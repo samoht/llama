@@ -7,9 +7,10 @@ COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
 
-EXTERNOBJS=config.cmx misc.cmx interntl.cmx opcodes.cmx caml_light_extern.o
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx opcodes.cmx
 
-OBJS=predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx link.cmx \
+OBJS=caml_light_extern.o \
+    predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx link.cmx \
     readword.cmx version.cmx main.cmx
 
 GENSOURCES=version.ml prim_c.ml predef.ml
