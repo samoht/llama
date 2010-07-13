@@ -1,38 +1,38 @@
 (* System functions for interactive use. *)
 
-#open "obj";;
-#open "meta";;
-#open "misc";;
-#open "const";;
-#open "location";;
-#open "modules";;
-#open "globals";;
-#open "builtins";;
-#open "types";;
-#open "patch";;
-#open "emit_phr";;
-#open "symtable";;
-#open "do_phr";;
-#open "load_phr";;
-#open "compiler";;
-#open "pr_value";;
-#open "format";;
+open Obj;;
+open Meta;;
+open Misc;;
+open Const;;
+open Location;;
+open Modules;;
+open Globals;;
+open Builtins;;
+open Types;;
+open Patch;;
+open Emit_phr;;
+open Symtable;;
+open Do_phr;;
+open Load_phr;;
+open Compiler;;
+open Pr_value;;
+open Format;;
 
 (* Utility functions *)
 
 let add_suffix name suffix =
-  if filename__check_suffix name suffix
-  then (filename__chop_suffix name suffix, name)
+  if Filename.check_suffix name suffix
+  then (Filename.chop_suffix name suffix, name)
   else (name, name ^ suffix)
 ;;
 
 let parse_global s =
   let rec parse n =
-    if n + 2 >= string_length s then
+    if n + 2 >= String.length s then
       GRname s
-    else if nth_char s n == `_` && nth_char s (n+1) == `_` then
-      GRmodname { qual = sub_string s 0 n;
-                  id = sub_string s (n + 2) (string_length s - n - 2) }
+    else if s.[n] == '_' && s.[n+1] == '_' then
+      GRmodname { qual = String.sub s 0 n;
+                  id = String.sub s (n + 2) (String.length s - n - 2) }
     else
       parse (n+1)
   in parse 0;;
@@ -45,7 +45,7 @@ let load_object name =
     try
       find_in_path filename
     with Cannot_find_file name ->
-      interntl__eprintf "Cannot find file %s.\n" name;
+      Interntl.eprintf "Cannot find file %s.\n" name;
       raise Toplevel in
   let inchan = open_in_bin truename in
   let stop = input_binary_int inchan in
@@ -53,14 +53,14 @@ let load_object name =
   let code_len = stop - start in
   let block_len = code_len + 1 in
   let code = static_alloc block_len in
-  fast_really_input inchan code 0 code_len;
-  set_nth_char code code_len (char_of_int opcodes__STOP);
+  really_input inchan code 0 code_len;
+  code.[code_len] <- char_of_int Opcodes.opSTOP;
   let phrase_index = (input_value inchan : compiled_phrase list) in
   close_in inchan;
-  do_list
+  List.iter
     (function phr ->
       patch_object code (phr.cph_pos - start) phr.cph_reloc)
-    (rev phrase_index);
+    (List.rev phrase_index);
   let res = do_code false code 0 block_len in
   ()
 ;;
@@ -110,10 +110,10 @@ let loadfile filename =
     try
       find_in_path filename
     with Cannot_find_file name ->
-      interntl__eprintf "Cannot find file %s.\n" name;
+      Interntl.eprintf "Cannot find file %s.\n" name;
       raise Toplevel in
   let ic = open_in truename in
-  let lexbuf = lexing__create_lexer_channel ic in
+  let lexbuf = Lexing.from_channel ic in
   try
     protect_current_input (fun () ->
       input_name := truename;
@@ -126,14 +126,14 @@ let loadfile filename =
      | x -> close_in ic; raise x
 ;;
 
-let include name =
+let include_file name =
   let (simplename, filename) = add_suffix name ".ml" in
     loadfile filename
 ;;
 
 let load name =
   let (simplename, filename) = add_suffix name ".ml" in
-  let modname = filename__basename simplename in
+  let modname = Filename.basename simplename in
   protect_current_module (fun () ->
     start_compiling_interface modname;
     loadfile filename)
@@ -141,14 +141,14 @@ let load name =
 
 (* To quit. (Alternative: ctrl-D) *)
 
-let quit x = io__exit 0; ()
+let quit x = exit 0; ()
 ;;
 
 (* The trace *)
 
-let trace_env = ref ([] : (int * obj) list);;
+let trace_env = ref ([] : (int * t) list);;
 
-let rec trace_instr name val ty =
+let rec trace_instr name value ty =
   match (type_repr ty).typ_desc with
     Tarrow(t1,t2) ->
       let namestar = name ^ "*" in
@@ -156,19 +156,19 @@ let rec trace_instr name val ty =
         print_string name; print_string " <-- ";
         print_value arg t1; print_newline ();
         try
-          let res = (magic_obj val : obj -> obj) arg in
+          let res = (Obj.magic value : t -> t) arg in
            print_string name; print_string " --> ";
            print_value res t2; print_newline ();
            trace_instr namestar res t2
         with exc ->
            print_string name;
            print_string " raises ";
-           print_value (repr exc) builtins__type_exn;
+           print_value (repr exc) Builtins.type_exn;
            print_newline ();
            raise exc)
   | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
-      trace_instr name val (expand_abbrev params body args)
-  | _ -> val
+      trace_instr name value (expand_abbrev params body args)
+  | _ -> value
 ;;
 
 let trace name =
@@ -177,19 +177,19 @@ let trace name =
     match val_desc.info.val_prim with
       ValueNotPrim ->
         let pos = get_slot_for_variable val_desc.qualid in
-        if mem_assoc pos !trace_env then begin
-          interntl__eprintf "The function %s is already traced.\n" name        
+        if List.mem_assoc pos !trace_env then begin
+          Interntl.eprintf "The function %s is already traced.\n" name        
         end else begin
           trace_env := (pos, global_data.(pos)) :: !trace_env;
           global_data.(pos) <-
             trace_instr name global_data.(pos) val_desc.info.val_typ;
-          interntl__eprintf "The function %s is now traced.\n" name
+          Interntl.eprintf "The function %s is now traced.\n" name
         end
     | ValuePrim(_, _) ->
-        interntl__eprintf
+        Interntl.eprintf
          "The function %s is a primitive, it cannot be traced.\n" name
   with Desc_not_found ->
-    interntl__eprintf "Unknown function %s.\n" name
+    Interntl.eprintf "Unknown function %s.\n" name
   end
 ;;
 
@@ -199,18 +199,18 @@ let untrace name =
     let pos = get_slot_for_variable val_desc.qualid in
     let rec except = function
       [] ->
-        interntl__eprintf "The function %s was not traced.\n" name;
+        Interntl.eprintf "The function %s was not traced.\n" name;
         []
     | (pos',obj as pair)::rest ->
         if pos == pos' then begin
           global_data.(pos) <- obj;
-          interntl__eprintf "The function %s is no longer traced.\n" name;
+          Interntl.eprintf "The function %s is no longer traced.\n" name;
           rest
         end else
           pair :: except rest in
     trace_env := except !trace_env
   with Desc_not_found ->
-    interntl__eprintf "Unknown function %s.\n" name
+    Interntl.eprintf "Unknown function %s.\n" name
   end
 ;;
 
@@ -227,19 +227,19 @@ let install_printer name =
       pop_type_level();
       generalize_type ty_arg;
       let pos = get_slot_for_variable val_desc.qualid in
-      printers := (name, ty_arg, (magic_obj global_data.(pos) : obj -> unit))
+      printers := (name, ty_arg, (Obj.magic global_data.(pos) : t -> unit))
                :: !printers
     with Unify ->
-      interntl__eprintf "%s has the wrong type for a printing function.\n" name
+      Interntl.eprintf "%s has the wrong type for a printing function.\n" name
     end
   with Desc_not_found ->
-    interntl__eprintf "Unknown function %s.\n" name
+    Interntl.eprintf "Unknown function %s.\n" name
   end
 ;;
 
 let remove_printer name =
   let rec remove = function
-    [] -> interntl__eprintf "No printer named %s.\n" name; []
+    [] -> Interntl.eprintf "No printer named %s.\n" name; []
   | (pr_name, _, _ as printer) :: rem ->
       if name = pr_name then rem else printer :: remove rem in
   printers := remove !printers
@@ -247,7 +247,7 @@ let remove_printer name =
 
 (* Change the current working directory *)
 
-let cd s = sys__chdir s;;
+let cd s = Sys.chdir s;;
 
 (* Add a directory to the search path *)
 
@@ -258,14 +258,14 @@ let directory dirname =
 
 let compile s =
   protect_current_input (fun () -> protect_current_module (fun () ->
-    if filename__check_suffix s ".ml" then
-      let filename = filename__chop_suffix s ".ml" in
-      compile_implementation (filename__basename filename) filename ".ml"
-    else if filename__check_suffix s ".mli" then
-      let filename = filename__chop_suffix s ".mli" in
-      compile_interface (filename__basename filename) filename
+    if Filename.check_suffix s ".ml" then
+      let filename = Filename.chop_suffix s ".ml" in
+      compile_implementation (Filename.basename filename) filename ".ml"
+    else if Filename.check_suffix s ".mli" then
+      let filename = Filename.chop_suffix s ".mli" in
+      compile_interface (Filename.basename filename) filename
     else begin
-      interntl__eprintf "Incorrect source file name %s.\n\
+      Interntl.eprintf "Incorrect source file name %s.\n\
                A source file name must end in \".ml\" or \".mli\".\n" s
     end))
 ;;
@@ -275,22 +275,22 @@ let compile s =
 
 let debug_mode status =
   use_extended_interfaces := status;
-  event__record_events := status;
-  compiler__write_extended_intf := status;
+  Event.record_events := status;
+  Compiler.write_extended_intf := status;
   flush_module_cache()
 ;;
 
 (* Set whether compilation prints the inferred types. *)
 
 let verbose_mode status =
-  compiler__verbose := status
+  Compiler.verbose := status
 ;;
 
 (* Set the maximal depth for printing values. *)
 
 let set_print_depth n =
-  if n > 0 then pr_value__max_printer_depth := n;;
+  if n > 0 then Pr_value.max_printer_depth := n;;
 
 let set_print_length n =
-  if n > 0 then pr_value__max_printer_steps := n;;
+  if n > 0 then Pr_value.max_printer_steps := n;;
 

@@ -1,15 +1,17 @@
+
+
 (* To print values *)
 
-(**) #open "obj";;
-(**) #open "misc";;
-(**) #open "const";;
-(**) #open "globals";;
-(**) #open "builtins";;
-(**) #open "modules";;
-(**) #open "types";;
-(**) #open "format";;
-(**) #open "fmt_type";;
-(**) #open "symtable";;
+(**) open Obj;;
+(**) open Misc;;
+(**) open Const;;
+(**) open Globals;;
+(**) open Builtins;;
+(**) open Modules;;
+(**) open Types;;
+(**) open Format;;
+(**) open Fmt_type;;
+(**) open Symtable;;
 
 exception Constr_not_found;;
 
@@ -37,21 +39,21 @@ let find_exception tag =
           if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  select_exn(hashtbl__find_all (find_module qualid.qual).mod_constrs qualid.id)
+  select_exn(Hashtbl.find_all (find_module qualid.qual).mod_constrs qualid.id)
 ;;
 
 let printers = ref [
   "", type_int,
-    (fun x -> print_int (magic_obj x : int));
+    (fun x -> print_int (Obj.magic x : int));
   "", type_float,
-    (fun x -> print_float (magic_obj x : float));
+    (fun x -> print_float (Obj.magic x : float));
   "", type_char,
     (fun x -> print_string "`";
-              print_string (char_for_read (magic_obj x : char));
+              print_string (Char.escaped (Obj.magic x : char));
               print_string "`");
   "", type_string,
    (fun x -> print_string "\"";
-             print_string (string_for_read (magic_obj x : string));
+             print_string (String.escaped (Obj.magic x : string));
              print_string "\"")
 #ifdef PRINT_NUMS
   ;
@@ -113,7 +115,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
     Abstract_type ->
       print_string "<abstr>"
   | Variant_type constr_list ->
-      let tag = obj_tag obj in
+      let tag = Obj.tag obj in
       begin try
         let constr = 
           if same_type_constr cstr constr_type_exn
@@ -130,7 +132,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
              else open_box 1;
             output_constr constr;
             print_space();
-            cautious (print_val 2 (depth - 1) (obj_field obj 0)) ty_arg;
+            cautious (print_val 2 (depth - 1) (Obj.field obj 0)) ty_arg;
             if prio > 1 then print_string ")";
             close_box()
         | Constr_superfluous n ->
@@ -166,7 +168,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           fatal_error "print_val: types should match"
         end;
         cautious (print_val 0 (depth - 1)
-                 (obj_field obj lbl.info.lbl_pos)) ty_arg;
+                 (Obj.field obj lbl.info.lbl_pos)) ty_arg;
         close_box() in
       let print_fields depth label_list =
           let rec loop depth b = function
@@ -191,17 +193,17 @@ and print_val_list prio depth obj ty_list =
           [] -> ()
         | ty :: ty_list ->
            if i > 0 then begin print_string ","; print_space() end;
-           print_val prio (depth - 1) (obj_field obj i) ty;
+           print_val prio (depth - 1) (Obj.field obj i) ty;
            loop (depth - 1) (succ i) ty_list in
       loop depth 0
   in cautious (print_list depth 0) ty_list
 
 and print_list depth obj ty_arg =
   let rec print_conses depth cons =
-   if obj_tag cons != 0 then begin
-     print_val 0 (depth - 1) (obj_field cons 0) ty_arg;
-     let next_obj = obj_field cons 1 in
-     if obj_tag next_obj != 0 then begin
+   if Obj.tag cons != 0 then begin
+     print_val 0 (depth - 1) (Obj.field cons 0) ty_arg;
+     let next_obj = Obj.field cons 1 in
+     if Obj.tag next_obj != 0 then begin
        print_string ";"; print_space();
        print_conses (depth - 1) next_obj
      end
@@ -216,10 +218,10 @@ and print_list depth obj ty_arg =
 and print_vect depth obj ty_arg =
   let print_items depth obj =
       let rec loop depth i =
-          if i < obj_size obj then
+          if i < Obj.size obj then
            begin
             if i > 0 then begin print_string ";"; print_space() end;
-            print_val 0 (depth - 1) (obj_field obj i) ty_arg;
+            print_val 0 (depth - 1) (Obj.field obj i) ty_arg;
             loop (depth - 1) (i + 1)
            end in
       loop depth 0
@@ -234,6 +236,6 @@ and print_vect depth obj ty_arg =
 let print_value obj ty =
     printer_steps := !max_printer_steps;
     try print_val 0 !max_printer_depth obj ty
-    with x -> print_newline(); flush std_err; raise x
+    with x -> print_newline(); flush stderr; raise x
 ;;
 

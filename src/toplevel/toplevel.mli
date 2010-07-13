@@ -1,8 +1,8 @@
 (* System functions for interactive use *)
 
-value quit : unit -> unit
+val quit : unit -> unit
         (* Exit the toplevel loop and terminate the [camllight] command. *)
-  and include : string -> unit
+val include_file : string -> unit
         (* Read, compile and execute source phrases from the given file.
            The [.ml] extension is automatically added to the file name,
            if not present.
@@ -10,7 +10,7 @@ value quit : unit -> unit
            they were typed on standard input. In particular, global
            identifiers defined by these phrases are entered in the
            module named [top], not in a new module. *)
-  and load : string -> unit
+val load : string -> unit
         (* Load in memory the source code for a module
            implementation. Read, compile and execute source phrases
            from the given file. The [.ml] extension is automatically
@@ -29,7 +29,7 @@ value quit : unit -> unit
            automatically opened: the identifier [bar] does not
            automatically complete to [foo__bar]. To achieve this, you
            must execute the directive [#open "foo"] afterwards. *)
-  and compile : string -> unit
+val compile : string -> unit
         (* Compile the source code for a module implementation or
            interface ([.ml] or [.mli] file). Compilation proceeds as
            with the batch compiler, and produces the same results as
@@ -40,7 +40,7 @@ value quit : unit -> unit
            the compilation is left in files ([.zo], [.zi],
            [.zix]). The compiled code is not loaded in memory. Use
            [load_object] to load a [.zo] file produced by [compile]. *)
-  and load_object : string -> unit
+val load_object : string -> unit
         (* Load in memory the compiled bytecode contained in the given
            file.  The [.zo] extension is automatically added to the
            file name, if not present. The bytecode file has been
@@ -48,7 +48,7 @@ value quit : unit -> unit
            the [compile] function. Global identifiers defined in the
            file being loaded are entered in their own module, not in
            the [top] module, just as with the [load] function. *)
-  and trace : string -> unit
+val trace : string -> unit
         (* After the execution of [trace "foo"], all calls to the
            global function named [foo] will be ``traced''. That is,
            the argument and the result are displayed for each call, as
@@ -58,14 +58,14 @@ value quit : unit -> unit
            is printed as it is passed to the function. 
            Only functions implemented in ML can be traced; system primitives
            such as [string_length] or user-supplied C functions cannot. *)
-  and untrace : string -> unit
+val untrace : string -> unit
         (* Executing [untrace "foo"] stops all tracing over the global
            function named [foo]. *)
-  and verbose_mode: bool -> unit
+val verbose_mode: bool -> unit
         (* [verbose_mode true] causes the [compile] function to print
            the inferred types and other information. [verbose_mode false]
            reverts to the default silent behavior. *)
-  and install_printer : string -> unit
+val install_printer : string -> unit
         (* [install_printer "printername"] registers the function named
            [printername] as a printer for objects whose types match
            its argument type. That is, the toplevel loop will call
@@ -74,18 +74,18 @@ value quit : unit -> unit
            module to produce its output, otherwise the output of
            [printername] will not be correctly located in the values
            printed by the toplevel loop. *)
-  and remove_printer : string -> unit
+val remove_printer : string -> unit
         (* [remove_printer "printername"] removes the function named
            [printername] from the table of toplevel printers. *)
-  and set_print_depth : int -> unit
+val set_print_depth : int -> unit
         (* [set_print_depth n] limits the printing of values to a maximal
            depth of [n]. The parts of values whose depth exceeds [n]
            are printed as [...] (ellipsis). *)
-  and set_print_length : int -> unit
+val set_print_length : int -> unit
         (* [set_print_length n] limits the number of value nodes
            printed to at most [n]. Remaining parts of values
            are printed as [...] (ellipsis). *)
-  and debug_mode: bool -> unit
+val debug_mode: bool -> unit
         (* Set whether extended module interfaces must be used
            [debug_mode true] or not [debug_mode false]. Extended
            module interfaces are [.zix] files that describe the actual
@@ -96,9 +96,9 @@ value quit : unit -> unit
            to private types and variables of modules, and private functions
            can be traced with [trace]. Setting [debug_mode true] is equivalent
            to starting the toplevel with the [-g] option. *)
-  and cd : string -> unit
+val cd : string -> unit
         (* Change the current working directory. *)
-  and directory : string -> unit
+val directory : string -> unit
         (* Add the given directory to the search path for files.
            Same behavior as the [-I] option or the [#directory] directive. *)
 ;;

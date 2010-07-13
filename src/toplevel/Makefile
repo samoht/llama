@@ -1,27 +1,25 @@
 # Makefile for the Caml Light toplevel.
 
-CAMLCOMP=../camlrun ../camlcomp
-CAMLLINK=../camlrun ../camllink
-CAMLLIBR=../camlrun ../camllibr
-CAMLRUN=../camlrun
-INCLUDES=-stdlib ../lib -I ../compiler -I ../linker
-COMPFLAGS=-W -O fast $(INCLUDES)
+CAMLCOMP=ocamlopt.opt -c
+CAMLLINK=ocamlopt.opt
+INCLUDES=-I ../compiler -I ../linker
+COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
-CPP=/lib/cpp -P -Dunix
+CPP=/usr/bin/cpp -P -Dunix
 CPPFLAGS=
 
-EXTERNOBJS=config.zo misc.zo interntl.zo \
-    const.zo prim.zo instruct.zo lambda.zo \
-    globals.zo location.zo syntax.zo modules.zo builtins.zo \
-    types.zo pr_type.zo error.zo typing.zo ty_decl.zo pr_decl.zo \
-    ty_intf.zo tr_env.zo event.zo clauses.zo matching.zo trstream.zo front.zo \
-    back.zo opcodes.zo prim_opc.zo buffcode.zo labels.zo \
-    reloc.zo emitcode.zo emit_phr.zo \
-    primdecl.zo lexer.zo par_aux.zo parser.zo compiler.zo \
-    predef.zo prim_c.zo symtable.zo patch.zo tr_const.zo
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx \
+    const.cmx prim.cmx instruct.cmx lambda.cmx \
+    globals.cmx location.cmx syntax.cmx modules.cmx builtins.cmx \
+    types.cmx pr_type.cmx error.cmx typing.cmx ty_decl.cmx pr_decl.cmx \
+    ty_intf.cmx tr_env.cmx event.cmx clauses.cmx matching.cmx trstream.cmx front.cmx \
+    back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx labels.cmx \
+    reloc.cmx emitcode.cmx emit_phr.cmx \
+    primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
+    predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx
 
-OBJS=fmt_type.zo pr_value.zo load_phr.zo do_phr.zo toplevel.zo \
-     version.zo topinit.zo
+OBJS=fmt_type.cmx pr_value.cmx load_phr.cmx do_phr.cmx toplevel.cmx \
+     version.cmx topinit.cmx
 
 PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
     gc genlex hashtbl int io iparsing lexing list map obj pair parsing \
@@ -34,26 +32,26 @@ GENSOURCES=version.ml pr_value.ml
 
 all: camltop
 
-camltop: toplib.zo topmain.zo provide expunge
+camltop: toplib.cmx topmain.cmx provide expunge
 	$(CAMLRUN) ./provide -stdlib ../lib $(PERVASIVES) > required
 	$(CAMLLINK) $(LINKFLAGS) -o camltop1 -require required \
-                stdlib.zo toplib.zo topmain.zo
+                stdlib.cmx toplib.cmx topmain.cmx
 	$(CAMLRUN) ./expunge camltop1 camltop $(PERVASIVES) $(SPECIALS)
 	rm -f camltop1 required
 	cp toplevel.zi ../lib
 
-toplib.zo: $(OBJS)
-	$(CAMLLIBR) -o toplib.zo $(INCLUDES) $(EXTERNOBJS) $(OBJS)
+toplib.cmx: $(OBJS)
+	$(CAMLLIBR) -o toplib.cmx $(INCLUDES) $(EXTERNOBJS) $(OBJS)
 
-expunge: expunge.zo
-	$(CAMLLINK) $(LINKFLAGS) -o expunge stdlib.zo readword.zo expunge.zo
+expunge: expunge.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o expunge stdlib.cmx readword.cmx expunge.cmx
 
-provide: provide.zo
-	$(CAMLLINK) $(LINKFLAGS) -o provide stdlib.zo \
-                config.zo misc.zo interntl.zo modules.zo provide.zo
+provide: provide.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o provide stdlib.cmx \
+                config.cmx misc.cmx interntl.cmx modules.cmx provide.cmx
 
 clean:
-	rm -f *.zi *.zo camltop expunge provide
+	rm -f *.zi *.cmx camltop expunge provide
 	rm -f $(GENSOURCES)
 
 install:
@@ -61,16 +59,16 @@ install:
 	cp toplevel.mli toplevel.zi $(LIBDIR)
 	cp provide $(LIBDIR)/provide
 	cp expunge $(LIBDIR)/expunge
-	cp toplib.zo $(LIBDIR)/toplib.zo
-	cp topmain.zo $(LIBDIR)/topmain.zo
+	cp toplib.cmx $(LIBDIR)/toplib.cmx
+	cp topmain.cmx $(LIBDIR)/topmain.cmx
 
 .SUFFIXES :
-.SUFFIXES : .mli .ml .zi .zo .mlp
+.SUFFIXES : .mli .ml .cmi .cmx .mlp
 
-.mli.zi:
+.mli.cmi:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
-.ml.zo:
+.ml.cmx:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
 .mlp.ml:
@@ -89,35 +87,35 @@ pr_value.ml: pr_value.mlp
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-do_phr.zo: pr_value.zo ../compiler/typing.zo meta.zi ../compiler/modules.zo \
-    ../compiler/interntl.zo ../compiler/compiler.zo ../compiler/const.zo \
-    ../compiler/misc.zo load_phr.zo ../compiler/back.zo \
-    ../compiler/front.zo fmt_type.zo ../linker/symtable.zo \
-    ../compiler/syntax.zo ../compiler/ty_decl.zo ../compiler/types.zo 
-expunge.zo: ../linker/symtable.zo ../compiler/const.zo 
-fmt_type.zo: ../compiler/modules.zo ../compiler/globals.zo \
-    ../compiler/types.zo ../compiler/const.zo 
-load_phr.zo: pr_value.zo ../compiler/reloc.zo meta.zi ../linker/tr_const.zo \
-    ../compiler/interntl.zo ../compiler/labels.zo ../compiler/misc.zo \
-    ../linker/symtable.zo ../linker/patch.zo ../compiler/instruct.zo \
-    ../compiler/buffcode.zo ../compiler/emitcode.zo ../compiler/builtins.zo \
-    ../compiler/opcodes.zo 
-pr_value.zo: ../compiler/modules.zo ../compiler/const.zo \
-    ../compiler/misc.zo fmt_type.zo ../linker/symtable.zo \
-    ../compiler/globals.zo ../compiler/builtins.zo ../compiler/types.zo 
-provide.zo: ../compiler/prim.zo ../compiler/modules.zo \
-    ../compiler/config.zi ../compiler/const.zo ../compiler/misc.zo \
-    ../compiler/globals.zo 
-topinit.zo: meta.zi ../compiler/typing.zo toplevel.zi \
-    ../compiler/modules.zo ../compiler/interntl.zo ../compiler/config.zi \
-    ../compiler/misc.zo version.zo ../linker/symtable.zo 
-toplevel.zo: toplevel.zi meta.zi ../compiler/modules.zo \
-    ../compiler/emit_phr.zo ../compiler/misc.zo ../compiler/event.zo \
-    ../linker/symtable.zo ../linker/patch.zo ../compiler/globals.zo \
-    ../compiler/builtins.zo pr_value.zo ../compiler/location.zi \
-    ../compiler/interntl.zo ../compiler/const.zo ../compiler/compiler.zo \
-    load_phr.zo do_phr.zo ../compiler/types.zo ../compiler/opcodes.zo 
-topmain.zo: ../compiler/location.zi ../compiler/interntl.zo \
-    ../compiler/config.zi ../compiler/compiler.zo ../compiler/misc.zo \
-    do_phr.zo 
-version.zo: ../compiler/interntl.zo 
+do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmi ../compiler/modules.cmx \
+    ../compiler/interntl.cmx ../compiler/compiler.cmx ../compiler/const.cmx \
+    ../compiler/misc.cmx load_phr.cmx ../compiler/back.cmx \
+    ../compiler/front.cmx fmt_type.cmx ../linker/symtable.cmx \
+    ../compiler/syntax.cmx ../compiler/ty_decl.cmx ../compiler/types.cmx 
+expunge.cmx: ../linker/symtable.cmx ../compiler/const.cmx 
+fmt_type.cmx: ../compiler/modules.cmx ../compiler/globals.cmx \
+    ../compiler/types.cmx ../compiler/const.cmx 
+load_phr.cmx: pr_value.cmx ../compiler/reloc.cmx meta.cmi ../linker/tr_const.cmx \
+    ../compiler/interntl.cmx ../compiler/labels.cmx ../compiler/misc.cmx \
+    ../linker/symtable.cmx ../linker/patch.cmx ../compiler/instruct.cmx \
+    ../compiler/buffcode.cmx ../compiler/emitcode.cmx ../compiler/builtins.cmx \
+    ../compiler/opcodes.cmx 
+pr_value.cmx: ../compiler/modules.cmx ../compiler/const.cmx \
+    ../compiler/misc.cmx fmt_type.cmx ../linker/symtable.cmx \
+    ../compiler/globals.cmx ../compiler/builtins.cmx ../compiler/types.cmx 
+provide.cmx: ../compiler/prim.cmx ../compiler/modules.cmx \
+    ../compiler/config.cmi ../compiler/const.cmx ../compiler/misc.cmx \
+    ../compiler/globals.cmx 
+topinit.cmx: meta.cmi ../compiler/typing.cmx toplevel.cmi \
+    ../compiler/modules.cmx ../compiler/interntl.cmx ../compiler/config.cmi \
+    ../compiler/misc.cmx version.cmx ../linker/symtable.cmx 
+toplevel.cmx: toplevel.cmi meta.cmi ../compiler/modules.cmx \
+    ../compiler/emit_phr.cmx ../compiler/misc.cmx ../compiler/event.cmx \
+    ../linker/symtable.cmx ../linker/patch.cmx ../compiler/globals.cmx \
+    ../compiler/builtins.cmx pr_value.cmx ../compiler/location.cmi \
+    ../compiler/interntl.cmx ../compiler/const.cmx ../compiler/compiler.cmx \
+    load_phr.cmx do_phr.cmx ../compiler/types.cmx ../compiler/opcodes.cmx 
+topmain.cmx: ../compiler/location.cmi ../compiler/interntl.cmx \
+    ../compiler/config.cmi ../compiler/compiler.cmx ../compiler/misc.cmx \
+    do_phr.cmx 
+version.cmx: ../compiler/interntl.cmx 

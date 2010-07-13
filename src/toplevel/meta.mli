@@ -1,12 +1,12 @@
 (* To control the runtime system and bytecode interpreter *)
 
-#open "obj";;
+open Obj;;
 
-value global_data : obj vect
-  and realloc_global_data : int -> unit = 1 "realloc_global"
-  and static_alloc : int -> string = 1 "static_alloc"
-  and static_free : string -> unit = 1 "static_free"
-  and static_resize : string -> int -> string = 2 "static_resize"
-  and interprete : string -> int -> int -> obj = 3 "start_interp"
-  and available_primitives : unit -> string vect = 1 "available_primitives"
+val global_data : t array
+  external realloc_global_data : int -> unit = "realloc_global"
+  external static_alloc : int -> string = "static_alloc"
+  external static_free : string -> unit = "static_free"
+  external static_resize : string -> int -> string = "static_resize"
+  external interprete : string -> int -> int -> t = "start_interp"
+  external available_primitives : unit -> string array = "available_primitives"
 ;;
