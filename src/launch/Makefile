@@ -4,7 +4,7 @@ CC=cc
 OPTS=
 LIBS=
 
-all: darkc testprog # camllight camlmktop camlexec
+all: darkc camlexec testprog # camllight camlmktop
 
 # header cannot be generated until camlrun is installed in $(BINDIR)...
 # Also, "make install" is done with root permissions, meaning that we don't
@@ -20,7 +20,8 @@ install:
                else cp camlexec $(LIBDIR)/header; \
                fi'
 	rm -f /tmp/testscr
-	for script in darkc camllight camlmktop; do \
+#	for script in darkc camllight camlmktop; do
+	for script in darkc; do \
 	  cp $$script $(BINDIR)/$$script; \
 	  chmod a+x $(BINDIR)/$$script; \
 	done
