@@ -60,8 +60,8 @@ world:
 	cd runtime; make CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
 	cd compiler; make CPP="$(CPP)" all
 	cd linker; make CPP="$(CPP)" all
+	cd librar; make CPP="$(CPP)" all
 #	cp runtime/camlrun .
-#	cd librar; make CPP="$(CPP)" all
 #	cd lib; make CPP="$(CPP)" all
 #	cd lex; make CPP="$(CPP)" all
 #	cd yacc; make CC="$(CC)" OPTS="$(OPTS)" all

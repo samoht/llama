@@ -1,25 +1,25 @@
 # Makefile for the Caml Light librarian.
 
-CAMLCOMP=../camlrun ../camlcomp
-CAMLLINK=../camlrun ../camllink
-INCLUDES=-stdlib ../lib -I ../compiler -I ../linker
-COMPFLAGS=-W -O fast $(INCLUDES)
+CAMLCOMP=ocamlopt.opt -c
+CAMLLINK=ocamlopt.opt
+INCLUDES=-I ../compiler -I ../linker
+COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
-CPP=/lib/cpp -P -Dunix
+CPP=/usr/bin/cpp -P -Dunix
 
-EXTERNOBJS=config.zo misc.zo interntl.zo readword.zo
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx readword.cmx
 
-OBJS=librar.zo version.zo main.zo
+OBJS=librar.cmx version.cmx main.cmx
 
 GENSOURCES=version.ml
 
 all: camllibr
 
 camllibr: $(OBJS)
-	$(CAMLLINK) $(LINKFLAGS) -o camllibr stdlib.zo $(EXTERNOBJS) $(OBJS)
+	$(CAMLLINK) $(LINKFLAGS) -o camllibr $(EXTERNOBJS) $(OBJS)
 
 clean:
-	rm -f *.zi *.zo camllibr
+	rm -f *.cmi *.cmx *.o camllibr
 	rm -f $(GENSOURCES)
 
 install:
@@ -27,12 +27,12 @@ install:
 	chmod a+x $(BINDIR)/camllibr
 
 .SUFFIXES :
-.SUFFIXES : .mli .ml .zi .zo .mlp
+.SUFFIXES : .mli .ml .cmi .cmx .mlp
 
-.mli.zi:
+.mli.cmi:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
-.ml.zo:
+.ml.cmx:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
 .mlp.ml:
@@ -50,8 +50,8 @@ version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-librar.zo: ../compiler/emit_phr.zo ../compiler/misc.zo \
-    ../compiler/interntl.zo 
-main.zo: librar.zo version.zo ../compiler/misc.zo ../linker/readword.zo \
-    ../compiler/interntl.zo ../compiler/config.zi 
-version.zo: ../compiler/interntl.zo 
+librar.cmx: ../compiler/emit_phr.cmx ../compiler/misc.cmx \
+    ../compiler/interntl.cmx 
+main.cmx: librar.cmx version.cmx ../compiler/misc.cmx ../linker/readword.cmx \
+    ../compiler/interntl.cmx ../compiler/config.cmi 
+version.cmx: ../compiler/interntl.cmx 

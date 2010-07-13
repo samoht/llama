@@ -1,7 +1,7 @@
 (* librar.ml : builds a library by concatenating bytecode object files *)
 
-#open "misc";;
-#open "emit_phr";;
+open Misc;;
+open Emit_phr;;
 
 let offset_compiled_phrase ofs cp =
   { cph_pos = cp.cph_pos + ofs;
@@ -16,15 +16,15 @@ let add_to_library outchan (offset, index_rest) filename =
     let inchan = open_in_bin (find_in_path filename) in
     let ofs = input_binary_int inchan in
     let len = ofs - 4 in
-    let buffer = create_string len in
+    let buffer = String.make len '\000' in
     really_input inchan buffer 0 len;
     output outchan buffer 0 len;
     let old_index = (input_value inchan : compiled_phrase list) in
     close_in inchan;
-    let new_index = map (offset_compiled_phrase offset) old_index in
+    let new_index = List.map (offset_compiled_phrase offset) old_index in
       (offset + len, new_index @ index_rest)
   with Cannot_find_file name ->
-    interntl__eprintf "Cannot find file %s.\n" name;
+    Interntl.eprintf "Cannot find file %s.\n" name;
     raise Toplevel
 ;;    
 
@@ -34,7 +34,7 @@ let make_library file_list library_name =
   try
     output_binary_int outchan 0;
     let (offset, index) =
-      it_list (add_to_library outchan) (0, []) file_list in
+      List.fold_left (add_to_library outchan) (0, []) file_list in
     let pos_reloc =
       pos_out outchan in
     output_value outchan index;
