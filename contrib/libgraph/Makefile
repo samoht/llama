@@ -5,10 +5,10 @@ CC=cc
 OPTS=
 X11_INCLUDES=/usr/include
 X11_LIB=/usr/lib
-CPP=/lib/cpp -P
+CPP=/usr/bin/cpp -P
 
 BINDIR=/usr/local/bin
-LIBDIR=/usr/local/lib/caml-light
+LIBDIR=/usr/local/lib/caml-dark
 
 # Compilation options
 CFLAGS=$(OPTS) -I../../src/runtime -I$(X11_INCLUDES) -O
@@ -20,7 +20,7 @@ RANLIBTEST=test -f /usr/bin/ranlib -o -f /bin/ranlib
 RANLIB=ranlib
 
 # The Caml Light compilers
-CAMLC=camlc
+CAMLC=darkc
 CAMLMKTOP=camlmktop
 COMPFLAGS=-W -I ../libunix
 
@@ -29,7 +29,7 @@ OBJS=open.o draw.o fill.o color.o text.o \
 
 GENFILES=graphics.ml
 
-all: libgraph.a graphics.zo graphics.zi camlgraph
+all: libgraph.a graphics.zo graphics.zi #camlgraph
 
 libgraph.a: $(OBJS)
 	rm -f libgraph.a
@@ -47,7 +47,7 @@ install:
 	cp libgraph.a $(LIBDIR)/libgraph.a
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libgraph.a; else true; fi
 	cp graphics.z[io] $(LIBDIR)
-	cp camlgraph $(LIBDIR)
+#	cp camlgraph $(LIBDIR)
 
 .SUFFIXES: .ml .mli .zo .zi
 

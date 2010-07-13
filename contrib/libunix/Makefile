@@ -3,7 +3,7 @@
 # These options are overriden when called from ../Makefile
 CC=cc
 OPTS=
-LIBDIR=/usr/local/lib/caml-light
+LIBDIR=/usr/local/lib/caml-dark
 
 # Test to see whether ranlib exists on the machine
 RANLIBTEST=test -f /usr/bin/ranlib -o -f /bin/ranlib
@@ -13,7 +13,7 @@ RANLIB=ranlib
 
 # Compilation options
 CFLAGS=-I../../src/runtime -O $(OPTS)
-CAMLC=camlc
+CAMLC=darkc
 CAMLCOMP=$(CAMLC) -c
 COMPFLAGS=-W
 CAMLMKTOP=camlmktop
@@ -37,7 +37,7 @@ INTF= unix.zi
 
 IMPL= unix.zo
 
-all: libunix.a $(INTF) $(IMPL) camlunix
+all: libunix.a $(INTF) $(IMPL) #camlunix
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
@@ -54,7 +54,7 @@ install:
 	cp libunix.a $(LIBDIR)/libunix.a
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libunix.a; else true; fi
 	cp $(INTF) $(IMPL) $(LIBDIR)
-	cp camlunix $(LIBDIR)
+#	cp camlunix $(LIBDIR)
 
 .SUFFIXES: .ml .mli .zo .zi
 
