@@ -11,11 +11,7 @@ let toplevel = ref false;;
 let load_path = ref ([] : string list)
 ;;
 
-let file_exists filename =
-  try
-    sys__close(sys__open filename [sys__O_RDONLY] 0); true
-  with sys__Sys_error _ ->
-    false
+let file_exists = Sys.file_exists
 ;;
 
 exception Cannot_find_file of string;;
@@ -23,14 +19,14 @@ exception Cannot_find_file of string;;
 let find_in_path filename =
   if file_exists filename then
     filename
-  else if filename__is_absolute filename then
+  else if not (Filename.is_relative filename) then
     raise(Cannot_find_file filename)
   else
     let rec find = function
       [] ->
         raise(Cannot_find_file filename)
     | a::rest ->
-        let b = filename__concat a filename in
+        let b = Filename.concat a filename in
           if file_exists b then b else find rest
     in find !load_path
 ;;
@@ -51,7 +47,7 @@ let rec rollback () =
 
 let remove_file f =
   try
-    sys__remove f
-  with sys__Sys_error _ ->
+    Sys.remove f
+  with Sys_error _ ->
     ()
 ;;

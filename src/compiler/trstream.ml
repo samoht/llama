@@ -1,11 +1,11 @@
 (* streams.ml: translation of streams *)
 
-#open "const";;
-#open "syntax";;
-#open "prim";;
-#open "lambda";;
-#open "matching";;
-#open "tr_env";;
+open Const;;
+open Syntax;;
+open Prim;;
+open Lambda;;
+open Matching;;
+open Tr_env;;
 
 (* The following constants must be kept in sync with the definition
    of type stream in file ../lib/stream.ml *)
@@ -120,14 +120,14 @@ let translate_parser translate_expr loc init_env case_list stream_type =
           (pat_case_list, []) ->
             Llet([Lapply(stream_oper "stream_peek", [access_stream env])],
                  translate_matching raise_parse_failure
-                   (map translate_line pat_case_list))
+                   (List.map translate_line pat_case_list))
         | (pat_case_list, rest) ->
             Lstatichandle(
               Llet(
                 [catch_parse_failure(Lapply(stream_oper "stream_peek",
                                         [access_stream env]))],
                 translate_matching (Lstaticfail 0)
-                   (map translate_line pat_case_list)),
+                   (List.map translate_line pat_case_list)),
               transl_top (Treserved env) rest)
         end
     | (Znontermpat(parsexpr, pat) :: spatl, act) :: [] ->

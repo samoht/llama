@@ -1,9 +1,9 @@
 (* Handling of debugging events *)
 
-#open "lambda";;
-#open "syntax";;
-#open "location";;
-#open "modules";;
+open Lambda;;
+open Syntax;;
+open Location;;
+open Modules;;
 
 let record_events = ref false;;
 

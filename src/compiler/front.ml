@@ -1,17 +1,17 @@
 (* front.ml : translation abstract syntax -> extended lambda-calculus. *)
 
-#open "misc";;
-#open "const";;
-#open "globals";;
-#open "syntax";;
-#open "builtins";;
-#open "modules";;
-#open "lambda";;
-#open "prim";;
-#open "matching";;
-#open "tr_env";;
-#open "trstream";;
-#open "error";;
+open Misc;;
+open Const;;
+open Globals;;
+open Syntax;;
+open Builtins;;
+open Modules;;
+open Lambda;;
+open Prim;;
+open Matching;;
+open Tr_env;;
+open Trstream;;
+open Error;;
 
 (* Propagation of constants *)
 
@@ -27,7 +27,7 @@ let rec check_letrec_expr expr =
   match expr.e_desc with
     Zident _ -> ()
   | Zconstant _ -> ()
-  | Ztuple el -> do_list check_letrec_expr el
+  | Ztuple el -> List.iter check_letrec_expr el
   | Zconstruct0 cstr -> ()
   | Zconstruct1(cstr, expr) ->
       check_letrec_expr expr;
@@ -40,11 +40,11 @@ let rec check_letrec_expr expr =
       end
   | Zfunction _ -> ()
   | Zconstraint(e,_) -> check_letrec_expr e
-  | Zvector el -> do_list check_letrec_expr el
+  | Zvector el -> List.iter check_letrec_expr el
   | Zrecord lbl_expr_list ->
-      do_list (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list
+      List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list
   | Zlet(flag, pat_expr_list, body) ->
-      do_list (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
+      List.iter (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
       check_letrec_expr body      
   | Zparser _ -> ()
   | _ ->
@@ -54,7 +54,7 @@ let rec check_letrec_expr expr =
 let rec size_of_expr expr =
   match expr.e_desc with
     Ztuple el ->
-      do_list check_letrec_expr el; list_length el
+      List.iter check_letrec_expr el; List.length el
   | Zconstruct1(cstr, expr) ->
       check_letrec_expr expr;
       begin match cstr.info.cs_kind with
@@ -65,12 +65,12 @@ let rec size_of_expr expr =
   | Zconstraint(e,_) ->
       size_of_expr e
   | Zvector el ->
-      do_list check_letrec_expr el; list_length el
+      List.iter check_letrec_expr el; List.length el
   | Zrecord lbl_expr_list ->
-      do_list (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list;
-      list_length lbl_expr_list
+      List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list;
+      List.length lbl_expr_list
   | Zlet(flag, pat_expr_list, body) ->
-      do_list (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
+      List.iter (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
       size_of_expr body      
   | Zparser _ ->
       2
@@ -86,10 +86,10 @@ let partial_try = Lprim(Praise, [Lvar 0]);;
 
 let translate_compar gen_fun (int_comp, float_comp) ty arg1 arg2 =
   let comparison =
-    if types__same_base_type ty type_int ||
-       types__same_base_type ty type_char then
+    if Types.same_base_type ty type_int ||
+       Types.same_base_type ty type_char then
       Ptest int_comp
-    else if types__same_base_type ty type_float then
+    else if Types.same_base_type ty type_float then
       Ptest float_comp
     else match (int_comp, arg1, arg2) with
       (Pint_test PTeq, Lconst(SCblock(tag, [])), _) -> Ptest Peq_test
@@ -124,9 +124,9 @@ let alloc_superfluous_constr cstr n =
 let rec translate_expr env =
   let rec transl expr =
   match expr.e_desc with
-    Zident(ref(Zlocal s)) ->
+    Zident({contents=Zlocal s}) ->
       translate_access s env
-  | Zident(ref(Zglobal g)) ->
+  | Zident({contents=Zglobal g}) ->
       (match g.info.val_prim with
         ValueNotPrim ->
           Lprim(Pget_global g.qualid, [])
@@ -143,9 +143,9 @@ let rec translate_expr env =
       Lconst cst
   | Ztuple(args) ->
       let tr_args =
-        map transl args in
+        List.map transl args in
       begin try
-        Lconst(SCblock(ConstrRegular(0,1), map extract_constant tr_args))
+        Lconst(SCblock(ConstrRegular(0,1), List.map extract_constant tr_args))
       with Not_constant ->
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
@@ -163,9 +163,9 @@ let rec translate_expr env =
         Constr_superfluous n ->
           begin match arg.e_desc with
             Ztuple argl ->
-              let tr_argl = map transl argl in
+              let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
-                Lconst(SCblock(c.info.cs_tag, map extract_constant tr_argl))
+                Lconst(SCblock(c.info.cs_tag, List.map extract_constant tr_argl))
               with Not_constant ->
                 Lprim(Pmakeblock c.info.cs_tag, tr_argl)
               end
@@ -186,38 +186,38 @@ let rec translate_expr env =
           end
       end
   | Zapply({e_desc = Zfunction ((patl,_)::_ as case_list)} as funct, args) ->
-      if list_length patl == list_length args then
+      if List.length patl == List.length args then
         Llet(translate_let env args,
              translate_match expr.e_loc env case_list)
       else
-      event__after env expr (Lapply(transl funct, map transl args))
-  | Zapply({e_desc = Zident(ref (Zglobal g))} as fct, args) ->
+      Event.after env expr (Lapply(transl funct, List.map transl args))
+  | Zapply({e_desc = Zident({contents=Zglobal g})} as fct, args) ->
       begin match g.info.val_prim with
         ValueNotPrim ->
-          event__after env expr (Lapply(transl fct, map transl args))
+          Event.after env expr (Lapply(transl fct, List.map transl args))
       | ValuePrim(arity, p) ->
-          if arity == list_length args then
+          if arity == List.length args then
             match (p, args) with
               (Praise, [arg1]) ->
-                Lprim(p, [event__after env arg1 (transl arg1)])
+                Lprim(p, [Event.after env arg1 (transl arg1)])
             | (Pccall(fn, _), [arg1; arg2]) ->
                 begin try
-                  translate_compar fn (assoc fn comparison_table)
+                  translate_compar fn (List.assoc fn comparison_table)
                                    arg1.e_typ (transl arg1) (transl arg2)
                 with Not_found ->
-                  event__after env expr (Lprim(p, map transl args))
+                  Event.after env expr (Lprim(p, List.map transl args))
                 end
             | (Pccall(_, _), _) ->
-                event__after env expr (Lprim(p, map transl args))
+                Event.after env expr (Lprim(p, List.map transl args))
             | (_, _) ->
-                Lprim(p, map transl args)
+                Lprim(p, List.map transl args)
           else
-            event__after env expr (Lapply(transl fct, map transl args))
+            Event.after env expr (Lapply(transl fct, List.map transl args))
       end
   | Zapply(funct, args) ->
-      event__after env expr (Lapply(transl funct, map transl args))
+      Event.after env expr (Lapply(transl funct, List.map transl args))
   | Zlet(false, pat_expr_list, body) ->
-      let cas = map (fun (pat, _) -> pat) pat_expr_list in
+      let cas = List.map (fun (pat, _) -> pat) pat_expr_list in
         Llet(translate_bind env pat_expr_list,
              translate_match expr.e_loc env [cas, body])
   | Zlet(true, pat_expr_list, body) ->
@@ -225,8 +225,8 @@ let rec translate_expr env =
         add_let_rec_to_env env pat_expr_list in
       let translate_rec_bind (pat, expr) =
         (translate_expr new_env expr, size_of_expr expr) in
-      Lletrec(map translate_rec_bind pat_expr_list,
-              event__before new_env body (translate_expr new_env body))
+      Lletrec(List.map translate_rec_bind pat_expr_list,
+              Event.before new_env body (translate_expr new_env body))
   | Zfunction [] ->
       fatal_error "translate_expr: empty fun"
   | Zfunction((patl1,act1)::_ as case_list) ->
@@ -238,51 +238,51 @@ let rec translate_expr env =
               if pat_irrefutable pat
               then let (newenv, _, _) = add_pat_to_env debug_env pat in newenv
               else Treserved debug_env in
-            Lfunction(event__after_pat new_debug_env pat
+            Lfunction(Event.after_pat new_debug_env pat
                         (transl_fun new_debug_env patl)) in
       transl_fun env patl1
   | Ztrywith(body, pat_expr_list) ->
       Lhandle(transl body,
               translate_simple_match env partial_try pat_expr_list)
   | Zsequence(e1, e2) ->
-      Lsequence(transl e1, event__before env e2 (transl e2))
+      Lsequence(transl e1, Event.before env e2 (transl e2))
   | Zcondition(eif, ethen, eelse) ->
       Lifthenelse(transl eif,
-                  event__before env ethen (transl ethen),
+                  Event.before env ethen (transl ethen),
                   if match eelse.e_desc with
                        Zconstruct0(cstr) -> cstr == constr_void | _ -> false
                   then transl eelse
-                  else event__before env eelse (transl eelse))
+                  else Event.before env eelse (transl eelse))
   | Zwhile(econd, ebody) ->
-      Lwhile(transl econd, event__before env ebody (transl ebody))
+      Lwhile(transl econd, Event.before env ebody (transl ebody))
   | Zfor(id, estart, estop, up_flag, ebody) ->
       let new_env = add_for_parameter_to_env env id in
       Lfor(transl estart,
            translate_expr (Treserved env) estop,
            up_flag,
-           event__before new_env ebody (translate_expr new_env ebody))
+           Event.before new_env ebody (translate_expr new_env ebody))
   | Zconstraint(e, _) ->
       transl e
   | Zvector [] ->
       Lconst(SCblock(ConstrRegular(0,0), []))
   | Zvector args ->
-      Lprim(Pmakeblock (ConstrRegular(0,0)), map transl args)
+      Lprim(Pmakeblock (ConstrRegular(0,0)), List.map transl args)
   | Zassign(id, e) ->
       translate_update id env (transl e)
   | Zrecord lbl_expr_list ->
-      let v = make_vect (list_length lbl_expr_list) (Lconst const_unit) in
-        do_list
+      let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
+        List.iter
           (fun (lbl, e) -> v.(lbl.info.lbl_pos) <- transl e)
           lbl_expr_list;
         begin try
-          if for_all
+          if List.for_all
                (fun (lbl, e) -> lbl.info.lbl_mut == Notmutable)
                lbl_expr_list
           then Lconst(SCblock(ConstrRegular(0,0),
-                              map_vect_list extract_constant v))
+                              Array.to_list (Array.map extract_constant v)))
           else raise Not_constant
         with Not_constant ->
-          Lprim(Pmakeblock(ConstrRegular(0,0)), list_of_vect v)
+          Lprim(Pmakeblock(ConstrRegular(0,0)), Array.to_list v)
         end
   | Zrecord_access (e, lbl) ->
       Lprim(Pfield lbl.info.lbl_pos, [transl e])
@@ -291,7 +291,7 @@ let rec translate_expr env =
   | Zstream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Zparser case_list ->
-      let (stream_type, _) = types__filter_arrow expr.e_typ in
+      let (stream_type, _) = Types.filter_arrow expr.e_typ in
       translate_parser translate_expr expr.e_loc env case_list stream_type
   | Zwhen(e1,e2) ->
       fatal_error "front: Zwhen"
@@ -306,14 +306,14 @@ and transl_action env (patlist, expr) =
           (translate_expr new_env e1) (translate_expr new_env e2) num_pops
     | _ ->
         translate_expr new_env expr in
-  (patlist, add_lets(event__before new_env expr action))
+  (patlist, add_lets(Event.before new_env expr action))
 
 and translate_match loc env casel =
-  translate_matching_check_failure loc (map (transl_action env) casel)
+  translate_matching_check_failure loc (List.map (transl_action env) casel)
 
 and translate_simple_match env failure_code pat_expr_list =
   translate_matching failure_code
-    (map (fun (pat, expr) -> transl_action env ([pat], expr)) pat_expr_list)
+    (List.map (fun (pat, expr) -> transl_action env ([pat], expr)) pat_expr_list)
 
 and translate_let env = function
      [] ->  []
@@ -345,9 +345,9 @@ let translate_letdef loc pat_expr_list =
       Lprim(Pset_global {qual=modname; id=i}, [translate_expression expr])
   | _ ->                                 (* The general case *)
     let pat_list =
-      map (fun (p, _) -> p) pat_expr_list in
+      List.map (fun (p, _) -> p) pat_expr_list in
     let vars =
-      flat_map free_vars_of_pat pat_list in
+      List.flatten (List.map free_vars_of_pat pat_list) in
     let env =
       env_for_toplevel_let pat_list in
     let store_global var =
@@ -374,7 +374,7 @@ exception Complicated_definition;;
 let translate_letdef_rec loc pat_expr_list =
   (* First check that all patterns are variables *)
   let var_expr_list =
-    map (fun (pat, expr) -> (extract_variable pat, expr)) pat_expr_list in
+    List.map (fun (pat, expr) -> (extract_variable pat, expr)) pat_expr_list in
   let modname = (!defined_module).mod_name in
   try                                   (* Simple case: let rec id = fun *)
     make_sequence

@@ -3,13 +3,13 @@ type location =
          * int     (* Position of the next character following the last one *)
 ;;
 
-value get_current_location : unit -> location
-  and no_location : location
-  and input_name : string ref
-  and input_chan : in_channel ref
-  and input_lexbuf : lexing__lexbuf ref
+val get_current_location : unit -> location
+  val no_location : location
+  val input_name : string ref
+  val input_chan : in_channel ref
+  val input_lexbuf : Lexing.lexbuf ref
 ;;
 
-value output_location: out_channel -> location -> unit
-and output_input_name: out_channel -> unit
+val output_location: out_channel -> location -> unit
+val output_input_name: out_channel -> unit
 ;;

@@ -1,8 +1,8 @@
 (* builtins.ml : the pre-defined global identifiers *)
 
-#open "const";;
-#open "globals";;
-#open "modules";;
+open Const;;
+open Globals;;
+open Modules;;
 
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
 ;;
@@ -84,7 +84,7 @@ let constr_void =
 ;;
 
 let constr_nil =
-  let arg = {typ_desc=Tvar(Tnolink); typ_level=generic} in
+  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
   builtin "[]"
     { cs_res = {typ_desc=Tconstr(constr_type_list, [arg]); typ_level=generic};
       cs_arg = type_unit;
@@ -93,7 +93,7 @@ let constr_nil =
       cs_kind= Constr_constant }
 
 and constr_cons =
-  let arg1 = {typ_desc=Tvar(Tnolink); typ_level=generic} in
+  let arg1 = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
   let arg2 = {typ_desc=Tconstr(constr_type_list, [arg1]); typ_level=generic} in
   builtin "::"
     { cs_res = arg2;
@@ -104,7 +104,7 @@ and constr_cons =
 ;;
 
 let constr_none =
-  let arg = {typ_desc=Tvar(Tnolink); typ_level=generic} in
+  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
   builtin "None"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
@@ -114,7 +114,7 @@ let constr_none =
       cs_kind= Constr_constant }
 
 and constr_some =
-  let arg = {typ_desc=Tvar(Tnolink); typ_level=generic} in
+  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
   builtin "Some"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
@@ -160,9 +160,9 @@ let constr_match_failure =
 
 let module_builtin = new_module "builtin";;
 
-do_list
+List.iter
   (fun (name,desc) ->
-      hashtbl__add module_builtin.mod_types name (builtin name desc))
+      Hashtbl.add module_builtin.mod_types name (builtin name desc))
   ["unit",
    {ty_constr=constr_type_unit; ty_arity=0; ty_desc=Variant_type[constr_void]};
    "exn",
@@ -190,13 +190,13 @@ do_list
 ;;
 (* The type "stream" is defined in the "stream" module *)
 
-do_list
-  (fun desc -> hashtbl__add module_builtin.mod_constrs desc.qualid.id desc)
+List.iter
+  (fun desc -> Hashtbl.add module_builtin.mod_constrs desc.qualid.id desc)
   [constr_void; constr_nil; constr_cons; constr_none; constr_some;
    constr_true; constr_false;
    constr_match_failure ]
 ;;
 
-hashtbl__add module_table "builtin" module_builtin
+Hashtbl.add module_table "builtin" module_builtin
 ;;
 

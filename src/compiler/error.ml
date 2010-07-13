@@ -1,13 +1,13 @@
 (* Printing of error messages and warnings *)
 
-#open "misc";;
-#open "location";;
-#open "const";;
-#open "globals";;
-#open "syntax";;
-#open "types";;
-#open "pr_type";;
-#open "interntl";;
+open Misc;;
+open Location;;
+open Const;;
+open Globals;;
+open Syntax;;
+open Types;;
+open Pr_type;;
+open Interntl;;
 
 let output_globalref oc = function
     GRname s ->
@@ -56,7 +56,7 @@ let type_arity_err cstr args loc =
     output_location loc
     output_type_constr cstr
     cstr.info.ty_arity
-    (list_length args);
+    (List.length args);
   raise Toplevel
 ;;
 

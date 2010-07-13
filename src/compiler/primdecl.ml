@@ -1,7 +1,7 @@
 (* Concrete syntax for primitive declarations *)
 
-#open "prim";;
-#open "globals";;
+open Prim;;
+open Globals;;
 
 let primitive_names = [
   "identity", Pidentity;
@@ -73,7 +73,7 @@ let primitive_names = [
 
 let find_primitive arity name =
   try
-    ValuePrim(arity, assoc name primitive_names)
+    ValuePrim(arity, List.assoc name primitive_names)
   with Not_found ->
     ValuePrim(arity, Pccall(name, arity))
 ;;

@@ -1,12 +1,12 @@
 (* clauses.ml : detection of unused match clauses and uncomplete matchings *)
 
-#open "misc";;
-#open "const";;
-#open "globals";;
-#open "location";;
-#open "syntax";;
-#open "lambda";;
-#open "types";;
+open Misc;;
+open Const;;
+open Globals;;
+open Location;;
+open Syntax;;
+open Lambda;;
+open Types;;
 
 let make_pat desc ty =
   {p_desc = desc; p_loc = no_location; p_typ = ty};;
@@ -36,19 +36,19 @@ let simple_match p1 p2 =
 let record_labels p = labels_of_type p.p_typ
 ;;
 
-let record_nargs p = list_length (record_labels p)
+let record_nargs p = List.length (record_labels p)
 ;;
 
 
 let set_fields size l =
 
-  let v = make_vect size omega in
+  let v = Array.make size omega in
 
   let rec change_rec l = match l with
     (lbl,p)::l ->  v.(lbl.info.lbl_pos) <- p ;  change_rec l 
   | [] -> () in
 
-  change_rec l ; list_of_vect v
+  change_rec l ; Array.to_list v
 ;;
 
 let simple_match_args p1 p2 =
@@ -59,8 +59,8 @@ let simple_match_args p1 p2 =
   | (Zwildpat | Zvarpat(_)) ->
       begin match p1.p_desc with
         Zconstruct1pat(_,_) ->  [omega]
-      | Ztuplepat(args) -> map (fun _ -> omega) args
-      | Zrecordpat(args) ->  map (fun _ -> omega) args
+      | Ztuplepat(args) -> List.map (fun _ -> omega) args
+      | Zrecordpat(args) ->  List.map (fun _ -> omega) args
       | _ -> []
       end
   | _ -> []
@@ -78,9 +78,9 @@ let rec simple_pat q pss = match pss with
 | ({p_desc = Zorpat(p1,p2)}::ps)::pss -> simple_pat q ((p1::ps)::(p2::ps)::pss)
 | ({p_desc = (Zwildpat | Zvarpat(_))}::_)::pss -> simple_pat q pss
 | (({p_desc = Ztuplepat(args)} as p)::_)::_ ->
-    make_pat(Ztuplepat(map (fun _ -> omega) args)) p.p_typ
+    make_pat(Ztuplepat(List.map (fun _ -> omega) args)) p.p_typ
 | (({p_desc = Zrecordpat(args)} as p)::_)::pss ->
-    make_pat(Zrecordpat (map (fun lbl -> lbl,omega) (record_labels p))) p.p_typ
+    make_pat(Zrecordpat (List.map (fun lbl -> lbl,omega) (record_labels p))) p.p_typ
 | _ -> q
 ;;
 
@@ -144,7 +144,7 @@ let filter_all pat0 pss =
       filter_omega env ((p1::ps)::(p2::ps)::pss)
   | ({p_desc = (Zwildpat | Zvarpat(_))}::ps)::pss ->
       filter_omega
-        (map
+        (List.map
           (fun (q,qss) ->
             q,(simple_match_args q omega @ ps) :: qss)
           env)
@@ -171,11 +171,11 @@ let get_span_of_constr cstr =
 
 let full_match env = match env with
   ({p_desc = Zconstruct0pat(c)},_) :: _ ->
-    list_length env ==  get_span_of_constr c
+    List.length env ==  get_span_of_constr c
 | ({p_desc = Zconstruct1pat(c,_)},_) :: _ ->
-    list_length env =  get_span_of_constr c
+    List.length env =  get_span_of_constr c
 | ({p_desc = Zconstantpat(ACchar(_))},_) :: _ ->
-    list_length env == 256
+    List.length env == 256
 | ({p_desc = Zconstantpat(_)},_) :: _ -> false
 | ({p_desc = Ztuplepat(_)},_) :: _ -> true
 | ({p_desc = Zrecordpat(_)},_) :: _ -> true
@@ -207,11 +207,11 @@ let rec satisfiable pss qs = match pss with
           let try_non_omega (p,pss) =
             satisfiable pss (simple_match_args p omega @ qs)  in
           if full_match constrs then
-            exists try_non_omega constrs
+            List.exists try_non_omega constrs
           else
             satisfiable (filter_extra pss) qs
           ||
-            exists try_non_omega constrs)
+            List.exists try_non_omega constrs)
   | q::qs ->
       let q0 = simple_pat q pss in
       satisfiable
@@ -260,7 +260,7 @@ let get_mins ps =
   let rec select_rec r ps = match ps with
     []      -> r
   | p::ps ->
-      if exists (fun p0 -> le_pats p0 p) ps then
+      if List.exists (fun p0 -> le_pats p0 p) ps then
         select_rec r ps
       else
         select_rec (p::r) ps in
@@ -271,7 +271,7 @@ let partial_match casel =
   let pss = get_mins (make_matrix casel) in
   match pss with
     []     -> true
-  | ps::_  -> satisfiable pss (map (fun _ -> omega) ps)
+  | ps::_  -> satisfiable pss (List.map (fun _ -> omega) ps)
 ;;
 
 
@@ -282,11 +282,11 @@ let extract_loc_from_clause clause = match clause with
 
 let check_unused casel =
   let prefs =   
-    list_it
+    List.fold_right
       (fun (ps,act as clause) r ->
          if has_guard act then ([],clause)::r
          else
-           ([],clause)::map (fun (pss,clause) -> ps::pss,clause) r)
+           ([],clause)::List.map (fun (pss,clause) -> ps::pss,clause) r)
       casel [] in
   let rec check_rec l   = match l with
     (pss,((qs,_) as clause)) :: l ->       
@@ -294,7 +294,7 @@ let check_unused casel =
          clause::check_rec l
        else
          begin
-           error__unused_cases_warning(extract_loc_from_clause qs);
+           Error.unused_cases_warning(extract_loc_from_clause qs);
            check_rec l
          end
    | [] -> [] in

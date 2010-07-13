@@ -1,14 +1,14 @@
 (* Emitting phrases *)
 
-#open "instruct";;
-#open "lambda";;
-#open "buffcode";;
-#open "emitcode";;
+open Instruct;;
+open Lambda;;
+open Buffcode;;
+open Emitcode;;
 
 type compiled_phrase =
   { cph_pos: int;                       (* Position of start of code *)
     cph_len: int;                       (* Length of code *)
-    cph_reloc: (reloc__info * int) list;(* What to patch *)
+    cph_reloc: (Reloc.info * int) list;(* What to patch *)
     cph_pure: bool;                     (* Can be omitted or not *)
     cph_events: event list }
 ;;
@@ -25,10 +25,10 @@ let start_emit_phrase outchan =
 ;;
 
 let emit_phrase outchan is_pure phr =
-  reloc__reset();
-  event__reset();
+  Reloc.reset();
+  Event.reset();
   init_out_code();
-  labels__reset_label_table();
+  Labels.reset_label_table();
   begin match phr with
     { kph_fcts = [] } ->
         emit phr.kph_init
@@ -47,10 +47,10 @@ let emit_phrase outchan is_pure phr =
   compiled_phrase_index :=
     { cph_pos = !abs_out_position;
       cph_len = !out_position;
-      cph_reloc = reloc__get_info();
-      cph_events = event__get_events();
+      cph_reloc = Reloc.get_info();
+      cph_events = Event.get_events();
       cph_pure = is_pure } :: !compiled_phrase_index;
-  abs_out_position := !abs_out_position + !out_position
+  abs_out_position := !abs_out_position + !out_position;
 ;;
 
 let end_emit_phrase outchan =

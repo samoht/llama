@@ -1,7 +1,7 @@
 (* Relocation information *)
 
-#open "const";;
-#open "buffcode";;
+open Const;;
+open Buffcode;;
 
 type info =
     Reloc_literal of struct_constant    (* structured constant *)
@@ -39,5 +39,5 @@ and slot_for_c_prim name =
 ;;
 
 let get_info () =
-  let res = !reloc_info in reloc_info := []; rev res
+  let res = !reloc_info in reloc_info := []; List.rev res
 ;;

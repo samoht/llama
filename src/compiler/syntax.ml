@@ -1,8 +1,8 @@
 (* The abstract syntax for the language *)
 
-#open "const";;
-#open "location";;
-#open "globals";;
+open Const;;
+open Location;;
+open Globals;;
 
 type type_expression =
   { te_desc: type_expression_desc;
@@ -115,33 +115,33 @@ let rec free_vars_of_pat pat =
   | Zvarpat v -> [v]
   | Zaliaspat(pat,v) -> v :: free_vars_of_pat pat
   | Zconstantpat _ -> []
-  | Ztuplepat patl -> flat_map free_vars_of_pat patl
+  | Ztuplepat patl -> List.flatten (List.map free_vars_of_pat patl)
   | Zconstruct0pat(_) -> []
   | Zconstruct1pat(_, pat) -> free_vars_of_pat pat
   | Zorpat(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
   | Zconstraintpat(pat, _) -> free_vars_of_pat pat
   | Zrecordpat lbl_pat_list ->
-      flat_map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list
+      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 ;;    
 
 let rec expr_is_pure expr =
   match expr.e_desc with
     Zident _ -> true
   | Zconstant _ -> true
-  | Ztuple el -> for_all expr_is_pure el
+  | Ztuple el -> List.for_all expr_is_pure el
   | Zconstruct0 cstr -> true
   | Zconstruct1(cstr,arg) -> expr_is_pure arg
   | Zfunction _ -> true
   | Zconstraint(expr, ty) -> expr_is_pure expr
-  | Zvector el -> for_all expr_is_pure el
+  | Zvector el -> List.for_all expr_is_pure el
   | Zrecord lbl_expr_list ->
-      for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
+      List.for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
   | Zparser _ -> true
   | _ -> false
 ;;
 
 let letdef_is_pure pat_expr_list =
-  for_all (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
+  List.for_all (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
 ;;
 
 let single_constructor cstr =
@@ -156,12 +156,12 @@ let rec pat_irrefutable pat =
   | Zvarpat s -> true
   | Zaliaspat(pat, _) -> pat_irrefutable pat
   | Zconstantpat _ -> false
-  | Ztuplepat patl -> for_all pat_irrefutable patl
+  | Ztuplepat patl -> List.for_all pat_irrefutable patl
   | Zconstruct0pat cstr -> single_constructor cstr
   | Zconstruct1pat(cstr, pat) -> single_constructor cstr && pat_irrefutable pat
   | Zorpat(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
   | Zconstraintpat(pat, _) -> pat_irrefutable pat
   | Zrecordpat lbl_pat_list ->
-      for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
+      List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
 ;;
 

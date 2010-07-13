@@ -1,7 +1,7 @@
 (* Global symbol tables *)
 
-#open "const";;
-#open "prim";;
+open Const;;
+open Prim;;
 
 (* A reference to a global, in a source file, is either a qualified identifier
    mod__name, or an unqualified identifier name. *)
@@ -38,7 +38,7 @@ and typ =
   { typ_desc: typ_desc;                 (* What kind of type expression? *)
     mutable typ_level: int }            (* Binding level *)
 and typ_desc =
-    Tvar of mutable typ_link            (* A type variable *)
+    Tvar of typ_link ref                (* A type variable *)
   | Tarrow of typ * typ                 (* A function type *)
   | Tproduct of typ list                (* A tuple type *)
   | Tconstr of type_constr global * typ list  (* A constructed type *)

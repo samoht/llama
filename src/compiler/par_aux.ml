@@ -1,13 +1,13 @@
 (* Auxiliary functions for parsing *)
 
-#open "const";;
-#open "misc";;
-#open "globals";;
-#open "location";;
-#open "syntax";;
-#open "modules";;
-#open "builtins";;
-#open "error";;
+open Const
+open Misc
+open Globals
+open Location
+open Syntax
+open Modules
+open Builtins
+open Error
 
 let make_expr desc =
   {e_desc = desc; e_loc = get_current_location(); e_typ = no_type}
@@ -55,18 +55,18 @@ let make_list el =
   in makel (make_expr(Zconstruct0(constr_nil))) el
 ;;
 
-let make_unary_minus = fun
-    "-"  {e_desc = Zconstant(SCatom(ACint i))} ->
-      make_expr(Zconstant(SCatom(ACint(minus i))))
-  | "-"  {e_desc = Zconstant(SCatom(ACfloat f))} ->
-      make_expr(Zconstant(SCatom(ACfloat(minus_float f))))
-  | "-"  e ->
+let make_unary_minus s e = match s, e with
+    "-",  {e_desc = Zconstant(SCatom(ACint i))} ->
+      make_expr(Zconstant(SCatom(ACint(- i))))
+  | "-",  {e_desc = Zconstant(SCatom(ACfloat f))} ->
+      make_expr(Zconstant(SCatom(ACfloat(-. f))))
+  | "-",  e ->
       make_unop "minus" e
-  | "-." {e_desc = Zconstant(SCatom(ACfloat f))} ->
-      make_expr(Zconstant(SCatom(ACfloat(minus_float f))))
-  | "-." e ->
+  | "-.", {e_desc = Zconstant(SCatom(ACfloat f))} ->
+      make_expr(Zconstant(SCatom(ACfloat(-. f))))
+  | "-.", e ->
       make_unop "minus_float" e
-  | _ _ ->
+  | _, _ ->
       fatal_error "make_unary_minus"
 ;;
 

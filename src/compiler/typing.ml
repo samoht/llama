@@ -1,13 +1,13 @@
 (* typing.ml : type inference *)
 
-#open "misc";;
-#open "const";;
-#open "globals";;
-#open "syntax";;
-#open "builtins";;
-#open "modules";;
-#open "types";;
-#open "error";;
+open Misc;;
+open Const;;
+open Globals;;
+open Syntax;;
+open Builtins;;
+open Modules;;
+open Types;;
+open Error;;
 
 (* To convert type expressions to types *)
 
@@ -20,9 +20,9 @@ let reset_type_expression_vars () =
 
 let bind_type_expression_vars var_list =
   type_expr_vars := [];
-  map
+  List.map
     (fun v ->
-      if mem_assoc v !type_expr_vars then
+      if List.mem_assoc v !type_expr_vars then
         failwith "bind_type_expression_vars"
       else begin
         let t = new_global_type_var() in
@@ -36,7 +36,7 @@ let type_of_type_expression strict_flag typexp =
     match typexp.te_desc with
     Ztypevar v ->
       begin try
-        assoc v !type_expr_vars
+        List.assoc v !type_expr_vars
       with Not_found ->
         if strict_flag then
           unbound_type_var_err v typexp
@@ -48,17 +48,17 @@ let type_of_type_expression strict_flag typexp =
   | Ztypearrow(arg1, arg2) ->
       type_arrow(type_of arg1, type_of arg2)
   | Ztypetuple argl ->
-      type_product(map type_of argl)
+      type_product(List.map type_of argl)
   | Ztypeconstr(cstr_name, args) ->
       let cstr =
         try
           find_type_desc cstr_name
         with Desc_not_found ->
           unbound_type_constr_err cstr_name typexp.te_loc in
-      if list_length args != cstr.info.ty_arity then
+      if List.length args != cstr.info.ty_arity then
         type_arity_err cstr args typexp.te_loc
       else
-        { typ_desc = Tconstr(cstr.info.ty_constr, map type_of args);
+        { typ_desc = Tconstr(cstr.info.ty_constr, List.map type_of args);
           typ_level = notgeneric }
   in type_of typexp
 ;;
@@ -100,15 +100,15 @@ let rec tpat new_env (pat, ty, mut_flag) =
     Zwildpat ->
       new_env
   | Zvarpat v ->
-      if mem_assoc v new_env then
+      if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else begin
-        if !warnings && (not !typing_let) && v.[0] >= `A` && v.[0] <= `Z` then
+        if !warnings && (not !typing_let) && v.[0] >= 'A' && v.[0] <= 'Z' then
           upper_case_variable_warning pat v;
         (v, (ty, mut_flag)) :: new_env
       end
   | Zaliaspat(pat, v) ->
-      if mem_assoc v new_env then
+      if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else
         tpat ((v, (ty, mut_flag)) :: new_env) (pat, ty, mut_flag)
@@ -117,10 +117,10 @@ let rec tpat new_env (pat, ty, mut_flag) =
       new_env
   | Ztuplepat(patl) ->
       begin try
-        tpat_list new_env patl (filter_product (list_length patl) ty)
+        tpat_list new_env patl (filter_product (List.length patl) ty)
       with Unify ->
         pat_wrong_type_err pat ty
-          (type_product(new_type_var_list (list_length patl)))
+          (type_product(new_type_var_list (List.length patl)))
       end
   | Zconstruct0pat(cstr) ->
       begin match cstr.info.cs_kind with
@@ -161,12 +161,12 @@ let rec tpat new_env (pat, ty, mut_flag) =
       in
         tpat_lbl new_env lbl_pat_list
 
-and tpat_list new_env = fun
-    [] [] ->
+and tpat_list new_env pats tys = match pats, tys with
+    [], [] ->
       new_env
-  | (pat::patl) (ty::tyl) ->
+  | (pat::patl), (ty::tyl) ->
       tpat_list (tpat new_env (pat, ty, Notmutable)) patl tyl
-  | _ _ ->
+  | _, _ ->
       fatal_error "type_pattern: arity error"
 ;;
 
@@ -181,23 +181,23 @@ let rec is_nonexpansive expr =
   match expr.e_desc with
     Zident id -> true
   | Zconstant sc -> true
-  | Ztuple el -> for_all is_nonexpansive el
+  | Ztuple el -> List.for_all is_nonexpansive el
   | Zconstruct0 cstr -> true
   | Zconstruct1(cstr, e) -> cstr.info.cs_mut == Notmutable && is_nonexpansive e
   | Zlet(rec_flag, bindings, body) ->
-      for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
+      List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
   | Zfunction pat_expr_list -> true
   | Ztrywith(body, pat_expr_list) ->
       is_nonexpansive body &&
-      for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
+      List.for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
   | Zsequence(e1, e2) -> is_nonexpansive e2
   | Zcondition(cond, ifso, ifnot) ->
       is_nonexpansive ifso && is_nonexpansive ifnot
   | Zconstraint(e, ty) -> is_nonexpansive e
   | Zvector [] -> true
   | Zrecord lbl_expr_list ->
-      for_all (fun (lbl, expr) ->
+      List.for_all (fun (lbl, expr) ->
                   lbl.info.lbl_mut == Notmutable && is_nonexpansive expr)
               lbl_expr_list
   | Zrecord_access(e, lbl) -> is_nonexpansive e
@@ -209,37 +209,37 @@ let rec is_nonexpansive expr =
 (* Typing of printf formats *)
 
 let type_format loc fmt =
-  let len = string_length fmt in
+  let len = String.length fmt in
   let ty_input = new_type_var()
   and ty_result = new_type_var() in
   let rec skip_args j =
     if j >= len then j else
-      match nth_char fmt j with
-        `0` .. `9` | ` ` | `.` | `-` -> skip_args (succ j)
+      match fmt.[j] with
+        '0' .. '9' | ' ' | '.' | '-' -> skip_args (succ j)
       | _ -> j in
   let rec scan_format i =
     if i >= len then ty_result else
-    match nth_char fmt i with
-      `%` ->
+    match fmt.[i] with
+      '%' ->
         let j = skip_args(succ i) in
-        begin match nth_char fmt j with
-          `%` ->
+        begin match fmt.[j] with
+          '%' ->
             scan_format (succ j)
-        | `s` ->
+        | 's' ->
             type_arrow (type_string, scan_format (succ j))
-        | `c` ->
+        | 'c' ->
             type_arrow (type_char, scan_format (succ j))
-        | `d` | `o` | `x` | `X` | `u` ->
+        | 'd' | 'o' | 'x' | 'X' | 'u' ->
             type_arrow (type_int, scan_format (succ j))
-        | `f` | `e` | `E` | `g` | `G` ->
+        | 'f' | 'e' | 'E' | 'g' | 'G' ->
             type_arrow (type_float, scan_format (succ j))
-        | `b` ->
+        | 'b' ->
             type_arrow (type_bool, scan_format (succ j))
-        | `a` ->
+        | 'a' ->
             let ty_arg = new_type_var() in
             type_arrow (type_arrow (ty_input, type_arrow (ty_arg, ty_result)),
                         type_arrow (ty_arg, scan_format (succ j)))
-        | `t` ->
+        | 't' ->
             type_arrow (type_arrow (ty_input, ty_result), scan_format (succ j))
         | c ->
             bad_format_letter loc c
@@ -267,7 +267,7 @@ let rec type_expr env expr =
             type_instance glob_desc.info.val_typ
         | Zlocal s ->
             try
-              let (ty_schema, mut_flag) = assoc s env in
+              let (ty_schema, mut_flag) = List.assoc s env in
                 type_instance ty_schema
             with Not_found ->
               try
@@ -280,7 +280,7 @@ let rec type_expr env expr =
   | Zconstant cst ->
       type_of_structured_constant cst
   | Ztuple(args) ->
-      type_product(map (type_expr env) args)
+      type_product(List.map (type_expr env) args)
   | Zconstruct0(cstr) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
@@ -318,18 +318,18 @@ let rec type_expr env expr =
   | Zfunction [] ->
       fatal_error "type_expr: empty matching"
   | Zfunction ((patl1,expr1)::_ as matching) ->
-      let ty_args = map (fun pat -> new_type_var()) patl1 in
+      let ty_args = List.map (fun pat -> new_type_var()) patl1 in
       let ty_res = new_type_var() in
       let tcase (patl, action) =
-        if list_length patl != list_length ty_args then
+        if List.length patl != List.length ty_args then
           ill_shaped_match_err expr;
         type_expect (type_pattern_list patl ty_args @ env) action ty_res in
-      do_list tcase matching;
-      list_it (fun ty_arg ty_res -> type_arrow(ty_arg, ty_res))
+      List.iter tcase matching;
+      List.fold_right (fun ty_arg ty_res -> type_arrow(ty_arg, ty_res))
               ty_args ty_res
   | Ztrywith (body, matching) ->
       let ty = type_expr env body in
-      do_list
+      List.iter
         (fun (pat, expr) ->
           type_expect (type_pattern (pat, type_exn, Notmutable) @ env) expr ty)
         matching;
@@ -366,11 +366,11 @@ let rec type_expr env expr =
       ty'
   | Zvector elist ->
       let ty_arg = new_type_var() in
-      do_list (fun e -> type_expect env e ty_arg) elist;
+      List.iter (fun e -> type_expect env e ty_arg) elist;
       type_vect ty_arg
   | Zassign(id, e) ->
       begin try
-        match assoc id env with
+        match List.assoc id env with
           (ty_schema, Notmutable) ->
             not_mutable_err id expr.e_loc
         | (ty_schema, Mutable) ->
@@ -381,7 +381,7 @@ let rec type_expr env expr =
       end
   | Zrecord lbl_expr_list ->
       let ty = new_type_var() in
-      do_list
+      List.iter
         (fun (lbl, exp) ->
           let (ty_res, ty_arg) =
             type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
@@ -390,15 +390,15 @@ let rec type_expr env expr =
           end;
           type_expect env exp ty_arg)
         lbl_expr_list;
-      let label = vect_of_list (labels_of_type ty) in
-      let defined = make_vect (vect_length label) false in
-      do_list (fun (lbl, exp) ->
+      let label = Array.of_list (labels_of_type ty) in
+      let defined = Array.make (Array.length label) false in
+      List.iter (fun (lbl, exp) ->
         let p = lbl.info.lbl_pos in
           if defined.(p)
           then label_multiply_defined_err expr lbl
           else defined.(p) <- true)
         lbl_expr_list;
-      for i = 0 to vect_length label - 1 do
+      for i = 0 to Array.length label - 1 do
         if not defined.(i) then label_undefined_err expr label.(i)
       done;
       ty
@@ -417,7 +417,7 @@ let rec type_expr env expr =
   | Zstream complist ->
       let ty_comp = new_type_var() in
       let ty_res = type_stream ty_comp in
-      do_list
+      List.iter
         (function Zterm e -> type_expect env e ty_comp
                 | Znonterm e -> type_expect env e ty_res)
         complist;
@@ -440,7 +440,7 @@ let rec type_expr env expr =
       | (Zstreampat s :: rest, act) ->
           type_stream_pat ((s, (ty_stream, Notmutable)) :: new_env) (rest,act)
       in
-      do_list (type_stream_pat [])  casel;
+      List.iter (type_stream_pat [])  casel;
       type_arrow(ty_stream, ty_res)
   in
     expr.e_typ <- inferred_ty;
@@ -472,8 +472,8 @@ and type_expect env exp expected_ty =
       type_expect env ifnot expected_ty
   | Ztuple el ->
       begin try
-        do_list2 (type_expect env)
-                 el (filter_product (list_length el) expected_ty)
+        List.iter2 (type_expect env)
+                 el (filter_product (List.length el) expected_ty)
       with Unify ->
         unify_expr exp expected_ty (type_expr env exp)
       end
@@ -486,23 +486,23 @@ and type_expect env exp expected_ty =
 and type_let_decl env rec_flag pat_expr_list =
   push_type_level();
   let ty_list =
-    map (fun (pat, expr) -> new_type_var()) pat_expr_list in
+    List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
   typing_let := true;
   let add_env =
-    type_pattern_list (map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
+    type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
   typing_let := false;
   let new_env =
     add_env @ env in
-  do_list2
+  List.iter2
     (fun (pat, exp) ty ->
         type_expect (if rec_flag then new_env else env) exp ty)
     pat_expr_list ty_list;
   pop_type_level();
   let gen_type =
-    map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
+    List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
          pat_expr_list ty_list in
-  do_list (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
-  do_list (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
+  List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
+  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   new_env
 
 (* Typing of statements (expressions whose values are ignored) *)

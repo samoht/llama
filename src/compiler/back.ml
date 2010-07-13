@@ -1,10 +1,10 @@
 (*  back.ml : translation of lambda terms to lists of instructions. *)
 
-#open "misc";;
-#open "const";;
-#open "lambda";;
-#open "prim";;
-#open "instruct";;
+open Misc;;
+open Const;;
+open Lambda;;
+open Prim;;
+open Instruct;;
 
 (* "is_return" determines if we're in tail call position. *)
 
@@ -62,7 +62,7 @@ let rec discard_dead_code = function
 
 let add_switchtable switchtable code =
   try
-    for i = 1 to vect_length switchtable - 1 do
+    for i = 1 to Array.length switchtable - 1 do
       if switchtable.(i) != switchtable.(0) then raise Exit
     done;
     match code with
@@ -86,24 +86,24 @@ type decision_tree =
 
 and decision =
   { low: int;
-    act: lambda vect;
+    act: lambda array;
     high: int }
 ;;
 
 let compile_nbranch int_of_key casel =
   let casei =
-    map (fun (key, act) -> (int_of_key key, act)) casel in
+    List.map (fun (key, act) -> (int_of_key key, act)) casel in
   let cases =
-    sort__sort (fun (key1,act1) (key2,act2) -> key1 <= key2) casei in
+    List.sort (fun (key1,act1) (key2,act2) -> compare key1 key2) casei in
   let keyv =
-    vect_of_list (map fst cases)
+    Array.of_list (List.map fst cases)
   and actv =
-    vect_of_list (map snd cases) in
+    Array.of_list (List.map snd cases) in
   let n =
-    vect_length keyv in
+    Array.length keyv in
   let extract_act start stop =
     let v =
-      make_vect (keyv.(stop) - keyv.(start) + 1) (Lstaticfail 0) in
+      Array.make (keyv.(stop) - keyv.(start) + 1) (Lstaticfail 0) in
     for i = start to stop do
       v.(keyv.(i) - keyv.(start)) <- actv.(i)
     done;
@@ -125,7 +125,7 @@ let compile_nbranch int_of_key casel =
       act = extract_act start !stop;
       high = keyv.(!stop) } :: partition (!stop + 1) in
   let part =
-    vect_of_list (partition 0) in
+    Array.of_list (partition 0) in
   (* We build a balanced binary tree *)
   let rec make_tree start stop =
     if start > stop then
@@ -135,14 +135,14 @@ let compile_nbranch int_of_key casel =
         DTinterval(make_tree start (middle-1),
                    part.(middle), 
                    make_tree (middle+1) stop) in
-  make_tree 0 (vect_length part - 1)
+  make_tree 0 (Array.length part - 1)
 ;;
 
 (* To check if a switch construct contains tags that are unknown at
    compile-time (i.e. exception tags). *)
 
 let switch_contains_extensibles casel =
-  exists (function ConstrExtensible _, _ -> true | _ -> false) casel
+  List.exists (function ConstrExtensible _, _ -> true | _ -> false) casel
 ;;
 
 (* Inversion of a boolean test ( < becomes >= and so on) *)
@@ -176,7 +176,7 @@ let test_for_atom = function
 
 (* To keep track of function bodies that remain to be compiled. *)
 
-let still_to_compile  = (stack__new () : (lambda * int) stack__t);;
+let still_to_compile  = (Stack.create () : (lambda * int) Stack.t);;
 
 (* The translator from lambda terms to lists of instructions.
 
@@ -209,12 +209,12 @@ let rec compile_expr staticfail =
           Kgrab :: compexp body code
         else begin
           let lbl = new_label() in
-            stack__push (body, lbl) still_to_compile;
+            Stack.push (body, lbl) still_to_compile;
             Kclosure lbl :: code
           end
   | Llet(args, body) ->
         let code1 = if is_return code then code
-                    else Kendlet(list_length args) :: code in
+                    else Kendlet(List.length args) :: code in
         let rec comp_args = function
             [] ->
               compexp body code1
@@ -224,10 +224,10 @@ let rec compile_expr staticfail =
   | Lletrec([Lfunction f, _], body) ->
         let code1 = if is_return code then code else Kendlet 1 :: code in
         let lbl = new_label() in
-          stack__push (f, lbl) still_to_compile;
+          Stack.push (f, lbl) still_to_compile;
           Kletrec1 lbl :: compexp body code1
   | Lletrec(args, body) ->
-        let size = list_length args in
+        let size = List.length args in
         let code1 = if is_return code then code else Kendlet size :: code in
 	let rec comp_args i = function
 	    [] ->
@@ -235,7 +235,7 @@ let rec compile_expr staticfail =
 	  | (exp, sz)::rest ->
               compexp exp (Kpush :: Kaccess i :: Kprim Pupdate ::
                             comp_args (i-1) rest) in
-        list_it
+        List.fold_right
           (fun (e, sz) code -> Kprim(Pdummy sz) :: Klet :: code)
           args (comp_args (size-1) args)
   | Lprim(Pget_global qualid, []) ->
@@ -243,7 +243,7 @@ let rec compile_expr staticfail =
   | Lprim(Pset_global qualid, [exp]) ->
         compexp exp (Kset_global qualid :: code)
   | Lprim(Pmakeblock tag, explist) ->
-        compexplist explist (Kmakeblock(tag, list_length explist) :: code)
+        compexplist explist (Kmakeblock(tag, List.length explist) :: code)
   | Lprim(Pnot, [exp]) ->
        (match code with
           Kbranchif lbl :: code' ->
@@ -345,7 +345,7 @@ let rec compile_expr staticfail =
           then
             comp_decision (compile_nbranch int_of_atom casel) code
           else
-            comp_tests (map (fun (cst,act) -> (test_for_atom cst, act)) casel)
+            comp_tests (List.map (fun (cst,act) -> (test_for_atom cst, act)) casel)
                        code
         in
           compexp arg code1
@@ -366,8 +366,8 @@ let rec compile_expr staticfail =
         let code1 =
           if switch_contains_extensibles casel then
             comp_tests
-              (map (fun (tag,act) -> (Pnoteqtag_test tag, act)) casel) code
-          else if list_length casel >= size - 5 then
+              (List.map (fun (tag,act) -> (Pnoteqtag_test tag, act)) casel) code
+          else if List.length casel >= size - 5 then
             Kprim Ptag_of :: comp_direct_switch size casel code
           else
             Kprim Ptag_of ::
@@ -375,7 +375,7 @@ let rec compile_expr staticfail =
        in
          compexp arg code1
   | Lshared(expr, lbl_ref) ->
-       if !lbl_ref == Nolabel then begin
+       if !lbl_ref == nolabel then begin
          let lbl = new_label() in
            lbl_ref := lbl;
            Klabel lbl :: compexp expr code
@@ -392,10 +392,10 @@ let rec compile_expr staticfail =
            else compexp expr (Kevent event :: code)
        end
 
-  and compexplist = fun
-      [] code -> code
-    | [exp] code -> compexp exp code
-    | (exp::rest) code -> compexplist rest (Kpush :: compexp exp code)
+  and compexplist l code = match l with
+      [] -> code
+    | [exp] -> compexp exp code
+    | (exp::rest) -> compexplist rest (Kpush :: compexp exp code)
 
   and comp_test2 cond ifso ifnot code =
     let branch1, code1 = make_branch code
@@ -420,9 +420,9 @@ let rec compile_expr staticfail =
 
   and comp_switch v branch1 code =
       let switchtable =
-        make_vect (vect_length v) staticfail in
+        Array.make (Array.length v) staticfail in
       let rec comp_cases n =
-        if n >= vect_length v then
+        if n >= Array.length v then
           code
         else begin
           let (lbl, code1) =
@@ -434,10 +434,10 @@ let rec compile_expr staticfail =
 
   and comp_decision tree code =
     let branch1, code1 = make_branch code in
-    let rec comp_dec = fun
-      (DTfail) code ->
+    let rec comp_dec e code = match e with
+      (DTfail) ->
         Kbranch staticfail :: discard_dead_code code
-    | (DTinterval(left, dec, right)) code ->
+    | (DTinterval(left, dec, right)) ->
         let (lbl_right, coderight) =
           match right with
             DTfail -> (staticfail, code)
@@ -447,7 +447,7 @@ let rec compile_expr staticfail =
             DTfail -> (staticfail, coderight)
           | _ ->      label_code (comp_dec left coderight) in
         Kbranchinterval(dec.low, dec.high, lbl_left, lbl_right) ::
-        begin match vect_length dec.act with
+        begin match Array.length dec.act with
                 1 -> compexp dec.act.(0) (branch1 :: codeleft)
               | _ -> comp_switch dec.act branch1 codeleft
         end in
@@ -455,7 +455,7 @@ let rec compile_expr staticfail =
 
   and comp_direct_switch size casel code =
     let branch1, code1 = make_branch code in
-    let switchtable = make_vect size staticfail in
+    let switchtable = Array.make size staticfail in
     let rec comp_case = function
         [] ->
           fatal_error "comp_switch"
@@ -476,17 +476,17 @@ let rec compile_expr staticfail =
 
 let rec compile_rest code =
   try
-    let (exp, lbl) = stack__pop still_to_compile in
-      compile_rest (Klabel lbl :: compile_expr Nolabel exp (Kreturn :: code))
-  with stack__Empty ->
+    let (exp, lbl) = Stack.pop still_to_compile in
+      compile_rest (Klabel lbl :: compile_expr nolabel exp (Kreturn :: code))
+  with Stack.Empty ->
     code
 ;;
 
 let compile_lambda (rec_flag : bool) expr =
-  stack__clear still_to_compile;
+  Stack.clear still_to_compile;
   reset_label();
   let init_code =
-    compile_expr Nolabel expr [] in
+    compile_expr nolabel expr [] in
   let function_code =
     compile_rest [] in
   { kph_rec = rec_flag; kph_init = init_code; kph_fcts = function_code }

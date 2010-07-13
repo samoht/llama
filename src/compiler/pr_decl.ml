@@ -1,22 +1,22 @@
 (* To print the things defined by an implementation *)
 
-#open "misc";;
-#open "const";;
-#open "globals";;
-#open "pr_type";;
-#open "printf";;
+open Misc;;
+open Const;;
+open Globals;;
+open Pr_type;;
+open Printf;;
 
 let print_expr ty =
   printf "(* - : %a *)\n" output_one_type ty;
-  flush std_out
+  flush stdout
 ;;
 
 let print_valdef env =
-  do_list
+  List.iter
     (fun (name, (typ, mut_flag)) ->
        printf "value %s : %a;;\n" name output_schema typ)
     env;
-  flush std_out
+  flush stdout
 ;;
 
 let print_constr_decl cstr =
@@ -41,10 +41,10 @@ let print_one_typedecl (ty_res, ty_comp) =
   begin match ty_comp with
     Variant_type(cstr1::cstrl) ->
       print_string " = \n  | "; print_constr_decl cstr1;
-      do_list (fun cstr -> print_string "  | "; print_constr_decl cstr) cstrl
+      List.iter (fun cstr -> print_string "  | "; print_constr_decl cstr) cstrl
   | Record_type(lbl1::lbll) ->
       print_string " = \n  { "; print_label_decl lbl1;
-      do_list (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
+      List.iter (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
       print_string "  }\n"
   | Abbrev_type(_, ty_body) ->
       printf " == %a\n" output_type ty_body
@@ -59,19 +59,19 @@ let print_typedecl = function
     [] -> fatal_error "print_typedecl"
   | dcl1::dcll ->
       print_string "type "; print_one_typedecl dcl1;
-      do_list (fun dcl -> print_string " and "; print_one_typedecl dcl) dcll;
-      print_string ";;\n"; flush std_out
+      List.iter (fun dcl -> print_string " and "; print_one_typedecl dcl) dcll;
+      print_string ";;\n"; flush stdout
 ;;
 
 let print_excdecl = function
     Variant_type cstrl ->
-      do_list
+      List.iter
         (fun cstr ->
           reset_type_var_name();
           print_string "exception ";
           print_constr_decl cstr)
         cstrl;
-      print_string ";;\n"; flush std_out
+      print_string ";;\n"; flush stdout
   | _ ->
       fatal_error "print_excdecl"
 ;;

@@ -1,20 +1,20 @@
 (* The compiler entry points *)
 
-#open "misc";;
-#open "interntl";;
-#open "lexer";;
-#open "parser";;
-#open "location";;
-#open "syntax";;
-#open "modules";;
-#open "error";;
-#open "typing";;
-#open "ty_decl";;
-#open "pr_decl";;
-#open "ty_intf";;
-#open "front";;
-#open "back";;
-#open "emit_phr";;
+open Misc;;
+open Interntl;;
+open Lexer;;
+open Parser;;
+open Location;;
+open Syntax;;
+open Modules;;
+open Error;;
+open Typing;;
+open Ty_decl;;
+open Pr_decl;;
+open Ty_intf;;
+open Front;;
+open Back;;
+open Emit_phr;;
 
 (* Parsing functions *)
 
@@ -25,31 +25,31 @@ let parse_phrase parsing_fun lexing_fun lexbuf =
         EOF -> ()
       | SEMISEMI -> ()
       | _ -> skip()
-    with lexer__Lexical_error(_,_,_) ->
+    with Lexer.Lexical_error(_,_,_) ->
       skip() in
   let skip_maybe () =
-    if parsing__is_current_lookahead EOF
-    || parsing__is_current_lookahead SEMISEMI
+    if Parsing.is_current_lookahead EOF
+    || Parsing.is_current_lookahead SEMISEMI
     then () else skip() in
   try
     parsing_fun lexing_fun lexbuf
-  with parsing__Parse_error ->
-         let pos1 = lexing__get_lexeme_start lexbuf in
-         let pos2 = lexing__get_lexeme_end lexbuf in
+  with Parsing.Parse_error ->
+         let pos1 = Lexing.lexeme_start lexbuf in
+         let pos2 = Lexing.lexeme_end lexbuf in
          skip_maybe();
          eprintf "%aSyntax error.\n" output_location (Loc(pos1, pos2));
          raise Toplevel
-     | lexer__Lexical_error(errcode, pos1, pos2) ->
+     | Lexer.Lexical_error(errcode, pos1, pos2) ->
          let l = Loc(pos1, pos2) in
          begin match errcode with
-           lexer__Illegal_character ->
+           Lexer.Illegal_character ->
              eprintf "%aIllegal character.\n" output_location l
-         | lexer__Unterminated_comment ->
+         | Lexer.Unterminated_comment ->
              eprintf "%aComment not terminated.\n" output_location l
-         | lexer__Bad_char_constant ->
+         | Lexer.Bad_char_constant ->
              eprintf "%aIll-formed character literal.\n"
                              output_location l
-         | lexer__Unterminated_string ->
+         | Lexer.Unterminated_string ->
              eprintf "%aString literal not terminated.\n"
                              output_location l
          end;
@@ -60,8 +60,8 @@ let parse_phrase parsing_fun lexing_fun lexbuf =
          raise Toplevel
 ;;
 
-let parse_impl_phrase = parse_phrase parser__Implementation lexer__main
-and parse_intf_phrase = parse_phrase parser__Interface lexer__main
+let parse_impl_phrase = parse_phrase Parser.implementation Lexer.main
+and parse_intf_phrase = parse_phrase Parser.interface Lexer.main
 ;;
 
 (* Executing directives *)
@@ -87,10 +87,10 @@ let do_directive loc = function
 (* Warn for unused #open *)
 
 let check_unused_opens () =
-  if !typing__warnings then
-   hashtbl__do_table
+  if !Typing.warnings then
+   Hashtbl.iter
      (fun name used ->
-       if not !used && not (mem name !default_used_modules)
+       if not !used && not (List.mem name !default_used_modules)
        then unused_open_warning name)
      !used_opened_modules
 ;;
@@ -121,7 +121,7 @@ let compile_interface modname filename =
   and oc = open_out_bin intf_name in
     try
       start_compiling_interface modname;
-      let lexbuf = lexing__create_lexer_channel ic in
+      let lexbuf = Lexing.from_channel ic in
       input_name := source_name;
       input_chan := ic;
       input_lexbuf := lexbuf;
@@ -180,7 +180,7 @@ let compile_impl modname filename suffix =
      seeks in print_location work. The lexer ignores both \n and \r,
      so this is OK on the Mac and on the PC. *)
   and oc = open_out_bin obj_name in
-  let lexbuf = lexing__create_lexer_channel ic in
+  let lexbuf = Lexing.from_channel ic in
     input_name := source_name;
     input_chan := ic;
     input_lexbuf := lexbuf;
@@ -232,7 +232,7 @@ let compile_implementation modname filename suffix =
           raise x
       end;
       kill_module modname
-    with x ->
+    with Sys_error _ as x -> (* xxx *)
       remove_file (filename ^ ".zo");
       raise x
   end else begin

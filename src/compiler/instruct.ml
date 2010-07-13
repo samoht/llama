@@ -1,7 +1,7 @@
 (* The type of the instructions of the abstract machine *)
 
-#open "const";;
-#open "prim";;
+open Const;;
+open Prim;;
 
 type zam_instruction =
     Kquote of struct_constant 
@@ -31,8 +31,8 @@ type zam_instruction =
   | Kstrictbranchifnot of int
   | Ktest of bool_test * int
   | Kbranchinterval of int * int * int * int
-  | Kswitch of int vect
-  | Kevent of lambda__event
+  | Kswitch of int array
+  | Kevent of Lambda.event
 ;;
 
 type zam_phrase =
@@ -41,5 +41,5 @@ type zam_phrase =
     kph_fcts: zam_instruction list }    (* code for functions *)
 ;;
 
-let Nolabel = (-1)
+let nolabel = (-1)
 ;;

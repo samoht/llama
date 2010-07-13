@@ -1,23 +1,23 @@
 # Makefile for the Caml Light compiler.
 
-CAMLCOMP=../camlrun ../camlcomp -stdlib ../lib
-CAMLLINK=../camlrun ../camllink -stdlib ../lib
-CAMLLEX=../camlrun ../camllex
-CAMLYACC=../camlyacc -s
-CPP=/lib/cpp -P -Dunix
+CAMLCOMP=ocamlopt.opt -c
+CAMLLINK=ocamlopt.opt
+CAMLLEX=ocamllex.opt
+CAMLYACC=ocamlyacc
+CPP=/usr/bin/cpp -P -Dunix
 
-COMPFLAGS=-W -O fast
+COMPFLAGS=-g
 LINKFLAGS=-g
 
-OBJS=config.zo misc.zo interntl.zo const.zo prim.zo lambda.zo globals.zo \
- location.zo syntax.zo \
- modules.zo builtins.zo types.zo \
- pr_type.zo error.zo typing.zo ty_decl.zo pr_decl.zo ty_intf.zo \
- tr_env.zo event.zo clauses.zo matching.zo trstream.zo front.zo \
- instruct.zo back.zo opcodes.zo prim_opc.zo buffcode.zo labels.zo reloc.zo \
- emitcode.zo emit_phr.zo \
- primdecl.zo lexer.zo par_aux.zo parser.zo compiler.zo \
- version.zo main.zo
+OBJS=config.cmx misc.cmx interntl.cmx const.cmx prim.cmx lambda.cmx globals.cmx \
+ location.cmx syntax.cmx \
+ modules.cmx builtins.cmx types.cmx \
+ pr_type.cmx error.cmx typing.cmx ty_decl.cmx pr_decl.cmx ty_intf.cmx \
+ tr_env.cmx event.cmx clauses.cmx matching.cmx trstream.cmx front.cmx \
+ instruct.cmx back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx labels.cmx reloc.cmx \
+ emitcode.cmx emit_phr.cmx \
+ primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
+ version.cmx main.cmx
 
 GENSOURCES=lexer.ml parser.ml parser.mli opcodes.ml config.ml \
   location.ml version.ml
@@ -25,10 +25,10 @@ GENSOURCES=lexer.ml parser.ml parser.mli opcodes.ml config.ml \
 all: camlcomp
 
 camlcomp: $(OBJS)
-	$(CAMLLINK) $(LINKFLAGS) -o camlcomp stdlib.zo $(OBJS)
+	$(CAMLLINK) $(LINKFLAGS) -o camlcomp $(OBJS)
         
 clean:
-	rm -f *.zi *.zo camlcomp
+	rm -f *.cmi *.cmx *.o camlcomp
 	rm -f $(GENSOURCES) lexer.mll
 
 install:
@@ -48,12 +48,12 @@ parser.ml parser.mli: parser.mly
 	$(CAMLYACC) parser.mly
 
 .SUFFIXES :
-.SUFFIXES : .mli .ml .zi .zo .mlp
+.SUFFIXES : .mli .ml .cmi .cmx .mlp
 
-.mli.zi:
+.mli.cmi:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
-.ml.zo:
+.ml.cmx:
 	$(CAMLCOMP) $(COMPFLAGS) $<
 
 .mlp.ml:
@@ -73,60 +73,60 @@ version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-lexer.zi: parser.zi 
-parser.zi: syntax.zo 
-back.zo: prim.zo lambda.zo const.zo misc.zo instruct.zo 
-buffcode.zo: error.zo 
-builtins.zo: modules.zo globals.zo const.zo 
-clauses.zo: lambda.zo error.zo location.zi const.zo misc.zo syntax.zo \
-    globals.zo types.zo 
-compiler.zo: pr_decl.zo typing.zo parser.zi error.zo modules.zo location.zi \
-    interntl.zo emit_phr.zo misc.zo back.zo front.zo ty_intf.zo syntax.zo \
-    lexer.zi ty_decl.zo 
-config.zo: config.zi 
-const.zo: misc.zo 
-emit_phr.zo: event.zo reloc.zo lambda.zo emitcode.zo buffcode.zo \
-    instruct.zo labels.zo 
-emitcode.zo: prim.zo reloc.zo prim_opc.zo lambda.zo config.zi labels.zo \
-    const.zo misc.zo event.zo instruct.zo buffcode.zo opcodes.zo 
-error.zo: misc.zo syntax.zo pr_type.zo location.zi interntl.zo globals.zo \
-    types.zo const.zo 
-event.zo: syntax.zo lambda.zo modules.zo location.zi 
-front.zo: trstream.zo prim.zo lambda.zo error.zo tr_env.zo matching.zo \
-    modules.zo const.zo misc.zo event.zo syntax.zo globals.zo builtins.zo \
-    types.zo 
-globals.zo: prim.zo const.zo 
-instruct.zo: prim.zo lambda.zo const.zo 
-interntl.zo: misc.zo 
-labels.zo: misc.zo buffcode.zo instruct.zo 
-lambda.zo: prim.zo globals.zo const.zo 
-lexer.zo: lexer.zi parser.zi 
-location.zo: location.zi interntl.zo config.zi 
-main.zo: typing.zo modules.zo interntl.zo config.zi compiler.zo misc.zo \
-    version.zo event.zo 
-matching.zo: clauses.zo prim.zo lambda.zo error.zo location.zi const.zo \
-    misc.zo syntax.zo globals.zo builtins.zo types.zo 
-modules.zo: misc.zo interntl.zo globals.zo const.zo 
-par_aux.zo: error.zo modules.zo location.zi const.zo misc.zo syntax.zo \
-    globals.zo builtins.zo 
-parser.zo: parser.zi primdecl.zo par_aux.zo syntax.zo builtins.zo \
-    globals.zo const.zo 
-pr_decl.zo: misc.zo pr_type.zo globals.zo const.zo 
-pr_type.zo: modules.zo globals.zo types.zo const.zo 
-prim.zo: const.zo 
-prim_opc.zo: misc.zo prim.zo opcodes.zo 
-primdecl.zo: prim.zo globals.zo 
-reloc.zo: buffcode.zo const.zo 
-syntax.zo: location.zi globals.zo const.zo 
-tr_env.zo: prim.zo lambda.zo error.zo const.zo misc.zo syntax.zo \
-    builtins.zo globals.zo 
-trstream.zo: prim.zo lambda.zo syntax.zo tr_env.zo matching.zo const.zo 
-ty_decl.zo: typing.zo syntax.zo error.zo modules.zo builtins.zo globals.zo \
-    types.zo const.zo 
-ty_intf.zo: ty_decl.zo error.zo modules.zo globals.zo types.zo const.zo 
-types.zo: misc.zo modules.zo globals.zo const.zo 
-typing.zo: error.zo modules.zo const.zo misc.zo syntax.zo globals.zo \
-    builtins.zo types.zo 
-typing.old.zo: error.zo modules.zo const.zo misc.zo syntax.zo globals.zo \
-    builtins.zo types.zo 
-version.zo: interntl.zo 
+lexer.cmi: parser.cmi 
+parser.cmi: syntax.cmx 
+back.cmx: prim.cmx lambda.cmx const.cmx misc.cmx instruct.cmx 
+buffcode.cmx: error.cmx 
+builtins.cmx: modules.cmx globals.cmx const.cmx 
+clauses.cmx: lambda.cmx error.cmx location.cmi const.cmx misc.cmx syntax.cmx \
+    globals.cmx types.cmx 
+compiler.cmx: pr_decl.cmx typing.cmx parser.cmi error.cmx modules.cmx location.cmi \
+    interntl.cmx emit_phr.cmx misc.cmx back.cmx front.cmx ty_intf.cmx syntax.cmx \
+    lexer.cmi ty_decl.cmx 
+config.cmx: config.cmi 
+const.cmx: misc.cmx 
+emit_phr.cmx: event.cmx reloc.cmx lambda.cmx emitcode.cmx buffcode.cmx \
+    instruct.cmx labels.cmx 
+emitcode.cmx: prim.cmx reloc.cmx prim_opc.cmx lambda.cmx config.cmi labels.cmx \
+    const.cmx misc.cmx event.cmx instruct.cmx buffcode.cmx opcodes.cmx 
+error.cmx: misc.cmx syntax.cmx pr_type.cmx location.cmi interntl.cmx globals.cmx \
+    types.cmx const.cmx 
+event.cmx: syntax.cmx lambda.cmx modules.cmx location.cmi 
+front.cmx: trstream.cmx prim.cmx lambda.cmx error.cmx tr_env.cmx matching.cmx \
+    modules.cmx const.cmx misc.cmx event.cmx syntax.cmx globals.cmx builtins.cmx \
+    types.cmx 
+globals.cmx: prim.cmx const.cmx 
+instruct.cmx: prim.cmx lambda.cmx const.cmx 
+interntl.cmx: misc.cmx 
+labels.cmx: misc.cmx buffcode.cmx instruct.cmx 
+lambda.cmx: prim.cmx globals.cmx const.cmx 
+lexer.cmx: lexer.cmi parser.cmi 
+location.cmx: location.cmi interntl.cmx config.cmi 
+main.cmx: typing.cmx modules.cmx interntl.cmx config.cmi compiler.cmx misc.cmx \
+    version.cmx event.cmx 
+matching.cmx: clauses.cmx prim.cmx lambda.cmx error.cmx location.cmi const.cmx \
+    misc.cmx syntax.cmx globals.cmx builtins.cmx types.cmx 
+modules.cmx: misc.cmx interntl.cmx globals.cmx const.cmx 
+par_aux.cmx: error.cmx modules.cmx location.cmi const.cmx misc.cmx syntax.cmx \
+    globals.cmx builtins.cmx 
+parser.cmx: parser.cmi primdecl.cmx par_aux.cmx syntax.cmx builtins.cmx \
+    globals.cmx const.cmx 
+pr_decl.cmx: misc.cmx pr_type.cmx globals.cmx const.cmx 
+pr_type.cmx: modules.cmx globals.cmx types.cmx const.cmx 
+prim.cmx: const.cmx 
+prim_opc.cmx: misc.cmx prim.cmx opcodes.cmx 
+primdecl.cmx: prim.cmx globals.cmx 
+reloc.cmx: buffcode.cmx const.cmx 
+syntax.cmx: location.cmi globals.cmx const.cmx 
+tr_env.cmx: prim.cmx lambda.cmx error.cmx const.cmx misc.cmx syntax.cmx \
+    builtins.cmx globals.cmx 
+trstream.cmx: prim.cmx lambda.cmx syntax.cmx tr_env.cmx matching.cmx const.cmx 
+ty_decl.cmx: typing.cmx syntax.cmx error.cmx modules.cmx builtins.cmx globals.cmx \
+    types.cmx const.cmx 
+ty_intf.cmx: ty_decl.cmx error.cmx modules.cmx globals.cmx types.cmx const.cmx 
+types.cmx: misc.cmx modules.cmx globals.cmx const.cmx 
+typing.cmx: error.cmx modules.cmx const.cmx misc.cmx syntax.cmx globals.cmx \
+    builtins.cmx types.cmx 
+typing.old.cmx: error.cmx modules.cmx const.cmx misc.cmx syntax.cmx globals.cmx \
+    builtins.cmx types.cmx 
+version.cmx: interntl.cmx 

@@ -1,6 +1,6 @@
 (* Constants *)
 
-#open "misc";;
+open Misc;;
 
 type qualified_ident =
   { qual: string;

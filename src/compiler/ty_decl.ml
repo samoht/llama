@@ -1,17 +1,17 @@
 (* Typing toplevel phrases *)
 
-#open "const";;
-#open "globals";;
-#open "builtins";;
-#open "syntax";;
-#open "modules";;
-#open "types";;
-#open "error";;
-#open "typing";;
+open Const;;
+open Globals;;
+open Builtins;;
+open Syntax;;
+open Modules;;
+open Types;;
+open Error;;
+open Typing;;
 
 let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =
-    list_length constrs in
+    List.length constrs in
   let rec make_constrs constr_idx = function
     [] -> []
   | Zconstr0decl constr_name :: rest ->
@@ -44,7 +44,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
         match type_repr ty_arg with
           {typ_desc = Tproduct tylist} ->
             begin match mut_flag with
-              Notmutable -> Constr_superfluous (list_length tylist)
+              Notmutable -> Constr_superfluous (List.length tylist)
             | Mutable    -> Constr_regular
             end
         | _ ->
@@ -63,7 +63,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
     let constr_descs = make_constrs 0 constrs in
       pop_type_level();
       generalize_type ty_res;
-      do_list
+      List.iter
         (fun cstr -> generalize_type cstr.info.cs_arg)
         constr_descs;
       Variant_type constr_descs
@@ -84,7 +84,7 @@ let enter_new_record loc (ty_constr, ty_res, labels) =
   let label_descs = make_labels 0 labels in
     pop_type_level();
     generalize_type ty_res;
-    do_list
+    List.iter
       (function lbl -> generalize_type lbl.info.lbl_arg)
       label_descs;
     Record_type label_descs
@@ -94,7 +94,7 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
   let ty_body = type_of_type_expression true body in
     pop_type_level();
     generalize_type ty_body;
-    do_list generalize_type ty_params;
+    List.iter generalize_type ty_params;
     ty_constr.info.ty_abbr <- Tabbrev(ty_params, ty_body);
     Abbrev_type(ty_params, ty_body)
 ;;
@@ -107,7 +107,7 @@ let enter_new_type (ty_name, params, def) =
   let ty_desc =
     defined_global ty_name
       { ty_constr = ty_constr;
-        ty_arity = list_length params;
+        ty_arity = List.length params;
         ty_desc  = Abstract_type } in
   add_type ty_desc;
   (ty_desc, params, def)
@@ -143,7 +143,7 @@ let define_new_type loc (ty_desc, params, def) =
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.ty_desc <- type_comp;
   begin try
-    let extdef = assoc ty_desc.qualid.id !external_types in
+    let extdef = List.assoc ty_desc.qualid.id !external_types in
     if extdef.et_manifest || extdef.et_defined then
       illegal_type_redefinition loc extdef.et_descr;
     if extdef.et_descr.info.ty_arity <> ty_desc.info.ty_arity then
@@ -169,9 +169,9 @@ let check_recursive_abbrev loc (ty, params, def) =
 ;;
 
 let type_typedecl loc decl =
-  let newdecl = map enter_new_type decl in
-  let res = map (define_new_type loc) newdecl in
-  do_list (check_recursive_abbrev loc) newdecl;
+  let newdecl = List.map enter_new_type decl in
+  let res = List.map (define_new_type loc) newdecl in
+  List.iter (check_recursive_abbrev loc) newdecl;
   res
 ;;
 
@@ -190,31 +190,31 @@ let type_valuedecl loc decl =
       generalize_type ty;
       add_value (defined_global name { val_typ = ty; val_prim = prim })
   in
-    do_list enter_val decl
+    List.iter enter_val decl
 ;;
 
 let type_letdef loc rec_flag pat_expr_list =
   push_type_level();
   let ty_list =
-    map (fun (pat, expr) -> new_type_var()) pat_expr_list in
+    List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
   typing_let := true;
   let env =
-    type_pattern_list (map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
+    type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
   typing_let := false;
   let enter_val =
-    do_list
+    List.iter
       (fun (name,(ty,mut_flag)) ->
         add_value (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
   if rec_flag then enter_val env;
-  do_list2
+  List.iter2
     (fun (pat, exp) ty -> type_expect [] exp ty)
     pat_expr_list ty_list;
   pop_type_level();
   let gen_type =
-    map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
+    List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
          pat_expr_list ty_list in
-  do_list (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
-  do_list (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
+  List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
+  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   if not rec_flag then enter_val env;
   env
 ;;

@@ -1,13 +1,13 @@
-value path_library : string ref
+val path_library : string ref
 ;;
-value maxint_byte : int
-  and minint_byte : int
-  and maxint_short : int
-  and minint_short : int
+val maxint_byte : int
+  val minint_byte : int
+  val maxint_short : int
+  val minint_short : int
 ;;
-value default_used_interfaces : (string * string list) list
-  and default_exec_name: string
+val default_used_interfaces : (string * string list) list
+  val default_exec_name: string
 ;;
-value toplevel_input_prompt : string
-  and error_prompt : string
+val toplevel_input_prompt : string
+  val error_prompt : string
 ;;

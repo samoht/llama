@@ -1,12 +1,12 @@
 /* The parser definition */
 
 %{
-#open "par_aux";;
-#open "const";;
-#open "globals";;
-#open "builtins";;
-#open "syntax";;
-#open "primdecl";;
+open Par_aux;;
+open Const;;
+open Globals;;
+open Builtins;;
+open Syntax;;
+open Primdecl;;
 %}
 
 /* Tokens */
@@ -126,16 +126,16 @@
 
 /* Entry points */
 
-%start Implementation
-%type <syntax__impl_phrase> Implementation 
-%start Interface
-%type <syntax__intf_phrase> Interface
+%start implementation
+%type <Syntax.impl_phrase> implementation 
+%start interface
+%type <Syntax.intf_phrase> interface
 
 %%
 
 /* One phrase from a module implementation */
 
-Implementation :
+implementation :
         Expr SEMISEMI
           { make_impl(Zexpr $1) }
       | LET Binding_list SEMISEMI  %prec prec_let
@@ -154,7 +154,7 @@ Implementation :
 
 /* One phrase from a module interface */
 
-Interface :
+interface :
         VALUE Value_decl SEMISEMI
           { make_intf(Zvaluedecl $2) }
       | TYPE Type_decl SEMISEMI
@@ -175,7 +175,7 @@ Expr :
       | Simple_expr Simple_expr_list   %prec prec_app
           { make_apply ($1, $2) }
       | Expr_comma_list
-          { make_expr(Ztuple(rev $1)) }
+          { make_expr(Ztuple(List.rev $1)) }
       | SUBTRACTIVE Expr  %prec prec_uminus
           { make_unary_minus $1 $2 }
       | NOT Expr
@@ -265,9 +265,9 @@ Simple_expr :
       | LBRACKET Expr_sm_list RBRACKET
           { make_list $2 }
       | LBRACKETBAR Expr_sm_list BARRBRACKET
-          { make_expr(Zvector(rev $2)) }
+          { make_expr(Zvector(List.rev $2)) }
       | LBRACKETLESS Stream_expr GREATERRBRACKET
-          { make_expr(Zstream (rev $2)) }
+          { make_expr(Zstream (List.rev $2)) }
       | LPAREN Expr COLON Type RPAREN
           { make_expr(Zconstraint($2, $4)) }
       | LPAREN Opt_expr RPAREN
@@ -448,7 +448,7 @@ Pattern :
           { make_pat(Zconstruct1pat(constr_cons,
               make_pat(Ztuplepat [$1; $3]))) }
       | Pattern_comma_list
-          { make_pat(Ztuplepat(rev $1)) }
+          { make_pat(Ztuplepat(List.rev $1)) }
       | Ext_ident Simple_pattern
           { make_pat(Zconstruct1pat (find_constructor $1, $2)) }
       | Pattern BAR Pattern
@@ -459,9 +459,9 @@ Simple_pattern :
         Atomic_constant
           { make_pat(Zconstantpat $1) }
       | SUBTRACTIVE INT
-          { make_pat(Zconstantpat(ACint(minus_int $2))) }
+          { make_pat(Zconstantpat(ACint(- $2))) }
       | SUBTRACTIVE FLOAT
-          { make_pat(Zconstantpat(ACfloat(minus_float $2))) }
+          { make_pat(Zconstantpat(ACfloat(-. $2))) }
       | UNDERSCORE
           { make_pat(Zwildpat) }
       | Ide
@@ -573,7 +573,7 @@ Type :
         Simple_type
           { $1 }
       | Type_star_list
-          { make_typ(Ztypetuple(rev $1)) }
+          { make_typ(Ztypetuple(List.rev $1)) }
       | Type MINUSGREATER Type
           { make_typ(Ztypearrow($1, $3)) }
 ;

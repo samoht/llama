@@ -5,5 +5,5 @@
 #endif
 
 let print_banner() =
-  interntl__eprintf "The Caml Light compiler, version %s\n" VERSION; ()
+  Interntl.eprintf "The Caml Light compiler, version %s\n" VERSION; ()
 ;;

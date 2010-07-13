@@ -1,18 +1,18 @@
 (* tr_env.ml: handling of the translation environment. *)
 
-#open "misc";;
-#open "const";;
-#open "syntax";;
-#open "lambda";;
-#open "prim";;
-#open "error";;
-#open "globals";;
+open Misc;;
+open Const;;
+open Syntax;;
+open Lambda;;
+open Prim;;
+open Error;;
+open Globals;;
 
 let translate_path root =
   let rec transl = function
       Path_root -> root
     | Path_son(n, p) -> Lprim(Pfield n, [transl p])
-    | Path_tuple pl -> Lprim(Pmakeblock(ConstrRegular(0,1)), map transl pl)
+    | Path_tuple pl -> Lprim(Pmakeblock(ConstrRegular(0,1)), List.map transl pl)
   in transl
 ;;
 
@@ -119,7 +119,7 @@ let rec mutable_vars_of_pat mut pat =
       then {var_name = v; var_typ = pat.p_typ; var_path = Path_root} :: l
       else l
   | Zconstraintpat(pat, _) -> mutable_vars_of_pat mut pat
-  | Ztuplepat patl -> flat_map (mutable_vars_of_pat mut) patl
+  | Ztuplepat patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
   | Zconstruct1pat(cstr,pat) ->
       let mut' =
         match cstr.info.cs_mut with
@@ -127,14 +127,14 @@ let rec mutable_vars_of_pat mut pat =
         | Notmutable -> mut in
       mutable_vars_of_pat mut' pat
   | Zrecordpat lbl_pat_list ->
-      flat_map
+      List.flatten (List.map
         (fun (lbl,pat) ->
           let mut' =
             match lbl.info.lbl_mut with
               Mutable -> true
             | Notmutable -> mut in
           mutable_vars_of_pat mut' pat)
-        lbl_pat_list
+        lbl_pat_list)
   | _ -> []                             (* Zwildpat or Zconstpat or Zorpat *)
 ;;
 
@@ -159,17 +159,17 @@ let add_pat_to_env env pat =
   let mut_vars = mutable_vars_of_pat false pat in
   (add_lets_to_env mut_vars env',
    add_lets_to_expr mut_vars env',
-   list_length mut_vars)
+   List.length mut_vars)
 ;;
 
 let add_pat_list_to_env env patl =
   let env' =
-    it_list (fun env pat -> Tenv(paths_of_pat Path_root pat, env)) env patl in
+    List.fold_left (fun env pat -> Tenv(paths_of_pat Path_root pat, env)) env patl in
   let mut_vars =
-    flat_map (mutable_vars_of_pat false) patl in
+    List.flatten (List.map (mutable_vars_of_pat false) patl) in
   (add_lets_to_env mut_vars env',
    add_lets_to_expr mut_vars env',
-   list_length mut_vars)
+   List.length mut_vars)
 ;;
 
 (* The parameter of a "for" loop is let-bound with index 0.
@@ -180,7 +180,7 @@ let add_for_parameter_to_env env id =
   let var =
     {var_name = id;
      var_path = Path_root;
-     var_typ = builtins__type_int} in
+     var_typ = Builtins.type_int} in
   Tenv([var], Treserved(Treserved(env)))
 ;;
 
@@ -201,10 +201,10 @@ let add_let_rec_to_env env pat_expr_list =
         add env (p, expr)
     | _ ->
         illegal_letrec_pat pat.p_loc in
-  it_list add env pat_expr_list
+  List.fold_left add env pat_expr_list
 ;;
     
 let env_for_toplevel_let patl =
-  it_list (fun env pat -> Tenv(paths_of_pat Path_root pat, env)) Tnullenv patl
+  List.fold_left (fun env pat -> Tenv(paths_of_pat Path_root pat, env)) Tnullenv patl
 ;;
 

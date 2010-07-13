@@ -1,9 +1,9 @@
 (* Printing a type expression *)
 
-#open "const";;
-#open "globals";;
-#open "types";;
-#open "modules";;
+open Const;;
+open Globals;;
+open Types;;
+open Modules;;
 
 let output_global sel_fct oc gl =
   if not (can_omit_qualifier sel_fct gl) then begin
@@ -25,8 +25,8 @@ and output_label =
 
 let int_to_alpha i =
   if i < 26
-  then make_string 1 (char_of_int (i+97))
-  else make_string 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
+  then String.make 1 (char_of_int (i+97))
+  else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
 ;;
 
 let type_vars_counter = ref 0
@@ -37,7 +37,7 @@ let reset_type_var_name () =
 
 let name_of_type_var sch var =
   try
-    assq var !type_vars_names
+    List.assq var !type_vars_names
   with Not_found ->
     let name = int_to_alpha !type_vars_counter in
     let var_name =

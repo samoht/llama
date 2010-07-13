@@ -1,9 +1,9 @@
 (* The intermediate language: extended lambda-calculus in de
     Bruijn's notation *)
 
-#open "const";;
-#open "prim";;
-#open "globals";;
+open Const;;
+open Prim;;
+open Globals;;
 
 (* Structure of compilation environments *)
 

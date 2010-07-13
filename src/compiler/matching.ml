@@ -1,15 +1,15 @@
 (*  match.ml : expansion of pattern-matching as a cascade of tests. *)
 
-#open "misc";;
-#open "const";;
-#open "globals";;
-#open "builtins";;
-#open "error";;
-#open "syntax";;
-#open "location";;
-#open "lambda";;
-#open "prim";;
-#open "clauses";;
+open Misc;;
+open Const;;
+open Globals;;
+open Builtins;;
+open Error;;
+open Syntax;;
+open Location;;
+open Lambda;;
+open Prim;;
+open Clauses;;
 
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
@@ -43,15 +43,15 @@ let make_path n = function
 let add_to_match (Matching(casel,pathl)) cas =
   Matching(cas :: casel, pathl)
 
-and make_constant_match = fun
-    (path :: pathl) cas -> Matching([cas], pathl)
-  | _ _ -> fatal_error "make_constant_match"
+and make_constant_match paths cas = match paths with
+    (path :: pathl) -> Matching([cas], pathl)
+  | _ -> fatal_error "make_constant_match"
 
 and make_tuple_match arity pathl =
   Matching([], make_path arity pathl)
 
-and make_construct_match = fun
-  cstr (path :: pathl as pathl0) cas ->
+and make_construct_match cstr pathl0 cas = match pathl0 with
+    path :: pathl ->
   (match cstr.info.cs_kind with
     Constr_constant ->
       Matching([cas], pathl)
@@ -59,14 +59,14 @@ and make_construct_match = fun
       Matching([cas], pathl0)
   | _ ->
       Matching([cas], Lprim(Pfield 0, [path]) :: pathl))
-| _ _ _ -> fatal_error "make_construct_match"
+| _ -> fatal_error "make_construct_match"
 ;;
 
 (* Auxiliaries for factoring common tests *)
 
 let add_to_division make_match divlist key cas =
   try
-    let matchref = assoc key divlist in
+    let matchref = List.assoc key divlist in
       matchref := add_to_match !matchref cas; divlist
     with Not_found ->
       (key, ref (make_match cas)) :: divlist
@@ -88,22 +88,24 @@ let rec simpl_casel = function
 (* Factoring pattern-matchings. *)
 
 let divide_constant_matching (Matching(casel, pathl)) =
-  divide_rec casel where rec divide_rec casel =
+  let rec divide_rec casel =
     match simpl_casel casel with
-      ({p_desc = Zconstantpat(cst)} :: patl, action) :: rest ->
-        let (constant, others) = divide_rec rest in
+        ({p_desc = Zconstantpat(cst)} :: patl, action) :: rest ->
+          let (constant, others) = divide_rec rest in
           add_to_division
             (make_constant_match pathl) constant cst (patl, action),
           others
-    | casel ->
+      | casel ->
         [], Matching(casel, pathl)
+  in
+  divide_rec casel 
 ;;
 
 let wildcard_pat =
   {p_desc = Zwildpat; p_loc = no_location; p_typ = no_type};;
 
 let divide_tuple_matching arity (Matching(casel, pathl)) =
-  divide_rec casel where rec divide_rec casel =
+  let rec divide_rec casel =
     match simpl_casel casel with
       ({p_desc = Ztuplepat(args)} :: patl, action) :: rest ->
         add_to_match (divide_rec rest) (args @ patl, action)
@@ -115,10 +117,11 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
         make_tuple_match arity pathl
     | _ ->
         fatal_error "divide_tuple_matching"
+  in divide_rec casel
 ;;
 
 let divide_construct_matching (Matching(casel, pathl)) =
-  divide_rec casel where rec divide_rec casel =
+  let rec divide_rec casel =
     match simpl_casel casel with
       ({p_desc = Zconstruct0pat(c)} :: patl, action) :: rest ->
         let (constrs, others) =
@@ -138,6 +141,7 @@ let divide_construct_matching (Matching(casel, pathl)) =
         others
     | casel ->
         [], Matching(casel, pathl)
+  in divide_rec casel
 ;;
 
 let divide_var_matching = function
@@ -155,8 +159,8 @@ let divide_var_matching = function
 ;;
 
 let divide_record_matching ty_record (Matching(casel, pathl)) =
-  let labels = types__labels_of_type ty_record in
-  let num_labels = list_length labels in
+  let labels = Types.labels_of_type ty_record in
+  let num_labels = List.length labels in
   let rec divide_rec = function
       ({p_desc = Zaliaspat(pat,v)} :: patl, action) :: rest ->
         divide_rec ((pat::patl, action) :: rest)
@@ -173,16 +177,16 @@ let divide_record_matching ty_record (Matching(casel, pathl)) =
     | _ ->
         fatal_error "divide_record_matching"
   and divide_rec_cont pat_expr_list patl action rest =
-    let v = make_vect num_labels wildcard_pat in
-    do_list (fun (lbl, pat) -> v.(lbl.info.lbl_pos) <- pat) pat_expr_list;
-    add_to_match (divide_rec rest) (list_of_vect v @ patl, action)
+    let v = Array.make num_labels wildcard_pat in
+    List.iter (fun (lbl, pat) -> v.(lbl.info.lbl_pos) <- pat) pat_expr_list;
+    add_to_match (divide_rec rest) (Array.to_list v @ patl, action)
   in
     divide_rec casel
 ;;
 
 (* Utilities on pattern-matchings *)
 
-let length_of_matching (Matching(casel,_)) = list_length casel
+let length_of_matching (Matching(casel,_)) = List.length casel
 ;;
 
 let upper_left_pattern =
@@ -252,13 +256,13 @@ let rec conquer_matching =
             then (lambda1, true)
             else (Lstatichandle(lambda1, lambda2), total2)
       | {p_desc = Ztuplepat patl} ->
-          conquer_matching (divide_tuple_matching (list_length patl) matching)
+          conquer_matching (divide_tuple_matching (List.length patl) matching)
       | {p_desc = (Zconstruct0pat(_) | Zconstruct1pat(_,_))} ->
           let constrs, vars = divide_construct_matching matching in
           let (switchlst, total1) = conquer_divided_matching constrs
           and (lambda,    total2) = conquer_matching vars in
           let span = get_span_of_matching matching
-          and num_cstr = list_length constrs in
+          and num_cstr = List.length constrs in
             if num_cstr = span && total1 then
               (Lswitch(span, path, switchlst), true)
             else
@@ -286,7 +290,7 @@ let make_initial_matching = function
       let rec make_path n =
         if n <= 0 then [] else Lvar(n-1) :: make_path(n-1)
       in
-        Matching(casel, make_path(list_length patl))
+        Matching(casel, make_path(List.length patl))
 ;;
 
 let partial_fun (Loc(start, stop)) =
@@ -299,7 +303,7 @@ let partial_fun (Loc(start, stop)) =
 
 let translate_matching_check_failure loc casel =
   let casel' =
-    map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
+    List.map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
   if partial_match casel then not_exhaustive_warning loc;
   let (lambda, total) = conquer_matching (make_initial_matching casel') in
   if total then lambda else Lstatichandle(lambda, partial_fun loc)
@@ -307,7 +311,7 @@ let translate_matching_check_failure loc casel =
 
 let translate_matching failure_code casel =
   let casel' =
-    map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
+    List.map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
   let (lambda, total) = conquer_matching (make_initial_matching casel') in
   if total then lambda else Lstatichandle(lambda, failure_code)
 ;;
