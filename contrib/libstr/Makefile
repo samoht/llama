@@ -12,13 +12,13 @@ RANLIB=ranlib
 
 # Compilation options
 CFLAGS=-O -I$(REGEXLIB) -I../../src/runtime
-CAMLC=camlc
+CAMLC=darkc
 CAMLCOMP=$(CAMLC) -c
 COMPFLAGS=-W
 REGEXLIB=regex-0.12
 COBJS=strstubs.o $(REGEXLIB)/regex.o
 
-all: libstr.a str.zo camlstr
+all: libstr.a str.zo # camlstr
 
 libstr.a: $(COBJS)
 	rm -f libstr.a

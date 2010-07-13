@@ -13,10 +13,10 @@ RANLIB=ranlib
 
 # Compilation options
 CFLAGS=-O -I../../src/runtime -I./bignum/h
-CAMLC=camlc
+CAMLC=darkc
 CAMLCOMP=$(CAMLC) -c
 COMPFLAGS=-W #-O fast
-CAMLLIBR=camllibr
+CAMLLIBR=darklibr
 CAMLMKTOP=camlmktop
 
 ZOFILES=int_misc.zo fnat.zo nat.zo big_int.zo arith_flags.zo ratio.zo \
@@ -29,7 +29,7 @@ ZIFILESD=$(ZIFILES) ltx_num.zi fmt_num.zi
 
 OBJFILES=nat_stubs.o
 
-all: libnums.a nums.zo $(ZIFILESD) camlnum ${ZOFILESD} ${ZIFILESD}
+all: libnums.a nums.zo $(ZIFILESD) ${ZOFILESD} ${ZIFILESD} # camlnum
 
 camlnum: libnums.a $(ZOFILES) numprint.zo
 	$(CAMLMKTOP) -o camlnum -custom $(ZOFILES) numprint.zo libnums.a

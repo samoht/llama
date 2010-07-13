@@ -63,7 +63,7 @@ while : ; do
     -v|-version)
       echo "The Caml Light system, version" VERSION
       echo "  (standard library from $stdlib)"
-      camlrun -V
+      darkrun -V
       $stdlib/camlcomp -version
       $stdlib/camllink -version;;
     -files)

@@ -1,4 +1,4 @@
-CAMLC=camlc -g
+CAMLC=darkc -g
 
 test: test.out
 	./test.out

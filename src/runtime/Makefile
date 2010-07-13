@@ -50,8 +50,8 @@ clean:
 	rm -f primitives prims.c opnames.h jumptbl.h
 
 install:
-	cp camlrun $(BINDIR)
-	strip $(BINDIR)/camlrun
+	cp camlrun $(BINDIR)/darkrun
+	strip $(BINDIR)/darkrun
 	cp libcaml.a $(LIBDIR)
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libcaml.a; else true; fi
 	cp mlvalues.h alloc.h misc.h $(LIBDIR)

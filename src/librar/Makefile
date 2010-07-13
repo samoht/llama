@@ -23,8 +23,9 @@ clean:
 	rm -f $(GENSOURCES)
 
 install:
-	cat $(LIBDIR)/header camllibr > $(BINDIR)/camllibr
-	chmod a+x $(BINDIR)/camllibr
+#	cat $(LIBDIR)/header camllibr > $(BINDIR)/darklibr
+#	chmod a+x $(BINDIR)/darklibr
+	cp camllibr $(BINDIR)/darklibr
 
 .SUFFIXES :
 .SUFFIXES : .mli .ml .cmi .cmx .mlp

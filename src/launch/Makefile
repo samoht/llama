@@ -11,12 +11,12 @@ all: darkc camlexec testprog # camllight camlmktop
 # have write permission in the current directory if NFS-mounted...
 
 install:
-	(echo "#!$(BINDIR)/camlrun"; \
+	(echo "#!$(BINDIR)/darkrun"; \
 	 echo "exit 2"; \
 	 cat testprog) > /tmp/testscr
 	chmod a+x /tmp/testscr
 	sh -c 'if sh -c /tmp/testscr 2>/dev/null; \
-               then echo "#!$(VBINDIR)/camlrun" > $(LIBDIR)/header; \
+               then echo "#!$(VBINDIR)/darkrun" > $(LIBDIR)/header; \
                else cp camlexec $(LIBDIR)/header; \
                fi'
 	rm -f /tmp/testscr
