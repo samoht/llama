@@ -54,8 +54,8 @@ let do_toplevel_phrase phr =
           print_string name; print_string " :"; print_space();
           print_one_type typ; print_string " ="; print_space();
           print_value
-            global_data.(get_slot_for_variable
-                         {qual=compiled_module_name(); id=name})
+            (get_global_data (get_slot_for_variable
+                         {qual=compiled_module_name(); id=name}))
             typ;
           print_newline())
         (List.rev env)

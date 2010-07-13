@@ -52,7 +52,7 @@ try
   load_linker_tables ic;
   set_c_primitives (Meta.available_primitives());
   close_in ic;
-  Meta.global_data.(16) <- Obj.repr true; (* 16: cf ../runtime/globals.h *)
+  Meta.set_global_data 16 (Obj.repr true); (* 16: cf ../runtime/globals.h *)
   start_compiling_interface "top"
 
 with Toplevel -> exit 2

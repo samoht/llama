@@ -1,11 +1,11 @@
 (* To determine the identifiers exported by an interface *)
 
-#open "const";;
-#open "config";;
-#open "misc";;
-#open "globals";;
-#open "prim";;
-#open "modules";;
+open Const;;
+open Config;;
+open Misc;;
+open Globals;;
+open Prim;;
+open Modules;;
 
 let print_entry name valdesc =
   match valdesc.info.val_prim with
@@ -22,22 +22,24 @@ let print_entry name valdesc =
 
 let anonymous name =
   let md = load_module name in
-  hashtbl__do_table print_entry md.mod_values
+  Hashtbl.iter print_entry md.mod_values
 ;;
 
 let main() =
   try
     load_path := [!path_library];
-    arg__parse [
+    Arg.parse [
       "-stdlib",
-        arg__String (fun p -> path_library := p; load_path := [!path_library]);
+      Arg.String (fun p -> path_library := p; load_path := [!path_library]),
+      "(undocumented)";
       "-I",
-        arg__String (fun d -> load_path := d :: !load_path)]
-      anonymous;
+      Arg.String (fun d -> load_path := d :: !load_path),
+      "(undocumented)";
+    ] anonymous "(undocumented)";
     exit 0
   with Toplevel ->
     exit 2
 ;;
 
-printexc__f main ()
+Printexc.print main ()
 ;;

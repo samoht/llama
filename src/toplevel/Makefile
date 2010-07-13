@@ -2,6 +2,7 @@
 
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
+CAMLLIBR=ocamlopt.opt -a
 INCLUDES=-I ../compiler -I ../linker
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
@@ -23,8 +24,7 @@ OBJS=fmt_type.cmx pr_value.cmx load_phr.cmx do_phr.cmx toplevel.cmx \
 
 PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
     gc genlex hashtbl int io iparsing lexing list map obj pair parsing \
-    printexc printf queue random ref set sort stack stream string \
-    toplevel vect
+    printexc printf queue random ref set sort stack stream string vect
 
 SPECIALS=sys
 
@@ -32,22 +32,24 @@ GENSOURCES=version.ml pr_value.ml
 
 all: camltop
 
-camltop: toplib.cmx topmain.cmx provide expunge
-	$(CAMLRUN) ./provide -stdlib ../lib $(PERVASIVES) > required
-	$(CAMLLINK) $(LINKFLAGS) -o camltop1 -require required \
-                stdlib.cmx toplib.cmx topmain.cmx
-	$(CAMLRUN) ./expunge camltop1 camltop $(PERVASIVES) $(SPECIALS)
-	rm -f camltop1 required
-	cp toplevel.zi ../lib
+camltop: toplib.cmxa topmain.cmx provide expunge
+	./provide -stdlib ../lib $(PERVASIVES) > required
+	$(CAMLLINK) $(LINKFLAGS) -o camltop1 \
+                ../runtime/libcaml.a ../runtime/prims.o \
+		$(EXTERNOBJS)
+#		toplib.cmxa topmain.cmx
+#	./expunge camltop1 camltop $(PERVASIVES) $(SPECIALS)
+#	rm -f camltop1 required
+#	cp toplevel.zi ../lib
 
-toplib.cmx: $(OBJS)
-	$(CAMLLIBR) -o toplib.cmx $(INCLUDES) $(EXTERNOBJS) $(OBJS)
+toplib.cmxa: $(OBJS)
+	$(CAMLLIBR) -o toplib.cmxa $(INCLUDES) $(EXTERNOBJS) $(OBJS)
 
 expunge: expunge.cmx
-	$(CAMLLINK) $(LINKFLAGS) -o expunge stdlib.cmx readword.cmx expunge.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o expunge readword.cmx expunge.cmx
 
 provide: provide.cmx
-	$(CAMLLINK) $(LINKFLAGS) -o provide stdlib.cmx \
+	$(CAMLLINK) $(LINKFLAGS) -o provide \
                 config.cmx misc.cmx interntl.cmx modules.cmx provide.cmx
 
 clean:

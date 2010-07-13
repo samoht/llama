@@ -12,10 +12,10 @@ open Pr_value;;
 open Format;;
 
 let do_code may_free code entrypoint len =
-  if number_of_globals() >= Array.length global_data then
+  if number_of_globals() >= length_global_data () then
     realloc_global_data(number_of_globals());
   List.iter
-    (fun (n, sc) -> global_data.(n) <- transl_structured_const sc)
+    (fun (n, sc) -> set_global_data n (transl_structured_const sc))
     !literal_table;
   literal_table := [];
   let res =

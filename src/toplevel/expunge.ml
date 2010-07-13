@@ -1,36 +1,36 @@
 (* To hide the global variables internal to the toplevel system. *)
 
-#open "const";;
-#open "sys";;
-#open "symtable";;
+open Const;;
+open Sys;;
+open Symtable;;
 
 let (debug_flag, input_name, output_name, perv_pos) =
-  if command_line.(1) = "-g"
-  then (true, command_line.(2), command_line.(3), 4)
-  else (false, command_line.(1), command_line.(2), 3)
+  if argv.(1) = "-g"
+  then (true, argv.(2), argv.(3), 4)
+  else (false, argv.(1), argv.(2), 3)
 ;;
 
 let pervasives =
-  map filename__basename
-      (list_of_vect(sub_vect command_line perv_pos
-                             (vect_length command_line - perv_pos)))
+  List.map Filename.basename
+      (Array.to_list(Array.sub argv perv_pos
+                             (Array.length argv - perv_pos)))
 ;;
 
 let qualid_pervasive qualid =
-  mem qualid.qual pervasives
+  List.mem qualid.qual pervasives
 ;;
   
 let expunge_numtable is_pervasive size nt =
-  let new_tbl = hashtbl__new size in
-    hashtbl__do_table
+  let new_tbl = Hashtbl.create size in
+    Hashtbl.iter
       (fun key info ->
-        if is_pervasive key then hashtbl__add new_tbl key info)
+        if is_pervasive key then Hashtbl.add new_tbl key info)
       nt.num_tbl;
     { num_cnt = nt.num_cnt; num_tbl = new_tbl }
 ;;
 
 let expunge_vect v =
-  for i = 0 to vect_length v - 1 do
+  for i = 0 to Array.length v - 1 do
     let (q,s) = v.(i) in
       if qualid_pervasive q then () else
         v.(i) <- ({qual="<internal>";id="<exc>"}, 0)
@@ -39,10 +39,10 @@ let expunge_vect v =
 
 let copy_bytes inchan outchan n =
   let copy_buffer =
-    create_string 4096 in
+    String.make 4096 '\000' in
   let rec copy n =
     if n <= 0 then () else begin
-      match input inchan copy_buffer 0 (min n (string_length copy_buffer)) with
+      match input inchan copy_buffer 0 (min n (String.length copy_buffer)) with
         0 -> failwith "truncated input file"
       | r -> output outchan copy_buffer 0 r; copy (n-r)
     end in
@@ -51,8 +51,8 @@ let copy_bytes inchan outchan n =
 
 let main() =
   let ic = open_in_bin input_name
-  and oc = open_out_gen [O_WRONLY; O_TRUNC; O_CREAT; O_BINARY]
-                        (s_irall + s_iwall + s_ixall)
+  and oc = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
+                        0o777
                         output_name in
   let pos_hdr = in_channel_length ic - 20 in
   seek_in ic pos_hdr;
@@ -64,7 +64,7 @@ let main() =
   copy_bytes ic oc (pos_hdr - size_symb - size_debug);
   let global_table = (input_value ic : qualified_ident numtable) in 
   let exn_tag_table = (input_value ic : (qualified_ident * int) numtable) in 
-  let tag_exn_table = (input_value ic : (qualified_ident * int) vect) in 
+  let tag_exn_table = (input_value ic : (qualified_ident * int) array) in 
   let new_global_table =
     expunge_numtable qualid_pervasive 263 global_table in
   let new_exn_tag_table =
@@ -86,5 +86,5 @@ let main() =
   close_out oc
 ;;
 
-printexc__f main ()
+Printexc.print main ()
 ;;

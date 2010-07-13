@@ -180,9 +180,9 @@ let trace name =
         if List.mem_assoc pos !trace_env then begin
           Interntl.eprintf "The function %s is already traced.\n" name        
         end else begin
-          trace_env := (pos, global_data.(pos)) :: !trace_env;
-          global_data.(pos) <-
-            trace_instr name global_data.(pos) val_desc.info.val_typ;
+          trace_env := (pos, get_global_data pos) :: !trace_env;
+          set_global_data pos
+            (trace_instr name (get_global_data pos) val_desc.info.val_typ);
           Interntl.eprintf "The function %s is now traced.\n" name
         end
     | ValuePrim(_, _) ->
@@ -203,7 +203,7 @@ let untrace name =
         []
     | (pos',obj as pair)::rest ->
         if pos == pos' then begin
-          global_data.(pos) <- obj;
+          set_global_data pos obj;
           Interntl.eprintf "The function %s is no longer traced.\n" name;
           rest
         end else
@@ -227,7 +227,7 @@ let install_printer name =
       pop_type_level();
       generalize_type ty_arg;
       let pos = get_slot_for_variable val_desc.qualid in
-      printers := (name, ty_arg, (Obj.magic global_data.(pos) : t -> unit))
+      printers := (name, ty_arg, (Obj.magic (get_global_data pos) : t -> unit))
                :: !printers
     with Unify ->
       Interntl.eprintf "%s has the wrong type for a printing function.\n" name
