@@ -34,7 +34,7 @@ VBINDIR=/usr/local/bin
 BINDIR=${INSTROOT}${VBINDIR}
 
 # The directory where the Caml Light standard library will be installed
-LIBDIR=${INSTROOT}/usr/local/lib/caml-light
+LIBDIR=${INSTROOT}/usr/local/lib/caml-dark
 
 # The manual section where the manual pages will be installed
 MANEXT=1
@@ -61,20 +61,17 @@ world:
 	cd compiler; make CPP="$(CPP)" all
 	cd linker; make CPP="$(CPP)" all
 	cd librar; make CPP="$(CPP)" all
+	cd lib; make CPP="$(CPP)" all
+	cd launch; make LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) \
+                           CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
+	runtime/camlrun launch/testprog
+	@ echo "Is that 10946 on the line above? Good."
+	@ echo "The Caml Dark system is up and running."
 #	cp runtime/camlrun .
-#	cd lib; make CPP="$(CPP)" all
 #	cd lex; make CPP="$(CPP)" all
 #	cd yacc; make CC="$(CC)" OPTS="$(OPTS)" all
 #	cp yacc/camlyacc .
 #	cd toplevel; make CPP="$(CPP)" all
-#	cd launch; make LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) \
-                           CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
-#	@ echo "Let's test quickly the toplevel system..."
-#	(echo "1+2;;";                                                        \
-         echo "let rec fib n = if n < 2 then 1 else fib(n-1)+fib(n-2);;";     \
-         echo "fib 20;;") | ./camlrun toplevel/camltop -stdlib lib
-#	@ echo "Is that 10946 on the line above? Good."
-#	@ echo "The Caml Light system is up and running."
 
 # Rebuild the system (bootstrap)
 bootstrap: backup promote again compare
@@ -132,10 +129,10 @@ install:
 	cd compiler; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
 	cd linker; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
 	cd librar; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd toplevel; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd lex; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd yacc; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd man; make MANDIR=$(MANDIR) MANEXT=$(MANEXT) install
+#	cd toplevel; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
+#	cd lex; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
+#	cd yacc; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
+#	cd man; make MANDIR=$(MANDIR) MANEXT=$(MANEXT) install
 	cp camlmsgs.txt $(LIBDIR)
 
 # Remove the Caml Light system after installation

@@ -1,10 +1,10 @@
-CAMLCOMP=../camlrun ../camlcomp -W -stdlib ../lib
-CAMLLINK=../camlrun ../camllink -stdlib ../lib
+CAMLCOMP=../compiler/camlcomp -W -stdlib ../lib
+CAMLLINK=../linker/camllink -stdlib ../lib
 CC=cc
 OPTS=
 LIBS=
 
-all: camlc camllight camlmktop camlexec testprog 
+all: darkc testprog # camllight camlmktop camlexec
 
 # header cannot be generated until camlrun is installed in $(BINDIR)...
 # Also, "make install" is done with root permissions, meaning that we don't
@@ -20,7 +20,7 @@ install:
                else cp camlexec $(LIBDIR)/header; \
                fi'
 	rm -f /tmp/testscr
-	for script in camlc camllight camlmktop; do \
+	for script in darkc camllight camlmktop; do \
 	  cp $$script $(BINDIR)/$$script; \
 	  chmod a+x $(BINDIR)/$$script; \
 	done
@@ -28,10 +28,10 @@ install:
 SEDCOMMANDS=\
   -e 's|LIBDIR|$(LIBDIR)|' -e 's|CC|$(CC) $(OPTS)|' -e 's|LIBS|$(LIBS)|'
 
-camlc: camlc.tpl ../version.h
+darkc: darkc.tpl ../version.h
 	sed  $(SEDCOMMANDS) \
             -e s/VERSION/`sed -e 's/#define VERSION //' ../version.h`/ \
-            camlc.tpl > camlc
+            darkc.tpl > darkc
 
 camllight: camllight.tpl
 	sed $(SEDCOMMANDS) camllight.tpl > camllight
@@ -48,6 +48,6 @@ camlexec: camlexec.c
 	strip camlexec
 
 clean:
-	rm -f camlexec camlc camllight camlmktop testprog testprog.z[io]
+	rm -f camlexec darkc camllight camlmktop testprog testprog.z[io]
 
 depend:

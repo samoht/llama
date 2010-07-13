@@ -1,8 +1,8 @@
 # The standard library
 
-CAMLCOMP=../camlrun ../camlcomp
-CAMLLIBR=../camlrun ../camllibr
-CPP=/lib/cpp -P -Dunix
+CAMLCOMP=../compiler/camlcomp
+CAMLLIBR=../librar/camllibr
+CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-stdlib . -O none -g -W
 
 # The list of all interfaces. Order irrelevant.
