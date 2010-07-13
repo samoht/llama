@@ -1,42 +1,47 @@
-#open "sys";;
-#open "obj";;
-#open "const";;
-#open "misc";;
-#open "lambda";;
-#open "config";;
-#open "opcodes";;
-#open "symtable";;
-#open "reloc";;
-#open "emit_phr";;
-#open "patch";;
-#open "tr_const";;
+open Sys;;
+open Obj;;
+open Const;;
+open Misc;;
+open Lambda;;
+open Config;;
+open Opcodes;;
+open Symtable;;
+open Reloc;;
+open Emit_phr;;
+open Patch;;
+open Tr_const;;
 
 (* Production of a bytecode executable file *)
 
 (* First pass : determine which phrases are required *)
 
 let compare_qualids q1 q2 =
-  let c = compare_strings q1.id q2.id in
-  if c != 0 then c else compare_strings q1.qual q2.qual;;
+  let c = compare q1.id q2.id in
+  if c != 0 then c else compare q1.qual q2.qual;;
 
-let missing_globals = ref (set__empty compare_qualids);;
+module QualidSet = Set.Make(struct
+                              type t = qualified_ident
+                              let compare = compare_qualids
+                            end)
+
+let missing_globals = ref QualidSet.empty
 
 let is_required = function
-    Reloc_setglobal id, _ -> set__mem id !missing_globals
+    Reloc_setglobal id, _ -> QualidSet.mem id !missing_globals
   | _ -> false;;
 
 let remove_required = function
-    Reloc_setglobal id, _ -> missing_globals := set__remove id !missing_globals
+    Reloc_setglobal id, _ -> missing_globals := QualidSet.remove id !missing_globals
   | _ -> ();;
 
 let add_required = function
-    Reloc_getglobal id, _ -> missing_globals := set__add id !missing_globals
+    Reloc_getglobal id, _ -> missing_globals := QualidSet.add id !missing_globals
   | _ -> ();;
 
 let scan_phrase tolink phr =
-  if not phr.cph_pure || exists is_required phr.cph_reloc then begin
-    do_list remove_required phr.cph_reloc;
-    do_list add_required phr.cph_reloc;
+  if not phr.cph_pure || List.exists is_required phr.cph_reloc then begin
+    List.iter remove_required phr.cph_reloc;
+    List.iter add_required phr.cph_reloc;
     phr :: tolink
   end else
     tolink
@@ -49,16 +54,16 @@ let scan_file tolink name =
     let n = input_binary_int inchan in
     seek_in inchan n;
     let phrase_index = (input_value inchan : compiled_phrase list) in
-    let required = it_list scan_phrase [] phrase_index in
+    let required = List.fold_left scan_phrase [] phrase_index in
     close_in inchan;
     (truename, required)::tolink
   with Cannot_find_file name ->
-    interntl__eprintf "Cannot find file %s.\n" name;
+    Interntl.eprintf "Cannot find file %s.\n" name;
     raise Toplevel
 ;;
 
 let require_qualid qual id =
-  missing_globals := set__add {qual=qual; id=id} !missing_globals;;
+  missing_globals := QualidSet.add {qual=qual; id=id} !missing_globals;;
 
 (* Second pass : link in the required phrases. *)
 
@@ -66,7 +71,7 @@ let events = ref ([] : event list)
 and abs_pos = ref 0;;
 
 let add_events eventlist =
-  do_list
+  List.iter
     (function ev ->
       ev.ev_pos <- !abs_pos + ev.ev_pos;
       events := ev :: !events)
@@ -76,11 +81,11 @@ let add_events eventlist =
 let link_object outchan (truename, required) =
   let inchan = open_in_bin truename in
   try
-    do_list
+    List.iter
       (function phr ->
         seek_in inchan phr.cph_pos;
-        let buff = create_string phr.cph_len in
-        fast_really_input inchan buff 0 phr.cph_len;
+        let buff = String.make phr.cph_len '\000' in
+        really_input inchan buff 0 phr.cph_len;
         patch_object buff 0 phr.cph_reloc;
         add_events phr.cph_events;
         output outchan buff 0 phr.cph_len;
@@ -88,19 +93,22 @@ let link_object outchan (truename, required) =
       required;
     close_in inchan
   with x ->
-    interntl__eprintf "Error while linking file %s.\n" truename;
+    Interntl.eprintf "Error while linking file %s.\n" truename;
     close_in inchan;
     raise x
 ;;
 
 (* To build the initial table of globals *)
 
+external caml_light_output_value_to_string : 'a -> string =
+      "caml_light_output_value_to_string"
+
 let emit_data outstream =
-  let globals = make_vect (number_of_globals()) (repr 0) in
-  do_list
+  let globals = Array.make (number_of_globals()) (repr 0) in
+  List.iter
     (function (n,sc) -> globals.(n) <- transl_structured_const sc)
     !literal_table;
-  output_value outstream globals
+  output_string outstream (caml_light_output_value_to_string globals)
 ;;
 
 (* To build a bytecode executable file *)
@@ -109,17 +117,17 @@ let write_debug_info = ref false;;
 
 let link module_list exec_name =
   let tolink =
-    it_list scan_file [] (rev module_list) in
+    List.fold_left scan_file [] (List.rev module_list) in
   let outchan =
     open_out_gen
-      [O_WRONLY; O_TRUNC; O_CREAT; O_BINARY]
-      (s_irall + s_iwall + s_ixall)
+      [Open_wronly; Open_trunc; Open_creat; Open_binary]
+      0o777
       exec_name in
   try
     (* The header *)
     begin try
-      let inchan = open_in_bin (filename__concat !path_library "header") in
-      let buff = create_string 1024 in
+      let inchan = open_in_bin (Filename.concat !path_library "header") in
+      let buff = String.make 1024 '\000' in
       while true do
         let n = input inchan buff 0 1024 in
         if n <= 0 then begin close_in inchan; raise Exit end;
@@ -131,8 +139,8 @@ let link module_list exec_name =
     (* The bytecode *)
     let pos1 = pos_out outchan in
     abs_pos := 0;
-    do_list (link_object outchan) tolink;
-    output_byte outchan STOP;
+    List.iter (link_object outchan) tolink;
+    output_byte outchan opSTOP;
     (* The table of global data *)
     let pos2 = pos_out outchan in
     emit_data outchan;
@@ -141,7 +149,7 @@ let link module_list exec_name =
     if !write_debug_info then save_linker_tables outchan;
     (* Debugging info (the events) *)
     let pos4 = pos_out outchan in
-    if !write_debug_info then output_compact_value outchan !events;
+    if !write_debug_info then output_value outchan !events;
     events := [];
     (* The trailer *)
     let pos5 = pos_out outchan in

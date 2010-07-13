@@ -1,6 +1,6 @@
-#open "const";;
-#open "obj";;
-#open "symtable";;
+open Const;;
+open Obj;;
+open Symtable;;
 
 (* To translate a structured constant into an object. *)
   
@@ -10,13 +10,13 @@ let rec transl_structured_const = function
   | SCatom(ACstring s) -> repr s
   | SCatom(ACchar c) -> repr c
   | SCblock(tag, comps) ->
-      let res = obj_block (get_num_of_tag tag) (list_length comps) in
+      let res = Obj.new_block (get_num_of_tag tag) (List.length comps) in
       fill_structured_const 0 res comps;
       res
 
 and fill_structured_const n obj = function
     [] -> ()
   | cst::rest ->
-      set_obj_field obj n (transl_structured_const cst);
+      Obj.set_field obj n (transl_structured_const cst);
       fill_structured_const (n+1) obj rest
 ;;

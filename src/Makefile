@@ -57,8 +57,8 @@ configure:
 
 # Build the system for the first time
 world:
+	cd runtime; make CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
 	cd compiler; make CPP="$(CPP)" all
-#	cd runtime; make CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
 #	cp runtime/camlrun .
 #	cd linker; make CPP="$(CPP)" all
 #	cd librar; make CPP="$(CPP)" all
