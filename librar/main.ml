@@ -12,7 +12,8 @@ let anonymous s =
 let set_output s =
   lib_name := s
 and show_version () =
-  Version.print_banner(); exit 0
+  Interntl.eprintf "The Caml Light librarian, version %s\n" Version.version;
+  exit 0
 and process_include filename =
   List.iter anonymous (Readword.from_file filename)
 and set_stdlib p =

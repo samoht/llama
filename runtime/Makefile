@@ -155,7 +155,7 @@ lexing.o: lexing.c mlvalues.h config.h ../config/m.h ../config/s.h misc.h \
 main.o: main.c ../config/s.h alloc.h misc.h config.h ../config/m.h \
   mlvalues.h debugcom.h debugger.h exec.h fail.h gc_ctrl.h globals.h \
   intext.h io.h stacks.h memory.h gc.h major_gc.h freelist.h minor_gc.h \
-  sys.h ../version.h
+  sys.h version.h
 major_gc.o: major_gc.c config.h ../config/m.h ../config/s.h debugger.h \
   misc.h mlvalues.h fail.h freelist.h gc.h gc_ctrl.h globals.h major_gc.h \
   roots.h
@@ -238,7 +238,7 @@ lexing.d.o: lexing.c mlvalues.h config.h ../config/m.h ../config/s.h misc.h \
 main.d.o: main.c ../config/s.h alloc.h misc.h config.h ../config/m.h \
   mlvalues.h debugcom.h debugger.h exec.h fail.h gc_ctrl.h globals.h \
   intext.h io.h stacks.h memory.h gc.h major_gc.h freelist.h minor_gc.h \
-  sys.h ../version.h
+  sys.h version.h
 major_gc.d.o: major_gc.c config.h ../config/m.h ../config/s.h debugger.h \
   misc.h mlvalues.h fail.h freelist.h gc.h gc_ctrl.h globals.h major_gc.h \
   roots.h

@@ -2,18 +2,18 @@
 
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
-INCLUDES=-I ../typing -I ../compiler
+INCLUDES=-I ../utils -I ../typing -I ../compiler
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
 
-EXTERNOBJS=config.cmx misc.cmx interntl.cmx opcodes.cmx
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx opcodes.cmx version.cmx
 
 OBJS=caml_light_extern.o \
     predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx link.cmx \
-    readword.cmx version.cmx main.cmx
+    readword.cmx main.cmx
 
-GENSOURCES=version.ml prim_c.ml predef.ml
+GENSOURCES=prim_c.ml predef.ml
 
 all: camllink
 
@@ -67,8 +67,6 @@ depend: $(GENSOURCES)
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
          ocamldep.opt $(INCLUDES) *.ml) > Makefile
 	rm Makefile.bak
-
-version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE

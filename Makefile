@@ -163,4 +163,8 @@ package-macosx:
 
 .PHONY: package-macosx
 
-#
+utils/version.ml: utils/version.mlp VERSION
+	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
+
+runtime/version.h: VERSION
+	echo "#define VERSION \"`head -1 VERSION`\"" > $@

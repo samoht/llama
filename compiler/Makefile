@@ -5,7 +5,7 @@ CAMLLINK=ocamlopt.opt
 CAMLLEX=ocamllex.opt
 CAMLYACC=ocamlyacc
 CPP=/usr/bin/cpp -P -Dunix
-INCLUDES=-I ../typing
+INCLUDES=-I ../utils -I ../typing
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 
@@ -14,15 +14,15 @@ EXTERNOBJS=config.cmx misc.cmx interntl.cmx const.cmx prim.cmx \
  modules.cmx builtins.cmx types.cmx \
  pr_type.cmx error.cmx typing.cmx ty_decl.cmx pr_decl.cmx ty_intf.cmx \
  tr_env.cmx event.cmx clauses.cmx matching.cmx  \
- primdecl.cmx lexer.cmx par_aux.cmx parser.cmx
+ primdecl.cmx lexer.cmx par_aux.cmx parser.cmx version.cmx
 
 OBJS=trstream.cmx front.cmx \
  instruct.cmx back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx \
  labels.cmx reloc.cmx \
  emitcode.cmx emit_phr.cmx \
- compiler.cmx version.cmx main.cmx
+ compiler.cmx main.cmx
 
-GENSOURCES=opcodes.ml version.ml
+GENSOURCES=opcodes.ml
 
 all: camlcomp
 
@@ -71,7 +71,6 @@ depend: $(GENSOURCES)
 
 location.ml: location.mlp
 config.ml: config.mlp
-version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
@@ -83,14 +82,14 @@ buffcode.cmo: ../typing/error.cmo
 buffcode.cmx: ../typing/error.cmx 
 compiler.cmo: ../typing/typing.cmo ../typing/ty_intf.cmo \
     ../typing/ty_decl.cmo ../typing/syntax.cmo ../typing/pr_decl.cmo \
-    ../typing/modules.cmo ../typing/misc.cmo ../typing/location.cmi \
-    ../typing/lexer.cmi ../typing/interntl.cmo front.cmo ../typing/error.cmo \
-    emit_phr.cmo back.cmo 
+    ../typing/parser.cmi ../typing/modules.cmo ../typing/misc.cmo \
+    ../typing/location.cmi ../typing/lexer.cmi ../typing/interntl.cmo \
+    front.cmo ../typing/error.cmo emit_phr.cmo back.cmo 
 compiler.cmx: ../typing/typing.cmx ../typing/ty_intf.cmx \
     ../typing/ty_decl.cmx ../typing/syntax.cmx ../typing/pr_decl.cmx \
-    ../typing/modules.cmx ../typing/misc.cmx ../typing/location.cmi \
-    ../typing/lexer.cmi ../typing/interntl.cmx front.cmx ../typing/error.cmx \
-    emit_phr.cmx back.cmx 
+    ../typing/parser.cmx ../typing/modules.cmx ../typing/misc.cmx \
+    ../typing/location.cmx ../typing/lexer.cmx ../typing/interntl.cmx \
+    front.cmx ../typing/error.cmx emit_phr.cmx back.cmx 
 emit_phr.cmo: reloc.cmo ../typing/lambda.cmo labels.cmo instruct.cmo \
     ../typing/event.cmo emitcode.cmo buffcode.cmo 
 emit_phr.cmx: reloc.cmx ../typing/lambda.cmx labels.cmx instruct.cmx \
@@ -100,7 +99,7 @@ emitcode.cmo: reloc.cmo prim_opc.cmo ../typing/prim.cmo opcodes.cmo \
     ../typing/event.cmo ../typing/const.cmo ../typing/config.cmi buffcode.cmo 
 emitcode.cmx: reloc.cmx prim_opc.cmx ../typing/prim.cmx opcodes.cmx \
     ../typing/misc.cmx ../typing/lambda.cmx labels.cmx instruct.cmx \
-    ../typing/event.cmx ../typing/const.cmx ../typing/config.cmi buffcode.cmx 
+    ../typing/event.cmx ../typing/const.cmx ../typing/config.cmx buffcode.cmx 
 front.cmo: ../typing/types.cmo trstream.cmo ../typing/tr_env.cmo \
     ../typing/syntax.cmo ../typing/prim.cmo ../typing/modules.cmo \
     ../typing/misc.cmo ../typing/matching.cmo ../typing/lambda.cmo \
@@ -115,12 +114,12 @@ instruct.cmo: ../typing/prim.cmo ../typing/lambda.cmo ../typing/const.cmo
 instruct.cmx: ../typing/prim.cmx ../typing/lambda.cmx ../typing/const.cmx 
 labels.cmo: ../typing/misc.cmo instruct.cmo buffcode.cmo 
 labels.cmx: ../typing/misc.cmx instruct.cmx buffcode.cmx 
-main.cmo: version.cmo ../typing/typing.cmo ../typing/modules.cmo \
+main.cmo: ../utils/version.cmo ../typing/typing.cmo ../typing/modules.cmo \
     ../typing/misc.cmo ../typing/interntl.cmo ../typing/event.cmo \
     ../typing/config.cmi compiler.cmo 
-main.cmx: version.cmx ../typing/typing.cmx ../typing/modules.cmx \
+main.cmx: ../utils/version.cmx ../typing/typing.cmx ../typing/modules.cmx \
     ../typing/misc.cmx ../typing/interntl.cmx ../typing/event.cmx \
-    ../typing/config.cmi compiler.cmx 
+    ../typing/config.cmx compiler.cmx 
 opcodes.cmo: 
 opcodes.cmx: 
 prim_opc.cmo: ../typing/prim.cmo opcodes.cmo ../typing/misc.cmo 
@@ -131,5 +130,3 @@ trstream.cmo: ../typing/tr_env.cmo ../typing/syntax.cmo ../typing/prim.cmo \
     ../typing/matching.cmo ../typing/lambda.cmo ../typing/const.cmo 
 trstream.cmx: ../typing/tr_env.cmx ../typing/syntax.cmx ../typing/prim.cmx \
     ../typing/matching.cmx ../typing/lambda.cmx ../typing/const.cmx 
-version.cmo: ../typing/interntl.cmo 
-version.cmx: ../typing/interntl.cmx 

@@ -31,7 +31,8 @@ and set_custom f =
   custom_runtime := true;
   prim_file := f
 and show_version () =
-  Version.print_banner(); exit 0
+  Interntl.eprintf "The Caml Light linker, version %s\n" Version.version;
+  exit 0
 and process_include filename =
   List.iter anonymous (Readword.from_file filename)
 and process_require filename =

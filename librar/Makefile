@@ -2,16 +2,16 @@
 
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
-INCLUDES=-I ../typing -I ../compiler -I ../linker
+INCLUDES=-I ../utils -I ../typing -I ../compiler -I ../linker
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
 
-EXTERNOBJS=config.cmx misc.cmx interntl.cmx readword.cmx
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx readword.cmx version.cmx
 
-OBJS=librar.cmx version.cmx main.cmx
+OBJS=librar.cmx main.cmx
 
-GENSOURCES=version.ml
+GENSOURCES=
 
 all: camllibr
 
@@ -47,17 +47,13 @@ depend: $(GENSOURCES)
          ocamldep.opt $(INCLUDES) *.ml) > Makefile
 	rm Makefile.bak
 
-version.ml: version.mlp ../version.h
-
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
 librar.cmo: ../typing/misc.cmo ../typing/interntl.cmo \
     ../compiler/emit_phr.cmo 
 librar.cmx: ../typing/misc.cmx ../typing/interntl.cmx \
     ../compiler/emit_phr.cmx 
-main.cmo: version.cmo ../linker/readword.cmo ../typing/misc.cmo librar.cmo \
+main.cmo: ../linker/readword.cmo ../typing/misc.cmo librar.cmo \
     ../typing/interntl.cmo ../typing/config.cmi 
-main.cmx: version.cmx ../linker/readword.cmx ../typing/misc.cmx librar.cmx \
+main.cmx: ../linker/readword.cmx ../typing/misc.cmx librar.cmx \
     ../typing/interntl.cmx ../typing/config.cmx 
-version.cmo: ../typing/interntl.cmo 
-version.cmx: ../typing/interntl.cmx 

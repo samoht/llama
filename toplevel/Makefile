@@ -3,7 +3,7 @@
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
 CAMLLIBR=ocamlopt.opt -a
-INCLUDES=-I ../typing -I ../compiler -I ../linker
+INCLUDES=-I ../utils -I ../typing -I ../compiler -I ../linker
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
@@ -17,10 +17,11 @@ EXTERNOBJS=config.cmx misc.cmx interntl.cmx \
     back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx labels.cmx \
     reloc.cmx emitcode.cmx emit_phr.cmx \
     primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
-    predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx
+    predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx \
+    version.cmx
 
 OBJS= eval.cmx fmt_type.cmx pr_value.cmx meta.cmx do_phr.cmx toplevel.cmx \
-     version.cmx topinit.cmx
+     topinit.cmx
 
 PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
     gc genlex hashtbl int io iparsing lexing list map obj pair parsing \
@@ -28,7 +29,7 @@ PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
 
 SPECIALS=sys
 
-GENSOURCES=version.ml pr_value.ml
+GENSOURCES=pr_value.ml
 
 all: camltop
 
@@ -82,7 +83,6 @@ depend: $(GENSOURCES)
          ocamldep.opt $(INCLUDES) meta.mli *.ml) > Makefile
 	rm Makefile.bak
 
-version.ml: version.mlp ../version.h
 pr_value.ml: pr_value.mlp
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
@@ -122,12 +122,12 @@ provide.cmo: ../typing/prim.cmo ../typing/modules.cmo ../typing/misc.cmo \
     ../typing/globals.cmo ../typing/const.cmo ../typing/config.cmi 
 provide.cmx: ../typing/prim.cmx ../typing/modules.cmx ../typing/misc.cmx \
     ../typing/globals.cmx ../typing/const.cmx ../typing/config.cmx 
-topinit.cmo: version.cmo ../typing/typing.cmo toplevel.cmi \
-    ../linker/symtable.cmo ../typing/modules.cmo ../typing/misc.cmo \
-    ../typing/interntl.cmo ../typing/config.cmi 
-topinit.cmx: version.cmx ../typing/typing.cmx toplevel.cmx \
-    ../linker/symtable.cmx ../typing/modules.cmx ../typing/misc.cmx \
-    ../typing/interntl.cmx ../typing/config.cmx 
+topinit.cmo: ../typing/typing.cmo toplevel.cmi ../linker/symtable.cmo \
+    ../typing/modules.cmo ../typing/misc.cmo ../typing/interntl.cmo \
+    ../typing/config.cmi 
+topinit.cmx: ../typing/typing.cmx toplevel.cmx ../linker/symtable.cmx \
+    ../typing/modules.cmx ../typing/misc.cmx ../typing/interntl.cmx \
+    ../typing/config.cmx 
 toplevel.cmo: ../typing/types.cmo ../linker/symtable.cmo pr_value.cmo \
     ../linker/patch.cmo ../compiler/opcodes.cmo ../typing/modules.cmo \
     ../typing/misc.cmo meta.cmi ../typing/location.cmi ../typing/interntl.cmo \
@@ -146,5 +146,3 @@ topmain.cmo: ../linker/symtable.cmo ../typing/misc.cmo ../typing/location.cmi \
 topmain.cmx: ../linker/symtable.cmx ../typing/misc.cmx ../typing/location.cmx \
     ../typing/interntl.cmx do_phr.cmx ../typing/config.cmx \
     ../compiler/compiler.cmx 
-version.cmo: ../typing/interntl.cmo 
-version.cmx: ../typing/interntl.cmx 
