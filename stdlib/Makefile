@@ -2,7 +2,7 @@
 
 ZEBRA_COMPILE=../zebra-compile
 ZEBRA_ARCHIVE=../zebra-archive
-ZEBRA_DEP=../zebra-dep
+ZEBRA_DEPEND=../zebra-depend
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-stdlib . -O none -g -W
 
@@ -50,7 +50,7 @@ filename.ml: filename.mlp
 genlex.ml: genlex.mlp
 
 depend: filename.ml genlex.ml
-	$(ZEBRA_DEP) *.mli *.ml > .depend
+	$(ZEBRA_DEPEND) *.mli *.ml > .depend
 .PHONY: depend
 
 -include .depend
