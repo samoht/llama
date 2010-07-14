@@ -40,7 +40,7 @@ try
               "-lang", Arg.String set_language, "(undocumented)"]
              anonymous "(undocumented)";
   default_used_modules := "toplevel" :: !default_used_modules;
-  Interntl.printf "\tCaml Light version %s\n" Version.version;
+  Interntl.printf "\tZebra version %s\n" Version.version;
   print_newline();
 (*
   let ic = open_in_bin Sys.argv.(0) in

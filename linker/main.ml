@@ -31,7 +31,7 @@ and set_custom f =
   custom_runtime := true;
   prim_file := f
 and show_version () =
-  Interntl.eprintf "The Caml Light linker, version %s\n" Version.version;
+  Interntl.eprintf "The Zebra linker, version %s\n" Version.version;
   exit 0
 and process_include filename =
   List.iter anonymous (Readword.from_file filename)

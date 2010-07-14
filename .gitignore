@@ -21,8 +21,8 @@ compiler/opcodes.ml
 launch/camlexec
 launch/darkc
 launch/testprog
-lib/filename.ml
-lib/genlex.ml
+stdlib/filename.ml
+stdlib/genlex.ml
 linker/predef.ml
 linker/prim_c.ml
 runtime/camlrun
@@ -36,8 +36,8 @@ toplevel/pr_value.ml
 toplevel/provide
 toplevel/required
 utils/version.ml
-camlcomp
-camllink
-camllibr
-camltop
+zebra-compile
+zebra-link
+zebra-librarian
+zebra
 testprog

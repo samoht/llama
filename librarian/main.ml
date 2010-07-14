@@ -12,7 +12,7 @@ let anonymous s =
 let set_output s =
   lib_name := s
 and show_version () =
-  Interntl.eprintf "The Caml Light librarian, version %s\n" Version.version;
+  Interntl.eprintf "The Zebra librarian, version %s\n" Version.version;
   exit 0
 and process_include filename =
   List.iter anonymous (Readword.from_file filename)

@@ -1,12 +1,9 @@
-CAMLCOMP=ocamlopt.opt -c
-CAMLLINK=ocamlopt.opt
-CAMLLIBR=ocamlopt.opt -a
-CAMLLEX=ocamllex.opt
-CAMLYACC=ocamlyacc
-CPP=/usr/bin/cpp -P -Dunix
-INCLUDES=-I utils -I typing -I compiler -I linker -I librar -I toplevel
-COMPFLAGS=-g $(INCLUDES) 
-LINKFLAGS=-g $(INCLUDES)
+OCAMLOPT=ocamlopt.opt
+OCAMLDEP=ocamldep.opt
+OCAMLLEX=ocamllex.opt
+OCAMLYACC=ocamlyacc
+INCLUDES=-I utils -I typing -I compiler -I linker -I librarian -I toplevel
+FLAGS=-g $(INCLUDES) 
 
 UTILS=utils/version.cmx
 
@@ -31,7 +28,7 @@ LINKER=linker/caml_light_extern.o \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
-LIBRAR=librar/librar.cmx
+LIBRARIAN=librarian/librar.cmx
 
 TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
@@ -40,31 +37,31 @@ TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
 GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: camlcomp camllink camllibr camltop the_library the_runtime testprog
+all: zebra-compile zebra-link zebra-librarian zebra the_library the_runtime testprog
 
-testprog.zo: testprog.ml camlcomp the_library
-	./camlcomp -I lib $<
+testprog.zo: testprog.ml zebra-compile the_library
+	./zebra-compile -I stdlib $<
 
-testprog: testprog.zo camllink the_library the_runtime
-	./camllink -I lib stdlib.zo $< -o $@
+testprog: testprog.zo zebra-link the_library the_runtime
+	./zebra-link -I stdlib stdlib.zo $< -o $@
 	runtime/camlrun testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The system is up and running."
 
-camlcomp: $(UTILS) $(TYPING) $(COMPILER) compiler/main.cmx
-	$(CAMLLINK) $(LINKFLAGS) -o camlcomp $^
+zebra-compile: $(UTILS) $(TYPING) $(COMPILER) compiler/main.cmx
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-camllink: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) linker/main.cmx
-	$(CAMLLINK) $(LINKFLAGS) -o camllink $^
+zebra-link: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) linker/main.cmx
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-camllibr: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(LIBRAR) librar/main.cmx
-	$(CAMLLINK) $(LINKFLAGS) -o camllibr $^
+zebra-librarian: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(LIBRARIAN) librarian/main.cmx
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-camltop: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
-	$(CAMLLINK) $(LINKFLAGS) -o camltop $^
+zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 the_library:
-	cd lib && make
+	cd stdlib && make
 the_runtime:
 	cd runtime && make
 .PHONY: the_library the_runtime
@@ -76,10 +73,10 @@ utils/version.ml: utils/version.mlp VERSION
 	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
 
 typing/lexer.ml: typing/lexer.mll
-	$(CAMLLEX) $<
+	$(OCAMLLEX) $<
 
 typing/parser.ml typing/parser.mli: typing/parser.mly
-	$(CAMLYACC) $<
+	$(OCAMLYACC) $<
 
 compiler/opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
@@ -118,47 +115,29 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
          echo '];;') > $@
 
 linker/caml_light_extern.o: linker/caml_light_extern.c
-	$(CAMLCOMP) -ccopt "-o $@" $<
+	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-.SUFFIXES :
-.SUFFIXES : .mli .ml .cmi .cmx .mlp
+%.cmx: %.ml
+	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
 
-.mli.cmi:
-	$(CAMLCOMP) $(COMPFLAGS) $<
-
-.ml.cmx:
-	$(CAMLCOMP) $(COMPFLAGS) $<
-
-SUBDIRS=runtime launch lib compiler linker librar toplevel tools
+%.cmi: %.mli
+	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
 
 # Configure the system
 configure:
 	cd ../config; sh autoconf "$(CC) $(OPTS) $(LIBS)"
 
-# Build the system for the first time
-world:
-	cd runtime; make CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
-	cd typing; make CPP="$(CPP)" all
-	cd compiler; make CPP="$(CPP)" all
-	cd linker; make CPP="$(CPP)" all
-	cd librar; make CPP="$(CPP)" all
-	cd lib; make CPP="$(CPP)" all
-	cd toplevel; make CPP="$(CPP)" all
-	runtime/camlrun launch/testprog
-	@ echo "Is that 10946 on the line above? Good."
-	@ echo "The Caml Dark system is up and running."
-
 clean:
-	rm -f camlcomp camllink camllibr camltop
+	rm -f zebra-compile zebra-link zebra-librarian zebra
 	rm -f $(GENSOURCES)
-	rm -f {utils,typing,compiler,linker,librar,toplevel}/*.{cmi,cmx,o}
+	rm -f {utils,typing,compiler,linker,librarian,toplevel}/*.{cmi,cmx,o}
 	cd runtime && make clean
-	cd lib && make clean
+	cd stdlib && make clean
 	rm -f testprog{,.zi,.zo}
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	ocamldep.opt $(INCLUDES) {utils,typing,compiler,linker,librar,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,librarian,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 -include .depend

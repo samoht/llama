@@ -28,7 +28,7 @@ and open_set set =
   with Not_found ->
     raise (Arg.Bad ("unknown module set " ^ set))
 and show_version () =
-  Interntl.eprintf "The Caml Light compiler, version %s\n" Version.version;
+  Interntl.eprintf "The Zebra compiler, version %s\n" Version.version;
   flush stderr
 and show_types_flag () =
   Compiler.verbose := true
