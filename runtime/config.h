@@ -3,11 +3,11 @@
 
 
 #ifdef macintosh
-#include ":::config:m.h"
-#include ":::config:s.h"
+#include "::config:m.h"
+#include "::config:s.h"
 #else
-#include "../../config/m.h"
-#include "../../config/s.h"
+#include "../config/m.h"
+#include "../config/s.h"
 #endif
 
 /* Library dependencies */

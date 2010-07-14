@@ -1,7 +1,7 @@
 /* Buffered input/output. */
 
 #include <string.h>
-#include "../../config/s.h"
+#include "../config/s.h"
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
