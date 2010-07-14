@@ -49,7 +49,7 @@ SHELL=/bin/sh
 
 ### End of configuration section
 
-SUBDIRS=runtime launch lib compiler linker librar toplevel lex yacc tools
+SUBDIRS=runtime launch lib compiler linker librar toplevel tools
 
 # Configure the system
 configure:
