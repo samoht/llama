@@ -48,19 +48,6 @@ val load_object : string -> unit
            the [compile] function. Global identifiers defined in the
            file being loaded are entered in their own module, not in
            the [top] module, just as with the [load] function. *)
-val trace : string -> unit
-        (* After the execution of [trace "foo"], all calls to the
-           global function named [foo] will be ``traced''. That is,
-           the argument and the result are displayed for each call, as
-           well as the exceptions escaping out of [foo], either raised
-           by [foo] itself, or raised by one of the functions called
-           from [foo]. If [foo] is a curried function, each argument
-           is printed as it is passed to the function. 
-           Only functions implemented in ML can be traced; system primitives
-           such as [string_length] or user-supplied C functions cannot. *)
-val untrace : string -> unit
-        (* Executing [untrace "foo"] stops all tracing over the global
-           function named [foo]. *)
 val verbose_mode: bool -> unit
         (* [verbose_mode true] causes the [compile] function to print
            the inferred types and other information. [verbose_mode false]

@@ -19,7 +19,7 @@ EXTERNOBJS=config.cmx misc.cmx interntl.cmx \
     primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
     predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx
 
-OBJS=fmt_type.cmx pr_value.cmx meta.cmx load_phr.cmx do_phr.cmx toplevel.cmx \
+OBJS= eval.cmx fmt_type.cmx pr_value.cmx meta.cmx do_phr.cmx toplevel.cmx \
      version.cmx topinit.cmx
 
 PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
@@ -89,17 +89,12 @@ pr_value.ml: pr_value.mlp
 ### DO NOT DELETE THIS LINE
 do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmx ../compiler/modules.cmx \
     ../compiler/interntl.cmx ../compiler/compiler.cmx ../compiler/const.cmx \
-    ../compiler/misc.cmx load_phr.cmx ../compiler/back.cmx \
+    ../compiler/misc.cmx ../compiler/back.cmx \
     ../compiler/front.cmx fmt_type.cmx ../linker/symtable.cmx \
     ../compiler/syntax.cmx ../compiler/ty_decl.cmx ../compiler/types.cmx 
 expunge.cmx: ../linker/symtable.cmx ../compiler/const.cmx 
 fmt_type.cmx: ../compiler/modules.cmx ../compiler/globals.cmx \
     ../compiler/types.cmx ../compiler/const.cmx 
-load_phr.cmx: pr_value.cmx ../compiler/reloc.cmx meta.cmx ../linker/tr_const.cmx \
-    ../compiler/interntl.cmx ../compiler/labels.cmx ../compiler/misc.cmx \
-    ../linker/symtable.cmx ../linker/patch.cmx ../compiler/instruct.cmx \
-    ../compiler/buffcode.cmx ../compiler/emitcode.cmx ../compiler/builtins.cmx \
-    ../compiler/opcodes.cmx
 pr_value.cmx: ../compiler/modules.cmx ../compiler/const.cmx \
     ../compiler/misc.cmx fmt_type.cmx ../linker/symtable.cmx \
     ../compiler/globals.cmx ../compiler/builtins.cmx ../compiler/types.cmx 
@@ -114,7 +109,7 @@ toplevel.cmx: toplevel.cmi meta.cmi ../compiler/modules.cmx \
     ../linker/symtable.cmx ../linker/patch.cmx ../compiler/globals.cmx \
     ../compiler/builtins.cmx pr_value.cmx ../compiler/location.cmi \
     ../compiler/interntl.cmx ../compiler/const.cmx ../compiler/compiler.cmx \
-    load_phr.cmx do_phr.cmx ../compiler/types.cmx ../compiler/opcodes.cmx 
+    do_phr.cmx ../compiler/types.cmx ../compiler/opcodes.cmx 
 topmain.cmx: ../compiler/location.cmi ../compiler/interntl.cmx \
     ../compiler/config.cmi ../compiler/compiler.cmx ../compiler/misc.cmx \
     do_phr.cmx 

@@ -13,7 +13,6 @@ open Patch;;
 open Emit_phr;;
 open Symtable;;
 open Do_phr;;
-open Load_phr;;
 open Compiler;;
 open Pr_value;;
 open Format;;
@@ -60,9 +59,7 @@ let load_object name =
   List.iter
     (function phr ->
       patch_object code (phr.cph_pos - start) phr.cph_reloc)
-    (List.rev phrase_index);
-  let res = do_code false code 0 block_len in
-  ()
+    (List.rev phrase_index)
 ;;
 let _ = fwd_load_object := load_object;;
 
@@ -145,76 +142,6 @@ let load name =
 let quit x = exit 0; ()
 ;;
 
-(* The trace *)
-
-let trace_env = ref ([] : (int * t) list);;
-
-let rec trace_instr name value ty =
-  match (type_repr ty).typ_desc with
-    Tarrow(t1,t2) ->
-      let namestar = name ^ "*" in
-      repr(fun arg ->
-        print_string name; print_string " <-- ";
-        print_value arg t1; print_newline ();
-        try
-          let res = (Obj.magic value : t -> t) arg in
-           print_string name; print_string " --> ";
-           print_value res t2; print_newline ();
-           trace_instr namestar res t2
-        with exc ->
-           print_string name;
-           print_string " raises ";
-           print_value (repr exc) Builtins.type_exn;
-           print_newline ();
-           raise exc)
-  | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
-      trace_instr name value (expand_abbrev params body args)
-  | _ -> value
-;;
-
-let trace name =
-  begin try
-    let val_desc = find_value_desc (parse_global name) in
-    match val_desc.info.val_prim with
-      ValueNotPrim ->
-        let pos = get_slot_for_variable val_desc.qualid in
-        if List.mem_assoc pos !trace_env then begin
-          Interntl.eprintf "The function %s is already traced.\n" name        
-        end else begin
-          trace_env := (pos, get_global_data pos) :: !trace_env;
-          set_global_data pos
-            (trace_instr name (get_global_data pos) val_desc.info.val_typ);
-          Interntl.eprintf "The function %s is now traced.\n" name
-        end
-    | ValuePrim(_, _) ->
-        Interntl.eprintf
-         "The function %s is a primitive, it cannot be traced.\n" name
-  with Desc_not_found ->
-    Interntl.eprintf "Unknown function %s.\n" name
-  end
-;;
-
-let untrace name =
-  begin try
-    let val_desc = find_value_desc (parse_global name) in
-    let pos = get_slot_for_variable val_desc.qualid in
-    let rec except = function
-      [] ->
-        Interntl.eprintf "The function %s was not traced.\n" name;
-        []
-    | (pos',obj as pair)::rest ->
-        if pos == pos' then begin
-          set_global_data pos obj;
-          Interntl.eprintf "The function %s is no longer traced.\n" name;
-          rest
-        end else
-          pair :: except rest in
-    trace_env := except !trace_env
-  with Desc_not_found ->
-    Interntl.eprintf "Unknown function %s.\n" name
-  end
-;;
-
 (* To define specific printing functions. *)
 
 let install_printer name =
@@ -227,9 +154,11 @@ let install_printer name =
       unify (type_instance val_desc.info.val_typ, ty_printer);
       pop_type_level();
       generalize_type ty_arg;
+(*
       let pos = get_slot_for_variable val_desc.qualid in
       printers := (name, ty_arg, (Obj.magic (get_global_data pos) : t -> unit))
                :: !printers
+*)
     with Unify ->
       Interntl.eprintf "%s has the wrong type for a printing function.\n" name
     end
