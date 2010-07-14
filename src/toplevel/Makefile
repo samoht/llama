@@ -19,7 +19,7 @@ EXTERNOBJS=config.cmx misc.cmx interntl.cmx \
     primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
     predef.cmx prim_c.cmx symtable.cmx patch.cmx tr_const.cmx
 
-OBJS=fmt_type.cmx pr_value.cmx load_phr.cmx do_phr.cmx toplevel.cmx \
+OBJS=fmt_type.cmx pr_value.cmx meta.cmx load_phr.cmx do_phr.cmx toplevel.cmx \
      version.cmx topinit.cmx
 
 PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
@@ -33,11 +33,9 @@ GENSOURCES=version.ml pr_value.ml
 all: camltop
 
 camltop: toplib.cmxa topmain.cmx provide expunge
-	./provide -stdlib ../lib $(PERVASIVES) > required
-	$(CAMLLINK) $(LINKFLAGS) -o camltop1 \
-                ../runtime/libcaml.a ../runtime/prims.o \
-		$(EXTERNOBJS)
-#		toplib.cmxa topmain.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o camltop \
+		$(EXTERNOBJS) $(OBJS) topmain.cmx
+#	./provide -stdlib ../lib $(PERVASIVES) > required
 #	./expunge camltop1 camltop $(PERVASIVES) $(SPECIALS)
 #	rm -f camltop1 required
 #	cp toplevel.zi ../lib
@@ -89,7 +87,7 @@ pr_value.ml: pr_value.mlp
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmi ../compiler/modules.cmx \
+do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmx ../compiler/modules.cmx \
     ../compiler/interntl.cmx ../compiler/compiler.cmx ../compiler/const.cmx \
     ../compiler/misc.cmx load_phr.cmx ../compiler/back.cmx \
     ../compiler/front.cmx fmt_type.cmx ../linker/symtable.cmx \
@@ -97,18 +95,18 @@ do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmi ../compiler/modules.cmx
 expunge.cmx: ../linker/symtable.cmx ../compiler/const.cmx 
 fmt_type.cmx: ../compiler/modules.cmx ../compiler/globals.cmx \
     ../compiler/types.cmx ../compiler/const.cmx 
-load_phr.cmx: pr_value.cmx ../compiler/reloc.cmx meta.cmi ../linker/tr_const.cmx \
+load_phr.cmx: pr_value.cmx ../compiler/reloc.cmx meta.cmx ../linker/tr_const.cmx \
     ../compiler/interntl.cmx ../compiler/labels.cmx ../compiler/misc.cmx \
     ../linker/symtable.cmx ../linker/patch.cmx ../compiler/instruct.cmx \
     ../compiler/buffcode.cmx ../compiler/emitcode.cmx ../compiler/builtins.cmx \
-    ../compiler/opcodes.cmx 
+    ../compiler/opcodes.cmx
 pr_value.cmx: ../compiler/modules.cmx ../compiler/const.cmx \
     ../compiler/misc.cmx fmt_type.cmx ../linker/symtable.cmx \
     ../compiler/globals.cmx ../compiler/builtins.cmx ../compiler/types.cmx 
 provide.cmx: ../compiler/prim.cmx ../compiler/modules.cmx \
     ../compiler/config.cmi ../compiler/const.cmx ../compiler/misc.cmx \
     ../compiler/globals.cmx 
-topinit.cmx: meta.cmi ../compiler/typing.cmx toplevel.cmi \
+topinit.cmx: meta.cmi ../compiler/typing.cmx toplevel.cmx \
     ../compiler/modules.cmx ../compiler/interntl.cmx ../compiler/config.cmi \
     ../compiler/misc.cmx version.cmx ../linker/symtable.cmx 
 toplevel.cmx: toplevel.cmi meta.cmi ../compiler/modules.cmx \

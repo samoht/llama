@@ -64,6 +64,7 @@ let load_object name =
   let res = do_code false code 0 block_len in
   ()
 ;;
+let _ = fwd_load_object := load_object;;
 
 (* To preserve the current toplevel module while compiling another module. *)
 

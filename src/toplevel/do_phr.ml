@@ -17,6 +17,8 @@ open Symtable;;
 open Load_phr;;
 open Compiler;;
 
+let fwd_load_object = ref(fun s -> failwith "fwd_load_object")
+
 (* Executing phrases *)
 
 let do_toplevel_phrase phr =
@@ -26,8 +28,9 @@ let do_toplevel_phrase phr =
     Zexpr expr ->
       let ty =
         type_expression phr.im_loc expr in
-      let res =
-        load_phrase(compile_lambda false (translate_expression expr)) in
+      let texpr = translate_expression expr in
+      let cexpr = compile_lambda false texpr in
+      let res = load_phrase cexpr in
       flush stderr;
       open_box 1;
       print_string "- :"; print_space();
@@ -75,7 +78,12 @@ let do_toplevel_phrase phr =
                                             | Zconstr1decl(name,_,_) -> name))
         decl
   | Zimpldirective dir ->
-      do_directive phr.im_loc dir
+      begin match dir with
+        | Zdir ("load", filename) ->
+            !fwd_load_object filename
+        | _ ->
+            do_directive phr.im_loc dir
+      end
   end;
   flush stdout
 ;;

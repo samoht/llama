@@ -42,6 +42,7 @@ try
   default_used_modules := "toplevel" :: !default_used_modules;
   Version.print_banner();
   print_newline();
+(*
   let ic = open_in_bin Sys.argv.(0) in
   seek_in ic (in_channel_length ic - 20);
   let size_code = input_binary_int ic in
@@ -54,7 +55,7 @@ try
   close_in ic;
   Meta.set_global_data 16 (Obj.repr true); (* 16: cf ../runtime/globals.h *)
   start_compiling_interface "top"
-
+*)
 with Toplevel -> exit 2
    | Sys_error msg ->
       Interntl.eprintf "Input/output error: %s.\n" msg;

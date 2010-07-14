@@ -8,6 +8,7 @@ open Compiler;;
 open Format;;
 
 let mainloop() =
+  Symtable.reset_linker_tables();
   try
     Sys.catch_break true;
     let lexbuf = Lexing.from_channel stdin in
