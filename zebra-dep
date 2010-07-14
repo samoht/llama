@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 # To scan a Caml Light source file, find all references to external modules
 # (#open "foo";; or foo__bar), and output the dependencies on standard output.
