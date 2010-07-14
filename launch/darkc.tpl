@@ -61,7 +61,7 @@ while : ; do
       stdlib=$2
       shift;;
     -v|-version)
-      echo "The Caml Light system, version" VERSION
+      echo "The Caml Light system, version" %%VERSION%%
       echo "  (standard library from $stdlib)"
       darkrun -V
       $stdlib/camlcomp -version

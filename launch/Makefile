@@ -29,10 +29,8 @@ install:
 SEDCOMMANDS=\
   -e 's|LIBDIR|$(LIBDIR)|' -e 's|CC|$(CC) $(OPTS)|' -e 's|LIBS|$(LIBS)|'
 
-darkc: darkc.tpl ../version.h
-	sed  $(SEDCOMMANDS) \
-            -e s/VERSION/`sed -e 's/#define VERSION //' ../version.h`/ \
-            darkc.tpl > darkc
+darkc: darkc.tpl ../VERSION
+	sed -e "s|%%VERSION%%|`head -1 ../VERSION`|" $< > $@
 
 camllight: camllight.tpl
 	sed $(SEDCOMMANDS) camllight.tpl > camllight
