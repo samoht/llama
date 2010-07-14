@@ -2,7 +2,7 @@
 
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
-INCLUDES=-I ../compiler -I ../linker
+INCLUDES=-I ../typing -I ../compiler -I ../linker
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
@@ -44,15 +44,20 @@ install:
 depend: $(GENSOURCES)
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
-         ../tools/camldep -I ../compiler -I ../linker *.ml) > Makefile
+         ocamldep.opt $(INCLUDES) *.ml) > Makefile
 	rm Makefile.bak
 
 version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-librar.cmx: ../compiler/emit_phr.cmx ../compiler/misc.cmx \
-    ../compiler/interntl.cmx 
-main.cmx: librar.cmx version.cmx ../compiler/misc.cmx ../linker/readword.cmx \
-    ../compiler/interntl.cmx ../compiler/config.cmi 
-version.cmx: ../compiler/interntl.cmx 
+librar.cmo: ../typing/misc.cmo ../typing/interntl.cmo \
+    ../compiler/emit_phr.cmo 
+librar.cmx: ../typing/misc.cmx ../typing/interntl.cmx \
+    ../compiler/emit_phr.cmx 
+main.cmo: version.cmo ../linker/readword.cmo ../typing/misc.cmo librar.cmo \
+    ../typing/interntl.cmo ../typing/config.cmi 
+main.cmx: version.cmx ../linker/readword.cmx ../typing/misc.cmx librar.cmx \
+    ../typing/interntl.cmx ../typing/config.cmx 
+version.cmo: ../typing/interntl.cmo 
+version.cmx: ../typing/interntl.cmx 

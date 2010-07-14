@@ -5,28 +5,30 @@ CAMLLINK=ocamlopt.opt
 CAMLLEX=ocamllex.opt
 CAMLYACC=ocamlyacc
 CPP=/usr/bin/cpp -P -Dunix
+INCLUDES=-I ../typing
+COMPFLAGS=-g $(INCLUDES)
+LINKFLAGS=-g $(INCLUDES)
 
-COMPFLAGS=-g
-LINKFLAGS=-g
-
-OBJS=config.cmx misc.cmx interntl.cmx const.cmx prim.cmx lambda.cmx globals.cmx \
- location.cmx syntax.cmx \
+EXTERNOBJS=config.cmx misc.cmx interntl.cmx const.cmx prim.cmx \
+ lambda.cmx globals.cmx location.cmx syntax.cmx \
  modules.cmx builtins.cmx types.cmx \
  pr_type.cmx error.cmx typing.cmx ty_decl.cmx pr_decl.cmx ty_intf.cmx \
- tr_env.cmx event.cmx clauses.cmx matching.cmx trstream.cmx front.cmx \
- instruct.cmx back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx labels.cmx reloc.cmx \
- emitcode.cmx emit_phr.cmx \
- primdecl.cmx lexer.cmx par_aux.cmx parser.cmx compiler.cmx \
- version.cmx main.cmx
+ tr_env.cmx event.cmx clauses.cmx matching.cmx  \
+ primdecl.cmx lexer.cmx par_aux.cmx parser.cmx
 
-GENSOURCES=lexer.ml parser.ml parser.mli opcodes.ml config.ml \
-  location.ml version.ml
+OBJS=trstream.cmx front.cmx \
+ instruct.cmx back.cmx opcodes.cmx prim_opc.cmx buffcode.cmx \
+ labels.cmx reloc.cmx \
+ emitcode.cmx emit_phr.cmx \
+ compiler.cmx version.cmx main.cmx
+
+GENSOURCES=opcodes.ml version.ml
 
 all: camlcomp
 
 camlcomp: $(OBJS)
-	$(CAMLLINK) $(LINKFLAGS) -o camlcomp $(OBJS)
-        
+	$(CAMLLINK) $(LINKFLAGS) -o camlcomp $(EXTERNOBJS) $(OBJS)
+
 clean:
 	rm -f *.cmi *.cmx *.o camlcomp
 	rm -f $(GENSOURCES) lexer.mll
@@ -64,7 +66,7 @@ parser.ml parser.mli: parser.mly
 depend: $(GENSOURCES)
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
-         ../tools/camldep *.mli *.ml) > Makefile
+         ocamldep *.mli *.ml) > Makefile
 	rm Makefile.bak
 
 location.ml: location.mlp
@@ -73,60 +75,33 @@ version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-lexer.cmi: parser.cmi 
-parser.cmi: syntax.cmx 
-back.cmx: prim.cmx lambda.cmx const.cmx misc.cmx instruct.cmx 
-buffcode.cmx: error.cmx 
-builtins.cmx: modules.cmx globals.cmx const.cmx 
-clauses.cmx: lambda.cmx error.cmx location.cmi const.cmx misc.cmx syntax.cmx \
-    globals.cmx types.cmx 
-compiler.cmx: pr_decl.cmx typing.cmx parser.cmi error.cmx modules.cmx location.cmi \
-    interntl.cmx emit_phr.cmx misc.cmx back.cmx front.cmx ty_intf.cmx syntax.cmx \
-    lexer.cmi ty_decl.cmx 
-config.cmx: config.cmi 
-const.cmx: misc.cmx 
-emit_phr.cmx: event.cmx reloc.cmx lambda.cmx emitcode.cmx buffcode.cmx \
-    instruct.cmx labels.cmx 
-emitcode.cmx: prim.cmx reloc.cmx prim_opc.cmx lambda.cmx config.cmi labels.cmx \
-    const.cmx misc.cmx event.cmx instruct.cmx buffcode.cmx opcodes.cmx 
-error.cmx: misc.cmx syntax.cmx pr_type.cmx location.cmi interntl.cmx globals.cmx \
-    types.cmx const.cmx 
-event.cmx: syntax.cmx lambda.cmx modules.cmx location.cmi 
-front.cmx: trstream.cmx prim.cmx lambda.cmx error.cmx tr_env.cmx matching.cmx \
-    modules.cmx const.cmx misc.cmx event.cmx syntax.cmx globals.cmx builtins.cmx \
-    types.cmx 
-globals.cmx: prim.cmx const.cmx 
-instruct.cmx: prim.cmx lambda.cmx const.cmx 
-interntl.cmx: misc.cmx 
-labels.cmx: misc.cmx buffcode.cmx instruct.cmx 
-lambda.cmx: prim.cmx globals.cmx const.cmx 
-lexer.cmx: lexer.cmi parser.cmi 
-location.cmx: location.cmi interntl.cmx config.cmi 
-main.cmx: typing.cmx modules.cmx interntl.cmx config.cmi compiler.cmx misc.cmx \
-    version.cmx event.cmx 
-matching.cmx: clauses.cmx prim.cmx lambda.cmx error.cmx location.cmi const.cmx \
-    misc.cmx syntax.cmx globals.cmx builtins.cmx types.cmx 
-modules.cmx: misc.cmx interntl.cmx globals.cmx const.cmx 
-par_aux.cmx: error.cmx modules.cmx location.cmi const.cmx misc.cmx syntax.cmx \
-    globals.cmx builtins.cmx 
-parser.cmx: parser.cmi primdecl.cmx par_aux.cmx syntax.cmx builtins.cmx \
-    globals.cmx const.cmx 
-pr_decl.cmx: misc.cmx pr_type.cmx globals.cmx const.cmx 
-pr_type.cmx: modules.cmx globals.cmx types.cmx const.cmx 
-prim.cmx: const.cmx 
-prim_opc.cmx: misc.cmx prim.cmx opcodes.cmx 
-primdecl.cmx: prim.cmx globals.cmx 
-reloc.cmx: buffcode.cmx const.cmx 
-syntax.cmx: location.cmi globals.cmx const.cmx 
-tr_env.cmx: prim.cmx lambda.cmx error.cmx const.cmx misc.cmx syntax.cmx \
-    builtins.cmx globals.cmx 
-trstream.cmx: prim.cmx lambda.cmx syntax.cmx tr_env.cmx matching.cmx const.cmx 
-ty_decl.cmx: typing.cmx syntax.cmx error.cmx modules.cmx builtins.cmx globals.cmx \
-    types.cmx const.cmx 
-ty_intf.cmx: ty_decl.cmx error.cmx modules.cmx globals.cmx types.cmx const.cmx 
-types.cmx: misc.cmx modules.cmx globals.cmx const.cmx 
-typing.cmx: error.cmx modules.cmx const.cmx misc.cmx syntax.cmx globals.cmx \
-    builtins.cmx types.cmx 
-typing.old.cmx: error.cmx modules.cmx const.cmx misc.cmx syntax.cmx globals.cmx \
-    builtins.cmx types.cmx 
-version.cmx: interntl.cmx 
+back.cmo: instruct.cmo 
+back.cmx: instruct.cmx 
+buffcode.cmo: 
+buffcode.cmx: 
+compiler.cmo: front.cmo emit_phr.cmo back.cmo 
+compiler.cmx: front.cmx emit_phr.cmx back.cmx 
+emit_phr.cmo: reloc.cmo labels.cmo instruct.cmo emitcode.cmo buffcode.cmo 
+emit_phr.cmx: reloc.cmx labels.cmx instruct.cmx emitcode.cmx buffcode.cmx 
+emitcode.cmo: reloc.cmo prim_opc.cmo opcodes.cmo labels.cmo instruct.cmo \
+    buffcode.cmo 
+emitcode.cmx: reloc.cmx prim_opc.cmx opcodes.cmx labels.cmx instruct.cmx \
+    buffcode.cmx 
+front.cmo: trstream.cmo 
+front.cmx: trstream.cmx 
+instruct.cmo: 
+instruct.cmx: 
+labels.cmo: instruct.cmo buffcode.cmo 
+labels.cmx: instruct.cmx buffcode.cmx 
+main.cmo: version.cmo compiler.cmo 
+main.cmx: version.cmx compiler.cmx 
+opcodes.cmo: 
+opcodes.cmx: 
+prim_opc.cmo: opcodes.cmo 
+prim_opc.cmx: opcodes.cmx 
+reloc.cmo: buffcode.cmo 
+reloc.cmx: buffcode.cmx 
+trstream.cmo: 
+trstream.cmx: 
+version.cmo: 
+version.cmx: 

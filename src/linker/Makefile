@@ -2,7 +2,7 @@
 
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
-INCLUDES=-I ../compiler
+INCLUDES=-I ../typing -I ../compiler
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
@@ -65,22 +65,38 @@ caml_light_extern.o: caml_light_extern.c
 depend: $(GENSOURCES)
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
-         ../tools/camldep -I ../compiler *.ml) > Makefile
+         ocamldep.opt $(INCLUDES) *.ml) > Makefile
 	rm Makefile.bak
 
 version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-link.cmx: ../compiler/reloc.cmx ../compiler/lambda.cmx tr_const.cmx \
-    ../compiler/interntl.cmx ../compiler/config.cmi ../compiler/const.cmx \
-    ../compiler/misc.cmx ../compiler/emit_phr.cmx symtable.cmx patch.cmx \
-    ../compiler/opcodes.cmx 
-main.cmx: link.cmx ../compiler/interntl.cmx ../compiler/config.cmi \
-    ../compiler/misc.cmx version.cmx symtable.cmx readword.cmx 
+link.cmo: tr_const.cmo symtable.cmo ../compiler/reloc.cmo patch.cmo \
+    ../compiler/opcodes.cmo ../typing/misc.cmo ../typing/lambda.cmo \
+    ../typing/interntl.cmo ../compiler/emit_phr.cmo ../typing/const.cmo \
+    ../typing/config.cmi 
+link.cmx: tr_const.cmx symtable.cmx ../compiler/reloc.cmx patch.cmx \
+    ../compiler/opcodes.cmx ../typing/misc.cmx ../typing/lambda.cmx \
+    ../typing/interntl.cmx ../compiler/emit_phr.cmx ../typing/const.cmx \
+    ../typing/config.cmx 
+main.cmo: version.cmo symtable.cmo readword.cmo ../typing/misc.cmo link.cmo \
+    ../typing/interntl.cmo ../typing/config.cmi 
+main.cmx: version.cmx symtable.cmx readword.cmx ../typing/misc.cmx link.cmx \
+    ../typing/interntl.cmx ../typing/config.cmx 
+patch.cmo: symtable.cmo ../compiler/reloc.cmo 
 patch.cmx: symtable.cmx ../compiler/reloc.cmx 
-predef.cmx: ../compiler/const.cmx 
-symtable.cmx: predef.cmx ../compiler/misc.cmx prim_c.cmx \
-    ../compiler/interntl.cmx ../compiler/const.cmx 
-tr_const.cmx: symtable.cmx ../compiler/const.cmx 
-version.cmx: ../compiler/interntl.cmx 
+predef.cmo: ../typing/const.cmo 
+predef.cmx: ../typing/const.cmx 
+prim_c.cmo: 
+prim_c.cmx: 
+readword.cmo: 
+readword.cmx: 
+symtable.cmo: prim_c.cmo predef.cmo ../typing/misc.cmo ../typing/interntl.cmo \
+    ../typing/const.cmo 
+symtable.cmx: prim_c.cmx predef.cmx ../typing/misc.cmx ../typing/interntl.cmx \
+    ../typing/const.cmx 
+tr_const.cmo: symtable.cmo ../typing/const.cmo 
+tr_const.cmx: symtable.cmx ../typing/const.cmx 
+version.cmo: ../typing/interntl.cmo 
+version.cmx: ../typing/interntl.cmx 

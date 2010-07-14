@@ -3,7 +3,7 @@
 CAMLCOMP=ocamlopt.opt -c
 CAMLLINK=ocamlopt.opt
 CAMLLIBR=ocamlopt.opt -a
-INCLUDES=-I ../compiler -I ../linker
+INCLUDES=-I ../typing -I ../compiler -I ../linker
 COMPFLAGS=-g $(INCLUDES)
 LINKFLAGS=-g $(INCLUDES)
 CPP=/usr/bin/cpp -P -Dunix
@@ -79,7 +79,7 @@ install:
 depend: $(GENSOURCES)
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
-         ../tools/camldep -I ../compiler -I ../linker meta.mli *.ml) > Makefile
+         ocamldep.opt $(INCLUDES) meta.mli *.ml) > Makefile
 	rm Makefile.bak
 
 version.ml: version.mlp ../version.h
@@ -87,30 +87,64 @@ pr_value.ml: pr_value.mlp
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-do_phr.cmx: pr_value.cmx ../compiler/typing.cmx meta.cmx ../compiler/modules.cmx \
-    ../compiler/interntl.cmx ../compiler/compiler.cmx ../compiler/const.cmx \
-    ../compiler/misc.cmx ../compiler/back.cmx \
-    ../compiler/front.cmx fmt_type.cmx ../linker/symtable.cmx \
-    ../compiler/syntax.cmx ../compiler/ty_decl.cmx ../compiler/types.cmx 
-expunge.cmx: ../linker/symtable.cmx ../compiler/const.cmx 
-fmt_type.cmx: ../compiler/modules.cmx ../compiler/globals.cmx \
-    ../compiler/types.cmx ../compiler/const.cmx 
-pr_value.cmx: ../compiler/modules.cmx ../compiler/const.cmx \
-    ../compiler/misc.cmx fmt_type.cmx ../linker/symtable.cmx \
-    ../compiler/globals.cmx ../compiler/builtins.cmx ../compiler/types.cmx 
-provide.cmx: ../compiler/prim.cmx ../compiler/modules.cmx \
-    ../compiler/config.cmi ../compiler/const.cmx ../compiler/misc.cmx \
-    ../compiler/globals.cmx 
-topinit.cmx: meta.cmi ../compiler/typing.cmx toplevel.cmx \
-    ../compiler/modules.cmx ../compiler/interntl.cmx ../compiler/config.cmi \
-    ../compiler/misc.cmx version.cmx ../linker/symtable.cmx 
-toplevel.cmx: toplevel.cmi meta.cmi ../compiler/modules.cmx \
-    ../compiler/emit_phr.cmx ../compiler/misc.cmx ../compiler/event.cmx \
-    ../linker/symtable.cmx ../linker/patch.cmx ../compiler/globals.cmx \
-    ../compiler/builtins.cmx pr_value.cmx ../compiler/location.cmi \
-    ../compiler/interntl.cmx ../compiler/const.cmx ../compiler/compiler.cmx \
-    do_phr.cmx ../compiler/types.cmx ../compiler/opcodes.cmx 
-topmain.cmx: ../compiler/location.cmi ../compiler/interntl.cmx \
-    ../compiler/config.cmi ../compiler/compiler.cmx ../compiler/misc.cmx \
-    do_phr.cmx 
-version.cmx: ../compiler/interntl.cmx 
+meta.cmi: 
+do_phr.cmo: ../typing/typing.cmo ../typing/types.cmo ../typing/ty_decl.cmo \
+    ../typing/syntax.cmo ../linker/symtable.cmo pr_value.cmo \
+    ../typing/modules.cmo ../typing/misc.cmo meta.cmi ../typing/interntl.cmo \
+    ../compiler/front.cmo fmt_type.cmo eval.cmo ../typing/const.cmo \
+    ../compiler/compiler.cmo ../compiler/back.cmo 
+do_phr.cmx: ../typing/typing.cmx ../typing/types.cmx ../typing/ty_decl.cmx \
+    ../typing/syntax.cmx ../linker/symtable.cmx pr_value.cmx \
+    ../typing/modules.cmx ../typing/misc.cmx meta.cmx ../typing/interntl.cmx \
+    ../compiler/front.cmx fmt_type.cmx eval.cmx ../typing/const.cmx \
+    ../compiler/compiler.cmx ../compiler/back.cmx 
+eval.cmo: ../typing/syntax.cmo ../linker/symtable.cmo ../typing/prim.cmo \
+    ../typing/location.cmi ../typing/globals.cmo ../typing/const.cmo \
+    ../typing/builtins.cmo 
+eval.cmx: ../typing/syntax.cmx ../linker/symtable.cmx ../typing/prim.cmx \
+    ../typing/location.cmx ../typing/globals.cmx ../typing/const.cmx \
+    ../typing/builtins.cmx 
+expunge.cmo: ../linker/symtable.cmo ../typing/const.cmo 
+expunge.cmx: ../linker/symtable.cmx ../typing/const.cmx 
+fmt_type.cmo: ../typing/types.cmo ../typing/modules.cmo ../typing/globals.cmo \
+    ../typing/const.cmo 
+fmt_type.cmx: ../typing/types.cmx ../typing/modules.cmx ../typing/globals.cmx \
+    ../typing/const.cmx 
+meta.cmo: meta.cmi 
+meta.cmx: meta.cmi 
+pr_value.cmo: ../typing/types.cmo ../typing/syntax.cmo ../linker/symtable.cmo \
+    ../typing/modules.cmo ../typing/misc.cmo ../typing/globals.cmo \
+    fmt_type.cmo eval.cmo ../typing/const.cmo ../typing/builtins.cmo 
+pr_value.cmx: ../typing/types.cmx ../typing/syntax.cmx ../linker/symtable.cmx \
+    ../typing/modules.cmx ../typing/misc.cmx ../typing/globals.cmx \
+    fmt_type.cmx eval.cmx ../typing/const.cmx ../typing/builtins.cmx 
+provide.cmo: ../typing/prim.cmo ../typing/modules.cmo ../typing/misc.cmo \
+    ../typing/globals.cmo ../typing/const.cmo ../typing/config.cmi 
+provide.cmx: ../typing/prim.cmx ../typing/modules.cmx ../typing/misc.cmx \
+    ../typing/globals.cmx ../typing/const.cmx ../typing/config.cmx 
+topinit.cmo: version.cmo ../typing/typing.cmo toplevel.cmi \
+    ../linker/symtable.cmo ../typing/modules.cmo ../typing/misc.cmo \
+    ../typing/interntl.cmo ../typing/config.cmi 
+topinit.cmx: version.cmx ../typing/typing.cmx toplevel.cmx \
+    ../linker/symtable.cmx ../typing/modules.cmx ../typing/misc.cmx \
+    ../typing/interntl.cmx ../typing/config.cmx 
+toplevel.cmo: ../typing/types.cmo ../linker/symtable.cmo pr_value.cmo \
+    ../linker/patch.cmo ../compiler/opcodes.cmo ../typing/modules.cmo \
+    ../typing/misc.cmo meta.cmi ../typing/location.cmi ../typing/interntl.cmo \
+    ../typing/globals.cmo ../typing/event.cmo ../compiler/emit_phr.cmo \
+    do_phr.cmo ../typing/const.cmo ../compiler/compiler.cmo \
+    ../typing/builtins.cmo toplevel.cmi 
+toplevel.cmx: ../typing/types.cmx ../linker/symtable.cmx pr_value.cmx \
+    ../linker/patch.cmx ../compiler/opcodes.cmx ../typing/modules.cmx \
+    ../typing/misc.cmx meta.cmx ../typing/location.cmx ../typing/interntl.cmx \
+    ../typing/globals.cmx ../typing/event.cmx ../compiler/emit_phr.cmx \
+    do_phr.cmx ../typing/const.cmx ../compiler/compiler.cmx \
+    ../typing/builtins.cmx toplevel.cmi 
+topmain.cmo: ../linker/symtable.cmo ../typing/misc.cmo ../typing/location.cmi \
+    ../typing/interntl.cmo do_phr.cmo ../typing/config.cmi \
+    ../compiler/compiler.cmo 
+topmain.cmx: ../linker/symtable.cmx ../typing/misc.cmx ../typing/location.cmx \
+    ../typing/interntl.cmx do_phr.cmx ../typing/config.cmx \
+    ../compiler/compiler.cmx 
+version.cmo: ../typing/interntl.cmo 
+version.cmx: ../typing/interntl.cmx 
