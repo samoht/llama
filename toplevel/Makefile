@@ -29,7 +29,7 @@ PERVASIVES=baltree bool char eq exc fchar filename float format fstring fvect \
 
 SPECIALS=sys
 
-GENSOURCES=pr_value.ml
+GENSOURCES=
 
 all: camltop
 
@@ -82,8 +82,6 @@ depend: $(GENSOURCES)
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
          ocamldep.opt $(INCLUDES) meta.mli *.ml) > Makefile
 	rm Makefile.bak
-
-pr_value.ml: pr_value.mlp
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE

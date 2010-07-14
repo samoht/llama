@@ -94,11 +94,6 @@ let printers = ref [
    (fun x -> print_string "\"";
              print_string (String.escaped (magic_to_string x));
              print_string "\"")
-#ifdef PRINT_NUMS
-  ;
-  "", type_num,
-   (fun x -> print_string (num__string_of_num (magic_obj x : num__num)))
-#endif
 ];;
 
 let find_printer ty =
