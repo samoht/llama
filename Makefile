@@ -1,53 +1,133 @@
-### Configuration section
+CAMLCOMP=ocamlopt.opt -c
+CAMLLINK=ocamlopt.opt
+CAMLLIBR=ocamlopt.opt -a
+CAMLLEX=ocamllex.opt
+CAMLYACC=ocamlyacc
+CPP=/usr/bin/cpp -P -Dunix
+INCLUDES=-I utils -I typing -I compiler -I linker -I librar -I toplevel
+COMPFLAGS=-g $(INCLUDES) 
+LINKFLAGS=-g $(INCLUDES)
 
-# Which C compiler to use.
-# Performance is often improved if you use gcc 2.x instead of cc.
-CC=gcc
+UTILS=utils/version.cmx
 
-# Additional options to $(CC).
-# If you are using gcc, add -fno-defer-pop.
-# This option circumvents a gcc bug on some platforms (680x0, 80386).
-# If you are using Linux with libc6 (RedHat 5, Debian 2), add -D__FAVOR_BSD
-# This option avoids signal-related problems.
-OPTS=
+TYPING=typing/config.cmx typing/misc.cmx typing/interntl.cmx \
+ typing/const.cmx typing/prim.cmx typing/lambda.cmx typing/globals.cmx \
+ typing/location.cmx typing/syntax.cmx \
+ typing/modules.cmx typing/builtins.cmx typing/types.cmx \
+ typing/pr_type.cmx typing/error.cmx typing/typing.cmx \
+ typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
+ typing/tr_env.cmx typing/event.cmx typing/clauses.cmx typing/matching.cmx \
+ typing/primdecl.cmx typing/lexer.cmx typing/par_aux.cmx typing/parser.cmx
 
-# Extra libraries that have to be linked with the runtime system.
-# The math library "-lm" is linked by default.
-# On most machines, nothing else is needed.
-# Under Solaris: -lsocket -lnsl
-LIBS=
+COMPILER=compiler/trstream.cmx compiler/front.cmx \
+ compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
+ compiler/prim_opc.cmx compiler/buffcode.cmx \
+ compiler/labels.cmx compiler/reloc.cmx \
+ compiler/emitcode.cmx compiler/emit_phr.cmx \
+ compiler/compiler.cmx
 
-# How to call the C preprocessor on a file that does not have the .c extension.
-# That's /lib/cpp on most machines, sometimes /usr/bin/cpp,
-# and /usr/ccs/lib/cpp under Solaris.
-# The -P option suppresses the generation of "# linenum" directives,
-# which are not understood by Caml Light.
-# The -Dunix option ensures that the symbol "unix" is defined --
-# not all Unix C preprocessors define it.
-# If your cpp is too fussy, make tools/clprepro and use this:
-#CPP=../../src/tools/clprepro -Dunix
-#CPP=/lib/cpp -P -traditional -Dunix
-CPP=/usr/bin/cpp -P -traditional -Dunix
+LINKER=linker/caml_light_extern.o \
+  linker/predef.cmx linker/prim_c.cmx linker/symtable.cmx \
+  linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
+  linker/readword.cmx
 
-# The directory where public executables will be installed
-VBINDIR=/usr/local/bin
-BINDIR=${INSTROOT}${VBINDIR}
+LIBRAR=librar/librar.cmx
 
-# The directory where the Caml Light standard library will be installed
-LIBDIR=${INSTROOT}/usr/local/lib/caml-dark
+TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
+  toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
+  toplevel/topinit.cmx toplevel/topmain.cmx
 
-# The manual section where the manual pages will be installed
-MANEXT=1
+GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
+ compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-# The directory where the manual pages will be installed
-MANDIR=${INSTROOT}/usr/local/man/man$(MANEXT)
+all: camlcomp camllink camllibr camltop the_library the_runtime testprog
 
-# Some "make"s need this to ensure that they call the Bourne shell,
-# not the C shell. Seems harmless on most other "make"s.
-# Try removing this line if you run into trouble.
-SHELL=/bin/sh
+testprog.zo: testprog.ml camlcomp the_library
+	./camlcomp -I lib $<
 
-### End of configuration section
+testprog: testprog.zo camllink the_library the_runtime
+	./camllink -I lib stdlib.zo $< -o $@
+	runtime/camlrun testprog
+	@ echo "Is that 10946 on the line above? Good."
+	@ echo "The system is up and running."
+
+camlcomp: $(UTILS) $(TYPING) $(COMPILER) compiler/main.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o camlcomp $^
+
+camllink: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) linker/main.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o camllink $^
+
+camllibr: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(LIBRAR) librar/main.cmx
+	$(CAMLLINK) $(LINKFLAGS) -o camllibr $^
+
+camltop: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+	$(CAMLLINK) $(LINKFLAGS) -o camltop $^
+
+the_library:
+	cd lib && make
+the_runtime:
+	cd runtime && make
+.PHONY: the_library the_runtime
+
+runtime/version.h: VERSION
+	echo "#define VERSION \"`head -1 VERSION`\"" > $@
+
+utils/version.ml: utils/version.mlp VERSION
+	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
+
+typing/lexer.ml: typing/lexer.mll
+	$(CAMLLEX) $<
+
+typing/parser.ml typing/parser.mli: typing/parser.mly
+	$(CAMLYACC) $<
+
+compiler/opcodes.ml: runtime/instruct.h
+	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
+        awk -f tools/make-opcodes > $@
+
+PRIMS=runtime/compare.c runtime/extern.c runtime/externcp.c \
+  runtime/floats.c runtime/gc_ctrl.c runtime/hash.c \
+  runtime/intern.c runtime/interncp.c runtime/interp.c \
+  runtime/ints.c runtime/io.c runtime/lexing.c runtime/meta.c runtime/parsing.c \
+  runtime/str.c runtime/sys.c
+
+runtime/primitives : $(PRIMS)
+	sed -n -e '/\/\* ML \*\//s/.* \([a-z0-9_][a-z0-9_]*\) *(.*/\1/p' \
+                $(PRIMS) > primitives2
+	sh -c 'if cmp -s runtime/primitives primitives2; \
+        then rm primitives2; \
+        else mv primitives2 runtime/primitives; \
+        fi'
+
+linker/prim_c.ml : runtime/primitives
+	(echo 'let primitives_table = [|'; \
+	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' $<; \
+	 echo '|];;') > $@
+
+linker/predef.ml : runtime/globals.h runtime/fail.h
+	(echo 'open Const;;'; \
+         echo 'let predef_variables = ['; \
+	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{qual=\1; id=\2};|p' \
+                $< \
+           | sed -e '$$s|;$$||'; \
+         echo '];;'; \
+         echo 'let predef_exn = ['; \
+         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|({qual=\1; id=\2}, \3);|p' \
+                runtime/fail.h \
+           | sed -e '$$s|;$$||'; \
+         echo '];;') > $@
+
+linker/caml_light_extern.o: linker/caml_light_extern.c
+	$(CAMLCOMP) -ccopt "-o $@" $<
+
+.SUFFIXES :
+.SUFFIXES : .mli .ml .cmi .cmx .mlp
+
+.mli.cmi:
+	$(CAMLCOMP) $(COMPFLAGS) $<
+
+.ml.cmx:
+	$(CAMLCOMP) $(COMPFLAGS) $<
 
 SUBDIRS=runtime launch lib compiler linker librar toplevel tools
 
@@ -64,107 +144,21 @@ world:
 	cd librar; make CPP="$(CPP)" all
 	cd lib; make CPP="$(CPP)" all
 	cd toplevel; make CPP="$(CPP)" all
-	cd launch; make LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) \
-                           CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
 	runtime/camlrun launch/testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Caml Dark system is up and running."
-#	cp runtime/camlrun .
-#	cd lex; make CPP="$(CPP)" all
-#	cd yacc; make CC="$(CC)" OPTS="$(OPTS)" all
-#	cp yacc/camlyacc .
 
-# Rebuild the system (bootstrap)
-bootstrap: backup promote again compare
-
-# Save a copy of the current compiler
-backup:
-	sh tools/backup camlrun camlcomp camllink camllibr camllex 
-
-# Make the newly compiled compiler the current compiler
-promote:
-	cp compiler/camlcomp linker/camllink librar/camllibr lex/camllex .
-
-# Recompile all Caml code from scratch
-again:
-	cd lib; make CPP="$(CPP)" clean all
-	cd compiler; make CPP="$(CPP)" clean all
-	cd linker; make CPP="$(CPP)" clean all
-	cd librar; make CPP="$(CPP)" clean all
-	cd lex; make CPP="$(CPP)" clean all
-	cd toplevel; make CPP="$(CPP)" clean all
-
-# Compare the current compiler with the newly compiled one
-compare:
-	@sh -c ' \
-        if cmp camlcomp compiler/camlcomp \
-        && cmp camllink linker/camllink \
-        && cmp camllibr librar/camllibr \
-        && cmp camllex lex/camllex; \
-        then echo "The Caml Light system has successfully recompiled itself.";\
-        else echo "Hmph. Better do one more bootstrapping cycle."; \
-        fi'
-
-# Restore the latest backup copy of the compiler
-restore:
-	sh tools/restore camlrun camlcomp camllink camllibr camllex 
-
-# Compile all Caml code
-compile:
-	cd lib; make CPP="$(CPP)" all
-	cd compiler; make CPP="$(CPP)" all
-	cd linker; make CPP="$(CPP)" all
-	cd librar; make CPP="$(CPP)" all
-	cd lex; make CPP="$(CPP)" all
-	cd toplevel; make CPP="$(CPP)" all
-
-# Install the Caml Light system
-install:
-	if test -d $(BINDIR); then : ; else mkdir -p $(BINDIR); fi
-	if test -d $(LIBDIR); then : ; else mkdir -p $(LIBDIR); fi
-	if test -d $(MANDIR); then : ; else mkdir -p $(MANDIR); fi
-	cd runtime; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd launch; make BINDIR=$(BINDIR) VBINDIR=$(VBINDIR) \
-                        LIBDIR=$(LIBDIR) install
-	cd lib; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd compiler; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd linker; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-	cd librar; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-#	cd toplevel; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-#	cd lex; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-#	cd yacc; make BINDIR=$(BINDIR) LIBDIR=$(LIBDIR) install
-#	cd man; make MANDIR=$(MANDIR) MANEXT=$(MANEXT) install
-	cp camlmsgs.txt $(LIBDIR)
-
-# Remove the Caml Light system after installation
-uninstall:
-	rm -rf $(LIBDIR)
-	rm -f $(BINDIR)/camlrun $(BINDIR)/camlc $(BINDIR)/camllight
-	rm -f $(BINDIR)/camlyacc $(BINDIR)/camllex $(BINDIR)/camlmktop
-
-# Remove all generated files
 clean:
-	for d in $(SUBDIRS); \
-	do (cd $$d; make clean); \
-        done
+	rm -f camlcomp camllink camllibr camltop
+	rm -f $(GENSOURCES)
+	rm -f {utils,typing,compiler,linker,librar,toplevel}/*.{cmi,cmx,o}
+	cd runtime && make clean
+	cd lib && make clean
+	rm -f testprog{,.zi,.zo}
+.PHONY: clean
 
-# Rebuild the dependencies in all Makefiles
-depend:
-	for d in $(SUBDIRS); \
-	do (cd $$d; make depend); \
-        done
+depend: $(GENSOURCES)
+	ocamldep.opt $(INCLUDES) {utils,typing,compiler,linker,librar,toplevel}/*.{mli,ml} > .depend
+.PHONY: depend
 
-# Make MacOS X package
-
-package-macosx:
-	sudo rm -rf package-macosx/root
-	umask 022; make INSTROOT="`pwd`"/package-macosx/root install
-	tools/make-package-macosx
-
-.PHONY: package-macosx
-
-utils/version.ml: utils/version.mlp VERSION
-	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
-
-runtime/version.h: VERSION
-	echo "#define VERSION \"`head -1 VERSION`\"" > $@
+-include .depend

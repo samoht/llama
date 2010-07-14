@@ -1,7 +1,7 @@
 # The standard library
 
-CAMLCOMP=../compiler/camlcomp
-CAMLLIBR=../librar/camllibr
+CAMLCOMP=../camlcomp
+CAMLLIBR=../camllibr
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-stdlib . -O none -g -W
 
