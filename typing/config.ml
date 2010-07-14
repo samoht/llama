@@ -1,10 +1,6 @@
 (* Configuration file *)
 
-#ifdef macintosh
-let path_library = ref ":lib:";;
-#else
 let path_library = ref "";;
-#endif
 
 (* Integer ranges *)
 
@@ -26,20 +22,16 @@ let default_used_interfaces =
 
 (* The default name for executable bytecode files. *)
 
-#ifdef unix
-let default_exec_name = "a.out";;
-#endif
-#ifdef macintosh
-let default_exec_name = "Camlc.out";;
-#endif
-#ifdef msdos
-let default_exec_name = "camlout.exe";;
-#endif
+let default_exec_name =
+  begin match Sys.os_type with
+    | "Win32" | "Cygwin" -> "camlout.exe"
+    | _ -> "a.out"
+  end
 
 (* Prompts.
  * toplevel_input_prompt: Printed before user input.
  * error_prompt: Printed before compiler error and warning messages.
  *)
 
-let toplevel_input_prompt = "#";;
+let toplevel_input_prompt = "# ";;
 let error_prompt = ">";;

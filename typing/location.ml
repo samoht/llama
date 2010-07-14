@@ -25,11 +25,6 @@ let get_current_location () =
 ;;
 
 let output_lines oc char1 char2 charline1 line1 line2 =
-#ifdef macintosh
-  if not sys__interactive then begin
-    fprintf oc "; Line \165!%d:\165!%d\n" char1 char2; ()
-  end else
-#endif
   begin
 	let n1 = char1 - charline1
 	and n2 = char2 - charline1 in
@@ -171,9 +166,5 @@ let output_location oc loc =
 ;;
 
 let output_input_name oc =
-#ifdef macintosh
-  fprintf oc "File \"%s\"\n" !input_name
-#else
   fprintf oc "File \"%s\", line 1:\n" !input_name
-#endif
 ;;

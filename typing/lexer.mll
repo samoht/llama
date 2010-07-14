@@ -105,13 +105,8 @@ let get_stored_string () =
 (* To translate escape sequences *)
 
 let char_for_backslash = function
-#ifdef macintosh
-    'n' -> '\013'
-  | 'r' -> '\010'
-#else
     'n' -> '\010'
   | 'r' -> '\013'
-#endif
   | 'b' -> '\008'
   | 't' -> '\009'
   | c   -> c
@@ -127,30 +122,14 @@ let char_for_decimal_code lexbuf i =
 
 }
 
-#ifdef unix
-#define ACCENTED '\192'-'\214' '\216'-'\246' '\248'-'\255'
-#endif
-#ifdef macintosh
-#define ACCENTED '\128'-'\159' '\174'-'\175' '\190'-'\191' '\203'-'\207' '\216'-'\217' '\222'-'\223' '\229'-'\239' '\241'-'\244'
-#endif
-#ifdef msdos
-#define ACCENTED '\128'-'\154' '\160'-'\165' '\192'-'\214' '\216'-'\246' '\248'-'\255'
-#endif
-
-#define SYMBOLS \
-    '!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'
-
-#ifdef msdos
-#define End_of_file (eof | '\026')
-#else
-#define End_of_file eof
-#endif
+let symbolchar =
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~']
 
 rule main = parse
     [' ' '\010' '\013' '\009' '\012'] +
       { main lexbuf }
-  | ['A'-'Z' 'a'-'z' ACCENTED ]
-    ( '_' ? ['A'-'Z' 'a'-'z' ACCENTED ''' (*'*) '0'-'9' ] ) *
+  | ['A'-'Z' 'a'-'z' ]
+    ( '_' ? ['A'-'Z' 'a'-'z' ''' (*'*) '0'-'9' ] ) *
       { let s = Lexing.lexeme lexbuf in
           try
             Hashtbl.find keyword_table s
@@ -226,19 +205,19 @@ rule main = parse
   | "-"     { SUBTRACTIVE "-" }
   | "-."    { SUBTRACTIVE "-." }
 
-  | [ '!' '?' ] [ SYMBOLS ] *
+  | [ '!' '?' ] symbolchar *
             { PREFIX(Lexing.lexeme lexbuf) }
-  | [ '=' '<' '>' '|' '&' '~' '$' ] [ SYMBOLS ] *
+  | [ '=' '<' '>' '|' '&' '~' '$' ] symbolchar *
             { INFIX0(Lexing.lexeme lexbuf) }
-  | [ '@' '^' ] [ SYMBOLS ] *
+  | [ '@' '^' ] symbolchar *
             { INFIX1(Lexing.lexeme lexbuf) }
-  | [ '+' '-' ] [ SYMBOLS ] *
+  | [ '+' '-' ] symbolchar *
             { INFIX2(Lexing.lexeme lexbuf) }
-  | "**" [ SYMBOLS ] *
+  | "**" symbolchar *
             { INFIX4(Lexing.lexeme lexbuf) }
-  | [ '*' '/' '%' ] [ SYMBOLS ] *
+  | [ '*' '/' '%' ] symbolchar *
             { INFIX3(Lexing.lexeme lexbuf) }
-  | End_of_file { EOF }
+  | eof { EOF }
   | _
       { raise (Lexical_error(Illegal_character,
                             Lexing.lexeme_start lexbuf, Lexing.lexeme_end lexbuf)) }
@@ -266,7 +245,7 @@ and comment = parse
       { comment lexbuf }
   | "'" '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
       { comment lexbuf }
-  | End_of_file
+  | eof
       { raise(Lexical_error
                 (Unterminated_comment, 0, Lexing.lexeme_start lexbuf)) }
   | _
@@ -279,7 +258,7 @@ and char = parse
       { char_for_backslash (Lexing.lexeme_char lexbuf 1) }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "`"
       { char_for_decimal_code lexbuf 1 }
-  | [^ '`'] * ("`" | End_of_file)
+  | [^ '`'] * ("`" | eof)
       { raise (Lexical_error(Bad_char_constant,
                             Lexing.lexeme_start lexbuf - 1,
                             Lexing.lexeme_end lexbuf)) }
@@ -295,7 +274,7 @@ and string = parse
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string_char(char_for_decimal_code lexbuf 1);
          string lexbuf }
-  | End_of_file
+  | eof
       { raise (Lexical_error
                 (Unterminated_string, 0, Lexing.lexeme_start lexbuf)) }
   | _
