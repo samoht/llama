@@ -122,14 +122,35 @@ let char_for_decimal_code lexbuf i =
 
 }
 
+let newline = ('\010' | '\013' | "\013\010")
+let blank = [' ' '\009' '\012']
+let lowercase = ['a'-'z' '\223'-'\246' '\248'-'\255' '_']
+let uppercase = ['A'-'Z' '\192'-'\214' '\216'-'\222']
+let claux1 = ['A'-'Z' 'a'-'z' '\192'-'\214' '\216'-'\246' '\248'-'\255']
+let claux2 = claux1 | ['\'' '0'-'9']
+let identchar =
+  ['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255' '\'' '0'-'9']
 let symbolchar =
   ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~']
+let decimal_literal =
+  ['0'-'9'] ['0'-'9' '_']*
+let hex_literal =
+  '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']['0'-'9' 'A'-'F' 'a'-'f' '_']*
+let oct_literal =
+  '0' ['o' 'O'] ['0'-'7'] ['0'-'7' '_']*
+let bin_literal =
+  '0' ['b' 'B'] ['0'-'1'] ['0'-'1' '_']*
+let int_literal =
+  decimal_literal | hex_literal | oct_literal | bin_literal
+let float_literal =
+  ['0'-'9'] ['0'-'9' '_']*
+  ('.' ['0'-'9' '_']* )?
+  (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
 
 rule main = parse
     [' ' '\010' '\013' '\009' '\012'] +
       { main lexbuf }
-  | ['A'-'Z' 'a'-'z' ]
-    ( '_' ? ['A'-'Z' 'a'-'z' ''' (*'*) '0'-'9' ] ) *
+  | claux1 ('_'? claux2) *
       { let s = Lexing.lexeme lexbuf in
           try
             Hashtbl.find keyword_table s
