@@ -37,9 +37,7 @@ src/runtime/libcaml.a
 src/runtime/primitives
 src/runtime/prims.c
 src/toplevel/camltop
-src/toplevel/eval.ml
 src/toplevel/expunge
-src/toplevel/meta.ml
 src/toplevel/pr_value.ml
 src/toplevel/provide
 src/toplevel/required

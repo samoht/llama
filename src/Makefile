@@ -58,10 +58,12 @@ configure:
 # Build the system for the first time
 world:
 	cd runtime; make CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
+	cd typing; make CPP="$(CPP)" all
 	cd compiler; make CPP="$(CPP)" all
 	cd linker; make CPP="$(CPP)" all
 	cd librar; make CPP="$(CPP)" all
 	cd lib; make CPP="$(CPP)" all
+	cd toplevel; make CPP="$(CPP)" all
 	cd launch; make LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) \
                            CC="$(CC)" OPTS="$(OPTS)" LIBS="$(LIBS)" all
 	runtime/camlrun launch/testprog
@@ -71,7 +73,6 @@ world:
 #	cd lex; make CPP="$(CPP)" all
 #	cd yacc; make CC="$(CC)" OPTS="$(OPTS)" all
 #	cp yacc/camlyacc .
-#	cd toplevel; make CPP="$(CPP)" all
 
 # Rebuild the system (bootstrap)
 bootstrap: backup promote again compare

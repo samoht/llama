@@ -66,7 +66,7 @@ parser.ml parser.mli: parser.mly
 depend: $(GENSOURCES)
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak; \
-         ocamldep *.mli *.ml) > Makefile
+         ocamldep.opt $(INCLUDES) *.mli *.ml) > Makefile
 	rm Makefile.bak
 
 location.ml: location.mlp
@@ -75,33 +75,61 @@ version.ml: version.mlp ../version.h
 
 ### EVERYTHING THAT GOES BEYOND THIS COMMENT IS GENERATED
 ### DO NOT DELETE THIS LINE
-back.cmo: instruct.cmo 
-back.cmx: instruct.cmx 
-buffcode.cmo: 
-buffcode.cmx: 
-compiler.cmo: front.cmo emit_phr.cmo back.cmo 
-compiler.cmx: front.cmx emit_phr.cmx back.cmx 
-emit_phr.cmo: reloc.cmo labels.cmo instruct.cmo emitcode.cmo buffcode.cmo 
-emit_phr.cmx: reloc.cmx labels.cmx instruct.cmx emitcode.cmx buffcode.cmx 
-emitcode.cmo: reloc.cmo prim_opc.cmo opcodes.cmo labels.cmo instruct.cmo \
-    buffcode.cmo 
-emitcode.cmx: reloc.cmx prim_opc.cmx opcodes.cmx labels.cmx instruct.cmx \
-    buffcode.cmx 
-front.cmo: trstream.cmo 
-front.cmx: trstream.cmx 
-instruct.cmo: 
-instruct.cmx: 
-labels.cmo: instruct.cmo buffcode.cmo 
-labels.cmx: instruct.cmx buffcode.cmx 
-main.cmo: version.cmo compiler.cmo 
-main.cmx: version.cmx compiler.cmx 
+back.cmo: ../typing/prim.cmo ../typing/misc.cmo ../typing/lambda.cmo \
+    instruct.cmo ../typing/const.cmo 
+back.cmx: ../typing/prim.cmx ../typing/misc.cmx ../typing/lambda.cmx \
+    instruct.cmx ../typing/const.cmx 
+buffcode.cmo: ../typing/error.cmo 
+buffcode.cmx: ../typing/error.cmx 
+compiler.cmo: ../typing/typing.cmo ../typing/ty_intf.cmo \
+    ../typing/ty_decl.cmo ../typing/syntax.cmo ../typing/pr_decl.cmo \
+    ../typing/modules.cmo ../typing/misc.cmo ../typing/location.cmi \
+    ../typing/lexer.cmi ../typing/interntl.cmo front.cmo ../typing/error.cmo \
+    emit_phr.cmo back.cmo 
+compiler.cmx: ../typing/typing.cmx ../typing/ty_intf.cmx \
+    ../typing/ty_decl.cmx ../typing/syntax.cmx ../typing/pr_decl.cmx \
+    ../typing/modules.cmx ../typing/misc.cmx ../typing/location.cmi \
+    ../typing/lexer.cmi ../typing/interntl.cmx front.cmx ../typing/error.cmx \
+    emit_phr.cmx back.cmx 
+emit_phr.cmo: reloc.cmo ../typing/lambda.cmo labels.cmo instruct.cmo \
+    ../typing/event.cmo emitcode.cmo buffcode.cmo 
+emit_phr.cmx: reloc.cmx ../typing/lambda.cmx labels.cmx instruct.cmx \
+    ../typing/event.cmx emitcode.cmx buffcode.cmx 
+emitcode.cmo: reloc.cmo prim_opc.cmo ../typing/prim.cmo opcodes.cmo \
+    ../typing/misc.cmo ../typing/lambda.cmo labels.cmo instruct.cmo \
+    ../typing/event.cmo ../typing/const.cmo ../typing/config.cmi buffcode.cmo 
+emitcode.cmx: reloc.cmx prim_opc.cmx ../typing/prim.cmx opcodes.cmx \
+    ../typing/misc.cmx ../typing/lambda.cmx labels.cmx instruct.cmx \
+    ../typing/event.cmx ../typing/const.cmx ../typing/config.cmi buffcode.cmx 
+front.cmo: ../typing/types.cmo trstream.cmo ../typing/tr_env.cmo \
+    ../typing/syntax.cmo ../typing/prim.cmo ../typing/modules.cmo \
+    ../typing/misc.cmo ../typing/matching.cmo ../typing/lambda.cmo \
+    ../typing/globals.cmo ../typing/event.cmo ../typing/error.cmo \
+    ../typing/const.cmo ../typing/builtins.cmo 
+front.cmx: ../typing/types.cmx trstream.cmx ../typing/tr_env.cmx \
+    ../typing/syntax.cmx ../typing/prim.cmx ../typing/modules.cmx \
+    ../typing/misc.cmx ../typing/matching.cmx ../typing/lambda.cmx \
+    ../typing/globals.cmx ../typing/event.cmx ../typing/error.cmx \
+    ../typing/const.cmx ../typing/builtins.cmx 
+instruct.cmo: ../typing/prim.cmo ../typing/lambda.cmo ../typing/const.cmo 
+instruct.cmx: ../typing/prim.cmx ../typing/lambda.cmx ../typing/const.cmx 
+labels.cmo: ../typing/misc.cmo instruct.cmo buffcode.cmo 
+labels.cmx: ../typing/misc.cmx instruct.cmx buffcode.cmx 
+main.cmo: version.cmo ../typing/typing.cmo ../typing/modules.cmo \
+    ../typing/misc.cmo ../typing/interntl.cmo ../typing/event.cmo \
+    ../typing/config.cmi compiler.cmo 
+main.cmx: version.cmx ../typing/typing.cmx ../typing/modules.cmx \
+    ../typing/misc.cmx ../typing/interntl.cmx ../typing/event.cmx \
+    ../typing/config.cmi compiler.cmx 
 opcodes.cmo: 
 opcodes.cmx: 
-prim_opc.cmo: opcodes.cmo 
-prim_opc.cmx: opcodes.cmx 
-reloc.cmo: buffcode.cmo 
-reloc.cmx: buffcode.cmx 
-trstream.cmo: 
-trstream.cmx: 
-version.cmo: 
-version.cmx: 
+prim_opc.cmo: ../typing/prim.cmo opcodes.cmo ../typing/misc.cmo 
+prim_opc.cmx: ../typing/prim.cmx opcodes.cmx ../typing/misc.cmx 
+reloc.cmo: ../typing/const.cmo buffcode.cmo 
+reloc.cmx: ../typing/const.cmx buffcode.cmx 
+trstream.cmo: ../typing/tr_env.cmo ../typing/syntax.cmo ../typing/prim.cmo \
+    ../typing/matching.cmo ../typing/lambda.cmo ../typing/const.cmo 
+trstream.cmx: ../typing/tr_env.cmx ../typing/syntax.cmx ../typing/prim.cmx \
+    ../typing/matching.cmx ../typing/lambda.cmx ../typing/const.cmx 
+version.cmo: ../typing/interntl.cmo 
+version.cmx: ../typing/interntl.cmx 
