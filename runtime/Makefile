@@ -27,13 +27,13 @@ PRIMS=compare.c extern.c externcp.c floats.c gc_ctrl.c hash.c \
   intern.c interncp.c interp.c ints.c io.c lexing.c meta.c parsing.c \
   str.c sys.c
 
-all: camlrun libcaml.a
+all: zebra-run libcaml.a
 
-camlrun: $(OBJS) prims.o
-	$(CC) $(CFLAGS) -o camlrun prims.o $(OBJS) $(LIBS) -lm
+zebra-run: $(OBJS) prims.o
+	$(CC) $(CFLAGS) -o zebra-run prims.o $(OBJS) $(LIBS) -lm
 
-camlrund: $(DOBJS) prims.o
-	$(CC) -g $(OPTS) -o camlrund prims.o $(DOBJS) $(LIBS) -lm
+zebra-rund: $(DOBJS) prims.o
+	$(CC) -g $(OPTS) -o zebra-rund prims.o $(DOBJS) $(LIBS) -lm
 
 libcaml.a: $(OBJS)
 	rm -f libcaml.a
@@ -46,11 +46,11 @@ libcamld.a: $(DOBJS)
 	if $(RANLIBTEST); then $(RANLIB) libcamld.a; else true; fi
 
 clean:
-	rm -f camlrun camlrund *.o *.a
-	rm -f primitives prims.c opnames.h jumptbl.h
+	rm -f zebra-run zebra-rund *.o *.a
+	rm -f primitives prims.c opnames.h jumptbl.h version.h
 
 install:
-	cp camlrun $(BINDIR)/darkrun
+	cp zebra-run $(BINDIR)/darkrun
 	strip $(BINDIR)/darkrun
 	cp libcaml.a $(LIBDIR)
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libcaml.a; else true; fi
@@ -87,6 +87,9 @@ opnames.h : instruct.h
             -e 's/{$$/[] = {/' \
             -e 's/\([A-Z][A-Z_0-9]*\)/"\1"/g' instruct.h > opnames.h
 
+version.h: ../VERSION
+	echo "#define VERSION \"`head -1 ../VERSION`\"" > $@
+
 # jumptbl.h is required only if you have GCC 2.0 or later
 jumptbl.h : instruct.h
 	awk -f ../tools/make-jumptbl instruct.h > jumptbl.h
@@ -97,7 +100,7 @@ jumptbl.h : instruct.h
 	cd .debugobj; $(CC) -c -g -I.. -DDEBUG $(OPTS) ../$<
 	mv .debugobj/$*.o $*.d.o
 
-depend : prims.c opnames.h jumptbl.h
+depend : prims.c opnames.h jumptbl.h version.h
 	mv Makefile Makefile.bak
 	(sed -n -e '1,/^### DO NOT DELETE THIS LINE/p' Makefile.bak;	 \
          gcc -MM -I.. $(OPTS) *.c; \

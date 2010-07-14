@@ -2,7 +2,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I typing -I compiler -I linker -I librarian -I toplevel
+INCLUDES=-I utils -I typing -I compiler -I linker -I archivist -I toplevel
 FLAGS=-g $(INCLUDES) 
 
 UTILS=utils/version.cmx
@@ -28,7 +28,7 @@ LINKER=linker/caml_light_extern.o \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
-LIBRARIAN=librarian/librar.cmx
+ARCHIVIST=archivist/librar.cmx
 
 TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
@@ -37,14 +37,14 @@ TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
 GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: zebra-compile zebra-link zebra-librarian zebra the_library the_runtime testprog
+all: zebra-compile zebra-link zebra-archive zebra zebra-run stdlib.zo testprog
 
-testprog.zo: testprog.ml zebra-compile the_library
+testprog.zo: testprog.ml zebra-compile stdlib.zo
 	./zebra-compile -I stdlib $<
 
-testprog: testprog.zo zebra-link the_library the_runtime
+testprog: testprog.zo zebra-link zebra-run stdlib.zo
 	./zebra-link -I stdlib stdlib.zo $< -o $@
-	runtime/camlrun testprog
+	./zebra-run testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The system is up and running."
 
@@ -54,20 +54,17 @@ zebra-compile: $(UTILS) $(TYPING) $(COMPILER) compiler/main.cmx
 zebra-link: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) linker/main.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-zebra-librarian: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(LIBRARIAN) librarian/main.cmx
+zebra-archive: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(ARCHIVIST) archivist/main.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-the_library:
-	cd stdlib && make
-the_runtime:
-	cd runtime && make
-.PHONY: the_library the_runtime
+%.cmx: %.ml
+	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
 
-runtime/version.h: VERSION
-	echo "#define VERSION \"`head -1 VERSION`\"" > $@
+%.cmi: %.mli
+	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
 
 utils/version.ml: utils/version.mlp VERSION
 	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
@@ -81,20 +78,6 @@ typing/parser.ml typing/parser.mli: typing/parser.mly
 compiler/opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
-
-PRIMS=runtime/compare.c runtime/extern.c runtime/externcp.c \
-  runtime/floats.c runtime/gc_ctrl.c runtime/hash.c \
-  runtime/intern.c runtime/interncp.c runtime/interp.c \
-  runtime/ints.c runtime/io.c runtime/lexing.c runtime/meta.c runtime/parsing.c \
-  runtime/str.c runtime/sys.c
-
-runtime/primitives : $(PRIMS)
-	sed -n -e '/\/\* ML \*\//s/.* \([a-z0-9_][a-z0-9_]*\) *(.*/\1/p' \
-                $(PRIMS) > primitives2
-	sh -c 'if cmp -s runtime/primitives primitives2; \
-        then rm primitives2; \
-        else mv primitives2 runtime/primitives; \
-        fi'
 
 linker/prim_c.ml : runtime/primitives
 	(echo 'let primitives_table = [|'; \
@@ -117,27 +100,36 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-%.cmx: %.ml
-	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
+zebra-run: runtime/zebra-run
+	cp $< $@
 
-%.cmi: %.mli
-	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
+stdlib.zo: stdlib/stdlib.zo
+	cp $< $@
 
-# Configure the system
+runtime/primitives:
+	cd runtime && make
+
+runtime/zebra-run:
+	cd runtime && make
+
+stdlib/stdlib.zo:
+	cd stdlib && make
+
 configure:
-	cd ../config; sh autoconf "$(CC) $(OPTS) $(LIBS)"
+	cd config; sh autoconf "$(CC) $(OPTS) $(LIBS)"
+.PHONY: configure
 
 clean:
-	rm -f zebra-compile zebra-link zebra-librarian zebra
+	rm -f zebra-compile zebra-link zebra-archive zebra zebra-run stdlib.zo
 	rm -f $(GENSOURCES)
-	rm -f {utils,typing,compiler,linker,librarian,toplevel}/*.{cmi,cmx,o}
+	rm -f {utils,typing,compiler,linker,archivist,toplevel}/*.{cmi,cmx,o}
+	rm -f testprog{,.zi,.zo}
 	cd runtime && make clean
 	cd stdlib && make clean
-	rm -f testprog{,.zi,.zo}
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,librarian,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,archivist,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 -include .depend

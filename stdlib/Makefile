@@ -1,7 +1,7 @@
 # The standard library
 
-CAMLCOMP=../camlcomp
-CAMLLIBR=../camllibr
+ZEBRA_COMPILE=../zebra-compile
+ZEBRA_ARCHIVE=../zebra-archive
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-stdlib . -O none -g -W
 
@@ -24,7 +24,7 @@ STD_IMPL= bool.zo eq.zo exc.zo int.zo fstring.zo string.zo fchar.zo \
 all: $(STD_INTF) stdlib.zo
 
 stdlib.zo: $(STD_IMPL)
-	$(CAMLLIBR) -o stdlib.zo $(STD_IMPL)
+	$(ZEBRA_ARCHIVE) -o stdlib.zo $(STD_IMPL)
 
 clean:
 	rm -f *.zi *.zix *.zo
@@ -38,9 +38,9 @@ install:
 .SUFFIXES : .ml .mli .zi .zo .mlp
 
 .mli.zi:
-	$(CAMLCOMP) $(COMPFLAGS) $<
+	$(ZEBRA_COMPILE) $(COMPFLAGS) $<
 .ml.zo:
-	$(CAMLCOMP) $(COMPFLAGS) $<
+	$(ZEBRA_COMPILE) $(COMPFLAGS) $<
 .mlp.ml:
 	@rm -f $@
 	$(CPP) $< > $@
