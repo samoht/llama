@@ -30,14 +30,15 @@ LINKER=linker/caml_light_extern.o \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
-TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
-  toplevel/meta.cmx toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
-  toplevel/topinit.cmx toplevel/topmain.cmx
+TOPLEVEL=\
+  toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
+  toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
+  toplevel/topinit.cmx toplevel/topmain.cmx runtime/libcaml.a toplevel/zebra.o
 
 GENSOURCES=utils/config.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: zebra zebrac zebradep testprog runtime_dir stdlib_dir
+all: runtime_dir zebra zebrac zebradep testprog stdlib_dir
 .PHONY: all
 
 testprog: testprog.ml runtime_dir stdlib_dir
@@ -97,8 +98,15 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
+toplevel/zebra.o: toplevel/zebra.c
+	$(OCAMLOPT) -c -ccopt "-I . -o $@" $<
+
 runtime/primitives:
 	cd runtime && make primitives
+runtime/libcaml.a:
+	cd runtime && make libcaml.a
+runtime/libcamld.a:
+	cd runtime && make libcamld.a
 runtime_dir:
 	cd runtime && make
 stdlib_dir:
@@ -118,9 +126,8 @@ depend: $(GENSOURCES)
 	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
--include .depend
+include .depend
 
-SRCDIR=/Users/jeremy/zebra
-dummyconfig:
-	./configure -bindir $(SRCDIR)/runtime -libdir $(SRCDIR)/stdlib
-.PHONY: dummyconfig
+configure-in-situ:
+	./configure -bindir ${PWD}/runtime -libdir ${PWD}/stdlib
+.PHONY: configure-in-situ

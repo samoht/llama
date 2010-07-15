@@ -1,8 +1,5 @@
-
-
 (* To print values *)
 
-(**) open Obj;;
 (**) open Misc;;
 (**) open Const;;
 (**) open Globals;;
@@ -12,45 +9,6 @@
 (**) open Format;;
 (**) open Fmt_type;;
 (**) open Symtable;;
-
-open Syntax;;
-open Eval;;
-
-let magic_to_int tm =
-  begin match tm with
-    | Const(ACint i) -> i
-    | _ -> failwith "magic_to_int"
-  end
-
-let magic_to_float tm =
-  begin match tm with
-    | Const(ACfloat f) -> f
-    | _ -> failwith "magic_to_float"
-  end
-
-let magic_to_char tm =
-  begin match tm with
-    | Const(ACchar c) -> c
-    | _ -> failwith "magic_to_float"
-  end
-
-let magic_to_string tm =
-  begin match tm with
-    | Const(ACstring s) -> s
-    | _ -> failwith "magic_to_string"
-  end
-
-let constr_tag tm =
-  begin match strip_args tm with
-    | Ctor c ->
-        begin match c.info.cs_tag with
-          | ConstrRegular(i, _) -> i
-          | _ -> failwith "constr_tag"
-        end
-    | _ -> failwith "constr_tag"
-  end
-
-let nth_arg tm i = List.nth (proj_args tm) i
 
 exception Constr_not_found;;
 
@@ -83,16 +41,16 @@ let find_exception tag =
 
 let printers = ref [
   "", type_int,
-    (fun x -> print_int (magic_to_int x));
+    (fun x -> print_int (Zebra_obj.to_int x));
   "", type_float,
-    (fun x -> print_float (magic_to_float x));
+    (fun x -> print_float (Zebra_obj.to_float x));
   "", type_char,
     (fun x -> print_string "`";
-              print_string (Char.escaped (magic_to_char x));
+              print_string (Char.escaped (Zebra_obj.to_char x));
               print_string "`");
   "", type_string,
    (fun x -> print_string "\"";
-             print_string (String.escaped (magic_to_string x));
+             print_string (String.escaped (Zebra_obj.to_string x));
              print_string "\"")
 ];;
 
@@ -149,7 +107,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
     Abstract_type ->
       print_string "<abstr>"
   | Variant_type constr_list ->
-      let tag = constr_tag obj in
+      let tag = Zebra_obj.tag obj in
       begin try
         let constr = 
           if same_type_constr cstr constr_type_exn
@@ -166,7 +124,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
              else open_box 1;
             output_constr constr;
             print_space();
-            cautious (print_val 2 (depth - 1) (nth_arg obj 0)) ty_arg;
+            cautious (print_val 2 (depth - 1) (Zebra_obj.field obj 0)) ty_arg;
             if prio > 1 then print_string ")";
             close_box()
         | Constr_superfluous n ->
@@ -202,7 +160,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           fatal_error "print_val: types should match"
         end;
         cautious (print_val 0 (depth - 1)
-                 (nth_arg obj lbl.info.lbl_pos)) ty_arg;
+                 (Zebra_obj.field obj lbl.info.lbl_pos)) ty_arg;
         close_box() in
       let print_fields depth label_list =
           let rec loop depth b = function
@@ -227,17 +185,17 @@ and print_val_list prio depth obj ty_list =
           [] -> ()
         | ty :: ty_list ->
            if i > 0 then begin print_string ","; print_space() end;
-           print_val prio (depth - 1) (nth_arg obj i) ty;
+           print_val prio (depth - 1) (Zebra_obj.field obj i) ty;
            loop (depth - 1) (succ i) ty_list in
       loop depth 0
   in cautious (print_list depth 0) ty_list
 
 and print_list depth obj ty_arg =
   let rec print_conses depth cons =
-   if constr_tag cons != 0 then begin
-     print_val 0 (depth - 1) (nth_arg cons 0) ty_arg;
-     let next_obj = nth_arg cons 1 in
-     if constr_tag next_obj != 0 then begin
+   if Zebra_obj.tag cons != 0 then begin
+     print_val 0 (depth - 1) (Zebra_obj.field cons 0) ty_arg;
+     let next_obj = Zebra_obj.field cons 1 in
+     if Zebra_obj.tag next_obj != 0 then begin
        print_string ";"; print_space();
        print_conses (depth - 1) next_obj
      end
@@ -252,10 +210,10 @@ and print_list depth obj ty_arg =
 and print_vect depth obj ty_arg =
   let print_items depth obj =
       let rec loop depth i =
-          if i < count_args obj then
+          if i < Zebra_obj.size obj then
            begin
             if i > 0 then begin print_string ";"; print_space() end;
-            print_val 0 (depth - 1) (nth_arg obj i) ty_arg;
+            print_val 0 (depth - 1) (Zebra_obj.field obj i) ty_arg;
             loop (depth - 1) (i + 1)
            end in
       loop depth 0

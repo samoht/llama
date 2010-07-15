@@ -7,9 +7,28 @@ open Opcodes;;
 open Buffcode;;
 open Symtable;;
 open Emitcode;;
-open Tr_const;;
+(*open Tr_const;;*)
 open Pr_value;;
 open Format;;
+
+open Const;;
+let rec transl_structured_const = function
+    SCatom(ACint i) -> Zebra_obj.of_int i
+  | SCatom(ACfloat f) -> Zebra_obj.of_float f
+  | SCatom(ACstring s) -> Zebra_obj.of_string s
+  | SCatom(ACchar c) -> Zebra_obj.of_char c
+  | SCblock(tag, comps) ->
+      let res = Zebra_obj.new_block (get_num_of_tag tag) (List.length comps) in
+      fill_structured_const 0 res comps;
+      res
+
+and fill_structured_const n obj = function
+    [] -> ()
+  | cst::rest ->
+      let zv = transl_structured_const cst in
+      Zebra_obj.set_field obj n zv;
+      fill_structured_const (n+1) obj rest
+;;
 
 let do_code may_free code entrypoint len =
   if number_of_globals() >= length_global_data () then
@@ -68,7 +87,7 @@ let load_phrase phr =
     end in
   let len = !out_position in
   let code = static_alloc len in
-  String.blit !out_buffer 0 code 0 len;
+  String.unsafe_blit !out_buffer 0 code 0 len;
   Patch.patch_object code 0 (Reloc.get_info());
   do_code (match phr.kph_fcts with [] -> true | _ -> false) code entrypoint len
 ;;

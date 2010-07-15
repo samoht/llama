@@ -15,7 +15,7 @@ RANLIB=ranlib
 #========== End of configuration section
 
 
-OBJS=interp.o misc.o stacks.o fix_code.o main.o fail.o signals.o debugcom.o \
+OBJS=interp.o misc.o stacks.o fix_code.o fail.o signals.o debugcom.o \
   freelist.o major_gc.o minor_gc.o memory.o alloc.o roots.o \
   compare.o ints.o floats.o str.o io.o \
   extern.o externcp.o intern.o interncp.o \
@@ -27,22 +27,22 @@ PRIMS=compare.c extern.c externcp.c floats.c gc_ctrl.c hash.c \
   intern.c interncp.c interp.c ints.c io.c lexing.c meta.c parsing.c \
   str.c sys.c
 
-all: zebrarun libcaml.a
+all: zebrarun zebrarund libcaml.a libcamld.a
 
-zebrarun: $(OBJS) prims.o
-	$(CC) $(CFLAGS) -o zebrarun prims.o $(OBJS) $(LIBS) -lm
+zebrarun: $(OBJS) prims.o main.o
+	$(CC) $(CFLAGS) -o zebrarun prims.o main.o $(OBJS) $(LIBS) -lm
 
-zebrarund: $(DOBJS) prims.o
-	$(CC) -g $(OPTS) -o zebrarund prims.o $(DOBJS) $(LIBS) -lm
+zebrarund: $(DOBJS) prims.o main.d.o
+	$(CC) -g $(OPTS) -o zebrarund prims.o main.o $(DOBJS) $(LIBS) -lm
 
-libcaml.a: $(OBJS)
+libcaml.a: $(OBJS) prims.o api.o
 	rm -f libcaml.a
-	ar rc libcaml.a $(OBJS)
+	ar rc libcaml.a $(OBJS) prims.o api.o
 	if $(RANLIBTEST); then $(RANLIB) libcaml.a; else true; fi
 
-libcamld.a: $(DOBJS)
+libcamld.a: $(DOBJS) prims.o api.d.o
 	rm -f libcamld.a
-	ar rc libcamld.a $(DOBJS)
+	ar rc libcamld.a $(DOBJS) prims.o api.d.o
 	if $(RANLIBTEST); then $(RANLIB) libcamld.a; else true; fi
 
 clean:
@@ -97,6 +97,7 @@ jumptbl.h : instruct.h
 .SUFFIXES: .d.o
 
 .c.d.o:
+	@ mkdir -p .debugobj
 	cd .debugobj; $(CC) -c -g -I.. -DDEBUG $(OPTS) ../$<
 	mv .debugobj/$*.o $*.d.o
 

@@ -8,9 +8,7 @@
 *.cmxa
 config/m.h
 config/s.h
-config/auto-aux/m.h
-config/auto-aux/s.h
-config/auto-aux/tst
+config/Makefile
 typing/config.ml
 typing/lexer.ml
 typing/lexer.mll
@@ -39,6 +37,8 @@ utils/config.ml
 zebra
 zebrac
 runtime/zebrarun
+runtime/zebrarund
+runtime/opnames.h
 testprog
 stdlib/header
 examples/asl/asl

@@ -4,8 +4,8 @@ open Reloc;;
 open Symtable;;
 
 let patch_short buff pos value =
-  buff.[pos] <- char_of_int (value land 0xFF);
-  buff.[succ pos] <- char_of_int (value lsr 8)
+  String.unsafe_set buff pos (char_of_int (value land 0xFF));
+  String.unsafe_set buff (succ pos) (char_of_int (value lsr 8))
 ;;
 
 let patch_object buff offset =
@@ -17,7 +17,7 @@ let patch_object buff offset =
   | Reloc_setglobal id, pos ->
       patch_short buff (pos + offset) (get_slot_for_defined_variable id)
   | Reloc_tag(id, stamp), pos ->
-      buff.[pos + offset] <- char_of_int (get_num_of_exn(id,stamp))
+      String.unsafe_set buff (pos + offset) (char_of_int (get_num_of_exn(id,stamp)))
   | Reloc_primitive name, pos ->
       patch_short buff (pos + offset) (get_num_of_prim name))
 ;;
