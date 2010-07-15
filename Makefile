@@ -62,7 +62,7 @@ utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
 	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
             -e 's|%%BYTERUN%%|$(BINDIR)/zebrarun|' \
-            -e 's|%%VERSION%%|`head -` VERSION`|' \
+            -e 's|%%VERSION%%|`head -1 VERSION`|' \
             utils/config.mlp > utils/config.ml
 	@chmod -w utils/config.ml
 
@@ -76,7 +76,7 @@ compiler/opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
 
-linker/prim_c.ml : runtime_primitives
+linker/prim_c.ml : runtime/primitives
 	(echo 'let primitives_table = [|'; \
 	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' runtime/primitives; \
 	 echo '|];;') > $@
@@ -97,13 +97,13 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
+runtime/primitives:
+	cd runtime && make primitives
 runtime_dir:
 	cd runtime && make
-runtime_primitives:
-	cd runtime && make primitives
 stdlib_dir:
 	cd stdlib && make
-.PHONY: runtime_dir runtime_primitives stdlib_dir
+.PHONY: runtime_dir stdlib_dir
 
 clean:
 	rm -f zebra zebrac zebrarun stdlib.zo
