@@ -35,7 +35,6 @@ try
               "-debug", Arg.Unit debug_option, "(undocumented)";
               "-lang", Arg.String set_language, "(undocumented)"]
              anonymous "(undocumented)";
-  default_used_modules := "toplevel" :: !default_used_modules;
   Interntl.printf "\tZebra version %s\n" Config.version;
   print_newline();
 (*
@@ -50,8 +49,9 @@ try
   set_c_primitives (Meta.available_primitives());
   close_in ic;
   Meta.set_global_data 16 (Obj.repr true); (* 16: cf ../runtime/globals.h *)
-  start_compiling_interface "top"
 *)
+  start_compiling_interface "top"
+
 with Toplevel -> exit 2
    | Sys_error msg ->
       Interntl.eprintf "Input/output error: %s.\n" msg;
