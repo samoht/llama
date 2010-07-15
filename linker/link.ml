@@ -115,9 +115,12 @@ let emit_data outstream =
 
 let write_debug_info = ref false;;
 
-let link module_list exec_name =
+let link objfiles exec_name =
+  let objfiles =
+    if !Clflags.nopervasives then objfiles
+    else "stdlib.zo" :: objfiles in
   let tolink =
-    List.fold_left scan_file [] (List.rev module_list) in
+    List.fold_left scan_file [] (List.rev objfiles) in
   let outchan =
     open_out_gen
       [Open_wronly; Open_trunc; Open_creat; Open_binary]

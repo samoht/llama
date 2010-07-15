@@ -1,3 +1,5 @@
+open Clflags
+(*
 let make_archive = ref false
 let compile_only = ref false
 let custom_runtime = ref false
@@ -7,6 +9,8 @@ let output_name = ref None
 let fast = ref false
 let nopervasives = ref false
 let objfiles = ref []
+*)
+
 
 module Warnings = struct
   let parse_options b s = ()
@@ -59,6 +63,10 @@ let default_output = function
   | Some s -> s
   | None -> "a.out" (*Config.default_executable_name*)
 
+let set_nopervasives () =
+  Modules.default_used_modules := List.assoc "none" Config.default_used_interfaces;
+  Clflags.nopervasives := true
+
 let main () =
   Modules.default_used_modules := List.assoc "cautious" Config.default_used_interfaces;
   Misc.load_path := [Config.standard_library];
@@ -72,9 +80,7 @@ let main () =
       " Print inferred interface";
       "-I", Arg.String (fun s -> Misc.load_path := s :: !Misc.load_path),
            "<dir>  Add <dir> to the list of include directories";
-      "-nostdlib",
-      Arg.Unit(fun () ->
-                 Modules.default_used_modules := List.assoc "none" Config.default_used_interfaces),
+      "-nostdlib", Arg.Unit(fun () -> failwith "-nostdlib"),
       " do not add default directory to the list of include directories";
       "-o", Arg.String (fun s -> output_name := Some s),
       "<file>  Set output file name to <file>";
@@ -106,7 +112,7 @@ let main () =
       \     Default setting is \"a\" (warnings are not errors)";
     "-where", Arg.Unit print_standard_library,
            " Print location of standard library and exit";
-    "-nopervasives", Arg.Set nopervasives, " (undocumented)";
+    "-nopervasives", Arg.Unit set_nopervasives, " (undocumented)";
     "-", Arg.String anonymous,
            "<file>  Treat <file> as a file name (even if it starts with `-')";
     ] anonymous usage;

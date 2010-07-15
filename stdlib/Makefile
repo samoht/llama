@@ -1,6 +1,6 @@
 # The standard library
 
-ZEBRAC=../zebrac -nostdlib -I .
+ZEBRAC=../zebrac -nopervasives -I .
 ZEBRA_DEPEND=../zebradep
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-g

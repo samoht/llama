@@ -5,9 +5,9 @@ OCAMLYACC=ocamlyacc
 INCLUDES=-I utils -I typing -I compiler -I linker -I toplevel
 FLAGS=-g $(INCLUDES) 
 
-UTILS=utils/version.cmx
+UTILS=utils/version.cmx utils/config.cmx utils/clflags.cmx
 
-TYPING=typing/config.cmx typing/misc.cmx typing/interntl.cmx \
+TYPING=typing/misc.cmx typing/interntl.cmx \
  typing/const.cmx typing/prim.cmx typing/lambda.cmx typing/globals.cmx \
  typing/location.cmx typing/syntax.cmx \
  typing/modules.cmx typing/builtins.cmx typing/types.cmx \
