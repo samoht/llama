@@ -222,6 +222,16 @@ toplevel/load_phr.cmx: toplevel/zebra_obj.cmi linker/symtable.cmx \
     compiler/opcodes.cmx typing/misc.cmx toplevel/meta.cmi \
     compiler/labels.cmx typing/interntl.cmx compiler/instruct.cmx \
     compiler/emitcode.cmx typing/const.cmx compiler/buffcode.cmx 
+toplevel/main.cmo: typing/typing.cmx toplevel/toplevel.cmi \
+    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
+    typing/location.cmi toplevel/load_phr.cmx typing/interntl.cmx \
+    toplevel/do_phr.cmx typing/const.cmx utils/config.cmi \
+    compiler/compiler.cmx utils/clflags.cmi 
+toplevel/main.cmx: typing/typing.cmx toplevel/toplevel.cmx \
+    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
+    typing/location.cmx toplevel/load_phr.cmx typing/interntl.cmx \
+    toplevel/do_phr.cmx typing/const.cmx utils/config.cmx \
+    compiler/compiler.cmx utils/clflags.cmx 
 toplevel/pr_value.cmo: toplevel/zebra_obj.cmi typing/types.cmx \
     linker/symtable.cmx typing/modules.cmx typing/misc.cmx typing/globals.cmx \
     toplevel/fmt_type.cmx typing/const.cmx typing/builtins.cmx 
@@ -232,12 +242,6 @@ toplevel/provide.cmo: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
     typing/globals.cmx typing/const.cmx utils/config.cmi 
 toplevel/provide.cmx: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
     typing/globals.cmx typing/const.cmx utils/config.cmx 
-toplevel/topinit.cmo: typing/typing.cmx toplevel/toplevel.cmi \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    typing/interntl.cmx utils/config.cmi 
-toplevel/topinit.cmx: typing/typing.cmx toplevel/toplevel.cmx \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    typing/interntl.cmx utils/config.cmx 
 toplevel/toplevel.cmo: typing/types.cmx linker/symtable.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
     typing/modules.cmx typing/misc.cmx toplevel/meta.cmi typing/location.cmi \
@@ -252,9 +256,3 @@ toplevel/toplevel.cmx: typing/types.cmx linker/symtable.cmx \
     typing/event.cmx compiler/emit_phr.cmx toplevel/do_phr.cmx \
     typing/const.cmx compiler/compiler.cmx typing/builtins.cmx \
     toplevel/toplevel.cmi 
-toplevel/topmain.cmo: linker/symtable.cmx typing/misc.cmx typing/location.cmi \
-    typing/interntl.cmx toplevel/do_phr.cmx utils/config.cmi \
-    compiler/compiler.cmx 
-toplevel/topmain.cmx: linker/symtable.cmx typing/misc.cmx typing/location.cmx \
-    typing/interntl.cmx toplevel/do_phr.cmx utils/config.cmx \
-    compiler/compiler.cmx 

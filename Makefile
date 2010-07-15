@@ -33,7 +33,7 @@ LINKER=linker/caml_light_extern.o \
 TOPLEVEL=\
   toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
-  toplevel/topinit.cmx toplevel/topmain.cmx runtime/libcaml.a toplevel/zebra.o
+  toplevel/main.cmx runtime/libcaml.a toplevel/zebra.o
 
 GENSOURCES=utils/config.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
