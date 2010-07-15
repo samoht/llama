@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "prims.h"
 #include "api.h"
+#include "alloc.h"
 extern value interprete(code_t prog);
 
 #define NUM_GLOBALS 20   // cf globals.h
