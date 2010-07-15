@@ -36,11 +36,8 @@ toplevel/pr_value.ml
 toplevel/provide
 toplevel/required
 utils/version.ml
-zebra-compile
-zebra-link
-zebra-run
+zebrarun
 zebra
-stdlib.zo
-runtime/zebra-run
+runtime/zebrarun
 testprog
 zebrac

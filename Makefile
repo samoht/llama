@@ -35,13 +35,13 @@ TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
 GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: zebra zebrac zebra-run stdlib.zo testprog
+all: zebra zebrac zebrarun stdlib/stdlib.zo testprog
 
-testprog: testprog.ml zebra-run stdlib/stdlib.zo
+testprog: testprog.ml zebrarun stdlib/stdlib.zo
 	./zebrac -stdlib stdlib stdlib/stdlib.zo $< -o $@
-	./zebra-run testprog
+	./zebrarun testprog
 	@ echo "Is that 10946 on the line above? Good."
-	@ echo "The system is up and running."
+	@ echo "The Zebra system is up and running."
 
 zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
@@ -89,16 +89,13 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-zebra-run: runtime/zebra-run
-	cp $< $@
-
-stdlib.zo: stdlib/stdlib.zo
+zebrarun: runtime/zebrarun
 	cp $< $@
 
 runtime/primitives:
 	cd runtime && make
 
-runtime/zebra-run:
+runtime/zebrarun:
 	cd runtime && make
 
 stdlib/stdlib.zo:
@@ -109,7 +106,7 @@ configure:
 .PHONY: configure
 
 clean:
-	rm -f zebra zebrac zebra-run stdlib.zo
+	rm -f zebra zebrac zebrarun stdlib.zo
 	rm -f $(GENSOURCES)
 	rm -f {utils,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
 	rm -f testprog{,.zi,.zo}

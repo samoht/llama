@@ -27,13 +27,13 @@ PRIMS=compare.c extern.c externcp.c floats.c gc_ctrl.c hash.c \
   intern.c interncp.c interp.c ints.c io.c lexing.c meta.c parsing.c \
   str.c sys.c
 
-all: zebra-run libcaml.a
+all: zebrarun libcaml.a
 
-zebra-run: $(OBJS) prims.o
-	$(CC) $(CFLAGS) -o zebra-run prims.o $(OBJS) $(LIBS) -lm
+zebrarun: $(OBJS) prims.o
+	$(CC) $(CFLAGS) -o zebrarun prims.o $(OBJS) $(LIBS) -lm
 
-zebra-rund: $(DOBJS) prims.o
-	$(CC) -g $(OPTS) -o zebra-rund prims.o $(DOBJS) $(LIBS) -lm
+zebrarund: $(DOBJS) prims.o
+	$(CC) -g $(OPTS) -o zebrarund prims.o $(DOBJS) $(LIBS) -lm
 
 libcaml.a: $(OBJS)
 	rm -f libcaml.a
@@ -46,11 +46,11 @@ libcamld.a: $(DOBJS)
 	if $(RANLIBTEST); then $(RANLIB) libcamld.a; else true; fi
 
 clean:
-	rm -f zebra-run zebra-rund *.o *.a
+	rm -f zebrarun zebrarund *.o *.a
 	rm -f primitives prims.c opnames.h jumptbl.h version.h
 
 install:
-	cp zebra-run $(BINDIR)/darkrun
+	cp zebrarun $(BINDIR)/darkrun
 	strip $(BINDIR)/darkrun
 	cp libcaml.a $(LIBDIR)
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libcaml.a; else true; fi
