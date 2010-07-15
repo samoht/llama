@@ -34,24 +34,6 @@ clean::
 makefiles::
 	@-echo "-- Making makefiles in" basics; cd basics; make TOP=../$(TOP) makefiles
 
-#all::
-#	@-echo "-- Making all in" calc; cd calc; make all
-
-clean::
-	@-echo "-- Making clean in" calc; cd calc; make clean
-
-makefiles::
-	@-echo "-- Making makefiles in" calc; cd calc; make TOP=../$(TOP) makefiles
-
-#all::
-#	@-echo "-- Making all in" colwheel; echo "(This program requires the libgraph library;"; echo " if you haven't installed it, compilation will fail.)"; cd colwheel; make all
-
-clean::
-	@-echo "-- Making clean in" colwheel; cd colwheel; make clean
-
-makefiles::
-	@-echo "-- Making makefiles in" colwheel; cd colwheel; make TOP=../$(TOP) makefiles
-
 all::
 	@-echo "-- Making all in" compress; cd compress; make all
 
@@ -115,15 +97,6 @@ clean::
 makefiles::
 	@-echo "-- Making makefiles in" minicaml; cd minicaml; make TOP=../$(TOP) makefiles
 
-#all::
-#	@-echo "-- Making all in" minilogo; echo "(This program requires the libgraph library;"; echo " if you haven't installed it, compilation will fail.)"; cd minilogo; make all
-
-clean::
-	@-echo "-- Making clean in" minilogo; cd minilogo; make clean
-
-makefiles::
-	@-echo "-- Making makefiles in" minilogo; cd minilogo; make TOP=../$(TOP) makefiles
-
 all::
 	@-echo "-- Making all in" pascal; cd pascal; make all
 
@@ -141,24 +114,6 @@ clean::
 
 makefiles::
 	@-echo "-- Making makefiles in" picomach; cd picomach; make TOP=../$(TOP) makefiles
-
-#all::
-#	@-echo "-- Making all in" showsort; echo "(This program requires the libgraph library;"; echo " if you haven't installed it, compilation will fail.)"; cd showsort; make all
-
-clean::
-	@-echo "-- Making clean in" showsort; cd showsort; make clean
-
-makefiles::
-	@-echo "-- Making makefiles in" showsort; cd showsort; make TOP=../$(TOP) makefiles
-
-#all::
-#	@-echo "-- Making all in" spirals; echo "(This program requires the libgraph library;"; echo " if you haven't installed it, compilation will fail.)"; cd spirals; make all
-
-clean::
-	@-echo "-- Making clean in" spirals; cd spirals; make clean
-
-makefiles::
-	@-echo "-- Making makefiles in" spirals; cd spirals; make TOP=../$(TOP) makefiles
 
 # (end Imakefile)
 
