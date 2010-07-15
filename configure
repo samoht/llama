@@ -6,7 +6,7 @@ case $1 in
 esac
 export cc
 
-cd auto-aux
+cd config/auto-aux
 rm -f s.h m.h
 touch s.h m.h
 

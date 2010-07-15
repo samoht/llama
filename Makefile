@@ -101,10 +101,6 @@ runtime/zebrarun:
 stdlib/stdlib.zo:
 	cd stdlib && make
 
-configure:
-	cd config; sh autoconf "$(CC) $(OPTS) $(LIBS)"
-.PHONY: configure
-
 clean:
 	rm -f zebra zebrac zebrarun stdlib.zo
 	rm -f $(GENSOURCES)
