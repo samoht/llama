@@ -1,16 +1,4 @@
 open Clflags
-(*
-let make_archive = ref false
-let compile_only = ref false
-let custom_runtime = ref false
-let debug = ref false
-let print_types = ref false
-let output_name = ref None
-let fast = ref false
-let nopervasives = ref false
-let objfiles = ref []
-*)
-
 
 module Warnings = struct
   let parse_options b s = ()
@@ -74,13 +62,12 @@ let main () =
   Arg.parse
     [ "-a", Arg.Set make_archive, " Build a library";
       "-c", Arg.Set compile_only, " Compile only (do not link)";
-      "-custom", Arg.Set custom_runtime, " Link in custom mode";
       "-g", Arg.Set debug, " Save debugging information";
       "-i", Arg.Unit (fun () -> print_types := true; compile_only := true),
       " Print inferred interface";
       "-I", Arg.String (fun s -> Misc.load_path := s :: !Misc.load_path),
            "<dir>  Add <dir> to the list of include directories";
-      "-nostdlib", Arg.Unit(fun () -> failwith "-nostdlib"),
+      "-nostdlib", Arg.Set no_std_include,
       " do not add default directory to the list of include directories";
       "-o", Arg.String (fun s -> output_name := Some s),
       "<file>  Set output file name to <file>";

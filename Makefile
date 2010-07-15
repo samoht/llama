@@ -62,7 +62,7 @@ utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
 	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
             -e 's|%%BYTERUN%%|$(BINDIR)/zebrarun|' \
-            -e 's|%%VERSION%%|`head -1 VERSION`|' \
+            -e "s|%%VERSION%%|`head -1 VERSION`|" \
             utils/config.mlp > utils/config.ml
 	@chmod -w utils/config.ml
 
