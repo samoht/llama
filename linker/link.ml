@@ -126,7 +126,7 @@ let link module_list exec_name =
   try
     (* The header *)
     begin try
-      let inchan = open_in_bin (Filename.concat !path_library "header") in
+      let inchan = open_in_bin (Filename.concat standard_library "header") in
       let buff = String.make 1024 '\000' in
       while true do
         let n = input inchan buff 0 1024 in

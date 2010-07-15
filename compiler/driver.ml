@@ -34,14 +34,14 @@ let print_version_and_library () =
   print_string "The Zebra compiler, version ";
   print_string Config.version; print_newline();
   print_string "Standard library directory: ";
-  print_string !Config.path_library; print_newline();
+  print_string Config.standard_library; print_newline();
   exit 0
 
 let print_version_string () =
   print_string Config.version; print_newline(); exit 0
 
 let print_standard_library () =
-  print_string !Config.path_library; print_newline(); exit 0
+  print_string Config.standard_library; print_newline(); exit 0
 
 let usage = "Usage: zebrac <options> <files>\nOptions are:"
 
@@ -59,13 +59,9 @@ let default_output = function
   | Some s -> s
   | None -> "a.out" (*Config.default_executable_name*)
 
-let set_stdlib p =
-  Config.path_library := p;
-  Misc.load_path := [!Config.path_library]
-
 let main () =
   Modules.default_used_modules := List.assoc "cautious" Config.default_used_interfaces;
-  Misc.load_path := [!Config.path_library];
+  Misc.load_path := [Config.standard_library];
   Symtable.reset_linker_tables();
   Arg.parse
     [ "-a", Arg.Set make_archive, " Build a library";
@@ -82,7 +78,6 @@ let main () =
       " do not add default directory to the list of include directories";
       "-o", Arg.String (fun s -> output_name := Some s),
       "<file>  Set output file name to <file>";
-      "-stdlib", Arg.String set_stdlib, "(undocumented)";
     "-unsafe", Arg.Set fast,
            " No bounds checking on array and string access";
     "-v", Arg.Unit print_version_and_library,

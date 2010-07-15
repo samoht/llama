@@ -1,6 +1,6 @@
 (* Configuration file *)
 
-let path_library = ref "";;
+let standard_library = ""
 let version = Version.version
 
 (* Integer ranges *)

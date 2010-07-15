@@ -1,4 +1,4 @@
-val path_library : string ref
+val standard_library : string
 val version : string
 ;;
 val maxint_byte : int

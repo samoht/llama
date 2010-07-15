@@ -27,11 +27,8 @@ let anonymous name =
 
 let main() =
   try
-    load_path := [!path_library];
+    load_path := [standard_library];
     Arg.parse [
-      "-stdlib",
-      Arg.String (fun p -> path_library := p; load_path := [!path_library]),
-      "(undocumented)";
       "-I",
       Arg.String (fun d -> load_path := d :: !load_path),
       "(undocumented)";

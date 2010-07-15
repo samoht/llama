@@ -38,7 +38,7 @@ GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
 all: zebra zebrac zebrarun stdlib/stdlib.zo testprog
 
 testprog: testprog.ml zebrarun stdlib/stdlib.zo
-	./zebrac -stdlib stdlib stdlib/stdlib.zo $< -o $@
+	./zebrac -I stdlib stdlib.zo $< -o $@
 	./zebrarun testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Zebra system is up and running."

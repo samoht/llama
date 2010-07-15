@@ -8,9 +8,6 @@ open Format;;
 
 let anonymous s =
   raise (Arg.Bad ("don't know what to do with " ^ s))
-and set_stdlib p =
-  path_library := p;
-  load_path := [!path_library]
 and add_include d =
   load_path := d :: !load_path
 and open_set set =
@@ -28,10 +25,9 @@ let init() =
 try
   toplevel := true;
   default_used_modules := List.assoc "cautious" default_used_interfaces;
-  load_path := [!path_library];
+  load_path := [standard_library];
   Typing.warnings := true;
-  Arg.parse ["-stdlib", Arg.String set_stdlib, "(undocumented)";
-              "-I", Arg.String add_include, "(undocumented)";
+  Arg.parse [ "-I", Arg.String add_include, "(undocumented)";
               "-include", Arg.String add_include, "(undocumented)";
               "-O", Arg.String open_set, "(undocumented)";
               "-open", Arg.String open_set, "(undocumented)";
