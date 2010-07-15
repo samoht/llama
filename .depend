@@ -154,12 +154,6 @@ compiler/librarian.cmo: typing/misc.cmx typing/interntl.cmx \
     compiler/emit_phr.cmx 
 compiler/librarian.cmx: typing/misc.cmx typing/interntl.cmx \
     compiler/emit_phr.cmx 
-compiler/main.cmo: utils/version.cmx typing/typing.cmx typing/modules.cmx \
-    typing/misc.cmx typing/interntl.cmx typing/event.cmx typing/config.cmi \
-    compiler/compiler.cmx 
-compiler/main.cmx: utils/version.cmx typing/typing.cmx typing/modules.cmx \
-    typing/misc.cmx typing/interntl.cmx typing/event.cmx typing/config.cmx \
-    compiler/compiler.cmx 
 compiler/opcodes.cmo: 
 compiler/opcodes.cmx: 
 compiler/prim_opc.cmo: typing/prim.cmx compiler/opcodes.cmx typing/misc.cmx 
@@ -178,10 +172,6 @@ linker/link.cmx: linker/tr_const.cmx linker/symtable.cmx compiler/reloc.cmx \
     linker/patch.cmx compiler/opcodes.cmx typing/misc.cmx typing/lambda.cmx \
     typing/interntl.cmx compiler/emit_phr.cmx typing/const.cmx \
     typing/config.cmx 
-linker/main.cmo: utils/version.cmx linker/symtable.cmx linker/readword.cmx \
-    typing/misc.cmx linker/link.cmx typing/interntl.cmx typing/config.cmi 
-linker/main.cmx: utils/version.cmx linker/symtable.cmx linker/readword.cmx \
-    typing/misc.cmx linker/link.cmx typing/interntl.cmx typing/config.cmx 
 linker/patch.cmo: linker/symtable.cmx compiler/reloc.cmx 
 linker/patch.cmx: linker/symtable.cmx compiler/reloc.cmx 
 linker/predef.cmo: typing/const.cmx 
