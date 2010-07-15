@@ -2,7 +2,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I typing -I compiler -I linker -I archivist -I toplevel
+INCLUDES=-I utils -I typing -I compiler -I linker -I toplevel
 FLAGS=-g $(INCLUDES) 
 
 UTILS=utils/version.cmx
@@ -28,8 +28,6 @@ LINKER=linker/caml_light_extern.o \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
-ARCHIVIST=archivist/librar.cmx
-
 TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/topinit.cmx toplevel/topmain.cmx
@@ -37,7 +35,7 @@ TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
 GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: zebra-compile zebra-link zebra-archive zebra zebra-run stdlib.zo testprog
+all: zebra-compile zebra-link zebra zebra-run stdlib.zo testprog zebrac
 
 testprog.zo: testprog.ml zebra-compile stdlib.zo
 	./zebra-compile -I stdlib $<
@@ -54,10 +52,10 @@ zebra-compile: $(UTILS) $(TYPING) $(COMPILER) compiler/main.cmx
 zebra-link: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) linker/main.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-zebra-archive: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(ARCHIVIST) archivist/main.cmx
+zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+zebrac: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 %.cmx: %.ml
@@ -120,16 +118,16 @@ configure:
 .PHONY: configure
 
 clean:
-	rm -f zebra-compile zebra-link zebra-archive zebra zebra-run stdlib.zo
+	rm -f zebra-compile zebra-link zebra zebra-run stdlib.zo
 	rm -f $(GENSOURCES)
-	rm -f {utils,typing,compiler,linker,archivist,toplevel}/*.{cmi,cmx,o}
+	rm -f {utils,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd runtime && make clean
 	cd stdlib && make clean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,archivist,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 -include .depend

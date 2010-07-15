@@ -38,9 +38,9 @@ toplevel/required
 utils/version.ml
 zebra-compile
 zebra-link
-zebra-archive
 zebra-run
 zebra
 stdlib.zo
 runtime/zebra-run
 testprog
+zebrac

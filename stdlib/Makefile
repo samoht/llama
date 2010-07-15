@@ -1,10 +1,9 @@
 # The standard library
 
-ZEBRA_COMPILE=../zebra-compile
-ZEBRA_ARCHIVE=../zebra-archive
+ZEBRAC=../zebrac -nostdlib -stdlib .
 ZEBRA_DEPEND=../zebra-depend
 CPP=/usr/bin/cpp -P -Dunix
-COMPFLAGS=-stdlib . -O none -g -W
+COMPFLAGS=-g
 
 # The list of all interfaces. Order irrelevant.
 
@@ -25,7 +24,7 @@ STD_IMPL= bool.zo eq.zo exc.zo int.zo fstring.zo string.zo fchar.zo \
 all: $(STD_INTF) stdlib.zo
 
 stdlib.zo: $(STD_IMPL)
-	$(ZEBRA_ARCHIVE) -o stdlib.zo $(STD_IMPL)
+	$(ZEBRAC) -a -o stdlib.zo $(STD_IMPL)
 
 clean:
 	rm -f *.zi *.zix *.zo
@@ -36,10 +35,10 @@ install:
 	rm $(LIBDIR)/iparsing.mli
 
 %.zi: %.mli
-	$(ZEBRA_COMPILE) $(COMPFLAGS) $<
+	$(ZEBRAC) -c $(COMPFLAGS) $<
 
 %.zo: %.ml
-	$(ZEBRA_COMPILE) $(COMPFLAGS) $<
+	$(ZEBRAC) -c $(COMPFLAGS) $<
 
 %.ml: %.mlp
 	@rm -f $@

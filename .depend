@@ -12,8 +12,8 @@ typing/clauses.cmo: typing/types.cmx typing/syntax.cmx typing/misc.cmx \
 typing/clauses.cmx: typing/types.cmx typing/syntax.cmx typing/misc.cmx \
     typing/location.cmx typing/lambda.cmx typing/globals.cmx typing/error.cmx \
     typing/const.cmx 
-typing/config.cmo: typing/config.cmi 
-typing/config.cmx: typing/config.cmi 
+typing/config.cmo: utils/version.cmx typing/config.cmi 
+typing/config.cmx: utils/version.cmx typing/config.cmi 
 typing/const.cmo: typing/misc.cmx 
 typing/const.cmx: typing/misc.cmx 
 typing/error.cmo: typing/types.cmx typing/syntax.cmx typing/pr_type.cmx \
@@ -116,6 +116,12 @@ compiler/compiler.cmx: typing/typing.cmx typing/ty_intf.cmx \
     typing/modules.cmx typing/misc.cmx typing/location.cmx typing/lexer.cmx \
     typing/interntl.cmx compiler/front.cmx typing/error.cmx \
     compiler/emit_phr.cmx compiler/back.cmx 
+compiler/driver.cmo: linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+    linker/link.cmx compiler/librarian.cmx typing/config.cmi \
+    compiler/compiler.cmx 
+compiler/driver.cmx: linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+    linker/link.cmx compiler/librarian.cmx typing/config.cmx \
+    compiler/compiler.cmx 
 compiler/emit_phr.cmo: compiler/reloc.cmx typing/lambda.cmx \
     compiler/labels.cmx compiler/instruct.cmx typing/event.cmx \
     compiler/emitcode.cmx compiler/buffcode.cmx 
@@ -144,6 +150,10 @@ compiler/labels.cmo: typing/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
 compiler/labels.cmx: typing/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
+compiler/librarian.cmo: typing/misc.cmx typing/interntl.cmx \
+    compiler/emit_phr.cmx 
+compiler/librarian.cmx: typing/misc.cmx typing/interntl.cmx \
+    compiler/emit_phr.cmx 
 compiler/main.cmo: utils/version.cmx typing/typing.cmx typing/modules.cmx \
     typing/misc.cmx typing/interntl.cmx typing/event.cmx typing/config.cmi \
     compiler/compiler.cmx 
@@ -186,14 +196,6 @@ linker/symtable.cmx: linker/prim_c.cmx linker/predef.cmx typing/misc.cmx \
     typing/interntl.cmx typing/const.cmx 
 linker/tr_const.cmo: linker/symtable.cmx typing/const.cmx 
 linker/tr_const.cmx: linker/symtable.cmx typing/const.cmx 
-librarian/librar.cmo: typing/misc.cmx typing/interntl.cmx \
-    compiler/emit_phr.cmx 
-librarian/librar.cmx: typing/misc.cmx typing/interntl.cmx \
-    compiler/emit_phr.cmx 
-librarian/main.cmo: utils/version.cmx linker/readword.cmx typing/misc.cmx \
-    librarian/librar.cmx typing/interntl.cmx typing/config.cmi 
-librarian/main.cmx: utils/version.cmx linker/readword.cmx typing/misc.cmx \
-    librarian/librar.cmx typing/interntl.cmx typing/config.cmx 
 toplevel/meta.cmi: 
 toplevel/toplevel.cmi: 
 toplevel/do_phr.cmo: typing/typing.cmx typing/types.cmx typing/ty_decl.cmx \
