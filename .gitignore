@@ -35,9 +35,9 @@ toplevel/expunge
 toplevel/pr_value.ml
 toplevel/provide
 toplevel/required
-utils/version.ml
-zebrarun
+utils/config.ml
 zebra
+zebrac
 runtime/zebrarun
 testprog
-zebrac
+stdlib/header

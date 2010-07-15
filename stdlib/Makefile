@@ -1,5 +1,7 @@
 # The standard library
 
+include ../config/Makefile
+
 ZEBRAC=../zebrac -nopervasives -I .
 ZEBRA_DEPEND=../zebradep
 CPP=/usr/bin/cpp -P -Dunix
@@ -21,10 +23,13 @@ STD_IMPL= bool.zo eq.zo exc.zo int.zo fstring.zo string.zo fchar.zo \
     printf.zo stream.zo stack.zo queue.zo format.zo random.zo genlex.zo \
     baltree.zo set.zo map.zo gc.zo
 
-all: $(STD_INTF) stdlib.zo
+all: $(STD_INTF) stdlib.zo header
 
 stdlib.zo: $(STD_IMPL)
 	$(ZEBRAC) -a -o stdlib.zo $(STD_IMPL)
+
+header: ../config/Makefile
+	echo '#!$(BINDIR)/zebrarun' > header
 
 clean:
 	rm -f *.zi *.zix *.zo

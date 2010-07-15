@@ -1,5 +1,6 @@
-val standard_library : string
 val version : string
+val standard_library : string
+val standard_runtime : string
 ;;
 val maxint_byte : int
   val minint_byte : int

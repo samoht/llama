@@ -1,3 +1,5 @@
+include config/Makefile
+
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
@@ -5,7 +7,7 @@ OCAMLYACC=ocamlyacc
 INCLUDES=-I utils -I typing -I compiler -I linker -I toplevel
 FLAGS=-g $(INCLUDES) 
 
-UTILS=utils/version.cmx utils/config.cmx utils/clflags.cmx
+UTILS=utils/config.cmx utils/clflags.cmx
 
 TYPING=typing/misc.cmx typing/interntl.cmx \
  typing/const.cmx typing/prim.cmx typing/lambda.cmx typing/globals.cmx \
@@ -32,14 +34,15 @@ TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/topinit.cmx toplevel/topmain.cmx
 
-GENSOURCES=utils/version.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
+GENSOURCES=utils/config.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
 
-all: zebra zebrac zebrarun stdlib/stdlib.zo testprog
+all: zebra zebrac zebradep testprog runtime_dir stdlib_dir
+.PHONY: all
 
-testprog: testprog.ml zebrarun stdlib/stdlib.zo
-	./zebrac -I stdlib stdlib.zo $< -o $@
-	./zebrarun testprog
+testprog: testprog.ml runtime_dir stdlib_dir
+	./zebrac -I stdlib $< -o $@
+	runtime/zebrarun testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Zebra system is up and running."
 
@@ -55,8 +58,13 @@ zebrac: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler
 %.cmi: %.mli
 	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
 
-utils/version.ml: utils/version.mlp VERSION
-	sed -e "s|%%VERSION%%|`head -1 VERSION`|" $< > $@
+utils/config.ml: utils/config.mlp config/Makefile
+	@rm -f utils/config.ml
+	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
+            -e 's|%%BYTERUN%%|$(BINDIR)/zebrarun|' \
+            -e 's|%%VERSION%%|`head -` VERSION`|' \
+            utils/config.mlp > utils/config.ml
+	@chmod -w utils/config.ml
 
 typing/lexer.ml: typing/lexer.mll
 	$(OCAMLLEX) $<
@@ -68,9 +76,9 @@ compiler/opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
 
-linker/prim_c.ml : runtime/primitives
+linker/prim_c.ml : runtime_primitives
 	(echo 'let primitives_table = [|'; \
-	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' $<; \
+	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' runtime/primitives; \
 	 echo '|];;') > $@
 
 linker/predef.ml : runtime/globals.h runtime/fail.h
@@ -89,17 +97,13 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-zebrarun: runtime/zebrarun
-	cp $< $@
-
-runtime/primitives:
+runtime_dir:
 	cd runtime && make
-
-runtime/zebrarun:
-	cd runtime && make
-
-stdlib/stdlib.zo:
+runtime_primitives:
+	cd runtime && make primitives
+stdlib_dir:
 	cd stdlib && make
+.PHONY: runtime_dir runtime_primitives stdlib_dir
 
 clean:
 	rm -f zebra zebrac zebrarun stdlib.zo
@@ -115,3 +119,8 @@ depend: $(GENSOURCES)
 .PHONY: depend
 
 -include .depend
+
+SRCDIR=/Users/jeremy/zebra
+dummyconfig:
+	./configure -bindir $(SRCDIR)/runtime -libdir $(SRCDIR)/stdlib
+.PHONY: dummyconfig

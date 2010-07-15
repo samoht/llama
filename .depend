@@ -2,10 +2,8 @@ utils/clflags.cmi:
 utils/config.cmi: 
 utils/clflags.cmo: utils/config.cmi utils/clflags.cmi 
 utils/clflags.cmx: utils/config.cmx utils/clflags.cmi 
-utils/config.cmo: utils/version.cmx utils/config.cmi 
-utils/config.cmx: utils/version.cmx utils/config.cmi 
-utils/version.cmo: 
-utils/version.cmx: 
+utils/config.cmo: utils/config.cmi 
+utils/config.cmx: utils/config.cmi 
 typing/lexer.cmi: typing/parser.cmi 
 typing/location.cmi: 
 typing/parser.cmi: typing/syntax.cmx 
@@ -225,12 +223,12 @@ toplevel/provide.cmo: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
     typing/globals.cmx typing/const.cmx utils/config.cmi 
 toplevel/provide.cmx: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
     typing/globals.cmx typing/const.cmx utils/config.cmx 
-toplevel/topinit.cmo: utils/version.cmx typing/typing.cmx \
-    toplevel/toplevel.cmi linker/symtable.cmx typing/modules.cmx \
-    typing/misc.cmx typing/interntl.cmx utils/config.cmi 
-toplevel/topinit.cmx: utils/version.cmx typing/typing.cmx \
-    toplevel/toplevel.cmx linker/symtable.cmx typing/modules.cmx \
-    typing/misc.cmx typing/interntl.cmx utils/config.cmx 
+toplevel/topinit.cmo: typing/typing.cmx toplevel/toplevel.cmi \
+    linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+    typing/interntl.cmx utils/config.cmi 
+toplevel/topinit.cmx: typing/typing.cmx toplevel/toplevel.cmx \
+    linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+    typing/interntl.cmx utils/config.cmx 
 toplevel/toplevel.cmo: typing/types.cmx linker/symtable.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
     typing/modules.cmx typing/misc.cmx toplevel/meta.cmi typing/location.cmi \

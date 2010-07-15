@@ -1,7 +1,14 @@
-(* Configuration file *)
+let version = "%%VERSION%%"
 
-let standard_library = ""
-let version = Version.version
+let standard_library_default = "%%LIBDIR%%"
+
+let standard_library =
+  try
+    Sys.getenv "ZEBRALIB"
+  with Not_found ->
+    standard_library_default
+
+let standard_runtime = "%%BYTERUN%%"
 
 (* Integer ranges *)
 
