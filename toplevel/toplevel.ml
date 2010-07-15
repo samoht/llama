@@ -13,6 +13,7 @@ open Patch;;
 open Emit_phr;;
 open Symtable;;
 open Do_phr;;
+open Load_phr;;
 open Compiler;;
 open Pr_value;;
 open Format;;
@@ -52,14 +53,16 @@ let load_object name =
   let code_len = stop - start in
   let block_len = code_len + 1 in
   let code = static_alloc block_len in
-  really_input inchan code 0 code_len;
-  code.[code_len] <- char_of_int Opcodes.opSTOP;
+  unsafe_really_input inchan code 0 code_len;
+  String.unsafe_set code code_len (char_of_int Opcodes.opSTOP);
   let phrase_index = (input_value inchan : compiled_phrase list) in
   close_in inchan;
   List.iter
     (function phr ->
       patch_object code (phr.cph_pos - start) phr.cph_reloc)
-    (List.rev phrase_index)
+    (List.rev phrase_index);
+  let res = do_code false code 0 block_len in
+  ()
 ;;
 let _ = fwd_load_object := load_object;;
 
@@ -123,6 +126,7 @@ let loadfile filename =
   with End_of_file -> close_in ic
      | x -> close_in ic; raise x
 ;;
+let _ = fwd_load_file := loadfile;;
 
 let include_file name =
   let (simplename, filename) = add_suffix name ".ml" in

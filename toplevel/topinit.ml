@@ -50,6 +50,7 @@ try
   close_in ic;
   Meta.set_global_data 16 (Obj.repr true); (* 16: cf ../runtime/globals.h *)
 *)
+  Meta.zebra_init Sys.argv;
   start_compiling_interface "top"
 
 with Toplevel -> exit 2

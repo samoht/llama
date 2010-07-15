@@ -48,7 +48,7 @@ unsigned long extern_table_size, extern_table_used;
 #define Hash(v) (((unsigned long) ((v) >> 2)) % extern_table_size)
 #endif
 
-void alloc_extern_table() {
+static void alloc_extern_table() {
   asize_t i;
 
   extern_table = (struct extern_obj *)
@@ -57,7 +57,7 @@ void alloc_extern_table() {
     extern_table[i].obj = 0;
 }
 
-void resize_extern_table() {
+static void resize_extern_table() {
   asize_t oldsize;
   struct extern_obj * oldtable;
   asize_t i, h;
