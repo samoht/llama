@@ -38,7 +38,9 @@ try
   Interntl.printf "\tZebra version %s\n" Config.version;
   print_newline();
   Meta.zebra_init Sys.argv;
-  Meta.set_global_data 16 (Zebra_obj.of_int 1); (* 16: cf ../runtime/globals.h *)
+  let const_true = Const.SCblock(Const.ConstrRegular(1,2), []) in
+  let repr_true = Load_phr.transl_structured_const const_true in
+  Meta.set_global_data 16 repr_true; (* 16: cf ../runtime/globals.h *)
   set_c_primitives (Meta.available_primitives());
   start_compiling_interface "top"
 

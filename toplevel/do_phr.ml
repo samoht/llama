@@ -113,6 +113,8 @@ let do_toplevel_phrase phr =
             !fwd_load_object filename
         | Zdir ("use", filename) ->
             !fwd_load_file filename
+        | Zdir ("disasm", s) ->
+            Meta.set_trace_flag (s<>"")
         | _ ->
             do_directive phr.im_loc dir
       end

@@ -101,7 +101,7 @@ CAMLprim value caml_zebra_obj_is_block(zebra_value zv) {
 }
 
 CAMLprim value caml_zebra_obj_tag(zebra_value zv) {
-    return Val_long(zebra_Tag_val(zv));
+    return Val_long(zebra_obj_tag(zv));
 }
 
 CAMLprim value caml_zebra_obj_size(value zv) {
@@ -118,5 +118,10 @@ CAMLprim value caml_zebra_obj_set_field(value zv, value i, value fzv) {
 }
 
 CAMLprim value caml_zebra_obj_new_block(value tag, value sz) {
-    return zebra_obj_new_block(Long_val(sz), Long_val(tag));
+    return zebra_obj_new_block(Long_val(tag), Long_val(sz));
+}
+
+CAMLprim value caml_zebra_set_trace_flag(value b) {
+    zebra_set_trace_flag(Long_val(b));
+    return Val_unit;
 }

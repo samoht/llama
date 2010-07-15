@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "prims.h"
 #include "api.h"
+extern value interprete(code_t prog);
 
 #define NUM_GLOBALS 20   // cf globals.h
 
@@ -98,7 +99,11 @@ value zebra_copy_double(double d) { return copy_double(d); }
 value zebra_copy_string(char* s) { return copy_string(s); }
 
 int zebra_Is_block(value v) { return Is_block(v); }
-unsigned int zebra_Tag_val(value v) { return Tag_val(v); }
+
+unsigned int zebra_obj_tag(value arg) {
+    return Tag_val(arg);
+}
+
 size_t zebra_Wosize_val(value v) { return Wosize_val(v); }
 value zebra_Field(value v, size_t i) { return Field(v, i); }
 void zebra_Store_field(value v, size_t i, value fv) { modify(&Field(v, i), fv); }
@@ -112,3 +117,14 @@ value zebra_obj_new_block(unsigned int tg, size_t sz) {
         initialize(&Field(res, i), Val_long(0));
     return res;
 }
+
+#ifdef DEBUG
+#include "debugger.h"
+void zebra_set_trace_flag(int b) {
+    trace_flag = b;
+}
+#else
+void zebra_set_trace_flag(int b) {
+    fprintf(stderr, "set_trace_flag: not available");
+}
+#endif

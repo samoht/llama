@@ -13,3 +13,5 @@ external static_resize : string -> int -> string = "caml_zebra_stat_resize"
 
 external interprete : string -> int -> int -> Zebra_obj.t = "caml_zebra_interpret"
 external available_primitives : unit -> string array = "caml_zebra_available_primitives"
+
+external set_trace_flag : bool -> unit = "caml_zebra_set_trace_flag"

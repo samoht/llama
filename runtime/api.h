@@ -25,8 +25,10 @@ zebra_value zebra_copy_double(double d);
 zebra_value zebra_copy_string(char* s);
 
 int zebra_Is_block(zebra_value v);
-unsigned int zebra_Tag_val(zebra_value v);
+unsigned int zebra_obj_tag(zebra_value v);
 size_t zebra_Wosize_val(zebra_value v);
 zebra_value zebra_Field(zebra_value v, size_t i);
 void zebra_Store_field(zebra_value v, size_t i, zebra_value fv);
 zebra_value zebra_obj_new_block(unsigned int tg, size_t sz);
+
+void zebra_set_trace_flag(int b);
