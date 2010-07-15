@@ -4,6 +4,7 @@
 #include "stacks.h"
 #include "gc_ctrl.h"
 #include "globals.h"
+#include "prims.h"
 #include "api.h"
 
 #define NUM_GLOBALS 20   // cf globals.h
@@ -82,6 +83,10 @@ value zebra_interpret(char* prog, size_t offset, size_t len) {
     fixup_endianness(&Byte(prog, 0), (asize_t) len);
 #endif
     return interprete(&Byte(prog, offset));
+}
+
+char** zebra_available_primitives() {
+  return names_of_cprim;
 }
 
 long zebra_Long_val(value v) { return Long_val(v); }

@@ -1,5 +1,6 @@
 #include "caml/mlvalues.h"
 #include "caml/memory.h"
+#include "caml/alloc.h"
 #include "caml/fail.h"
 #include "runtime/api.h"
 
@@ -21,7 +22,7 @@ CAMLprim value caml_zebra_init(value argv) {
     CAMLreturn(Val_unit);
 }
 
-CAMLprim value caml_zebra_count_globals() {
+CAMLprim value caml_zebra_count_globals(value unit) {
     return Val_long(zebra_count_globals());
 }
 
@@ -55,8 +56,8 @@ CAMLprim value caml_zebra_interpret(value prog, value offset, value len) {
     return zebra_interpret(prog, Long_val(offset), Long_val(len));
 }
 
-CAMLprim value caml_zebra_available_primitives() {
-    caml_failwith("caml_zebra_available_primitives: not implemented");
+CAMLprim value caml_zebra_available_primitives(value unit) {
+    return caml_copy_string_array(zebra_available_primitives());
 }
 
 /* ---------------------------------------------------------------------- */

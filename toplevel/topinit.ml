@@ -37,20 +37,9 @@ try
              anonymous "(undocumented)";
   Interntl.printf "\tZebra version %s\n" Config.version;
   print_newline();
-(*
-  let ic = open_in_bin Sys.argv.(0) in
-  seek_in ic (in_channel_length ic - 20);
-  let size_code = input_binary_int ic in
-  let size_data = input_binary_int ic in
-  let size_symb = input_binary_int ic in
-  let size_debug = input_binary_int ic in
-  seek_in ic (in_channel_length ic - 20 - size_debug - size_symb);
-  load_linker_tables ic;
-  set_c_primitives (Meta.available_primitives());
-  close_in ic;
-  Meta.set_global_data 16 (Obj.repr true); (* 16: cf ../runtime/globals.h *)
-*)
   Meta.zebra_init Sys.argv;
+  Meta.set_global_data 16 (Zebra_obj.of_int 1); (* 16: cf ../runtime/globals.h *)
+  set_c_primitives (Meta.available_primitives());
   start_compiling_interface "top"
 
 with Toplevel -> exit 2

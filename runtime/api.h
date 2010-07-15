@@ -14,6 +14,7 @@ void zebra_set_global(size_t i, zebra_value v);
 void zebra_realloc_globals(size_t n);
 
 zebra_value zebra_interpret(char* prog, size_t offset, size_t len);
+char** zebra_available_primitives();
 
 long zebra_Long_val(zebra_value v);
 double zebra_Double_val(zebra_value v);
