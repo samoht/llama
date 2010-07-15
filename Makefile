@@ -31,7 +31,7 @@ LINKER=linker/caml_light_extern.o \
   linker/readword.cmx
 
 TOPLEVEL=toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
-  toplevel/meta.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
+  toplevel/meta.cmx toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/topinit.cmx toplevel/topmain.cmx
 
 GENSOURCES=utils/config.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
