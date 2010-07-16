@@ -13,20 +13,20 @@ let rec lire_mot position flux =
          'é'|'à'|'è'|'ù'|'â'|'ê'|'î'|'ô'|'û'|'ë'|'ï'|'ü'|'ç'|
          'É'|'À'|'È'|'Ù'|'Â'|'Ê'|'Î'|'Ô'|'Û'|'À'|'Ï'|'Ü'|'Ç'
          as c) >] ->
-      if position < string_length tampon then
+      if position < String.length tampon then
         set_nth_char tampon position c;
       lire_mot (position+1) flux
   | [< >] ->
-      sub_string tampon 0 (min position (string_length tampon));;
+      String.sub tampon 0 (min position (String.length tampon));;
 let rec lire_symbole position flux =
   match flux with
   | [< `('!'|'$'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|':'|
          ';'|'<'|'='|'>'|'?'|'@'|'^'|'|'|'~' as c) >] ->
-      if position < string_length tampon then
+      if position < String.length tampon then
         set_nth_char tampon position c;
       lire_symbole (position + 1) flux
   | [< >] ->
-      sub_string tampon 0 (min position (string_length tampon));;
+      String.sub tampon 0 (min position (String.length tampon));;
 let rec lire_commentaire flux =
   match flux with
   | [< `'\n' >] -> ()
@@ -35,7 +35,7 @@ let mc_ou_ident table_des_mots_clés ident =
     try Hashtbl.find table_des_mots_clés ident
     with Not_found -> Ident(ident);;
 let mc_ou_erreur table_des_mots_clés caractère =
-    let ident = make_string 1 caractère in
+    let ident = String.make 1 caractère in
     try Hashtbl.find table_des_mots_clés ident
     with Not_found -> raise Parse_error;;
 let rec lire_lexème table flux =
@@ -72,7 +72,7 @@ let rec analyseur table flux =
       | [< (lire_lexème table) lexème >] -> lexème
       | [< >] -> raise Parse_failure);;
 let construire_analyseur mots_clés =
-    let table_des_mots_clés = Hashtbl.new 17 in
+    let table_des_mots_clés = Hashtbl.create 17 in
     do_list
       (function mot -> Hashtbl.add table_des_mots_clés mot (MC mot))
       mots_clés;

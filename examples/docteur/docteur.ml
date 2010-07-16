@@ -1,7 +1,7 @@
 exception Trouvé;;
 let caractère_dans_chaîne chaîne car =
     try
-      for i = 0 to string_length chaîne - 1 do
+      for i = 0 to String.length chaîne - 1 do
         if nth_char chaîne i = car then raise Trouvé
       done;
       false
@@ -33,50 +33,50 @@ let minuscule_de car =
     else car;; 
 let minuscules chaîne =
     let chaîne_en_minuscules =
-      create_string (string_length chaîne) in
-    for i = 0 to string_length chaîne - 1 do
+      create_string (String.length chaîne) in
+    for i = 0 to String.length chaîne - 1 do
       set_nth_char chaîne_en_minuscules i
                    (minuscule_de (nth_char chaîne i))
     done;
     chaîne_en_minuscules;;
 let sous_chaîne s départ fin =
-    sub_string s départ (fin - départ + 1);;
+    String.sub s départ (fin - départ + 1);;
 let simplifications =
   [("à","a"); ("ç","c"); ("é","e"); ("è","e"); ("ê","e"); ("ù","u");
    ("a'","a"); ("e'","e"); ("e'", "e"); ("e^","e"); ("u'","u");
    ("qu'", ""); ("l'", ""); ("d'", "")];;
 let simplifie_mot mot =
-    let nouveau_mot = create_string (string_length mot) in
+    let nouveau_mot = create_string (String.length mot) in
     let i = ref 0 and j = ref 0 in
     let rec cherche_traduction = function
     | [] -> raise Pas_trouvé
     | (original, traduction) :: reste ->
-        let longueur = string_length original in
-        if !i + longueur <= string_length mot
-         & sub_string mot !i longueur = original
+        let longueur = String.length original in
+        if !i + longueur <= String.length mot
+         & String.sub mot !i longueur = original
         then (longueur, traduction)
         else cherche_traduction reste in
-    while !i < string_length mot do
+    while !i < String.length mot do
       try
         let (longueur, traduction) =
           cherche_traduction simplifications in
         blit_string traduction 0 nouveau_mot !j
-                    (string_length traduction);
+                    (String.length traduction);
         i := !i + longueur;
-        j := !j + string_length traduction
+        j := !j + String.length traduction
       with Pas_trouvé ->
         set_nth_char nouveau_mot !j (nth_char mot !i);
         i := !i + 1;
         j := !j + 1
     done;
-    sub_string nouveau_mot 0 !j;;
+    String.sub nouveau_mot 0 !j;;
 let divise_en_mots chaîne =
     let mots = ref [] in
-    let j = ref (string_length chaîne - 1) in
+    let j = ref (String.length chaîne - 1) in
     let ajoute_mot i j =
         if i <= j then
         mots := simplifie_mot (sous_chaîne chaîne i j) :: !mots in
-    for i =  string_length chaîne - 1 downto 0 do
+    for i =  String.length chaîne - 1 downto 0 do
       match nth_char chaîne i with
       | (' ' | '\n' | '.' | ',' | ';' | '-' | '!' | '?') ->
          ajoute_mot (i+1) !j; j := i-1

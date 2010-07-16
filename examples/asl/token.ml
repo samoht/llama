@@ -3,7 +3,7 @@
 let id x = x;;
 
 let keywords =
-  let t = Hashtbl.new 13 in
+  let t = Hashtbl.create 13 in
   Hashtbl.add t "else" ELSE;
   Hashtbl.add t "fi" FI;
   Hashtbl.add t "if" IF;
@@ -21,7 +21,7 @@ let rec ident len = function
     (set_nth_char buff len c; ident(succ len)) i
   >] -> i
 | [< >] ->
-    let str = sub_string buff 0 len in
+    let str = String.sub buff 0 len in
     (try Hashtbl.find keywords str with _ -> IDENT str)
 ;;
 ***)
@@ -30,7 +30,7 @@ let rec ident len = function
 | [< `('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '\'') as c; s >] ->
     set_nth_char buff len c; ident (succ len) s
 | [< >] ->
-    let str = sub_string buff 0 len in
+    let str = String.sub buff 0 len in
     (try Hashtbl.find keywords str with _ -> IDENT str)
 ;;
 
@@ -46,14 +46,14 @@ let rec next_token = function
 | [< `'0' .. '9' as d; s >] ->
     INT(number (int_of_char d-int_of_char '0') s)
 | [< `' ' | '\n' | '\t'; s >] -> next_token s
-| [< `'+' | '-' | '*' | '/' as c >] -> OP (make_string 1 c)
+| [< `'+' | '-' | '*' | '/' as c >] -> OP (String.make 1 c)
 | [< `'.' >] -> DOT
 | [< `'=' >] -> EQUAL
 | [< `'\\' >] -> BSLASH
 | [< `';' >] -> SEMICOL
 | [< `'(' >] -> LPAREN
 | [< `')' >] -> RPAREN
-| [< `x >] -> failwith ("Bad char: "^make_string 1 x)
+| [< `x >] -> failwith ("Bad char: "^String.make 1 x)
 ;;
 
 let rec reset_lexer = function

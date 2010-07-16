@@ -150,7 +150,7 @@ let tvar_name n =
  (* type variables                                *)
  let rec name_of n =
     let q,r = (n / 26), (n mod 26) in
-    let s = make_string 1 (char_of_int (96+r)) in
+    let s = String.make 1 (char_of_int (96+r)) in
     if q=0 then s else (name_of q)^s
  in "'"^(name_of n)
 ;;

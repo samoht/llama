@@ -1,6 +1,6 @@
 (* String operations *)
 
-val string_length : string -> int = 1 "string_length"
+val length : string -> int = 1 "string_length"
         (* Return the length (number of characters) of the given string. *)
 ;;
 val nth_char : string -> int -> char
@@ -23,19 +23,19 @@ val (^) : string -> string -> string
   and concat : string list -> string
         (* Return a fresh string containing the concatenation of
            all the strings in the argument list. *)
-  and sub_string : string -> int -> int -> string
-        (* [sub_string s start len] returns a fresh string of length [len],
+  and sub : string -> int -> int -> string
+        (* [String.sub s start len] returns a fresh string of length [len],
            containing the characters number [start] to [start + len - 1]
            of string [s].
-           Raise [Invalid_argument "sub_string"] if [start] and [len] do not
+           Raise [Invalid_argument "String.sub"] if [start] and [len] do not
            designate a valid substring of [s]; that is, if [start < 0],
            or [len < 0], or [start + len > string_length s]. *)
 ;;
 val create_string : int -> string
         (* [create_string n] returns a fresh string of length [n].
            The string initially contains arbitrary characters. *)
-  and make_string : int -> char -> string
-        (* [make_string n c] returns a fresh string of length [n],
+  and make : int -> char -> string
+        (* [String.make n c] returns a fresh string of length [n],
            filled with the character [c]. *)
 ;;
 val fill_string : string -> int -> int -> char -> unit

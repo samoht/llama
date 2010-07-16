@@ -7,13 +7,13 @@ type état_de_l'assembleur =
      mutable à_résoudre: (int * string) list };;
 
 let asm =
-  { pc = 0; code = [||]; table_étiq = Hashtbl.new 0;
+  { pc = 0; code = [||]; table_étiq = Hashtbl.create 0;
     à_résoudre = [] };;
 
 let initialise () =
     asm.pc <- 0;
     asm.code <- make_vect 100 Stop;
-    asm.table_étiq <- Hashtbl.new 17;
+    asm.table_étiq <- Hashtbl.create 17;
     asm.à_résoudre <- [];;
 
 let décode_adresse adr = adr / taille_du_mot;;

@@ -17,8 +17,8 @@ and ('a, 'b) bucketlist =
   | Cons of 'a * 'b * ('a, 'b) bucketlist
 ;;
 
-let new initial_size =
- if initial_size <= 0 then invalid_arg "Hashtbl.new" else
+let create initial_size =
+ if initial_size <= 0 then invalid_arg "Hashtbl.create" else
  { max_len = 3; data = make_vect initial_size Empty }
 ;;
 

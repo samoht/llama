@@ -105,7 +105,7 @@ let imprime_var var =
     print_string (assq var !noms_des_variables)
   with Not_found ->
     let nom =
-      make_string 1
+      String.make 1
         (char_of_int(int_of_char 'a' + !compteur_de_variables)) in
     incr compteur_de_variables;
     noms_des_variables := (var, nom) :: !noms_des_variables;

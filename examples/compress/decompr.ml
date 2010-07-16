@@ -1,10 +1,10 @@
 exception Mauvais_suffixe;;
 
 let enlève_suffixe_cpr chaîne =
-  let longueur = string_length chaîne in
-  if longueur < 4 or sub_string chaîne (longueur - 4) 4 <> ".cpr"
+  let longueur = String.length chaîne in
+  if longueur < 4 or String.sub chaîne (longueur - 4) 4 <> ".cpr"
   then raise Mauvais_suffixe
-  else sub_string chaîne 0 (longueur - 4);;
+  else String.sub chaîne 0 (longueur - 4);;
 open Sys
 exception Erreur;;
 let erreur = ref false;;

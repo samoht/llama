@@ -3,7 +3,7 @@ exception Échec;;
 let reconnaît automate chaîne =
   let état_courant = ref automate in 
   try
-    for i = 0 to string_length chaîne - 1 do
+    for i = 0 to String.length chaîne - 1 do
     match !état_courant.dtransitions.(int_of_char(nth_char chaîne i)) with
     | Rejet  -> raise Échec
     | Vers e -> état_courant := e
@@ -42,7 +42,7 @@ let déplacements liste_états =
     liste_états;
   t;;
 let déterminise état_initial =
-  let états_connus = Hashtbl.new 51
+  let états_connus = Hashtbl.create 51
   and à_remplir = Stack.new () in
   let traduire ens =
     try Hashtbl.find états_connus ens.contenu

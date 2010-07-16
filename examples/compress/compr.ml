@@ -28,15 +28,15 @@ let compresse_fichier nom_fichier =
                  nom_fichier (nom_fichier ^ ".cpr");;
 
 let décompresse_fichier nom_fichier =
-  let longueur = string_length nom_fichier in
+  let longueur = String.length nom_fichier in
   if longueur < 4
-  or sub_string nom_fichier (longueur - 4) 4 <> ".cpr" then
+  or String.sub nom_fichier (longueur - 4) 4 <> ".cpr" then
     let nom_entrée = nom_fichier ^ ".cpr"
     and nom_sortie = nom_fichier in
     traite_fichier Huffman.décompresse nom_entrée nom_sortie
   else
     let nom_entrée = nom_fichier
-    and nom_sortie = sub_string nom_fichier 0 (longueur - 4) in
+    and nom_sortie = String.sub nom_fichier 0 (longueur - 4) in
     traite_fichier Huffman.décompresse nom_entrée nom_sortie;;
 if Sys.interactive then () else
   begin
