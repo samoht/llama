@@ -174,7 +174,6 @@ let pat_constr_or_var p =
 %token NOT            /* "not" */
 %token OF             /* "of" */
 %token OR             /* "or" */
-%token PREF           /* "prefix" */
 %token REC            /* "rec" */
 %token THEN           /* "then" */
 %token TO             /* "to" */

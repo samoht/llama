@@ -13,10 +13,10 @@ let init_semantics caml_fun =
                         | _ -> raise Illtyped)
               | _ -> raise Illtyped);;
 let caml_function = function
-  | "+" -> prefix +
-  | "-" -> prefix -
-  | "*" -> prefix *
-  | "/" -> prefix /
+  | "+" -> ( + )
+  | "-" -> ( - )
+  | "*" -> ( * )
+  | "/" -> ( / )
   | "=" -> (fun n m -> if n=m then 1 else 0)
   | s -> raise (SemantBug "Unknown primitive");;
 let init_sem =  map (fun x -> init_semantics(caml_function x))

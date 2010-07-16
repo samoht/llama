@@ -22,7 +22,7 @@ let grep_sur_fichier auto nom_fich =
     let canal = open_in nom_fich in
     try grep_sur_canal auto nom_fich canal; close_in canal
     with exc -> close_in canal; raise exc
-  with Sys.Sys_error message ->
+  with Sys_error message ->
     prerr_string "Erreur sur le fichier ";
     prerr_string nom_fich;
     prerr_string ": ";

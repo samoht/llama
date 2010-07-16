@@ -35,6 +35,6 @@ with Mauvais_arguments ->
        prerr_string message;
        prerr_string " ("; prerr_int param; prerr_endline ")";
        exit 2
-   | Sys.Sys_error message ->
+   | Sys_error message ->
        prerr_string "Erreur du système: "; prerr_endline message;
        exit 2;;

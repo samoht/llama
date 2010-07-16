@@ -53,7 +53,7 @@ try
       count_file  Sys.command_line.(i)
     done;
   print_result ();
-with Sys.Sys_error s ->
+with Sys_error s ->
   print_string "I/O error: ";
   print_string s;
   print_newline()

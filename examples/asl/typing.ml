@@ -86,7 +86,7 @@ let vars_of_type tau = vars [] tau
 
 let unknowns_of_type (bv,t) =
     subtract (vars_of_type t) bv;;
-let flat = it_list (prefix @) [];;
+let flat = it_list (@) [];;
 
 let unknowns_of_type_env env =
     flat (map (function Forall(gv,t) -> unknowns_of_type (gv,t)) env)

@@ -29,17 +29,17 @@ and prim2 codeur calcul décodeur1 décodeur2 =
 (* L'environnement initial *)
 
 let env_éval_initial =
-  ["+",  prim2 code_nombre  (prefix + ) décode_nombre décode_nombre;
-   "-",  prim2 code_nombre  (prefix - ) décode_nombre décode_nombre;
-   "*",  prim2 code_nombre  (prefix * ) décode_nombre décode_nombre;
-   "/",  prim2 code_nombre  (prefix / ) décode_nombre décode_nombre;
-   "=",  prim2 code_booléen (prefix = ) décode_nombre décode_nombre;
-   "<>", prim2 code_booléen (prefix <>) décode_nombre décode_nombre;
-   "<",  prim2 code_booléen (prefix < ) décode_nombre décode_nombre;
-   ">",  prim2 code_booléen (prefix > ) décode_nombre décode_nombre;
-   "<=", prim2 code_booléen (prefix <=) décode_nombre décode_nombre;
-   ">=", prim2 code_booléen (prefix >=) décode_nombre décode_nombre;
-   "not", prim1 code_booléen (prefix not) décode_booléen;
+  ["+",  prim2 code_nombre  ( + ) décode_nombre décode_nombre;
+   "-",  prim2 code_nombre  ( - ) décode_nombre décode_nombre;
+   "*",  prim2 code_nombre  ( * ) décode_nombre décode_nombre;
+   "/",  prim2 code_nombre  ( / ) décode_nombre décode_nombre;
+   "=",  prim2 code_booléen ( = ) décode_nombre décode_nombre;
+   "<>", prim2 code_booléen ( <>) décode_nombre décode_nombre;
+   "<",  prim2 code_booléen ( < ) décode_nombre décode_nombre;
+   ">",  prim2 code_booléen ( > ) décode_nombre décode_nombre;
+   "<=", prim2 code_booléen ( <=) décode_nombre décode_nombre;
+   ">=", prim2 code_booléen ( >=) décode_nombre décode_nombre;
+   "not", prim1 code_booléen (not) décode_booléen;
    "read_int", prim1 code_nombre (fun x -> read_int()) décode_nombre;
    "write_int", prim1 code_nombre
                       (fun x -> print_int x; print_newline(); 0)

@@ -34,6 +34,6 @@ with Mauvais_arguments ->
        prerr_endline
          "Usage: pico_asm <fichier assembleur> <fichier de code>";
        exit 2
-   | Sys.Sys_error message ->
+   | Sys_error message ->
        prerr_string "Erreur du système: "; prerr_endline message;
        exit 2;;

@@ -18,7 +18,7 @@ let interprète_fichier nom =
        | Interp.Erreur_exécution message ->
            prerr_string "Erreur pendant l'exécution: ";
            prerr_endline message
-  with Sys.Sys_error message ->
+  with Sys_error message ->
         prerr_string "Erreur du système: "; prerr_endline message;;
 
 if Sys.interactive then () else

@@ -2,13 +2,6 @@
 
 (* This module provides a simple interface to the operating system. *)
 
-exception Sys_error of string;;
-        (* Raised by some functions in the [sys] and [io] modules,
-           when the underlying system calls fail. The argument to
-           [Sys_error] is a string describing the error. The texts
-           of the error messages are implementation-dependent, and should
-           not be relied upon to catch specific system errors. *)
-
 val command_line : string vect;;
         (* The command line arguments given to the process.
            The first element is the command name used to invoke the program. *)
@@ -110,3 +103,5 @@ val max_vect_length : int
 val word_size : int
         (* Size of a machine word (in bits). *)
 ;;
+
+val file_exists : string -> bool = 1 "zebra_sys_file_exists"
