@@ -104,9 +104,9 @@ type intf_phrase =
   { in_desc: intf_desc;
     in_loc: location }
 and intf_desc =
-    Zvaluedecl of (string * core_type * prim_desc) list
-  | Ztypedecl of (string * string list * type_decl) list
-  | Zexcdecl of constr_decl list
+    Sig_value of (string * core_type * prim_desc) list
+  | Sig_type of (string * string list * type_decl) list
+  | Sig_exception of constr_decl list
   | Zintfdirective of directiveu
 ;;
 

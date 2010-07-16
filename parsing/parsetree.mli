@@ -88,9 +88,9 @@ type signature_item =
     psig_loc: location }
 
 and signature_item_desc =
-    Pvaluedecl of (string * core_type * (int*string) option) list
-  | Ptypedecl of (string * string list * type_decl) list
-  | Pexcdecl of constr_decl list
+    Psig_value of (string * core_type * (int*string) option) list
+  | Psig_type of (string * string list * type_decl) list
+  | Psig_exception of constr_decl list
   | Pintfdirective of directiveu
 
 type structure_item =

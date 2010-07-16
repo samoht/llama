@@ -97,12 +97,12 @@ let verbose = ref false;;
   
 let compile_intf_phrase phr =
   begin match phr.in_desc with
-    Zvaluedecl decl ->
+    Sig_value decl ->
       type_valuedecl phr.in_loc decl; ()
-  | Ztypedecl decl ->
+  | Sig_type decl ->
       let ty_decl = type_typedecl phr.in_loc decl in
       if !verbose then print_typedecl ty_decl
-  | Zexcdecl decl ->
+  | Sig_exception decl ->
       let ex_decl = type_excdecl phr.in_loc decl in
       if !verbose then print_excdecl ex_decl
   | Zintfdirective dir ->

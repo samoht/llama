@@ -116,10 +116,10 @@ let primitive o =
 let signature_item si =
   { in_desc =
       begin match si.psig_desc with
-        | Pvaluedecl l -> Zvaluedecl
+        | Psig_value l -> Sig_value
             (List.map (fun (s,te,pr) -> (s,core_type te, primitive pr)) l)
-        | Ptypedecl l -> Ztypedecl(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Pexcdecl l -> Zexcdecl (List.map constr_decl l)
+        | Psig_type l -> Sig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Psig_exception l -> Sig_exception (List.map constr_decl l)
         | Pintfdirective d -> Zintfdirective (directiveu d)
       end;
     in_loc = si.psig_loc }
