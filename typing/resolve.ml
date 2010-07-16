@@ -10,7 +10,7 @@ let rec type_expr te =
         | Ptypevar s -> Ztypevar s
         | Ptypearrow (x, y) -> Ztypearrow (type_expr x, type_expr y)
         | Ptypetuple l -> Ztypetuple (List.map type_expr l)
-        | Ptypeconstr (f, l) -> Ztypeconstr (Env.lookup_type f, List.map type_expr l)
+        | Ptypeconstr (f, l) -> Ztypeconstr (Env.lookup_type f te.ptyp_loc, List.map type_expr l)
       end;
     te_loc = te.ptyp_loc }
 
@@ -22,11 +22,11 @@ let rec pattern p =
         | Paliaspat (p, s) -> Zaliaspat (pattern p, s)
         | Pconstantpat c -> Zconstantpat c
         | Ptuplepat l -> Ztuplepat (List.map pattern l)
-        | Pconstruct0pat li -> Zconstruct0pat (Env.lookup_constructor li)
-        | Pconstruct1pat (li, p) -> Zconstruct1pat (Env.lookup_constructor li, pattern p)
+        | Pconstruct0pat li -> Zconstruct0pat (Env.lookup_constructor li p.ppat_loc)
+        | Pconstruct1pat (li, p) -> Zconstruct1pat (Env.lookup_constructor li p.ppat_loc, pattern p)
         | Porpat (p1, p2) -> Zorpat (pattern p1, pattern p2)
         | Pconstraintpat (p, te) -> Zconstraintpat (pattern p, type_expr te)
-        | Precordpat l -> Zrecordpat (List.map (fun (li,p) -> (Env.lookup_label li, pattern p)) l)
+        | Precordpat l -> Zrecordpat (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
       end;
     p_loc = p.ppat_loc;
     p_typ = no_type }
@@ -38,12 +38,12 @@ let rec expr ex =
             Zident
               begin match li with
                 | Longident.Id s -> ref(Zlocal s)
-                | Longident.Qual _ -> ref(Zglobal(Env.lookup_value li))
+                | Longident.Qual _ -> ref(Zglobal(Env.lookup_value li ex.pexp_loc))
               end
         | Pconstant c -> Zconstant c
         | Ptuple l -> Ztuple (List.map expr l)
-        | Pconstruct0 li -> Zconstruct0 (Env.lookup_constructor li)
-        | Pconstruct1 (li, e) -> Zconstruct1 (Env.lookup_constructor li, expr e)
+        | Pconstruct0 li -> Zconstruct0 (Env.lookup_constructor li ex.pexp_loc)
+        | Pconstruct1 (li, e) -> Zconstruct1 (Env.lookup_constructor li ex.pexp_loc, expr e)
         | Papply (f, l) -> Zapply (expr f, List.map expr l)
         | Plet (b, lpe, e) -> Zlet (b, List.map(fun (p,e) -> pattern p, expr e) lpe, expr e)
         | Pfunction l -> Zfunction (List.map (fun (lp,e) -> List.map pattern lp, expr e) l)
@@ -55,9 +55,9 @@ let rec expr ex =
         | Pconstraint(e,te) -> Zconstraint(expr e,type_expr te)
         | Pvector l -> Zvector(List.map expr l)
         | Passign (s,e) -> Zassign(s, expr e)
-        | Precord l -> Zrecord(List.map (fun (li,e) -> Env.lookup_label li,expr e) l)
-        | Precord_access (e,li) -> Zrecord_access(expr e,Env.lookup_label li)
-        | Precord_update(e,li,e2) -> Zrecord_update(expr e, Env.lookup_label li, expr e2)
+        | Precord l -> Zrecord(List.map (fun (li,e) -> Env.lookup_label li ex.pexp_loc,expr e) l)
+        | Precord_access (e,li) -> Zrecord_access(expr e,Env.lookup_label li ex.pexp_loc)
+        | Precord_update(e,li,e2) -> Zrecord_update(expr e, Env.lookup_label li ex.pexp_loc, expr e2)
         | Pstream l ->
             Zstream (List.map
                        (fun cmp ->
@@ -124,10 +124,3 @@ let signature_item si =
       end;
     in_loc = si.psig_loc }
     
-
-let implementation tok lb =
-  List.map structure_item (Parser.implementation tok lb)
-
-let interface tok lb =
-  List.map signature_item (Parser.interface tok lb)
-

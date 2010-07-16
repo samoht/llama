@@ -13,25 +13,25 @@ let lookup li =
     | Longident.Qual (mn, s) -> Globals.GRmodname {Const.qual=mn; Const.id=s}
   end
 
-let lookup_type = lookup
+let lookup_type li loc = lookup li
 
-let lookup_constructor li =
+let lookup_constructor li loc =
   let gr = lookup li in
   try
     find_constr_desc gr
   with Desc_not_found ->
-    unbound_constr_err gr (get_current_location()) gr
+    unbound_constr_err gr loc gr
 
-let lookup_label li =
+let lookup_label li loc =
   let gr = lookup li in
   try
     find_label_desc gr
   with Desc_not_found ->
-    unbound_label_err gr (get_current_location()) gr
+    unbound_label_err gr loc gr
 
-let lookup_value li =
+let lookup_value li loc =
   let gr = lookup li in
   try
     find_value_desc gr
   with Desc_not_found ->
-    unbound_value_err gr (get_current_location())
+    unbound_value_err gr loc gr

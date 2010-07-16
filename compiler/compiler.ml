@@ -18,7 +18,7 @@ open Emit_phr;;
 
 (* Parsing functions *)
 
-let parse_phrase parsing_fun lexing_fun lexbuf =
+let wrap parsing_fun lexing_fun lexbuf =
   let rec skip () =
     try
       match lexing_fun lexbuf with
@@ -58,9 +58,6 @@ let parse_phrase parsing_fun lexing_fun lexbuf =
      | Toplevel ->
          skip_maybe();
          raise Toplevel
-;;
-
-let parse_intf        = parse_phrase Resolve.interface Lexer.main
 ;;
 
 (* Executing directives *)
@@ -125,7 +122,9 @@ let compile_interface modname filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       external_types := [];
-      List.iter compile_intf_phrase (List.rev (parse_intf lexbuf));
+      let l = wrap Parser.interface Lexer.main lexbuf in
+      let l = List.rev_map Resolve.signature_item l in
+      List.iter compile_intf_phrase l;
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
@@ -181,7 +180,7 @@ let compile_impl modname filename suffix =
     input_chan := ic;
     input_lexbuf := lexbuf;
     start_emit_phrase oc;
-    let l = Parser.implementation Lexer.main lexbuf in
+    let l = wrap Parser.implementation Lexer.main lexbuf in
     try
       List.iter (fun x -> compile_impl_phrase oc (Resolve.structure_item x)) l;
       end_emit_phrase oc;
