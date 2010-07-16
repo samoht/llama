@@ -1,7 +1,7 @@
 (****************** Equation manipulations *************)
 
-#open "prelude";;
-#open "terms";;
+open Prelude
+open Terms
 
 type rule == int * (int * (term * term));;
 

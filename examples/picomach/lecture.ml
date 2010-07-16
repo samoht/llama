@@ -1,6 +1,6 @@
-#open "code";;
-#open "stockage";;
-#open "lexuniv";;
+open Code
+open Stockage
+open Lexuniv
 
 let registre = function
   | [< 'MC "r"; 'Entier nbr >] -> nbr

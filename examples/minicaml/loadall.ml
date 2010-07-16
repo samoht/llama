@@ -15,7 +15,7 @@ compile "synthese.ml";;
 load_object "synthese.zo";;
 compile "caml.ml";;
 load_object "caml.zo";;
-#open "caml";;
+open Caml
 print_string "Pour lancer: boucle();;"; print_newline();;
 
 

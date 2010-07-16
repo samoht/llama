@@ -1,10 +1,10 @@
 (* Operations on strings, without sanity checks *)
 
-#open "pervasives";;
-#open "int";;
-#open "eq";;
-#open "fchar";;
-#open "exc";;
+open Pervasives
+open Int
+open Eq
+open Fchar
+open Exc
 
 let make_string len init =
   let s = create_string len in

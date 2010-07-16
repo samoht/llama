@@ -10,7 +10,7 @@ let reconnaît automate chaîne =
     done;
     !état_courant.dterminal
   with Échec -> false;;
-#open "auto";;
+open Auto
 
 type ensemble_d'états =
   { contenu  : Ensent.t;

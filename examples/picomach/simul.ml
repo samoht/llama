@@ -1,4 +1,4 @@
-#open "code";;
+open Code
 
 type état_du_processeur =
    { registres: int vect;

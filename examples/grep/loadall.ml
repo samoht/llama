@@ -12,6 +12,6 @@ compile "determ.ml";;
 load_object "determ.zo";;
 compile "grep.ml";;
 load_object "grep.zo";;
-#open "grep";;
+open Grep
 print_string "Pour lancer: grep \"expression rationnelle\" \"nom de fichier\"";
 print_newline();;

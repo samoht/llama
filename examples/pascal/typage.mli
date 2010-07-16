@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 
 type erreur_de_type =
     Indéfini of string      (* variable utilisée mais non définie *)

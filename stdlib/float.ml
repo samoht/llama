@@ -1,8 +1,8 @@
 (* Operations on floating-point numbers *) 
 
-#open "exc";;
-#open "fstring";;
-#open "int";;
+open Exc
+open Fstring
+open Int
 
 let string_of_float f =
   let s = format_float "%.12g" f in

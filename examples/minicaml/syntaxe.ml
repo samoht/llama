@@ -1,4 +1,4 @@
-#open "lexuniv";;
+open Lexuniv
 
 let est_un_opérateur opérateurs = function
   | MC op -> mem op opérateurs

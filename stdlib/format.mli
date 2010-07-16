@@ -33,7 +33,7 @@
    after each phrase. Each phrase is therefore executed in the initial
    state of the pretty-printer. *)
 
-#open "io";;
+open Io
 
 (*** Boxes *)
 val open_box : int -> unit;;
@@ -290,7 +290,7 @@ val pp_get_formatter_output_functions :
            evaluation of these primitives. For instance,
            [print_string] is equal to [pp_print_string std_formatter]. *)
 
-#open "printf";;
+open Printf
 val fprintf : formatter -> ('a, formatter, unit) format -> 'a;;
         (* [fprintf ff format arg1 ... argN] formats the arguments
            [arg1] to [argN] according to the format string [format],

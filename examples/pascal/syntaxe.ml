@@ -1,4 +1,4 @@
-#open "lexuniv";;
+open Lexuniv
 let analyseur_lexical = construire_analyseur
   ["false";"true";"("; ","; ")"; "["; "]"; "not"; "*"; "/"; "-"; "+";
    "="; "<>"; "<"; ">"; "<="; ">="; "and"; "or"; "if"; "then"; "else";

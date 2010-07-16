@@ -9,5 +9,5 @@ compile "asynt.ml";;
 load_object "asynt.zo";;
 compile "demo.ml";;
 load_object "demo.zo";;
-#open "demo";;
+open Demo
 print_string "Pour lancer: boucle();;"; print_newline();;

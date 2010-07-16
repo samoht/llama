@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 
 exception Échec_filtrage;;
 

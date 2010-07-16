@@ -1,4 +1,4 @@
-#open "code";;
+open Code
 
 type état_de_l'assembleur =
    { mutable pc: int;

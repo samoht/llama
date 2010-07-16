@@ -1,9 +1,9 @@
 (* Character operations, with sanity checks *)
 
-#open "bool";;
-#open "eq";;
-#open "exc";;
-#open "fstring";;
+open Bool
+open Eq
+open Exc
+open Fstring
 
 let char_of_int i =
   if i < 0 || i > 255

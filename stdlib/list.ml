@@ -1,9 +1,9 @@
 (* Operations on lists *)
 
-#open "bool";;
-#open "int";;
-#open "exc";;
-#open "eq";;
+open Bool;;
+open Int;;
+open Exc;;
+open Eq;;
 
 let rec length_aux n = function
      []  -> n

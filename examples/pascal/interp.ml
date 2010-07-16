@@ -1,6 +1,6 @@
-#open "syntaxe";;
-#open "valeur";;
-#open "envir";;
+open Syntaxe
+open Valeur
+open Envir
 
 let rec valeur_initiale = function
   | Integer | Boolean -> Inconnue

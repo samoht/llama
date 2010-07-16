@@ -1,13 +1,13 @@
 (* A catch-all exception handler *)
 
-#open "bool";;
-#open "exc";;
-#open "eq";;
-#open "int";;
-#open "fvect";;
-#open "io";;
-#open "obj";;
-#open "sys";;
+open Bool
+open Exc
+open Eq
+open Int
+open Fvect
+open Io
+open Obj
+open Sys
 
 type qualid = {qual:string; id:string}
 ;;

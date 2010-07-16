@@ -1,8 +1,8 @@
 (* Sets over ordered types *)
 
-#open "eq";;
-#open "exc";;
-#open "baltree";;
+open Eq
+open Exc
+open Baltree
 
 (* Sets are represented by AVL trees. *)
 

@@ -1,4 +1,4 @@
-#open "sys";;
+open Sys
 exception Erreur;;
 
 let traite_fichier traitement nom_entrée nom_sortie =

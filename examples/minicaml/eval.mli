@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 type valeur =
      Val_nombre of int
    | Val_booléenne of bool

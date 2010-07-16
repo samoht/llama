@@ -1,10 +1,10 @@
 (* $Id: load.ml,v 1.3 1994-11-10 09:57:20 xleroy Exp $ *)
 
-#open "token";;
-#open "parser";;
-#open "semant";;
-#open "typing";;
-#open "main";;
+open Token
+open Parser
+open Semant
+open Typing
+open Main
 
 load_object "hash";
 load_object "asl";

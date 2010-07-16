@@ -1,5 +1,5 @@
-#open "code";;
-#open "simul";;
+open Code
+open Simul
 
 exception Fichier_incorrect;;
 

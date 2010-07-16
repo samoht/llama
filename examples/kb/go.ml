@@ -1,6 +1,6 @@
-#open "terms";;
-#open "order";;
-#open "kb";;
+open Terms
+open Order
+open Kb
 
 (* The axioms for groups *)
 

@@ -1,6 +1,6 @@
-#open "syntaxe";;
-#open "envir";;
-#open "printf";;
+open Syntaxe
+open Envir
+open Printf
 
 let taille_du_mot = 4;;            (* un mot = quatre octets *)
 

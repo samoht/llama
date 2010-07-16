@@ -1,6 +1,6 @@
 (* Formatting printing functions *)
 
-#open "io";;
+open Io
 
 type ('a, 'b, 'c) format;;
         (* The type of format strings. ['a] is the type of the parameters

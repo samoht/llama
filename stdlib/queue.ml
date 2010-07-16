@@ -1,6 +1,6 @@
-#open "pervasives";;
-#open "int";;
-#open "exc";;
+open Pervasives
+open Int
+open Exc
 type 'a queue_cell =
     Nil
   | Cons of 'a * 'a queue_cell ref

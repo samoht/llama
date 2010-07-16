@@ -1,6 +1,6 @@
-#open "syntaxe";;
-#open "types";;
-#open "synthese";;
+open Syntaxe
+open Types
+open Synthese
 
 let type_arithmétique = schéma_trivial
   (type_flèche (type_produit type_int type_int) type_int)

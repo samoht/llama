@@ -2,10 +2,10 @@
    These are binary trees such that the heights of the children
    differ by at most 2. *)
 
-#open "bool";;
-#open "int";;
-#open "eq";;
-#open "exc";;
+open Bool
+open Int
+open Eq
+open Exc
 
 (* Compute the height of a tree. *)
 

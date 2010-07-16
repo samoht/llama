@@ -1,6 +1,6 @@
-#open "prelude";;
-#open "terms";;
-#open "equation";;
+open Prelude
+open Terms
+open Equation
 
 (****************** Critical pairs *********************)
 

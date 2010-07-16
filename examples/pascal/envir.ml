@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 
 type 'a env =
   { vars: (string * 'a) list;

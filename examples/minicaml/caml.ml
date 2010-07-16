@@ -1,7 +1,7 @@
-#open "syntaxe";;
-#open "eval";;
-#open "types";;
-#open "synthese";;
+open Syntaxe
+open Eval
+open Types
+open Synthese
 
 (* L'environnement d'évaluation *)
 

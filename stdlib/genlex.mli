@@ -5,7 +5,7 @@
    roughly the lexical conventions of Caml, but is parameterized by the
    set of keywords of your language. *)
 
-#open "stream";;
+open Stream
 
 type token =
     Kwd of string

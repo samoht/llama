@@ -1,6 +1,6 @@
 (* Operations on streams *)
 
-#open "io";;
+open Io
 
 type 'a stream;;
   (* The type of streams containing values of type ['a]. *)

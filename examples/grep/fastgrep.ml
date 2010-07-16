@@ -1,6 +1,6 @@
-#open "expr";;
-#open "auto";;
-#open "determ";;
+open Expr
+open Auto
+open Determ
 
 let ligne_trouvée = ref false;;
 

@@ -1,13 +1,13 @@
-#open "pervasives";;
-#open "exc";;
-#open "eq";;
-#open "bool";;
-#open "float";;
-#open "int";;
-#open "fstring";;
-#open "io";;
-#open "list";;
-#open "obj";;
+open Pervasives
+open Exc
+open Eq
+open Bool
+open Float
+open Int
+open Fstring
+open Io
+open List
+open Obj
 
 type ('a, 'b, 'c) format == string;;
 

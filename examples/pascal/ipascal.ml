@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 
 let interprète_fichier nom =
   try

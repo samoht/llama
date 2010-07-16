@@ -1,4 +1,4 @@
-#open "interp";;
+open Interp
 let ent_val = function
   | Ent n -> n
   | _ -> raise(Erreur_exécution "entier attendu")

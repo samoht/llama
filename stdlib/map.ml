@@ -1,6 +1,6 @@
 (* Association tables over ordered types *)
 
-#open "baltree";;
+open Baltree
 
 type ('a, 'b) binding =
   { key: 'a; data: 'b; prev: 'b list };;

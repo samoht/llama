@@ -1,4 +1,4 @@
-#open "exc";;
+open Exc
 
 let rec split = function
          []    -> [],[]

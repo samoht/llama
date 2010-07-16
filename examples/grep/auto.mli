@@ -1,4 +1,4 @@
-#open "expr";;
+open Expr
 
 type état =
   { mutable transitions : (char * état) list;

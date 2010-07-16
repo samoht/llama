@@ -1,5 +1,5 @@
-#open "syntaxe";;
-#open "types";;
+open Syntaxe
+open Types
 
 type environnement == (string * schéma_de_types) list;;
 

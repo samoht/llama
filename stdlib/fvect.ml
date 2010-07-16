@@ -1,7 +1,7 @@
 (* Operations on vectors, without sanity checks *)
 
-#open "eq";;
-#open "int";;
+open Eq;;
+open Int;;
 
 let make_matrix dimx dimy init =
   let res = make_vect dimx [||] in

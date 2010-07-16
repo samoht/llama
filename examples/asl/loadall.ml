@@ -14,7 +14,7 @@ load_object "typing.zo";;
 compile "main.mli";;
 compile "main.ml";;
 load_object "main.zo";;
-#open "main";;
+open Main
 print_string "To run: go();;"; print_newline();;
 
 

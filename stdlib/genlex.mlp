@@ -1,14 +1,14 @@
 (* A generic lexer *)
 
-(**) #open "pervasives";;
-(**) #open "eq";;
-(**) #open "float";;
-(**) #open "int";;
-(**) #open "exc";;
-(**) #open "list";;
-(**) #open "fchar";;
-(**) #open "fstring";;
-(**) #open "stream";;
+open Pervasives
+open Eq
+open Float
+open Int
+open Exc
+open List
+open Fchar
+open Fstring
+open Stream
 
 (* The string buffering machinery *)
 

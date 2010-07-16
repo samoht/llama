@@ -23,8 +23,8 @@ compile "compil.ml";;
 load_object "compil.zo";;
 compile "cpascal.ml";;
 load_object "cpascal.zo";;
-#open "ipascal";;
-#open "cpascal";;
+open Ipascal
+open Cpascal
 print_string "Pour lancer:
         interprète_fichier \"fichier source\"
         compile_fichier \"fichier source\"";

@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 type 'a env;;
 val environnement_initial:
       (string * décl_proc) list -> (string * décl_fonc) list -> 'a env

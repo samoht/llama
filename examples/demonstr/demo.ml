@@ -1,5 +1,5 @@
-#open "prop";;
-#open "asynt";;
+open Prop
+open Asynt
 
 let examine chaîne =
     let proposition = analyse_proposition chaîne in

@@ -1,7 +1,7 @@
 (* Character operations, without sanity checks *)
 
-#open "int";;
-#open "fstring";;
+open Int
+open Fstring
 
 let char_for_read = function
     `\`` -> "\\`"

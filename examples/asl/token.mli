@@ -1,6 +1,6 @@
 (* $Id: token.mli,v 1.3 1994-11-10 09:57:26 xleroy Exp $ *)
 
-#open "stream";;
+open Stream
 
 type token_type =
   IDENT of string | INT of int | OP of string

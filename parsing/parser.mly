@@ -173,6 +173,7 @@ let pat_constr_or_var p =
 %token MUTABLE        /* "mutable" */
 %token NOT            /* "not" */
 %token OF             /* "of" */
+%token OPEN           /* "open" */
 %token OR             /* "or" */
 %token REC            /* "rec" */
 %token THEN           /* "then" */
@@ -247,10 +248,11 @@ structure_item:
       { make_impl(Ptypedef $2) }
   | EXCEPTION Exc_decl
       { make_impl(Pexcdef $2) }
-  | SHARP Directive
-      { make_impl(Pimpldirective $2) }
+  | OPEN UIDENT
+      { make_impl(Pimpldirective(Pdir("open",String.uncapitalize $2))) }
 ;
 toplevel_phrase:
+  | SHARP Directive SEMISEMI { make_impl(Pimpldirective($2)) }
   | structure_item SEMISEMI  { $1 }
   | Expr SEMISEMI            { make_impl(Pexpr $1) }
   | EOF { raise End_of_file }
@@ -271,8 +273,8 @@ interface_item :
           { make_intf(Ptypedecl $2) }
       | EXCEPTION Exc_decl
           { make_intf(Pexcdecl $2) }
-      | SHARP Directive
-          { make_intf(Pintfdirective $2) }
+      | OPEN UIDENT
+          { make_intf(Pintfdirective(Pdir("open",String.uncapitalize $2))) }
 ;
 
 /* Expressions */

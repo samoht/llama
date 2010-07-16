@@ -1,9 +1,9 @@
 (* Hash tables *)
 
-#open "exc";;
-#open "int";;
-#open "eq";;
-#open "fvect";;
+open Exc
+open Int
+open Eq
+open Fvect
 
 (* We do dynamic hashing, and resize the table and rehash the elements
    when buckets become too long. *)

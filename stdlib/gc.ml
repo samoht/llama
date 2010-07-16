@@ -1,4 +1,4 @@
-#open "printf";;
+open Printf
 
 let print_stat c =
   let st = stat () in

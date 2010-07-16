@@ -1,4 +1,4 @@
-#open "exc";;
+open Exc
 
 let string_of_bool = function | false -> "false" | _ -> "true";;
 let bool_of_string = function

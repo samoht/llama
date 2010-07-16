@@ -1,5 +1,5 @@
-#open "prop";;
-#open "lexuniv";;
+open Prop
+open Lexuniv
 
 let rec lire_proposition f = proposition5 f
 

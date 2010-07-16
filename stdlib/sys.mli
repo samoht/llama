@@ -54,7 +54,7 @@ val exit : int -> 'a = 1 "sys_exit"
            In contrast with the function [exit] from module [io], this
            [exit] function does not flush the standard
            output and standard error channels. *)
-  and open : string -> open_flag list -> file_perm -> int = 3 "sys_open"
+  and open_gen : string -> open_flag list -> file_perm -> int = 3 "sys_open"
         (* Open a file. The second argument is the opening mode.
            The third argument is the permissions to use if the file
            must be created. The result is a file descriptor opened on the

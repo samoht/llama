@@ -1,9 +1,9 @@
-#open "pervasives";;
-#open "eq";;
-#open "io";;
-#open "exc";;
-#open "obj";;
-#open "fstring";;
+open Pervasives
+open Eq
+open Io
+open Exc
+open Obj
+open Fstring
 
 type 'a current_value =
     Vcurr of 'a

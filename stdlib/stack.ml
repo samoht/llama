@@ -1,5 +1,5 @@
-#open "list";;
-#open "exc";;
+open List
+open Exc
 
 type 'a t = { mutable c : 'a list };;
 

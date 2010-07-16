@@ -42,6 +42,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) [
   "mutable", MUTABLE;
   "not", NOT;
   "of", OF;
+  "open", OPEN;
   "or", OR;
   "rec", REC;
   "then", THEN;

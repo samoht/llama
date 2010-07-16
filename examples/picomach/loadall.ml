@@ -17,8 +17,8 @@ compile "lecture.ml";;
 load_object "lecture.zo";;
 compile "asm.ml";;
 load_object "asm.zo";;
-#open "exec";;
-#open "asm";;
+open Exec
+open Asm
 print_string
 "Pour assembler un fichier:
      assemble_fichier \"fichier source\" \"fichier résultat\"

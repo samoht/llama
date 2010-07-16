@@ -1,5 +1,5 @@
-#open "syntaxe";;
-#open "envir";;
+open Syntaxe
+open Envir
 
 let vérifie_type message type_attendu type_réel =
   if type_attendu <> type_réel then

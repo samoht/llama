@@ -1,9 +1,9 @@
 (* Operations on vectors, with sanity checks *)
 
-#open "bool";;
-#open "eq";;
-#open "int";;
-#open "exc";;
+open Bool;;
+open Eq;;
+open Int;;
+open Exc;;
 
 let make_vect n init =
   if n < 0 || n > Sys.max_vect_length

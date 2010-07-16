@@ -1,10 +1,10 @@
-#open "pervasives";;
-#open "exc";;
-#open "int";;
-#open "fstring";;
-#open "eq";;
-#open "bool";;
-#open "io";;
+open Pervasives
+open Exc
+open Int
+open Fstring
+open Eq
+open Bool
+open Io
 
 (* Tokens are one of the following : *)
 
@@ -637,9 +637,9 @@ and set_formatter_output_functions =
 and get_formatter_output_functions =
     pp_get_formatter_output_functions std_formatter;;
 
-#open "obj";;
-#open "float";;
-#open "int";;
+open Obj
+open Float
+open Int
 
 let fprintf ppf format =
   let format = (magic format : string) in

@@ -1,4 +1,4 @@
-#open "syntaxe";;
+open Syntaxe
 
 let compile_fichier nom =
   try

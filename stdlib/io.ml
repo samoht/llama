@@ -1,11 +1,11 @@
 (* Input-output *)
 
-#open "bool";;
-#open "eq";;
-#open "exc";;
-#open "int";;
-#open "sys";;
-#open "fstring";;
+open Bool
+open Eq
+open Exc
+open Int
+open Sys
+open Fstring;;
 
 type in_channel
  and out_channel
@@ -28,7 +28,7 @@ let exit n =
 ;;
 
 let open_in_gen mode rights filename =
-  open_descriptor_in (open filename mode rights)
+  open_descriptor_in (open_gen filename mode rights)
 ;;
 
 let open_in = open_in_gen [O_RDONLY; O_TEXT] 0
@@ -83,7 +83,7 @@ let read_float () = Float.float_of_string (read_line())
 ;;
 
 let open_out_gen mode rights filename =
-  open_descriptor_out(open filename mode rights)
+  open_descriptor_out(open_gen filename mode rights)
 ;;
 
 let open_out =

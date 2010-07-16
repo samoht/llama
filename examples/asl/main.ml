@@ -1,11 +1,11 @@
 (* $Id: main.ml,v 1.4 1998-03-12 18:44:01 weis Exp $ *)
 
-#open "stream";;
-#open "asl";;
-#open "token";;
-#open "parser";;
-#open "semant";;
-#open "typing";;
+open Stream
+open Asl
+open Token
+open Parser
+open Semant
+open Typing
 
 let input_stream = ref std_in;;
 let trace_parsing = ref false;;

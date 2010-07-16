@@ -1,5 +1,5 @@
-#open "syntaxe";;
-#open "eval";;
+open Syntaxe
+open Eval
 
 let code_nombre n =
     Val_nombre n

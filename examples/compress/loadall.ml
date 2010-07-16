@@ -9,7 +9,7 @@ compile "huffman.ml";;
 load_object "huffman.zo";;
 compile "compr.ml";;
 load_object "compr.zo";;
-#open "compr";;
+open Compr
 print_string
 "Pour lancer: compresse_fichier \"nom du fichier\" ou
              décompresse_fichier \"nom du fichier\"";

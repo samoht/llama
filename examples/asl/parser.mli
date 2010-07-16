@@ -1,7 +1,7 @@
 (* $Id: parser.mli,v 1.4 1995-02-08 18:57:20 xleroy Exp $ *)
 
-#open "stream";;
-#open "token";;
+open Stream
+open Token
 
 type asl = Const of int
          | Var of int

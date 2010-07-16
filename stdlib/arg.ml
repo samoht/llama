@@ -1,13 +1,13 @@
 (* arg.ml *)
 
-#open "bool";;
-#open "exc";;
-#open "eq";;
-#open "int";;
-#open "fvect";;
-#open "fstring";;
-#open "io";;
-#open "list";;
+open Bool
+open Exc
+open Eq
+open Int
+open Fvect
+open Fstring
+open Io
+open List
 
 
 type error =

@@ -1,6 +1,6 @@
 (* Operations on integers *)
 
-#open "eq";;
+open Eq
 
 let abs n =
   if n < 0 then -n else n

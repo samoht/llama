@@ -5,7 +5,7 @@ let enlève_suffixe_cpr chaîne =
   if longueur < 4 or sub_string chaîne (longueur - 4) 4 <> ".cpr"
   then raise Mauvais_suffixe
   else sub_string chaîne 0 (longueur - 4);;
-#open "sys";;
+open Sys
 exception Erreur;;
 let erreur = ref false;;
 for i = 1 to vect_length command_line - 1 do

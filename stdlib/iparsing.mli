@@ -1,7 +1,7 @@
 (* Internal interface to the parsing engine *)
 
-#open "obj";;
-#open "parsing";;
+open Obj
+open Parsing
 
 type parser_env =
   { mutable s_stack : int vect;         (* States *)

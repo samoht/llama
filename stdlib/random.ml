@@ -9,11 +9,11 @@
    To avoid this problem we throw away the 10 low-order bits of the LCG.
 *)
 
-#open "pervasives";;
-#open "float";;
-#open "int";;
-#open "eq";;
-#open "fvect";;
+open Pervasives
+open Float
+open Int
+open Eq
+open Fvect
 
 (* This is the state you get with [init 27182818] on a 32-bit machine. *)
 let state = [|

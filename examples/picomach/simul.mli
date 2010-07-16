@@ -1,4 +1,4 @@
-#open "code";;
+open Code
 
 exception Erreur of string * int;;
 

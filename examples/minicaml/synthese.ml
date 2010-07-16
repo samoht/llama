@@ -1,5 +1,5 @@
-#open "syntaxe";;
-#open "types";;
+open Syntaxe
+open Types
 
 let rec type_motif env = function
   | Motif_variable id ->
