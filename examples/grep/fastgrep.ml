@@ -22,7 +22,7 @@ let grep_sur_fichier auto nom_fich =
     let canal = open_in nom_fich in
     try grep_sur_canal auto nom_fich canal; close_in canal
     with exc -> close_in canal; raise exc
-  with sys__Sys_error message ->
+  with Sys.Sys_error message ->
     prerr_string "Erreur sur le fichier ";
     prerr_string nom_fich;
     prerr_string ": ";
@@ -34,19 +34,19 @@ let construire_auto expr =
 let grep expr fichier =
   grep_sur_fichier (construire_auto expr) fichier;;
 
-if sys__interactive then () else
-  if vect_length sys__command_line < 2 then begin
+if Sys.interactive then () else
+  if vect_length Sys.command_line < 2 then begin
     prerr_endline "Utilisation: grep <motif> <fichiers>";
     exit 2
   end else begin
     let auto =
-      try construire_auto sys__command_line.(1)
+      try construire_auto Sys.command_line.(1)
       with Parse_error | Parse_failure ->
         prerr_endline "Erreur de syntaxe dans l'expression";
         exit 2 in
-    if vect_length sys__command_line >= 3 then
-      for i = 2 to vect_length sys__command_line - 1 do
-        grep_sur_fichier auto sys__command_line.(i)
+    if vect_length Sys.command_line >= 3 then
+      for i = 2 to vect_length Sys.command_line - 1 do
+        grep_sur_fichier auto Sys.command_line.(i)
       done
     else
       grep_sur_canal auto "(entrée standard)" std_in;

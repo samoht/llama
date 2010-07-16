@@ -13,15 +13,15 @@ let exécute_fichier nom_fichier taille_mémoire =
 
 exception Mauvais_arguments;;
 
-if sys__interactive then () else
+if Sys.interactive then () else
 try
-  if vect_length sys__command_line < 2 then raise Mauvais_arguments;
+  if vect_length Sys.command_line < 2 then raise Mauvais_arguments;
   let taille_mémoire =
-    if vect_length sys__command_line < 3
+    if vect_length Sys.command_line < 3
     then 1024
-    else try int_of_string sys__command_line.(2)
+    else try int_of_string Sys.command_line.(2)
          with Failure _ -> raise Mauvais_arguments in
-  exécute_fichier sys__command_line.(1)
+  exécute_fichier Sys.command_line.(1)
                   (taille_du_mot * taille_mémoire);
   exit 0
 with Mauvais_arguments ->
@@ -35,6 +35,6 @@ with Mauvais_arguments ->
        prerr_string message;
        prerr_string " ("; prerr_int param; prerr_endline ")";
        exit 2
-   | sys__Sys_error message ->
+   | Sys.Sys_error message ->
        prerr_string "Erreur du système: "; prerr_endline message;
        exit 2;;

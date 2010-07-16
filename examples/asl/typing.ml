@@ -12,8 +12,8 @@ type asl_type =
 | TypeVar of vartype
 | Arrow of asl_type * asl_type
 and vartype = {
-  Index         : int;
-  mutable Value : asl_type
+  index         : int;
+  mutable value : asl_type
 }
 and asl_type_scheme = Forall of int list * asl_type
 ;;
@@ -23,27 +23,27 @@ exception TypingBug of string;;
 let new_vartype, reset_vartypes =
   (* Generating and resetting unknowns *)
   let counter = ref 0 in
-  (function () -> counter := !counter+1; {Index = !counter; Value = Unknown}),
+  (function () -> counter := !counter+1; {index = !counter; value = Unknown}),
   (function () -> counter := 0)
 ;;
 
 let rec shorten t =
     match t with
-   | TypeVar {Index=_; Value=Unknown} -> t
-   | TypeVar ({Index=_;
-                Value=TypeVar {Index=_;
-                               Value=Unknown} as tv}) -> tv
-   | TypeVar ({Index=_; Value=TypeVar tv1} as tv2)
-            -> tv2.Value <- tv1.Value; shorten t
-   | TypeVar {Index=_; Value=t'} -> t'
+   | TypeVar {index=_; value=Unknown} -> t
+   | TypeVar ({index=_;
+                value=TypeVar {index=_;
+                               value=Unknown} as tv}) -> tv
+   | TypeVar ({index=_; value=TypeVar tv1} as tv2)
+            -> tv2.value <- tv1.value; shorten t
+   | TypeVar {index=_; value=t'} -> t'
    | Unknown -> raise (TypingBug "shorten")
    | t' -> t';;
 exception TypeClash of asl_type * asl_type;;
 
-let occurs {Index=n;Value=_} = occrec
+let occurs {index=n;value=_} = occrec
   where rec occrec =
-  function TypeVar{Index=m;Value=Unknown} -> (n=m)
-         | TypeVar{Index=m;Value=t} -> (n=m) or (occrec t)
+  function TypeVar{index=m;value=Unknown} -> (n=m)
+         | TypeVar{index=m;value=t} -> (n=m) or (occrec t)
          | Number -> false
          | Arrow(t1,t2) -> (occrec t1) or (occrec t2)
          | Unknown -> raise (TypingBug "occurs")
@@ -52,16 +52,16 @@ let occurs {Index=n;Value=_} = occrec
 let rec unify (tau1,tau2) =
   match (shorten tau1, shorten tau2)
   with (* type variable n and type variable m *)
-     | (TypeVar({Index=n; Value=Unknown} as tv1) as t1),
-       (TypeVar({Index=m; Value=Unknown} as tv2) as t2)
-           -> if n=m then () else tv1.Value <- t2
+     | (TypeVar({index=n; value=Unknown} as tv1) as t1),
+       (TypeVar({index=m; value=Unknown} as tv2) as t2)
+           -> if n=m then () else tv1.value <- t2
      | (* type t1 and type variable *)
-      t1, (TypeVar ({Index=_;Value=Unknown} as tv) as t2)
-            -> if not(occurs tv t1) then tv.Value <- t1
+      t1, (TypeVar ({index=_;value=Unknown} as tv) as t2)
+            -> if not(occurs tv t1) then tv.value <- t1
                else raise (TypeClash (t1,t2))
      | (* type variable and type t2 *)
-       (TypeVar ({Index=_;Value=Unknown} as tv) as t1), t2
-            -> if not(occurs tv t2) then tv.Value <- t2
+       (TypeVar ({index=_;value=Unknown} as tv) as t1), t2
+            -> if not(occurs tv t2) then tv.value <- t2
                else raise (TypeClash (t1,t2))
      | Number, Number -> ()
      | Arrow(t1,t2), (Arrow(t'1,t'2) as t)
@@ -78,9 +78,9 @@ let global_typing_env = ref init_typing_env;;
 let vars_of_type tau = vars [] tau
  where rec vars vs =
   function Number -> vs
-         | TypeVar {Index=n; Value=Unknown}
+         | TypeVar {index=n; value=Unknown}
                  -> if mem n vs then vs else n::vs
-         | TypeVar {Index=_; Value= t} -> vars vs t
+         | TypeVar {index=_; value= t} -> vars vs t
          | Arrow(t1,t2) -> vars (vars vs t1) t2
          | Unknown -> raise (TypingBug "vars_of_type");;
 
@@ -110,10 +110,10 @@ let gen_instance (Forall(gv,tau)) =
           gv
   in ginstance tau
   where rec ginstance = function
-      | (TypeVar {Index=n; Value=Unknown} as t) ->
+      | (TypeVar {index=n; value=Unknown} as t) ->
                     (try assoc n unknowns
                      with Not_found -> t)
-      | TypeVar {Index=_; Value= t} -> ginstance t
+      | TypeVar {index=_; value= t} -> ginstance t
       | Number -> Number
       | Arrow(t1,t2) -> Arrow(ginstance t1, ginstance t2)
       | Unknown -> raise (TypingBug "gen_instance")
@@ -165,13 +165,13 @@ let print_type_scheme (Forall(gv,t)) =
                            ::(names_of (n+1, lv))) in
  let tvar_names = combine (rev gv,names) in
  let rec print_rec = function
-    | TypeVar{Index=n; Value=Unknown} ->
+    | TypeVar{index=n; value=Unknown} ->
          let name =
              try assoc n tvar_names
              with Not_found ->
                raise (TypingBug "Non generic variable")
          in print_string name
-    | TypeVar{Index=_;Value=t} -> print_rec t
+    | TypeVar{index=_;value=t} -> print_rec t
     | Number -> print_string "Number"
     | Arrow(t1,t2) ->
            print_string "("; print_rec t1;
@@ -211,9 +211,9 @@ typing (parse_top "z = \\f.((\\x.f(\\z.(x x)z)) (\\x.f(\\z.(x x)z)));");;
 global_env := `z`::init_env;
 global_typing_env:=
     (Forall([1],
-     Arrow(Arrow(TypeVar{Index=1;Value=Unknown},
-                   TypeVar{Index=1;Value=Unknown}),
-            TypeVar{Index=1;Value=Unknown})))
+     Arrow(Arrow(TypeVar{index=1;value=Unknown},
+                   TypeVar{index=1;value=Unknown}),
+            TypeVar{index=1;value=Unknown})))
    ::init_typing_env;
 ();;
 typing (parse_top "f = z(\\f.(\\n. C (= n 0) 1 ( * n (f (- n 1)))));");;

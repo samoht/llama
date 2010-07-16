@@ -66,7 +66,7 @@ and expr5 flux =
 
 and définition = function
   | [< 'MC "let"; récursive r; 'Ident nom; 'MC "="; expression e >] ->
-      {Récursive = r; Nom = nom; Expr = e}
+      {récursive = r; nom = nom; expr = e}
 and récursive = function
   | [< 'MC "rec" >] -> true
   | [< >] -> false

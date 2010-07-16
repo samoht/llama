@@ -487,7 +487,7 @@ let réponses_aux_mots_intéressants =
     "Ne m'en veuillez pas si je vous interroge. Continuez";
     "Vous ne le pensez pas vraiment?"|])
 ];;
-let au_choix_dans v = v.(random__int (vect_length v));;
+let au_choix_dans v = v.(Random.int (vect_length v));;
 let message s = print_string s; print_newline();;
 let prix_à_payer = ref 0;;
 let bonjour () =
@@ -543,12 +543,12 @@ let camélia () =
        répond_au_patient()
      done
     with Fini -> au_revoir()
-       | End_of_file | sys__Break ->
+       | End_of_file | Sys.Break ->
            message "\n\n\nVous pourriez être poli \
                     et me dire au revoir ...\n\n\n";
            au_revoir();;
-if sys__interactive then () else begin
-  sys__catch_break true;
+if Sys.interactive then () else begin
+  Sys.catch_break true;
   camélia();
   exit 0
 end;;

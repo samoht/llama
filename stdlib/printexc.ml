@@ -69,5 +69,5 @@ let f fct arg =
         end
     end;
     prerr_char `\n`;
-    io__exit 2
+    Io.exit 2
 ;;

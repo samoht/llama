@@ -9,7 +9,7 @@ val new : int -> ('a,'b) t
         (* [new n] creates a new, empty hash table, with initial size [n].
            The table grows as needed, so [n] is just an initial guess.
            Better results are said to be achieved when [n] is a prime
-           number. Raise [Invalid_argument "hashtbl__new"] if [n] is
+           number. Raise [Invalid_argument "Hashtbl.new"] if [n] is
            less than 1. *)
 
   and clear : ('a, 'b) t -> unit

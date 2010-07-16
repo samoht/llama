@@ -431,7 +431,7 @@ let pp_print_string state s = pp_print_as state (string_length s) s;;
 let pp_print_int state i = pp_print_string state (string_of_int i);;
 
 (* To format a float *)
-let pp_print_float state f = pp_print_string state (float__string_of_float f);;
+let pp_print_float state f = pp_print_string state (Float.string_of_float f);;
 
 (* To format a boolean *)
 let pp_print_bool state b = pp_print_string state (string_of_bool b);;

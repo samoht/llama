@@ -13,15 +13,15 @@ let reconnaît automate chaîne =
 #open "auto";;
 
 type ensemble_d'états =
-  { contenu  : ensent__t;
-    éléments : auto__état list };;
-let vide = { contenu = ensent__vide; éléments = [] };;
+  { contenu  : Ensent.t;
+    éléments : Auto.état list };;
+let vide = { contenu = Ensent.vide; éléments = [] };;
 let est_vide ens =
   match ens.éléments with [] -> true | _ -> false;;
 let appartient état ens =
-  ensent__appartient état.numéro ens.contenu;;
+  Ensent.appartient état.numéro ens.contenu;;
 let ajoute état ens =
-  { contenu  = ensent__ajoute état.numéro ens.contenu;
+  { contenu  = Ensent.ajoute état.numéro ens.contenu;
     éléments = état :: ens.éléments };;
 let rec ajoute_fermeture état ferm =
   if appartient état ferm then ferm else
@@ -42,22 +42,22 @@ let déplacements liste_états =
     liste_états;
   t;;
 let déterminise état_initial =
-  let états_connus = hashtbl__new 51
-  and à_remplir = stack__new () in
+  let états_connus = Hashtbl.new 51
+  and à_remplir = Stack.new () in
   let traduire ens =
-    try hashtbl__find états_connus ens.contenu
+    try Hashtbl.find états_connus ens.contenu
     with Not_found ->
       let nouvel_état =
         { dterminal = exists (function n -> n.terminal) ens.éléments;
           dtransitions = make_vect 256 Rejet } in
-      hashtbl__add états_connus ens.contenu nouvel_état;
-      stack__push (ens.éléments, nouvel_état) à_remplir;
+      Hashtbl.add états_connus ens.contenu nouvel_état;
+      Stack.push (ens.éléments, nouvel_état) à_remplir;
       nouvel_état in
   let nouvel_état_initial =
     traduire (fermeture état_initial) in
   begin try
     while true do
-      let (liste, nouvel_état) = stack__pop à_remplir in
+      let (liste, nouvel_état) = Stack.pop à_remplir in
       let dépl = déplacements liste in
       for i = 0 to 255 do
         if not est_vide dépl.(i) then
@@ -65,6 +65,6 @@ let déterminise état_initial =
             Vers(traduire (fermeture_ens dépl.(i)))
       done
     done
-  with stack__Empty -> ()
+  with Stack.Empty -> ()
   end;
   nouvel_état_initial;;

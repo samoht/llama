@@ -31,7 +31,7 @@ for i = 1 to vect_length command_line - 1 do
           ("Erreur à la création de " ^ nom_sortie ^ " : " ^ message);
         raise Erreur in
     try
-      huffman__décompresse entrée sortie;
+      Huffman.décompresse entrée sortie;
       close_in entrée; close_out sortie; remove nom_entrée
     with Sys_error message ->
       close_in entrée; close_out sortie; remove nom_sortie;

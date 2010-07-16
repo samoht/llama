@@ -18,9 +18,9 @@ and motif =
   | Motif_cons of motif * motif
 
 and définition =
-  { Récursive: bool;
-    Nom: string;
-    Expr: expression };;
+  { récursive: bool;
+    nom: string;
+    expr: expression };;
 type phrase =
     Expression of expression
   | Définition of définition;;

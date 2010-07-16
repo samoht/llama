@@ -9,8 +9,8 @@ type valeur =
    | Val_primitive of valeur -> valeur
 
 and fermeture =
-  { Définition: (motif * expression) list;
-    mutable Environnement: environnement }
+  { définition: (motif * expression) list;
+    mutable environnement: environnement }
 
 and environnement == (string * valeur) list;;
 

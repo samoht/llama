@@ -150,12 +150,15 @@ let float_literal =
 rule main = parse
     [' ' '\010' '\013' '\009' '\012'] +
       { main lexbuf }
-  | claux1 ('_'? claux2) *
+  | "_" { UNDERSCORE }
+  | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in
           try
             Hashtbl.find keyword_table s
           with Not_found ->
-            IDENT s }
+            LIDENT s }
+  | uppercase identchar *
+      { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
   | ['0'-'9']+
     | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
     | '0' ['o' 'O'] ['0'-'7']+
@@ -213,7 +216,6 @@ rule main = parse
   | "[|" { LBRACKETBAR }
   | "[<" { LBRACKETLESS }
   | "]" { RBRACKET }
-  | "_" { UNDERSCORE }
   | "__" { UNDERUNDER }
   | "{" { LBRACE }
   | "|" { BAR }

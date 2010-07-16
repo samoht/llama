@@ -102,12 +102,12 @@ let boucle () =
         print_string "Impossible d'identifier ";
         imprime_type var; print_string " et ";
         imprime_type ty; print_newline()
-    | eval__Erreur msg ->
+    | Eval.Erreur msg ->
         print_string "Erreur à l'évaluation: "; print_string msg;
         print_newline()
-    | synthese__Erreur msg ->
+    | Synthese.Erreur msg ->
         print_string "Erreur de typage: "; print_string msg;
         print_newline()
   done;;
 
-if sys__interactive then () else boucle();;
+if Sys.interactive then () else boucle();;

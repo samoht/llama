@@ -6,7 +6,7 @@ type ('a, 'b) binding =
   { key: 'a; data: 'b; prev: 'b list };;
 
 type ('a, 'b) t =
-  { tree: ('a, 'b) binding baltree__t;
+  { tree: ('a, 'b) binding Baltree.t;
     order: 'a -> ('a, 'b) binding -> int };;
 
 let empty ord =
@@ -19,11 +19,11 @@ let bind x y b =
       prev = match b with Nothing -> [] | Something b -> b.data :: b.prev };;
 
 let add x y m =
-  { tree = baltree__modify (m.order x) (bind x y) m.tree;
+  { tree = Baltree.modify (m.order x) (bind x y) m.tree;
     order = m.order };;
 
 let find x m =
-  (baltree__find (m.order x) m.tree).data;;
+  (Baltree.find (m.order x) m.tree).data;;
 
 let unbind = function
     Something({prev = x::l} as b) ->
@@ -31,7 +31,7 @@ let unbind = function
   | _ -> Nothing;;
 
 let remove x m =
-  { tree = baltree__modify (m.order x) unbind m.tree;
+  { tree = Baltree.modify (m.order x) unbind m.tree;
     order = m.order };;
 
 let iter f m =

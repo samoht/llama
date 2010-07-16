@@ -44,16 +44,16 @@ let count name =
   print_result ()
 ;;  
 
-if sys__interactive then () else
+if Sys.interactive then () else
 try
-  if vect_length sys__command_line <= 1 then
+  if vect_length Sys.command_line <= 1 then
     count_channel std_in                (* No command-line arguments *)
   else
-    for i = 1 to vect_length sys__command_line - 1 do
-      count_file  sys__command_line.(i)
+    for i = 1 to vect_length Sys.command_line - 1 do
+      count_file  Sys.command_line.(i)
     done;
   print_result ();
-with sys__Sys_error s ->
+with Sys.Sys_error s ->
   print_string "I/O error: ";
   print_string s;
   print_newline()

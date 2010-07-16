@@ -32,11 +32,11 @@ let rec lire_commentaire flux =
   | [< '`\n` >] -> ()
   | [< 'c >] -> lire_commentaire flux;;
 let mc_ou_ident table_des_mots_clés ident =
-    try hashtbl__find table_des_mots_clés ident
+    try Hashtbl.find table_des_mots_clés ident
     with Not_found -> Ident(ident);;
 let mc_ou_erreur table_des_mots_clés caractère =
     let ident = make_string 1 caractère in
-    try hashtbl__find table_des_mots_clés ident
+    try Hashtbl.find table_des_mots_clés ident
     with Not_found -> raise Parse_error;;
 let rec lire_lexème table flux =
   match flux with
@@ -72,8 +72,8 @@ let rec analyseur table flux =
       | [< (lire_lexème table) lexème >] -> lexème
       | [< >] -> raise Parse_failure);;
 let construire_analyseur mots_clés =
-    let table_des_mots_clés = hashtbl__new 17 in
+    let table_des_mots_clés = Hashtbl.new 17 in
     do_list
-      (function mot -> hashtbl__add table_des_mots_clés mot (MC mot))
+      (function mot -> Hashtbl.add table_des_mots_clés mot (MC mot))
       mots_clés;
     analyseur table_des_mots_clés;;

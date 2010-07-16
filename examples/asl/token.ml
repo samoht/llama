@@ -3,12 +3,12 @@
 let id x = x;;
 
 let keywords =
-  let t = hashtbl__new 13 in
-  hashtbl__add t "else" ELSE;
-  hashtbl__add t "fi" FI;
-  hashtbl__add t "if" IF;
-  hashtbl__add t "let" LET;
-  hashtbl__add t "then" THEN;
+  let t = Hashtbl.new 13 in
+  Hashtbl.add t "else" ELSE;
+  Hashtbl.add t "fi" FI;
+  Hashtbl.add t "if" IF;
+  Hashtbl.add t "let" LET;
+  Hashtbl.add t "then" THEN;
   t
 ;;
 
@@ -22,7 +22,7 @@ let rec ident len = function
   >] -> i
 | [< >] ->
     let str = sub_string buff 0 len in
-    (try hashtbl__find keywords str with _ -> IDENT str)
+    (try Hashtbl.find keywords str with _ -> IDENT str)
 ;;
 ***)
 
@@ -31,7 +31,7 @@ let rec ident len = function
     set_nth_char buff len c; ident (succ len) s
 | [< >] ->
     let str = sub_string buff 0 len in
-    (try hashtbl__find keywords str with _ -> IDENT str)
+    (try Hashtbl.find keywords str with _ -> IDENT str)
 ;;
 
 let rec number n = function

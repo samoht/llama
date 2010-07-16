@@ -5,5 +5,5 @@ and transition =
     Vers of état
   | Rejet;;
 
-val déterminise : auto__état -> determ__état
-  and reconnaît : determ__état -> string -> bool;;
+val déterminise : Auto.état -> état
+  and reconnaît : état -> string -> bool;;

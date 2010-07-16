@@ -38,13 +38,13 @@ let usage() =
   exit 2
 ;;
 
-if sys__interactive then () else
-if vect_length sys__command_line <> 2 then begin
+if Sys.interactive then () else
+if vect_length Sys.command_line <> 2 then begin
   print_string "Usage: sieve <n>";
   print_newline()
 end else begin
   try
-    let n = int_of_string sys__command_line.(1) in
+    let n = int_of_string Sys.command_line.(1) in
     do_list (fun n -> print_int n; print_string " ") (sieve n);
     print_newline()
   with Failure "int_of_string" ->

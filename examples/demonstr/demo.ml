@@ -33,4 +33,4 @@ let boucle () =
     done
   with End_of_file -> ();;
 
-if sys__interactive then () else begin boucle(); exit 0 end;;
+if Sys.interactive then () else begin boucle(); exit 0 end;;

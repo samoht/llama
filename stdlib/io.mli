@@ -87,18 +87,18 @@ val open_out : string -> out_channel
            on that file, positionned at the beginning of the file. The
            file is truncated to zero length if it already exists. It
            is created if it does not already exists.
-           Raise [sys__Sys_error] if the file could not be opened. *)
+           Raise [Sys.Sys_error] if the file could not be opened. *)
   and open_out_bin : string -> out_channel
         (* Same as [open_out], but the file is opened in binary mode,
            so that no translation takes place during writes. On operating
            systems that do not distinguish between text mode and binary
            mode, this function behaves like [open_out]. *)
-  and open_out_gen : sys__open_flag list -> int -> string -> out_channel
+  and open_out_gen : Sys.open_flag list -> int -> string -> out_channel
         (* [open_out_gen mode rights filename] opens the file named
            [filename] for writing, as above. The extra argument [mode]
-           specify the opening mode (see [sys__open]). The extra
+           specify the opening mode (see [Sys.open]). The extra
            argument [rights] specifies the file permissions, in case the
-           file must be created (see [sys__open]).
+           file must be created (see [Sys.open]).
            [open_out] and [open_out_bin] are special cases of this function. *)
   and open_descriptor_out : int -> out_channel = 1 "open_descriptor"
         (* [open_descriptor_out fd] returns a buffered output channel
@@ -160,17 +160,17 @@ val open_out : string -> out_channel
 val open_in : string -> in_channel
         (* Open the named file for reading, and return a new input channel
            on that file, positionned at the beginning of the file.
-           Raise [sys__Sys_error] if the file could not be opened. *)
+           Raise [Sys.Sys_error] if the file could not be opened. *)
   and open_in_bin : string -> in_channel
         (* Same as [open_in], but the file is opened in binary mode,
            so that no translation takes place during reads. On operating
            systems that do not distinguish between text mode and binary
            mode, this function behaves like [open_in]. *)
-  and open_in_gen : sys__open_flag list -> int -> string -> in_channel
+  and open_in_gen : Sys.open_flag list -> int -> string -> in_channel
         (* [open_in_gen mode rights filename] opens the file named
            [filename] for reading, as above. The extra arguments
            [mode] and [rights] specify the opening mode and file permissions
-           (see [sys__open]). [open_in] and [open_in_bin] are special cases
+           (see [Sys.open]). [open_in] and [open_in_bin] are special cases
            of this function. *)
   and open_descriptor_in : int -> in_channel = 1 "open_descriptor"
         (* [open_descriptor_in fd] returns a buffered input channel

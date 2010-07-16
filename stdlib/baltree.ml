@@ -32,25 +32,25 @@ let bal l x r =
   let sr = match r with Empty -> 0 | Node(_,_,_,s) -> s in
   if sl > sr + 2 then begin
     match l with
-      Empty -> invalid_arg "baltree__bal"
+      Empty -> invalid_arg "Baltree.bal"
     | Node(ll, lv, lr, _) ->
         if height ll >= height lr then
           new ll lv (new lr x r)
         else begin
           match lr with
-            Empty -> invalid_arg "baltree__bal"
+            Empty -> invalid_arg "Baltree.bal"
           | Node(lrl, lrv, lrr, _)->
               new (new ll lv lrl) lrv (new lrr x r)
         end
   end else if sr > sl + 2 then begin
     match r with
-      Empty -> invalid_arg "baltree__bal"
+      Empty -> invalid_arg "Baltree.bal"
     | Node(rl, rv, rr, _) ->
         if height rr >= height rl then
           new (new l x rl) rv rr
         else begin
           match rl with
-            Empty -> invalid_arg "baltree__bal"
+            Empty -> invalid_arg "Baltree.bal"
           | Node(rll, rlv, rlr, _) ->
               new (new l x rll) rlv (new rlr rv rr)
         end
@@ -61,7 +61,7 @@ let bal l x r =
 
 let rec join l x r =
   match bal l x r with
-    Empty -> invalid_arg "baltree__join"
+    Empty -> invalid_arg "Baltree.join"
   | Node(l', x', r', _) as t' ->
       let d = height l' - height r' in
       if d < -2 || d > 2 then join l' x' r' else t'

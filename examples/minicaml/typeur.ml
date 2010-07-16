@@ -53,4 +53,4 @@ let boucle () =
         print_newline()
   done;;
 
-if sys__interactive then () else boucle();;
+if Sys.interactive then () else boucle();;

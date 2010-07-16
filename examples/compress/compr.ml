@@ -24,7 +24,7 @@ let traite_fichier traitement nom_entrée nom_sortie =
                    ^ nom_entrée ^ " : " ^ message);
     raise Erreur;;
 let compresse_fichier nom_fichier =
-  traite_fichier huffman__compresse
+  traite_fichier Huffman.compresse
                  nom_fichier (nom_fichier ^ ".cpr");;
 
 let décompresse_fichier nom_fichier =
@@ -33,12 +33,12 @@ let décompresse_fichier nom_fichier =
   or sub_string nom_fichier (longueur - 4) 4 <> ".cpr" then
     let nom_entrée = nom_fichier ^ ".cpr"
     and nom_sortie = nom_fichier in
-    traite_fichier huffman__décompresse nom_entrée nom_sortie
+    traite_fichier Huffman.décompresse nom_entrée nom_sortie
   else
     let nom_entrée = nom_fichier
     and nom_sortie = sub_string nom_fichier 0 (longueur - 4) in
-    traite_fichier huffman__décompresse nom_entrée nom_sortie;;
-if sys__interactive then () else
+    traite_fichier Huffman.décompresse nom_entrée nom_sortie;;
+if Sys.interactive then () else
   begin
     let erreur = ref false in
     if vect_length command_line >= 2 & command_line.(1) = "-d" then

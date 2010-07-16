@@ -104,7 +104,8 @@ let pat_constr_or_var p =
 /* Tokens */
 
 /* Identifiers, prefixes, infixes */
-%token <string> IDENT
+%token <string> UIDENT
+%token <string> LIDENT
 %token <string> PREFIX
 %token <string> INFIX
 %token <string> INFIX0
@@ -554,7 +555,7 @@ Simple_pattern_list :
 Pattern :
         Simple_pattern
           { $1 }
-      | Pattern AS IDENT
+      | Pattern AS LIDENT
           { make_pat(Paliaspat($1, $3)) }
       | Pattern COLONCOLON Pattern
           { make_pat(Pconstruct1pat(Id "::",
@@ -622,7 +623,7 @@ Stream_pattern :
 ;
 
 Stream_pattern_component_list :
-        IDENT
+        LIDENT
           { [Pstreampat $1] }
       | Stream_pattern_component SEMI Stream_pattern_component_list
           { $1 :: $3 }
@@ -649,7 +650,9 @@ Parser_match :
 /* Identifiers */
 
 Ide :
-        IDENT
+        LIDENT
+          { $1 }
+      | UIDENT
           { $1 }
       | PREF Infx
           { $2 }
@@ -668,7 +671,7 @@ Infx :
 ;
 
 Qual_ident :
-        IDENT UNDERUNDER Ide
+        UIDENT DOT Ide
           { Qual($1,$3) }
 ;
 
@@ -711,7 +714,7 @@ Type_star_list :
 ;
 
 Type_var :
-        QUOTE IDENT
+        QUOTE LIDENT
           { $2 }
 ;
 
@@ -774,7 +777,7 @@ Prim_decl :
 ;
 
 Type1_decl :
-        Type_params IDENT Type1_def
+        Type_params LIDENT Type1_def
           { ($2, $1, $3) }
 ;
 
@@ -797,7 +800,7 @@ Constr1_decl :
 ;
 
 Label1_decl :
-        Mutable_option IDENT COLON Type
+        Mutable_option LIDENT COLON Type
           { ($2, $4, $1) }
 ;
 
@@ -827,7 +830,7 @@ Type_var_list :
 /* Directives */
 
 Directive :
-        IDENT STRING
+        LIDENT STRING
           { Pdir($1, $2) }
 ;
 

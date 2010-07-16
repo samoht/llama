@@ -103,6 +103,6 @@ global_sem := (Funval(function x -> x))::!global_sem;;
 global_typing_env :=
   Forall(
     [1;2],
-    Arrow(TypeVar{Index=1; Value=Unknown},TypeVar{Index=2; Value=Unknown})
+    Arrow(TypeVar{index=1; value=Unknown},TypeVar{index=2; value=Unknown})
   )::!global_typing_env;;
 

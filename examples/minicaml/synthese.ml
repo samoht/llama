@@ -55,14 +55,14 @@ let rec type_exp env = function
 and type_déf env déf =
   début_de_définition();
   let type_expr =
-    match déf.Récursive with
-    | false -> type_exp env déf.Expr
+    match déf.récursive with
+    | false -> type_exp env déf.expr
     | true ->
         let type_provisoire = nouvelle_inconnue() in
         let type_expr =
-          type_exp ((déf.Nom, schéma_trivial type_provisoire) :: env)
-                   déf.Expr in
+          type_exp ((déf.nom, schéma_trivial type_provisoire) :: env)
+                   déf.expr in
         unifie type_expr type_provisoire;
         type_expr in
   fin_de_définition();
-  (déf.Nom, généralisation type_expr) :: env;;
+  (déf.nom, généralisation type_expr) :: env;;

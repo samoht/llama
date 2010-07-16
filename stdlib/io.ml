@@ -24,7 +24,7 @@ and stderr = std_err
 let exit n =
   flush std_out;
   flush std_err;
-  sys__exit n
+  Sys.exit n
 ;;
 
 let open_in_gen mode rights filename =
@@ -77,9 +77,9 @@ let rec input_line chan =
 
 let read_line () = flush std_out; input_line std_in
 ;;
-let read_int () = int__int_of_string (read_line())
+let read_int () = Int.int_of_string (read_line())
 ;;
-let read_float () = float__float_of_string (read_line())
+let read_float () = Float.float_of_string (read_line())
 ;;
 
 let open_out_gen mode rights filename =
@@ -110,10 +110,10 @@ let print_string =
   output_string std_out
 ;;
 let print_int i =
-  print_string (int__string_of_int i)
+  print_string (Int.string_of_int i)
 ;;
 let print_float f =
-  print_string (float__string_of_float f)
+  print_string (Float.string_of_float f)
 ;;
 let print_endline s =
   print_string s;
@@ -132,10 +132,10 @@ let prerr_string =
   output_string std_err
 ;;
 let prerr_int i =
-  prerr_string (int__string_of_int i)
+  prerr_string (Int.string_of_int i)
 ;;
 let prerr_float f =
-  prerr_string (float__string_of_float f)
+  prerr_string (Float.string_of_float f)
 ;;
 let prerr_endline s =
   prerr_string s;

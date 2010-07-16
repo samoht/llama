@@ -18,8 +18,8 @@ type error =
 ;;
 
 let stop error =
-  let progname = if vect_length sys__command_line > 0
-                 then sys__command_line.(0)
+  let progname = if vect_length Sys.command_line > 0
+                 then Sys.command_line.(0)
                  else "(?)"
   in let message = match error
      with Unknown s -> progname ^ ": unknown option: \"" ^ s ^ "\"."
@@ -57,11 +57,11 @@ let parse speclist anonfun =
                      -> stop (Wrong (s, arg, "an integer"))
                 end;
                 p t
-           | (Float f, arg::t) -> f (float__float_of_string arg); p t
+           | (Float f, arg::t) -> f (Float.float_of_string arg); p t
            | (_, []) -> stop (Missing s)
     with Bad m -> stop (Message m)
   in
-    match list_of_vect sys__command_line with
+    match list_of_vect Sys.command_line with
         [] -> ()
     | a::l -> p l
 ;;

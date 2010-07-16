@@ -3,16 +3,16 @@ type type_simple =
   | Terme of string * type_simple vect
 
 and variable_de_type =
-  { mutable Niveau: int;
-    mutable Valeur: valeur_d'une_variable }
+  { mutable niveau: int;
+    mutable valeur: valeur_d'une_variable }
 
 and valeur_d'une_variable =
     Inconnue
   | Connue of type_simple;;
 
 type schéma_de_types =
-  { Paramètres: variable_de_type list;
-    Corps: type_simple };;
+  { paramètres: variable_de_type list;
+    corps: type_simple };;
 
 let type_int = Terme("int", [||])
 and type_bool = Terme("bool", [||])
@@ -20,9 +20,9 @@ and type_flèche t1 t2 = Terme("->", [|t1; t2|])
 and type_produit t1 t2 = Terme("*", [|t1; t2|])
 and type_liste t = Terme("list", [|t|]);;
 let rec valeur_de = function
-  | Variable({Valeur = Connue ty1} as var) ->
+  | Variable({valeur = Connue ty1} as var) ->
       let valeur_de_ty1 = valeur_de ty1 in
-      var.Valeur <- Connue valeur_de_ty1;
+      var.valeur <- Connue valeur_de_ty1;
       valeur_de_ty1
   | ty -> ty;;
 let test_d'occurrence var ty =
@@ -36,7 +36,7 @@ let test_d'occurrence var ty =
 let rec rectifie_niveaux niveau_max ty =
   match valeur_de ty with
   | Variable var ->
-      if var.Niveau > niveau_max then var.Niveau <- niveau_max
+      if var.niveau > niveau_max then var.niveau <- niveau_max
   | Terme(constructeur, arguments) ->
       do_vect (rectifie_niveaux niveau_max) arguments;;
 let rec unifie ty1 ty2 =
@@ -46,12 +46,12 @@ let rec unifie ty1 ty2 =
     match (valeur1, valeur2) with
     | Variable var, ty ->
         test_d'occurrence var ty;
-        rectifie_niveaux var.Niveau ty;        
-        var.Valeur <- Connue ty
+        rectifie_niveaux var.niveau ty;        
+        var.valeur <- Connue ty
     | ty, Variable var ->
         test_d'occurrence var ty;
-        rectifie_niveaux var.Niveau ty;        
-        var.Valeur <- Connue ty
+        rectifie_niveaux var.niveau ty;        
+        var.valeur <- Connue ty
     | Terme(constr1, arguments1), Terme(constr2, arguments2) ->
         if constr1 <> constr2 then
           raise (Conflit(valeur1, valeur2))
@@ -65,23 +65,23 @@ let début_de_définition () = incr niveau_de_liaison
 and fin_de_définition () = decr niveau_de_liaison;;
 
 let nouvelle_inconnue () =
-  Variable {Niveau = !niveau_de_liaison; Valeur = Inconnue};;
+  Variable {niveau = !niveau_de_liaison; valeur = Inconnue};;
 let généralisation ty =
   let paramètres = ref [] in
   let rec trouve_paramètres ty =
     match valeur_de ty with
     | Variable var ->
-        if var.Niveau > !niveau_de_liaison & not memq var !paramètres
+        if var.niveau > !niveau_de_liaison & not memq var !paramètres
         then paramètres := var :: !paramètres
     | Terme(constr, arguments) ->
         do_vect trouve_paramètres arguments in
   trouve_paramètres ty;
-  {Paramètres = !paramètres; Corps = ty};;
+  {paramètres = !paramètres; corps = ty};;
 
-let schéma_trivial ty = {Paramètres = []; Corps = ty};;
+let schéma_trivial ty = {paramètres = []; corps = ty};;
 let spécialisation schéma =
-  match schéma.Paramètres with
-  | [] -> schéma.Corps
+  match schéma.paramètres with
+  | [] -> schéma.corps
   | paramètres ->
       let nouvelles_inconnues =
         map (fun var -> (var, nouvelle_inconnue())) paramètres in
@@ -95,7 +95,7 @@ let spécialisation schéma =
             end
         | Terme(constr, arguments) ->
             Terme(constr, map_vect copie arguments) in
-      copie schéma.Corps;;
+      copie schéma.corps;;
 let noms_des_variables = ref ([] : (variable_de_type * string) list)
 and compteur_de_variables = ref 0;;
 
@@ -134,10 +134,10 @@ let imprime_type ty =
 let imprime_schéma schéma =
   noms_des_variables := [];
   compteur_de_variables := 0;
-  if schéma.Paramètres <> [] then begin
+  if schéma.paramètres <> [] then begin
     print_string "pour tout ";
     do_list (fun var -> imprime_var var; print_string " ")
-            schéma.Paramètres;
+            schéma.paramètres;
     print_string ", "
   end;
-  imprime schéma.Corps;;
+  imprime schéma.corps;;

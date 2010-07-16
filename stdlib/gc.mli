@@ -73,7 +73,7 @@ type control = {
 val stat : unit -> stat = 1 "gc_stat";;
   (* Return the current values of the memory management counters in a
      [stat] record. *)
-val print_stat : io__out_channel -> unit;;
+val print_stat : Io.out_channel -> unit;;
   (* Print the current values of the memory management counters (in
      human-readable form) into the channel argument. *)
 val get : unit -> control = 1 "gc_get";;

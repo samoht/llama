@@ -35,11 +35,11 @@ let rec type_de env = function
       (cherche_fonction fonc env).fonc_type_résultat
   | Op_unaire(op, arg) ->
       let (type_arg, type_res) =
-        typage__type_op_unaire op
+        Typage.type_op_unaire op
       in type_res
   | Op_binaire(op, arg1, arg2) ->
       let (type_arg1, type_arg2, type_res) =
-        typage__type_op_binaire op
+        Typage.type_op_binaire op
       in type_res
   | Accès_tableau(arg1, arg2) ->
       match type_de env arg1 with
