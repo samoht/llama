@@ -1,7 +1,7 @@
 (* streams.ml: translation of streams *)
 
 open Const;;
-open Syntax;;
+open Typedtree;;
 open Prim;;
 open Lambda;;
 open Matching;;

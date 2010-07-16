@@ -2,7 +2,7 @@ open Const
 open Misc
 open Globals
 open Location
-open Syntax
+open Typedtree
 open Modules
 open Builtins
 open Error

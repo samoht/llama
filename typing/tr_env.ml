@@ -3,7 +3,7 @@
 open Asttypes;;
 open Misc;;
 open Const;;
-open Syntax;;
+open Typedtree;;
 open Lambda;;
 open Prim;;
 open Error;;

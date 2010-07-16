@@ -2,7 +2,7 @@ type token = Parser.token
 
 open Globals
 open Parsetree
-open Syntax
+open Typedtree
 
 let rec core_type te =
   { te_desc =
@@ -93,8 +93,6 @@ let type_decl td =
                                                   (s,core_type te, m)) l)
     | Pabbrev_type te -> Zabbrev_type (core_type te)
   end
-
-let directiveu (Pdir(s1,s2)) = Zdir(s1,s2)
 
 let structure_item si =
   { im_desc =

@@ -1,12 +1,13 @@
-(* The abstract syntax for the language *)
+(* Abstract syntax tree produced by parsing *)
 
-open Const;;
-open Location;;
-open Asttypes;;
+open Asttypes
+open Const
+
+(* Type expressions for the core language *)
 
 type core_type =
   { ptyp_desc: core_type_desc;
-    ptyp_loc: location }
+    ptyp_loc: Location.location }
 
 and core_type_desc =
     Ptyp_var of string
@@ -16,7 +17,7 @@ and core_type_desc =
 
 type pattern =
   { ppat_desc: pattern_desc;
-    ppat_loc: location }
+    ppat_loc: Location.location }
 
 and pattern_desc =
     Ppat_any
@@ -26,37 +27,38 @@ and pattern_desc =
   | Ppat_tuple of pattern list
   | Ppat_construct0 of Longident.t
   | Ppat_construct1 of Longident.t * pattern
+  | Ppat_record of (Longident.t * pattern) list
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type
-  | Ppat_record of (Longident.t * pattern) list
 
 type expression =
   { pexp_desc: expression_desc;
-    pexp_loc: location }
+    pexp_loc: Location.location }
 
 and expression_desc =
     Pident of Longident.t
   | Pconstant of struct_constant
+  | Plet of bool * (pattern * expression) list * expression
+  | Pfunction of (pattern list * expression) list
+  | Papply of expression * expression list
+  | Ptrywith of expression * (pattern * expression) list
   | Ptuple of expression list
   | Pconstruct0 of Longident.t
   | Pconstruct1 of Longident.t * expression
-  | Papply of expression * expression list
-  | Plet of bool * (pattern * expression) list * expression
-  | Pfunction of (pattern list * expression) list
-  | Ptrywith of expression * (pattern * expression) list
-  | Psequence of expression * expression
-  | Pcondition of expression * expression * expression
-  | Pwhile of expression * expression
-  | Pfor of string * expression * expression * bool * expression
-  | Pconstraint of expression * core_type
-  | Pvector of expression list
-  | Passign of string * expression
   | Precord of (Longident.t * expression) list
   | Precord_access of expression * Longident.t
   | Precord_update of expression * Longident.t * expression
+  | Pvector of expression list
+  | Pcondition of expression * expression * expression
+  | Psequence of expression * expression
+  | Pwhile of expression * expression
+  | Pfor of string * expression * expression * bool * expression
+  | Pconstraint of expression * core_type
+  | Pwhen of expression * expression
+(* the rest are doomed *)
   | Pstream of stream_component list
   | Pparser of (stream_pattern list * expression) list
-  | Pwhen of expression * expression
+  | Passign of string * expression
 
 and stream_component =
     Pterm of expression
@@ -66,7 +68,6 @@ and stream_pattern =
     Ptermpat of pattern
   | Pnontermpat of expression * pattern
   | Pstreampat of string
-;;
 
 type type_decl =
     Pabstract_type
@@ -77,15 +78,10 @@ type type_decl =
 and constr_decl =
     Pconstr0decl of string
   | Pconstr1decl of string * core_type * mutable_flag
-;;
-
-type directiveu =
-    Pdir of string * string
-;;
 
 type signature_item =
   { psig_desc: signature_item_desc;
-    psig_loc: location }
+    psig_loc: Location.location }
 
 and signature_item_desc =
     Psig_value of (string * core_type * (int*string) option) list
@@ -95,7 +91,7 @@ and signature_item_desc =
 
 type structure_item =
   { pstr_desc: structure_item_desc;
-    pstr_loc: location }
+    pstr_loc: Location.location }
 
 and structure_item_desc =
     Pstr_eval of expression
@@ -105,6 +101,9 @@ and structure_item_desc =
   | Pstr_open of module_name
 
 (* Toplevel phrases *)
+
+type directiveu =
+    Pdir of string * string
 
 type toplevel_phrase =
     Ptop_def of structure_item

@@ -1,7 +1,7 @@
 (* Handling of debugging events *)
 
 open Lambda;;
-open Syntax;;
+open Typedtree;;
 open Location;;
 open Modules;;
 

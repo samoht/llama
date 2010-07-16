@@ -4,7 +4,7 @@ open Asttypes
 open Const;;
 open Globals;;
 open Builtins;;
-open Syntax;;
+open Typedtree;;
 open Modules;;
 open Types;;
 open Error;;

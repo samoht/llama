@@ -1,24 +1,25 @@
 (* The abstract syntax for the language *)
 
-open Const;;
-open Location;;
-open Globals;;
-open Asttypes;;
+open Const
+open Location
+open Globals
+open Asttypes
 
 type core_type =
   { te_desc: core_type_desc;
     te_loc: location }
+
 and core_type_desc =
     Ztyp_var of string
   | Ztyp_arrow of core_type * core_type
   | Ztyp_tuple of core_type list
   | Ztyp_constr of global_reference * core_type list
-;;
 
 type pattern =
   { p_desc: pattern_desc;
     p_loc: location;
     mutable p_typ: typ }
+
 and pattern_desc =
     Zpat_any
   | Zpat_var of string
@@ -30,12 +31,12 @@ and pattern_desc =
   | Zpat_or of pattern * pattern
   | Zpat_constraint of pattern * core_type
   | Zpat_record of (label_desc global * pattern) list
-;;
 
 type expression =
   { e_desc: expression_desc;
     e_loc: location;
     mutable e_typ: typ }
+
 and expression_desc =
     Zident of expr_ident ref
   | Zconstant of struct_constant
@@ -72,7 +73,6 @@ and stream_pattern =
     Ztermpat of pattern
   | Znontermpat of expression * pattern
   | Zstreampat of string
-;;
 
 type type_decl =
     Zabstract_type
@@ -83,84 +83,24 @@ type type_decl =
 and constr_decl =
     Zconstr0decl of string
   | Zconstr1decl of string * core_type * mutable_flag
-;;
 
-type directiveu =
-    Zdir of string * string
-;;
-
-type impl_phrase =
-  { im_desc: impl_desc;
-    im_loc: location }
-and impl_desc =
-    Str_eval of expression
-  | Str_value of bool * (pattern * expression) list
-  | Str_type of (string * string list * type_decl) list
-  | Str_exception of constr_decl list
-  | Str_open of module_name
-
-type intf_phrase =
-  { in_desc: intf_desc;
+type signature_item =
+  { in_desc: signature_item_desc;
     in_loc: location }
-and intf_desc =
+
+and signature_item_desc =
     Sig_value of (string * core_type * prim_desc) list
   | Sig_type of (string * string list * type_decl) list
   | Sig_exception of constr_decl list
   | Sig_open of module_name
 
-let rec free_vars_of_pat pat =
-  match pat.p_desc with
-    Zpat_any -> []
-  | Zpat_var v -> [v]
-  | Zpat_alias(pat,v) -> v :: free_vars_of_pat pat
-  | Zpat_constant _ -> []
-  | Zpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Zpat_construct0(_) -> []
-  | Zpat_construct1(_, pat) -> free_vars_of_pat pat
-  | Zpat_or(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
-  | Zpat_constraint(pat, _) -> free_vars_of_pat pat
-  | Zpat_record lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
-;;    
+type structure_item =
+  { im_desc: structure_item_desc;
+    im_loc: location }
 
-let rec expr_is_pure expr =
-  match expr.e_desc with
-    Zident _ -> true
-  | Zconstant _ -> true
-  | Ztuple el -> List.for_all expr_is_pure el
-  | Zconstruct0 cstr -> true
-  | Zconstruct1(cstr,arg) -> expr_is_pure arg
-  | Zfunction _ -> true
-  | Zconstraint(expr, ty) -> expr_is_pure expr
-  | Zvector el -> List.for_all expr_is_pure el
-  | Zrecord lbl_expr_list ->
-      List.for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
-  | Zparser _ -> true
-  | _ -> false
-;;
-
-let letdef_is_pure pat_expr_list =
-  List.for_all (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
-;;
-
-let single_constructor cstr =
-  match cstr.info.cs_tag with
-    ConstrRegular(_, span) -> span == 1
-  | ConstrExtensible(_,_) -> false
-;;
-
-let rec pat_irrefutable pat =
-  match pat.p_desc with
-    Zpat_any -> true
-  | Zpat_var s -> true
-  | Zpat_alias(pat, _) -> pat_irrefutable pat
-  | Zpat_constant _ -> false
-  | Zpat_tuple patl -> List.for_all pat_irrefutable patl
-  | Zpat_construct0 cstr -> single_constructor cstr
-  | Zpat_construct1(cstr, pat) -> single_constructor cstr && pat_irrefutable pat
-  | Zpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
-  | Zpat_constraint(pat, _) -> pat_irrefutable pat
-  | Zpat_record lbl_pat_list ->
-      List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
-;;
-
+and structure_item_desc =
+    Str_eval of expression
+  | Str_value of bool * (pattern * expression) list
+  | Str_type of (string * string list * type_decl) list
+  | Str_exception of constr_decl list
+  | Str_open of module_name

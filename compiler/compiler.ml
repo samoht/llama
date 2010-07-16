@@ -5,7 +5,8 @@ open Printf;;
 open Lexer;;
 open Parser;;
 open Location;;
-open Syntax;;
+open Typedtree;;
+open Typedtree_aux
 open Modules;;
 open Error;;
 open Typing;;

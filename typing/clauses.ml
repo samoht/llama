@@ -4,7 +4,7 @@ open Misc;;
 open Const;;
 open Globals;;
 open Location;;
-open Syntax;;
+open Typedtree;;
 open Lambda;;
 open Types;;
 

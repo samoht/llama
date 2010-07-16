@@ -5,7 +5,7 @@ open Const;;
 open Globals;;
 open Builtins;;
 open Error;;
-open Syntax;;
+open Typedtree;;
 open Location;;
 open Lambda;;
 open Prim;;

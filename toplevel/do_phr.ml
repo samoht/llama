@@ -4,7 +4,7 @@ open Meta;;
 open Misc;;
 open Const;;
 open Modules;;
-open Syntax;;
+open Typedtree;;
 open Types;;
 open Typing;;
 open Ty_decl;;
@@ -113,24 +113,24 @@ let do_structure_item phr =
   flush stdout
 ;;
 
+open Parsetree
 let do_toplevel_phrase topphr =
   begin match topphr with
     | Parsetree.Ptop_dir dir ->
-        let dir = Resolve.directiveu dir in
       begin match dir with
-        | Zdir ("load", filename) ->
+        | Pdir ("load", filename) ->
             !fwd_load_object filename
-        | Zdir ("use", filename) ->
+        | Pdir ("use", filename) ->
             !fwd_load_file filename
-        | Zdir ("disasm", s) ->
+        | Pdir ("disasm", s) ->
             Meta.set_trace_flag (s<>"")
-        | Zdir("infix", name) ->
+        | Pdir("infix", name) ->
             Lexer.add_infix name
-        | Zdir("uninfix", name) ->
+        | Pdir("uninfix", name) ->
             Lexer.remove_infix name
-        | Zdir("directory", dirname) ->
+        | Pdir("directory", dirname) ->
             load_path := dirname :: !load_path
-        | Zdir(d, name) ->
+        | Pdir(d, name) ->
             eprintf 
               "%aWarning: unknown directive \"#%s\", ignored.\n";
             flush stderr

@@ -3,7 +3,8 @@
 open Misc;;
 open Const;;
 open Globals;;
-open Syntax;;
+open Typedtree;;
+open Typedtree_aux
 open Builtins;;
 open Modules;;
 open Types;;

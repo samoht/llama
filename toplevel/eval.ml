@@ -1,7 +1,7 @@
 open Globals
 open Const
 open Builtins
-open Syntax
+open Typedtree
 open Prim
 open Symtable
 

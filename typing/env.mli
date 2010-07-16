@@ -1,5 +1,5 @@
 open Globals
-open Syntax
+open Typedtree
 
 val lookup_type : Longident.t -> Location.location -> Path.t
 val lookup_constructor : Longident.t -> Location.location -> constr_desc global

@@ -14,7 +14,7 @@ PARSING=parsing/const.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
 TYPING=typing/lambda.cmx typing/globals.cmx \
- typing/syntax.cmx \
+ typing/typedtree_aux.cmx \
  typing/modules.cmx typing/builtins.cmx typing/types.cmx \
  typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
