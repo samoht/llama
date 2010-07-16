@@ -1,5 +1,6 @@
 (* front.ml : translation abstract syntax -> extended lambda-calculus. *)
 
+open Asttypes;;
 open Misc;;
 open Const;;
 open Globals;;

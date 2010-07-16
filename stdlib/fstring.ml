@@ -1,8 +1,8 @@
 (* Operations on strings, without sanity checks *)
 
+#open "pervasives";;
 #open "int";;
 #open "eq";;
-#open "ref";;
 #open "fchar";;
 #open "exc";;
 

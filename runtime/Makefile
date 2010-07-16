@@ -27,7 +27,7 @@ PRIMS=compare.c extern.c externcp.c floats.c gc_ctrl.c hash.c \
   intern.c interncp.c interp.c ints.c io.c lexing.c meta.c parsing.c \
   str.c sys.c
 
-all: zebrarun zebrarund libcaml.a libcamld.a
+all: zebrarun libcaml.a
 
 zebrarun: $(OBJS) prims.o main.o
 	$(CC) $(CFLAGS) -o zebrarun prims.o main.o $(OBJS) $(LIBS) -lm

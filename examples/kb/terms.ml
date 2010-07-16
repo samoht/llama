@@ -76,13 +76,13 @@ let rec unify = function
 (* We need to print terms with variables independently from input terms
   obtained by parsing. We give arbitrary names v1,v2,... to their variables. *)
 
-let INFIXES = ["+";"*";"-";"/"];;
+let infixes = ["+";"*";"-";"/"];;
 
 let rec pretty_term = function
   | Var n ->
       print_string "v"; print_int n
   | Term (oper, sons) ->
-      if mem oper INFIXES then
+      if mem oper infixes then
         match sons with
           | [s1;s2] ->
               pretty_close s1; print_string oper; pretty_close s2
@@ -98,7 +98,7 @@ let rec pretty_term = function
                      print_string ")")
 and pretty_close = function
   | Term (oper, _) as m ->
-      if mem oper INFIXES then
+      if mem oper infixes then
         (print_string "("; pretty_term m; print_string ")")
       else pretty_term m
   | m -> pretty_term m

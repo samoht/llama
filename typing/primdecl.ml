@@ -68,7 +68,8 @@ let primitive_names = [
   "<string", Ptest (Pstring_test PTlt);
   ">string", Ptest (Pstring_test PTgt);
   "<=string", Ptest (Pstring_test PTle);
-  ">=string", Ptest (Pstring_test PTge)
+  ">=string", Ptest (Pstring_test PTge);
+  "makemutable", Pmakeblock_mutable;
 ];;
 
 let find_primitive arity name =

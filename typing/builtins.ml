@@ -3,6 +3,7 @@
 open Const;;
 open Globals;;
 open Modules;;
+open Asttypes;;
 
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
 ;;

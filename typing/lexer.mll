@@ -11,7 +11,7 @@ type lexical_error =
 
 exception Lexical_error of lexical_error * int * int;;
 
-(**) open Parser;;
+(**) open Newparser;;
 
 (* For nested comments *)
 

@@ -1,9 +1,9 @@
 (* A generic lexer *)
 
+(**) #open "pervasives";;
 (**) #open "eq";;
 (**) #open "float";;
 (**) #open "int";;
-(**) #open "ref";;
 (**) #open "exc";;
 (**) #open "list";;
 (**) #open "fchar";;

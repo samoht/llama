@@ -1,6 +1,7 @@
 /* The parser definition */
 
 %{
+  open Asttypes;;
 open Par_aux;;
 open Const;;
 open Globals;;

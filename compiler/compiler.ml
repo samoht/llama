@@ -3,6 +3,7 @@
 open Misc;;
 open Interntl;;
 open Lexer;;
+open Newparser;;
 open Parser;;
 open Location;;
 open Syntax;;

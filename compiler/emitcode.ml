@@ -179,6 +179,9 @@ let rec emit = function
           | Pfloatprim p ->
               out opFLOATOP;
               out(opcode_for_float_primitive p)
+          | Pmakeblock_mutable ->
+              out opMAKEBLOCK1;
+              out_tag (ConstrRegular(0,1))
           | p ->
               out(opcode_for_primitive p));
         emit code

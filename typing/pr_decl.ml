@@ -1,5 +1,6 @@
 (* To print the things defined by an implementation *)
 
+open Asttypes;;
 open Misc;;
 open Const;;
 open Globals;;

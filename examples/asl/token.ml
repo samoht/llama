@@ -1,6 +1,6 @@
 (* $Id: token.ml,v 1.5 1998-03-12 18:44:02 weis Exp $ *)
 
-let I x = x;;
+let id x = x;;
 
 let keywords =
   let t = hashtbl__new 13 in

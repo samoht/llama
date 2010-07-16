@@ -3,6 +3,7 @@
 open Const;;
 open Location;;
 open Globals;;
+open Asttypes;;
 
 type type_expression =
   { te_desc: type_expression_desc;

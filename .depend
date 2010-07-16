@@ -4,121 +4,160 @@ utils/clflags.cmo: utils/config.cmi utils/clflags.cmi
 utils/clflags.cmx: utils/config.cmx utils/clflags.cmi 
 utils/config.cmo: utils/config.cmi 
 utils/config.cmx: utils/config.cmi 
+utils/misc.cmo: 
+utils/misc.cmx: 
+parsing/asttypes.cmi: 
+parsing/longident.cmi: 
+parsing/newparser.cmi: parsing/presyntax.cmx 
+parsing/const.cmo: utils/misc.cmx 
+parsing/const.cmx: utils/misc.cmx 
+parsing/interntl.cmo: utils/misc.cmx 
+parsing/interntl.cmx: utils/misc.cmx 
+parsing/location.cmo: parsing/interntl.cmx utils/config.cmi 
+parsing/location.cmx: parsing/interntl.cmx utils/config.cmx 
+parsing/longident.cmo: parsing/longident.cmi 
+parsing/longident.cmx: parsing/longident.cmi 
+parsing/newparser.cmo: parsing/presyntax.cmx utils/misc.cmx \
+    parsing/longident.cmi typing/location.cmi parsing/const.cmx \
+    parsing/asttypes.cmi parsing/newparser.cmi 
+parsing/newparser.cmx: parsing/presyntax.cmx utils/misc.cmx \
+    parsing/longident.cmx typing/location.cmi parsing/const.cmx \
+    parsing/asttypes.cmi parsing/newparser.cmi 
+parsing/presyntax.cmo: parsing/longident.cmi typing/location.cmi \
+    parsing/const.cmx parsing/asttypes.cmi 
+parsing/presyntax.cmx: parsing/longident.cmx typing/location.cmi \
+    parsing/const.cmx parsing/asttypes.cmi 
+parsing/prim.cmo: parsing/const.cmx 
+parsing/prim.cmx: parsing/const.cmx 
+typing/env.cmi: typing/syntax.cmx typing/path.cmi parsing/longident.cmi \
+    typing/globals.cmx 
 typing/lexer.cmi: typing/parser.cmi 
 typing/location.cmi: 
-typing/parser.cmi: typing/syntax.cmx 
-typing/builtins.cmo: typing/modules.cmx typing/globals.cmx typing/const.cmx 
-typing/builtins.cmx: typing/modules.cmx typing/globals.cmx typing/const.cmx 
-typing/clauses.cmo: typing/types.cmx typing/syntax.cmx typing/misc.cmx \
+typing/oldparser.cmi: typing/syntax.cmx 
+typing/parser.cmi: typing/syntax.cmx parsing/newparser.cmi 
+typing/path.cmi: typing/globals.cmx 
+typing/builtins.cmo: typing/modules.cmx typing/globals.cmx parsing/const.cmx \
+    parsing/asttypes.cmi 
+typing/builtins.cmx: typing/modules.cmx typing/globals.cmx parsing/const.cmx \
+    parsing/asttypes.cmi 
+typing/clauses.cmo: typing/types.cmx typing/syntax.cmx utils/misc.cmx \
     typing/location.cmi typing/lambda.cmx typing/globals.cmx typing/error.cmx \
-    typing/const.cmx 
-typing/clauses.cmx: typing/types.cmx typing/syntax.cmx typing/misc.cmx \
-    typing/location.cmx typing/lambda.cmx typing/globals.cmx typing/error.cmx \
-    typing/const.cmx 
-typing/const.cmo: typing/misc.cmx 
-typing/const.cmx: typing/misc.cmx 
+    parsing/const.cmx 
+typing/clauses.cmx: typing/types.cmx typing/syntax.cmx utils/misc.cmx \
+    typing/location.cmi typing/lambda.cmx typing/globals.cmx typing/error.cmx \
+    parsing/const.cmx 
+typing/env.cmo: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
+    parsing/longident.cmi typing/location.cmi typing/globals.cmx \
+    typing/error.cmx parsing/const.cmx typing/builtins.cmx typing/env.cmi 
+typing/env.cmx: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
+    parsing/longident.cmx typing/location.cmi typing/globals.cmx \
+    typing/error.cmx parsing/const.cmx typing/builtins.cmx typing/env.cmi 
 typing/error.cmo: typing/types.cmx typing/syntax.cmx typing/pr_type.cmx \
-    typing/misc.cmx typing/location.cmi typing/interntl.cmx \
-    typing/globals.cmx typing/const.cmx 
+    utils/misc.cmx typing/location.cmi parsing/interntl.cmx \
+    typing/globals.cmx parsing/const.cmx 
 typing/error.cmx: typing/types.cmx typing/syntax.cmx typing/pr_type.cmx \
-    typing/misc.cmx typing/location.cmx typing/interntl.cmx \
-    typing/globals.cmx typing/const.cmx 
+    utils/misc.cmx typing/location.cmi parsing/interntl.cmx \
+    typing/globals.cmx parsing/const.cmx 
 typing/event.cmo: typing/syntax.cmx typing/modules.cmx typing/location.cmi \
     typing/lambda.cmx 
-typing/event.cmx: typing/syntax.cmx typing/modules.cmx typing/location.cmx \
+typing/event.cmx: typing/syntax.cmx typing/modules.cmx typing/location.cmi \
     typing/lambda.cmx 
-typing/globals.cmo: typing/prim.cmx typing/const.cmx 
-typing/globals.cmx: typing/prim.cmx typing/const.cmx 
-typing/interntl.cmo: typing/misc.cmx 
-typing/interntl.cmx: typing/misc.cmx 
-typing/lambda.cmo: typing/prim.cmx typing/globals.cmx typing/const.cmx 
-typing/lambda.cmx: typing/prim.cmx typing/globals.cmx typing/const.cmx 
-typing/lexer.cmo: typing/parser.cmi typing/lexer.cmi 
-typing/lexer.cmx: typing/parser.cmx typing/lexer.cmi 
-typing/location.cmo: typing/interntl.cmx utils/config.cmi typing/location.cmi 
-typing/location.cmx: typing/interntl.cmx utils/config.cmx typing/location.cmi 
-typing/matching.cmo: typing/types.cmx typing/syntax.cmx typing/prim.cmx \
-    typing/misc.cmx typing/location.cmi typing/lambda.cmx typing/globals.cmx \
-    typing/error.cmx typing/const.cmx typing/clauses.cmx typing/builtins.cmx 
-typing/matching.cmx: typing/types.cmx typing/syntax.cmx typing/prim.cmx \
-    typing/misc.cmx typing/location.cmx typing/lambda.cmx typing/globals.cmx \
-    typing/error.cmx typing/const.cmx typing/clauses.cmx typing/builtins.cmx 
-typing/misc.cmo: 
-typing/misc.cmx: 
-typing/modules.cmo: typing/misc.cmx typing/interntl.cmx typing/globals.cmx \
-    typing/const.cmx 
-typing/modules.cmx: typing/misc.cmx typing/interntl.cmx typing/globals.cmx \
-    typing/const.cmx 
-typing/par_aux.cmo: typing/syntax.cmx typing/modules.cmx typing/misc.cmx \
-    typing/location.cmi typing/globals.cmx typing/error.cmx typing/const.cmx \
+typing/globals.cmo: parsing/prim.cmx parsing/const.cmx parsing/asttypes.cmi 
+typing/globals.cmx: parsing/prim.cmx parsing/const.cmx parsing/asttypes.cmi 
+typing/lambda.cmo: parsing/prim.cmx typing/globals.cmx parsing/const.cmx 
+typing/lambda.cmx: parsing/prim.cmx typing/globals.cmx parsing/const.cmx 
+typing/lexer.cmo: parsing/newparser.cmi typing/lexer.cmi 
+typing/lexer.cmx: parsing/newparser.cmx typing/lexer.cmi 
+typing/matching.cmo: typing/types.cmx typing/syntax.cmx parsing/prim.cmx \
+    utils/misc.cmx typing/location.cmi typing/lambda.cmx typing/globals.cmx \
+    typing/error.cmx parsing/const.cmx typing/clauses.cmx typing/builtins.cmx 
+typing/matching.cmx: typing/types.cmx typing/syntax.cmx parsing/prim.cmx \
+    utils/misc.cmx typing/location.cmi typing/lambda.cmx typing/globals.cmx \
+    typing/error.cmx parsing/const.cmx typing/clauses.cmx typing/builtins.cmx 
+typing/modules.cmo: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
+    parsing/const.cmx 
+typing/modules.cmx: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
+    parsing/const.cmx 
+typing/oldparser.cmo: typing/syntax.cmx typing/primdecl.cmx \
+    typing/par_aux.cmx typing/globals.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi typing/oldparser.cmi 
+typing/oldparser.cmx: typing/syntax.cmx typing/primdecl.cmx \
+    typing/par_aux.cmx typing/globals.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi typing/oldparser.cmi 
+typing/par_aux.cmo: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
+    typing/location.cmi typing/globals.cmx typing/error.cmx parsing/const.cmx \
     typing/builtins.cmx 
-typing/par_aux.cmx: typing/syntax.cmx typing/modules.cmx typing/misc.cmx \
-    typing/location.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
+typing/par_aux.cmx: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
+    typing/location.cmi typing/globals.cmx typing/error.cmx parsing/const.cmx \
     typing/builtins.cmx 
-typing/parser.cmo: typing/syntax.cmx typing/primdecl.cmx typing/par_aux.cmx \
-    typing/globals.cmx typing/const.cmx typing/builtins.cmx typing/parser.cmi 
-typing/parser.cmx: typing/syntax.cmx typing/primdecl.cmx typing/par_aux.cmx \
-    typing/globals.cmx typing/const.cmx typing/builtins.cmx typing/parser.cmi 
-typing/pr_decl.cmo: typing/pr_type.cmx typing/misc.cmx typing/globals.cmx \
-    typing/const.cmx 
-typing/pr_decl.cmx: typing/pr_type.cmx typing/misc.cmx typing/globals.cmx \
-    typing/const.cmx 
+typing/parser.cmo: typing/syntax.cmx typing/primdecl.cmx \
+    parsing/presyntax.cmx parsing/newparser.cmi parsing/longident.cmi \
+    typing/globals.cmx typing/env.cmi typing/parser.cmi 
+typing/parser.cmx: typing/syntax.cmx typing/primdecl.cmx \
+    parsing/presyntax.cmx parsing/newparser.cmx parsing/longident.cmx \
+    typing/globals.cmx typing/env.cmx typing/parser.cmi 
+typing/pr_decl.cmo: typing/pr_type.cmx utils/misc.cmx typing/globals.cmx \
+    parsing/const.cmx parsing/asttypes.cmi 
+typing/pr_decl.cmx: typing/pr_type.cmx utils/misc.cmx typing/globals.cmx \
+    parsing/const.cmx parsing/asttypes.cmi 
 typing/pr_type.cmo: typing/types.cmx typing/modules.cmx typing/globals.cmx \
-    typing/const.cmx 
+    parsing/const.cmx 
 typing/pr_type.cmx: typing/types.cmx typing/modules.cmx typing/globals.cmx \
-    typing/const.cmx 
-typing/prim.cmo: typing/const.cmx 
-typing/prim.cmx: typing/const.cmx 
-typing/primdecl.cmo: typing/prim.cmx typing/globals.cmx 
-typing/primdecl.cmx: typing/prim.cmx typing/globals.cmx 
-typing/syntax.cmo: typing/location.cmi typing/globals.cmx typing/const.cmx 
-typing/syntax.cmx: typing/location.cmx typing/globals.cmx typing/const.cmx 
-typing/tr_env.cmo: typing/syntax.cmx typing/prim.cmx typing/misc.cmx \
-    typing/lambda.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
-typing/tr_env.cmx: typing/syntax.cmx typing/prim.cmx typing/misc.cmx \
-    typing/lambda.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
+    parsing/const.cmx 
+typing/primdecl.cmo: parsing/prim.cmx typing/globals.cmx 
+typing/primdecl.cmx: parsing/prim.cmx typing/globals.cmx 
+typing/syntax.cmo: typing/location.cmi typing/globals.cmx parsing/const.cmx \
+    parsing/asttypes.cmi 
+typing/syntax.cmx: typing/location.cmi typing/globals.cmx parsing/const.cmx \
+    parsing/asttypes.cmi 
+typing/tr_env.cmo: typing/syntax.cmx parsing/prim.cmx utils/misc.cmx \
+    typing/lambda.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
+typing/tr_env.cmx: typing/syntax.cmx parsing/prim.cmx utils/misc.cmx \
+    typing/lambda.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
 typing/ty_decl.cmo: typing/typing.cmx typing/types.cmx typing/syntax.cmx \
-    typing/modules.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
+    typing/modules.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
 typing/ty_decl.cmx: typing/typing.cmx typing/types.cmx typing/syntax.cmx \
-    typing/modules.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
+    typing/modules.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
 typing/ty_intf.cmo: typing/types.cmx typing/ty_decl.cmx typing/modules.cmx \
-    typing/globals.cmx typing/error.cmx typing/const.cmx 
+    typing/globals.cmx typing/error.cmx parsing/const.cmx 
 typing/ty_intf.cmx: typing/types.cmx typing/ty_decl.cmx typing/modules.cmx \
-    typing/globals.cmx typing/error.cmx typing/const.cmx 
-typing/types.cmo: typing/modules.cmx typing/misc.cmx typing/globals.cmx \
-    typing/const.cmx 
-typing/types.cmx: typing/modules.cmx typing/misc.cmx typing/globals.cmx \
-    typing/const.cmx 
+    typing/globals.cmx typing/error.cmx parsing/const.cmx 
+typing/types.cmo: typing/modules.cmx utils/misc.cmx typing/globals.cmx \
+    parsing/const.cmx 
+typing/types.cmx: typing/modules.cmx utils/misc.cmx typing/globals.cmx \
+    parsing/const.cmx 
 typing/typing.cmo: typing/types.cmx typing/syntax.cmx typing/modules.cmx \
-    typing/misc.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
+    utils/misc.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
 typing/typing.cmx: typing/types.cmx typing/syntax.cmx typing/modules.cmx \
-    typing/misc.cmx typing/globals.cmx typing/error.cmx typing/const.cmx \
-    typing/builtins.cmx 
-compiler/back.cmo: typing/prim.cmx typing/misc.cmx typing/lambda.cmx \
-    compiler/instruct.cmx typing/const.cmx 
-compiler/back.cmx: typing/prim.cmx typing/misc.cmx typing/lambda.cmx \
-    compiler/instruct.cmx typing/const.cmx 
+    utils/misc.cmx typing/globals.cmx typing/error.cmx parsing/const.cmx \
+    typing/builtins.cmx parsing/asttypes.cmi 
+compiler/back.cmo: parsing/prim.cmx utils/misc.cmx typing/lambda.cmx \
+    compiler/instruct.cmx parsing/const.cmx 
+compiler/back.cmx: parsing/prim.cmx utils/misc.cmx typing/lambda.cmx \
+    compiler/instruct.cmx parsing/const.cmx 
 compiler/buffcode.cmo: typing/error.cmx 
 compiler/buffcode.cmx: typing/error.cmx 
 compiler/compiler.cmo: typing/typing.cmx typing/ty_intf.cmx \
     typing/ty_decl.cmx typing/syntax.cmx typing/pr_decl.cmx typing/parser.cmi \
-    typing/modules.cmx typing/misc.cmx typing/location.cmi typing/lexer.cmi \
-    typing/interntl.cmx compiler/front.cmx typing/error.cmx \
-    compiler/emit_phr.cmx compiler/back.cmx 
+    parsing/newparser.cmi typing/modules.cmx utils/misc.cmx \
+    typing/location.cmi typing/lexer.cmi parsing/interntl.cmx \
+    compiler/front.cmx typing/error.cmx compiler/emit_phr.cmx \
+    compiler/back.cmx 
 compiler/compiler.cmx: typing/typing.cmx typing/ty_intf.cmx \
     typing/ty_decl.cmx typing/syntax.cmx typing/pr_decl.cmx typing/parser.cmx \
-    typing/modules.cmx typing/misc.cmx typing/location.cmx typing/lexer.cmx \
-    typing/interntl.cmx compiler/front.cmx typing/error.cmx \
-    compiler/emit_phr.cmx compiler/back.cmx 
-compiler/driver.cmo: linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+    parsing/newparser.cmx typing/modules.cmx utils/misc.cmx \
+    typing/location.cmi typing/lexer.cmx parsing/interntl.cmx \
+    compiler/front.cmx typing/error.cmx compiler/emit_phr.cmx \
+    compiler/back.cmx 
+compiler/driver.cmo: linker/symtable.cmx typing/modules.cmx utils/misc.cmx \
     linker/link.cmx compiler/librarian.cmx utils/config.cmi \
     compiler/compiler.cmx utils/clflags.cmi 
-compiler/driver.cmx: linker/symtable.cmx typing/modules.cmx typing/misc.cmx \
+compiler/driver.cmx: linker/symtable.cmx typing/modules.cmx utils/misc.cmx \
     linker/link.cmx compiler/librarian.cmx utils/config.cmx \
     compiler/compiler.cmx utils/clflags.cmx 
 compiler/emit_phr.cmo: compiler/reloc.cmx typing/lambda.cmx \
@@ -128,131 +167,131 @@ compiler/emit_phr.cmx: compiler/reloc.cmx typing/lambda.cmx \
     compiler/labels.cmx compiler/instruct.cmx typing/event.cmx \
     compiler/emitcode.cmx compiler/buffcode.cmx 
 compiler/emitcode.cmo: compiler/reloc.cmx compiler/prim_opc.cmx \
-    typing/prim.cmx compiler/opcodes.cmx typing/misc.cmx typing/lambda.cmx \
+    parsing/prim.cmx compiler/opcodes.cmx utils/misc.cmx typing/lambda.cmx \
     compiler/labels.cmx compiler/instruct.cmx typing/event.cmx \
-    typing/const.cmx utils/config.cmi compiler/buffcode.cmx 
+    parsing/const.cmx utils/config.cmi compiler/buffcode.cmx 
 compiler/emitcode.cmx: compiler/reloc.cmx compiler/prim_opc.cmx \
-    typing/prim.cmx compiler/opcodes.cmx typing/misc.cmx typing/lambda.cmx \
+    parsing/prim.cmx compiler/opcodes.cmx utils/misc.cmx typing/lambda.cmx \
     compiler/labels.cmx compiler/instruct.cmx typing/event.cmx \
-    typing/const.cmx utils/config.cmx compiler/buffcode.cmx 
+    parsing/const.cmx utils/config.cmx compiler/buffcode.cmx 
 compiler/front.cmo: typing/types.cmx compiler/trstream.cmx typing/tr_env.cmx \
-    typing/syntax.cmx typing/prim.cmx typing/modules.cmx typing/misc.cmx \
+    typing/syntax.cmx parsing/prim.cmx typing/modules.cmx utils/misc.cmx \
     typing/matching.cmx typing/lambda.cmx typing/globals.cmx typing/event.cmx \
-    typing/error.cmx typing/const.cmx typing/builtins.cmx 
+    typing/error.cmx parsing/const.cmx typing/builtins.cmx \
+    parsing/asttypes.cmi 
 compiler/front.cmx: typing/types.cmx compiler/trstream.cmx typing/tr_env.cmx \
-    typing/syntax.cmx typing/prim.cmx typing/modules.cmx typing/misc.cmx \
+    typing/syntax.cmx parsing/prim.cmx typing/modules.cmx utils/misc.cmx \
     typing/matching.cmx typing/lambda.cmx typing/globals.cmx typing/event.cmx \
-    typing/error.cmx typing/const.cmx typing/builtins.cmx 
-compiler/instruct.cmo: typing/prim.cmx typing/lambda.cmx typing/const.cmx 
-compiler/instruct.cmx: typing/prim.cmx typing/lambda.cmx typing/const.cmx 
-compiler/labels.cmo: typing/misc.cmx compiler/instruct.cmx \
+    typing/error.cmx parsing/const.cmx typing/builtins.cmx \
+    parsing/asttypes.cmi 
+compiler/instruct.cmo: parsing/prim.cmx typing/lambda.cmx parsing/const.cmx 
+compiler/instruct.cmx: parsing/prim.cmx typing/lambda.cmx parsing/const.cmx 
+compiler/labels.cmo: utils/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
-compiler/labels.cmx: typing/misc.cmx compiler/instruct.cmx \
+compiler/labels.cmx: utils/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
-compiler/librarian.cmo: typing/misc.cmx typing/interntl.cmx \
+compiler/librarian.cmo: utils/misc.cmx parsing/interntl.cmx \
     compiler/emit_phr.cmx 
-compiler/librarian.cmx: typing/misc.cmx typing/interntl.cmx \
+compiler/librarian.cmx: utils/misc.cmx parsing/interntl.cmx \
     compiler/emit_phr.cmx 
 compiler/opcodes.cmo: 
 compiler/opcodes.cmx: 
-compiler/prim_opc.cmo: typing/prim.cmx compiler/opcodes.cmx typing/misc.cmx 
-compiler/prim_opc.cmx: typing/prim.cmx compiler/opcodes.cmx typing/misc.cmx 
-compiler/reloc.cmo: typing/const.cmx compiler/buffcode.cmx 
-compiler/reloc.cmx: typing/const.cmx compiler/buffcode.cmx 
-compiler/trstream.cmo: typing/tr_env.cmx typing/syntax.cmx typing/prim.cmx \
-    typing/matching.cmx typing/lambda.cmx typing/const.cmx 
-compiler/trstream.cmx: typing/tr_env.cmx typing/syntax.cmx typing/prim.cmx \
-    typing/matching.cmx typing/lambda.cmx typing/const.cmx 
+compiler/prim_opc.cmo: parsing/prim.cmx compiler/opcodes.cmx utils/misc.cmx 
+compiler/prim_opc.cmx: parsing/prim.cmx compiler/opcodes.cmx utils/misc.cmx 
+compiler/reloc.cmo: parsing/const.cmx compiler/buffcode.cmx 
+compiler/reloc.cmx: parsing/const.cmx compiler/buffcode.cmx 
+compiler/trstream.cmo: typing/tr_env.cmx typing/syntax.cmx parsing/prim.cmx \
+    typing/matching.cmx typing/lambda.cmx parsing/const.cmx 
+compiler/trstream.cmx: typing/tr_env.cmx typing/syntax.cmx parsing/prim.cmx \
+    typing/matching.cmx typing/lambda.cmx parsing/const.cmx 
 linker/link.cmo: linker/tr_const.cmx linker/symtable.cmx compiler/reloc.cmx \
-    linker/patch.cmx compiler/opcodes.cmx typing/misc.cmx typing/lambda.cmx \
-    typing/interntl.cmx compiler/emit_phr.cmx typing/const.cmx \
+    linker/patch.cmx compiler/opcodes.cmx utils/misc.cmx typing/lambda.cmx \
+    parsing/interntl.cmx compiler/emit_phr.cmx parsing/const.cmx \
     utils/config.cmi utils/clflags.cmi 
 linker/link.cmx: linker/tr_const.cmx linker/symtable.cmx compiler/reloc.cmx \
-    linker/patch.cmx compiler/opcodes.cmx typing/misc.cmx typing/lambda.cmx \
-    typing/interntl.cmx compiler/emit_phr.cmx typing/const.cmx \
+    linker/patch.cmx compiler/opcodes.cmx utils/misc.cmx typing/lambda.cmx \
+    parsing/interntl.cmx compiler/emit_phr.cmx parsing/const.cmx \
     utils/config.cmx utils/clflags.cmx 
 linker/patch.cmo: linker/symtable.cmx compiler/reloc.cmx 
 linker/patch.cmx: linker/symtable.cmx compiler/reloc.cmx 
-linker/predef.cmo: typing/const.cmx 
-linker/predef.cmx: typing/const.cmx 
+linker/predef.cmo: parsing/const.cmx 
+linker/predef.cmx: parsing/const.cmx 
 linker/prim_c.cmo: 
 linker/prim_c.cmx: 
 linker/readword.cmo: 
 linker/readword.cmx: 
-linker/symtable.cmo: linker/prim_c.cmx linker/predef.cmx typing/misc.cmx \
-    typing/interntl.cmx typing/const.cmx 
-linker/symtable.cmx: linker/prim_c.cmx linker/predef.cmx typing/misc.cmx \
-    typing/interntl.cmx typing/const.cmx 
-linker/tr_const.cmo: linker/symtable.cmx typing/const.cmx 
-linker/tr_const.cmx: linker/symtable.cmx typing/const.cmx 
+linker/symtable.cmo: linker/prim_c.cmx linker/predef.cmx utils/misc.cmx \
+    parsing/interntl.cmx parsing/const.cmx 
+linker/symtable.cmx: linker/prim_c.cmx linker/predef.cmx utils/misc.cmx \
+    parsing/interntl.cmx parsing/const.cmx 
+linker/tr_const.cmo: linker/symtable.cmx parsing/const.cmx 
+linker/tr_const.cmx: linker/symtable.cmx parsing/const.cmx 
 toplevel/meta.cmi: toplevel/zebra_obj.cmi 
 toplevel/toplevel.cmi: 
 toplevel/zebra_obj.cmi: 
 toplevel/do_phr.cmo: typing/typing.cmx typing/types.cmx typing/ty_decl.cmx \
     typing/syntax.cmx linker/symtable.cmx toplevel/pr_value.cmx \
-    typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    toplevel/load_phr.cmx typing/interntl.cmx compiler/front.cmx \
-    toplevel/fmt_type.cmx typing/const.cmx compiler/compiler.cmx \
-    compiler/back.cmx 
+    typing/modules.cmx utils/misc.cmx toplevel/meta.cmi toplevel/load_phr.cmx \
+    parsing/interntl.cmx compiler/front.cmx toplevel/fmt_type.cmx \
+    parsing/const.cmx compiler/compiler.cmx compiler/back.cmx 
 toplevel/do_phr.cmx: typing/typing.cmx typing/types.cmx typing/ty_decl.cmx \
     typing/syntax.cmx linker/symtable.cmx toplevel/pr_value.cmx \
-    typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    toplevel/load_phr.cmx typing/interntl.cmx compiler/front.cmx \
-    toplevel/fmt_type.cmx typing/const.cmx compiler/compiler.cmx \
-    compiler/back.cmx 
-toplevel/eval.cmo: typing/syntax.cmx linker/symtable.cmx typing/prim.cmx \
-    typing/location.cmi typing/globals.cmx typing/const.cmx \
+    typing/modules.cmx utils/misc.cmx toplevel/meta.cmi toplevel/load_phr.cmx \
+    parsing/interntl.cmx compiler/front.cmx toplevel/fmt_type.cmx \
+    parsing/const.cmx compiler/compiler.cmx compiler/back.cmx 
+toplevel/eval.cmo: typing/syntax.cmx linker/symtable.cmx parsing/prim.cmx \
+    typing/location.cmi typing/globals.cmx parsing/const.cmx \
     typing/builtins.cmx 
-toplevel/eval.cmx: typing/syntax.cmx linker/symtable.cmx typing/prim.cmx \
-    typing/location.cmx typing/globals.cmx typing/const.cmx \
+toplevel/eval.cmx: typing/syntax.cmx linker/symtable.cmx parsing/prim.cmx \
+    typing/location.cmi typing/globals.cmx parsing/const.cmx \
     typing/builtins.cmx 
-toplevel/expunge.cmo: linker/symtable.cmx typing/const.cmx 
-toplevel/expunge.cmx: linker/symtable.cmx typing/const.cmx 
+toplevel/expunge.cmo: linker/symtable.cmx parsing/const.cmx 
+toplevel/expunge.cmx: linker/symtable.cmx parsing/const.cmx 
 toplevel/fmt_type.cmo: typing/types.cmx typing/modules.cmx typing/globals.cmx \
-    typing/const.cmx 
+    parsing/const.cmx 
 toplevel/fmt_type.cmx: typing/types.cmx typing/modules.cmx typing/globals.cmx \
-    typing/const.cmx 
+    parsing/const.cmx 
 toplevel/load_phr.cmo: toplevel/zebra_obj.cmi linker/symtable.cmx \
     compiler/reloc.cmx toplevel/pr_value.cmx linker/patch.cmx \
-    compiler/opcodes.cmx typing/misc.cmx toplevel/meta.cmi \
-    compiler/labels.cmx typing/interntl.cmx compiler/instruct.cmx \
-    compiler/emitcode.cmx typing/const.cmx compiler/buffcode.cmx 
+    compiler/opcodes.cmx utils/misc.cmx toplevel/meta.cmi compiler/labels.cmx \
+    parsing/interntl.cmx compiler/instruct.cmx compiler/emitcode.cmx \
+    parsing/const.cmx compiler/buffcode.cmx 
 toplevel/load_phr.cmx: toplevel/zebra_obj.cmi linker/symtable.cmx \
     compiler/reloc.cmx toplevel/pr_value.cmx linker/patch.cmx \
-    compiler/opcodes.cmx typing/misc.cmx toplevel/meta.cmi \
-    compiler/labels.cmx typing/interntl.cmx compiler/instruct.cmx \
-    compiler/emitcode.cmx typing/const.cmx compiler/buffcode.cmx 
+    compiler/opcodes.cmx utils/misc.cmx toplevel/meta.cmi compiler/labels.cmx \
+    parsing/interntl.cmx compiler/instruct.cmx compiler/emitcode.cmx \
+    parsing/const.cmx compiler/buffcode.cmx 
 toplevel/main.cmo: typing/typing.cmx toplevel/toplevel.cmi \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    typing/location.cmi toplevel/load_phr.cmx typing/interntl.cmx \
-    toplevel/do_phr.cmx typing/const.cmx utils/config.cmi \
+    linker/symtable.cmx typing/modules.cmx utils/misc.cmx toplevel/meta.cmi \
+    typing/location.cmi toplevel/load_phr.cmx parsing/interntl.cmx \
+    toplevel/do_phr.cmx parsing/const.cmx utils/config.cmi \
     compiler/compiler.cmx utils/clflags.cmi 
 toplevel/main.cmx: typing/typing.cmx toplevel/toplevel.cmx \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx toplevel/meta.cmi \
-    typing/location.cmx toplevel/load_phr.cmx typing/interntl.cmx \
-    toplevel/do_phr.cmx typing/const.cmx utils/config.cmx \
+    linker/symtable.cmx typing/modules.cmx utils/misc.cmx toplevel/meta.cmi \
+    typing/location.cmi toplevel/load_phr.cmx parsing/interntl.cmx \
+    toplevel/do_phr.cmx parsing/const.cmx utils/config.cmx \
     compiler/compiler.cmx utils/clflags.cmx 
 toplevel/pr_value.cmo: toplevel/zebra_obj.cmi typing/types.cmx \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx typing/globals.cmx \
-    toplevel/fmt_type.cmx typing/const.cmx typing/builtins.cmx 
+    linker/symtable.cmx typing/modules.cmx utils/misc.cmx typing/globals.cmx \
+    toplevel/fmt_type.cmx parsing/const.cmx typing/builtins.cmx 
 toplevel/pr_value.cmx: toplevel/zebra_obj.cmi typing/types.cmx \
-    linker/symtable.cmx typing/modules.cmx typing/misc.cmx typing/globals.cmx \
-    toplevel/fmt_type.cmx typing/const.cmx typing/builtins.cmx 
-toplevel/provide.cmo: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
-    typing/globals.cmx typing/const.cmx utils/config.cmi 
-toplevel/provide.cmx: typing/prim.cmx typing/modules.cmx typing/misc.cmx \
-    typing/globals.cmx typing/const.cmx utils/config.cmx 
+    linker/symtable.cmx typing/modules.cmx utils/misc.cmx typing/globals.cmx \
+    toplevel/fmt_type.cmx parsing/const.cmx typing/builtins.cmx 
+toplevel/provide.cmo: parsing/prim.cmx typing/modules.cmx utils/misc.cmx \
+    typing/globals.cmx parsing/const.cmx utils/config.cmi 
+toplevel/provide.cmx: parsing/prim.cmx typing/modules.cmx utils/misc.cmx \
+    typing/globals.cmx parsing/const.cmx utils/config.cmx 
 toplevel/toplevel.cmo: typing/types.cmx linker/symtable.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
-    typing/modules.cmx typing/misc.cmx toplevel/meta.cmi typing/location.cmi \
-    toplevel/load_phr.cmx typing/interntl.cmx typing/globals.cmx \
+    typing/modules.cmx utils/misc.cmx toplevel/meta.cmi typing/location.cmi \
+    toplevel/load_phr.cmx parsing/interntl.cmx typing/globals.cmx \
     typing/event.cmx compiler/emit_phr.cmx toplevel/do_phr.cmx \
-    typing/const.cmx compiler/compiler.cmx typing/builtins.cmx \
+    parsing/const.cmx compiler/compiler.cmx typing/builtins.cmx \
     toplevel/toplevel.cmi 
 toplevel/toplevel.cmx: typing/types.cmx linker/symtable.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
-    typing/modules.cmx typing/misc.cmx toplevel/meta.cmi typing/location.cmx \
-    toplevel/load_phr.cmx typing/interntl.cmx typing/globals.cmx \
+    typing/modules.cmx utils/misc.cmx toplevel/meta.cmi typing/location.cmi \
+    toplevel/load_phr.cmx parsing/interntl.cmx typing/globals.cmx \
     typing/event.cmx compiler/emit_phr.cmx toplevel/do_phr.cmx \
-    typing/const.cmx compiler/compiler.cmx typing/builtins.cmx \
+    parsing/const.cmx compiler/compiler.cmx typing/builtins.cmx \
     toplevel/toplevel.cmi 

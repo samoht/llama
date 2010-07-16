@@ -2,6 +2,7 @@
 
 open Const;;
 open Prim;;
+open Asttypes;;
 
 (* A reference to a global, in a source file, is either a qualified identifier
    mod__name, or an unqualified identifier name. *)
@@ -68,9 +69,6 @@ and constr_desc =
     cs_mut: mutable_flag;              (* Mutable or not *)
     cs_tag: constr_tag;                (* Its run-time tag *)
     cs_kind: constr_kind }             (* How it is represented *)
-
-and mutable_flag =
-  Mutable | Notmutable
 
 and constr_kind =
     Constr_constant                     (* Constant constructor *)

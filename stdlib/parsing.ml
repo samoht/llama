@@ -1,5 +1,6 @@
 (* The parsing engine *)
 
+#open "pervasives";;
 #open "eq";;
 #open "exc";;
 #open "int";;
@@ -7,7 +8,6 @@
 #open "obj";;
 #open "lexing";;
 #open "iparsing";;
-#open "ref";;
 
 let env =
   { s_stack = make_vect 100 0;

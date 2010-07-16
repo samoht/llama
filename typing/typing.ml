@@ -8,6 +8,7 @@ open Builtins;;
 open Modules;;
 open Types;;
 open Error;;
+open Asttypes;;
 
 (* To convert type expressions to types *)
 

@@ -25,6 +25,7 @@ type primitive =
   | Pfloatprim of float_primitive
   | Pstringlength | Pgetstringchar | Psetstringchar
   | Pmakevector | Pvectlength | Pgetvectitem | Psetvectitem
+  | Pmakeblock_mutable
 
 and float_primitive =
     Pfloatofint

@@ -9,12 +9,14 @@
 config/m.h
 config/s.h
 config/Makefile
+parsing/newparser.ml
+parsing/newparser.mli
 typing/config.ml
 typing/lexer.ml
 typing/lexer.mll
 typing/location.ml
-typing/parser.ml
-typing/parser.mli
+typing/oldparser.ml
+typing/oldparser.mli
 compiler/opcodes.ml
 launch/camlexec
 launch/darkc

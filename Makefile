@@ -4,19 +4,23 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I typing -I compiler -I linker -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel
 FLAGS=-g $(INCLUDES) 
 
-UTILS=utils/config.cmx utils/clflags.cmx
+UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx
 
-TYPING=typing/misc.cmx typing/interntl.cmx \
- typing/const.cmx typing/prim.cmx typing/lambda.cmx typing/globals.cmx \
- typing/location.cmx typing/syntax.cmx \
+PARSING=parsing/const.cmx parsing/interntl.cmx \
+ parsing/location.cmx parsing/presyntax.cmx parsing/prim.cmx \
+ parsing/longident.cmx parsing/newparser.cmx 
+
+TYPING=typing/lambda.cmx typing/globals.cmx \
+ typing/syntax.cmx \
  typing/modules.cmx typing/builtins.cmx typing/types.cmx \
- typing/pr_type.cmx typing/error.cmx typing/typing.cmx \
+ typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
  typing/tr_env.cmx typing/event.cmx typing/clauses.cmx typing/matching.cmx \
- typing/primdecl.cmx typing/lexer.cmx typing/par_aux.cmx typing/parser.cmx
+ typing/primdecl.cmx typing/lexer.cmx typing/par_aux.cmx typing/oldparser.cmx \
+ typing/parser.cmx
 
 COMPILER=compiler/trstream.cmx compiler/front.cmx \
  compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
@@ -35,8 +39,8 @@ TOPLEVEL=\
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/main.cmx runtime/libcaml.a toplevel/zebra.o
 
-GENSOURCES=utils/config.ml typing/lexer.ml typing/parser.ml typing/parser.mli \
- compiler/opcodes.ml linker/prim_c.ml linker/predef.ml
+GENSOURCES=utils/config.ml typing/lexer.ml typing/oldparser.ml typing/oldparser.mli \
+ compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/newparser.ml
 
 all: runtime_dir zebra zebrac zebradep testprog stdlib_dir
 .PHONY: all
@@ -47,10 +51,10 @@ testprog: testprog.ml runtime_dir stdlib_dir
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Zebra system is up and running."
 
-zebra: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+zebra: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-zebrac: $(UTILS) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
+zebrac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 %.cmx: %.ml
@@ -70,7 +74,9 @@ utils/config.ml: utils/config.mlp config/Makefile
 typing/lexer.ml: typing/lexer.mll
 	$(OCAMLLEX) $<
 
-typing/parser.ml typing/parser.mli: typing/parser.mly
+typing/oldparser.ml typing/oldparser.mli: typing/oldparser.mly
+	$(OCAMLYACC) $<
+parsing/newparser.ml parsing/newparser.mli: parsing/newparser.mly
 	$(OCAMLYACC) $<
 
 compiler/opcodes.ml: runtime/instruct.h
@@ -116,14 +122,14 @@ stdlib_dir:
 clean:
 	rm -f zebra zebrac zebrarun stdlib.zo
 	rm -f $(GENSOURCES)
-	rm -f {utils,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
+	rm -f {utils,parsing,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd runtime && make clean
 	cd stdlib && make clean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,typing,compiler,linker,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,linker,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend

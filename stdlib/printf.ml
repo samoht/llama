@@ -1,3 +1,4 @@
+#open "pervasives";;
 #open "exc";;
 #open "eq";;
 #open "bool";;
@@ -7,7 +8,6 @@
 #open "io";;
 #open "list";;
 #open "obj";;
-#open "ref";;
 
 type ('a, 'b, 'c) format == string;;
 

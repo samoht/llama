@@ -1,5 +1,6 @@
 (* tr_env.ml: handling of the translation environment. *)
 
+open Asttypes;;
 open Misc;;
 open Const;;
 open Syntax;;

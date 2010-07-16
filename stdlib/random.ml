@@ -9,10 +9,10 @@
    To avoid this problem we throw away the 10 low-order bits of the LCG.
 *)
 
+#open "pervasives";;
 #open "float";;
 #open "int";;
 #open "eq";;
-#open "ref";;
 #open "fvect";;
 
 (* This is the state you get with [init 27182818] on a 32-bit machine. *)

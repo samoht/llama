@@ -1,7 +1,6 @@
+#open "pervasives";;
 #open "int";;
-#open "ref";;
 #open "exc";;
-
 type 'a queue_cell =
     Nil
   | Cons of 'a * 'a queue_cell ref
@@ -22,9 +21,9 @@ let clear q =
 
 let add x = function
     { head = h; tail = Nil as t } ->    (* if tail = Nil then head = Nil *)
-      let c = Cons(x, ref Nil) in
+      let c = Cons(x, {contents=Nil}) in
         h <- c; t <- c
-  | { tail = Cons(_, ref newtail) as oldtail } ->
+  | { tail = Cons(_, {contents=newtail}) as oldtail } ->
       let c = Cons(x, ref Nil) in
         newtail <- c; oldtail <- c
 ;;
@@ -33,7 +32,7 @@ let peek q =
   match q.head with
     Nil ->
       raise Empty
-  | Cons(x, ref rest) ->
+  | Cons(x, {contents=rest}) ->
       x
 ;;
 
@@ -42,7 +41,7 @@ let take q =
   match q.head with
     Nil ->
       raise Empty
-  | Cons(x, ref rest) ->
+  | Cons(x, {contents=rest}) ->
       q.head <- rest;
       begin match rest with
         Nil -> q.tail <- Nil
@@ -53,7 +52,7 @@ let take q =
 
 let rec length_aux = function
     Nil -> 0
-  | Cons(_, ref rest) -> succ (length_aux rest)
+  | Cons(_, {contents=rest}) -> succ (length_aux rest)
 ;;
 
 let length q = length_aux q.head
@@ -62,9 +61,10 @@ let length q = length_aux q.head
 let rec iter_aux f = function
     Nil ->
       ()
-  | Cons(x, ref rest) ->
+  | Cons(x, {contents=rest}) ->
       f x; iter_aux f rest
 ;;
 
 let iter f q = iter_aux f q.head
 ;;
+

@@ -1,5 +1,6 @@
 (* Typing toplevel phrases *)
 
+open Asttypes
 open Const;;
 open Globals;;
 open Builtins;;
