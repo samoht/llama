@@ -4,15 +4,15 @@ open Const;;
 open Location;;
 open Asttypes;;
 
-type type_expression =
-  { ptyp_desc: type_expression_desc;
+type core_type =
+  { ptyp_desc: core_type_desc;
     ptyp_loc: location }
-and type_expression_desc =
-    Ptypevar of string
-  | Ptypearrow of type_expression * type_expression
-  | Ptypetuple of type_expression list
-  | Ptypeconstr of Longident.t * type_expression list
-;;
+
+and core_type_desc =
+    Ptyp_var of string
+  | Ptyp_arrow of core_type * core_type
+  | Ptyp_tuple of core_type list
+  | Ptyp_constr of Longident.t * core_type list
 
 type pattern =
   { ppat_desc: pattern_desc;
@@ -26,7 +26,7 @@ and pattern_desc =
   | Pconstruct0pat of Longident.t
   | Pconstruct1pat of Longident.t * pattern
   | Porpat of pattern * pattern
-  | Pconstraintpat of pattern * type_expression
+  | Pconstraintpat of pattern * core_type
   | Precordpat of (Longident.t * pattern) list
 ;;
 
@@ -47,7 +47,7 @@ and expression_desc =
   | Pcondition of expression * expression * expression
   | Pwhile of expression * expression
   | Pfor of string * expression * expression * bool * expression
-  | Pconstraint of expression * type_expression
+  | Pconstraint of expression * core_type
   | Pvector of expression list
   | Passign of string * expression
   | Precord of (Longident.t * expression) list
@@ -70,12 +70,12 @@ and stream_pattern =
 type type_decl =
     Pabstract_type
   | Pvariant_type of constr_decl list
-  | Precord_type of (string * type_expression * mutable_flag) list
-  | Pabbrev_type of type_expression
+  | Precord_type of (string * core_type * mutable_flag) list
+  | Pabbrev_type of core_type
 
 and constr_decl =
     Pconstr0decl of string
-  | Pconstr1decl of string * type_expression * mutable_flag
+  | Pconstr1decl of string * core_type * mutable_flag
 ;;
 
 type directiveu =
@@ -97,7 +97,7 @@ type intf_phrase =
   { psig_desc: intf_desc;
     psig_loc: location }
 and intf_desc =
-    Pvaluedecl of (string * type_expression * (int*string) option) list
+    Pvaluedecl of (string * core_type * (int*string) option) list
   | Ptypedecl of (string * string list * type_decl) list
   | Pexcdecl of constr_decl list
   | Pintfdirective of directiveu

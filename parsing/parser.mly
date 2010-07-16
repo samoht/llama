@@ -688,20 +688,20 @@ Type :
         Simple_type
           { $1 }
       | Type_star_list
-          { make_typ(Ptypetuple(List.rev $1)) }
+          { make_typ(Ptyp_tuple(List.rev $1)) }
       | Type MINUSGREATER Type
-          { make_typ(Ptypearrow($1, $3)) }
+          { make_typ(Ptyp_arrow($1, $3)) }
 ;
 
 Simple_type :
         Type_var
-          { make_typ(Ptypevar $1) }
+          { make_typ(Ptyp_var $1) }
       | Ext_ident
-          { make_typ(Ptypeconstr($1, [])) }
+          { make_typ(Ptyp_constr($1, [])) }
       | Simple_type Ext_ident
-          { make_typ(Ptypeconstr($2, [$1])) }
+          { make_typ(Ptyp_constr($2, [$1])) }
       | LPAREN Type COMMA Type_comma_list RPAREN Ext_ident
-          { make_typ(Ptypeconstr($6, $2 :: $4)) }
+          { make_typ(Ptyp_constr($6, $2 :: $4)) }
       | LPAREN Type RPAREN
           { $2 }
 ;

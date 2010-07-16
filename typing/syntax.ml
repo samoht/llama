@@ -5,14 +5,14 @@ open Location;;
 open Globals;;
 open Asttypes;;
 
-type type_expression =
-  { te_desc: type_expression_desc;
+type core_type =
+  { te_desc: core_type_desc;
     te_loc: location }
-and type_expression_desc =
-    Ztypevar of string
-  | Ztypearrow of type_expression * type_expression
-  | Ztypetuple of type_expression list
-  | Ztypeconstr of global_reference * type_expression list
+and core_type_desc =
+    Ztyp_var of string
+  | Ztyp_arrow of core_type * core_type
+  | Ztyp_tuple of core_type list
+  | Ztyp_constr of global_reference * core_type list
 ;;
 
 type pattern =
@@ -28,7 +28,7 @@ and pattern_desc =
   | Zconstruct0pat of constr_desc global
   | Zconstruct1pat of constr_desc global * pattern
   | Zorpat of pattern * pattern
-  | Zconstraintpat of pattern * type_expression
+  | Zconstraintpat of pattern * core_type
   | Zrecordpat of (label_desc global * pattern) list
 ;;
 
@@ -50,7 +50,7 @@ and expression_desc =
   | Zcondition of expression * expression * expression
   | Zwhile of expression * expression
   | Zfor of string * expression * expression * bool * expression
-  | Zconstraint of expression * type_expression
+  | Zconstraint of expression * core_type
   | Zvector of expression list
   | Zassign of string * expression
   | Zrecord of (label_desc global * expression) list
@@ -77,12 +77,12 @@ and stream_pattern =
 type type_decl =
     Zabstract_type
   | Zvariant_type of constr_decl list
-  | Zrecord_type of (string * type_expression * mutable_flag) list
-  | Zabbrev_type of type_expression
+  | Zrecord_type of (string * core_type * mutable_flag) list
+  | Zabbrev_type of core_type
 
 and constr_decl =
     Zconstr0decl of string
-  | Zconstr1decl of string * type_expression * mutable_flag
+  | Zconstr1decl of string * core_type * mutable_flag
 ;;
 
 type directiveu =
@@ -104,7 +104,7 @@ type intf_phrase =
   { in_desc: intf_desc;
     in_loc: location }
 and intf_desc =
-    Zvaluedecl of (string * type_expression * prim_desc) list
+    Zvaluedecl of (string * core_type * prim_desc) list
   | Ztypedecl of (string * string list * type_decl) list
   | Zexcdecl of constr_decl list
   | Zintfdirective of directiveu

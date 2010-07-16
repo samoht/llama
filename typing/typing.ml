@@ -35,7 +35,7 @@ let bind_type_expression_vars var_list =
 let type_of_type_expression strict_flag typexp =
   let rec type_of typexp =
     match typexp.te_desc with
-    Ztypevar v ->
+    Ztyp_var v ->
       begin try
         List.assoc v !type_expr_vars
       with Not_found ->
@@ -46,11 +46,11 @@ let type_of_type_expression strict_flag typexp =
           type_expr_vars := (v,t) :: !type_expr_vars; t
         end
       end
-  | Ztypearrow(arg1, arg2) ->
+  | Ztyp_arrow(arg1, arg2) ->
       type_arrow(type_of arg1, type_of arg2)
-  | Ztypetuple argl ->
+  | Ztyp_tuple argl ->
       type_product(List.map type_of argl)
-  | Ztypeconstr(cstr_name, args) ->
+  | Ztyp_constr(cstr_name, args) ->
       let cstr =
         try
           find_type_desc cstr_name

@@ -4,13 +4,13 @@ open Globals
 open Parsetree
 open Syntax
 
-let rec type_expr te =
+let rec core_type te =
   { te_desc =
       begin match te.ptyp_desc with
-        | Ptypevar s -> Ztypevar s
-        | Ptypearrow (x, y) -> Ztypearrow (type_expr x, type_expr y)
-        | Ptypetuple l -> Ztypetuple (List.map type_expr l)
-        | Ptypeconstr (f, l) -> Ztypeconstr (Env.lookup_type f te.ptyp_loc, List.map type_expr l)
+        | Ptyp_var s -> Ztyp_var s
+        | Ptyp_arrow (x, y) -> Ztyp_arrow (core_type x, core_type y)
+        | Ptyp_tuple l -> Ztyp_tuple (List.map core_type l)
+        | Ptyp_constr (f, l) -> Ztyp_constr (Env.lookup_type f te.ptyp_loc, List.map core_type l)
       end;
     te_loc = te.ptyp_loc }
 
@@ -25,7 +25,7 @@ let rec pattern p =
         | Pconstruct0pat li -> Zconstruct0pat (Env.lookup_constructor li p.ppat_loc)
         | Pconstruct1pat (li, p) -> Zconstruct1pat (Env.lookup_constructor li p.ppat_loc, pattern p)
         | Porpat (p1, p2) -> Zorpat (pattern p1, pattern p2)
-        | Pconstraintpat (p, te) -> Zconstraintpat (pattern p, type_expr te)
+        | Pconstraintpat (p, te) -> Zconstraintpat (pattern p, core_type te)
         | Precordpat l -> Zrecordpat (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
       end;
     p_loc = p.ppat_loc;
@@ -52,7 +52,7 @@ let rec expr ex =
         | Pcondition(e1,e2,e3) -> Zcondition (expr e1,expr e2, expr e3)
         | Pwhile(e1,e2) -> Zwhile(expr e1,expr e2)
         | Pfor(s,e1,e2,b,e3) -> Zfor(s,expr e1,expr e2,b,expr e3)
-        | Pconstraint(e,te) -> Zconstraint(expr e,type_expr te)
+        | Pconstraint(e,te) -> Zconstraint(expr e,core_type te)
         | Pvector l -> Zvector(List.map expr l)
         | Passign (s,e) -> Zassign(s, expr e)
         | Precord l -> Zrecord(List.map (fun (li,e) -> Env.lookup_label li ex.pexp_loc,expr e) l)
@@ -82,7 +82,7 @@ let rec expr ex =
 let constr_decl cd =
   begin match cd with
     | Pconstr0decl s -> Zconstr0decl s
-    | Pconstr1decl (s,te,m) -> Zconstr1decl(s,type_expr te,m)
+    | Pconstr1decl (s,te,m) -> Zconstr1decl(s,core_type te,m)
   end
 
 let type_decl td =
@@ -90,8 +90,8 @@ let type_decl td =
     | Pabstract_type -> Zabstract_type
     | Pvariant_type cdl -> Zvariant_type (List.map constr_decl cdl)
     | Precord_type l -> Zrecord_type (List.map (fun (s,te,m) ->
-                                                  (s,type_expr te, m)) l)
-    | Pabbrev_type te -> Zabbrev_type (type_expr te)
+                                                  (s,core_type te, m)) l)
+    | Pabbrev_type te -> Zabbrev_type (core_type te)
   end
 
 let directiveu (Pdir(s1,s2)) = Zdir(s1,s2)
@@ -117,7 +117,7 @@ let signature_item si =
   { in_desc =
       begin match si.psig_desc with
         | Pvaluedecl l -> Zvaluedecl
-            (List.map (fun (s,te,pr) -> (s,type_expr te, primitive pr)) l)
+            (List.map (fun (s,te,pr) -> (s,core_type te, primitive pr)) l)
         | Ptypedecl l -> Ztypedecl(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
         | Pexcdecl l -> Zexcdecl (List.map constr_decl l)
         | Pintfdirective d -> Zintfdirective (directiveu d)
