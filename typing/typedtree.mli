@@ -101,6 +101,7 @@ type structure_item =
 and structure_item_desc =
     Str_eval of expression
   | Str_value of bool * (pattern * expression) list
+  | Str_primitive of string * core_type * prim_desc
   | Str_type of (string * string list * type_decl) list
   | Str_exception of constr_decl list
   | Str_open of module_name

@@ -92,6 +92,10 @@ let do_structure_item phr =
 *)
           print_newline())
         (List.rev env)
+  | Str_primitive (name,te,pr) ->
+      let _ = type_valuedecl phr.im_loc name te pr in
+      reset_rollback ();
+      Printf.printf "Primitive %s defined.\n" name
   | Str_type decl ->
       let _ = type_typedecl phr.im_loc decl in
       reset_rollback ();

@@ -96,6 +96,7 @@ type structure_item =
 and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of bool * (pattern * expression) list
+  | Pstr_primitive of string * core_type * (int * string)
   | Pstr_type of (string * string list * type_decl) list
   | Pstr_exception of constr_decl list
   | Pstr_open of module_name

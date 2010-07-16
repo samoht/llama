@@ -137,6 +137,8 @@ let compile_impl_phrase outstream phr =
           else
             compile_lambda false (translate_letdef phr.im_loc pat_expr_list));
       if !verbose then print_valdef env
+  | Str_primitive(s,te,pr) ->
+      type_valuedecl phr.im_loc s te pr; ()
   | Str_type decl ->
       let ty_decl = type_typedecl phr.im_loc decl in
       if !verbose then print_typedecl ty_decl

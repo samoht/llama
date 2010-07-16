@@ -164,6 +164,7 @@ let pat_constr_or_var p =
 %token ELSE           /* "else" */
 %token END            /* "end" */
 %token EXCEPTION      /* "exception" */
+%token EXTERNAL       /* "external" */
 %token FOR            /* "for" */
 %token FUN            /* "fun" */
 %token FUNCTION       /* "function" */
@@ -245,6 +246,8 @@ structure_item:
       { make_impl(Pstr_value(false, $2)) }
   | LET REC Binding_list  %prec prec_let
       { make_impl(Pstr_value(true, $3)) }
+  | EXTERNAL Ide COLON Type EQUAL Prim_decl
+      { make_impl(Pstr_primitive($2, $4, $6)) }
   | TYPE Type_decl
       { make_impl(Pstr_type $2) }
   | EXCEPTION Exc_decl

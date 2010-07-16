@@ -33,6 +33,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) [
   "else", ELSE;
   "end", END;
   "exception", EXCEPTION;
+  "external", EXTERNAL;
   "for", FOR;
   "fun", FUN;
   "function", FUNCTION;

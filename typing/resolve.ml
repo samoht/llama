@@ -94,22 +94,23 @@ let type_decl td =
     | Pabbrev_type te -> Zabbrev_type (core_type te)
   end
 
-let structure_item si =
-  { im_desc =
-      begin match si.pstr_desc with
-        | Pstr_eval e -> Str_eval (expr e)
-        | Pstr_value(b,l) -> Str_value(b,List.map (fun (p,e)->pattern p, expr e) l)
-        | Pstr_type l -> Str_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Pstr_exception l -> Str_exception (List.map constr_decl l)
-        | Pstr_open mn -> Str_open mn
-      end;
-    im_loc = si.pstr_loc }
-
 let primitive o =
   begin match o with
     | None ->ValueNotPrim
     | Some (arity,s) -> Primdecl.find_primitive arity s 
   end
+
+let structure_item si =
+  { im_desc =
+      begin match si.pstr_desc with
+        | Pstr_eval e -> Str_eval (expr e)
+        | Pstr_value(b,l) -> Str_value(b,List.map (fun (p,e)->pattern p, expr e) l)
+        | Pstr_primitive(s,te,(arity,n)) -> Str_primitive(s,core_type te, Primdecl.find_primitive arity n)
+        | Pstr_type l -> Str_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Pstr_exception l -> Str_exception (List.map constr_decl l)
+        | Pstr_open mn -> Str_open mn
+      end;
+    im_loc = si.pstr_loc }
 
 let signature_item si =
   { in_desc =
