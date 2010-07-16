@@ -11,9 +11,8 @@ config/s.h
 config/Makefile
 parsing/parser.ml
 parsing/parser.mli
-typing/config.ml
-typing/lexer.ml
-typing/lexer.mll
+parsing/lexer.ml
+parsing/lexer.mll
 typing/location.ml
 compiler/opcodes.ml
 launch/camlexec
