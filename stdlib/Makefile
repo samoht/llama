@@ -3,7 +3,7 @@
 include ../config/Makefile
 
 ZEBRAC=../zebrac -nopervasives -I .
-ZEBRA_DEPEND=../zebradep
+ZEBRA_DEPEND=ocamldep
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-g
 

@@ -13,19 +13,19 @@ val interactive: bool;;
 type file_perm == int;;
 
 val s_irusr : file_perm
-  and s_iwusr : file_perm
-  and s_ixusr : file_perm
-  and s_irgrp : file_perm
-  and s_iwgrp : file_perm
-  and s_ixgrp : file_perm
-  and s_iroth : file_perm
-  and s_iwoth : file_perm
-  and s_ixoth : file_perm
-  and s_isuid : file_perm
-  and s_isgid : file_perm
-  and s_irall : file_perm
-  and s_iwall : file_perm
-  and s_ixall : file_perm
+val s_iwusr : file_perm
+val s_ixusr : file_perm
+val s_irgrp : file_perm
+val s_iwgrp : file_perm
+val s_ixgrp : file_perm
+val s_iroth : file_perm
+val s_iwoth : file_perm
+val s_ixoth : file_perm
+val s_isuid : file_perm
+val s_isgid : file_perm
+val s_irall : file_perm
+val s_iwall : file_perm
+val s_ixall : file_perm
 ;;
         (* Access permissions for files. [r] is reading permission,
            [w] is writing permission, [x] is execution permission.
@@ -54,26 +54,26 @@ val exit : int -> 'a = 1 "sys_exit"
            In contrast with the function [exit] from module [io], this
            [exit] function does not flush the standard
            output and standard error channels. *)
-  and open_gen : string -> open_flag list -> file_perm -> int = 3 "sys_open"
+val open_gen : string -> open_flag list -> file_perm -> int = 3 "sys_open"
         (* Open a file. The second argument is the opening mode.
            The third argument is the permissions to use if the file
            must be created. The result is a file descriptor opened on the
            file. *)
-  and close : int -> unit = 1 "sys_close"
+val close : int -> unit = 1 "sys_close"
         (* Close a file descriptor. *)
-  and remove : string -> unit = 1 "sys_remove"
+val remove : string -> unit = 1 "sys_remove"
         (* Remove the given file name from the file system. *)
-  and rename : string -> string -> unit = 2 "sys_rename"
+val rename : string -> string -> unit = 2 "sys_rename"
         (* Rename a file. The first argument is the old name and the
            second is the new name. *)
-  and getenv : string -> string = 1 "sys_getenv"
+val getenv : string -> string = 1 "sys_getenv"
         (* Return the value associated to a variable in the process
            environment. Raise [Not_found] if the variable is unbound. *)
-  and chdir : string -> unit = 1 "sys_chdir"
+val chdir : string -> unit = 1 "sys_chdir"
         (* Change the current working directory of the process.
 	   Note that there is no easy way of getting the current
 	   working directory from the operating system. *)
-  and system_command : string -> int = 1 "sys_system_command"
+val system_command : string -> int = 1 "sys_system_command"
         (* Execute the given shell command and return its exit code. *)
 ;;
 
@@ -96,7 +96,7 @@ val catch_break : bool -> unit = 1 "sys_catch_break"
 (*--*)
 
 val max_vect_length : int
-  and max_string_length : int
+val max_string_length : int
         (* Max length for arrays and strings, as imposed by the
            runtime system. *)
 ;;

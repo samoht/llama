@@ -10,7 +10,7 @@ val nth_char : string -> int -> char
            Raise [Invalid_argument "nth_char"] if [n] is ouside the range
            0 to [(string_length s - 1)].
            You can also write [s.[n]] instead of [nth_char s n]. *)
-  and set_nth_char : string -> int -> char -> unit
+val set_nth_char : string -> int -> char -> unit
         (* [set_nth_char s n c] modifies string [s] in place,
            replacing the character number [n] by [c].
            Raise [Invalid_argument "set_nth_char"] if [n] is ouside the range
@@ -20,10 +20,10 @@ val nth_char : string -> int -> char
 val (^) : string -> string -> string
         (* [s1 ^ s2] returns a fresh string containing the concatenation of
            the strings [s1] and [s2]. *)
-  and concat : string list -> string
+val concat : string list -> string
         (* Return a fresh string containing the concatenation of
            all the strings in the argument list. *)
-  and sub : string -> int -> int -> string
+val sub : string -> int -> int -> string
         (* [String.sub s start len] returns a fresh string of length [len],
            containing the characters number [start] to [start + len - 1]
            of string [s].
@@ -34,7 +34,7 @@ val (^) : string -> string -> string
 val create_string : int -> string
         (* [create_string n] returns a fresh string of length [n].
            The string initially contains arbitrary characters. *)
-  and make : int -> char -> string
+val make : int -> char -> string
         (* [String.make n c] returns a fresh string of length [n],
            filled with the character [c]. *)
 ;;
@@ -44,7 +44,7 @@ val fill_string : string -> int -> int -> char -> unit
            by [c].
            Raise [Invalid_argument "fill_string"] if [start] and [len] do not
            designate a valid substring of [s]. *)
-  and blit_string : string -> int -> string -> int -> int -> unit
+val blit_string : string -> int -> string -> int -> int -> unit
         (* [blit_string s1 o1 s2 o2 len] copies [len] characters
            from string [s1], starting at character number [o1], to string [s2],
            starting at character number [o2]. It works correctly even if
@@ -53,7 +53,7 @@ val fill_string : string -> int -> int -> char -> unit
            Raise [Invalid_argument "blit_string"] if [o1] and [len] do not
            designate a valid substring of [s1], or if [o2] and [len] do not
            designate a valid substring of [s2]. *)
-  and replace_string : string -> string -> int -> unit
+val replace_string : string -> string -> int -> unit
         (* [replace_string dest src start] copies all characters from the 
            string [src] into the string [dst], starting at
            character number [start] in [dst].
@@ -61,11 +61,11 @@ val fill_string : string -> int -> int -> char -> unit
            string [dest]. *)
 ;;
 val eq_string : string -> string -> bool = 2 "=string"
-  and neq_string : string -> string -> bool = 2 "<>string"
-  and le_string : string -> string -> bool = 2 "<=string"
-  and lt_string : string -> string -> bool = 2 "<string"
-  and ge_string : string -> string -> bool = 2 ">=string"
-  and gt_string : string -> string -> bool = 2 ">string"
+val neq_string : string -> string -> bool = 2 "<>string"
+val le_string : string -> string -> bool = 2 "<=string"
+val lt_string : string -> string -> bool = 2 "<string"
+val ge_string : string -> string -> bool = 2 ">=string"
+val gt_string : string -> string -> bool = 2 ">string"
         (* Comparison functions (lexicographic ordering) between strings. *)
 ;;
 val compare_strings : string -> string -> int = 2 "compare_strings"

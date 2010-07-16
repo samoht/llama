@@ -13,23 +13,23 @@
 val vect_length : 'a vect -> int = 1 "vect_length"
 ;;
 val vect_item : 'a vect -> int -> 'a = 2 "get_vect_item"
-  and vect_assign : 'a vect -> int -> 'a -> unit = 3 "set_vect_item"
+val vect_assign : 'a vect -> int -> 'a -> unit = 3 "set_vect_item"
 ;;
 val make_vect : int -> 'a -> 'a vect = 2 "make_vect"
-  and make_matrix : int -> int -> 'a -> 'a vect vect
+val make_matrix : int -> int -> 'a -> 'a vect vect
 ;;
 val init_vect : int -> (int -> 'a) -> 'a vect;;
 val concat_vect : 'a vect -> 'a vect -> 'a vect
-  and sub_vect : 'a vect -> int -> int -> 'a vect
-  and copy_vect: 'a vect -> 'a vect
+val sub_vect : 'a vect -> int -> int -> 'a vect
+val copy_vect: 'a vect -> 'a vect
 ;;
 val fill_vect : 'a vect -> int -> int -> 'a -> unit
-  and blit_vect : 'a vect -> int -> 'a vect -> int -> int -> unit
+val blit_vect : 'a vect -> int -> 'a vect -> int -> int -> unit
 ;;
 val list_of_vect : 'a vect -> 'a list
-  and vect_of_list : 'a list -> 'a vect
+val vect_of_list : 'a list -> 'a vect
 ;;
 val do_vect : ('a -> unit) -> 'a vect -> unit
-  and map_vect : ('a -> 'b) -> 'a vect -> 'b vect
-  and map_vect_list : ('a -> 'b) -> 'a vect -> 'b list
+val map_vect : ('a -> 'b) -> 'a vect -> 'b vect
+val map_vect_list : ('a -> 'b) -> 'a vect -> 'b list
 ;;

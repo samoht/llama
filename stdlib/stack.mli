@@ -10,16 +10,16 @@ exception Empty;;
 
 val new: unit -> 'a t
         (* Return a new stack, initially empty. *)
-  and push: 'a -> 'a t -> unit
+val push: 'a -> 'a t -> unit
         (* [push x s] adds the element [x] at the top of stack [s]. *)
-  and pop: 'a t -> 'a
+val pop: 'a t -> 'a
         (* [pop s] removes and returns the topmost element in stack [s],
            or raises [Empty] if the stack is empty. *)
-  and clear : 'a t -> unit
+val clear : 'a t -> unit
         (* Discard all elements from a stack. *)
-  and length: 'a t -> int
+val length: 'a t -> int
         (* Return the number of elements in a stack. *)
-  and iter: ('a -> unit) -> 'a t -> unit
+val iter: ('a -> unit) -> 'a t -> unit
         (* [iter f s] applies [f] in turn to all elements of [s], from the
            element at the top of the stack to the element at the
            bottom of the stack. The stack itself is unchanged. *)

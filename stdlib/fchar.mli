@@ -11,7 +11,7 @@
 (*--*)
 
 val int_of_char : char -> int = 1 "identity"
-  and char_of_int : int -> char = 1 "identity"
-  and char_for_read : char -> string
-  and is_printable : char -> bool = 1 "is_printable"
+val char_of_int : int -> char = 1 "identity"
+val char_for_read : char -> string
+val is_printable : char -> bool = 1 "is_printable"
 ;;

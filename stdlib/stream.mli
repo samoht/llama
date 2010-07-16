@@ -53,5 +53,5 @@ val stream_get : 'a stream -> 'a * 'a stream;;
 (*-- The following functions are for internal use. *)
 
 val stream_require : 'a stream -> 'a
-  and parser_require : ('a stream -> 'a) -> 'a stream -> 'a
+val parser_require : ('a stream -> 'a) -> 'a stream -> 'a
 ;;

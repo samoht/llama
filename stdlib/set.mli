@@ -20,39 +20,39 @@ val empty: ('a -> 'a -> int) -> 'a t
            Examples: a suitable ordering function for type [int]
            is [prefix -]. You can also use the generic structural comparison
            function [eq__compare]. *)
-  and is_empty: 'a t -> bool
+val is_empty: 'a t -> bool
         (* Test whether a set is empty or not. *)
-  and mem: 'a -> 'a t -> bool
+val mem: 'a -> 'a t -> bool
         (* [mem x s] tests whether [x] belongs to the set [s]. *)
-  and add: 'a -> 'a t -> 'a t
+val add: 'a -> 'a t -> 'a t
         (* [add x s] returns a set containing all elements of [s],
            plus [x]. If [x] was already in [s], [s] is returned unchanged. *)
-  and remove: 'a -> 'a t -> 'a t
+val remove: 'a -> 'a t -> 'a t
         (* [remove x s] returns a set containing all elements of [s],
            except [x]. If [x] was not in [s], [s] is returned unchanged. *)
-  and union: 'a t -> 'a t -> 'a t
-  and inter: 'a t -> 'a t -> 'a t
-  and diff: 'a t -> 'a t -> 'a t
+val union: 'a t -> 'a t -> 'a t
+val inter: 'a t -> 'a t -> 'a t
+val diff: 'a t -> 'a t -> 'a t
         (* Union, intersection and set difference. *)
-  and equal: 'a t -> 'a t -> bool
+val equal: 'a t -> 'a t -> bool
         (* [equal s1 s2] tests whether the sets [s1] and [s2] are
            equal, that is, contain the same elements. *)
-  and compare: 'a t -> 'a t -> int
+val compare: 'a t -> 'a t -> int
         (* Total ordering between sets. Can be used as the ordering function
            for doing sets of sets. *)
-  and elements: 'a t -> 'a list
+val elements: 'a t -> 'a list
         (* Return the list of all elements of the given set.
            The elements appear in the list in some non-specified order. *)
-  and iter: ('a -> unit) -> 'a t -> unit
+val iter: ('a -> unit) -> 'a t -> unit
         (* [iter f s] applies [f] in turn to all elements of [s], and
            discards the results. The elements of [s] are presented to [f]
            in a non-specified order. *)
-  and fold: ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+val fold: ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
         (* [fold f s a] computes [(f xN ... (f x2 (f x1 a))...)],
            where [x1 ... xN] are the elements of [s].
            The order in which elements of [s] are presented to [f] is
            not specified. *)
-  and choose: 'a t -> 'a
+val choose: 'a t -> 'a
         (* Return one element of the given set, or raise [Not_found] if
            the set is empty. Which element is chosen is not specified,
            but equal elements will be chosen for equal sets. *)

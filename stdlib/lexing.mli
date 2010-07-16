@@ -23,12 +23,12 @@ val create_lexer_channel : in_channel -> lexbuf
         (* Create a lexer buffer on the given input channel.
            [create_lexer_channel inchan] returns a lexer buffer which reads
            from the input channel [inchan], at the current reading position. *)
-  and create_lexer_string : string -> lexbuf
+val create_lexer_string : string -> lexbuf
         (* Create a lexer buffer which reads from
            the given string. Reading starts from the first character in
            the string. An end-of-input condition is generated when the
            end of the string is reached. *)
-  and create_lexer : (string -> int -> int) -> lexbuf
+val create_lexer : (string -> int -> int) -> lexbuf
         (* Create a lexer buffer with the given function as its reading method.
            When the scanner needs more characters, it will call the given
            function, giving it a character string [s] and a character
@@ -51,14 +51,14 @@ val create_lexer_channel : in_channel -> lexbuf
 val get_lexeme : lexbuf -> string
         (* [get_lexeme lexbuf] returns the string matched by
            the regular expression. *)
-  and get_lexeme_char : lexbuf -> int -> char
+val get_lexeme_char : lexbuf -> int -> char
         (* [get_lexeme_char lexbuf i] returns character number [i] in
            the matched string. *)
-  and get_lexeme_start : lexbuf -> int
+val get_lexeme_start : lexbuf -> int
         (* [get_lexeme_start lexbuf] returns the position in the input stream
            of the first character of the matched string. The first character
            of the stream has position 0. *)
-  and get_lexeme_end : lexbuf -> int
+val get_lexeme_end : lexbuf -> int
         (* [get_lexeme_end lexbuf] returns the position in the input stream
            of the character following the last character of the matched
            string. The first character of the stream has position 0. *)
@@ -70,6 +70,6 @@ val get_lexeme : lexbuf -> string
    They are not intended to be used by user programs. *)
 
 val start_lexing : lexbuf -> unit
-  and get_next_char : lexbuf -> char = 1 "get_next_char"
-  and backtrack : lexbuf -> 'a
+val get_next_char : lexbuf -> char = 1 "get_next_char"
+val backtrack : lexbuf -> 'a
 ;;

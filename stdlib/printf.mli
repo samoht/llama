@@ -48,26 +48,26 @@ val fprintf: out_channel -> ('a, out_channel, unit) format -> 'a
            If too few arguments are provided, printing stops just
            before converting the first missing argument. *)
 
-  and printf: ('a, out_channel, unit) format -> 'a
+val printf: ('a, out_channel, unit) format -> 'a
         (* Same as [fprintf], but output on [std_out]. *)
 
-  and eprintf: ('a, out_channel, unit) format -> 'a
+val eprintf: ('a, out_channel, unit) format -> 'a
         (* Same as [fprintf], but output on [std_err]. *)
 
-  and sprintf: ('a, unit, string) format -> 'a
+val sprintf: ('a, unit, string) format -> 'a
         (* Same as [fprintf], except that the result of the formatting
            is returned as a string instead of being written on a channel. *)
 
-  and fprint: out_channel -> string -> unit
+val fprint: out_channel -> string -> unit
         (* Print the given string on the given output channel, without
            any formatting. This is the same function as [output_string]
            of module [io]. *)
 
-  and print: string -> unit
+val print: string -> unit
         (* Print the given string on [std_out], without any formatting.
 	   This is the same function as [print_string] of module [io]. *)
 
-  and eprint: string -> unit
+val eprint: string -> unit
         (* Print the given string on [std_err], without any formatting.
 	   This is the same function as [prerr_string] of module [io]. *)
 

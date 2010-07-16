@@ -26,24 +26,24 @@ val add: ('a -> int) -> 'a -> 'a t -> 'a t
            The ordering [f] must be consistent with the orderings used
            to build [t] with [add], [remove], [modify] or [split]
            operations. *)
-  and contains: ('a -> int) -> 'a t -> bool
+val contains: ('a -> int) -> 'a t -> bool
         (* [contains f t] checks whether [t] contains an element
            satisfying [f], that is, an element [x] such
            that [f x] is [0]. [f] is an ordering function with the same
            constraints as for [add]. It can be coarser (identify more
            elements) than the orderings used to build [t], but must be
            consistent with them. *)
-  and find: ('a -> int) -> 'a t -> 'a
+val find: ('a -> int) -> 'a t -> 'a
         (* Same as [contains], except that [find f t] returns the element [x]
            such that [f x] is [0], or raises [Not_found] if none has been
            found. *)
-  and remove: ('a -> int) -> 'a t -> 'a t
+val remove: ('a -> int) -> 'a t -> 'a t
         (* [remove f t] removes one element [x] of [t] such that [f x] is [0].
            [f] is an ordering function with the same constraints as for [add].
            [t] is returned unchanged if it does not contain any element
            satisfying [f]. If several elements of [t] satisfy [f],
            only one is removed. *)
-  and modify: ('a -> int) -> ('a contents -> 'a contents) -> 'a t -> 'a t
+val modify: ('a -> int) -> ('a contents -> 'a contents) -> 'a t -> 'a t
         (* General insertion/modification/deletion function.
            [modify f g t] searchs [t] for an element [x] satisfying the
            ordering function [f]. If one is found, [g] is applied to
@@ -57,14 +57,14 @@ val add: ('a -> int) -> 'a -> 'a t -> 'a t
            the element [x] is inserted in the tree. (It is assumed that
            [f x] is [0].) The functions [add] and [remove] are special cases
            of [modify], slightly more efficient. *)
-  and split: ('a -> int) -> 'a t -> 'a t * 'a contents * 'a t
+val split: ('a -> int) -> 'a t -> 'a t * 'a contents * 'a t
         (* [split f t] returns a triple [(less, elt, greater)] where
            [less] is a tree containing all elements [x] of [t] such that
            [f x] is negative, [greater] is a tree containing all
            elements [x] of [t] such that [f x] is positive, and [elt]
            is [Something x] if [t] contains an element [x] such that
            [f x] is [0], and [Nothing] otherwise. *)
-  and compare: ('a -> 'a -> int) -> 'a t -> 'a t -> int
+val compare: ('a -> 'a -> int) -> 'a t -> 'a t -> int
         (* Compare two trees. The first argument [f] is a comparison function
            over the tree elements: [f e1 e2] is zero if the elements [e1] and 
            [e2] are equal, negative if [e1] is smaller than [e2],
@@ -72,7 +72,7 @@ val add: ('a -> int) -> 'a -> 'a t -> 'a t
            compares the fringes of [t1] and [t2] by lexicographic extension
            of [f]. *)
 (*--*)
-  and join: 'a t -> 'a -> 'a t -> 'a t
-  and concat: 'a t -> 'a t -> 'a t
+val join: 'a t -> 'a -> 'a t -> 'a t
+val concat: 'a t -> 'a t -> 'a t
 ;;
 

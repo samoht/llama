@@ -20,21 +20,21 @@ val empty: ('a -> 'a -> int) -> ('a, 'b) t
            Examples: a suitable ordering function for type [int]
            is [prefix -]. You can also use the generic structural comparison
            function [eq__compare]. *)
-  and add: 'a -> 'b -> ('a, 'b) t -> ('a, 'b) t
+val add: 'a -> 'b -> ('a, 'b) t -> ('a, 'b) t
         (* [add x y m] returns a map containing the same bindings as
            [m], plus a binding of [x] to [y]. Previous bindings for [x] 
            in [m] are not removed, but simply hidden: they reappear
            after performing a [remove] operation.
            (This is the semantics of association lists.) *)
-  and find:'a -> ('a, 'b) t -> 'b
+val find:'a -> ('a, 'b) t -> 'b
         (* [find x m] returns the current binding of [x] in [m],
            or raises [Not_found] if no such binding exists. *)
-  and remove: 'a -> ('a, 'b) t -> ('a, 'b) t
+val remove: 'a -> ('a, 'b) t -> ('a, 'b) t
         (* [remove x m] returns a map containing the same bindings
            as [m] except the current binding for [x]. The previous
            binding for [x] is restored if it exists. [m] is returned
            unchanged if [x] is not bound in [m]. *)
-  and iter: ('a -> 'b -> unit) -> ('a, 'b) t -> unit
+val iter: ('a -> 'b -> unit) -> ('a, 'b) t -> unit
         (* [iter f m] applies [f] to all bindings in map [m],
 	   discarding the results.
            [f] receives the key as first argument, and the associated value

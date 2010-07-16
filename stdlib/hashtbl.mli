@@ -12,31 +12,31 @@ val create : int -> ('a,'b) t
            number. Raise [Invalid_argument "Hashtbl.create"] if [n] is
            less than 1. *)
 
-  and clear : ('a, 'b) t -> unit
+val clear : ('a, 'b) t -> unit
         (* Empty a hash table. *)
 
-  and add : ('a, 'b) t -> 'a -> 'b -> unit
+val add : ('a, 'b) t -> 'a -> 'b -> unit
         (* [add tbl x y] adds a binding of [x] to [y] in table [tbl].
            Previous bindings for [x] are not removed, but simply
            hidden. That is, after performing [remove tbl x], the previous
            binding for [x], if any, is restored.
            (This is the semantics of association lists.) *)
 
-  and find : ('a, 'b) t -> 'a -> 'b
+val find : ('a, 'b) t -> 'a -> 'b
         (* [find tbl x] returns the current binding of [x] in [tbl],
            or raises [Not_found] if no such binding exists. *)
 
-  and find_all : ('a, 'b) t -> 'a -> 'b list
+val find_all : ('a, 'b) t -> 'a -> 'b list
         (* [find_all tbl x] returns the list of all data associated with [x]
            in [tbl]. The current binding is returned first, then the previous
            bindings, in reverse order of introduction in the table. *)
 
-  and remove : ('a, 'b) t -> 'a -> unit
+val remove : ('a, 'b) t -> 'a -> unit
         (* [remove tbl x] removes the current binding of [x] in [tbl],
            restoring the previous binding if it exists.
            It does nothing if [x] is not bound in [tbl]. *)
 
-  and do_table : ('a -> 'b -> unit) -> ('a, 'b) t -> unit
+val do_table : ('a -> 'b -> unit) -> ('a, 'b) t -> unit
         (* [do_table f tbl] applies [f] to all bindings in table [tbl],
 	   discarding all the results.
            [f] receives the key as first argument, and the associated value
@@ -47,7 +47,7 @@ val create : int -> ('a,'b) t
            key are presented in reverse chronological order 
            (most recent first). *)
 
-  and do_table_rev : ('a -> 'b -> unit) -> ('a, 'b) t -> unit
+val do_table_rev : ('a -> 'b -> unit) -> ('a, 'b) t -> unit
         (* Same as [do_table], except that successive bindings for the same
            key are presented in chronological order (oldest first). *)
 ;;
