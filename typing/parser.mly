@@ -129,7 +129,7 @@ open Primdecl;;
 %start implementation
 %type <Syntax.impl_phrase> implementation 
 %start interface
-%type <Syntax.intf_phrase> interface
+%type <Syntax.intf_phrase list> interface
 
 %%
 
@@ -154,17 +154,21 @@ implementation :
 
 /* One phrase from a module interface */
 
-interface :
-        VALUE Value_decl SEMISEMI
+interface:
+    /* empty */                                 { [] }
+  | interface interface_item                    { $2 :: $1 }
+  | interface interface_item SEMISEMI           { $2 :: $1 }
+;
+
+interface_item :
+        VALUE Value_decl
           { make_intf(Zvaluedecl $2) }
-      | TYPE Type_decl SEMISEMI
+      | TYPE Type_decl
           { make_intf(Ztypedecl $2) }
-      | EXCEPTION Exc_decl SEMISEMI
+      | EXCEPTION Exc_decl
           { make_intf(Zexcdecl $2) }
-      | SHARP Directive SEMISEMI
+      | SHARP Directive
           { make_intf(Zintfdirective $2) }
-      | EOF
-          { raise End_of_file }
 ;
 
 /* Expressions */

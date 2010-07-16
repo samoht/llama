@@ -61,7 +61,7 @@ let parse_phrase parsing_fun lexing_fun lexbuf =
 ;;
 
 let parse_impl_phrase = parse_phrase Parser.implementation Lexer.main
-and parse_intf_phrase = parse_phrase Parser.interface Lexer.main
+and parse_intf        = parse_phrase Parser.interface Lexer.main
 ;;
 
 (* Executing directives *)
@@ -126,15 +126,12 @@ let compile_interface modname filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       external_types := [];
-      while true do
-        compile_intf_phrase(parse_intf_phrase lexbuf)
-      done
-    with End_of_file ->
+      List.iter compile_intf_phrase (List.rev (parse_intf lexbuf));
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
       check_unused_opens()
-    | x ->
+    with x ->
       close_in ic;
       close_out oc;
       remove_file intf_name;
