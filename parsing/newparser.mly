@@ -219,7 +219,9 @@ let pat_constr_or_var p =
 /* Entry points */
 
 %start implementation
-%type <Presyntax.impl_phrase> implementation 
+%type <Presyntax.impl_phrase list> implementation 
+%start toplevel_phrase
+%type <Presyntax.impl_phrase> toplevel_phrase
 %start interface
 %type <Presyntax.intf_phrase list> interface
 
@@ -227,21 +229,33 @@ let pat_constr_or_var p =
 
 /* One phrase from a module implementation */
 
-implementation :
-        Expr SEMISEMI
-          { make_impl(Pexpr $1) }
-      | LET Binding_list SEMISEMI  %prec prec_let
-          { make_impl(Pletdef(false, $2)) }
-      | LET REC Binding_list SEMISEMI  %prec prec_let
-          { make_impl(Pletdef(true, $3)) }
-      | TYPE Type_decl SEMISEMI
-          { make_impl(Ptypedef $2) }
-      | EXCEPTION Exc_decl SEMISEMI
-          { make_impl(Pexcdef $2) }
-      | SHARP Directive SEMISEMI
-          { make_impl(Pimpldirective $2) }
-      | EOF
-          { raise End_of_file }
+implementation:
+    structure_tail        { $1 }
+  | Expr structure_tail   { make_impl(Pexpr $1) :: $2 }
+;
+structure_tail:
+    /* empty */                                 { [] }
+  | SEMISEMI EOF                                { [] }
+  | SEMISEMI Expr structure_tail            { make_impl(Pexpr $2) :: $3 }
+  | SEMISEMI structure_item structure_tail      { $2 :: $3 }
+  | structure_item structure_tail               { $1 :: $2 }
+;
+structure_item:
+  | LET Binding_list   %prec prec_let
+      { make_impl(Pletdef(false, $2)) }
+  | LET REC Binding_list  %prec prec_let
+      { make_impl(Pletdef(true, $3)) }
+  | TYPE Type_decl
+      { make_impl(Ptypedef $2) }
+  | EXCEPTION Exc_decl
+      { make_impl(Pexcdef $2) }
+  | SHARP Directive
+      { make_impl(Pimpldirective $2) }
+;
+toplevel_phrase:
+  | structure_item SEMISEMI  { $1 }
+  | Expr SEMISEMI            { make_impl(Pexpr $1) }
+  | EOF { raise End_of_file }
 ;
 
 /* One phrase from a module interface */

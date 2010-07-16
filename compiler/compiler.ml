@@ -183,16 +183,14 @@ let compile_impl modname filename suffix =
     input_chan := ic;
     input_lexbuf := lexbuf;
     start_emit_phrase oc;
+    let l = Newparser.implementation Lexer.main lexbuf in
     try
-      while true do
-        compile_impl_phrase oc (parse_impl_phrase lexbuf)
-      done
-    with End_of_file ->
+      List.iter (fun x -> compile_impl_phrase oc (Parser.structure_item x)) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
       check_unused_opens()
-    | x ->
+    with x ->
       close_in ic;
       close_out oc;
       remove_file obj_name;
