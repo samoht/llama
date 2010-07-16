@@ -99,10 +99,10 @@ let directiveu (Pdir(s1,s2)) = Zdir(s1,s2)
 let structure_item si =
   { im_desc =
       begin match si.pstr_desc with
-        | Pexpr e -> Zexpr (expr e)
-        | Pletdef(b,l) -> Zletdef(b,List.map (fun (p,e)->pattern p, expr e) l)
-        | Ptypedef l -> Ztypedef(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Pexcdef l -> Zexcdef (List.map constr_decl l)
+        | Pstr_eval e -> Str_eval (expr e)
+        | Pstr_value(b,l) -> Str_value(b,List.map (fun (p,e)->pattern p, expr e) l)
+        | Pstr_type l -> Str_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Pstr_exception l -> Str_exception (List.map constr_decl l)
         | Pimpldirective d -> Zimpldirective (directiveu d)
       end;
     im_loc = si.pstr_loc }

@@ -83,30 +83,31 @@ type directiveu =
     Pdir of string * string
 ;;
 
-type impl_phrase =
-  { pstr_desc: impl_desc;
-    pstr_loc: location }
-and impl_desc =
-    Pexpr of expression
-  | Pletdef of bool * (pattern * expression) list
-  | Ptypedef of (string * string list * type_decl) list
-  | Pexcdef of constr_decl list
-  | Pimpldirective of directiveu
-;;
-
-type intf_phrase =
-  { psig_desc: intf_desc;
+type signature_item =
+  { psig_desc: signature_item_desc;
     psig_loc: location }
-and intf_desc =
+
+and signature_item_desc =
     Pvaluedecl of (string * core_type * (int*string) option) list
   | Ptypedecl of (string * string list * type_decl) list
   | Pexcdecl of constr_decl list
   | Pintfdirective of directiveu
 
+type structure_item =
+  { pstr_desc: structure_item_desc;
+    pstr_loc: location }
+
+and structure_item_desc =
+    Pstr_eval of expression
+  | Pstr_value of bool * (pattern * expression) list
+  | Pstr_type of (string * string list * type_decl) list
+  | Pstr_exception of constr_decl list
+  | Pimpldirective of directiveu
+
 (* Toplevel phrases *)
 
 type toplevel_phrase =
-    Ptop_def of impl_phrase
+    Ptop_def of structure_item
   | Ptop_dir of directiveu (* string * directive_argument *)
 
 and directive_argument =

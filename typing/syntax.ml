@@ -93,10 +93,10 @@ type impl_phrase =
   { im_desc: impl_desc;
     im_loc: location }
 and impl_desc =
-    Zexpr of expression
-  | Zletdef of bool * (pattern * expression) list
-  | Ztypedef of (string * string list * type_decl) list
-  | Zexcdef of constr_decl list
+    Str_eval of expression
+  | Str_value of bool * (pattern * expression) list
+  | Str_type of (string * string list * type_decl) list
+  | Str_exception of constr_decl list
   | Zimpldirective of directiveu
 ;;
 

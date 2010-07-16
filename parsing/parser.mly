@@ -219,11 +219,11 @@ let pat_constr_or_var p =
 /* Entry points */
 
 %start implementation
-%type <Parsetree.impl_phrase list> implementation 
+%type <Parsetree.structure_item list> implementation 
 %start toplevel_phrase
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start interface
-%type <Parsetree.intf_phrase list> interface
+%type <Parsetree.signature_item list> interface
 
 %%
 

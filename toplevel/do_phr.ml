@@ -26,7 +26,7 @@ let do_structure_item phr =
   reset_type_var();
   reset_type_expression_vars ();
   begin match phr.im_desc with
-    Zexpr expr ->
+    Str_eval expr ->
       let ty =
         type_expression phr.im_loc expr in
       let res =
@@ -39,7 +39,7 @@ let do_structure_item phr =
       print_string " ="; print_space();
       print_value res ty;
       print_newline()
-  | Zletdef(rec_flag, pat_expr_list) ->
+  | Str_value(rec_flag, pat_expr_list) ->
       let env = type_letdef phr.im_loc rec_flag pat_expr_list in
       let res =
         if rec_flag then
@@ -92,13 +92,13 @@ let do_structure_item phr =
 *)
           print_newline())
         (List.rev env)
-  | Ztypedef decl ->
+  | Str_type decl ->
       let _ = type_typedecl phr.im_loc decl in
       reset_rollback ();
       List.iter
         (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
-  | Zexcdef decl ->
+  | Str_exception decl ->
       let _ = type_excdecl phr.im_loc decl in
       reset_rollback ();
       List.iter
