@@ -1,6 +1,6 @@
 (* Operations on lists *)
 
-value list_length : 'a list -> int
+val list_length : 'a list -> int
         (* Return the length (number of elements) of the given list. *)
   and prefix @ : 'a list -> 'a list -> 'a list
         (* List concatenation. *)
@@ -51,7 +51,7 @@ value list_length : 'a list -> int
         (* [exists p [a1; ...; an]] is [(p a1) or (p a2) or ... or (p an)]. *)
 ;;
 
-value mem : 'a -> 'a list -> bool
+val mem : 'a -> 'a list -> bool
         (* [mem a l] is true if and only if [a] is structurally equal (see
            module [eq]) to an element of [l]. *)
   and memq : 'a -> 'a list -> bool
@@ -82,17 +82,17 @@ value mem : 'a -> 'a list -> bool
 
 (** List searching *)
 
-value find : ('a -> bool) -> 'a list -> 'a;;
+val find : ('a -> bool) -> 'a list -> 'a;;
         (* [find p l] returns the first element of the list [l]
            that satisfies the predicate [p].
            Raise [Not_found] if there is no value that satisfies [p] in the
            list [l]. *)
 
-value find_all : ('a -> bool) -> 'a list -> 'a list;;
+val find_all : ('a -> bool) -> 'a list -> 'a list;;
         (* [find_all p l] returns all the elements of the list [l]
            that satisfies the predicate [p]. *)
 
-value partition : ('a -> bool) -> 'a list -> 'a list * 'a list;;
+val partition : ('a -> bool) -> 'a list -> 'a list * 'a list;;
         (* [partition p l] returns a pair of lists [(l1, l2)], such
         that [l1] is the list of all the elements of [l] that
         satisfy the predicate [p], and [l2] is the list of all the
@@ -100,7 +100,7 @@ value partition : ('a -> bool) -> 'a list -> 'a list * 'a list;;
 
 (** Association lists *)
 
-value assoc : 'a -> ('a * 'b) list -> 'b
+val assoc : 'a -> ('a * 'b) list -> 'b
         (* [assoc a l] returns the value associated with key [a] in the list of
            pairs [l]. That is,
              [assoc a [ ...; (a,b); ...] = b]

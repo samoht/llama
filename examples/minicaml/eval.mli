@@ -14,7 +14,7 @@ and fermeture =
 
 and environnement == (string * valeur) list;;
 
-value évalue: environnement -> expression -> valeur
+val évalue: environnement -> expression -> valeur
   and évalue_définition: environnement -> définition -> environnement
   and imprime_valeur: valeur -> unit;;
 

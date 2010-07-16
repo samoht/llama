@@ -10,7 +10,7 @@
 type ('a, 'b) t;;
         (* The type of maps from type ['a] to type ['b]. *)
 
-value empty: ('a -> 'a -> int) -> ('a, 'b) t
+val empty: ('a -> 'a -> int) -> ('a, 'b) t
         (* The empty map.
            The argument is a total ordering function over the set elements.
            This is a two-argument function [f] such that

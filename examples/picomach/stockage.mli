@@ -2,7 +2,7 @@
 
 exception Erreur of string;;
 
-value initialise: unit -> unit
+val initialise: unit -> unit
   and assemble: instruction -> unit
   and poser_étiquette: string -> unit
   and valeur_étiquette: string -> int

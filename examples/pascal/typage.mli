@@ -9,7 +9,7 @@ type erreur_de_type =
 
 exception Erreur_typage of erreur_de_type;;
 
-value type_programme: programme -> unit
+val type_programme: programme -> unit
   and affiche_erreur: erreur_de_type -> unit
   and type_op_unaire: string -> expr_type * expr_type
   and type_op_binaire: string -> expr_type * expr_type * expr_type;;

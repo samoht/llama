@@ -4,7 +4,7 @@ exception Échec_filtrage;;
 
 let rec filtrage valeur motif =
   match (valeur, motif) with
-  | (val, Motif_variable id) -> [id, val]
+  | (v, Motif_variable id) -> [id, v]
   | (Val_booléenne b1, Motif_booléen b2) ->
       if b1 = b2 then [] else raise Échec_filtrage
   | (Val_nombre i1, Motif_nombre i2) ->

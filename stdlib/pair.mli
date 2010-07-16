@@ -1,6 +1,6 @@
 (* Operations on pairs *)
 
-value fst : 'a * 'b -> 'a = 1 "field0"
+val fst : 'a * 'b -> 'a = 1 "field0"
         (* Return the first component of a pair. *)
   and snd : 'a * 'b -> 'b = 1 "field1"
         (* Return the second component of a pair. *)

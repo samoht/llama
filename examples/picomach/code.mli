@@ -17,7 +17,7 @@ and opération =
   | And | Or | Xor | Shl | Shr
   | Slt | Sle | Seq;;
 
-value nombre_de_registres: int
+val nombre_de_registres: int
   and sp: int
   and ra: int
   and taille_du_mot: int;;

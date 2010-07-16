@@ -1,2 +1,2 @@
 #open "prop";;
-value analyse_proposition: string -> proposition;;
+val analyse_proposition: string -> proposition;;

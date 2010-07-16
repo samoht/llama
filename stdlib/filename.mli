@@ -1,6 +1,6 @@
 (* Operations on file names *)
 
-value current_dir_name : string
+val current_dir_name : string
         (* The conventional name for the current directory
            (e.g. [.] in Unix). *)
   and concat : string -> string -> string

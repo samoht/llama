@@ -18,9 +18,9 @@ let alloue_variables décl_var env =
 let rec ajoute_arguments paramètres arguments env =
   match (paramètres, arguments) with
   | [], [] -> env
-  | ((nom, typ) :: reste_p, val :: reste_a) ->
+  | ((nom, typ) :: reste_p, v :: reste_a) ->
       ajoute_arguments reste_p reste_a
-                       (ajoute_variable nom (ref val) env)
+                       (ajoute_variable nom (ref v) env)
   | (_, _) ->
       raise(Erreur_exécution "mauvais nombre d'arguments");;
 let environnement_global =

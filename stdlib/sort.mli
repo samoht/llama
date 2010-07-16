@@ -1,6 +1,6 @@
 (* Sorting and merging lists *)
 
-value sort : ('a -> 'a -> bool) -> 'a list -> 'a list
+val sort : ('a -> 'a -> bool) -> 'a list -> 'a list
         (* Sort a list in increasing order according to an ordering predicate.
            The predicate should return [true] if its first argument is
            less than or equal to its second argument. *)

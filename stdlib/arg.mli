@@ -34,7 +34,7 @@ type spec =
     The concrete type describing the behavior associated with a keyword.
 *)
 
-value parse : (string * spec) list -> (string -> unit) -> unit
+val parse : (string * spec) list -> (string -> unit) -> unit
 (*
     [parse speclist anonfun]
     parses the command line, calling the functions in [speclist]

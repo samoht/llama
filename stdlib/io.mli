@@ -8,7 +8,7 @@ exception End_of_file
         (* Raised when an operation cannot complete, because the end
            of the file has been reached. *)
 ;;
-value stdin : in_channel
+val stdin : in_channel
   and std_in : in_channel
   and stdout : out_channel
   and std_out : out_channel
@@ -18,7 +18,7 @@ value stdin : in_channel
            for the process. [std_in], [std_out] and [std_err] are respectively
 	   synonymous with [stdin], [stdout] and [stderr]. *)
 ;;
-value exit : int -> 'a
+val exit : int -> 'a
         (* Flush all pending writes on [std_out] and [std_err],
            and terminate the process, returning the given status code
 	   to the operating system
@@ -31,7 +31,7 @@ value exit : int -> 'a
 
 (*** Output functions on standard output *)
 
-value print_char : char -> unit
+val print_char : char -> unit
         (* Print the character on standard output. *)
   and print_string : string -> unit
         (* Print the string on standard output. *)
@@ -50,7 +50,7 @@ value print_char : char -> unit
 
 (*** Output functions on standard error *)
 
-value prerr_char : char -> unit
+val prerr_char : char -> unit
         (* Print the character on standard error. *)
   and prerr_string : string -> unit
         (* Print the string on standard error. *)
@@ -65,7 +65,7 @@ value prerr_char : char -> unit
 
 (*** Input functions on standard input *)
 
-value read_line : unit -> string
+val read_line : unit -> string
         (* Flush standard output, then read characters from standard input
 	   until a newline character is encountered. Return the string of
            all characters read, without the newline character at the end. *)
@@ -82,7 +82,7 @@ value read_line : unit -> string
 
 (*** General output functions *)
 
-value open_out : string -> out_channel
+val open_out : string -> out_channel
         (* Open the named file for writing, and return a new output channel
            on that file, positionned at the beginning of the file. The
            file is truncated to zero length if it already exists. It
@@ -157,7 +157,7 @@ value open_out : string -> out_channel
 
 (*** General input functions *)
 
-value open_in : string -> in_channel
+val open_in : string -> in_channel
         (* Open the named file for reading, and return a new input channel
            on that file, positionned at the beginning of the file.
            Raise [sys__Sys_error] if the file could not be opened. *)
@@ -242,7 +242,7 @@ value open_in : string -> in_channel
 
 (*--*)
 
-value fast_input : in_channel -> string -> int -> int -> int = 4 "input"
+val fast_input : in_channel -> string -> int -> int -> int = 4 "input"
   and fast_really_input : in_channel -> string -> int -> int -> unit
   and fast_output : out_channel -> string -> int -> int -> unit = 4 "output"
   and input_scan_line: in_channel -> int = 1 "input_scan_line"

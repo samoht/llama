@@ -15,7 +15,7 @@ type 'a contents = Nothing | Something of 'a;;
         (* Used with the functions [modify] and [split], to represent
            the presence or the absence of an element in a tree. *)
 
-value add: ('a -> int) -> 'a -> 'a t -> 'a t
+val add: ('a -> int) -> 'a -> 'a t -> 'a t
         (* [add f x t] inserts the element [x] into the tree [t].
            [f] is an ordering function: [f y] must return [0] if
            [x] and [y] are equal (or equivalent), a negative integer if

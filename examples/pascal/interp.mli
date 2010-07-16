@@ -1,2 +1,2 @@
-value exécute_programme : syntaxe__programme -> unit;;
+val exécute_programme : syntaxe__programme -> unit;;
 exception Erreur_exécution of string;;

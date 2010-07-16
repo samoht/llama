@@ -1,9 +1,9 @@
 (* Operations on vectors *)
 
-value vect_length : 'a vect -> int = 1 "vect_length"
+val vect_length : 'a vect -> int = 1 "vect_length"
         (* Return the length (number of elements) of the given vector. *)
 ;;
-value vect_item : 'a vect -> int -> 'a
+val vect_item : 'a vect -> int -> 'a
         (* [vect_item v n] returns the element number [n] of vector [v].
            The first element has number 0.
            The last element has number [vect_length v - 1].
@@ -17,7 +17,7 @@ value vect_item : 'a vect -> int -> 'a
            0 to [vect_length v - 1].
            You can also write [v.(n) <- x] instead of [vect_assign v n x]. *)
 ;;
-value make_vect : int -> 'a -> 'a vect
+val make_vect : int -> 'a -> 'a vect
         (* [make_vect n x] returns a fresh vector of length [n],
            initialized with [x].
 	   All the elements of this new vector are initially
@@ -33,10 +33,10 @@ value make_vect : int -> 'a -> 'a vect
            The element ([x,y]) of a matrix [m] is accessed
            with the notation [m.(x).(y)]. *)  
 ;;
-value init_vect : int -> (int -> 'a) -> 'a vect;;
+val init_vect : int -> (int -> 'a) -> 'a vect;;
         (* [init_vect n f] returns a fresh array of length [n],
            with element number [i] equal to [f i]. *)
-value concat_vect : 'a vect -> 'a vect -> 'a vect
+val concat_vect : 'a vect -> 'a vect -> 'a vect
         (* [concat_vect v1 v2] returns a fresh vector containing the
            concatenation of vectors [v1] and [v2]. *)
   and sub_vect : 'a vect -> int -> int -> 'a vect
@@ -50,7 +50,7 @@ value concat_vect : 'a vect -> 'a vect -> 'a vect
         (* [copy_vect v] returns a copy of [v], that is, a fresh vector
            containing the same elements as [v]. *)
 ;;
-value fill_vect : 'a vect -> int -> int -> 'a -> unit
+val fill_vect : 'a vect -> int -> int -> 'a -> unit
         (* [fill_vect v ofs len x] modifies the vector [v] in place,
            storing [x] in elements number [ofs] to [ofs + len - 1].
            Raise [Invalid_argument "fill_vect"] if [ofs] and [len] do not
@@ -65,14 +65,14 @@ value fill_vect : 'a vect -> int -> int -> 'a -> unit
            designate a valid subvector of [v1], or if [o2] and [len] do not
            designate a valid subvector of [v2]. *)
 ;;
-value list_of_vect : 'a vect -> 'a list
+val list_of_vect : 'a vect -> 'a list
         (* [list_of_vect v] returns the list of all the elements of [v], that is:
            [[v.(0); v.(1); ...; v.(vect_length v - 1)]]. *)
   and vect_of_list : 'a list -> 'a vect
         (* [vect_of_list l] returns a fresh vector containing the elements
            of [l]. *)
 ;;
-value map_vect : ('a -> 'b) -> 'a vect -> 'b vect
+val map_vect : ('a -> 'b) -> 'a vect -> 'b vect
         (* [map_vect f v] applies function [f] to all the elements of [v],
            and builds a vector with the results returned by [f]:
            [[| f v.(0); f v.(1); ...; f v.(vect_length v - 1) |]]. *)

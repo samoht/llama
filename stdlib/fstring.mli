@@ -10,25 +10,25 @@
 
 (*--*)
 
-value string_length : string -> int = 1 "string_length"
+val string_length : string -> int = 1 "string_length"
 ;;
-value nth_char : string -> int -> char = 2 "get_nth_char"
+val nth_char : string -> int -> char = 2 "get_nth_char"
   and set_nth_char : string -> int -> char -> unit = 3 "set_nth_char"
 ;;
-value prefix ^ : string -> string -> string
+val prefix ^ : string -> string -> string
   and concat : string list -> string
   and sub_string : string -> int -> int -> string
 ;;
-value create_string : int -> string = 1 "create_string"
+val create_string : int -> string = 1 "create_string"
   and make_string : int -> char -> string
 ;;
-value fill_string : string -> int -> int -> char -> unit
+val fill_string : string -> int -> int -> char -> unit
     = 4 "fill_string"
   and blit_string : string -> int -> string -> int -> int -> unit
     = 5 "blit_string"
   and replace_string : string -> string -> int -> unit
 ;;
-value eq_string : string -> string -> bool = 2 "=string"
+val eq_string : string -> string -> bool = 2 "=string"
   and neq_string : string -> string -> bool = 2 "<>string"
   and le_string : string -> string -> bool = 2 "<=string"
   and lt_string : string -> string -> bool = 2 "<string"
@@ -36,9 +36,9 @@ value eq_string : string -> string -> bool = 2 "=string"
   and gt_string : string -> string -> bool = 2 ">string"
   and compare_strings : string -> string -> int = 2 "compare_strings"
 ;;
-value string_for_read : string -> string
+val string_for_read : string -> string
 ;;
-value index_char: string -> char -> int;;
-value rindex_char: string -> char -> int;;
-value index_char_from: string -> int -> char -> int;;
-value rindex_char_from: string -> int -> char -> int;;
+val index_char: string -> char -> int;;
+val rindex_char: string -> char -> int;;
+val index_char_from: string -> int -> char -> int;;
+val rindex_char_from: string -> int -> char -> int;;

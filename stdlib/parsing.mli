@@ -3,7 +3,7 @@
 #open "obj";;
 #open "lexing";;
 
-value symbol_start : unit -> int
+val symbol_start : unit -> int
   and symbol_end : unit -> int
         (* [symbol_start] and [symbol_end] are to be called in the action part
            of a grammar rule only. They return the position of the string that
@@ -50,7 +50,7 @@ type parse_tables =
 
 exception yyexit of obj;;
 
-value yyparse : parse_tables -> int -> (lexbuf -> 'a) -> lexbuf -> 'b
+val yyparse : parse_tables -> int -> (lexbuf -> 'a) -> lexbuf -> 'b
   and peek_val : int -> 'a
   and is_current_lookahead: 'a -> bool
 ;;

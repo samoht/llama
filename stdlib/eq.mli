@@ -1,6 +1,6 @@
 (* Generic comparisons *)
 
-value prefix = : 'a -> 'a -> bool = 2 "equal"
+val prefix = : 'a -> 'a -> bool = 2 "equal"
         (* [e1 = e2] tests for structural equality of [e1] and [e2].
            Mutable structures (e.g. references and arrays) are equal
            if and only if their current contents are structurally equal,

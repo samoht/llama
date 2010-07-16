@@ -8,7 +8,7 @@ type 'a t;;
 exception Empty;;
         (* Raised when [take] is applied to an empty queue. *)
 
-value new: unit -> 'a t
+val new: unit -> 'a t
         (* Return a new queue, initially empty. *)
   and add: 'a -> 'a t -> unit
         (* [add x q] adds the element [x] at the end of the queue [q]. *)

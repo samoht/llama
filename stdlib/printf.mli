@@ -8,7 +8,7 @@ type ('a, 'b, 'c) format;;
            function, and ['b] is the type of the first argument given to
            [%a] and [%t] printing functions. *)
 
-value fprintf: out_channel -> ('a, out_channel, unit) format -> 'a
+val fprintf: out_channel -> ('a, out_channel, unit) format -> 'a
         (* [fprintf outchan format arg1 ... argN] formats the arguments
            [arg1] to [argN] according to the format string [format],
            and outputs the resulting string on the channel [outchan].

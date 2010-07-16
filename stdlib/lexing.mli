@@ -19,7 +19,7 @@ type lexbuf =
            The lexer buffer holds the current state of the scanner, plus
            a function to refill the buffer from the input. *)
 
-value create_lexer_channel : in_channel -> lexbuf
+val create_lexer_channel : in_channel -> lexbuf
         (* Create a lexer buffer on the given input channel.
            [create_lexer_channel inchan] returns a lexer buffer which reads
            from the input channel [inchan], at the current reading position. *)
@@ -48,7 +48,7 @@ value create_lexer_channel : in_channel -> lexbuf
            camllex, is bound to the lexer buffer passed to the parsing
            function. *)
 
-value get_lexeme : lexbuf -> string
+val get_lexeme : lexbuf -> string
         (* [get_lexeme lexbuf] returns the string matched by
            the regular expression. *)
   and get_lexeme_char : lexbuf -> int -> char
@@ -69,7 +69,7 @@ value get_lexeme : lexbuf -> string
 (* The following definitions are used by the generated scanners only.
    They are not intended to be used by user programs. *)
 
-value start_lexing : lexbuf -> unit
+val start_lexing : lexbuf -> unit
   and get_next_char : lexbuf -> char = 1 "get_next_char"
   and backtrack : lexbuf -> 'a
 ;;

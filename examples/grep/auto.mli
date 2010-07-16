@@ -6,4 +6,4 @@ type état =
     mutable terminal : bool;
     numéro : int };;
 
-value expr_vers_automate : expr -> état;;
+val expr_vers_automate : expr -> état;;

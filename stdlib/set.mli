@@ -10,7 +10,7 @@
 type 'a t;;
         (* The type of sets containing elements of type ['a]. *)
 
-value empty: ('a -> 'a -> int) -> 'a t
+val empty: ('a -> 'a -> int) -> 'a t
         (* The empty set.
            The argument is a total ordering function over the set elements.
            This is a two-argument function [f] such that

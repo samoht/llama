@@ -8,6 +8,6 @@ type token_type =
 | THEN
 ;;
 
-value next_token : char stream -> token_type;;
-value reset_lexer : char stream -> unit;;
-value token_name : token_type -> string;;
+val next_token : char stream -> token_type;;
+val reset_lexer : char stream -> unit;;
+val token_name : token_type -> string;;

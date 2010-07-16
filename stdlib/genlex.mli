@@ -23,7 +23,7 @@ type token =
            [+], [*], etc); and [Kwd] for keywords (either identifiers or
            single ``special characters'' such as [(], [}], etc). *)
            
-value make_lexer: string list -> (char stream -> token stream);;
+val make_lexer: string list -> (char stream -> token stream);;
         (* Construct the lexer function. The first argument is the list of
            keywords. An identifier [s] is returned as [Kwd s] if [s]
            belongs to this list, and as [Ident s] otherwise.

@@ -5,7 +5,7 @@
 type ('a, 'b) t;;
         (* The type of hash tables from type ['a] to type ['b]. *)
 
-value new : int -> ('a,'b) t
+val new : int -> ('a,'b) t
         (* [new n] creates a new, empty hash table, with initial size [n].
            The table grows as needed, so [n] is just an initial guess.
            Better results are said to be achieved when [n] is a prime
@@ -54,14 +54,14 @@ value new : int -> ('a,'b) t
 
 (*** The polymorphic hash primitive *)
 
-value hash : 'a -> int
+val hash : 'a -> int
         (* [hash x] associates a positive integer to any value of
            any type. It is guaranteed that
                 if [x = y], then [hash x = hash y]. 
            Moreover, [hash] always terminates, even on cyclic
            structures. *)
 ;;
-value hash_param : int -> int -> 'a -> int = 3 "hash_univ_param"
+val hash_param : int -> int -> 'a -> int = 3 "hash_univ_param"
         (* [hash_param n m x] computes a hash value for [x], with the
            same properties as for [hash]. The two extra parameters [n] and
            [m] give more precise control over hashing. Hashing performs a

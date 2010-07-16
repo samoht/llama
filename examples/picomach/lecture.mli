@@ -1,2 +1,2 @@
 #open "code";;
-value programme: char stream -> instruction vect;;
+val programme: char stream -> instruction vect;;

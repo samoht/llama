@@ -1,6 +1,6 @@
 (* Exceptions *)
 
-value raise : exn -> 'a = 1 "raise";;
+val raise : exn -> 'a = 1 "raise";;
         (* Raise the given exception value. *)
 
 (*** A few general-purpose predefined exceptions. *)
@@ -21,9 +21,9 @@ exception Exit;;
         (* This exception is not raised by any library function.  It is
 	   provided for use in your programs. *)
 
-value failwith : string -> 'a;;
+val failwith : string -> 'a;;
         (* Raise exception [Failure] with the given string. *)
-value invalid_arg : string -> 'a;;
+val invalid_arg : string -> 'a;;
         (* Raise exception [Invalid_argument] with the given string. *)
 
 

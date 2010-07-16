@@ -1,6 +1,6 @@
 (* A catch-all exception handler *)
 
-value f: ('a -> 'b) -> 'a -> 'b;;
+val f: ('a -> 'b) -> 'a -> 'b;;
         (* [printexc__f fn x] applies [fn] to [x] and returns the result.
            If the evaluation of [fn x] raises any exception, the
            name of the exception is printed on standard error output,

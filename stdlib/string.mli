@@ -1,9 +1,9 @@
 (* String operations *)
 
-value string_length : string -> int = 1 "string_length"
+val string_length : string -> int = 1 "string_length"
         (* Return the length (number of characters) of the given string. *)
 ;;
-value nth_char : string -> int -> char
+val nth_char : string -> int -> char
         (* [nth_char s n] returns character number [n] in string [s].
            The first character is character number 0.
            The last character is character number [string_length s - 1].
@@ -17,7 +17,7 @@ value nth_char : string -> int -> char
            0 to [(string_length s - 1)].
            You can also write [s.[n] <- c] instead of [set_nth_char s n c]. *)
 ;;
-value prefix ^ : string -> string -> string
+val prefix ^ : string -> string -> string
         (* [s1 ^ s2] returns a fresh string containing the concatenation of
            the strings [s1] and [s2]. *)
   and concat : string list -> string
@@ -31,14 +31,14 @@ value prefix ^ : string -> string -> string
            designate a valid substring of [s]; that is, if [start < 0],
            or [len < 0], or [start + len > string_length s]. *)
 ;;
-value create_string : int -> string
+val create_string : int -> string
         (* [create_string n] returns a fresh string of length [n].
            The string initially contains arbitrary characters. *)
   and make_string : int -> char -> string
         (* [make_string n c] returns a fresh string of length [n],
            filled with the character [c]. *)
 ;;
-value fill_string : string -> int -> int -> char -> unit
+val fill_string : string -> int -> int -> char -> unit
         (* [fill_string s start len c] modifies string [s] in place,
            replacing the characters number [start] to [start + len - 1]
            by [c].
@@ -60,7 +60,7 @@ value fill_string : string -> int -> int -> char -> unit
            Raise [Invalid_argument "replace_string"] if copying would overflow
            string [dest]. *)
 ;;
-value eq_string : string -> string -> bool = 2 "=string"
+val eq_string : string -> string -> bool = 2 "=string"
   and neq_string : string -> string -> bool = 2 "<>string"
   and le_string : string -> string -> bool = 2 "<=string"
   and lt_string : string -> string -> bool = 2 "<string"
@@ -68,7 +68,7 @@ value eq_string : string -> string -> bool = 2 "=string"
   and gt_string : string -> string -> bool = 2 ">string"
         (* Comparison functions (lexicographic ordering) between strings. *)
 ;;
-value compare_strings : string -> string -> int = 2 "compare_strings"
+val compare_strings : string -> string -> int = 2 "compare_strings"
         (* General comparison between strings.
 	   [compare_strings s1 s2] returns 0 if [s1] and [s2] are equal,
 	   or else -2 if [s1] is a prefix of [s2],
@@ -76,22 +76,22 @@ value compare_strings : string -> string -> int = 2 "compare_strings"
 	   or else -1 if [s1] is lexicographically before [s2],
 	   or 1 if [s2] is lexicographically before [s1]. *)
 ;;
-value string_for_read : string -> string
+val string_for_read : string -> string
         (* Return a copy of the argument, with special characters represented
            by escape sequences, following the lexical conventions of
            Caml Light. *)
 ;;
 
-value index_char: string -> char -> int;;
+val index_char: string -> char -> int;;
         (* [index_char s c] returns the position of the leftmost occurrence of
            character [c] in string [s].  Raise [Not_found] if [c] does not
            occur in [s]. *)
-value rindex_char: string -> char -> int;;
+val rindex_char: string -> char -> int;;
         (* [rindex_char s c] returns the position of the rightmost
            occurrence of character [c] in string [s].  Raise
            [Not_found] if [c] does not occur in [s]. *)
-value index_char_from: string -> int -> char -> int;;
-value rindex_char_from: string -> int -> char -> int;;
+val index_char_from: string -> int -> char -> int;;
+val rindex_char_from: string -> int -> char -> int;;
         (* Same as [index_char] and [rindex_char], but start searching
            at the character position given as second argument.
            [index_char s c] is equivalent to [index_char_from s 0 c], and

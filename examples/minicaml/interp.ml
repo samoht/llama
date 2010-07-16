@@ -15,7 +15,7 @@ and décode_booléen = function
 (* Pour transformer une fonction Caml en valeur fonctionnelle *)
 
 let prim1 codeur calcul décodeur =
-  Val_primitive(function val -> codeur(calcul(décodeur val)))
+  Val_primitive(function v -> codeur(calcul(décodeur v)))
 and prim2 codeur calcul décodeur1 décodeur2 =
   Val_primitive(function
   | Val_paire(v1, v2) ->
@@ -54,9 +54,9 @@ let boucle () =
       | Définition déf ->
           let nouvel_env = évalue_définition !env_global déf in
           begin match nouvel_env with
-          | (nom, val) :: _ ->
+          | (nom, v) :: _ ->
               print_string nom; print_string " = ";
-              imprime_valeur val; print_newline()
+              imprime_valeur v; print_newline()
           | _ -> failwith "mauvaise gestion des définitions"
           end;
           env_global := nouvel_env

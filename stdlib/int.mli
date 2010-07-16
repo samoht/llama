@@ -6,7 +6,7 @@
 
 exception Division_by_zero;;
 
-value minus : int -> int = 1 "~int"
+val minus : int -> int = 1 "~int"
   and minus_int : int -> int = 1 "~int"
         (* Unary negation. You can write [-e] instead of [minus e]. *)
   and succ : int -> int = 1 "succ"
@@ -41,18 +41,18 @@ value minus : int -> int = 1 "~int"
         (* Usual comparisons between integers. *)
 ;;
 
-value abs : int -> int
+val abs : int -> int
         (* Return the absolute value of the argument. *)
 ;;
 
-value max_int : int
+val max_int : int
   and min_int : int
         (* The greatest and smallest integer values. *)
 ;;
 
 (*** Bitwise operations *)
 
-value prefix land : int -> int -> int = 2 "and"
+val prefix land : int -> int -> int = 2 "and"
         (* Bitwise logical and. *)
   and prefix lor : int -> int -> int = 2 "or"
         (* Bitwise logical or. *)
@@ -76,7 +76,7 @@ value prefix land : int -> int -> int = 2 "and"
 
 (*** Conversion functions *)
 
-value string_of_int : int -> string
+val string_of_int : int -> string
         (* Convert the given integer to its decimal representation. *)
   and int_of_string : string -> int = 1 "int_of_string"
         (* Convert the given string to an integer, in decimal (by default)

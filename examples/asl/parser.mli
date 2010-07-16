@@ -12,13 +12,13 @@ and top_asl = Decl of string * asl;;
 
 exception Unbound of string;;
 
-value init_env : string list;;
-value global_env : string list ref;;
+val init_env : string list;;
+val global_env : string list ref;;
 
-value top : token_type stream -> top_asl;;
-value expr : token_type stream -> string list -> asl;;
-value expr0 : token_type stream -> string list -> asl;;
+val top : token_type stream -> top_asl;;
+val expr : token_type stream -> string list -> asl;;
+val expr0 : token_type stream -> string list -> asl;;
 
-value print_top : top_asl -> string stream;;
-value print_expr : asl -> string stream;;
+val print_top : top_asl -> string stream;;
+val print_expr : asl -> string stream;;
 

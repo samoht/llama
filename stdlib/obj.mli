@@ -5,7 +5,7 @@
 
 type obj
 ;;
-value repr : 'a -> obj = 1 "identity"
+val repr : 'a -> obj = 1 "identity"
   and magic_obj : obj -> 'a = 1 "identity"
   and magic : 'a -> 'b = 1 "identity"
   and is_block : obj -> bool = 1 "obj_is_block"

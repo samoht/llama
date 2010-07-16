@@ -1,13 +1,13 @@
 (* Operations on floating-point numbers *)
 
-value int_of_float : float -> int = 1 "int_of_float"
+val int_of_float : float -> int = 1 "int_of_float"
         (* Truncate the given float to an integer value.
            The result is unspecified if it falls outside the
            range of representable integers. *)
   and float_of_int : int -> float = 1 "float_of_int";;
         (* Convert an integer to floating-point. *)
 
-value minus : float -> float = 1 "~float"
+val minus : float -> float = 1 "~float"
   and minus_float : float -> float = 1 "~float"
         (* Unary negation. *)
   and prefix + : float -> float -> float = 2 "+float"
@@ -48,7 +48,7 @@ value minus : float -> float = 1 "~float"
         (* Usual comparisons between floating-point numbers. *)
 ;;
 
-value acos : float -> float = 1 "acos_float"
+val acos : float -> float = 1 "acos_float"
   and asin : float -> float = 1 "asin_float"
   and atan : float -> float = 1 "atan_float"
   and atan2 : float -> float -> float = 2 "atan2_float"
@@ -67,7 +67,7 @@ value acos : float -> float = 1 "acos_float"
           (* Usual transcendental functions on floating-point numbers. *)
 ;;
 
-value ceil : float -> float = 1 "ceil_float"
+val ceil : float -> float = 1 "ceil_float"
   and floor : float -> float = 1 "floor_float"
           (* Round the given float to an integer value.
              [floor f] returns the greatest integer value less than or
@@ -92,7 +92,7 @@ value ceil : float -> float = 1 "ceil_float"
               part of [f]. *)
 ;;
 
-value string_of_float : float -> string
+val string_of_float : float -> string
         (* Convert the given float to its decimal representation. *)
   and float_of_string : string -> float = 1 "float_of_string"
         (* Convert the given string to a float, in decimal.

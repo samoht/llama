@@ -5,4 +5,4 @@ type expr =
   | Séquence of expr * expr
   | Répétition of expr;;
 
-value lire : char stream -> expr;;
+val lire : char stream -> expr;;

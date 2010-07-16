@@ -9,17 +9,17 @@ exception Sys_error of string;;
            of the error messages are implementation-dependent, and should
            not be relied upon to catch specific system errors. *)
 
-value command_line : string vect;;
+val command_line : string vect;;
         (* The command line arguments given to the process.
            The first element is the command name used to invoke the program. *)
 
-value interactive: bool;;
+val interactive: bool;;
         (* True if we're running under the toplevel system. False if
            we're running as a standalone program. *)
 
 type file_perm == int;;
 
-value s_irusr : file_perm
+val s_irusr : file_perm
   and s_iwusr : file_perm
   and s_ixusr : file_perm
   and s_irgrp : file_perm
@@ -55,7 +55,7 @@ type open_flag =
 ;;
         (* The commands for [open]. *)
 
-value exit : int -> 'a = 1 "sys_exit"
+val exit : int -> 'a = 1 "sys_exit"
         (* Terminate the program and return the given status code to
 	   the operating system.
            In contrast with the function [exit] from module [io], this
@@ -84,7 +84,7 @@ value exit : int -> 'a = 1 "sys_exit"
         (* Execute the given shell command and return its exit code. *)
 ;;
 
-value time : unit -> float = 1 "sys_time"
+val time : unit -> float = 1 "sys_time"
         (* Return the processor time, in seconds, used by the program
            since the beginning of execution. *)
 ;;
@@ -93,7 +93,7 @@ exception Break
         (* Exception [Break] is raised on user interrupt if [catch_break]
            is on. *)
 ;;
-value catch_break : bool -> unit = 1 "sys_catch_break"
+val catch_break : bool -> unit = 1 "sys_catch_break"
         (* [catch_break] governs whether user interrupt terminates the program
            or raises the [Break] exception. Call [catch_break true] to enable
 	   raising [Break], and [catch_break false] to let the system
@@ -102,11 +102,11 @@ value catch_break : bool -> unit = 1 "sys_catch_break"
 
 (*--*)
 
-value max_vect_length : int
+val max_vect_length : int
   and max_string_length : int
         (* Max length for arrays and strings, as imposed by the
            runtime system. *)
 ;;
-value word_size : int
+val word_size : int
         (* Size of a machine word (in bits). *)
 ;;

@@ -49,7 +49,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) [
   "to", TO;
   "try", TRY;
   "type", TYPE;
-  "value", VALUE;
+  "val", VALUE;
   "when", WHEN;
   "where", WHERE;
   "while", WHILE;

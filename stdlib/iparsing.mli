@@ -35,7 +35,7 @@ and parser_output =
   | Compute_semantic_action
 ;;
 
-value parse_engine :
+val parse_engine :
     parse_tables -> parser_env -> parser_input -> obj -> parser_output
     = 4 "parse_engine"
 ;;
