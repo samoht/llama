@@ -17,22 +17,23 @@ and core_type_desc =
 type pattern =
   { ppat_desc: pattern_desc;
     ppat_loc: location }
+
 and pattern_desc =
-    Pwildpat
-  | Pvarpat of string
-  | Paliaspat of pattern * string
-  | Pconstantpat of atomic_constant
-  | Ptuplepat of pattern list
-  | Pconstruct0pat of Longident.t
-  | Pconstruct1pat of Longident.t * pattern
-  | Porpat of pattern * pattern
-  | Pconstraintpat of pattern * core_type
-  | Precordpat of (Longident.t * pattern) list
-;;
+    Ppat_any
+  | Ppat_var of string
+  | Ppat_alias of pattern * string
+  | Ppat_constant of atomic_constant
+  | Ppat_tuple of pattern list
+  | Ppat_construct0 of Longident.t
+  | Ppat_construct1 of Longident.t * pattern
+  | Ppat_or of pattern * pattern
+  | Ppat_constraint of pattern * core_type
+  | Ppat_record of (Longident.t * pattern) list
 
 type expression =
   { pexp_desc: expression_desc;
     pexp_loc: location }
+
 and expression_desc =
     Pident of Longident.t
   | Pconstant of struct_constant

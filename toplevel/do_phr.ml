@@ -60,9 +60,9 @@ let do_toplevel_phrase phr =
                 let res = Eval.eval [] (Eval.term_of_expr [] expr) in
                 let rec aux pat res =
                   begin match pat.p_desc, res with
-                    | Zwildpat, _ ->
+                    | Zpat_any, _ ->
                         ()
-                    | Zvarpat s, _ ->
+                    | Zpat_var s, _ ->
                         let qualid = {qual=compiled_module_name(); id=s} in
                         Eval.enter_global qualid res
                     | _ ->

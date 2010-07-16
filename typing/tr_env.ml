@@ -61,9 +61,9 @@ let translate_update s env newval =
 
 let rec pat_is_named pat =
   match pat.p_desc with
-    Zvarpat s -> true
-  | Zaliaspat(pat, s) -> true
-  | Zconstraintpat(pat, _) -> pat_is_named pat
+    Zpat_var s -> true
+  | Zpat_alias(pat, s) -> true
+  | Zpat_constraint(pat, _) -> pat_is_named pat
   | _ -> false
 ;;
 
@@ -76,29 +76,29 @@ let tuple_path nfields path =
 
 let rec paths_of_pat path pat =
   match pat.p_desc with
-    Zvarpat s ->
+    Zpat_var s ->
       [{var_name = s; var_path = path; var_typ = pat.p_typ}]
-  | Zaliaspat(pat,s) ->
+  | Zpat_alias(pat,s) ->
       {var_name = s; var_path = path; var_typ = pat.p_typ} ::
       paths_of_pat path pat
-  | Ztuplepat(patlist) ->
+  | Zpat_tuple(patlist) ->
       let rec paths_of_patlist i = function
         [] -> []
       | p::pl ->
           paths_of_pat (Path_son(i,path)) p @ paths_of_patlist (i+1) pl in
       paths_of_patlist 0 patlist
-  | Zconstruct0pat(cstr) ->
+  | Zpat_construct0(cstr) ->
       []
-  | Zconstruct1pat(cstr, p) ->
+  | Zpat_construct1(cstr, p) ->
       begin match cstr.info.cs_kind with
         Constr_superfluous n ->
           paths_of_pat (if pat_is_named p then tuple_path n path else path) p
       | _ ->
           paths_of_pat (Path_son(0, path)) p
       end
-  | Zconstraintpat(pat,_) ->
+  | Zpat_constraint(pat,_) ->
       paths_of_pat path pat
-  | Zrecordpat lbl_pat_list ->
+  | Zpat_record lbl_pat_list ->
       let rec paths_of_lbl_pat_list = function
         [] -> []
       | (lbl,p)::pl ->
@@ -110,24 +110,24 @@ let rec paths_of_pat path pat =
 
 let rec mutable_vars_of_pat mut pat =
   match pat.p_desc with
-    Zvarpat v ->
+    Zpat_var v ->
       if mut
       then [{var_name = v; var_typ = pat.p_typ; var_path = Path_root}]
       else []
-  | Zaliaspat(pat,v) ->
+  | Zpat_alias(pat,v) ->
       let l = mutable_vars_of_pat mut pat in
       if mut
       then {var_name = v; var_typ = pat.p_typ; var_path = Path_root} :: l
       else l
-  | Zconstraintpat(pat, _) -> mutable_vars_of_pat mut pat
-  | Ztuplepat patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
-  | Zconstruct1pat(cstr,pat) ->
+  | Zpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
+  | Zpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
+  | Zpat_construct1(cstr,pat) ->
       let mut' =
         match cstr.info.cs_mut with
           Mutable -> true
         | Notmutable -> mut in
       mutable_vars_of_pat mut' pat
-  | Zrecordpat lbl_pat_list ->
+  | Zpat_record lbl_pat_list ->
       List.flatten (List.map
         (fun (lbl,pat) ->
           let mut' =
@@ -136,7 +136,7 @@ let rec mutable_vars_of_pat mut pat =
             | Notmutable -> mut in
           mutable_vars_of_pat mut' pat)
         lbl_pat_list)
-  | _ -> []                             (* Zwildpat or Zconstpat or Zorpat *)
+  | _ -> []                             (* Zpat_any or Zconstpat or Zpat_or *)
 ;;
 
 let rec add_lets_to_env varlist env =
@@ -196,9 +196,9 @@ let var_root id typ =
 let add_let_rec_to_env env pat_expr_list =
   let rec add env (pat, expr) =
     match pat.p_desc with
-      Zvarpat v ->
+      Zpat_var v ->
         Tenv([{var_name = v; var_path = Path_root; var_typ = pat.p_typ}], env)
-    | Zconstraintpat(p, ty) ->
+    | Zpat_constraint(p, ty) ->
         add env (p, expr)
     | _ ->
         illegal_letrec_pat pat.p_loc in

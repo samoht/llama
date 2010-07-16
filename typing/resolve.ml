@@ -17,16 +17,16 @@ let rec core_type te =
 let rec pattern p =
   { p_desc =
       begin match p.ppat_desc with
-        | Pwildpat -> Zwildpat
-        | Pvarpat s -> Zvarpat s
-        | Paliaspat (p, s) -> Zaliaspat (pattern p, s)
-        | Pconstantpat c -> Zconstantpat c
-        | Ptuplepat l -> Ztuplepat (List.map pattern l)
-        | Pconstruct0pat li -> Zconstruct0pat (Env.lookup_constructor li p.ppat_loc)
-        | Pconstruct1pat (li, p) -> Zconstruct1pat (Env.lookup_constructor li p.ppat_loc, pattern p)
-        | Porpat (p1, p2) -> Zorpat (pattern p1, pattern p2)
-        | Pconstraintpat (p, te) -> Zconstraintpat (pattern p, core_type te)
-        | Precordpat l -> Zrecordpat (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
+        | Ppat_any -> Zpat_any
+        | Ppat_var s -> Zpat_var s
+        | Ppat_alias (p, s) -> Zpat_alias (pattern p, s)
+        | Ppat_constant c -> Zpat_constant c
+        | Ppat_tuple l -> Zpat_tuple (List.map pattern l)
+        | Ppat_construct0 li -> Zpat_construct0 (Env.lookup_constructor li p.ppat_loc)
+        | Ppat_construct1 (li, p) -> Zpat_construct1 (Env.lookup_constructor li p.ppat_loc, pattern p)
+        | Ppat_or (p1, p2) -> Zpat_or (pattern p1, pattern p2)
+        | Ppat_constraint (p, te) -> Zpat_constraint (pattern p, core_type te)
+        | Ppat_record l -> Zpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
       end;
     p_loc = p.ppat_loc;
     p_typ = no_type }

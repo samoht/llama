@@ -20,16 +20,16 @@ type pattern =
     p_loc: location;
     mutable p_typ: typ }
 and pattern_desc =
-    Zwildpat
-  | Zvarpat of string
-  | Zaliaspat of pattern * string
-  | Zconstantpat of atomic_constant
-  | Ztuplepat of pattern list
-  | Zconstruct0pat of constr_desc global
-  | Zconstruct1pat of constr_desc global * pattern
-  | Zorpat of pattern * pattern
-  | Zconstraintpat of pattern * core_type
-  | Zrecordpat of (label_desc global * pattern) list
+    Zpat_any
+  | Zpat_var of string
+  | Zpat_alias of pattern * string
+  | Zpat_constant of atomic_constant
+  | Zpat_tuple of pattern list
+  | Zpat_construct0 of constr_desc global
+  | Zpat_construct1 of constr_desc global * pattern
+  | Zpat_or of pattern * pattern
+  | Zpat_constraint of pattern * core_type
+  | Zpat_record of (label_desc global * pattern) list
 ;;
 
 type expression =
@@ -112,16 +112,16 @@ and intf_desc =
 
 let rec free_vars_of_pat pat =
   match pat.p_desc with
-    Zwildpat -> []
-  | Zvarpat v -> [v]
-  | Zaliaspat(pat,v) -> v :: free_vars_of_pat pat
-  | Zconstantpat _ -> []
-  | Ztuplepat patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Zconstruct0pat(_) -> []
-  | Zconstruct1pat(_, pat) -> free_vars_of_pat pat
-  | Zorpat(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
-  | Zconstraintpat(pat, _) -> free_vars_of_pat pat
-  | Zrecordpat lbl_pat_list ->
+    Zpat_any -> []
+  | Zpat_var v -> [v]
+  | Zpat_alias(pat,v) -> v :: free_vars_of_pat pat
+  | Zpat_constant _ -> []
+  | Zpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
+  | Zpat_construct0(_) -> []
+  | Zpat_construct1(_, pat) -> free_vars_of_pat pat
+  | Zpat_or(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
+  | Zpat_constraint(pat, _) -> free_vars_of_pat pat
+  | Zpat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 ;;    
 
@@ -153,16 +153,16 @@ let single_constructor cstr =
 
 let rec pat_irrefutable pat =
   match pat.p_desc with
-    Zwildpat -> true
-  | Zvarpat s -> true
-  | Zaliaspat(pat, _) -> pat_irrefutable pat
-  | Zconstantpat _ -> false
-  | Ztuplepat patl -> List.for_all pat_irrefutable patl
-  | Zconstruct0pat cstr -> single_constructor cstr
-  | Zconstruct1pat(cstr, pat) -> single_constructor cstr && pat_irrefutable pat
-  | Zorpat(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
-  | Zconstraintpat(pat, _) -> pat_irrefutable pat
-  | Zrecordpat lbl_pat_list ->
+    Zpat_any -> true
+  | Zpat_var s -> true
+  | Zpat_alias(pat, _) -> pat_irrefutable pat
+  | Zpat_constant _ -> false
+  | Zpat_tuple patl -> List.for_all pat_irrefutable patl
+  | Zpat_construct0 cstr -> single_constructor cstr
+  | Zpat_construct1(cstr, pat) -> single_constructor cstr && pat_irrefutable pat
+  | Zpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
+  | Zpat_constraint(pat, _) -> pat_irrefutable pat
+  | Zpat_record lbl_pat_list ->
       List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
 ;;
 

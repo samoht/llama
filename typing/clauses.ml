@@ -11,7 +11,7 @@ open Types;;
 let make_pat desc ty =
   {p_desc = desc; p_loc = no_location; p_typ = ty};;
 
-let omega = make_pat Zwildpat no_type;;
+let omega = make_pat Zpat_any no_type;;
 
 let rec omegas i =
   if i <= 0 then [] else omega::omegas (i-1)
@@ -19,15 +19,15 @@ let rec omegas i =
 
 let simple_match p1 p2 = 
   match p1.p_desc, p2.p_desc with
-    Zconstruct0pat(c1),Zconstruct0pat(c2) ->
+    Zpat_construct0(c1),Zpat_construct0(c2) ->
       c1.info.cs_tag = c2.info.cs_tag
-  | Zconstruct1pat(c1,_),Zconstruct1pat(c2,_) ->
+  | Zpat_construct1(c1,_),Zpat_construct1(c2,_) ->
       c1.info.cs_tag = c2.info.cs_tag
-  | Zconstantpat(c1),Zconstantpat(c2) ->
+  | Zpat_constant(c1),Zpat_constant(c2) ->
       c1 = c2
-  | Ztuplepat(_),Ztuplepat(_) -> true
-  | Zrecordpat(_),Zrecordpat(_) -> true
-  | _,(Zwildpat | Zvarpat(_)) -> true
+  | Zpat_tuple(_),Zpat_tuple(_) -> true
+  | Zpat_record(_),Zpat_record(_) -> true
+  | _,(Zpat_any | Zpat_var(_)) -> true
   | _,_ -> false
 ;;
 
@@ -53,14 +53,14 @@ let set_fields size l =
 
 let simple_match_args p1 p2 =
   match p2.p_desc with
-    Zconstruct1pat(_,arg) -> [arg]
-  | Ztuplepat(args)  -> args
-  | Zrecordpat(args) ->  set_fields (record_nargs p1) args
-  | (Zwildpat | Zvarpat(_)) ->
+    Zpat_construct1(_,arg) -> [arg]
+  | Zpat_tuple(args)  -> args
+  | Zpat_record(args) ->  set_fields (record_nargs p1) args
+  | (Zpat_any | Zpat_var(_)) ->
       begin match p1.p_desc with
-        Zconstruct1pat(_,_) ->  [omega]
-      | Ztuplepat(args) -> List.map (fun _ -> omega) args
-      | Zrecordpat(args) ->  List.map (fun _ -> omega) args
+        Zpat_construct1(_,_) ->  [omega]
+      | Zpat_tuple(args) -> List.map (fun _ -> omega) args
+      | Zpat_record(args) ->  List.map (fun _ -> omega) args
       | _ -> []
       end
   | _ -> []
@@ -73,23 +73,23 @@ let simple_match_args p1 p2 =
 *)
 
 let rec simple_pat q pss = match pss with
-  ({p_desc = Zaliaspat(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
-| ({p_desc = Zconstraintpat(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
-| ({p_desc = Zorpat(p1,p2)}::ps)::pss -> simple_pat q ((p1::ps)::(p2::ps)::pss)
-| ({p_desc = (Zwildpat | Zvarpat(_))}::_)::pss -> simple_pat q pss
-| (({p_desc = Ztuplepat(args)} as p)::_)::_ ->
-    make_pat(Ztuplepat(List.map (fun _ -> omega) args)) p.p_typ
-| (({p_desc = Zrecordpat(args)} as p)::_)::pss ->
-    make_pat(Zrecordpat (List.map (fun lbl -> lbl,omega) (record_labels p))) p.p_typ
+  ({p_desc = Zpat_alias(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
+| ({p_desc = Zpat_constraint(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
+| ({p_desc = Zpat_or(p1,p2)}::ps)::pss -> simple_pat q ((p1::ps)::(p2::ps)::pss)
+| ({p_desc = (Zpat_any | Zpat_var(_))}::_)::pss -> simple_pat q pss
+| (({p_desc = Zpat_tuple(args)} as p)::_)::_ ->
+    make_pat(Zpat_tuple(List.map (fun _ -> omega) args)) p.p_typ
+| (({p_desc = Zpat_record(args)} as p)::_)::pss ->
+    make_pat(Zpat_record (List.map (fun lbl -> lbl,omega) (record_labels p))) p.p_typ
 | _ -> q
 ;;
 
 let filter_one q pss =
 
   let rec filter_rec pss = match pss with
-    ({p_desc = Zaliaspat(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Zconstraintpat(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Zorpat(p1,p2)}::ps)::pss ->
+    ({p_desc = Zpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({p_desc = Zpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({p_desc = Zpat_or(p1,p2)}::ps)::pss ->
       filter_rec ((p1::ps)::(p2::ps)::pss)
   | (p::ps)::pss ->
       if simple_match q p then
@@ -105,11 +105,11 @@ let filter_one q pss =
 let filter_extra pss =
 
   let rec filter_rec pss = match pss with
-    ({p_desc = Zaliaspat(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Zconstraintpat(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Zorpat(p1,p2)}::ps)::pss ->
+    ({p_desc = Zpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({p_desc = Zpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({p_desc = Zpat_or(p1,p2)}::ps)::pss ->
       filter_rec ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Zwildpat | Zvarpat(_))} :: qs) :: pss -> qs :: filter_rec pss
+  | ({p_desc = (Zpat_any | Zpat_var(_))} :: qs) :: pss -> qs :: filter_rec pss
   | _::pss  -> filter_rec pss
   | [] -> [] in
 
@@ -127,22 +127,22 @@ let filter_all pat0 pss =
         c::insert q qs env in
 
   let rec filter_rec env pss = match pss with
-    ({p_desc = Zaliaspat(p,_)}::ps)::pss -> filter_rec env ((p::ps)::pss)
-  | ({p_desc = Zconstraintpat(p,_)}::ps)::pss ->
+    ({p_desc = Zpat_alias(p,_)}::ps)::pss -> filter_rec env ((p::ps)::pss)
+  | ({p_desc = Zpat_constraint(p,_)}::ps)::pss ->
       filter_rec env ((p::ps)::pss)
-  | ({p_desc = Zorpat(p1,p2)}::ps)::pss ->
+  | ({p_desc = Zpat_or(p1,p2)}::ps)::pss ->
       filter_rec env ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Zwildpat | Zvarpat(_))}::_)::pss -> filter_rec env pss  
+  | ({p_desc = (Zpat_any | Zpat_var(_))}::_)::pss -> filter_rec env pss  
   | (p::ps)::pss ->
       filter_rec (insert p ps env) pss
   | _ -> env
 
   and filter_omega env pss = match pss with
-    ({p_desc = Zaliaspat(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
-  | ({p_desc = Zconstraintpat(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
-  | ({p_desc = Zorpat(p1,p2)}::ps)::pss ->
+    ({p_desc = Zpat_alias(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
+  | ({p_desc = Zpat_constraint(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
+  | ({p_desc = Zpat_or(p1,p2)}::ps)::pss ->
       filter_omega env ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Zwildpat | Zvarpat(_))}::ps)::pss ->
+  | ({p_desc = (Zpat_any | Zpat_var(_))}::ps)::pss ->
       filter_omega
         (List.map
           (fun (q,qss) ->
@@ -155,7 +155,7 @@ let filter_all pat0 pss =
   filter_omega
     (filter_rec
       (match pat0.p_desc with
-        (Zrecordpat(_) | Ztuplepat(_)) -> [pat0,[]]
+        (Zpat_record(_) | Zpat_tuple(_)) -> [pat0,[]]
       | _ -> [])
       pss)
     pss
@@ -170,15 +170,15 @@ let get_span_of_constr cstr =
 
 
 let full_match env = match env with
-  ({p_desc = Zconstruct0pat(c)},_) :: _ ->
+  ({p_desc = Zpat_construct0(c)},_) :: _ ->
     List.length env ==  get_span_of_constr c
-| ({p_desc = Zconstruct1pat(c,_)},_) :: _ ->
+| ({p_desc = Zpat_construct1(c,_)},_) :: _ ->
     List.length env =  get_span_of_constr c
-| ({p_desc = Zconstantpat(ACchar(_))},_) :: _ ->
+| ({p_desc = Zpat_constant(ACchar(_))},_) :: _ ->
     List.length env == 256
-| ({p_desc = Zconstantpat(_)},_) :: _ -> false
-| ({p_desc = Ztuplepat(_)},_) :: _ -> true
-| ({p_desc = Zrecordpat(_)},_) :: _ -> true
+| ({p_desc = Zpat_constant(_)},_) :: _ -> false
+| ({p_desc = Zpat_tuple(_)},_) :: _ -> true
+| ({p_desc = Zpat_record(_)},_) :: _ -> true
 | _ -> fatal_error "full_match"
 ;;
 
@@ -194,11 +194,11 @@ let rec satisfiable pss qs = match pss with
   [] -> true
 | _ -> match qs with
     [] -> false
-  | {p_desc = Zorpat(q1,q2)}::qs ->
+  | {p_desc = Zpat_or(q1,q2)}::qs ->
       satisfiable pss (q1::qs) || satisfiable pss (q2::qs)
-  | {p_desc = Zaliaspat(q,_)}::qs -> satisfiable pss (q::qs)
-  | {p_desc = Zconstraintpat(q,_)}::qs -> satisfiable pss (q::qs)
-  | {p_desc = (Zwildpat | Zvarpat(_))}::qs ->
+  | {p_desc = Zpat_alias(q,_)}::qs -> satisfiable pss (q::qs)
+  | {p_desc = Zpat_constraint(q,_)}::qs -> satisfiable pss (q::qs)
+  | {p_desc = (Zpat_any | Zpat_var(_))}::qs ->
       let q0 = simple_pat omega pss in     
       (match filter_all q0 pss with
 (* first column of pss is made of variables only *)
@@ -231,22 +231,22 @@ let rec make_matrix pses = match pses with
 
 let rec le_pat p q =
   match p.p_desc, q.p_desc with
-    (Zvarpat(_)|Zwildpat),_ -> true
-  | Zaliaspat(p,_),_ -> le_pat p q
-  | _,Zaliaspat(q,_) -> le_pat p q
-  | Zconstraintpat(p,_),_ -> le_pat p q
-  | _,Zconstraintpat(q,_) -> le_pat p q
-  | Zorpat(p1,p2),_ ->
+    (Zpat_var(_)|Zpat_any),_ -> true
+  | Zpat_alias(p,_),_ -> le_pat p q
+  | _,Zpat_alias(q,_) -> le_pat p q
+  | Zpat_constraint(p,_),_ -> le_pat p q
+  | _,Zpat_constraint(q,_) -> le_pat p q
+  | Zpat_or(p1,p2),_ ->
       le_pat p1 q || le_pat p2 q
-  | _,Zorpat(q1,q2) ->
+  | _,Zpat_or(q1,q2) ->
        le_pat p q1 && le_pat p q2
-  | Zconstantpat(c1), Zconstantpat(c2) -> c1 = c2
-  | Zconstruct0pat(c1), Zconstruct0pat(c2) ->
+  | Zpat_constant(c1), Zpat_constant(c2) -> c1 = c2
+  | Zpat_construct0(c1), Zpat_construct0(c2) ->
       c1.info.cs_tag == c2.info.cs_tag
-  | Zconstruct1pat(c1,p), Zconstruct1pat(c2,q) ->
+  | Zpat_construct1(c1,p), Zpat_construct1(c2,q) ->
       c1.info.cs_tag == c2.info.cs_tag && le_pat p q
-  | Ztuplepat(ps), Ztuplepat(qs) -> le_pats ps qs
-  | Zrecordpat(l1), Zrecordpat(l2) ->
+  | Zpat_tuple(ps), Zpat_tuple(qs) -> le_pats ps qs
+  | Zpat_record(l1), Zpat_record(l2) ->
      let size = record_nargs p in
      le_pats (set_fields size l1) (set_fields size l2)
   | _,_ -> false  

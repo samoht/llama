@@ -98,9 +98,9 @@ let unify_pat pat expected_ty actual_ty =
 let rec tpat new_env (pat, ty, mut_flag) =
   pat.p_typ <- ty;
   match pat.p_desc with
-    Zwildpat ->
+    Zpat_any ->
       new_env
-  | Zvarpat v ->
+  | Zpat_var v ->
       if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else begin
@@ -108,22 +108,22 @@ let rec tpat new_env (pat, ty, mut_flag) =
           upper_case_variable_warning pat v;
         (v, (ty, mut_flag)) :: new_env
       end
-  | Zaliaspat(pat, v) ->
+  | Zpat_alias(pat, v) ->
       if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else
         tpat ((v, (ty, mut_flag)) :: new_env) (pat, ty, mut_flag)
-  | Zconstantpat cst ->
+  | Zpat_constant cst ->
       unify_pat pat ty (type_of_atomic_constant cst);
       new_env
-  | Ztuplepat(patl) ->
+  | Zpat_tuple(patl) ->
       begin try
         tpat_list new_env patl (filter_product (List.length patl) ty)
       with Unify ->
         pat_wrong_type_err pat ty
           (type_product(new_type_var_list (List.length patl)))
       end
-  | Zconstruct0pat(cstr) ->
+  | Zpat_construct0(cstr) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           unify_pat pat ty (type_instance cstr.info.cs_res);
@@ -131,7 +131,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
       | _ ->
           non_constant_constr_err cstr pat.p_loc
       end
-  | Zconstruct1pat(cstr, arg) ->
+  | Zpat_construct1(cstr, arg) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           constant_constr_err cstr pat.p_loc
@@ -141,17 +141,17 @@ let rec tpat new_env (pat, ty, mut_flag) =
         unify_pat pat ty ty_res;
         tpat new_env (arg, ty_arg, cstr.info.cs_mut)
       end
-  | Zorpat(pat1, pat2) ->
+  | Zpat_or(pat1, pat2) ->
       begin match free_vars_of_pat pat with
         [] -> tpat (tpat new_env (pat1, ty, mut_flag)) (pat2, ty, mut_flag)
       | _  -> orpat_should_be_closed_err pat
       end
-  | Zconstraintpat(pat, ty_expr) ->
+  | Zpat_constraint(pat, ty_expr) ->
       let ty' = type_of_type_expression false ty_expr in
       let new_env' = tpat new_env (pat, ty', mut_flag) in
         unify_pat pat ty ty';
         new_env'
-  | Zrecordpat lbl_pat_list ->
+  | Zpat_record lbl_pat_list ->
       let rec tpat_lbl new_env = function
         [] -> new_env
       | (lbl,p) :: rest ->
