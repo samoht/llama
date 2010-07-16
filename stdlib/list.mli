@@ -50,6 +50,7 @@ val list_length : 'a list -> int
   and exists : ('a -> bool) -> 'a list -> bool
         (* [exists p [a1; ...; an]] is [(p a1) or (p a2) or ... or (p an)]. *)
 ;;
+val flatten : 'a list list -> 'a list
 
 val mem : 'a -> 'a list -> bool
         (* [mem a l] is true if and only if [a] is structurally equal (see

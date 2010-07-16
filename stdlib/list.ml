@@ -92,6 +92,10 @@ let list_it2 f l1 l2 a =
   | _ _ -> invalid_arg "list_it2"
 ;;
 
+let rec flatten = function
+    [] -> []
+  | l::r -> l @ flatten r
+
 let flat_map f = flat_map_f
  where rec flat_map_f = function
      [] -> [] | x::l -> f x @ flat_map_f l

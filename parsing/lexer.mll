@@ -11,7 +11,8 @@ type lexical_error =
 
 exception Lexical_error of lexical_error * int * int;;
 
-(**) open Parser;;
+open Lexing;;
+open Parser;;
 
 (* For nested comments *)
 
@@ -133,6 +134,22 @@ let char_for_hexadecimal_code lexbuf i =
   in
   Char.chr (val1 * 16 + val2)
 
+(* Update the current location with file name and line number. *)
+
+let update_loc lexbuf file line absolute chars =
+  let pos = lexbuf.lex_curr_p in
+  let new_file = match file with
+                 | None -> pos.pos_fname
+                 | Some s -> s
+  in
+  lexbuf.lex_curr_p <- { pos with
+    pos_fname = new_file;
+    pos_lnum = if absolute then line else pos.pos_lnum + line;
+    pos_bol = pos.pos_cnum - chars;
+  }
+;;
+
+
 
 }
 
@@ -208,6 +225,12 @@ rule main = parse
                               comment_start, comment_end))
         end;
         main lexbuf }
+  | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*
+        ("\"" ([^ '\010' '\013' '"' ] * as name) "\"")?
+        [^ '\010' '\013'] * newline
+      { update_loc lexbuf name (int_of_string num) true 0;
+        main lexbuf
+      }
   | "#" { SHARP }
   | "&" { AMPERSAND }
   | "'" { QUOTE }
