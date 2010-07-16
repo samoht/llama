@@ -107,7 +107,16 @@ let do_structure_item phr =
                              (match decl with Zconstr0decl name -> name
                                             | Zconstr1decl(name,_,_) -> name))
         decl
-  | Zimpldirective dir ->
+  | Str_open mn ->
+      open_module (String.uncapitalize mn)
+  end;
+  flush stdout
+;;
+
+let do_toplevel_phrase topphr =
+  begin match topphr with
+    | Parsetree.Ptop_dir dir ->
+        let dir = Resolve.directiveu dir in
       begin match dir with
         | Zdir ("load", filename) ->
             !fwd_load_object filename
@@ -115,15 +124,16 @@ let do_structure_item phr =
             !fwd_load_file filename
         | Zdir ("disasm", s) ->
             Meta.set_trace_flag (s<>"")
-        | _ ->
-            do_directive phr.im_loc dir
+        | Zdir("infix", name) ->
+            Lexer.add_infix name
+        | Zdir("uninfix", name) ->
+            Lexer.remove_infix name
+        | Zdir("directory", dirname) ->
+            load_path := dirname :: !load_path
+        | Zdir(d, name) ->
+            eprintf 
+              "%aWarning: unknown directive \"#%s\", ignored.\n";
+            flush stderr
       end
-  end;
-  flush stdout
-;;
-
-let do_toplevel_phrase topphr =
-  begin match topphr with
-    | Parsetree.Ptop_dir d -> do_directive (Location.get_current_location()) (Resolve.directiveu d)
     | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item si)
   end

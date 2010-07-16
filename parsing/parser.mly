@@ -231,31 +231,31 @@ let pat_constr_or_var p =
 
 implementation:
     structure_tail        { $1 }
-  | Expr structure_tail   { make_impl(Pexpr $1) :: $2 }
+  | Expr structure_tail   { make_impl(Pstr_eval $1) :: $2 }
 ;
 structure_tail:
     /* empty */                                 { [] }
   | SEMISEMI EOF                                { [] }
-  | SEMISEMI Expr structure_tail            { make_impl(Pexpr $2) :: $3 }
+  | SEMISEMI Expr structure_tail            { make_impl(Pstr_eval $2) :: $3 }
   | SEMISEMI structure_item structure_tail      { $2 :: $3 }
   | structure_item structure_tail               { $1 :: $2 }
 ;
 structure_item:
   | LET Binding_list   %prec prec_let
-      { make_impl(Pletdef(false, $2)) }
+      { make_impl(Pstr_value(false, $2)) }
   | LET REC Binding_list  %prec prec_let
-      { make_impl(Pletdef(true, $3)) }
+      { make_impl(Pstr_value(true, $3)) }
   | TYPE Type_decl
-      { make_impl(Ptypedef $2) }
+      { make_impl(Pstr_type $2) }
   | EXCEPTION Exc_decl
-      { make_impl(Pexcdef $2) }
+      { make_impl(Pstr_exception $2) }
   | OPEN UIDENT
-      { make_impl(Pimpldirective(Pdir("open",String.uncapitalize $2))) }
+      { make_impl(Pstr_open $2) }
 ;
 toplevel_phrase:
   | SHARP Directive SEMISEMI { Ptop_dir($2) }
   | structure_item SEMISEMI  { Ptop_def($1) }
-  | Expr SEMISEMI            { Ptop_def(make_impl(Pexpr $1)) }
+  | Expr SEMISEMI            { Ptop_def(make_impl(Pstr_eval $1)) }
   | EOF { raise End_of_file }
 ;
 
@@ -269,13 +269,13 @@ interface:
 
 interface_item :
         VALUE Value_decl
-          { make_intf(Pvaluedecl $2) }
+          { make_intf(Psig_value $2) }
       | TYPE Type_decl
-          { make_intf(Ptypedecl $2) }
+          { make_intf(Psig_type $2) }
       | EXCEPTION Exc_decl
-          { make_intf(Pexcdecl $2) }
+          { make_intf(Psig_exception $2) }
       | OPEN UIDENT
-          { make_intf(Pintfdirective(Pdir("open",String.uncapitalize $2))) }
+          { make_intf(Psig_open $2) }
 ;
 
 /* Expressions */

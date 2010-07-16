@@ -60,26 +60,6 @@ let wrap parsing_fun lexing_fun lexbuf =
          raise Toplevel
 ;;
 
-(* Executing directives *)
-
-let do_directive loc = function
-    Zdir("open", name) ->
-      open_module name
-  | Zdir("close", name) ->
-      close_module name
-  | Zdir("infix", name) ->
-      add_infix name
-  | Zdir("uninfix", name) ->
-      remove_infix name
-  | Zdir("directory", dirname) ->
-      load_path := dirname :: !load_path
-  | Zdir(d, name) ->
-      eprintf 
-        "%aWarning: unknown directive \"#%s\", ignored.\n"
-        output_location loc d;
-      flush stderr
-;;
-
 (* Warn for unused #open *)
 
 let check_unused_opens () =
@@ -105,8 +85,8 @@ let compile_intf_phrase phr =
   | Sig_exception decl ->
       let ex_decl = type_excdecl phr.in_loc decl in
       if !verbose then print_excdecl ex_decl
-  | Zintfdirective dir ->
-      do_directive phr.in_loc dir
+  | Sig_open mn ->
+      open_module (String.uncapitalize mn)
   end
 ;;
 
@@ -162,8 +142,8 @@ let compile_impl_phrase outstream phr =
   | Str_exception decl ->
       let ex_decl = type_excdecl phr.im_loc decl in
       if !verbose then print_excdecl ex_decl
-  | Zimpldirective dir ->
-      do_directive phr.im_loc dir
+  | Str_open mn ->
+      open_module (String.uncapitalize mn)
   end
 ;;
 

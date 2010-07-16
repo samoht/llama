@@ -97,8 +97,7 @@ and impl_desc =
   | Str_value of bool * (pattern * expression) list
   | Str_type of (string * string list * type_decl) list
   | Str_exception of constr_decl list
-  | Zimpldirective of directiveu
-;;
+  | Str_open of module_name
 
 type intf_phrase =
   { in_desc: intf_desc;
@@ -107,8 +106,7 @@ and intf_desc =
     Sig_value of (string * core_type * prim_desc) list
   | Sig_type of (string * string list * type_decl) list
   | Sig_exception of constr_decl list
-  | Zintfdirective of directiveu
-;;
+  | Sig_open of module_name
 
 let rec free_vars_of_pat pat =
   match pat.p_desc with

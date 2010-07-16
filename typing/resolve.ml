@@ -103,7 +103,7 @@ let structure_item si =
         | Pstr_value(b,l) -> Str_value(b,List.map (fun (p,e)->pattern p, expr e) l)
         | Pstr_type l -> Str_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
         | Pstr_exception l -> Str_exception (List.map constr_decl l)
-        | Pimpldirective d -> Zimpldirective (directiveu d)
+        | Pstr_open mn -> Str_open mn
       end;
     im_loc = si.pstr_loc }
 
@@ -120,7 +120,7 @@ let signature_item si =
             (List.map (fun (s,te,pr) -> (s,core_type te, primitive pr)) l)
         | Psig_type l -> Sig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
         | Psig_exception l -> Sig_exception (List.map constr_decl l)
-        | Pintfdirective d -> Zintfdirective (directiveu d)
+        | Psig_open mn -> Sig_open mn
       end;
     in_loc = si.psig_loc }
     

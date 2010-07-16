@@ -91,7 +91,7 @@ and signature_item_desc =
     Psig_value of (string * core_type * (int*string) option) list
   | Psig_type of (string * string list * type_decl) list
   | Psig_exception of constr_decl list
-  | Pintfdirective of directiveu
+  | Psig_open of module_name
 
 type structure_item =
   { pstr_desc: structure_item_desc;
@@ -102,7 +102,7 @@ and structure_item_desc =
   | Pstr_value of bool * (pattern * expression) list
   | Pstr_type of (string * string list * type_decl) list
   | Pstr_exception of constr_decl list
-  | Pimpldirective of directiveu
+  | Pstr_open of module_name
 
 (* Toplevel phrases *)
 
