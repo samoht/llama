@@ -71,15 +71,15 @@ let rec make_range_pat low high =
   if low > high then
     make_range_pat high low
   else if low == high then
-    make_pat(Pconstantpat(ACchar(char_of_int low)))
+    make_pat(Ppat_constant(ACchar(char_of_int low)))
   else
-    make_pat(Porpat(make_pat(Pconstantpat(ACchar(char_of_int low))),
+    make_pat(Ppat_or(make_pat(Ppat_constant(ACchar(char_of_int low))),
                     make_range_pat (succ low) high))
 ;;
 
 let make_recordpat = function
-    [] -> make_pat(Pwildpat)
-  | l -> make_pat(Precordpat l);;
+    [] -> make_pat(Ppat_any)
+  | l -> make_pat(Ppat_record l);;
 
 let make_listpat pats =
   let rec makel res = function
@@ -87,17 +87,17 @@ let make_listpat pats =
       res
   | e::l ->
       makel
-       (make_pat(Pconstruct1pat(Id "::", make_pat(Ptuplepat [e;res]))))
+       (make_pat(Ppat_construct1(Id "::", make_pat(Ppat_tuple [e;res]))))
        l
   in
-    makel (make_pat(Pconstruct0pat(Id "[]"))) pats
+    makel (make_pat(Ppat_construct0(Id "[]"))) pats
 ;;
 
 let pat_constr_or_var p =
   if Longident.is_string_upper p then
-    make_pat(Pconstruct0pat (Id p))
+    make_pat(Ppat_construct0 (Id p))
   else
-    make_pat(Pvarpat p)
+    make_pat(Ppat_var p)
 
 %}
 
@@ -221,7 +221,7 @@ let pat_constr_or_var p =
 %start implementation
 %type <Parsetree.impl_phrase list> implementation 
 %start toplevel_phrase
-%type <Parsetree.impl_phrase> toplevel_phrase
+%type <Parsetree.toplevel_phrase> toplevel_phrase
 %start interface
 %type <Parsetree.intf_phrase list> interface
 
@@ -253,9 +253,9 @@ structure_item:
       { make_impl(Pimpldirective(Pdir("open",String.uncapitalize $2))) }
 ;
 toplevel_phrase:
-  | SHARP Directive SEMISEMI { make_impl(Pimpldirective($2)) }
-  | structure_item SEMISEMI  { $1 }
-  | Expr SEMISEMI            { make_impl(Pexpr $1) }
+  | SHARP Directive SEMISEMI { Ptop_dir($2) }
+  | structure_item SEMISEMI  { Ptop_def($1) }
+  | Expr SEMISEMI            { Ptop_def(make_impl(Pexpr $1)) }
   | EOF { raise End_of_file }
 ;
 
@@ -556,37 +556,37 @@ Pattern :
         Simple_pattern
           { $1 }
       | Pattern AS LIDENT
-          { make_pat(Paliaspat($1, $3)) }
+          { make_pat(Ppat_alias($1, $3)) }
       | Pattern COLONCOLON Pattern
-          { make_pat(Pconstruct1pat(Id "::",
-              make_pat(Ptuplepat [$1; $3]))) }
+          { make_pat(Ppat_construct1(Id "::",
+              make_pat(Ppat_tuple [$1; $3]))) }
       | Pattern_comma_list
-          { make_pat(Ptuplepat(List.rev $1)) }
+          { make_pat(Ppat_tuple(List.rev $1)) }
       | Ext_ident Simple_pattern
-          { make_pat(Pconstruct1pat ($1, $2)) }
+          { make_pat(Ppat_construct1 ($1, $2)) }
       | Pattern BAR Pattern
-          { make_pat(Porpat($1, $3)) }
+          { make_pat(Ppat_or($1, $3)) }
 ;
 
 Simple_pattern :
         Atomic_constant
-          { make_pat(Pconstantpat $1) }
+          { make_pat(Ppat_constant $1) }
       | SUBTRACTIVE INT
-          { make_pat(Pconstantpat(ACint(- $2))) }
+          { make_pat(Ppat_constant(ACint(- $2))) }
       | SUBTRACTIVE FLOAT
-          { make_pat(Pconstantpat(ACfloat(-. $2))) }
+          { make_pat(Ppat_constant(ACfloat(-. $2))) }
       | UNDERSCORE
-          { make_pat(Pwildpat) }
+          { make_pat(Ppat_any) }
       | Ide
           { pat_constr_or_var $1 }
       | Qual_ident
-          { make_pat(Pconstruct0pat($1)) }
+          { make_pat(Ppat_construct0($1)) }
       | LPAREN RPAREN
-          { make_pat(Pconstruct0pat(Id "()")) }
+          { make_pat(Ppat_construct0(Id "()")) }
       | LBRACKET Pattern_sm_list RBRACKET
           { make_listpat($2) }
       | LPAREN Pattern COLON Type RPAREN
-          { make_pat(Pconstraintpat($2, $4)) }
+          { make_pat(Ppat_constraint($2, $4)) }
       | LBRACE Pattern_label_list RBRACE
           { make_recordpat($2) }
       | LPAREN Pattern RPAREN

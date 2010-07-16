@@ -102,3 +102,16 @@ and intf_desc =
   | Ptypedecl of (string * string list * type_decl) list
   | Pexcdecl of constr_decl list
   | Pintfdirective of directiveu
+
+(* Toplevel phrases *)
+
+type toplevel_phrase =
+    Ptop_def of impl_phrase
+  | Ptop_dir of directiveu (* string * directive_argument *)
+
+and directive_argument =
+    Pdir_none
+  | Pdir_string of string
+  | Pdir_int of int
+  | Pdir_ident of Longident.t
+  | Pdir_bool of bool

@@ -22,7 +22,7 @@ let fwd_load_file = ref(fun s -> failwith "fwd_load_file")
 
 (* Executing phrases *)
 
-let do_toplevel_phrase phr =
+let do_structure_item phr =
   reset_type_var();
   reset_type_expression_vars ();
   begin match phr.im_desc with
@@ -121,3 +121,9 @@ let do_toplevel_phrase phr =
   end;
   flush stdout
 ;;
+
+let do_toplevel_phrase topphr =
+  begin match topphr with
+    | Parsetree.Ptop_dir d -> do_directive (Location.get_current_location()) (Resolve.directiveu d)
+    | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item si)
+  end

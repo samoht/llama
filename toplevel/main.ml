@@ -27,7 +27,7 @@ let interactive_loop () =
       Format.print_string toplevel_input_prompt;
       Format.print_flush ();
       reset_rollback();
-      let phr = Resolve.structure_item (Parser.toplevel_phrase Lexer.main lexbuf) in
+      let phr = Parser.toplevel_phrase Lexer.main lexbuf in
       do_toplevel_phrase phr
     with
       | End_of_file ->
