@@ -2,9 +2,9 @@ type 'a ref = { mutable contents : 'a };;
 
 val ref : 'a -> 'a ref = 1 "makemutable";;
 
-val prefix ! : 'a ref -> 'a = 1 "field0";;
+val ( ! ) : 'a ref -> 'a = 1 "field0";;
 
-val prefix := : 'a ref -> 'a -> unit = 2 "setfield0";;
+val ( := ) : 'a ref -> 'a -> unit = 2 "setfield0";;
 
 val incr : int ref -> unit = 1 "incr";;
         (* Increment the integer contained in the given reference.

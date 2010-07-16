@@ -134,8 +134,6 @@ let pat_constr_or_var p =
 %token MINUSGREATER   /* "->" */
 %token DOT            /* "." */
 %token DOTDOT         /* ".." */
-%token DOTLPAREN      /* ".(" */
-%token DOTLBRACKET    /* ".[" */
 %token COLON          /* ":" */
 %token COLONCOLON     /* "::" */
 %token COLONEQUAL     /* ":=" */
@@ -214,7 +212,7 @@ let pat_constr_or_var p =
 %right prec_uminus
 %left  INFIX
 %right prec_app
-%left  DOT DOTLPAREN DOTLBRACKET
+%left  DOT
 %right PREFIX                           /* prefix operators, e.g. ! */
 
 /* Entry points */
@@ -325,10 +323,10 @@ Expr :
           { make_binop "||" $1 $3 }
       | Simple_expr DOT Ext_ident LESSMINUS Expr
           { make_expr(Precord_update($1, $3, $5)) }
-      | Simple_expr DOTLPAREN Expr RPAREN LESSMINUS Expr
-          { make_ternop "vect_assign" $1 $3 $6 }
-      | Simple_expr DOTLBRACKET Expr RBRACKET LESSMINUS Expr
-          { make_ternop "set_nth_char" $1 $3 $6 }
+      | Simple_expr DOT LPAREN Expr RPAREN LESSMINUS Expr
+          { make_ternop "vect_assign" $1 $4 $7 }
+      | Simple_expr DOT LBRACKET Expr RBRACKET LESSMINUS Expr
+          { make_ternop "set_nth_char" $1 $4 $7 }
       | Expr COLONEQUAL Expr
           { make_binop ":=" $1 $3 }
       | IF Expr THEN Expr ELSE Expr  %prec prec_if
@@ -393,10 +391,10 @@ Simple_expr :
           { make_unop $1 $2 }
       | Simple_expr DOT Ext_ident
           { make_expr(Precord_access($1, $3)) }
-      | Simple_expr DOTLPAREN Expr RPAREN
-          { make_binop "vect_item" $1 $3 }
-      | Simple_expr DOTLBRACKET Expr RBRACKET
-          { make_binop "nth_char" $1 $3 }
+      | Simple_expr DOT LPAREN Expr RPAREN
+          { make_binop "vect_item" $1 $4 }
+      | Simple_expr DOT LBRACKET Expr RBRACKET
+          { make_binop "nth_char" $1 $4 }
 ;
 
 Simple_expr_list :
@@ -654,7 +652,7 @@ Ide :
           { $1 }
       | UIDENT
           { $1 }
-      | PREF Infx
+      | LPAREN Infx RPAREN
           { $2 }
 ;
 

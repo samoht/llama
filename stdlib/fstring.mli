@@ -15,7 +15,7 @@ val string_length : string -> int = 1 "string_length"
 val nth_char : string -> int -> char = 2 "get_nth_char"
   and set_nth_char : string -> int -> char -> unit = 3 "set_nth_char"
 ;;
-val prefix ^ : string -> string -> string
+val ( ^ ) : string -> string -> string
   and concat : string list -> string
   and sub_string : string -> int -> int -> string
 ;;

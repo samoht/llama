@@ -2,7 +2,7 @@
 
 val list_length : 'a list -> int
         (* Return the length (number of elements) of the given list. *)
-  and prefix @ : 'a list -> 'a list -> 'a list
+  and ( @ ) : 'a list -> 'a list -> 'a list
         (* List concatenation. *)
   and hd : 'a list -> 'a
         (* Return the first element of the given list. Raise

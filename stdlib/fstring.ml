@@ -11,7 +11,7 @@ let make_string len init =
     fill_string s 0 len init; s
 ;;
 
-let prefix ^ s1 s2 =
+let ( ^ ) s1 s2 =
   let l1 = string_length s1
   and l2 = string_length s2 in
   let s = create_string (l1 + l2) in

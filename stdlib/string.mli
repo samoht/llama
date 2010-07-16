@@ -17,7 +17,7 @@ val nth_char : string -> int -> char
            0 to [(string_length s - 1)].
            You can also write [s.[n] <- c] instead of [set_nth_char s n c]. *)
 ;;
-val prefix ^ : string -> string -> string
+val (^) : string -> string -> string
         (* [s1 ^ s2] returns a fresh string containing the concatenation of
            the strings [s1] and [s2]. *)
   and concat : string list -> string

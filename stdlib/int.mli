@@ -13,21 +13,21 @@ val minus : int -> int = 1 "~int"
         (* [succ x] is [x+1]. *)
   and pred : int -> int = 1 "pred"
         (* [pred x] is [x-1]. *)
-  and prefix + : int -> int -> int = 2 "+int"
+  and ( + ) : int -> int -> int = 2 "+int"
   and add_int : int -> int -> int = 2 "+int"
         (* Addition. *)
-  and prefix - : int -> int -> int = 2 "-int"
+  and ( - ) : int -> int -> int = 2 "-int"
   and sub_int : int -> int -> int = 2 "-int"
         (* Subtraction. *)
-  and prefix * : int -> int -> int = 2 "*int"
+  and ( * ) : int -> int -> int = 2 "*int"
   and mult_int : int -> int -> int = 2 "*int"
         (* Multiplication. *)
-  and prefix / : int -> int -> int = 2 "div"
+  and ( / ) : int -> int -> int = 2 "div"
   and div_int : int -> int -> int = 2 "div"
-  and prefix quo : int -> int -> int = 2 "div"
+  and ( quo ) : int -> int -> int = 2 "div"
         (* Integer division. Raise [Division_by_zero] if the second argument
            is 0. Give unpredictable results if either argument is negative. *)
-  and prefix mod : int -> int -> int = 2 "mod"
+  and ( mod ) : int -> int -> int = 2 "mod"
         (* Remainder. Raise [Division_by_zero] if the second argument is 0.
            Give unpredictable results if either argument is negative. *)
   and eq_int : int -> int -> bool = 2 "=int"
@@ -52,22 +52,22 @@ val max_int : int
 
 (*** Bitwise operations *)
 
-val prefix land : int -> int -> int = 2 "and"
+val ( land ) : int -> int -> int = 2 "and"
         (* Bitwise logical and. *)
-  and prefix lor : int -> int -> int = 2 "or"
+  and ( lor ) : int -> int -> int = 2 "or"
         (* Bitwise logical or. *)
-  and prefix lxor : int -> int -> int = 2 "xor"
+  and ( lxor ) : int -> int -> int = 2 "xor"
         (* Bitwise logical exclusive or. *)
   and lnot : int -> int
         (* Bitwise complement *)
-  and prefix lsl : int -> int -> int = 2 "shift_left"
+  and ( lsl ) : int -> int -> int = 2 "shift_left"
   and lshift_left : int -> int -> int = 2 "shift_left"
         (* [n lsl m], or equivalently [lshift_left n m], shifts [n] to the
            left by [m] bits. *)
-  and prefix lsr : int -> int -> int = 2 "shift_right_unsigned"
+  and ( lsr ) : int -> int -> int = 2 "shift_right_unsigned"
         (* [n lsr m] shifts [n] to the right by [m] bits.
             This is a logical shift: zeroes are inserted regardless of sign.*)
-  and prefix asr : int -> int -> int = 2 "shift_right_signed"
+  and ( asr ) : int -> int -> int = 2 "shift_right_signed"
   and lshift_right : int -> int -> int = 2 "shift_right_signed"
         (* [n asr m], or equivalently [lshift_right n m], shifts [n] to the
            right by [m] bits.

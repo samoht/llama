@@ -10,40 +10,40 @@ val int_of_float : float -> int = 1 "int_of_float"
 val minus : float -> float = 1 "~float"
   and minus_float : float -> float = 1 "~float"
         (* Unary negation. *)
-  and prefix + : float -> float -> float = 2 "+float"
-  and prefix +. : float -> float -> float = 2 "+float"
+  and ( + ) : float -> float -> float = 2 "+float"
+  and ( +. ) : float -> float -> float = 2 "+float"
   and add_float : float -> float -> float = 2 "+float"
         (* Addition. *)
-  and prefix - : float -> float -> float = 2 "-float"
-  and prefix -. : float -> float -> float = 2 "-float"
+  and ( - ) : float -> float -> float = 2 "-float"
+  and ( -. ) : float -> float -> float = 2 "-float"
   and sub_float : float -> float -> float = 2 "-float"
         (* Subtraction. *)
-  and prefix * : float -> float -> float = 2 "*float"
-  and prefix *. : float -> float -> float = 2 "*float"
+  and ( * ) : float -> float -> float = 2 "*float"
+  and ( *. ) : float -> float -> float = 2 "*float"
   and mult_float : float -> float -> float = 2 "*float"
         (* Product. *)
-  and prefix / : float -> float -> float = 2 "/"
-  and prefix /. : float -> float -> float = 2 "/"
+  and ( / ) : float -> float -> float = 2 "/"
+  and ( /. ) : float -> float -> float = 2 "/"
   and div_float : float -> float -> float = 2 "/"
         (* Division. *)
-  and prefix ** : float -> float -> float = 2 "power_float"
-  and prefix **. : float -> float -> float = 2 "power_float"
+  and ( ** ) : float -> float -> float = 2 "power_float"
+  and ( **. ) : float -> float -> float = 2 "power_float"
   and power : float -> float -> float = 2 "power_float"
         (* Exponentiation. *)
   and eq_float : float -> float -> bool = 2 "=float"
-  and prefix =. : float -> float -> bool = 2 "=float"
+  and ( =. ) : float -> float -> bool = 2 "=float"
         (* Floating-point equality.
            Equivalent to generic equality, just faster. *)
   and neq_float : float -> float -> bool = 2 "<>float"
-  and prefix <>. : float -> float -> bool = 2 "<>float"
+  and ( <>. ) : float -> float -> bool = 2 "<>float"
         (* Negation of [eq_float]. *)
-  and prefix <. : float -> float -> bool = 2 "<float"
+  and ( <. ) : float -> float -> bool = 2 "<float"
   and lt_float : float -> float -> bool = 2 "<float"
-  and prefix >. : float -> float -> bool = 2 ">float"
+  and ( >. ) : float -> float -> bool = 2 ">float"
   and gt_float : float -> float -> bool = 2 ">float"
-  and prefix <=. : float -> float -> bool = 2 "<=float"
+  and ( <=. ) : float -> float -> bool = 2 "<=float"
   and le_float : float -> float -> bool = 2 "<=float"
-  and prefix >=. : float -> float -> bool = 2 ">=float"
+  and ( >=. ) : float -> float -> bool = 2 ">=float"
   and ge_float : float -> float -> bool = 2 ">=float"
         (* Usual comparisons between floating-point numbers. *)
 ;;

@@ -43,7 +43,7 @@ let blit_string src start_src dst start_dst len =
   else Fstring.blit_string src start_src dst start_dst len
 ;;
 
-let prefix ^ = Fstring.prefix ^
+let ( ^ ) = Fstring.( ^ )
 ;;
 
 let concat = Fstring.concat

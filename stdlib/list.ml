@@ -14,7 +14,7 @@ let list_length l =
   length_aux 0 l
 ;;
 
-let prefix @ l1 l2 =
+let ( @ ) l1 l2 =
   let rec append = function
        []  -> l2
     | a::l -> a :: append l

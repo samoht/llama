@@ -201,8 +201,6 @@ rule main = parse
   | "->" { MINUSGREATER }
   | "." { DOT }
   | ".." { DOTDOT }
-  | ".(" { DOTLPAREN }
-  | ".[" { DOTLBRACKET }
   | ":" { COLON }
   | "::" { COLONCOLON }
   | ":=" { COLONEQUAL }
