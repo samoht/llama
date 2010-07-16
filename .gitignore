@@ -15,8 +15,6 @@ typing/config.ml
 typing/lexer.ml
 typing/lexer.mll
 typing/location.ml
-typing/oldparser.ml
-typing/oldparser.mli
 compiler/opcodes.ml
 launch/camlexec
 launch/darkc

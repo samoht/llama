@@ -19,7 +19,7 @@ TYPING=typing/lambda.cmx typing/globals.cmx \
  typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
  typing/tr_env.cmx typing/event.cmx typing/clauses.cmx typing/matching.cmx \
- typing/primdecl.cmx typing/lexer.cmx typing/par_aux.cmx typing/oldparser.cmx \
+ typing/primdecl.cmx typing/lexer.cmx typing/par_aux.cmx \
  typing/parser.cmx
 
 COMPILER=compiler/trstream.cmx compiler/front.cmx \
@@ -39,7 +39,7 @@ TOPLEVEL=\
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/main.cmx runtime/libcaml.a toplevel/zebra.o
 
-GENSOURCES=utils/config.ml typing/lexer.ml typing/oldparser.ml typing/oldparser.mli \
+GENSOURCES=utils/config.ml typing/lexer.ml \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/newparser.ml
 
 all: runtime_dir zebra zebrac zebradep testprog stdlib_dir

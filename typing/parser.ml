@@ -127,7 +127,7 @@ let signature_item si =
 
 let implementation tok lb =
   structure_item (Newparser.implementation tok lb)
-(* Oldparser.implementation*)
+
 let interface a lb =
   List.map signature_item (Newparser.interface a lb)
-(* Oldparser.interface *)
+

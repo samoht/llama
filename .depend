@@ -33,7 +33,6 @@ typing/env.cmi: typing/syntax.cmx typing/path.cmi parsing/longident.cmi \
     typing/globals.cmx 
 typing/lexer.cmi: typing/parser.cmi 
 typing/location.cmi: 
-typing/oldparser.cmi: typing/syntax.cmx 
 typing/parser.cmi: typing/syntax.cmx parsing/newparser.cmi 
 typing/path.cmi: typing/globals.cmx 
 typing/builtins.cmo: typing/modules.cmx typing/globals.cmx parsing/const.cmx \
@@ -78,12 +77,6 @@ typing/modules.cmo: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
     parsing/const.cmx 
 typing/modules.cmx: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
     parsing/const.cmx 
-typing/oldparser.cmo: typing/syntax.cmx typing/primdecl.cmx \
-    typing/par_aux.cmx typing/globals.cmx parsing/const.cmx \
-    typing/builtins.cmx parsing/asttypes.cmi typing/oldparser.cmi 
-typing/oldparser.cmx: typing/syntax.cmx typing/primdecl.cmx \
-    typing/par_aux.cmx typing/globals.cmx parsing/const.cmx \
-    typing/builtins.cmx parsing/asttypes.cmi typing/oldparser.cmi 
 typing/par_aux.cmo: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
     typing/location.cmi typing/globals.cmx typing/error.cmx parsing/const.cmx \
     typing/builtins.cmx 
