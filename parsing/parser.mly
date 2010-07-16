@@ -2,7 +2,7 @@
 
 %{
 open Const;;
-open Presyntax;;
+open Parsetree;;
 open Location;;
 open Misc;;
 open Longident;;
@@ -219,11 +219,11 @@ let pat_constr_or_var p =
 /* Entry points */
 
 %start implementation
-%type <Presyntax.impl_phrase list> implementation 
+%type <Parsetree.impl_phrase list> implementation 
 %start toplevel_phrase
-%type <Presyntax.impl_phrase> toplevel_phrase
+%type <Parsetree.impl_phrase> toplevel_phrase
 %start interface
-%type <Presyntax.intf_phrase list> interface
+%type <Parsetree.intf_phrase list> interface
 
 %%
 

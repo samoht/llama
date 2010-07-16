@@ -101,19 +101,3 @@ and intf_desc =
   | Ptypedecl of (string * string list * type_decl) list
   | Pexcdecl of constr_decl list
   | Pintfdirective of directiveu
-;;
-
-let rec free_vars_of_pat pat =
-  match pat.ppat_desc with
-    Pwildpat -> []
-  | Pvarpat v -> [v]
-  | Paliaspat(pat,v) -> v :: free_vars_of_pat pat
-  | Pconstantpat _ -> []
-  | Ptuplepat patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Pconstruct0pat(_) -> []
-  | Pconstruct1pat(_, pat) -> free_vars_of_pat pat
-  | Porpat(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
-  | Pconstraintpat(pat, _) -> free_vars_of_pat pat
-  | Precordpat lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
-;;    

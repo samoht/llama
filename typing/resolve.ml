@@ -1,7 +1,7 @@
 type token = Parser.token
 
 open Globals
-open Presyntax
+open Parsetree
 open Syntax
 
 let rec type_expr te =
