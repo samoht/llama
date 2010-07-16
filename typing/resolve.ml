@@ -1,4 +1,4 @@
-type token = Newparser.token
+type token = Parser.token
 
 open Globals
 open Presyntax
@@ -126,8 +126,8 @@ let signature_item si =
     
 
 let implementation tok lb =
-  List.map structure_item (Newparser.implementation tok lb)
+  List.map structure_item (Parser.implementation tok lb)
 
 let interface tok lb =
-  List.map signature_item (Newparser.interface tok lb)
+  List.map signature_item (Parser.interface tok lb)
 

@@ -11,7 +11,7 @@ UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx
 
 PARSING=parsing/const.cmx parsing/interntl.cmx \
  parsing/location.cmx parsing/presyntax.cmx parsing/prim.cmx \
- parsing/longident.cmx parsing/newparser.cmx 
+ parsing/longident.cmx parsing/parser.cmx 
 
 TYPING=typing/lambda.cmx typing/globals.cmx \
  typing/syntax.cmx \
@@ -19,7 +19,7 @@ TYPING=typing/lambda.cmx typing/globals.cmx \
  typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
  typing/tr_env.cmx typing/event.cmx typing/clauses.cmx typing/matching.cmx \
- typing/primdecl.cmx typing/lexer.cmx typing/parser.cmx
+ typing/primdecl.cmx typing/lexer.cmx typing/resolve.cmx
 
 COMPILER=compiler/trstream.cmx compiler/front.cmx \
  compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
@@ -39,7 +39,7 @@ TOPLEVEL=\
   toplevel/main.cmx runtime/libcaml.a toplevel/zebra.o
 
 GENSOURCES=utils/config.ml typing/lexer.ml \
- compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/newparser.ml
+ compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/parser.ml
 
 all: runtime_dir zebra zebrac zebradep testprog stdlib_dir
 .PHONY: all
@@ -73,9 +73,7 @@ utils/config.ml: utils/config.mlp config/Makefile
 typing/lexer.ml: typing/lexer.mll
 	$(OCAMLLEX) $<
 
-typing/oldparser.ml typing/oldparser.mli: typing/oldparser.mly
-	$(OCAMLYACC) $<
-parsing/newparser.ml parsing/newparser.mli: parsing/newparser.mly
+parsing/parser.ml parsing/parser.mli: parsing/parser.mly
 	$(OCAMLYACC) $<
 
 compiler/opcodes.ml: runtime/instruct.h
@@ -118,13 +116,15 @@ stdlib_dir:
 	cd stdlib && make
 .PHONY: runtime_dir stdlib_dir
 
-clean:
+semiclean:
 	rm -f zebra zebrac zebrarun stdlib.zo
 	rm -f $(GENSOURCES)
 	rm -f {utils,parsing,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
 	rm -f testprog{,.zi,.zo}
-	cd runtime && make clean
 	cd stdlib && make clean
+.PHONY: semiclean
+clean: semiclean
+	cd runtime && make clean
 .PHONY: clean
 
 depend: $(GENSOURCES)

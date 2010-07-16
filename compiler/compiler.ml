@@ -3,7 +3,6 @@
 open Misc;;
 open Interntl;;
 open Lexer;;
-open Newparser;;
 open Parser;;
 open Location;;
 open Syntax;;
@@ -61,8 +60,7 @@ let parse_phrase parsing_fun lexing_fun lexbuf =
          raise Toplevel
 ;;
 
-let parse_impl_phrase = parse_phrase Parser.implementation Lexer.main
-and parse_intf        = parse_phrase Parser.interface Lexer.main
+let parse_intf        = parse_phrase Resolve.interface Lexer.main
 ;;
 
 (* Executing directives *)
@@ -183,9 +181,9 @@ let compile_impl modname filename suffix =
     input_chan := ic;
     input_lexbuf := lexbuf;
     start_emit_phrase oc;
-    let l = Newparser.implementation Lexer.main lexbuf in
+    let l = Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (fun x -> compile_impl_phrase oc (Parser.structure_item x)) l;
+      List.iter (fun x -> compile_impl_phrase oc (Resolve.structure_item x)) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;

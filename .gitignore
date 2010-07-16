@@ -9,8 +9,8 @@
 config/m.h
 config/s.h
 config/Makefile
-parsing/newparser.ml
-parsing/newparser.mli
+parsing/parser.ml
+parsing/parser.mli
 typing/config.ml
 typing/lexer.ml
 typing/lexer.mll

@@ -121,8 +121,7 @@ let loadfile filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       while true do
-        let phr = Newparser.toplevel_phrase Lexer.main lexbuf in
-        let phr = Parser.structure_item phr in
+        let phr = Resolve.structure_item (Parser.toplevel_phrase Lexer.main lexbuf) in
         do_toplevel_phrase phr
       done)
   with End_of_file -> close_in ic

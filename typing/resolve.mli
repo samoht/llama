@@ -1,4 +1,4 @@
-type token = Newparser.token
+type token = Parser.token
 val implementation :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Syntax.impl_phrase list
 val interface :
