@@ -51,14 +51,14 @@ let get_string () =
 
 let make_lexer keywords =
 
-  let kwd_table = hashtbl__new 17 in
-  do_list (fun s -> hashtbl__add kwd_table s (Kwd s)) keywords;
+  let kwd_table = Hashtbl.new 17 in
+  do_list (fun s -> Hashtbl.add kwd_table s (Kwd s)) keywords;
 
   let ident_or_keyword id =
-    try hashtbl__find kwd_table id with Not_found -> Ident id
+    try Hashtbl.find kwd_table id with Not_found -> Ident id
   and keyword_or_error c =
     let s = make_string 1 c in
-      try hashtbl__find kwd_table s
+      try Hashtbl.find kwd_table s
       with Not_found -> raise Parse_error in
 
   let rec next_token = function

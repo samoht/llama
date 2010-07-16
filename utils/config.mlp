@@ -28,14 +28,6 @@ let default_used_interfaces =
    "none",     ["builtin"]]
 ;;
 
-(* The default name for executable bytecode files. *)
-
-let default_exec_name =
-  begin match Sys.os_type with
-    | "Win32" | "Cygwin" -> "camlout.exe"
-    | _ -> "a.out"
-  end
-
 (* Prompts.
  * toplevel_input_prompt: Printed before user input.
  * error_prompt: Printed before compiler error and warning messages.
