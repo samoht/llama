@@ -58,7 +58,7 @@ let scan_file tolink name =
     close_in inchan;
     (truename, required)::tolink
   with Cannot_find_file name ->
-    Interntl.eprintf "Cannot find file %s.\n" name;
+    Printf.eprintf "Cannot find file %s.\n" name;
     raise Toplevel
 ;;
 
@@ -93,7 +93,7 @@ let link_object outchan (truename, required) =
       required;
     close_in inchan
   with x ->
-    Interntl.eprintf "Error while linking file %s.\n" truename;
+    Printf.eprintf "Error while linking file %s.\n" truename;
     close_in inchan;
     raise x
 ;;

@@ -7,7 +7,7 @@ open Globals;;
 open Syntax;;
 open Types;;
 open Pr_type;;
-open Interntl;;
+open Printf;;
 
 let output_globalref oc = function
     GRname s ->

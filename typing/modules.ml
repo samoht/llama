@@ -58,7 +58,7 @@ let read_module basename filename =
     md
   with End_of_file | Failure _ ->
     close_in ic;
-    Interntl.eprintf "Corrupted compiled interface file %s.\n\
+    Printf.eprintf "Corrupted compiled interface file %s.\n\
                        Please recompile %s.mli or %s.ml first.\n"
       filename basename basename;
     raise Toplevel
@@ -74,7 +74,7 @@ let load_module name =
       (if !use_extended_interfaces && file_exists extname
        then extname else fullname)
   with Cannot_find_file _ ->
-    Interntl.eprintf "Cannot find the compiled interface file %s.zi.\n" name;
+    Printf.eprintf "Cannot find the compiled interface file %s.zi.\n" name;
     raise Toplevel
 ;;
 

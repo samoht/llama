@@ -3,7 +3,7 @@
 (**) open Config;;
 (**) open Lexing;;
 (**) open Parsing;;
-(**) open Interntl;;
+(**) open Printf;;
 
 let input_name = ref ""                 (* Input file name. *)
 and input_chan = ref stdin              (* The channel opened on the input. *)

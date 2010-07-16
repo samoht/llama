@@ -12,7 +12,7 @@ module Warnings = struct
 end
 
 let interactive_loop () =
-  Interntl.printf "\tZebra version %s\n" Config.version;
+  Printf.printf "\tZebra version %s\n" Config.version;
   print_newline();
   Sys.catch_break true;
   (* set Sys.interactive to true *)
@@ -37,7 +37,7 @@ let interactive_loop () =
           flush stderr;
           rollback ()
       | Sys.Break ->
-          print_string(Interntl.translate "Interrupted.\n");
+          print_string("Interrupted.\n");
           rollback ()
   done
 

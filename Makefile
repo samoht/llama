@@ -9,7 +9,7 @@ FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx
 
-PARSING=parsing/const.cmx parsing/interntl.cmx \
+PARSING=parsing/const.cmx \
  parsing/location.cmx parsing/presyntax.cmx parsing/prim.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 

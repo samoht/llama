@@ -51,13 +51,13 @@ let do_code may_free code entrypoint len =
           ()
       end;
       open_box 0;
-      print_string (Interntl.translate "Uncaught exception: ");
+      print_string ("Uncaught exception: ");
       begin try
         failwith "foo"
 (*      print_value (Obj.repr x) Builtins.type_exn *)
       with _ ->
         print_string
-          (Interntl.translate "<Internal error while printing the exception>")
+          ("<Internal error while printing the exception>")
       end;
       print_newline();
       flush stdout;

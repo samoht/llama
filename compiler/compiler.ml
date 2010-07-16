@@ -1,7 +1,7 @@
 (* The compiler entry points *)
 
 open Misc;;
-open Interntl;;
+open Printf;;
 open Lexer;;
 open Parser;;
 open Location;;

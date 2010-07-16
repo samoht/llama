@@ -96,14 +96,14 @@ let do_toplevel_phrase phr =
       let _ = type_typedecl phr.im_loc decl in
       reset_rollback ();
       List.iter
-        (fun (name, _, _) -> Interntl.printf "Type %s defined.\n" name)
+        (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
   | Zexcdef decl ->
       let _ = type_excdecl phr.im_loc decl in
       reset_rollback ();
       List.iter
         (fun decl ->
-            Interntl.printf "Exception %s defined.\n"
+            Printf.printf "Exception %s defined.\n"
                              (match decl with Zconstr0decl name -> name
                                             | Zconstr1decl(name,_,_) -> name))
         decl

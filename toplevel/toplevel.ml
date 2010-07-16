@@ -45,7 +45,7 @@ let load_object name =
     try
       find_in_path filename
     with Cannot_find_file name ->
-      Interntl.eprintf "Cannot find file %s.\n" name;
+      Printf.eprintf "Cannot find file %s.\n" name;
       raise Toplevel in
   let inchan = open_in_bin truename in
   let stop = input_binary_int inchan in
@@ -111,7 +111,7 @@ let loadfile filename =
     try
       find_in_path filename
     with Cannot_find_file name ->
-      Interntl.eprintf "Cannot find file %s.\n" name;
+      Printf.eprintf "Cannot find file %s.\n" name;
       raise Toplevel in
   let ic = open_in truename in
   let lexbuf = Lexing.from_channel ic in
@@ -165,16 +165,16 @@ let install_printer name =
                :: !printers
 *)
     with Unify ->
-      Interntl.eprintf "%s has the wrong type for a printing function.\n" name
+      Printf.eprintf "%s has the wrong type for a printing function.\n" name
     end
   with Desc_not_found ->
-    Interntl.eprintf "Unknown function %s.\n" name
+    Printf.eprintf "Unknown function %s.\n" name
   end
 ;;
 
 let remove_printer name =
   let rec remove = function
-    [] -> Interntl.eprintf "No printer named %s.\n" name; []
+    [] -> Printf.eprintf "No printer named %s.\n" name; []
   | (pr_name, _, _ as printer) :: rem ->
       if name = pr_name then rem else printer :: remove rem in
   printers := remove !printers
@@ -200,7 +200,7 @@ let compile s =
       let filename = Filename.chop_suffix s ".mli" in
       compile_interface (Filename.basename filename) filename
     else begin
-      Interntl.eprintf "Incorrect source file name %s.\n\
+      Printf.eprintf "Incorrect source file name %s.\n\
                A source file name must end in \".ml\" or \".mli\".\n" s
     end))
 ;;
