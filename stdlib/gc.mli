@@ -70,15 +70,15 @@ type control = {
 -     [verbose]  This flag controls the GC messages on standard error output.
   *)
 
-val stat : unit -> stat = 1 "gc_stat";;
+external stat : unit -> stat = 1 "gc_stat";;
   (* Return the current values of the memory management counters in a
      [stat] record. *)
 val print_stat : Io.out_channel -> unit;;
   (* Print the current values of the memory management counters (in
      human-readable form) into the channel argument. *)
-val get : unit -> control = 1 "gc_get";;
+external get : unit -> control = 1 "gc_get";;
   (* Return the current values of the GC parameters in a [control] record. *)
-val set : control -> unit = 1 "gc_set";;
+external set : control -> unit = 1 "gc_set";;
   (* [set r] changes the GC parameters according to the [control] record [r].
      The normal usage is:
      [
@@ -87,10 +87,10 @@ val set : control -> unit = 1 "gc_set";;
          gc__set r              (* Set the new values. *)
      ]
   *)
-val minor : unit -> unit = 1 "gc_minor";;
+external minor : unit -> unit = 1 "gc_minor";;
   (* Trigger a minor collection. *)
-val major : unit -> unit = 1 "gc_major";;
+external major : unit -> unit = 1 "gc_major";;
   (* Finish the current major collection cycle. *)
-val full_major : unit -> unit = 1 "gc_full_major";;
+external full_major : unit -> unit = 1 "gc_full_major";;
   (* Finish the current major collection cycle and perform a complete
      new cycle.  This will collect all currently unreachable objects. *)

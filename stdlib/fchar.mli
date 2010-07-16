@@ -10,8 +10,8 @@
 
 (*--*)
 
-val int_of_char : char -> int = 1 "identity"
-val char_of_int : int -> char = 1 "identity"
+external int_of_char : char -> int = 1 "identity"
+external char_of_int : int -> char = 1 "identity"
 val char_for_read : char -> string
-val is_printable : char -> bool = 1 "is_printable"
+external is_printable : char -> bool = 1 "is_printable"
 ;;

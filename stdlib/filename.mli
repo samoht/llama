@@ -26,5 +26,5 @@ val dirname : string -> string
            references to [basename name] (which is a relative file name)
 	   designate the same file as [name] before the call to [chdir]. *)
 ;;
-val is_relative : string -> bool = 1 "zebra_filename_is_relative"
+external is_relative : string -> bool = 1 "zebra_filename_is_relative"
 

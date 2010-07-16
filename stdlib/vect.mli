@@ -1,6 +1,6 @@
 (* Operations on vectors *)
 
-val vect_length : 'a vect -> int = 1 "vect_length"
+external vect_length : 'a vect -> int = 1 "vect_length"
         (* Return the length (number of elements) of the given vector. *)
 ;;
 val vect_item : 'a vect -> int -> 'a

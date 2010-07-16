@@ -1,9 +1,9 @@
 (* Boolean operations *)
 
-val (&)  : bool -> bool -> bool = 2 "sequand";;
-val (&&) : bool -> bool -> bool = 2 "sequand";;
-val (or) : bool -> bool -> bool = 2 "sequor";;
-val (||) : bool -> bool -> bool = 2 "sequor";;
+external (&)  : bool -> bool -> bool = 2 "sequand";;
+external (&&) : bool -> bool -> bool = 2 "sequand";;
+external (or) : bool -> bool -> bool = 2 "sequor";;
+external (||) : bool -> bool -> bool = 2 "sequor";;
         (* The boolean and is written [e1 & e2] or [e1 && e2].
            The boolean or  is written [e1 or e2] or [e1 || e2].
            Both constructs are sequential, left-to-right:
@@ -12,7 +12,7 @@ val (||) : bool -> bool -> bool = 2 "sequor";;
            and
            [e1 or e2] is equivalent to  [if e1 then true else e2].
 *)
-val (not) : bool -> bool = 1 "not"
+external (not) : bool -> bool = 1 "not"
         (* The boolean negation. *)
 ;;
 

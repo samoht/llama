@@ -273,6 +273,8 @@ interface:
 interface_item :
         VALUE Value_decl
           { make_intf($2) }
+      | EXTERNAL Ide COLON Type EQUAL Prim_decl
+          { make_intf(Psig_value ($2, $4, Some $6)) }
       | TYPE Type_decl
           { make_intf(Psig_type $2) }
       | EXCEPTION Exc_decl
@@ -763,8 +765,6 @@ Label_decl :
 Value_decl :
         Ide COLON Type
           { Psig_value($1, $3, None) }
-      | Ide COLON Type EQUAL Prim_decl
-          { Psig_value($1, $3, Some $5) }
 ;
 
 Prim_decl :
