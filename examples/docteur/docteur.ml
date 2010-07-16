@@ -43,7 +43,7 @@ let sous_chaîne s départ fin =
     sub_string s départ (fin - départ + 1);;
 let simplifications =
   [("à","a"); ("ç","c"); ("é","e"); ("è","e"); ("ê","e"); ("ù","u");
-   ("a`","a"); ("e'","e"); ("e`", "e"); ("e^","e"); ("u`","u");
+   ("a'","a"); ("e'","e"); ("e'", "e"); ("e^","e"); ("u'","u");
    ("qu'", ""); ("l'", ""); ("d'", "")];;
 let simplifie_mot mot =
     let nouveau_mot = create_string (string_length mot) in
@@ -78,7 +78,7 @@ let divise_en_mots chaîne =
         mots := simplifie_mot (sous_chaîne chaîne i j) :: !mots in
     for i =  string_length chaîne - 1 downto 0 do
       match nth_char chaîne i with
-      | (` ` | `\n` | `.` | `,` | `;` | `-` | `!` | `?`) ->
+      | (' ' | '\n' | '.' | ',' | ';' | '-' | '!' | '?') ->
          ajoute_mot (i+1) !j; j := i-1
       | _ -> ()
    done;
@@ -170,7 +170,7 @@ let réponses_aux_phrases_simples =
   [|"Si bémol?";
     "D'accord, d'accord";
     "Mouais, je m'en doutais un peu, figurez-vous";
-    "Expliquez-vous, ``si'' ne me suffit pas";
+    "Expliquez-vous, ''si'' ne me suffit pas";
     "Réponse trop laconique";
     "Syndrôme du si";
     "Vous n'êtes pas bavard vous au moins"|]);
@@ -210,7 +210,7 @@ let réponses_aux_petits_mots =
     "Vraiment pas?";
     "Pourquoi pas?"|]);
   (["jamais"],
-   [|"Ne dites jamais ``jamais''";
+   [|"Ne dites jamais ''jamais''";
      "Jamais me semble un peu fort, non?";
      "Jamais?"|]);
   (["non"],
@@ -528,7 +528,7 @@ let répond_au_patient () =
         try associé_d'un_élément_de phrase
             réponses_aux_mots_intéressants
         with Pas_trouvé ->
-        if caractère_dans_chaîne r `?`
+        if caractère_dans_chaîne r '?'
         then réponses_types
         else try associé_d'un_élément_de phrase
                  réponses_aux_petits_mots

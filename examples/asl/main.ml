@@ -20,7 +20,7 @@ fun() ->
   if !bol then print_prompt();
   let c = input_char !input_stream in
   if !input_stream != std_in then print_char c;
-  bol := c == `\n`;
+  bol := c == '\n';
   c
 ;;
 

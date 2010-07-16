@@ -117,11 +117,11 @@ let print_float f =
 ;;
 let print_endline s =
   print_string s;
-  print_char `\n`
+  print_char '\n'
 ;;
 
 let print_newline () =
-  print_char `\n`;
+  print_char '\n';
   flush std_out
 ;;
 
@@ -139,7 +139,7 @@ let prerr_float f =
 ;;
 let prerr_endline s =
   prerr_string s;
-  prerr_char `\n`;
+  prerr_char '\n';
   flush std_err
 ;;
 

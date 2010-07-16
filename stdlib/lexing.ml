@@ -15,7 +15,7 @@ let lex_refill read_fun lexbuf =
   let read =
     read_fun lex_aux_buffer 1024 in
   let n =
-    if read > 0 then read else (set_nth_char lex_aux_buffer 0 `\000`; 1) in
+    if read > 0 then read else (set_nth_char lex_aux_buffer 0 '\000'; 1) in
   blit_string lexbuf.lex_buffer n lexbuf.lex_buffer 0 (2048 - n);
   blit_string lex_aux_buffer 0 lexbuf.lex_buffer (2048 - n) n;
   lexbuf.lex_abs_pos <- lexbuf.lex_abs_pos + n;

@@ -48,7 +48,7 @@ let string_for_read s =
     for i = 0 to string_length s - 1 do
       n := !n +
         (match nth_char s i with
-           `"` | `\\` | `\n` | `\t` -> 2
+           '"' | '\\' | '\n' | '\t' -> 2
           | c -> if is_printable c then 1 else 4)
     done;
     if !n == string_length s then s else begin
@@ -57,16 +57,16 @@ let string_for_read s =
         for i = 0 to string_length s - 1 do
           begin
             match nth_char s i with
-              `"` -> set_nth_char s' !n `\\`; incr n; set_nth_char s' !n `"`
-            | `\\` -> set_nth_char s' !n `\\`; incr n; set_nth_char s' !n `\\`
-            | `\n` -> set_nth_char s' !n `\\`; incr n; set_nth_char s' !n `n`
-            | `\t` -> set_nth_char s' !n `\\`; incr n; set_nth_char s' !n `t`
+              '"' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n '"'
+            | '\\' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n '\\'
+            | '\n' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n 'n'
+            | '\t' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n 't'
             | c ->
                 if is_printable c then
                   set_nth_char s' !n c
                 else begin
                   let a = int_of_char c in
-                  set_nth_char s' !n `\\`;
+                  set_nth_char s' !n '\\';
                   incr n;
                   set_nth_char s' !n (char_of_int (48 + a / 100));
                   incr n;

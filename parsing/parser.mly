@@ -127,6 +127,7 @@ let pat_constr_or_var p =
 %token SHARP          /* "#" */
 %token AMPERSAND      /* "&" */
 %token QUOTE          /* "'" */
+%token BACKQUOTE      /* "`" */
 %token LPAREN         /* "(" */
 %token RPAREN         /* ")" */
 %token STAR           /* "*" */
@@ -610,7 +611,7 @@ Stream_expr :
 Stream_expr_component :
         Expr %prec prec_list
           { Pnonterm $1 }
-      | QUOTE Expr  %prec prec_list
+      | BACKQUOTE Expr  %prec prec_list
           { Pterm $2 }
 ;
 
@@ -633,7 +634,7 @@ Stream_pattern_component_list :
 Stream_pattern_component :
         Simple_expr Simple_pattern
           { Pnontermpat($1, $2) }
-      | QUOTE Pattern
+      | BACKQUOTE Pattern
           { Ptermpat $2 }
       | Stream_pattern_component SEMI
           { $1 }

@@ -12,9 +12,9 @@ let count_channel in_channel =
     let c = input_char in_channel in
     incr chars;
     match c with
-    | `\n` ->
+    | '\n' ->
         incr lines; count Outside_word
-    | ` ` | `\t` ->
+    | ' ' | '\t' ->
         count Outside_word
     | _ ->
         if status = Outside_word then begin incr words; () end;

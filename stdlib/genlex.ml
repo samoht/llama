@@ -36,17 +36,6 @@ let get_string () =
   let s = sub_string !buffer 0 !bufpos in buffer := initial_buffer; s
 ;;
 
-#ifdef unix
-#define ACCENTED `\192`..`\255`
-#endif
-#ifdef macintosh
-#define ACCENTED `\128`..`\160`|`\174`|`\175`|`\190`|`\191`|`\203`|`\207`|\
-  `\216`|`\217`|`\222`|`\223`|`\229`..`\239`|`\241`..`\244`
-#endif
-#ifdef msdos
-#define ACCENTED `\128`..`\154`|`\160`..`\165`|`\192`..`\255`
-#endif
-
 (* The lexer *)
 
 let make_lexer keywords =
@@ -62,111 +51,111 @@ let make_lexer keywords =
       with Not_found -> raise Parse_error in
 
   let rec next_token = function
-    [< '(*'*) ` `|`\010`|`\013`|`\009`|`\026`|`\012`; s >] ->
+    [< `(*'*) ' '|'\010'|'\013'|'\009'|'\026'|'\012'; s >] ->
       next_token s
-  | [< '(*'*) `A`..`Z`|`a`..`z`|ACCENTED as c; s>] ->
+  | [< `(*'*) 'A'..'Z'|'a'..'z'|'\192'..'\255' as c; s>] ->
       reset_buffer(); store c; ident s
-  | [< '(*'*) `!`|`%`|`&`|`$`|`#`|`+`|`/`|`:`|`<`|`=`|`>`|`?`|`@`|`\\`|
-             `~`|`^`|`|`|`*` as c; s >] ->
+  | [< `(*'*) '!'|'%'|'&'|'$'|'#'|'+'|'/'|':'|'<'|'='|'>'|'?'|'@'|'\\'|
+             '~'|'^'|'|'|'*' as c; s >] ->
       reset_buffer(); store c; ident2 s
-  | [< '(*'*) `0`..`9` as c; s>] ->
+  | [< `(*'*) '0'..'9' as c; s>] ->
       reset_buffer(); store c; number s
-  | [< '(*'*) `\``; char c; '(*'*) `\`` >] ->
+  | [< `(*'*) '\''; char c; `(*'*) '\'' >] ->
       Char c
-  | [< '(*'*) `"` (*"'"'*); s >] ->
+  | [< `(*'*) '"' (*"'"'*); s >] ->
       reset_buffer(); String(string s)
-  | [< '(*'*) `-`; s >] ->
+  | [< `(*'*) '-'; s >] ->
       neg_number s
-  | [< '(*'*) `(`; s >] ->
+  | [< `(*'*) '('; s >] ->
       maybe_comment s
-  | [< '(*'*) c >] ->
+  | [< `(*'*) c >] ->
       keyword_or_error c
       
   and ident = function
-    [< '(*'*) `A`..`Z`|`a`..`z`|ACCENTED|`0`..`9`|`_`|`'` (*'*) as c; s>] ->
+    [< `(*'*) 'A'..'Z'|'a'..'z'|'\192'..'\255'|'0'..'9'|'_'|'\'' (*'*) as c; s>] ->
       store c; ident s
   | [< >] ->
       ident_or_keyword(get_string())
 
   and ident2 = function
-    [< '(*'*) `!`|`%`|`&`|`$`|`#`|`+`|`-`|`/`|`:`|`<`|`=`|`>`|`?`|`@`|`\\`|
-             `~`|`^`|`|`|`*` as c; s >] ->
+    [< `(*'*) '!'|'%'|'&'|'$'|'#'|'+'|'-'|'/'|':'|'<'|'='|'>'|'?'|'@'|'\\'|
+             '~'|'^'|'|'|'*' as c; s >] ->
       store c; ident2 s
   | [< >] ->
       ident_or_keyword(get_string())
 
   and neg_number = function
-    [< '(*'*) `0`..`9` as c; s >] ->
-      reset_buffer(); store `-`; store c; number s
+    [< `(*'*) '0'..'9' as c; s >] ->
+      reset_buffer(); store '-'; store c; number s
   | [< s >] ->
-      reset_buffer(); store `-`; ident2 s
+      reset_buffer(); store '-'; ident2 s
     
   and number = function
-    [< '(*'*) `0`..`9` as c; s >] ->
+    [< `(*'*) '0'..'9' as c; s >] ->
       store c; number s
-  | [< '(*'*) `.`; s >] ->
-      store `.`; decimal_part s
-  | [< '(*'*) `e`|`E`; s >] ->
-      store `E`; exponent_part s
+  | [< `(*'*) '.'; s >] ->
+      store '.'; decimal_part s
+  | [< `(*'*) 'e'|'E'; s >] ->
+      store 'E'; exponent_part s
   | [< >] ->
       Int(int_of_string(get_string()))
 
   and decimal_part = function
-    [< '(*'*) `0`..`9` as c; s >] ->
+    [< `(*'*) '0'..'9' as c; s >] ->
       store c; decimal_part s
-  | [< '(*'*) `e`|`E`; s >] ->
-      store `E`; exponent_part s
+  | [< `(*'*) 'e'|'E'; s >] ->
+      store 'E'; exponent_part s
   | [< >] ->
       Float(float_of_string(get_string()))
 
   and exponent_part = function
-    [< '(*'*) `+`|`-` as c; s >] ->
+    [< `(*'*) '+'|'-' as c; s >] ->
       store c; end_exponent_part s
   | [< s >] ->
       end_exponent_part s
 
   and end_exponent_part = function
-    [< '(*'*) `0`..`9` as c; s >] ->
+    [< `(*'*) '0'..'9' as c; s >] ->
       store c; end_exponent_part s
   | [< >] ->
       Float(float_of_string(get_string()))
 
   and string = function
-    [< '(*'*) `"` (*"'"'*) >] -> get_string()
-  | [< '(*'*) `\\`; escape c; s >] -> store c; string s
-  | [< '(*'*) c; s >] -> store c; string s
+    [< `(*'*) '"' (*"'"'*) >] -> get_string()
+  | [< `(*'*) '\\'; escape c; s >] -> store c; string s
+  | [< `(*'*) c; s >] -> store c; string s
 
   and char = function
-    [< '(*'*) `\\`; escape c >] -> c
-  | [< '(*'*) c >] -> c
+    [< `(*'*) '\\'; escape c >] -> c
+  | [< `(*'*) c >] -> c
 
   and escape = function
-    [< '(*'*) `n` >] -> `\n`
-  | [< '(*'*) `r` >] -> `\r`
-  | [< '(*'*) `t` >] -> `\t`
-  | [< '(*'*) `0`..`9` as c1; '(*'*) `0`..`9` as c2; '(*'*) `0`..`9` as c3 >] ->
+    [< `(*'*) 'n' >] -> '\n'
+  | [< `(*'*) 'r' >] -> '\r'
+  | [< `(*'*) 't' >] -> '\t'
+  | [< `(*'*) '0'..'9' as c1; `(*'*) '0'..'9' as c2; `(*'*) '0'..'9' as c3 >] ->
       char_of_int((int_of_char c1 - 48) * 100 +
                   (int_of_char c2 - 48) * 10 +
                   (int_of_char c3 - 48))
-  | [< '(*'*) c >] -> c
+  | [< `(*'*) c >] -> c
 
   and maybe_comment = function
-    [< '(*'*) `*`; s >] -> comment s; next_token s
-  | [< >] -> keyword_or_error `(`
+    [< `(*'*) '*'; s >] -> comment s; next_token s
+  | [< >] -> keyword_or_error '('
 
   and comment = function
-    [< '(*'*) `(`; s >] -> maybe_nested_comment s
-  | [< '(*'*) `*`; s >] -> maybe_end_comment s
-  | [< '(*'*) c; s >] -> comment s
+    [< `(*'*) '('; s >] -> maybe_nested_comment s
+  | [< `(*'*) '*'; s >] -> maybe_end_comment s
+  | [< `(*'*) c; s >] -> comment s
 
   and maybe_nested_comment = function
-    [< '(*'*) `*`; s >] -> comment s; comment s
-  | [< '(*'*) c; s >] -> comment s
+    [< `(*'*) '*'; s >] -> comment s; comment s
+  | [< `(*'*) c; s >] -> comment s
 
   and maybe_end_comment = function
-    [< '(*'*) `)` >] -> ()
-  | [< '(*'*) `*`; s >] -> maybe_end_comment s
-  | [< '(*'*) c; s >] -> comment s
+    [< `(*'*) ')' >] -> ()
+  | [< `(*'*) '*'; s >] -> maybe_end_comment s
+  | [< `(*'*) c; s >] -> comment s
 
   in fun input -> stream_from (fun () -> next_token input)
 ;;

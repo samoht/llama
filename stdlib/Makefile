@@ -33,7 +33,7 @@ header: ../config/Makefile
 
 clean:
 	rm -f *.zi *.zix *.zo
-	rm -f filename.ml genlex.ml
+	rm -f filename.ml
 
 install:
 	cp -f stdlib.zo *.zi *.zix *.mli *.ml $(LIBDIR)
@@ -51,9 +51,8 @@ install:
 	@chmod a-w $@
 
 filename.ml: filename.mlp
-genlex.ml: genlex.mlp
 
-depend: filename.ml genlex.ml
+depend: filename.ml
 	$(ZEBRA_DEPEND) *.mli *.ml > .depend
 .PHONY: depend
 

@@ -1,13 +1,13 @@
-let blancs n = make_string n ` `;;
+let blancs n = make_string n ' ';;
 let disque taille =
-    let moitié_droite = make_string taille `>`
-    and moitié_gauche = make_string taille `<`
+    let moitié_droite = make_string taille '>'
+    and moitié_gauche = make_string taille '<'
     in moitié_gauche ^ "|" ^ moitié_droite;;
 let disque_numéro n taille_grand_disque =
     let partie_blanche = blancs (taille_grand_disque + 1 - n) in
     partie_blanche ^ (disque n) ^ partie_blanche;;
 let base_de_tige taille_grand_disque =
-    let moitié = make_string taille_grand_disque `_` in
+    let moitié = make_string taille_grand_disque '_' in
     " " ^ moitié ^ "|" ^ moitié ^ " ";;
 let rec tige taille_grand_disque = function
   | (0, []) -> []

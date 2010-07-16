@@ -24,7 +24,7 @@ let f fct arg =
         prerr_string "Pattern matching failed, file ";
         prerr_string file;
         prerr_string ", chars "; prerr_int first_char;
-        prerr_char `-`; prerr_int last_char
+        prerr_char '-'; prerr_int last_char
     | x ->
         prerr_string "Uncaught exception: ";
         let tag = obj_tag (repr x) in
@@ -47,27 +47,27 @@ let f fct arg =
           prerr_string "__";
           prerr_string q.id;
         with _ ->
-          prerr_char `<`;
+          prerr_char '<';
           prerr_int tag;
-          prerr_char `>`
+          prerr_char '>'
         end;
         if obj_size (repr x) > 0 then begin
-          prerr_char `(`;
+          prerr_char '(';
           for i = 0 to obj_size (repr x) - 1 do
             if i > 0 then prerr_string ", ";
             let arg = obj_field (repr x) i in
             if not (is_block arg) then
               prerr_int (magic_obj arg : int)
             else if obj_tag arg == 253 then begin
-              prerr_char `"`;
+              prerr_char '"';
               prerr_string (magic_obj arg : string);
-              prerr_char `"`
+              prerr_char '"'
             end else
-              prerr_char `_`
+              prerr_char '_'
           done;
-          prerr_char `)`
+          prerr_char ')'
         end
     end;
-    prerr_char `\n`;
+    prerr_char '\n';
     Io.exit 2
 ;;

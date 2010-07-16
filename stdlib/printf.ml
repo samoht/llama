@@ -17,13 +17,13 @@ let fprintf outchan format =
       magic ()
     else
       match nth_char format i with
-        `%` ->
+        '%' ->
           let j = skip_args (succ i) in
           begin match nth_char format j with
-            `%` ->
-              output_char outchan `%`;
+            '%' ->
+              output_char outchan '%';
               doprn (succ j)
-          | `s` ->
+          | 's' ->
               magic(fun s ->
                 if j <= i+1 then
                   output_string outchan s
@@ -35,33 +35,33 @@ let fprintf outchan format =
                       invalid_arg "fprintf: bad %s format" in
                   if p > 0 && string_length s < p then begin
                     output_string outchan
-                                  (make_string (p - string_length s) ` `);
+                                  (make_string (p - string_length s) ' ');
                     output_string outchan s
                   end else if p < 0 && string_length s < -p then begin
                     output_string outchan s;
                     output_string outchan
-                                  (make_string (-p - string_length s) ` `)
+                                  (make_string (-p - string_length s) ' ')
                   end else
                     output_string outchan s
                 end;
                 doprn (succ j))
-          | `c` ->
+          | 'c' ->
               magic(fun c ->
                 output_char outchan c;
                 doprn (succ j))
-          | `d` | `o` | `x` | `X` | `u` ->
+          | 'd' | 'o' | 'x' | 'X' | 'u' ->
               magic(doint i j)
-          | `f` | `e` | `E` | `g` | `G` ->
+          | 'f' | 'e' | 'E' | 'g' | 'G' ->
               magic(dofloat i j)
-          | `b` ->
+          | 'b' ->
               magic(fun b ->
                 output_string outchan (string_of_bool b);
                 doprn (succ j))
-          | `a` ->
+          | 'a' ->
               magic(fun printer arg ->
                 printer outchan arg;
                 doprn(succ j))
-          | `t` ->
+          | 't' ->
               magic(fun printer ->
                 printer outchan;
                 doprn(succ j))
@@ -72,8 +72,8 @@ let fprintf outchan format =
 
   and skip_args j =
     match nth_char format j with
-      `0` | `1` | `2` | `3` | `4` | `5` | `6` | `7` | `8` | `9` |
-      ` ` | `.` | `-` ->
+      '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' |
+      ' ' | '.' | '-' ->
         skip_args (succ j)
     | c ->
         j
@@ -82,7 +82,7 @@ let fprintf outchan format =
     let len = j-i in
     let fmt = create_string (len+2) in
     blit_string format i fmt 0 len;
-    set_nth_char fmt len `l`;
+    set_nth_char fmt len 'l';
     set_nth_char fmt (len+1) (nth_char format j);
     output_string outchan (format_int fmt n);
     doprn (succ j)
@@ -112,33 +112,33 @@ let sprintf format =
       if i > start then res := sub_string format start (i-start) :: !res;
       magic(concat(rev !res))
     end else
-      if nth_char format i != `%` then
+      if nth_char format i != '%' then
         doprn start (i+1)
       else begin
         if i > start then res := sub_string format start (i-start) :: !res;
         let j = skip_args (succ i) in
         match nth_char format j with
-          `%` ->
+          '%' ->
             doprn j (succ j)
-        | `s` ->
+        | 's' ->
             magic(dostring i j)
-        | `c` ->
+        | 'c' ->
             magic(fun c ->
                 res := make_string 1 c :: !res;
                 doprn (succ j) (succ j))
-        | `d` | `i` | `o` | `x` | `X` | `u` ->
+        | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' ->
             magic(doint i j)
-        | `f` | `e` | `E` | `g` | `G` ->
+        | 'f' | 'e' | 'E' | 'g' | 'G' ->
             magic(dofloat i j)
-        | `b` ->
+        | 'b' ->
             magic(fun b ->
                 res := string_of_bool b :: !res;
                 doprn (succ j) (succ j))
-        | `a` ->
+        | 'a' ->
             magic(fun printer arg ->
               res := printer () arg :: !res;
               doprn (succ j) (succ j))
-        | `t` ->
+        | 't' ->
             magic(fun printer ->
               res := printer () :: !res;
               doprn (succ j) (succ j))
@@ -148,8 +148,8 @@ let sprintf format =
 
   and skip_args j =
     match nth_char format j with
-      `0` | `1` | `2` | `3` | `4` | `5` | `6` | `7` | `8` | `9` |
-      ` ` | `.` | `-` ->
+      '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' |
+      ' ' | '.' | '-' ->
         skip_args (succ j)
     | c ->
         j
@@ -164,11 +164,11 @@ let sprintf format =
         with _ ->
           invalid_arg "sprintf: bad %s format" in
       if p > 0 && string_length s < p then begin
-        res := make_string (p - string_length s) ` ` :: !res;
+        res := make_string (p - string_length s) ' ' :: !res;
         res := s :: !res
       end else if p < 0 && string_length s < -p then begin
         res := s :: !res;
-        res := make_string (-p - string_length s) ` ` :: !res
+        res := make_string (-p - string_length s) ' ' :: !res
       end else
         res := s :: !res
     end;
@@ -178,7 +178,7 @@ let sprintf format =
     let len = j-i in
     let fmt = create_string (len+2) in
     blit_string format i fmt 0 len;
-    set_nth_char fmt len `l`;
+    set_nth_char fmt len 'l';
     set_nth_char fmt (len+1) (nth_char format j);
     res := format_int fmt n :: !res;
     doprn (succ j) (succ j)

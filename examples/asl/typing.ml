@@ -208,7 +208,7 @@ typing (parse_top "t = + (i 1) (i i 2);");;
 typing (parse_top "f = (\\x.x x) (\\x.x);");;
 typing (parse_top "a = + (\\x.x) 1;");;
 typing (parse_top "z = \\f.((\\x.f(\\z.(x x)z)) (\\x.f(\\z.(x x)z)));");;
-global_env := `z`::init_env;
+global_env := 'z'::init_env;
 global_typing_env:=
     (Forall([1],
      Arrow(Arrow(TypeVar{index=1;value=Unknown},

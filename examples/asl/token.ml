@@ -17,7 +17,7 @@ let buff = create_string 2000;;
 (***
 let rec ident len = function
   [<
-    '(`a`..`z` | `A` .. `Z` | `0` .. `9` | `_` | `'`) as c;
+    '('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '\'') as c;
     (set_nth_char buff len c; ident(succ len)) i
   >] -> i
 | [< >] ->
@@ -27,7 +27,7 @@ let rec ident len = function
 ***)
 
 let rec ident len = function
-| [< '(`a`..`z` | `A` .. `Z` | `0` .. `9` | `_` | `'`) as c; s >] ->
+| [< `('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '\'') as c; s >] ->
     set_nth_char buff len c; ident (succ len) s
 | [< >] ->
     let str = sub_string buff 0 len in
@@ -35,30 +35,30 @@ let rec ident len = function
 ;;
 
 let rec number n = function
-| [< '`0` .. `9` as d; s >] ->
-    number(10*n+int_of_char d-int_of_char`0`) s
+| [< `'0' .. '9' as d; s >] ->
+    number(10*n+int_of_char d-int_of_char '0') s
 | [< >] -> n
 ;;
 
 let rec next_token = function
-| [< '(`a`..`z` | `A` .. `Z`) as c; s >] ->
+| [< `('a'..'z' | 'A' .. 'Z') as c; s >] ->
     set_nth_char buff 0 c; ident 1 s
-| [< '`0` .. `9` as d; s >] ->
-    INT(number (int_of_char d-int_of_char `0`) s)
-| [< '` ` | `\n` | `\t`; s >] -> next_token s
-| [< '`+` | `-` | `*` | `/` as c >] -> OP (make_string 1 c)
-| [< '`.` >] -> DOT
-| [< '`=` >] -> EQUAL
-| [< '`\\` >] -> BSLASH
-| [< '`;` >] -> SEMICOL
-| [< '`(` >] -> LPAREN
-| [< '`)` >] -> RPAREN
-| [< 'x >] -> failwith ("Bad char: "^make_string 1 x)
+| [< `'0' .. '9' as d; s >] ->
+    INT(number (int_of_char d-int_of_char '0') s)
+| [< `' ' | '\n' | '\t'; s >] -> next_token s
+| [< `'+' | '-' | '*' | '/' as c >] -> OP (make_string 1 c)
+| [< `'.' >] -> DOT
+| [< `'=' >] -> EQUAL
+| [< `'\\' >] -> BSLASH
+| [< `';' >] -> SEMICOL
+| [< `'(' >] -> LPAREN
+| [< `')' >] -> RPAREN
+| [< `x >] -> failwith ("Bad char: "^make_string 1 x)
 ;;
 
 let rec reset_lexer = function
-| [< '`\n` >] -> ()
-| [< '_; reset_lexer _ >] -> ()
+| [< `'\n' >] -> ()
+| [< `_; reset_lexer _ >] -> ()
 | [< >] -> ()
 ;;
 

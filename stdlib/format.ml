@@ -144,11 +144,11 @@ let pp_enqueue state ({length = len;_} as token) =
     add_queue token state.pp_queue;;
 
 (* To output spaces *)
-let blank_line = make_string 80 ` `;;
+let blank_line = make_string 80 ' ';;
 let display_blanks state n =
     if n > 0 then
     if n <= 80 then state.pp_output_function blank_line 0 n
-    else pp_output_string state (make_string n ` `);;
+    else pp_output_string state (make_string n ' ');;
 
 (* To format a break, indenting a new line *)
 let break_new_line state offset width =
@@ -650,45 +650,45 @@ let fprintf ppf format =
       magic ()
     else
       match format.[i] with
-      | `@` ->
+      | '@' ->
           let j = succ i in
           if j >= limit then invalid_arg ("fprintf: unknown format") else
           begin match format.[j] with
-          | `@` ->
-              pp_print_char ppf `@`;
+          | '@' ->
+              pp_print_char ppf '@';
               doprn (succ j)
-          | `[` ->
+          | '[' ->
               let j = do_pp_open ppf (i + 2) in
               doprn j
-          | `]` ->
+          | ']' ->
               pp_close_box ppf ();
               doprn (succ j)
-          | ` ` ->
+          | ' ' ->
               pp_print_space ppf ();
               doprn (succ j)
-          | `,` ->
+          | ',' ->
               pp_print_cut ppf ();
               doprn (succ j)
-          | `.` ->
+          | '.' ->
               pp_print_newline ppf ();
               doprn (succ j)
-          | `?` ->
+          | '?' ->
               pp_print_flush ppf ();
               doprn (succ j)
-          | `\n` ->
+          | '\n' ->
               pp_force_newline ppf ();
               doprn (succ j)
-          | `;` ->
+          | ';' ->
               let j = do_pp_break ppf (i + 2) in
               doprn j
           | _ -> invalid_arg ("fprintf: unknown format") end
-      | `%` ->
+      | '%' ->
           let j = skip_args (succ i) in
           begin match format.[j] with
-          | `%` ->
-              pp_print_char ppf `%`;
+          | '%' ->
+              pp_print_char ppf '%';
               doprn (succ j)
-          | `s` ->
+          | 's' ->
               magic(fun s ->
                 if j <= i+1 then
                   pp_print_string ppf s
@@ -700,33 +700,33 @@ let fprintf ppf format =
                       invalid_arg "fprintf: bad %s format" in
                   if p > 0 && string_length s < p then begin
                     pp_print_string ppf
-                                  (make_string (p - string_length s) ` `);
+                                  (make_string (p - string_length s) ' ');
                     pp_print_string ppf s
                   end else if p < 0 && string_length s < -p then begin
                     pp_print_string ppf s;
                     pp_print_string ppf
-                                  (make_string (-p - string_length s) ` `)
+                                  (make_string (-p - string_length s) ' ')
                   end else
                     pp_print_string ppf s
                 end;
                 doprn (succ j))
-          | `c` ->
+          | 'c' ->
               magic(fun c ->
                 pp_print_char ppf c;
                 doprn (succ j))
-          | `d` | `o` | `x` | `X` | `u` ->
+          | 'd' | 'o' | 'x' | 'X' | 'u' ->
               magic(doint i j)
-          | `f` | `e` | `E` | `g` | `G` ->
+          | 'f' | 'e' | 'E' | 'g' | 'G' ->
               magic(dofloat i j)
-          | `b` ->
+          | 'b' ->
               magic(fun b ->
                 pp_print_string ppf (string_of_bool b);
                 doprn(succ j))
-          | `a` ->
+          | 'a' ->
               magic(fun printer arg ->
                 printer ppf arg;
                 doprn(succ j))
-          | `t` ->
+          | 't' ->
               magic(fun printer ->
                 printer ppf;
                 doprn(succ j))
@@ -739,7 +739,7 @@ let fprintf ppf format =
     let len = j - i in
     let fmt = create_string (len + 2) in
     blit_string format i fmt 0 len;
-    fmt.[len] <- `l`;
+    fmt.[len] <- 'l';
     fmt.[len + 1] <- format.[j];
     pp_print_string ppf (format_int fmt n);
     doprn (succ j)
@@ -750,19 +750,19 @@ let fprintf ppf format =
 
   and skip_args j =
     match format.[j] with
-    | `0` .. `9` | ` ` | `.` | `-` -> skip_args (succ j)
+    | '0' .. '9' | ' ' | '.' | '-' -> skip_args (succ j)
     | c -> j
 
   and get_int s i =
    if i >= limit then invalid_arg s else
    match format.[i] with
-   | ` ` -> get_int s (i + 1)
+   | ' ' -> get_int s (i + 1)
    | c ->
       let rec get j =
        if j >= limit then invalid_arg s else
        match format.[j] with
-       | `0` .. `9` | `-` -> get (succ j)
-       | `>` | ` ` ->
+       | '0' .. '9' | '-' -> get (succ j)
+       | '>' | ' ' ->
          if j = i then 0, succ j else
           begin try int_of_string (sub_string format i (j-i)), succ j
           with Failure _ -> invalid_arg s end
@@ -772,32 +772,32 @@ let fprintf ppf format =
   and get_box_kind j =
    if j >= limit then Pp_box, j else
    match format.[j] with
-   | `h` ->
+   | 'h' ->
       let j = succ j in
       if j >= limit then Pp_hbox, j else
       begin match format.[j] with
-      | `o` -> 
+      | 'o' -> 
          let j = succ j in
          if j >= limit
           then invalid_arg "fprintf: bad box format" else
          begin match format.[j] with
-         | `v` -> Pp_hovbox, succ j
+         | 'v' -> Pp_hovbox, succ j
          | _ ->  invalid_arg "fprintf: bad box format" end
-      | `v` -> Pp_hvbox, succ j
+      | 'v' -> Pp_hvbox, succ j
       | c -> Pp_hbox, j
       end
-   | `b` -> Pp_box, succ j
-   | `v` -> Pp_vbox, succ j
+   | 'b' -> Pp_box, succ j
+   | 'v' -> Pp_vbox, succ j
    | _ -> Pp_box, j
 
   and do_pp_break ppf i =
    if i >= limit
    then begin pp_print_space ppf (); i end else
    match format.[i] with
-   | `<` ->
+   | '<' ->
      let nspaces, j = get_int "fprintf: bad break format" (succ i) in
      let offset, j = get_int "fprintf: bad break format" j in
-     if format.[pred j] != `>` then invalid_arg "fprintf: bad break format"
+     if format.[pred j] != '>' then invalid_arg "fprintf: bad break format"
      else pp_print_break ppf nspaces offset;
      j
    | c ->  pp_print_space ppf (); i
@@ -806,7 +806,7 @@ let fprintf ppf format =
    if i >= limit
    then begin pp_open_box_gen ppf 0 Pp_box; i end else
    match format.[i] with
-   | `<` ->
+   | '<' ->
      let k, j = get_box_kind (succ i) in
      let size, j = get_int "fprintf: bad box format" j in
      pp_open_box_gen ppf size k;
