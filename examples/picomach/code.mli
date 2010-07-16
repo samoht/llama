@@ -18,6 +18,6 @@ and opération =
   | Slt | Sle | Seq;;
 
 val nombre_de_registres: int
-  and sp: int
-  and ra: int
-  and taille_du_mot: int;;
+val sp: int
+val ra: int
+val taille_du_mot: int;;

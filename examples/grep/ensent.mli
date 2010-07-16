@@ -1,4 +1,4 @@
 type t;;
 val vide : t
-  and appartient : int -> t -> bool
-  and ajoute : int -> t -> t;;
+val appartient : int -> t -> bool
+val ajoute : int -> t -> t;;

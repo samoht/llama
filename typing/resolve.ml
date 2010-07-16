@@ -114,8 +114,7 @@ let primitive o =
 let signature_item si =
   { in_desc =
       begin match si.psig_desc with
-        | Psig_value l -> Sig_value
-            (List.map (fun (s,te,pr) -> (s,core_type te, primitive pr)) l)
+        | Psig_value (s,te,pr) -> Sig_value (s,core_type te, primitive pr)
         | Psig_type l -> Sig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
         | Psig_exception l -> Sig_exception (List.map constr_decl l)
         | Psig_open mn -> Sig_open mn

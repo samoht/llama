@@ -84,7 +84,7 @@ type signature_item =
     psig_loc: Location.location }
 
 and signature_item_desc =
-    Psig_value of (string * core_type * (int*string) option) list
+    Psig_value of string * core_type * (int*string) option
   | Psig_type of (string * string list * type_decl) list
   | Psig_exception of constr_decl list
   | Psig_open of module_name

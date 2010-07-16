@@ -6,4 +6,4 @@ and transition =
   | Rejet;;
 
 val déterminise : Auto.état -> état
-  and reconnaît : état -> string -> bool;;
+val reconnaît : état -> string -> bool;;

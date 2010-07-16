@@ -3,7 +3,7 @@ open Code
 exception Erreur of string;;
 
 val initialise: unit -> unit
-  and assemble: instruction -> unit
-  and poser_étiquette: string -> unit
-  and valeur_étiquette: string -> int
-  and extraire_code: unit -> instruction vect;;
+val assemble: instruction -> unit
+val poser_étiquette: string -> unit
+val valeur_étiquette: string -> int
+val extraire_code: unit -> instruction vect;;

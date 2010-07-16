@@ -11,7 +11,7 @@ val int : int -> int
   (* [random__int bound] returns a random number between 0 (inclusive)
      and [bound] (exclusive).  [bound] must be positive and smaller
      than $2^{30}$. *)
-and float : float -> float
+val float : float -> float
   (* [random__float bound] returns a random number between 0 (inclusive)
      and [bound] (exclusive). *)
 ;;

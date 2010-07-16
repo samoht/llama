@@ -269,7 +269,7 @@ interface:
 
 interface_item :
         VALUE Value_decl
-          { make_intf(Psig_value $2) }
+          { make_intf($2) }
       | TYPE Type_decl
           { make_intf(Psig_type $2) }
       | EXCEPTION Exc_decl
@@ -727,13 +727,6 @@ Type_comma_list :
 
 /* Declarations */
 
-Value_decl :
-        Value1_decl AND Value_decl
-          { $1 :: $3 }
-      | Value1_decl
-          { [$1] }
-;
-
 Type_decl :
         Type1_decl AND Type_decl
           { $1 :: $3 }
@@ -764,11 +757,11 @@ Label_decl :
           { [$1] }
 ;
 
-Value1_decl :
+Value_decl :
         Ide COLON Type
-          { ($1, $3, None) }
+          { Psig_value($1, $3, None) }
       | Ide COLON Type EQUAL Prim_decl
-          { ($1, $3, Some $5) }
+          { Psig_value($1, $3, Some $5) }
 ;
 
 Prim_decl :

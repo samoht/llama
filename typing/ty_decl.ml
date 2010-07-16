@@ -182,16 +182,13 @@ let type_excdecl loc decl =
   enter_new_variant true loc (constr_type_exn, type_exn, decl)
 ;;
 
-let type_valuedecl loc decl =
-  let enter_val (name, typexp, prim) =
+let type_valuedecl loc name typexp prim =
     push_type_level();
     reset_type_expression_vars ();
     let ty = type_of_type_expression false typexp in
       pop_type_level();
       generalize_type ty;
       add_value (defined_global name { val_typ = ty; val_prim = prim })
-  in
-    List.iter enter_val decl
 ;;
 
 let type_letdef loc rec_flag pat_expr_list =

@@ -5,7 +5,7 @@ type valeur =
   | Tableau of int * valeur vect;;
 
 val ent_val: valeur -> int
-  and bool_val: valeur -> bool
-  and tableau_val: valeur -> int * valeur vect
-  and affiche_valeur: valeur -> unit
-  and lire_valeur: unit -> valeur;;
+val bool_val: valeur -> bool
+val tableau_val: valeur -> int * valeur vect
+val affiche_valeur: valeur -> unit
+val lire_valeur: unit -> valeur;;

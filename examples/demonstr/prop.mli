@@ -10,4 +10,4 @@ type proposition =
 
 exception Réfutation of (string * bool) list;;
 val vérifie_tautologie: proposition -> string list -> unit
-  and variables_libres: proposition -> string list;;
+val variables_libres: proposition -> string list;;

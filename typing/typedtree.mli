@@ -89,7 +89,7 @@ type signature_item =
     in_loc: location }
 
 and signature_item_desc =
-    Sig_value of (string * core_type * prim_desc) list
+    Sig_value of string * core_type * prim_desc
   | Sig_type of (string * string list * type_decl) list
   | Sig_exception of constr_decl list
   | Sig_open of module_name

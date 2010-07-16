@@ -78,8 +78,8 @@ let verbose = ref false;;
   
 let compile_intf_phrase phr =
   begin match phr.in_desc with
-    Sig_value decl ->
-      type_valuedecl phr.in_loc decl; ()
+    Sig_value (s,te,pr) ->
+      type_valuedecl phr.in_loc s te pr; ()
   | Sig_type decl ->
       let ty_decl = type_typedecl phr.in_loc decl in
       if !verbose then print_typedecl ty_decl

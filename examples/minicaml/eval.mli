@@ -15,7 +15,7 @@ and fermeture =
 and environnement == (string * valeur) list;;
 
 val évalue: environnement -> expression -> valeur
-  and évalue_définition: environnement -> définition -> environnement
-  and imprime_valeur: valeur -> unit;;
+val évalue_définition: environnement -> définition -> environnement
+val imprime_valeur: valeur -> unit;;
 
 exception Erreur of string;;
