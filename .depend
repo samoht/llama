@@ -77,12 +77,6 @@ typing/modules.cmo: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
     parsing/const.cmx 
 typing/modules.cmx: utils/misc.cmx parsing/interntl.cmx typing/globals.cmx \
     parsing/const.cmx 
-typing/par_aux.cmo: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
-    typing/location.cmi typing/globals.cmx typing/error.cmx parsing/const.cmx \
-    typing/builtins.cmx 
-typing/par_aux.cmx: typing/syntax.cmx typing/modules.cmx utils/misc.cmx \
-    typing/location.cmi typing/globals.cmx typing/error.cmx parsing/const.cmx \
-    typing/builtins.cmx 
 typing/parser.cmo: typing/syntax.cmx typing/primdecl.cmx \
     parsing/presyntax.cmx parsing/newparser.cmi parsing/longident.cmi \
     typing/globals.cmx typing/env.cmi typing/parser.cmi 
