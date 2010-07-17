@@ -104,14 +104,14 @@ and print_concrete_type prio depth obj cstr ty ty_list =
   let typ_descr =
     type_descr_of_type_constr cstr in
   match typ_descr.info.type_kind with
-    Abstract_type ->
+    Type_abstract ->
       begin match typ_descr.info.type_manifest with
         | None ->
             print_string "<abstr>"
         | Some body ->
             print_val prio depth obj (expand_abbrev typ_descr.info.type_params body ty_list)
       end
-  | Variant_type constr_list ->
+  | Type_variant constr_list ->
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
@@ -152,7 +152,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       | Unify ->
           fatal_error "print_val: types should match"
       end
-  | Record_type label_list ->
+  | Type_record label_list ->
       let print_field depth lbl =
         open_box 1;
         output_label lbl;

@@ -153,10 +153,10 @@ let primitive o =
 
 let type_kind c tk =
   begin match tk with
-    | Ptype_abstract -> Type_abstract
-    | Ptype_abbrev te -> Type_abbrev (type_expression c te)
-    | Ptype_variant cdl -> Type_variant (List.map (constr_decl c) cdl)
-    | Ptype_record l -> Type_record (List.map (fun (s,te,m) ->
+    | Ptype_abstract -> Ttype_abstract
+    | Ptype_abbrev te -> Ttype_abbrev (type_expression c te)
+    | Ptype_variant cdl -> Ttype_variant (List.map (constr_decl c) cdl)
+    | Ptype_record l -> Ttype_record (List.map (fun (s,te,m) ->
                                                   (s,type_expression c te, m)) l)
   end
 

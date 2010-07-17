@@ -18,7 +18,7 @@ TYPING=typing/types.cmx typing/modules.cmx typing/btype.cmx \
  typing/builtins.cmx \
  typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
- typing/primdecl.cmx typing/resolve.cmx typing/includecore.cmx typing/includemod.cmx
+ typing/primdecl.cmx typing/resolve.cmx typing/ctype.cmx typing/includecore.cmx typing/includemod.cmx
 
 COMPILER=compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
  compiler/event.cmx \

@@ -19,17 +19,12 @@ let value_descriptions env vd1 vd2 =
       | (_, _) -> Tcoerce_none
   end else
     raise Dont_match
-(*
+
 let type_manifest ty1 params1 ty2 params2 =
-  let rec check_super ty1 =
-    Ctype.equal env true (ty1 :: params1) (ty2 :: params2) ||
-      priv2 = Private &&
-    try check_super
-      (Ctype.try_expand_once_opt env (Ctype.expand_head env ty1))
-    with Ctype.Cannot_expand -> false
-  in check_super ty1
+  Ctype.equal true (ty1 :: params1) (ty2 :: params2)
 
 (* | Tsig_type of (string * string list * type_decl) list *)
+(*
 let type_declarations decl1 decl2 =
   decl1.type_arity = decl2.type_arity &&
   begin match (decl1.type_kind, decl2.type_kind) with

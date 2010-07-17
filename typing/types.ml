@@ -58,9 +58,9 @@ type type_declaration =
     mutable type_kind: type_components }  (* Its description *)
 
 and type_components =
-    Abstract_type
-  | Variant_type of constr_desc global list (* Sum type -> list of constr. *)
-  | Record_type of label_desc global list (* Record type -> list of labels *)
+    Type_abstract
+  | Type_variant of constr_desc global list (* Sum type -> list of constr. *)
+  | Type_record of label_desc global list (* Record type -> list of labels *)
 
 (* Value constructors *)
 

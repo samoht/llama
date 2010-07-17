@@ -380,7 +380,7 @@ let rec labels_of_type ty =
       labels_of_type (expand_abbrev params body args)
   | Tconstr(cstr, _) ->
       begin match (type_descr_of_type_constr cstr).info.type_kind with
-        Record_type lbl_list -> lbl_list
+        Type_record lbl_list -> lbl_list
       | _ -> fatal_error "labels_of_type"
       end
   | _ ->

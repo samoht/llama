@@ -45,7 +45,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       List.iter
         (fun cstr -> List.iter generalize_type cstr.info.cs_args)
         constr_descs;
-      Variant_type constr_descs
+      Type_variant constr_descs
 ;;
 
 let enter_new_record loc (ty_constr, ty_res, labels) =
@@ -66,7 +66,7 @@ let enter_new_record loc (ty_constr, ty_res, labels) =
     List.iter
       (function lbl -> generalize_type lbl.info.lbl_arg)
       label_descs;
-    Record_type label_descs
+    Type_record label_descs
 ;;
     
 let enter_new_abbrev (ty_constr, ty_params, body) =
@@ -75,7 +75,7 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
     generalize_type ty_body;
     List.iter generalize_type ty_params;
     ty_constr.info.ty_abbr <- Tabbrev(ty_params, ty_body);
-    Abstract_type, Some ty_body
+    Type_abstract, Some ty_body
 ;;
 
 let enter_new_type (ty_name, params, def) =
@@ -89,7 +89,7 @@ let enter_new_type (ty_name, params, def) =
         type_arity = List.length params;
         type_manifest = None; (* xxx *)
         type_params = []; (* xxx *)
-        type_kind  = Abstract_type } in
+        type_kind  = Type_abstract } in
   add_type ty_desc;
   ty_desc, params, def
 ;;
@@ -115,13 +115,13 @@ let define_new_type loc (ty_desc, params, def) =
       typ_level = notgeneric} in
   let type_comp,manifest =
     match def with
-      Type_abstract ->
-        pop_type_level(); Abstract_type,None
-    | Type_variant constrs ->
+      Ttype_abstract ->
+        pop_type_level(); Type_abstract,None
+    | Ttype_variant constrs ->
         enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs),None
-    | Type_record labels ->
+    | Ttype_record labels ->
         enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels),None
-    | Type_abbrev body ->
+    | Ttype_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.type_kind <- type_comp;
   ty_desc.info.type_manifest <- manifest;

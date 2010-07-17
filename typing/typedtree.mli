@@ -77,10 +77,10 @@ and stream_pattern =
   | Texp_streampat of string
 
 type type_kind =
-    Type_abstract
-  | Type_variant of constr_decl list
-  | Type_record of (string * type_expression * mutable_flag) list
-  | Type_abbrev of type_expression
+    Ttype_abstract
+  | Ttype_variant of constr_decl list
+  | Ttype_record of (string * type_expression * mutable_flag) list
+  | Ttype_abbrev of type_expression
 
 and constr_decl = string * type_expression list
 

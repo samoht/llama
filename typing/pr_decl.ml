@@ -43,14 +43,14 @@ let print_one_typedecl (newthing, (ty_res, ty_comp)) =
 
   output_one_type stdout ty_res;
   begin match ty_comp with
-    Variant_type(cstr1::cstrl) ->
+    Type_variant(cstr1::cstrl) ->
       print_string " = \n  | "; print_constr_decl cstr1;
       List.iter (fun cstr -> print_string "  | "; print_constr_decl cstr) cstrl
-  | Record_type(lbl1::lbll) ->
+  | Type_record(lbl1::lbll) ->
       print_string " = \n  { "; print_label_decl lbl1;
       List.iter (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
       print_string "  }\n"
-  | Abstract_type ->
+  | Type_abstract ->
       begin match manifest with
         | None ->
             print_string "\n"
@@ -71,7 +71,7 @@ let print_typedecl = function
 ;;
 
 let print_excdecl = function
-    Variant_type cstrl ->
+    Type_variant cstrl ->
       List.iter
         (fun cstr ->
           reset_type_var_name();

@@ -169,16 +169,16 @@ let mkty cstr params desc =
 let _ = List.iter
   (fun (name,desc) ->
       Hashtbl.add module_builtin.mod_types name (builtin name desc))
-  ["unit", mkty constr_type_unit [] (Variant_type[constr_void]);
-   "exn", mkty constr_type_exn [] (Variant_type []);
-   "bool", mkty constr_type_bool [] (Variant_type [constr_false; constr_true]);
-   "int", mkty constr_type_int [] Abstract_type;
-   "float", mkty constr_type_float [] Abstract_type;
-   "string", mkty constr_type_string [] Abstract_type;
-   "char", mkty constr_type_char [] Abstract_type;
-   "list", mkty constr_type_list [list_tyvar] (Variant_type [constr_nil; constr_cons]);
-   "vect", mkty constr_type_vect [vect_tyvar] Abstract_type;
-   "option", mkty constr_type_option [option_tyvar] (Variant_type [constr_none; constr_some])
+  ["unit", mkty constr_type_unit [] (Type_variant[constr_void]);
+   "exn", mkty constr_type_exn [] (Type_variant []);
+   "bool", mkty constr_type_bool [] (Type_variant [constr_false; constr_true]);
+   "int", mkty constr_type_int [] Type_abstract;
+   "float", mkty constr_type_float [] Type_abstract;
+   "string", mkty constr_type_string [] Type_abstract;
+   "char", mkty constr_type_char [] Type_abstract;
+   "list", mkty constr_type_list [list_tyvar] (Type_variant [constr_nil; constr_cons]);
+   "vect", mkty constr_type_vect [vect_tyvar] Type_abstract;
+   "option", mkty constr_type_option [option_tyvar] (Type_variant [constr_none; constr_some])
   ]
 ;;
 (* The type "stream" is defined in the "stream" module *)

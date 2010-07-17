@@ -16,7 +16,7 @@ let enter_interface_definitions intf =
     (fun name ty_desc ->
       let manifest =
         match ty_desc.info.type_kind with
-          Abstract_type -> false
+          Type_abstract -> false
         | _ -> add_type ty_desc; true in
       external_types :=
         (ty_desc.qualid.id,
