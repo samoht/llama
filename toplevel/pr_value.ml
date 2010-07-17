@@ -176,8 +176,8 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       cautious (print_fields depth) label_list;
       print_string "}";
       close_box()
-  | Abbrev_type(params, body) ->
-      print_val prio depth obj (expand_abbrev params body ty_list)
+  | Abbrev_type(body) ->
+      print_val prio depth obj (expand_abbrev typ_descr.info.ty_params body ty_list)
 
 and print_val_list prio depth obj ty_list =
   let print_list depth i =

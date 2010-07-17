@@ -75,7 +75,7 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
     generalize_type ty_body;
     List.iter generalize_type ty_params;
     ty_constr.info.ty_abbr <- Tabbrev(ty_params, ty_body);
-    Abbrev_type(ty_params, ty_body)
+    Abbrev_type(ty_body)
 ;;
 
 let enter_new_type (ty_name, params, def) =
@@ -87,6 +87,7 @@ let enter_new_type (ty_name, params, def) =
     defined_global ty_name
       { ty_constr = ty_constr;
         ty_arity = List.length params;
+        ty_params = []; (* xxx *)
         ty_desc  = Abstract_type } in
   add_type ty_desc;
   ty_desc, params, def
@@ -107,6 +108,7 @@ let define_new_type loc (ty_desc, params, def) =
       bind_type_expression_vars params
     with Failure "bind_type_expression_vars" ->
       duplicate_param_in_type_decl_err loc in
+  ty_desc.info.ty_params <- ty_params; (* they may get generalized by enter_new_abbrev... *)
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
       typ_level = notgeneric} in
@@ -148,8 +150,8 @@ let check_recursive_abbrev loc (ty, params, def) =
 ;;
 
 let type_typedecl loc decl =
-  let newdecl = List.map enter_new_type decl in
-  let res = List.map (define_new_type loc) newdecl in
+  let newdecl = List.map enter_new_type decl in (* xxx: they need params *)
+  let res = List.map (define_new_type loc) newdecl in (* xxx: and they got them now *)
   List.iter (check_recursive_abbrev loc) newdecl;
   res
 ;;

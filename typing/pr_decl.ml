@@ -46,7 +46,7 @@ let print_one_typedecl (ty_res, ty_comp) =
       print_string " = \n  { "; print_label_decl lbl1;
       List.iter (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
       print_string "  }\n"
-  | Abbrev_type(_, ty_body) ->
+  | Abbrev_type(ty_body) ->
       printf " == %a\n" output_type ty_body
   | Abstract_type ->
       print_string "\n"

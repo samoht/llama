@@ -8,6 +8,12 @@ open Asttypes;;
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
 ;;
 
+let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
+let list_tyvar = newgenvar()
+let vect_tyvar = newgenvar()
+let option_tyvar = newgenvar()
+
+
 (* Some types that must be known to the type checker *)
 
 let constr_type_unit =
@@ -84,7 +90,7 @@ let constr_void =
 ;;
 
 let constr_nil =
-  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
+  let arg = list_tyvar in
   builtin "[]"
     { cs_res = {typ_desc=Tconstr(constr_type_list, [arg]); typ_level=generic};
       cs_args = [];
@@ -92,7 +98,7 @@ let constr_nil =
       cs_kind= Constr_constant }
 
 and constr_cons =
-  let arg1 = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
+  let arg1 = list_tyvar in
   let arg2 = {typ_desc=Tconstr(constr_type_list, [arg1]); typ_level=generic} in
   builtin "::"
     { cs_res = arg2;
@@ -102,7 +108,7 @@ and constr_cons =
 ;;
 
 let constr_none =
-  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
+  let arg = option_tyvar in
   builtin "None"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
@@ -111,7 +117,7 @@ let constr_none =
       cs_kind= Constr_constant }
 
 and constr_some =
-  let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
+  let arg = option_tyvar in
   builtin "Some"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
@@ -157,27 +163,27 @@ List.iter
   (fun (name,desc) ->
       Hashtbl.add module_builtin.mod_types name (builtin name desc))
   ["unit",
-   {ty_constr=constr_type_unit; ty_arity=0; ty_desc=Variant_type[constr_void]};
+   {ty_constr=constr_type_unit; ty_arity=0; ty_params=[]; ty_desc=Variant_type[constr_void]};
    "exn",
-    {ty_constr=constr_type_exn; ty_arity=0; ty_desc=Variant_type []};
+    {ty_constr=constr_type_exn; ty_arity=0; ty_params=[]; ty_desc=Variant_type []};
    "bool",
-    {ty_constr=constr_type_bool; ty_arity=0;
+    {ty_constr=constr_type_bool; ty_arity=0;ty_params=[]; 
      ty_desc=Variant_type [constr_false; constr_true]};
    "int",
-    {ty_constr=constr_type_int; ty_arity=0; ty_desc=Abstract_type};
+    {ty_constr=constr_type_int; ty_arity=0;ty_params=[];  ty_desc=Abstract_type};
    "float",
-    {ty_constr=constr_type_float; ty_arity=0; ty_desc=Abstract_type};
+    {ty_constr=constr_type_float; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
    "string",
-    {ty_constr=constr_type_string; ty_arity=0; ty_desc=Abstract_type};
+    {ty_constr=constr_type_string; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
    "char",
-    {ty_constr=constr_type_char; ty_arity=0; ty_desc=Abstract_type};
+    {ty_constr=constr_type_char; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
    "list",
-    {ty_constr=constr_type_list; ty_arity=1;
+    {ty_constr=constr_type_list; ty_arity=1; ty_params=[list_tyvar];
      ty_desc=Variant_type [constr_nil; constr_cons]};
    "vect",
-    {ty_constr=constr_type_vect; ty_arity=1; ty_desc=Abstract_type};
+    {ty_constr=constr_type_vect; ty_arity=1; ty_params=[vect_tyvar]; ty_desc=Abstract_type};
    "option",
-    {ty_constr=constr_type_option; ty_arity=1;
+    {ty_constr=constr_type_option; ty_arity=1; ty_params=[option_tyvar];
      ty_desc=Variant_type [constr_none; constr_some]};
    ]
 ;;
