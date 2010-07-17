@@ -51,12 +51,20 @@ let type_of_type_expression strict_flag typexp =
       type_arrow(type_of arg1, type_of arg2)
   | Ttyp_tuple argl ->
       type_product(List.map type_of argl)
-  | Ttyp_constr(cstr_name, args) ->
+  | Ttyp_constr(ident, args) ->
       let cstr =
-        try
-          find_type_desc cstr_name
-        with Desc_not_found ->
-          unbound_type_constr_err cstr_name typexp.te_loc in
+        begin match ident with
+          | Tcrec(s, r) ->
+              begin match !r with
+                | None ->
+                    let cstr = Env.lookup_type (Longident.Id s) typexp.te_loc in
+                    r := Some cstr;
+                    cstr
+                | Some cstr -> cstr
+              end
+          | Tcglobal cstr -> cstr
+        end
+      in
       if List.length args != cstr.info.ty_arity then
         type_arity_err cstr args typexp.te_loc
       else
@@ -253,8 +261,8 @@ let unify_expr expr expected_ty actual_ty =
 let rec type_expr env expr =
   let inferred_ty =
   match expr.exp_desc with
-    Texp_ident r ->
-      begin match r with
+    Texp_ident ident ->
+      begin match ident with
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_typ
         | Zlocal s ->

@@ -4,10 +4,9 @@ open Const
 open Types
 open Asttypes
 
-type 'a ident =
-    Zglobal of 'a
-  | Zlocal of string
-  | Zrec of string * 'a option ref
+type tconstr_identifier =
+  | Tcglobal of type_desc global
+  | Tcrec of string * type_desc global option ref
 
 type type_expression =
   { te_desc: type_expression_desc;
@@ -17,7 +16,7 @@ and type_expression_desc =
     Ttyp_var of string
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
-  | Ttyp_constr of global_reference * type_expression list
+  | Ttyp_constr of tconstr_identifier * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
@@ -35,13 +34,18 @@ and pattern_desc =
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label_desc global * pattern) list
 
+type value_identifier =
+    Zglobal of value_desc global
+  | Zlocal of string
+  | Zrec of string * value_desc global option ref
+
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
     mutable exp_type: typ }
 
 and expression_desc =
-    Texp_ident of value_desc global ident
+    Texp_ident of value_identifier
   | Texp_constant of struct_constant
   | Texp_tuple of expression list
   | Texp_construct of constr_desc global * expression list

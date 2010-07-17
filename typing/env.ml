@@ -13,7 +13,12 @@ let lookup li =
     | Longident.Qual (mn, s) -> Types.GRmodname {Const.qual=mn; Const.id=s}
   end
 
-let lookup_type li loc = lookup li
+let lookup_type li loc =
+  let gr = lookup li in
+  try
+    find_type_desc gr
+  with Desc_not_found ->
+    unbound_type_constr_err gr loc
 
 let lookup_constructor li loc =
   let gr = lookup li in

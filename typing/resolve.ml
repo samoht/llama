@@ -11,9 +11,13 @@ let rec type_expression c te =
         | Ptyp_var s -> Ttyp_var s
         | Ptyp_arrow (x, y) -> Ttyp_arrow (type_expression c x, type_expression c y)
         | Ptyp_tuple l -> Ttyp_tuple (List.map (type_expression c) l)
-        | Ptyp_constr (f, l) ->
-            Ttyp_constr (Env.lookup_type f te.ptyp_loc,
-                         List.map (type_expression c) l)
+        | Ptyp_constr (li, l) ->
+            Ttyp_constr
+              (begin match li with
+                 | Longident.Id s when List.mem s c -> Tcrec (s, ref None)
+                 | _ -> Tcglobal (Env.lookup_type li te.ptyp_loc)
+               end,
+               List.map (type_expression c) l)
       end;
     te_loc = te.ptyp_loc }
 
@@ -67,14 +71,14 @@ let rec expr c ex =
   { exp_desc =
       begin match ex.pexp_desc with
         | Pexp_ident li ->
-            let nf() = Zglobal(Env.lookup_value li ex.pexp_loc) in
+            let notlocal() = Zglobal(Env.lookup_value li ex.pexp_loc) in
             Texp_ident
               begin match li with
                 | Longident.Id s ->
                     begin try
                       if List.assoc s c then Zrec (s, ref None) else Zlocal s
-                    with Not_found -> nf() end
-                | _ -> nf()
+                    with Not_found -> notlocal() end
+                | _ -> notlocal()
               end
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr c) l)

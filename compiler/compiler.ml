@@ -103,9 +103,8 @@ let compile_interface modname filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       external_types := [];
-      let l = wrap Parser.interface Lexer.main lexbuf in
-      let l = List.rev_map Resolve.signature_item l in
-      List.iter compile_intf_phrase l;
+      let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
+      List.iter (fun x -> compile_intf_phrase (Resolve.signature_item x)) l;
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
