@@ -25,9 +25,8 @@ let print_constr_decl cstr =
     Constr_constant ->
       printf "%s\n" cstr.qualid.id
   | _ ->
-      printf "%s of %s%a\n"
+      printf "%s of %a\n"
              cstr.qualid.id
-             (match cstr.info.cs_mut with Mutable -> "mutable " | _ -> "")
              output_type cstr.info.cs_arg
 ;;
 

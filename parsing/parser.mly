@@ -789,8 +789,8 @@ Type1_def :
 ;
 
 Constr1_decl :
-        Ide OF Mutable_option Type
-          { Pconstr1decl($1, $4, $3) }
+        Ide OF Type
+          { Pconstr1decl($1, $3) }
       | Ide
           { Pconstr0decl ($1) }
 ;

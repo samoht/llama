@@ -176,15 +176,10 @@ let rec translate_expr env =
           end
       | _ ->
           let tr_arg = transl arg in
-          begin match c.info.cs_mut with
-            Mutable ->
-              Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
-          | Notmutable ->
-              begin try
-                Lconst(SCblock(c.info.cs_tag, [extract_constant tr_arg]))
-              with Not_constant ->
-                Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
-              end
+          begin try
+            Lconst(SCblock(c.info.cs_tag, [extract_constant tr_arg]))
+          with Not_constant ->
+            Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
           end
       end
   | Zapply({e_desc = Zfunction ((patl,_)::_ as case_list)} as funct, args) ->

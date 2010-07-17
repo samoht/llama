@@ -77,7 +77,7 @@ type type_decl =
 
 and constr_decl =
     Pconstr0decl of string
-  | Pconstr1decl of string * core_type * mutable_flag
+  | Pconstr1decl of string * core_type
 
 type signature_item =
   { psig_desc: signature_item_desc;

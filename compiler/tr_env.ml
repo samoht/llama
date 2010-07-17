@@ -122,11 +122,7 @@ let rec mutable_vars_of_pat mut pat =
   | Tpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
   | Tpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
   | Tpat_construct1(cstr,pat) ->
-      let mut' =
-        match cstr.info.cs_mut with
-          Mutable -> true
-        | Notmutable -> mut in
-      mutable_vars_of_pat mut' pat
+      mutable_vars_of_pat mut pat
   | Tpat_record lbl_pat_list ->
       List.flatten (List.map
         (fun (lbl,pat) ->

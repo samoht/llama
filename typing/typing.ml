@@ -140,7 +140,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
         let (ty_res, ty_arg) =
           type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
         unify_pat pat ty ty_res;
-        tpat new_env (arg, ty_arg, cstr.info.cs_mut)
+        tpat new_env (arg, ty_arg, Asttypes.Notmutable)
       end
   | Tpat_or(pat1, pat2) ->
       begin match free_vars_of_pat pat with
@@ -185,7 +185,7 @@ let rec is_nonexpansive expr =
   | Zconstant sc -> true
   | Ztuple el -> List.for_all is_nonexpansive el
   | Zconstruct0 cstr -> true
-  | Zconstruct1(cstr, e) -> cstr.info.cs_mut == Notmutable && is_nonexpansive e
+  | Zconstruct1(cstr, e) -> is_nonexpansive e
   | Zlet(rec_flag, bindings, body) ->
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body

@@ -82,7 +82,7 @@ type type_decl =
 
 and constr_decl =
     Zconstr0decl of string
-  | Zconstr1decl of string * core_type * mutable_flag
+  | Zconstr1decl of string * core_type
 
 type signature_item =
   { in_desc: signature_item_desc;

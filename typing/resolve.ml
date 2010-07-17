@@ -82,7 +82,7 @@ let rec expr ex =
 let constr_decl cd =
   begin match cd with
     | Pconstr0decl s -> Zconstr0decl s
-    | Pconstr1decl (s,te,m) -> Zconstr1decl(s,core_type te,m)
+    | Pconstr1decl (s,te) -> Zconstr1decl(s,core_type te)
   end
 
 let type_decl td =

@@ -66,7 +66,6 @@ and type_components =
 and constr_desc =
   { cs_res: typ;                       (* Result type *)
     cs_arg: typ;                       (* Argument type *)
-    cs_mut: mutable_flag;              (* Mutable or not *)
     cs_tag: constr_tag;                (* Its run-time tag *)
     cs_kind: constr_kind }             (* How it is represented *)
 

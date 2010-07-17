@@ -80,7 +80,6 @@ let constr_void =
     { cs_res = {typ_desc=Tconstr(constr_type_unit,[]); typ_level=notgeneric};
       cs_arg = type_unit;
       cs_tag = ConstrRegular(0,1);
-      cs_mut = Notmutable;
       cs_kind= Constr_constant }
 ;;
 
@@ -90,7 +89,6 @@ let constr_nil =
     { cs_res = {typ_desc=Tconstr(constr_type_list, [arg]); typ_level=generic};
       cs_arg = type_unit;
       cs_tag = ConstrRegular(0,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_constant }
 
 and constr_cons =
@@ -100,7 +98,6 @@ and constr_cons =
     { cs_res = arg2;
       cs_arg = {typ_desc=Tproduct[arg1; arg2]; typ_level=generic};
       cs_tag = ConstrRegular(1,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_superfluous 2}
 ;;
 
@@ -111,7 +108,6 @@ let constr_none =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
       cs_arg = type_unit;
       cs_tag = ConstrRegular(0,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_constant }
 
 and constr_some =
@@ -121,7 +117,6 @@ and constr_some =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
       cs_arg = arg;
       cs_tag = ConstrRegular(1,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_regular }
 ;;
 
@@ -130,7 +125,6 @@ let constr_false =
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
       cs_arg = type_unit;
       cs_tag = ConstrRegular(0,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_constant }
 
 and constr_true =
@@ -138,7 +132,6 @@ and constr_true =
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
       cs_arg = type_unit;
       cs_tag = ConstrRegular(1,2);
-      cs_mut = Notmutable;
       cs_kind= Constr_constant }
 ;;
 
@@ -153,7 +146,6 @@ let constr_match_failure =
     { cs_res = {typ_desc=Tconstr(constr_type_exn,[]); typ_level=notgeneric};
       cs_arg = type_product [type_string; type_int; type_int];
       cs_tag = match_failure_tag;
-      cs_mut = Notmutable;
       cs_kind = Constr_superfluous 3 }
 ;;
 

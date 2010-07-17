@@ -109,7 +109,7 @@ let do_structure_item phr =
         (fun decl ->
             Printf.printf "Exception %s defined.\n"
                              (match decl with Zconstr0decl name -> name
-                                            | Zconstr1decl(name,_,_) -> name))
+                                            | Zconstr1decl(name,_) -> name))
         decl
   | Tstr_open mn ->
       open_module (String.uncapitalize mn)
