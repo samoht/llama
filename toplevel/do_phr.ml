@@ -25,10 +25,10 @@ let fwd_load_file = ref(fun s -> failwith "fwd_load_file")
 let do_structure_item phr =
   reset_type_var();
   reset_type_expression_vars ();
-  begin match phr.im_desc with
+  begin match phr.str_desc with
     Tstr_eval expr ->
       let ty =
-        type_expression phr.im_loc expr in
+        type_expression phr.str_loc expr in
       let res =
         load_phrase(compile_lambda false (translate_expression expr)) in
 (*    let res = Eval.eval [] (Eval.term_of_expr [] expr) in *)
@@ -40,16 +40,16 @@ let do_structure_item phr =
       print_value res ty;
       print_newline()
   | Tstr_value(rec_flag, pat_expr_list) ->
-      let env = type_letdef phr.im_loc rec_flag pat_expr_list in
+      let env = type_letdef phr.str_loc rec_flag pat_expr_list in
       let res =
         if rec_flag then
           load_phrase
             (compile_lambda true
-              (translate_letdef_rec phr.im_loc pat_expr_list))
+              (translate_letdef_rec phr.str_loc pat_expr_list))
         else
           load_phrase
             (compile_lambda false
-              (translate_letdef phr.im_loc pat_expr_list)) in
+              (translate_letdef phr.str_loc pat_expr_list)) in
       flush stderr;
       reset_rollback ();
 (*
@@ -93,17 +93,17 @@ let do_structure_item phr =
           print_newline())
         (List.rev env)
   | Tstr_primitive (name,te,pr) ->
-      let _ = type_valuedecl phr.im_loc name te pr in
+      let _ = type_valuedecl phr.str_loc name te pr in
       reset_rollback ();
       Printf.printf "Primitive %s defined.\n" name
   | Tstr_type decl ->
-      let _ = type_typedecl phr.im_loc decl in
+      let _ = type_typedecl phr.str_loc decl in
       reset_rollback ();
       List.iter
         (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
   | Tstr_exception decl ->
-      let _ = type_excdecl phr.im_loc decl in
+      let _ = type_excdecl phr.str_loc decl in
       reset_rollback ();
       Printf.printf "Exception %s defined.\n" (fst decl)
   | Tstr_open mn ->

@@ -77,14 +77,14 @@ let check_unused_opens () =
 let verbose = ref false;;
   
 let compile_intf_phrase phr =
-  begin match phr.in_desc with
+  begin match phr.sig_desc with
     Tsig_value (s,te,pr) ->
-      type_valuedecl phr.in_loc s te pr; ()
+      type_valuedecl phr.sig_loc s te pr; ()
   | Tsig_type decl ->
-      let ty_decl = type_typedecl phr.in_loc decl in
+      let ty_decl = type_typedecl phr.sig_loc decl in
       if !verbose then print_typedecl ty_decl
   | Tsig_exception decl ->
-      let ex_decl = type_excdecl phr.in_loc decl in
+      let ex_decl = type_excdecl phr.sig_loc decl in
       if !verbose then print_excdecl ex_decl
   | Tsig_open mn ->
       open_module (String.uncapitalize mn)
@@ -121,29 +121,29 @@ let compile_interface modname filename =
 
 let compile_impl_phrase outstream phr =
   reset_type_expression_vars();
-  begin match phr.im_desc with
+  begin match phr.str_desc with
     Tstr_eval expr ->
-      let ty = type_expression phr.im_loc expr in
+      let ty = type_expression phr.str_loc expr in
       emit_phrase outstream
                   (expr_is_pure expr)
                   (compile_lambda false (translate_expression expr));
       if !verbose then print_expr ty
   | Tstr_value(rec_flag, pat_expr_list) ->
-      let env = type_letdef phr.im_loc rec_flag pat_expr_list in
+      let env = type_letdef phr.str_loc rec_flag pat_expr_list in
       emit_phrase outstream
          (letdef_is_pure pat_expr_list)
          (if rec_flag then
-            compile_lambda true (translate_letdef_rec phr.im_loc pat_expr_list)
+            compile_lambda true (translate_letdef_rec phr.str_loc pat_expr_list)
           else
-            compile_lambda false (translate_letdef phr.im_loc pat_expr_list));
+            compile_lambda false (translate_letdef phr.str_loc pat_expr_list));
       if !verbose then print_valdef env
   | Tstr_primitive(s,te,pr) ->
-      type_valuedecl phr.im_loc s te pr; ()
+      type_valuedecl phr.str_loc s te pr; ()
   | Tstr_type decl ->
-      let ty_decl = type_typedecl phr.im_loc decl in
+      let ty_decl = type_typedecl phr.str_loc decl in
       if !verbose then print_typedecl ty_decl
   | Tstr_exception decl ->
-      let ex_decl = type_excdecl phr.im_loc decl in
+      let ex_decl = type_excdecl phr.str_loc decl in
       if !verbose then print_excdecl ex_decl
   | Tstr_open mn ->
       open_module (String.uncapitalize mn)

@@ -19,7 +19,7 @@ let rec free_vars_of_pat pat =
 ;;    
 
 let rec expr_is_pure expr =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_ident _ -> true
   | Texp_constant _ -> true
   | Texp_tuple el -> List.for_all expr_is_pure el

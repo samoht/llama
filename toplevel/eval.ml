@@ -52,7 +52,7 @@ let term_of_structured_const sc =
   end
 
 let rec term_of_expr c expr =
-  begin match expr.e_desc with
+  begin match expr.exp_desc with
     | Texp_ident id ->
         begin match !id with
           | Zglobal vdg ->
@@ -137,4 +137,4 @@ let rec eval env tm =
         tm
   end
 
-let make_expr desc = {e_desc = desc; e_loc = Location.no_location; e_typ = no_type}
+let make_expr desc = {exp_desc = desc; exp_loc = Location.no_location; exp_type = no_type}

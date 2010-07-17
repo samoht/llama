@@ -26,7 +26,7 @@ let extract_constant = function
 (* Compilation of let rec definitions *)
 
 let rec check_letrec_expr expr =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_ident _ -> ()
   | Texp_constant _ -> ()
   | Texp_tuple el | Texp_construct(_, el) -> List.iter check_letrec_expr el
@@ -40,11 +40,11 @@ let rec check_letrec_expr expr =
       check_letrec_expr body      
   | Texp_parser _ -> ()
   | _ ->
-      illegal_letrec_expr expr.e_loc
+      illegal_letrec_expr expr.exp_loc
 ;;
 
 let rec size_of_expr expr =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_tuple el | Texp_construct(_, el) ->
       List.iter check_letrec_expr el; List.length el
   | Texp_function _ ->
@@ -62,7 +62,7 @@ let rec size_of_expr expr =
   | Texp_parser _ ->
       2
   | _ ->
-      illegal_letrec_expr expr.e_loc
+      illegal_letrec_expr expr.exp_loc
 ;;
 
 (* Default cases for partial matches *) 
@@ -110,7 +110,7 @@ let alloc_superfluous_constr cstr n =
 
 let rec translate_expr env =
   let rec transl expr =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_ident({contents=Zlocal s}) ->
       translate_access s env
   | Texp_ident({contents=Zglobal g}) ->
@@ -156,13 +156,13 @@ let rec translate_expr env =
       | Constr_constant ->
           Lconst(SCblock(c.info.cs_tag, []))
       end
-  | Texp_apply({e_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
+  | Texp_apply({exp_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
       if List.length patl == List.length args then
         Llet(translate_let env args,
-             translate_match expr.e_loc env case_list)
+             translate_match expr.exp_loc env case_list)
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_apply({e_desc = Texp_ident({contents=Zglobal g})} as fct, args) ->
+  | Texp_apply({exp_desc = Texp_ident({contents=Zglobal g})} as fct, args) ->
       begin match g.info.val_prim with
         ValueNotPrim ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
@@ -174,7 +174,7 @@ let rec translate_expr env =
             | (Pccall(fn, _), [arg1; arg2]) ->
                 begin try
                   translate_compar fn (List.assoc fn comparison_table)
-                                   arg1.e_typ (transl arg1) (transl arg2)
+                                   arg1.exp_type (transl arg1) (transl arg2)
                 with Not_found ->
                   Event.after env expr (Lprim(p, List.map transl args))
                 end
@@ -190,7 +190,7 @@ let rec translate_expr env =
   | Texp_let(false, pat_expr_list, body) ->
       let cas = List.map (fun (pat, _) -> pat) pat_expr_list in
         Llet(translate_bind env pat_expr_list,
-             translate_match expr.e_loc env [cas, body])
+             translate_match expr.exp_loc env [cas, body])
   | Texp_let(true, pat_expr_list, body) ->
       let new_env =
         add_let_rec_to_env env pat_expr_list in
@@ -203,7 +203,7 @@ let rec translate_expr env =
   | Texp_function((patl1,act1)::_ as case_list) ->
       let rec transl_fun debug_env = function
           [] ->
-            translate_match expr.e_loc env case_list
+            translate_match expr.exp_loc env case_list
         | pat::patl ->
             let new_debug_env =
               if pat_irrefutable pat
@@ -220,7 +220,7 @@ let rec translate_expr env =
   | Texp_ifthenelse(eif, ethen, eelse) ->
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
-                  if match eelse.e_desc with
+                  if match eelse.exp_desc with
                        Texp_construct(cstr,[]) -> cstr == constr_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
@@ -262,8 +262,8 @@ let rec translate_expr env =
   | Texp_stream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Texp_parser case_list ->
-      let (stream_type, _) = Btype.filter_arrow expr.e_typ in
-      translate_parser translate_expr expr.e_loc env case_list stream_type
+      let (stream_type, _) = Btype.filter_arrow expr.exp_type in
+      translate_parser translate_expr expr.exp_loc env case_list stream_type
   | Texp_when(e1,e2) ->
       fatal_error "front: Texp_when"
   in transl
@@ -271,7 +271,7 @@ let rec translate_expr env =
 and transl_action env (patlist, expr) =
   let (new_env, add_lets, num_pops) = add_pat_list_to_env env patlist in
   let action =
-    match expr.e_desc with
+    match expr.exp_desc with
       Texp_when(e1, e2) ->
         guard_expression
           (translate_expr new_env e1) (translate_expr new_env e2) num_pops
@@ -350,7 +350,7 @@ let translate_letdef_rec loc pat_expr_list =
   try                                   (* Simple case: let rec id = fun *)
     make_sequence
       (function (i, e) ->
-        match e.e_desc with
+        match e.exp_desc with
           Texp_function _ ->
             Lprim(Pset_global {qual=modname; id=i}, [translate_expression e])
         | _ ->

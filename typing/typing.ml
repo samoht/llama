@@ -171,7 +171,7 @@ and type_pattern_list = tpat_list []
    evaluation cannot contain newly created mutable objects. *)
 
 let rec is_nonexpansive expr =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_ident id -> true
   | Texp_constant sc -> true
   | Texp_tuple el -> List.for_all is_nonexpansive el
@@ -252,7 +252,7 @@ let unify_expr expr expected_ty actual_ty =
 
 let rec type_expr env expr =
   let inferred_ty =
-  match expr.e_desc with
+  match expr.exp_desc with
     Texp_ident r ->
       begin match !r with
           Zglobal glob_desc ->
@@ -267,7 +267,7 @@ let rec type_expr env expr =
                   r := Zglobal glob_desc;
                   type_instance glob_desc.info.val_typ
               with Desc_not_found ->
-                unbound_value_err (GRname s) expr.e_loc
+                unbound_value_err (GRname s) expr.exp_loc
       end
   | Texp_constant cst ->
       type_of_structured_constant cst
@@ -275,7 +275,7 @@ let rec type_expr env expr =
       type_product(List.map (type_expr env) args)
   | Texp_construct(constr, args) ->
       if List.length args <> arity constr.info then
-        arity_err constr args expr.e_loc;
+        arity_err constr args expr.exp_loc;
       let (ty_args, ty_res) = instance_constructor constr.info in
       List.iter2 (type_expect env) args ty_args;
       ty_res
@@ -317,7 +317,7 @@ let rec type_expr env expr =
       type_statement env e1; type_expr env e2
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
-      if match ifnot.e_desc
+      if match ifnot.exp_desc
          with Texp_construct (cstr,[]) -> cstr == constr_void | _ -> false
       then begin
         type_expect env ifso type_unit;
@@ -351,12 +351,12 @@ let rec type_expr env expr =
       begin try
         match List.assoc id env with
           (ty_schema, Notmutable) ->
-            not_mutable_err id expr.e_loc
+            not_mutable_err id expr.exp_loc
         | (ty_schema, Mutable) ->
             type_expect env e (type_instance ty_schema);
             type_unit
       with Not_found ->
-        unbound_value_err (GRname id) expr.e_loc
+        unbound_value_err (GRname id) expr.exp_loc
       end
   | Texp_record lbl_expr_list ->
       let ty = new_type_var() in
@@ -422,21 +422,21 @@ let rec type_expr env expr =
       List.iter (type_stream_pat [])  casel;
       type_arrow(ty_stream, ty_res)
   in
-    expr.e_typ <- inferred_ty;
+    expr.exp_type <- inferred_ty;
     inferred_ty
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and type_expect env exp expected_ty =
-  match exp.e_desc with
+  match exp.exp_desc with
     Texp_constant(SCatom(ACstring s)) ->
       let actual_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
             if cstr = constr_type_format
-            then type_format exp.e_loc s
+            then type_format exp.exp_loc s
             else type_string
         | _ ->
             type_string in
@@ -489,7 +489,7 @@ and type_let_decl env rec_flag pat_expr_list =
 and type_statement env expr =
   let ty = type_expr env expr in
   match (type_repr ty).typ_desc with
-  | Tarrow(_,_) -> partial_apply_warning expr.e_loc
+  | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
   | Tvar _ -> ()
   | _ ->
       if not (same_base_type ty type_unit) then not_unit_type_warning expr ty

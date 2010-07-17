@@ -101,7 +101,7 @@ let pat_wrong_type_err pat actual_ty expected_ty =
 let expr_wrong_type_err exp actual_ty expected_ty =
   eprintf "%aThis expression has type %a,\n\
            but is used with type %a.\n"
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_one_type actual_ty
     output_type expected_ty;
   raise Toplevel
@@ -110,7 +110,7 @@ let expr_wrong_type_err exp actual_ty expected_ty =
 let not_unit_type_warning exp actual_ty =
   eprintf "%aWarning: this expression has type %a,\n\
            but is used with type unit.\n"
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_one_type actual_ty;
   flush stderr
 ;;
@@ -119,17 +119,17 @@ let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
     eprintf "%aThis function is applied to too many arguments.\n"
-      output_location exp.e_loc
+      output_location exp.exp_loc
   with Unify ->
     eprintf "%aThis expression is not a function, it cannot be applied.\n"
-      output_location exp.e_loc
+      output_location exp.exp_loc
   end;
   raise Toplevel
 ;;
 
 let ill_shaped_match_err exp =
   eprintf "%aThis curried matching contains cases of different lengths.\n"
-    output_location exp.e_loc;
+    output_location exp.exp_loc;
   raise Toplevel
 ;;
 
@@ -179,21 +179,21 @@ let cannot_generalize_err val_desc =
 
 let label_multiply_defined_err exp lbl =
   eprintf "%aThe label %a is defined several times in this record.\n" 
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_label lbl;
   raise Toplevel
 ;;
 
 let label_undefined_err exp lbl =
   eprintf "%aThe label %a is not defined in this record.\n"
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_label lbl;
   raise Toplevel
 ;;
 
 let label_not_belong_err exp lbl ty =
   eprintf "%aThe label %a does not belong to the type %a.\n"
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_label lbl
     output_type ty;
   raise Toplevel
@@ -201,7 +201,7 @@ let label_not_belong_err exp lbl ty =
 
 let label_not_mutable_err exp lbl =
   eprintf "%aThe label %a is not mutable.\n"
-    output_location exp.e_loc
+    output_location exp.exp_loc
     output_label lbl;
   raise Toplevel
 ;;

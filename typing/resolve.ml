@@ -43,7 +43,7 @@ let rec pattern p =
     pat_type = no_type }
 
 let rec expr ex =
-  { e_desc =
+  { exp_desc =
       begin match ex.pexp_desc with
         | Pexp_ident li ->
             Texp_ident
@@ -95,8 +95,8 @@ let rec expr ex =
             Texp_parser(List.map (fun (l,e) -> List.map aux l, expr e) l)
         | Pexp_when(e1,e2) -> Texp_when(expr e1,expr e2)
       end;
-    e_loc = ex.pexp_loc;
-    e_typ = no_type }
+    exp_loc = ex.pexp_loc;
+    exp_type = no_type }
 
 let constr_decl (s,tys) = (s,List.map core_type tys)
 
@@ -116,7 +116,7 @@ let primitive o =
   end
 
 let structure_item si =
-  { im_desc =
+  { str_desc =
       begin match si.pstr_desc with
         | Pstr_eval e -> Tstr_eval (expr e)
         | Pstr_value(b,l) -> Tstr_value(b,List.map (fun (p,e)->pattern p, expr e) l)
@@ -125,15 +125,15 @@ let structure_item si =
         | Pstr_exception l -> Tstr_exception (constr_decl l)
         | Pstr_open mn -> Tstr_open mn
       end;
-    im_loc = si.pstr_loc }
+    str_loc = si.pstr_loc }
 
 let signature_item si =
-  { in_desc =
+  { sig_desc =
       begin match si.psig_desc with
         | Psig_value (s,te,pr) -> Tsig_value (s,core_type te, primitive pr)
         | Psig_type l -> Tsig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
         | Psig_exception l -> Tsig_exception (constr_decl l)
         | Psig_open mn -> Tsig_open mn
       end;
-    in_loc = si.psig_loc }
+    sig_loc = si.psig_loc }
     

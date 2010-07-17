@@ -31,9 +31,9 @@ and pattern_desc =
   | Tpat_record of (label_desc global * pattern) list
 
 type expression =
-  { e_desc: expression_desc;
-    e_loc: Location.t;
-    mutable e_typ: typ }
+  { exp_desc: expression_desc;
+    exp_loc: Location.t;
+    mutable exp_type: typ }
 
 and expression_desc =
     Texp_ident of expr_ident ref
@@ -80,8 +80,8 @@ type type_decl =
 and constr_decl = string * core_type list
 
 type signature_item =
-  { in_desc: signature_item_desc;
-    in_loc: Location.t }
+  { sig_desc: signature_item_desc;
+    sig_loc: Location.t }
 
 and signature_item_desc =
     Tsig_value of string * core_type * prim_desc
@@ -90,8 +90,8 @@ and signature_item_desc =
   | Tsig_open of module_name
 
 type structure_item =
-  { im_desc: structure_item_desc;
-    im_loc: Location.t }
+  { str_desc: structure_item_desc;
+    str_loc: Location.t }
 
 and structure_item_desc =
     Tstr_eval of expression
