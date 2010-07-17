@@ -78,7 +78,7 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
     Abbrev_type(ty_params, ty_body)
 ;;
 
-let enter_new_type (ty_name, tydeclaration) =
+let enter_new_type (ty_name, params, def) =
   let ty_constr =
     defined_global ty_name
       { ty_stamp = new_type_stamp();
@@ -86,10 +86,10 @@ let enter_new_type (ty_name, tydeclaration) =
   let ty_desc =
     defined_global ty_name
       { ty_constr = ty_constr;
-        ty_arity = List.length tydeclaration.type_params;
+        ty_arity = List.length params;
         ty_desc  = Abstract_type } in
   add_type ty_desc;
-  ty_desc, tydeclaration
+  ty_desc, params, def
 ;;
 
 type external_type =
@@ -100,25 +100,25 @@ type external_type =
 let external_types =
   ref ([] : (string * external_type) list);;
 
-let define_new_type loc (ty_desc, tydecl) =
+let define_new_type loc (ty_desc, params, def) =
   push_type_level();
   let ty_params =
     try
-      bind_type_expression_vars tydecl.type_params
+      bind_type_expression_vars params
     with Failure "bind_type_expression_vars" ->
       duplicate_param_in_type_decl_err loc in
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
       typ_level = notgeneric} in
   let type_comp =
-    match tydecl.type_kind, tydecl.type_manifest with
-      Type_abstract, None ->
+    match def with
+      Type_abstract ->
         pop_type_level(); Abstract_type
-    | Type_variant constrs,_ ->
+    | Type_variant constrs ->
         enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs)
-    | Type_record labels,_ ->
+    | Type_record labels ->
         enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels)
-    | Type_abstract, Some body ->
+    | Type_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.ty_desc <- type_comp;
   begin try
@@ -140,7 +140,7 @@ let define_new_type loc (ty_desc, tydecl) =
 
 (* Check if an abbreviation is recursive *)
 
-let check_recursive_abbrev loc (ty,tydecl) =
+let check_recursive_abbrev loc (ty, params, def) =
   try
     check_recursive_abbrev ty.info.ty_constr
   with Recursive_abbrev ->

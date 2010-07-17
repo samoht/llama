@@ -70,7 +70,7 @@ let do_structure_item phr =
       let _ = type_typedecl phr.str_loc decl in
       reset_rollback ();
       List.iter
-        (fun (name, _) -> Printf.printf "Type %s defined.\n" name)
+        (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
   | Tstr_exception decl ->
       let _ = type_excdecl phr.str_loc decl in

@@ -154,15 +154,11 @@ let primitive o =
 let type_kind c tk =
   begin match tk with
     | Ptype_abstract -> Type_abstract
+    | Ptype_abbrev te -> Type_abbrev (type_expression c te)
     | Ptype_variant cdl -> Type_variant (List.map (constr_decl c) cdl)
     | Ptype_record l -> Type_record (List.map (fun (s,te,m) ->
                                                   (s,type_expression c te, m)) l)
   end
-
-let type_declaration c td =
-  { type_params = td.ptype_params;
-    type_kind = type_kind c td.ptype_kind;
-    type_manifest = match td.ptype_manifest with None -> None | Some m -> Some (type_expression c m) }
 
 let structure_item si =
   { str_desc =
@@ -176,8 +172,8 @@ let structure_item si =
             Tstr_value(b,List.map (fun (p,e)->pattern p, expr cond_c e) lpe)
         | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,type_expression [] te, Primdecl.find_primitive arity n)
         | Pstr_type l ->
-            let c = List.map fst l in
-            Tstr_type(List.map (fun (s,td)->(s,type_declaration c td)) l)
+            let c = List.map (fun (s,_,_) -> s) l in
+            Tstr_type(List.map (fun (s,ps,tk)->(s,ps,type_kind c tk)) l)
         | Pstr_exception l -> Tstr_exception (constr_decl [] l)
         | Pstr_open mn -> Tstr_open mn
       end;
@@ -188,8 +184,8 @@ let signature_item si =
       begin match si.psig_desc with
         | Psig_value (s,te,pr) -> Tsig_value (s,type_expression [] te, primitive pr)
         | Psig_type l ->
-            let c = List.map fst l in
-            Tsig_type(List.map (fun (s,td)->(s,type_declaration c td)) l)
+            let c = List.map (fun (s,_,_) -> s) l in
+            Tsig_type(List.map (fun (s,ps,tk)->(s,ps,type_kind c tk)) l)
         | Psig_exception l -> Tsig_exception (constr_decl [] l)
         | Psig_open mn -> Tsig_open mn
       end;

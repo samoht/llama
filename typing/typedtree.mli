@@ -80,13 +80,9 @@ type type_kind =
     Type_abstract
   | Type_variant of constr_decl list
   | Type_record of (string * type_expression * mutable_flag) list
+  | Type_abbrev of type_expression
 
 and constr_decl = string * type_expression list
-
-type type_declaration =
-  { type_params : string list;
-    type_kind : type_kind;
-    type_manifest : type_expression option }
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -94,7 +90,7 @@ type signature_item =
 
 and signature_item_desc =
     Tsig_value of string * type_expression * prim_desc
-  | Tsig_type of (string * type_declaration) list
+  | Tsig_type of (string * string list * type_kind) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
 
@@ -106,7 +102,7 @@ and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of string * type_expression * prim_desc
-  | Tstr_type of (string * type_declaration) list
+  | Tstr_type of (string * string list * type_kind) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
 
