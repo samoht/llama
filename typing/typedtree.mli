@@ -1,13 +1,12 @@
 (* The abstract syntax for the language *)
 
 open Const
-open Location
 open Types
 open Asttypes
 
 type core_type =
   { te_desc: core_type_desc;
-    te_loc: location }
+    te_loc: Location.t }
 
 and core_type_desc =
     Ttyp_var of string
@@ -17,7 +16,7 @@ and core_type_desc =
 
 type pattern =
   { p_desc: pattern_desc;
-    p_loc: location;
+    p_loc: Location.t;
     mutable p_typ: typ }
 
 and pattern_desc =
@@ -33,7 +32,7 @@ and pattern_desc =
 
 type expression =
   { e_desc: expression_desc;
-    e_loc: location;
+    e_loc: Location.t;
     mutable e_typ: typ }
 
 and expression_desc =
@@ -82,7 +81,7 @@ and constr_decl = string * core_type list
 
 type signature_item =
   { in_desc: signature_item_desc;
-    in_loc: location }
+    in_loc: Location.t }
 
 and signature_item_desc =
     Tsig_value of string * core_type * prim_desc
@@ -92,7 +91,7 @@ and signature_item_desc =
 
 type structure_item =
   { im_desc: structure_item_desc;
-    im_loc: location }
+    im_loc: Location.t }
 
 and structure_item_desc =
     Tstr_eval of expression

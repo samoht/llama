@@ -7,7 +7,7 @@ open Const
 
 type core_type =
   { ptyp_desc: core_type_desc;
-    ptyp_loc: Location.location }
+    ptyp_loc: Location.t }
 
 and core_type_desc =
     Ptyp_var of string
@@ -17,7 +17,7 @@ and core_type_desc =
 
 type pattern =
   { ppat_desc: pattern_desc;
-    ppat_loc: Location.location }
+    ppat_loc: Location.t }
 
 and pattern_desc =
     Ppat_any
@@ -32,7 +32,7 @@ and pattern_desc =
 
 type expression =
   { pexp_desc: expression_desc;
-    pexp_loc: Location.location }
+    pexp_loc: Location.t }
 
 and expression_desc =
     Pexp_ident of Longident.t
@@ -77,7 +77,7 @@ and constr_decl = string * core_type list
 
 type signature_item =
   { psig_desc: signature_item_desc;
-    psig_loc: Location.location }
+    psig_loc: Location.t }
 
 and signature_item_desc =
     Psig_value of string * core_type * (int*string) option
@@ -87,7 +87,7 @@ and signature_item_desc =
 
 type structure_item =
   { pstr_desc: structure_item_desc;
-    pstr_loc: Location.location }
+    pstr_loc: Location.t }
 
 and structure_item_desc =
     Pstr_eval of expression

@@ -11,7 +11,7 @@ and input_lexbuf = ref (Obj.magic 0 : lexbuf)
                                         (* The lexer buffer on the input. *)
 ;;
 
-type location =
+type t =
     Loc of int     (* Position of the first character *)
          * int     (* Position of the next character following the last one *)
 ;;
