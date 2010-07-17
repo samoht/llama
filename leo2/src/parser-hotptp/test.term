@@ -1,0 +1,29 @@
+/* Some test terms for the parser, call
+ * ./parser-test < test.term
+ */
+
+(zero :=  (^ [F : $i -> $i,  X : $i] : X)).
+
+(succ :=
+  (^ [N : ($i -> $i) -> $i -> $i,
+      F : $i -> $i,
+      X : $i] : F @ ((N @ F) @ X))).
+
+(times :=
+  (^ [M : ($i -> $i) -> $i -> $i,
+      N : ($i -> $i) -> $i -> $i,
+      F : $i -> $i,
+      X : $i] : (M @ (N @ F)) @ X)).
+
+(one := succ @ zero).
+(two := succ @ one).
+
+(times @ two) @ two.
+
+(! [X:$o,Y:$o] : X).
+
+(! [X:$o] : ((~ ~ X) => X)).
+
+
+
+

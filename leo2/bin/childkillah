@@ -1,0 +1,7 @@
+#ps ax -o ppid,pid,command
+for child in $(ps ax -o ppid,pid | sed -e "/^ $1/!d;s/^ [0-9]* *\([0-9]*\)/\1/" | sed -e "/^$$\$/d")
+do
+echo "killing process $child"
+$0 $child
+kill -9 $child
+done
