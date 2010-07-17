@@ -254,20 +254,16 @@ let rec type_expr env expr =
   let inferred_ty =
   match expr.exp_desc with
     Texp_ident r ->
-      begin match !r with
+      begin match r with
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_typ
         | Zlocal s ->
-            try
-              let (ty_schema, mut_flag) = List.assoc s env in
-                type_instance ty_schema
-            with Not_found ->
-              try
-                let glob_desc = find_value_desc(GRname s) in
-                  r := Zglobal glob_desc;
-                  type_instance glob_desc.info.val_typ
-              with Desc_not_found ->
-                unbound_value_err (GRname s) expr.exp_loc
+            let (ty_schema, mut_flag) = List.assoc s env in
+            type_instance ty_schema
+        | Zrec(s,r) ->
+            let glob_desc = find_value_desc(GRname s) in
+            r := Some glob_desc;
+            type_instance glob_desc.info.val_typ
       end
   | Texp_constant cst ->
       type_of_structured_constant cst

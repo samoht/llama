@@ -5,15 +5,15 @@ open Const
 
 (* Type expressions for the core language *)
 
-type core_type =
-  { ptyp_desc: core_type_desc;
+type type_expression =
+  { ptyp_desc: type_expression_desc;
     ptyp_loc: Location.t }
 
-and core_type_desc =
+and type_expression_desc =
     Ptyp_var of string
-  | Ptyp_arrow of core_type * core_type
-  | Ptyp_tuple of core_type list
-  | Ptyp_constr of Longident.t * core_type list
+  | Ptyp_arrow of type_expression * type_expression
+  | Ptyp_tuple of type_expression list
+  | Ptyp_constr of Longident.t * type_expression list
 
 type pattern =
   { ppat_desc: pattern_desc;
@@ -28,7 +28,7 @@ and pattern_desc =
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
   | Ppat_or of pattern * pattern
-  | Ppat_constraint of pattern * core_type
+  | Ppat_constraint of pattern * type_expression
 
 type expression =
   { pexp_desc: expression_desc;
@@ -51,7 +51,7 @@ and expression_desc =
   | Pexp_sequence of expression * expression
   | Pexp_while of expression * expression
   | Pexp_for of string * expression * expression * bool * expression
-  | Pexp_constraint of expression * core_type
+  | Pexp_constraint of expression * type_expression
   | Pexp_when of expression * expression
 (* the rest are doomed *)
   | Pexp_stream of stream_component list
@@ -67,24 +67,24 @@ and stream_pattern =
   | Pnontermpat of expression * pattern
   | Pexp_streampat of string
 
-type constr_decl = string * core_type list
+type constr_decl = string * type_expression list
 
 type type_kind =
     Ptype_abstract
   | Ptype_variant of constr_decl list
-  | Ptype_record of (string * core_type * mutable_flag) list
+  | Ptype_record of (string * type_expression * mutable_flag) list
 
 type type_declaration =
   { ptype_params : string list;
     ptype_kind : type_kind;
-    ptype_manifest : core_type option }
+    ptype_manifest : type_expression option }
 
 type signature_item =
   { psig_desc: signature_item_desc;
     psig_loc: Location.t }
 
 and signature_item_desc =
-    Psig_value of string * core_type * (int*string) option
+    Psig_value of string * type_expression * (int*string) option
   | Psig_type of (string * type_declaration) list
   | Psig_exception of constr_decl
   | Psig_open of module_name
@@ -96,7 +96,7 @@ type structure_item =
 and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of bool * (pattern * expression) list
-  | Pstr_primitive of string * core_type * (int * string)
+  | Pstr_primitive of string * type_expression * (int * string)
   | Pstr_type of (string * type_declaration) list
   | Pstr_exception of constr_decl
   | Pstr_open of module_name

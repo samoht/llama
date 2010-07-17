@@ -5,7 +5,7 @@ OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
 INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel
-FLAGS=-g $(INCLUDES) 
+FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx
 

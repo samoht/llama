@@ -31,7 +31,6 @@ let do_structure_item phr =
         type_expression phr.str_loc expr in
       let res =
         load_phrase(compile_lambda false (translate_expression expr)) in
-(*    let res = Eval.eval [] (Eval.term_of_expr [] expr) in *)
       flush stderr;
       open_box 1;
       print_string "- :"; print_space();
@@ -41,7 +40,7 @@ let do_structure_item phr =
       print_newline()
   | Tstr_value(rec_flag, pat_expr_list) ->
       let env = type_letdef phr.str_loc rec_flag pat_expr_list in
-      let res =
+      let _res =
         if rec_flag then
           load_phrase
             (compile_lambda true
@@ -52,30 +51,6 @@ let do_structure_item phr =
               (translate_letdef phr.str_loc pat_expr_list)) in
       flush stderr;
       reset_rollback ();
-(*
-      begin match rec_flag with
-        | false ->
-            List.iter
-              begin fun (pat, expr) ->
-                let res = Eval.eval [] (Eval.term_of_expr [] expr) in
-                let rec aux pat res =
-                  begin match pat.pat_desc, res with
-                    | Tpat_any, _ ->
-                        ()
-                    | Tpat_var s, _ ->
-                        let qualid = {qual=compiled_module_name(); id=s} in
-                        Eval.enter_global qualid res
-                    | _ ->
-                        assert false
-                  end
-                in
-                aux pat res
-              end
-              pat_expr_list
-        | true ->
-            assert false
-      end;
-*)
       List.iter
         (fun (name, (typ, mut_flag)) ->
           open_box 1;
@@ -85,11 +60,6 @@ let do_structure_item phr =
             (get_global_data (get_slot_for_variable
                                 {qual=compiled_module_name(); id=name}))
             typ;
-(*
-          print_value
-            (Eval.find_global {qual=compiled_module_name(); id=name})
-            typ;
-*)
           print_newline())
         (List.rev env)
   | Tstr_primitive (name,te,pr) ->
@@ -130,8 +100,9 @@ let do_toplevel_phrase topphr =
         | Pdir("directory", dirname) ->
             load_path := dirname :: !load_path
         | Pdir(d, name) ->
+            (* xxx:location? *)
             eprintf 
-              "%aWarning: unknown directive \"#%s\", ignored.\n";
+              "Warning: unknown directive \"#%s\", ignored.\n" d;
             flush stderr
       end
     | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item si)

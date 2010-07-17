@@ -111,9 +111,10 @@ let alloc_superfluous_constr cstr n =
 let rec translate_expr env =
   let rec transl expr =
   match expr.exp_desc with
-    Texp_ident({contents=Zlocal s}) ->
+    Texp_ident(Zlocal s) ->
       translate_access s env
-  | Texp_ident({contents=Zglobal g}) ->
+    | Texp_ident(Zrec(_,{contents=None})) -> assert false
+  | Texp_ident(Zglobal g | Zrec(_,{contents=Some g})) ->
       (match g.info.val_prim with
         ValueNotPrim ->
           Lprim(Pget_global g.qualid, [])
@@ -162,7 +163,7 @@ let rec translate_expr env =
              translate_match expr.exp_loc env case_list)
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_apply({exp_desc = Texp_ident({contents=Zglobal g})} as fct, args) ->
+  | Texp_apply({exp_desc = Texp_ident(Zglobal g)} as fct, args) ->
       begin match g.info.val_prim with
         ValueNotPrim ->
           Event.after env expr (Lapply(transl fct, List.map transl args))

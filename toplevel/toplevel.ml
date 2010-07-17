@@ -61,7 +61,7 @@ let load_object name =
     (function phr ->
       patch_object code (phr.cph_pos - start) phr.cph_reloc)
     (List.rev phrase_index);
-  let res = do_code false code 0 block_len in
+  let _res = do_code false code 0 block_len in
   ()
 ;;
 let _ = fwd_load_object := load_object;;
@@ -143,7 +143,7 @@ let load name =
 
 (* To quit. (Alternative: ctrl-D) *)
 
-let quit x = exit 0; ()
+let quit x = exit 0
 ;;
 
 (* To define specific printing functions. *)

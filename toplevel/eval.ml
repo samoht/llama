@@ -54,8 +54,9 @@ let term_of_structured_const sc =
 let rec term_of_expr c expr =
   begin match expr.exp_desc with
     | Texp_ident id ->
-        begin match !id with
-          | Zglobal vdg ->
+        begin match id with
+          | Zrec(_,{contents=None}) -> assert false
+          | Zglobal vdg | Zrec (_,{contents=Some vdg}) ->
               begin match vdg.info.val_prim with
                 | ValueNotPrim ->
                     let qid = vdg.qualid in

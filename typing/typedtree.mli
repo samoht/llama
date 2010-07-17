@@ -4,15 +4,20 @@ open Const
 open Types
 open Asttypes
 
-type core_type =
-  { te_desc: core_type_desc;
+type 'a ident =
+    Zglobal of 'a
+  | Zlocal of string
+  | Zrec of string * 'a option ref
+
+type type_expression =
+  { te_desc: type_expression_desc;
     te_loc: Location.t }
 
-and core_type_desc =
+and type_expression_desc =
     Ttyp_var of string
-  | Ttyp_arrow of core_type * core_type
-  | Ttyp_tuple of core_type list
-  | Ttyp_constr of global_reference * core_type list
+  | Ttyp_arrow of type_expression * type_expression
+  | Ttyp_tuple of type_expression list
+  | Ttyp_constr of global_reference * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
@@ -27,7 +32,7 @@ and pattern_desc =
   | Tpat_tuple of pattern list
   | Tpat_construct of constr_desc global * pattern list
   | Tpat_or of pattern * pattern
-  | Tpat_constraint of pattern * core_type
+  | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label_desc global * pattern) list
 
 type expression =
@@ -36,7 +41,7 @@ type expression =
     mutable exp_type: typ }
 
 and expression_desc =
-    Texp_ident of expr_ident ref
+    Texp_ident of value_desc global ident
   | Texp_constant of struct_constant
   | Texp_tuple of expression list
   | Texp_construct of constr_desc global * expression list
@@ -48,7 +53,7 @@ and expression_desc =
   | Texp_ifthenelse of expression * expression * expression
   | Texp_while of expression * expression
   | Texp_for of string * expression * expression * bool * expression
-  | Texp_constraint of expression * core_type
+  | Texp_constraint of expression * type_expression
   | Texp_array of expression list
   | Texp_assign of string * expression
   | Texp_record of (label_desc global * expression) list
@@ -57,10 +62,6 @@ and expression_desc =
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
   | Texp_when of expression * expression
-
-and expr_ident =
-    Zglobal of value_desc global
-  | Zlocal of string
 
 and stream_component =
     Zterm of expression
@@ -74,21 +75,21 @@ and stream_pattern =
 type type_kind =
     Type_abstract
   | Type_variant of constr_decl list
-  | Type_record of (string * core_type * mutable_flag) list
+  | Type_record of (string * type_expression * mutable_flag) list
 
-and constr_decl = string * core_type list
+and constr_decl = string * type_expression list
 
 type type_declaration =
   { type_params : string list;
     type_kind : type_kind;
-    type_manifest : core_type option }
+    type_manifest : type_expression option }
 
 type signature_item =
   { sig_desc: signature_item_desc;
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of string * core_type * prim_desc
+    Tsig_value of string * type_expression * prim_desc
   | Tsig_type of (string * type_declaration) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
@@ -100,7 +101,7 @@ type structure_item =
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
-  | Tstr_primitive of string * core_type * prim_desc
+  | Tstr_primitive of string * type_expression * prim_desc
   | Tstr_type of (string * type_declaration) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
