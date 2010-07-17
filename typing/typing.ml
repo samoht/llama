@@ -36,7 +36,7 @@ let bind_type_expression_vars var_list =
 let type_of_type_expression strict_flag typexp =
   let rec type_of typexp =
     match typexp.te_desc with
-    Ztyp_var v ->
+    Ttyp_var v ->
       begin try
         List.assoc v !type_expr_vars
       with Not_found ->
@@ -47,11 +47,11 @@ let type_of_type_expression strict_flag typexp =
           type_expr_vars := (v,t) :: !type_expr_vars; t
         end
       end
-  | Ztyp_arrow(arg1, arg2) ->
+  | Ttyp_arrow(arg1, arg2) ->
       type_arrow(type_of arg1, type_of arg2)
-  | Ztyp_tuple argl ->
+  | Ttyp_tuple argl ->
       type_product(List.map type_of argl)
-  | Ztyp_constr(cstr_name, args) ->
+  | Ttyp_constr(cstr_name, args) ->
       let cstr =
         try
           find_type_desc cstr_name
@@ -99,9 +99,9 @@ let unify_pat pat expected_ty actual_ty =
 let rec tpat new_env (pat, ty, mut_flag) =
   pat.p_typ <- ty;
   match pat.p_desc with
-    Zpat_any ->
+    Tpat_any ->
       new_env
-  | Zpat_var v ->
+  | Tpat_var v ->
       if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else begin
@@ -109,22 +109,22 @@ let rec tpat new_env (pat, ty, mut_flag) =
           upper_case_variable_warning pat v;
         (v, (ty, mut_flag)) :: new_env
       end
-  | Zpat_alias(pat, v) ->
+  | Tpat_alias(pat, v) ->
       if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else
         tpat ((v, (ty, mut_flag)) :: new_env) (pat, ty, mut_flag)
-  | Zpat_constant cst ->
+  | Tpat_constant cst ->
       unify_pat pat ty (type_of_atomic_constant cst);
       new_env
-  | Zpat_tuple(patl) ->
+  | Tpat_tuple(patl) ->
       begin try
         tpat_list new_env patl (filter_product (List.length patl) ty)
       with Unify ->
         pat_wrong_type_err pat ty
           (type_product(new_type_var_list (List.length patl)))
       end
-  | Zpat_construct0(cstr) ->
+  | Tpat_construct0(cstr) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           unify_pat pat ty (type_instance cstr.info.cs_res);
@@ -132,7 +132,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
       | _ ->
           non_constant_constr_err cstr pat.p_loc
       end
-  | Zpat_construct1(cstr, arg) ->
+  | Tpat_construct1(cstr, arg) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           constant_constr_err cstr pat.p_loc
@@ -142,17 +142,17 @@ let rec tpat new_env (pat, ty, mut_flag) =
         unify_pat pat ty ty_res;
         tpat new_env (arg, ty_arg, cstr.info.cs_mut)
       end
-  | Zpat_or(pat1, pat2) ->
+  | Tpat_or(pat1, pat2) ->
       begin match free_vars_of_pat pat with
         [] -> tpat (tpat new_env (pat1, ty, mut_flag)) (pat2, ty, mut_flag)
       | _  -> orpat_should_be_closed_err pat
       end
-  | Zpat_constraint(pat, ty_expr) ->
+  | Tpat_constraint(pat, ty_expr) ->
       let ty' = type_of_type_expression false ty_expr in
       let new_env' = tpat new_env (pat, ty', mut_flag) in
         unify_pat pat ty ty';
         new_env'
-  | Zpat_record lbl_pat_list ->
+  | Tpat_record lbl_pat_list ->
       let rec tpat_lbl new_env = function
         [] -> new_env
       | (lbl,p) :: rest ->

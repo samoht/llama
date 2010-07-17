@@ -78,15 +78,15 @@ let verbose = ref false;;
   
 let compile_intf_phrase phr =
   begin match phr.in_desc with
-    Sig_value (s,te,pr) ->
+    Tsig_value (s,te,pr) ->
       type_valuedecl phr.in_loc s te pr; ()
-  | Sig_type decl ->
+  | Tsig_type decl ->
       let ty_decl = type_typedecl phr.in_loc decl in
       if !verbose then print_typedecl ty_decl
-  | Sig_exception decl ->
+  | Tsig_exception decl ->
       let ex_decl = type_excdecl phr.in_loc decl in
       if !verbose then print_excdecl ex_decl
-  | Sig_open mn ->
+  | Tsig_open mn ->
       open_module (String.uncapitalize mn)
   end
 ;;
@@ -122,13 +122,13 @@ let compile_interface modname filename =
 let compile_impl_phrase outstream phr =
   reset_type_expression_vars();
   begin match phr.im_desc with
-    Str_eval expr ->
+    Tstr_eval expr ->
       let ty = type_expression phr.im_loc expr in
       emit_phrase outstream
                   (expr_is_pure expr)
                   (compile_lambda false (translate_expression expr));
       if !verbose then print_expr ty
-  | Str_value(rec_flag, pat_expr_list) ->
+  | Tstr_value(rec_flag, pat_expr_list) ->
       let env = type_letdef phr.im_loc rec_flag pat_expr_list in
       emit_phrase outstream
          (letdef_is_pure pat_expr_list)
@@ -137,15 +137,15 @@ let compile_impl_phrase outstream phr =
           else
             compile_lambda false (translate_letdef phr.im_loc pat_expr_list));
       if !verbose then print_valdef env
-  | Str_primitive(s,te,pr) ->
+  | Tstr_primitive(s,te,pr) ->
       type_valuedecl phr.im_loc s te pr; ()
-  | Str_type decl ->
+  | Tstr_type decl ->
       let ty_decl = type_typedecl phr.im_loc decl in
       if !verbose then print_typedecl ty_decl
-  | Str_exception decl ->
+  | Tstr_exception decl ->
       let ex_decl = type_excdecl phr.im_loc decl in
       if !verbose then print_excdecl ex_decl
-  | Str_open mn ->
+  | Tstr_open mn ->
       open_module (String.uncapitalize mn)
   end
 ;;

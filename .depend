@@ -62,6 +62,14 @@ typing/event.cmx: typing/typedtree.cmi typing/modules.cmx typing/location.cmi \
     typing/lambda.cmx 
 typing/globals.cmo: parsing/prim.cmx parsing/const.cmx parsing/asttypes.cmi 
 typing/globals.cmx: parsing/prim.cmx parsing/const.cmx parsing/asttypes.cmi 
+typing/includecore.cmo: typing/types.cmx typing/typedtree.cmi \
+    typing/globals.cmx 
+typing/includecore.cmx: typing/types.cmx typing/typedtree.cmi \
+    typing/globals.cmx 
+typing/includemod.cmo: typing/types.cmx typing/typedtree.cmi \
+    typing/globals.cmx 
+typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi \
+    typing/globals.cmx 
 typing/lambda.cmo: parsing/prim.cmx typing/globals.cmx parsing/const.cmx 
 typing/lambda.cmx: parsing/prim.cmx typing/globals.cmx parsing/const.cmx 
 typing/matching.cmo: typing/types.cmx typing/typedtree.cmi parsing/prim.cmx \

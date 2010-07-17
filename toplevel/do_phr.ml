@@ -26,7 +26,7 @@ let do_structure_item phr =
   reset_type_var();
   reset_type_expression_vars ();
   begin match phr.im_desc with
-    Str_eval expr ->
+    Tstr_eval expr ->
       let ty =
         type_expression phr.im_loc expr in
       let res =
@@ -39,7 +39,7 @@ let do_structure_item phr =
       print_string " ="; print_space();
       print_value res ty;
       print_newline()
-  | Str_value(rec_flag, pat_expr_list) ->
+  | Tstr_value(rec_flag, pat_expr_list) ->
       let env = type_letdef phr.im_loc rec_flag pat_expr_list in
       let res =
         if rec_flag then
@@ -60,9 +60,9 @@ let do_structure_item phr =
                 let res = Eval.eval [] (Eval.term_of_expr [] expr) in
                 let rec aux pat res =
                   begin match pat.p_desc, res with
-                    | Zpat_any, _ ->
+                    | Tpat_any, _ ->
                         ()
-                    | Zpat_var s, _ ->
+                    | Tpat_var s, _ ->
                         let qualid = {qual=compiled_module_name(); id=s} in
                         Eval.enter_global qualid res
                     | _ ->
@@ -92,17 +92,17 @@ let do_structure_item phr =
 *)
           print_newline())
         (List.rev env)
-  | Str_primitive (name,te,pr) ->
+  | Tstr_primitive (name,te,pr) ->
       let _ = type_valuedecl phr.im_loc name te pr in
       reset_rollback ();
       Printf.printf "Primitive %s defined.\n" name
-  | Str_type decl ->
+  | Tstr_type decl ->
       let _ = type_typedecl phr.im_loc decl in
       reset_rollback ();
       List.iter
         (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
-  | Str_exception decl ->
+  | Tstr_exception decl ->
       let _ = type_excdecl phr.im_loc decl in
       reset_rollback ();
       List.iter
@@ -111,7 +111,7 @@ let do_structure_item phr =
                              (match decl with Zconstr0decl name -> name
                                             | Zconstr1decl(name,_,_) -> name))
         decl
-  | Str_open mn ->
+  | Tstr_open mn ->
       open_module (String.uncapitalize mn)
   end;
   flush stdout

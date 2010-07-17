@@ -7,26 +7,26 @@ open Typedtree
 let rec core_type te =
   { te_desc =
       begin match te.ptyp_desc with
-        | Ptyp_var s -> Ztyp_var s
-        | Ptyp_arrow (x, y) -> Ztyp_arrow (core_type x, core_type y)
-        | Ptyp_tuple l -> Ztyp_tuple (List.map core_type l)
-        | Ptyp_constr (f, l) -> Ztyp_constr (Env.lookup_type f te.ptyp_loc, List.map core_type l)
+        | Ptyp_var s -> Ttyp_var s
+        | Ptyp_arrow (x, y) -> Ttyp_arrow (core_type x, core_type y)
+        | Ptyp_tuple l -> Ttyp_tuple (List.map core_type l)
+        | Ptyp_constr (f, l) -> Ttyp_constr (Env.lookup_type f te.ptyp_loc, List.map core_type l)
       end;
     te_loc = te.ptyp_loc }
 
 let rec pattern p =
   { p_desc =
       begin match p.ppat_desc with
-        | Ppat_any -> Zpat_any
-        | Ppat_var s -> Zpat_var s
-        | Ppat_alias (p, s) -> Zpat_alias (pattern p, s)
-        | Ppat_constant c -> Zpat_constant c
-        | Ppat_tuple l -> Zpat_tuple (List.map pattern l)
-        | Ppat_construct0 li -> Zpat_construct0 (Env.lookup_constructor li p.ppat_loc)
-        | Ppat_construct1 (li, p) -> Zpat_construct1 (Env.lookup_constructor li p.ppat_loc, pattern p)
-        | Ppat_or (p1, p2) -> Zpat_or (pattern p1, pattern p2)
-        | Ppat_constraint (p, te) -> Zpat_constraint (pattern p, core_type te)
-        | Ppat_record l -> Zpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
+        | Ppat_any -> Tpat_any
+        | Ppat_var s -> Tpat_var s
+        | Ppat_alias (p, s) -> Tpat_alias (pattern p, s)
+        | Ppat_constant c -> Tpat_constant c
+        | Ppat_tuple l -> Tpat_tuple (List.map pattern l)
+        | Ppat_construct0 li -> Tpat_construct0 (Env.lookup_constructor li p.ppat_loc)
+        | Ppat_construct1 (li, p) -> Tpat_construct1 (Env.lookup_constructor li p.ppat_loc, pattern p)
+        | Ppat_or (p1, p2) -> Tpat_or (pattern p1, pattern p2)
+        | Ppat_constraint (p, te) -> Tpat_constraint (pattern p, core_type te)
+        | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
       end;
     p_loc = p.ppat_loc;
     p_typ = no_type }
@@ -103,22 +103,22 @@ let primitive o =
 let structure_item si =
   { im_desc =
       begin match si.pstr_desc with
-        | Pstr_eval e -> Str_eval (expr e)
-        | Pstr_value(b,l) -> Str_value(b,List.map (fun (p,e)->pattern p, expr e) l)
-        | Pstr_primitive(s,te,(arity,n)) -> Str_primitive(s,core_type te, Primdecl.find_primitive arity n)
-        | Pstr_type l -> Str_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Pstr_exception l -> Str_exception (List.map constr_decl l)
-        | Pstr_open mn -> Str_open mn
+        | Pstr_eval e -> Tstr_eval (expr e)
+        | Pstr_value(b,l) -> Tstr_value(b,List.map (fun (p,e)->pattern p, expr e) l)
+        | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,core_type te, Primdecl.find_primitive arity n)
+        | Pstr_type l -> Tstr_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Pstr_exception l -> Tstr_exception (List.map constr_decl l)
+        | Pstr_open mn -> Tstr_open mn
       end;
     im_loc = si.pstr_loc }
 
 let signature_item si =
   { in_desc =
       begin match si.psig_desc with
-        | Psig_value (s,te,pr) -> Sig_value (s,core_type te, primitive pr)
-        | Psig_type l -> Sig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Psig_exception l -> Sig_exception (List.map constr_decl l)
-        | Psig_open mn -> Sig_open mn
+        | Psig_value (s,te,pr) -> Tsig_value (s,core_type te, primitive pr)
+        | Psig_type l -> Tsig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Psig_exception l -> Tsig_exception (List.map constr_decl l)
+        | Psig_open mn -> Tsig_open mn
       end;
     in_loc = si.psig_loc }
     

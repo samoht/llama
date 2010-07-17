@@ -88,7 +88,7 @@ let rec term_of_expr c expr =
         app (Ctor ct) (term_of_expr c x)
     | Zapply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
-    | Zfunction [([{p_desc=Zpat_var s}],e)] ->
+    | Zfunction [([{p_desc=Tpat_var s}],e)] ->
         Lambda (term_of_expr (s::c) e)
     | Zcondition (i, t, e) ->
         app3 (Match constr_type_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)

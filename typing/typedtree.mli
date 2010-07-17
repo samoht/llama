@@ -10,10 +10,10 @@ type core_type =
     te_loc: location }
 
 and core_type_desc =
-    Ztyp_var of string
-  | Ztyp_arrow of core_type * core_type
-  | Ztyp_tuple of core_type list
-  | Ztyp_constr of global_reference * core_type list
+    Ttyp_var of string
+  | Ttyp_arrow of core_type * core_type
+  | Ttyp_tuple of core_type list
+  | Ttyp_constr of global_reference * core_type list
 
 type pattern =
   { p_desc: pattern_desc;
@@ -21,16 +21,16 @@ type pattern =
     mutable p_typ: typ }
 
 and pattern_desc =
-    Zpat_any
-  | Zpat_var of string
-  | Zpat_alias of pattern * string
-  | Zpat_constant of atomic_constant
-  | Zpat_tuple of pattern list
-  | Zpat_construct0 of constr_desc global
-  | Zpat_construct1 of constr_desc global * pattern
-  | Zpat_or of pattern * pattern
-  | Zpat_constraint of pattern * core_type
-  | Zpat_record of (label_desc global * pattern) list
+    Tpat_any
+  | Tpat_var of string
+  | Tpat_alias of pattern * string
+  | Tpat_constant of atomic_constant
+  | Tpat_tuple of pattern list
+  | Tpat_construct0 of constr_desc global
+  | Tpat_construct1 of constr_desc global * pattern
+  | Tpat_or of pattern * pattern
+  | Tpat_constraint of pattern * core_type
+  | Tpat_record of (label_desc global * pattern) list
 
 type expression =
   { e_desc: expression_desc;
@@ -89,19 +89,24 @@ type signature_item =
     in_loc: location }
 
 and signature_item_desc =
-    Sig_value of string * core_type * prim_desc
-  | Sig_type of (string * string list * type_decl) list
-  | Sig_exception of constr_decl list
-  | Sig_open of module_name
+    Tsig_value of string * core_type * prim_desc
+  | Tsig_type of (string * string list * type_decl) list
+  | Tsig_exception of constr_decl list
+  | Tsig_open of module_name
 
 type structure_item =
   { im_desc: structure_item_desc;
     im_loc: location }
 
 and structure_item_desc =
-    Str_eval of expression
-  | Str_value of bool * (pattern * expression) list
-  | Str_primitive of string * core_type * prim_desc
-  | Str_type of (string * string list * type_decl) list
-  | Str_exception of constr_decl list
-  | Str_open of module_name
+    Tstr_eval of expression
+  | Tstr_value of bool * (pattern * expression) list
+  | Tstr_primitive of string * core_type * prim_desc
+  | Tstr_type of (string * string list * type_decl) list
+  | Tstr_exception of constr_decl list
+  | Tstr_open of module_name
+
+type module_coercion =
+    Tcoerce_none
+  | Tcoerce_structure of (int * module_coercion) list
+  | Tcoerce_primitive of prim_desc
