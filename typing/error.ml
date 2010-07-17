@@ -56,7 +56,7 @@ let type_arity_err cstr args loc =
            but is here given %d argument(s).\n"
     output_location loc
     output_type_constr cstr
-    cstr.info.ty_arity
+    cstr.info.type_arity
     (List.length args);
   raise Toplevel
 ;;
@@ -255,8 +255,8 @@ let type_decl_arity_err loc ty_desc1 ty_desc2 =
            but is here defined with %d parameter(s).\n"
     output_location loc
     output_type_constr ty_desc1
-    ty_desc1.info.ty_arity
-    ty_desc2.info.ty_arity;
+    ty_desc1.info.type_arity
+    ty_desc2.info.type_arity;
   raise Toplevel
 ;;
 

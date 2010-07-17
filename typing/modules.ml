@@ -14,7 +14,7 @@ type module_ =
                                              (* table of constructors *)
     mod_labels: (string, label_desc global) Hashtbl.t;
                                              (* table of labels *)
-    mod_types: (string, type_desc global) Hashtbl.t;
+    mod_types: (string, type_declaration global) Hashtbl.t;
                                              (* table of type constructors *)
     mutable mod_type_stamp: int;             (* stamp for type constructors *)
     mutable mod_exc_stamp: int;              (* stamp for exceptions *)

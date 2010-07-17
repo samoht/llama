@@ -15,7 +15,7 @@ let enter_interface_definitions intf =
   Hashtbl.iter
     (fun name ty_desc ->
       let manifest =
-        match ty_desc.info.ty_desc with
+        match ty_desc.info.type_kind with
           Abstract_type -> false
         | _ -> add_type ty_desc; true in
       external_types :=

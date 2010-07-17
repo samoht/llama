@@ -5,8 +5,8 @@ open Types
 open Asttypes
 
 type tconstr_identifier =
-  | Tcglobal of type_desc global
-  | Tcrec of string * type_desc global option ref
+  | Tcglobal of type_declaration global
+  | Tcrec of string * type_declaration global option ref
 
 type type_expression =
   { te_desc: type_expression_desc;

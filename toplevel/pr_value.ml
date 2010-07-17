@@ -103,13 +103,13 @@ let rec print_val prio depth obj ty =
 and print_concrete_type prio depth obj cstr ty ty_list =
   let typ_descr =
     type_descr_of_type_constr cstr in
-  match typ_descr.info.ty_desc with
+  match typ_descr.info.type_kind with
     Abstract_type ->
-      begin match typ_descr.info.ty_manifest with
+      begin match typ_descr.info.type_manifest with
         | None ->
             print_string "<abstr>"
         | Some body ->
-            print_val prio depth obj (expand_abbrev typ_descr.info.ty_params body ty_list)
+            print_val prio depth obj (expand_abbrev typ_descr.info.type_params body ty_list)
       end
   | Variant_type constr_list ->
       let tag = Llama_obj.tag obj in

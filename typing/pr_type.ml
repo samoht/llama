@@ -14,7 +14,7 @@ let output_global sel_fct oc gl =
 ;;
 
 let output_type_constr = 
-  (output_global types_of_module: out_channel -> type_desc global -> unit)
+  (output_global types_of_module: out_channel -> type_declaration global -> unit)
 and output_value =
   (output_global values_of_module: out_channel -> value_desc global -> unit)
 and output_constr =

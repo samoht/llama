@@ -86,16 +86,16 @@ let enter_new_type (ty_name, params, def) =
   let ty_desc =
     defined_global ty_name
       { ty_constr = ty_constr;
-        ty_arity = List.length params;
-        ty_manifest = None; (* xxx *)
-        ty_params = []; (* xxx *)
-        ty_desc  = Abstract_type } in
+        type_arity = List.length params;
+        type_manifest = None; (* xxx *)
+        type_params = []; (* xxx *)
+        type_kind  = Abstract_type } in
   add_type ty_desc;
   ty_desc, params, def
 ;;
 
 type external_type =
-  { et_descr: type_desc global;
+  { et_descr: type_declaration global;
     et_manifest: bool;
     mutable et_defined: bool };;
 
@@ -109,7 +109,7 @@ let define_new_type loc (ty_desc, params, def) =
       bind_type_expression_vars params
     with Failure "bind_type_expression_vars" ->
       duplicate_param_in_type_decl_err loc in
-  ty_desc.info.ty_params <- ty_params; (* they may get generalized by enter_new_abbrev... *)
+  ty_desc.info.type_params <- ty_params; (* they may get generalized by enter_new_abbrev... *)
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
       typ_level = notgeneric} in
@@ -123,13 +123,13 @@ let define_new_type loc (ty_desc, params, def) =
         enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels),None
     | Type_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
-  ty_desc.info.ty_desc <- type_comp;
-  ty_desc.info.ty_manifest <- manifest;
+  ty_desc.info.type_kind <- type_comp;
+  ty_desc.info.type_manifest <- manifest;
   begin try
     let extdef = List.assoc ty_desc.qualid.id !external_types in
     if extdef.et_manifest || extdef.et_defined then
       illegal_type_redefinition loc extdef.et_descr;
-    if extdef.et_descr.info.ty_arity <> ty_desc.info.ty_arity then
+    if extdef.et_descr.info.type_arity <> ty_desc.info.type_arity then
       type_decl_arity_err loc extdef.et_descr ty_desc;
     extdef.et_defined <- true;
     let extconstr = extdef.et_descr.info.ty_constr

@@ -50,12 +50,12 @@ and typ_link =
 
 (* Type constructor descriptions *)
 
-type type_desc =
+type type_declaration =
   { ty_constr: type_constr global;      (* The constructor *)
-    mutable ty_params : typ list;
-    ty_arity: int;                      (* Its arity *)
-    mutable ty_manifest : typ option;
-    mutable ty_desc: type_components }  (* Its description *)
+    mutable type_params : typ list;
+    type_arity: int;                      (* Its arity *)
+    mutable type_manifest : typ option;
+    mutable type_kind: type_components }  (* Its description *)
 
 and type_components =
     Abstract_type

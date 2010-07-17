@@ -15,7 +15,7 @@ let print_global sel_fct gl =
 ;;
 
 let output_type_constr = 
-  (print_global types_of_module: type_desc global -> unit)
+  (print_global types_of_module: type_declaration global -> unit)
 and output_value =
   (print_global values_of_module: value_desc global -> unit)
 and output_constr =

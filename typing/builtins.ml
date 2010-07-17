@@ -161,10 +161,10 @@ let module_builtin = new_module "builtin";;
 
 let mkty cstr params desc =
   {ty_constr = cstr;
-   ty_arity = List.length params;
-   ty_params = params;
-   ty_manifest = None;
-   ty_desc = desc }
+   type_arity = List.length params;
+   type_params = params;
+   type_manifest = None;
+   type_kind = desc }
 
 let _ = List.iter
   (fun (name,desc) ->

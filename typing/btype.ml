@@ -379,7 +379,7 @@ let rec labels_of_type ty =
     Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
       labels_of_type (expand_abbrev params body args)
   | Tconstr(cstr, _) ->
-      begin match (type_descr_of_type_constr cstr).info.ty_desc with
+      begin match (type_descr_of_type_constr cstr).info.type_kind with
         Record_type lbl_list -> lbl_list
       | _ -> fatal_error "labels_of_type"
       end
