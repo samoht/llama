@@ -89,7 +89,7 @@ type signature_item =
 and signature_item_desc =
     Tsig_value of string * core_type * prim_desc
   | Tsig_type of (string * string list * type_decl) list
-  | Tsig_exception of constr_decl list
+  | Tsig_exception of constr_decl
   | Tsig_open of module_name
 
 type structure_item =
@@ -101,7 +101,7 @@ and structure_item_desc =
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of string * core_type * prim_desc
   | Tstr_type of (string * string list * type_decl) list
-  | Tstr_exception of constr_decl list
+  | Tstr_exception of constr_decl
   | Tstr_open of module_name
 
 type module_coercion =

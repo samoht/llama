@@ -173,7 +173,7 @@ let type_typedecl loc decl =
 let type_excdecl loc decl =
   push_type_level();
   reset_type_expression_vars ();
-  enter_new_variant true loc (constr_type_exn, type_exn, decl)
+  enter_new_variant true loc (constr_type_exn, type_exn, [decl])
 ;;
 
 let type_valuedecl loc name typexp prim =

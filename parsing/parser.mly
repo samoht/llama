@@ -250,7 +250,7 @@ structure_item:
       { make_impl(Pstr_primitive($2, $4, $6)) }
   | TYPE Type_decl
       { make_impl(Pstr_type $2) }
-  | EXCEPTION Exc_decl
+  | EXCEPTION Constr1_decl
       { make_impl(Pstr_exception $2) }
   | OPEN UIDENT
       { make_impl(Pstr_open $2) }
@@ -277,7 +277,7 @@ interface_item :
           { make_intf(Psig_value ($2, $4, Some $6)) }
       | TYPE Type_decl
           { make_intf(Psig_type $2) }
-      | EXCEPTION Exc_decl
+      | EXCEPTION Constr1_decl
           { make_intf(Psig_exception $2) }
       | OPEN UIDENT
           { make_intf(Psig_open $2) }
@@ -736,13 +736,6 @@ Type_decl :
         Type1_decl AND Type_decl
           { $1 :: $3 }
       | Type1_decl
-          { [$1] }
-;
-
-Exc_decl :
-        Constr1_decl AND Exc_decl
-          { $1 :: $3 }
-      | Constr1_decl
           { [$1] }
 ;
 

@@ -109,7 +109,7 @@ let structure_item si =
         | Pstr_value(b,l) -> Tstr_value(b,List.map (fun (p,e)->pattern p, expr e) l)
         | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,core_type te, Primdecl.find_primitive arity n)
         | Pstr_type l -> Tstr_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Pstr_exception l -> Tstr_exception (List.map constr_decl l)
+        | Pstr_exception l -> Tstr_exception (constr_decl l)
         | Pstr_open mn -> Tstr_open mn
       end;
     im_loc = si.pstr_loc }
@@ -119,7 +119,7 @@ let signature_item si =
       begin match si.psig_desc with
         | Psig_value (s,te,pr) -> Tsig_value (s,core_type te, primitive pr)
         | Psig_type l -> Tsig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
-        | Psig_exception l -> Tsig_exception (List.map constr_decl l)
+        | Psig_exception l -> Tsig_exception (constr_decl l)
         | Psig_open mn -> Tsig_open mn
       end;
     in_loc = si.psig_loc }
