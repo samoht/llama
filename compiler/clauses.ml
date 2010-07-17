@@ -19,9 +19,7 @@ let rec omegas i =
 
 let simple_match p1 p2 = 
   match p1.p_desc, p2.p_desc with
-    Tpat_construct0(c1),Tpat_construct0(c2) ->
-      c1.info.cs_tag = c2.info.cs_tag
-  | Tpat_construct1(c1,_),Tpat_construct1(c2,_) ->
+    Tpat_construct(c1,_),Tpat_construct(c2,_) ->
       c1.info.cs_tag = c2.info.cs_tag
   | Tpat_constant(c1),Tpat_constant(c2) ->
       c1 = c2
@@ -53,12 +51,12 @@ let set_fields size l =
 
 let simple_match_args p1 p2 =
   match p2.p_desc with
-    Tpat_construct1(_,arg) -> [arg]
+    Tpat_construct(_,Some arg) -> [arg]
   | Tpat_tuple(args)  -> args
   | Tpat_record(args) ->  set_fields (record_nargs p1) args
   | (Tpat_any | Tpat_var(_)) ->
       begin match p1.p_desc with
-        Tpat_construct1(_,_) ->  [omega]
+        Tpat_construct(_,Some _) ->  [omega]
       | Tpat_tuple(args) -> List.map (fun _ -> omega) args
       | Tpat_record(args) ->  List.map (fun _ -> omega) args
       | _ -> []
@@ -170,10 +168,8 @@ let get_span_of_constr cstr =
 
 
 let full_match env = match env with
-  ({p_desc = Tpat_construct0(c)},_) :: _ ->
+  ({p_desc = Tpat_construct(c,_)},_) :: _ ->
     List.length env ==  get_span_of_constr c
-| ({p_desc = Tpat_construct1(c,_)},_) :: _ ->
-    List.length env =  get_span_of_constr c
 | ({p_desc = Tpat_constant(ACchar(_))},_) :: _ ->
     List.length env == 256
 | ({p_desc = Tpat_constant(_)},_) :: _ -> false
@@ -241,9 +237,9 @@ let rec le_pat p q =
   | _,Tpat_or(q1,q2) ->
        le_pat p q1 && le_pat p q2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
-  | Tpat_construct0(c1), Tpat_construct0(c2) ->
+  | Tpat_construct(c1,None), Tpat_construct(c2,None) ->
       c1.info.cs_tag == c2.info.cs_tag
-  | Tpat_construct1(c1,p), Tpat_construct1(c2,q) ->
+  | Tpat_construct(c1,Some p), Tpat_construct(c2,Some q) ->
       c1.info.cs_tag == c2.info.cs_tag && le_pat p q
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->

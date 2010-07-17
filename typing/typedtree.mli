@@ -26,8 +26,7 @@ and pattern_desc =
   | Tpat_alias of pattern * string
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
-  | Tpat_construct0 of constr_desc global
-  | Tpat_construct1 of constr_desc global * pattern
+  | Tpat_construct of constr_desc global * pattern option
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * core_type
   | Tpat_record of (label_desc global * pattern) list
@@ -41,8 +40,7 @@ and expression_desc =
     Texp_ident of expr_ident ref
   | Texp_constant of struct_constant
   | Texp_tuple of expression list
-  | Texp_construct0 of constr_desc global
-  | Texp_construct1 of constr_desc global * expression
+  | Texp_construct of constr_desc global * expression option
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
   | Texp_function of (pattern list * expression) list

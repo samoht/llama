@@ -25,8 +25,7 @@ and pattern_desc =
   | Ppat_alias of pattern * string
   | Ppat_constant of atomic_constant
   | Ppat_tuple of pattern list
-  | Ppat_construct0 of Longident.t
-  | Ppat_construct1 of Longident.t * pattern
+  | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type
@@ -43,8 +42,7 @@ and expression_desc =
   | Pexp_apply of expression * expression list
   | Pexp_try of expression * (pattern * expression) list
   | Pexp_tuple of expression list
-  | Pexp_construct0 of Longident.t
-  | Pexp_construct1 of Longident.t * expression
+  | Pexp_construct of Longident.t * expression option
   | Pexp_record of (Longident.t * expression) list
   | Pexp_field of expression * Longident.t
   | Pexp_setfield of expression * Longident.t * expression

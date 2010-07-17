@@ -22,8 +22,9 @@ let rec pattern p =
         | Ppat_alias (p, s) -> Tpat_alias (pattern p, s)
         | Ppat_constant c -> Tpat_constant c
         | Ppat_tuple l -> Tpat_tuple (List.map pattern l)
-        | Ppat_construct0 li -> Tpat_construct0 (Env.lookup_constructor li p.ppat_loc)
-        | Ppat_construct1 (li, p) -> Tpat_construct1 (Env.lookup_constructor li p.ppat_loc, pattern p)
+        | Ppat_construct (li,o) ->
+            Tpat_construct (Env.lookup_constructor li p.ppat_loc,
+                            match o with None -> None | Some p -> Some (pattern p))
         | Ppat_or (p1, p2) -> Tpat_or (pattern p1, pattern p2)
         | Ppat_constraint (p, te) -> Tpat_constraint (pattern p, core_type te)
         | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
@@ -42,8 +43,9 @@ let rec expr ex =
               end
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map expr l)
-        | Pexp_construct0 li -> Texp_construct0 (Env.lookup_constructor li ex.pexp_loc)
-        | Pexp_construct1 (li, e) -> Texp_construct1 (Env.lookup_constructor li ex.pexp_loc, expr e)
+        | Pexp_construct (li,o) ->
+            Texp_construct (Env.lookup_constructor li ex.pexp_loc,
+                            match o with None -> None | Some e -> Some (expr e))
         | Pexp_apply (f, l) -> Texp_apply (expr f, List.map expr l)
         | Pexp_let (b, lpe, e) -> Texp_let (b, List.map(fun (p,e) -> pattern p, expr e) lpe, expr e)
         | Pexp_function l -> Texp_function (List.map (fun (lp,e) -> List.map pattern lp, expr e) l)

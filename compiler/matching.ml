@@ -123,13 +123,13 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
 let divide_construct_matching (Matching(casel, pathl)) =
   let rec divide_rec casel =
     match simpl_casel casel with
-      ({p_desc = Tpat_construct0(c)} :: patl, action) :: rest ->
+      ({p_desc = Tpat_construct(c,None)} :: patl, action) :: rest ->
         let (constrs, others) =
           divide_rec rest in
         add_to_division
           (make_construct_match c pathl) constrs c.info.cs_tag (patl, action),
         others
-    | ({p_desc = Tpat_construct1(c,arg)} :: patl, action) :: rest ->
+    | ({p_desc = Tpat_construct(c,Some arg)} :: patl, action) :: rest ->
         let patl' =
           match c.info.cs_kind with
             Constr_constant -> patl
@@ -207,8 +207,8 @@ let get_span_of_constr cstr =
 
 let get_span_of_matching matching =
   match upper_left_pattern matching with
-      {p_desc = Tpat_construct0(c)}   -> get_span_of_constr c
-    | {p_desc = Tpat_construct1(c, _)} -> get_span_of_constr c
+      {p_desc = Tpat_construct(c,None)}   -> get_span_of_constr c
+    | {p_desc = Tpat_construct(c,Some _)} -> get_span_of_constr c
     | _ -> fatal_error "get_span_of_matching"
 ;;
 
@@ -257,7 +257,7 @@ let rec conquer_matching =
             else (Lstatichandle(lambda1, lambda2), total2)
       | {p_desc = Tpat_tuple patl} ->
           conquer_matching (divide_tuple_matching (List.length patl) matching)
-      | {p_desc = (Tpat_construct0(_) | Tpat_construct1(_,_))} ->
+      | {p_desc = (Tpat_construct _)} ->
           let constrs, vars = divide_construct_matching matching in
           let (switchlst, total1) = conquer_divided_matching constrs
           and (lambda,    total2) = conquer_matching vars in

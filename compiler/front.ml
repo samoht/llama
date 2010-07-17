@@ -30,8 +30,8 @@ let rec check_letrec_expr expr =
     Texp_ident _ -> ()
   | Texp_constant _ -> ()
   | Texp_tuple el -> List.iter check_letrec_expr el
-  | Texp_construct0 cstr -> ()
-  | Texp_construct1(cstr, expr) ->
+  | Texp_construct(cstr, None) -> ()
+  | Texp_construct(cstr, Some expr) ->
       check_letrec_expr expr;
       begin match cstr.info.cs_kind with
         Constr_superfluous n ->
@@ -57,7 +57,7 @@ let rec size_of_expr expr =
   match expr.e_desc with
     Texp_tuple el ->
       List.iter check_letrec_expr el; List.length el
-  | Texp_construct1(cstr, expr) ->
+  | Texp_construct(cstr, Some expr) ->
       check_letrec_expr expr;
       begin match cstr.info.cs_kind with
         Constr_superfluous n -> n | _ -> 1
@@ -151,7 +151,7 @@ let rec translate_expr env =
       with Not_constant ->
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
-  | Texp_construct0(c) ->
+  | Texp_construct(c,None) ->
       begin match c.info.cs_kind with
         Constr_constant ->
           Lconst(SCblock(c.info.cs_tag, []))
@@ -160,7 +160,7 @@ let rec translate_expr env =
       | Constr_superfluous n ->
           Lfunction(alloc_superfluous_constr c n)
       end
-  | Texp_construct1(c,arg) ->
+  | Texp_construct(c,Some arg) ->
       begin match c.info.cs_kind with
         Constr_superfluous n ->
           begin match arg.e_desc with
@@ -247,7 +247,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.e_desc with
-                       Texp_construct0(cstr) -> cstr == constr_void | _ -> false
+                       Texp_construct(cstr,None) -> cstr == constr_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
   | Texp_while(econd, ebody) ->

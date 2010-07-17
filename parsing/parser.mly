@@ -21,8 +21,8 @@ and make_intf desc =
 ;;
 
 let make_apply = function
-    {pexp_desc = Pexp_construct0(cstr1)}, [e2] ->
-      make_expr(Pexp_construct1(cstr1, e2))
+    {pexp_desc = Pexp_construct(cstr1,None)}, [e2] ->
+      make_expr(Pexp_construct(cstr1, Some e2))
   | e1, el ->
       make_expr(Pexp_apply(e1,el))
 ;;
@@ -48,8 +48,8 @@ let make_list el =
     [] ->
       res
   | e::l ->
-      makel (make_expr(Pexp_construct1(Id"::", make_expr(Pexp_tuple [e;res])))) l
-  in makel (make_expr(Pexp_construct0(Id"[]"))) el
+      makel (make_expr(Pexp_construct(Id"::", Some(make_expr(Pexp_tuple [e;res]))))) l
+  in makel (make_expr(Pexp_construct(Id"[]",None))) el
 ;;
 
 let make_unary_minus s e = match s, e with
@@ -87,15 +87,15 @@ let make_listpat pats =
       res
   | e::l ->
       makel
-       (make_pat(Ppat_construct1(Id "::", make_pat(Ppat_tuple [e;res]))))
+       (make_pat(Ppat_construct(Id "::", Some(make_pat(Ppat_tuple [e;res])))))
        l
   in
-    makel (make_pat(Ppat_construct0(Id "[]"))) pats
+    makel (make_pat(Ppat_construct(Id "[]",None))) pats
 ;;
 
 let pat_constr_or_var p =
   if Longident.is_string_upper p then
-    make_pat(Ppat_construct0 (Id p))
+    make_pat(Ppat_construct (Id p,None))
   else
     make_pat(Ppat_var p)
 
@@ -315,7 +315,7 @@ Expr :
       | Expr STAR Expr
           { make_binop "*" $1 $3 }
       | Expr COLONCOLON Expr
-          { make_expr(Pexp_construct1(Id "::", make_expr(Pexp_tuple [$1; $3]))) }
+          { make_expr(Pexp_construct(Id "::", Some(make_expr(Pexp_tuple [$1; $3])))) }
       | Expr EQUAL Expr
           { make_binop "=" $1 $3 }
       | Expr EQUALEQUAL Expr
@@ -340,7 +340,7 @@ Expr :
           { make_expr(Pexp_ifthenelse($2, $4, $6)) }
       | IF Expr THEN Expr  %prec prec_if
           { make_expr
-             (Pexp_ifthenelse($2, $4, make_expr(Pexp_construct0(Id "()")))) }
+             (Pexp_ifthenelse($2, $4, make_expr(Pexp_construct(Id "()",None)))) }
       | WHILE Expr DO Opt_expr DONE
           { make_expr(Pexp_while($2, $4)) }
       | FOR Ide EQUAL Expr TO Expr DO Opt_expr DONE
@@ -378,7 +378,7 @@ Simple_expr :
           { make_expr(Pexp_constant $1) }
       | Ext_ident
           { let p = $1 in
-            if Longident.is_upper p then make_expr(Pexp_construct0(p))
+            if Longident.is_upper p then make_expr(Pexp_construct(p,None))
             else make_expr(Pexp_ident(p)) }
       | LBRACKET Expr_sm_list RBRACKET
           { make_list $2 }
@@ -431,7 +431,7 @@ Expr_sm_list :
 
 Opt_expr :
         Expr            { $1 }
-      | /*epsilon*/     { make_expr(Pexp_construct0(Id "()")) }
+      | /*epsilon*/     { make_expr(Pexp_construct(Id "()",None)) }
 
 Expr_label :
         Ext_ident EQUAL Expr
@@ -563,12 +563,12 @@ Pattern :
       | Pattern AS LIDENT
           { make_pat(Ppat_alias($1, $3)) }
       | Pattern COLONCOLON Pattern
-          { make_pat(Ppat_construct1(Id "::",
-              make_pat(Ppat_tuple [$1; $3]))) }
+          { make_pat(Ppat_construct(Id "::",
+                                     Some (make_pat(Ppat_tuple [$1; $3])))) }
       | Pattern_comma_list
           { make_pat(Ppat_tuple(List.rev $1)) }
       | Ext_ident Simple_pattern
-          { make_pat(Ppat_construct1 ($1, $2)) }
+          { make_pat(Ppat_construct ($1, Some $2)) }
       | Pattern BAR Pattern
           { make_pat(Ppat_or($1, $3)) }
 ;
@@ -585,9 +585,9 @@ Simple_pattern :
       | Ide
           { pat_constr_or_var $1 }
       | Qual_ident
-          { make_pat(Ppat_construct0($1)) }
+          { make_pat(Ppat_construct($1,None)) }
       | LPAREN RPAREN
-          { make_pat(Ppat_construct0(Id "()")) }
+          { make_pat(Ppat_construct(Id "()",None)) }
       | LBRACKET Pattern_sm_list RBRACKET
           { make_listpat($2) }
       | LPAREN Pattern COLON Type RPAREN

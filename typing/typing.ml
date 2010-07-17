@@ -124,7 +124,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
         pat_wrong_type_err pat ty
           (type_product(new_type_var_list (List.length patl)))
       end
-  | Tpat_construct0(cstr) ->
+  | Tpat_construct(cstr,None) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           unify_pat pat ty (type_instance cstr.info.cs_res);
@@ -132,7 +132,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
       | _ ->
           non_constant_constr_err cstr pat.p_loc
       end
-  | Tpat_construct1(cstr, arg) ->
+  | Tpat_construct(cstr, Some arg) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           constant_constr_err cstr pat.p_loc
@@ -184,8 +184,8 @@ let rec is_nonexpansive expr =
     Texp_ident id -> true
   | Texp_constant sc -> true
   | Texp_tuple el -> List.for_all is_nonexpansive el
-  | Texp_construct0 cstr -> true
-  | Texp_construct1(cstr, e) -> is_nonexpansive e
+  | Texp_construct(cstr,None) -> true
+  | Texp_construct(cstr, Some e) -> is_nonexpansive e
   | Texp_let(rec_flag, bindings, body) ->
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
@@ -283,7 +283,7 @@ let rec type_expr env expr =
       type_of_structured_constant cst
   | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
-  | Texp_construct0(cstr) ->
+  | Texp_construct(cstr,None) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           type_instance cstr.info.cs_res
@@ -292,7 +292,7 @@ let rec type_expr env expr =
             type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
           type_arrow(ty_arg, ty_res)
       end            
-  | Texp_construct1(cstr, arg) ->
+  | Texp_construct(cstr, Some arg) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           constant_constr_err cstr expr.e_loc
@@ -341,7 +341,7 @@ let rec type_expr env expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.e_desc
-         with Texp_construct0 cstr -> cstr == constr_void | _ -> false
+         with Texp_construct (cstr,None) -> cstr == constr_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit

@@ -87,9 +87,9 @@ let rec paths_of_pat path pat =
       | p::pl ->
           paths_of_pat (Path_son(i,path)) p @ paths_of_patlist (i+1) pl in
       paths_of_patlist 0 patlist
-  | Tpat_construct0(cstr) ->
+  | Tpat_construct(cstr, None) ->
       []
-  | Tpat_construct1(cstr, p) ->
+  | Tpat_construct(cstr, Some p) ->
       begin match cstr.info.cs_kind with
         Constr_superfluous n ->
           paths_of_pat (if pat_is_named p then tuple_path n path else path) p
@@ -121,7 +121,7 @@ let rec mutable_vars_of_pat mut pat =
       else l
   | Tpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
   | Tpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
-  | Tpat_construct1(cstr,pat) ->
+  | Tpat_construct(cstr,Some pat) ->
       mutable_vars_of_pat mut pat
   | Tpat_record lbl_pat_list ->
       List.flatten (List.map

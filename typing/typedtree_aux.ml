@@ -11,8 +11,8 @@ let rec free_vars_of_pat pat =
   | Tpat_alias(pat,v) -> v :: free_vars_of_pat pat
   | Tpat_constant _ -> []
   | Tpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Tpat_construct0(_) -> []
-  | Tpat_construct1(_, pat) -> free_vars_of_pat pat
+  | Tpat_construct(_, None) -> []
+  | Tpat_construct(_, Some pat) -> free_vars_of_pat pat
   | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
   | Tpat_constraint(pat, _) -> free_vars_of_pat pat
   | Tpat_record lbl_pat_list ->
@@ -24,8 +24,8 @@ let rec expr_is_pure expr =
     Texp_ident _ -> true
   | Texp_constant _ -> true
   | Texp_tuple el -> List.for_all expr_is_pure el
-  | Texp_construct0 cstr -> true
-  | Texp_construct1(cstr,arg) -> expr_is_pure arg
+  | Texp_construct(cstr,None) -> true
+  | Texp_construct(cstr,Some arg) -> expr_is_pure arg
   | Texp_function _ -> true
   | Texp_constraint(expr, ty) -> expr_is_pure expr
   | Texp_array el -> List.for_all expr_is_pure el
@@ -52,8 +52,8 @@ let rec pat_irrefutable pat =
   | Tpat_alias(pat, _) -> pat_irrefutable pat
   | Tpat_constant _ -> false
   | Tpat_tuple patl -> List.for_all pat_irrefutable patl
-  | Tpat_construct0 cstr -> single_constructor cstr
-  | Tpat_construct1(cstr, pat) -> single_constructor cstr && pat_irrefutable pat
+  | Tpat_construct(cstr, None) -> single_constructor cstr
+  | Tpat_construct(cstr, Some pat) -> single_constructor cstr && pat_irrefutable pat
   | Tpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
   | Tpat_constraint(pat, _) -> pat_irrefutable pat
   | Tpat_record lbl_pat_list ->
