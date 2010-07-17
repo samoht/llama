@@ -2,8 +2,8 @@
 
 include ../config/Makefile
 
-ZEBRAC=../zebrac -nopervasives -I .
-ZEBRA_DEPEND=ocamldep
+LLAMAC=../llamac -nopervasives -I .
+LLAMADEP=ocamldep
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-g
 
@@ -26,10 +26,10 @@ STD_IMPL= pervasives.zo bool.zo eq.zo exc.zo int.zo fstring.zo string.zo fchar.z
 all: $(STD_INTF) stdlib.zo header
 
 stdlib.zo: $(STD_IMPL)
-	$(ZEBRAC) -a -o stdlib.zo $(STD_IMPL)
+	$(LLAMAC) -a -o stdlib.zo $(STD_IMPL)
 
 header: ../config/Makefile
-	echo '#!$(BINDIR)/zebrarun' > header
+	echo '#!$(BINDIR)/llamarun' > header
 
 clean:
 	rm -f *.zi *.zix *.zo
@@ -40,10 +40,10 @@ install:
 	rm $(LIBDIR)/iparsing.mli
 
 %.zi: %.mli
-	$(ZEBRAC) -c $(COMPFLAGS) $<
+	$(LLAMAC) -c $(COMPFLAGS) $<
 
 %.zo: %.ml
-	$(ZEBRAC) -c $(COMPFLAGS) $<
+	$(LLAMAC) -c $(COMPFLAGS) $<
 
 %.ml: %.mlp
 	@rm -f $@
@@ -53,7 +53,7 @@ install:
 filename.ml: filename.mlp
 
 depend: filename.ml
-	$(ZEBRA_DEPEND) *.mli *.ml > .depend
+	$(LLAMADEP) *.mli *.ml > .depend
 .PHONY: depend
 
 -include .depend

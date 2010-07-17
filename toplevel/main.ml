@@ -12,7 +12,7 @@ module Warnings = struct
 end
 
 let interactive_loop () =
-  Printf.printf "\tZebra version %s\n" Config.version;
+  Printf.printf "\tLlama version %s\n" Config.version;
   print_newline();
   Sys.catch_break true;
   (* set Sys.interactive to true *)
@@ -41,13 +41,13 @@ let interactive_loop () =
           rollback ()
   done
 
-let usage = "Usage: zebra <options> <object-files> [script-file]\nOptions are:"
+let usage = "Usage: llama <options> <object-files> [script-file]\nOptions are:"
 
 let preload_objects = ref ["stdlib.zo"]
 
 let initialize () =
   (* initialize the runtime *)
-  Meta.zebra_init Sys.argv;
+  Meta.llama_init Sys.argv;
   (* initialize our view of the runtime *)
   Symtable.reset_linker_tables();
   set_c_primitives (Meta.available_primitives ()); (* currently a no-op *)
@@ -67,7 +67,7 @@ let file_argument name =
   end
 
 let print_version () =
-  Printf.printf "The Zebra toplevel, version %s\n" Config.version;
+  Printf.printf "The Llama toplevel, version %s\n" Config.version;
   exit 0
 
 let main () =

@@ -13,12 +13,12 @@ open Format;;
 
 open Const;;
 let rec transl_structured_const = function
-    SCatom(ACint i) -> Zebra_obj.of_int i
-  | SCatom(ACfloat f) -> Zebra_obj.of_float f
-  | SCatom(ACstring s) -> Zebra_obj.of_string s
-  | SCatom(ACchar c) -> Zebra_obj.of_char c
+    SCatom(ACint i) -> Llama_obj.of_int i
+  | SCatom(ACfloat f) -> Llama_obj.of_float f
+  | SCatom(ACstring s) -> Llama_obj.of_string s
+  | SCatom(ACchar c) -> Llama_obj.of_char c
   | SCblock(tag, comps) ->
-      let res = Zebra_obj.new_block (get_num_of_tag tag) (List.length comps) in
+      let res = Llama_obj.new_block (get_num_of_tag tag) (List.length comps) in
       fill_structured_const 0 res comps;
       res
 
@@ -26,7 +26,7 @@ and fill_structured_const n obj = function
     [] -> ()
   | cst::rest ->
       let zv = transl_structured_const cst in
-      Zebra_obj.set_field obj n zv;
+      Llama_obj.set_field obj n zv;
       fill_structured_const (n+1) obj rest
 ;;
 

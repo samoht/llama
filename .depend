@@ -63,9 +63,9 @@ typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi typing/btype.cmx
 typing/modules.cmo: typing/types.cmx utils/misc.cmx parsing/const.cmx 
 typing/modules.cmx: typing/types.cmx utils/misc.cmx parsing/const.cmx 
 typing/pr_decl.cmo: typing/types.cmx typing/pr_type.cmx utils/misc.cmx \
-    parsing/const.cmx parsing/asttypes.cmi 
+    parsing/const.cmx typing/builtins.cmx parsing/asttypes.cmi 
 typing/pr_decl.cmx: typing/types.cmx typing/pr_type.cmx utils/misc.cmx \
-    parsing/const.cmx parsing/asttypes.cmi 
+    parsing/const.cmx typing/builtins.cmx parsing/asttypes.cmi 
 typing/pr_type.cmo: typing/types.cmx typing/modules.cmx parsing/const.cmx \
     typing/btype.cmx 
 typing/pr_type.cmx: typing/types.cmx typing/modules.cmx parsing/const.cmx \
@@ -73,11 +73,11 @@ typing/pr_type.cmx: typing/types.cmx typing/modules.cmx parsing/const.cmx \
 typing/primdecl.cmo: typing/types.cmx parsing/prim.cmx 
 typing/primdecl.cmx: typing/types.cmx parsing/prim.cmx 
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi typing/primdecl.cmx \
-    parsing/parsetree.cmi parsing/parser.cmi parsing/longident.cmi \
-    typing/env.cmi 
+    parsing/parsetree.cmi parsing/parser.cmi utils/misc.cmx \
+    parsing/longident.cmi typing/env.cmi 
 typing/resolve.cmx: typing/types.cmx typing/typedtree.cmi typing/primdecl.cmx \
-    parsing/parsetree.cmi parsing/parser.cmx parsing/longident.cmx \
-    typing/env.cmx 
+    parsing/parsetree.cmi parsing/parser.cmx utils/misc.cmx \
+    parsing/longident.cmx typing/env.cmx 
 typing/ty_decl.cmo: typing/typing.cmx typing/types.cmx typing/typedtree.cmi \
     typing/modules.cmx typing/error.cmx parsing/const.cmx typing/builtins.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
@@ -218,9 +218,9 @@ linker/symtable.cmx: linker/prim_c.cmx linker/predef.cmx utils/misc.cmx \
     parsing/const.cmx 
 linker/tr_const.cmo: linker/symtable.cmx parsing/const.cmx 
 linker/tr_const.cmx: linker/symtable.cmx parsing/const.cmx 
-toplevel/meta.cmi: toplevel/zebra_obj.cmi 
+toplevel/llama_obj.cmi: 
+toplevel/meta.cmi: toplevel/llama_obj.cmi 
 toplevel/toplevel.cmi: 
-toplevel/zebra_obj.cmi: 
 toplevel/do_phr.cmo: typing/typing.cmx typing/typedtree.cmi \
     typing/ty_decl.cmx linker/symtable.cmx typing/resolve.cmx \
     toplevel/pr_value.cmx parsing/parsetree.cmi typing/modules.cmx \
@@ -245,16 +245,16 @@ toplevel/fmt_type.cmo: typing/types.cmx typing/modules.cmx parsing/const.cmx \
     typing/btype.cmx 
 toplevel/fmt_type.cmx: typing/types.cmx typing/modules.cmx parsing/const.cmx \
     typing/btype.cmx 
-toplevel/load_phr.cmo: toplevel/zebra_obj.cmi linker/symtable.cmx \
-    compiler/reloc.cmx toplevel/pr_value.cmx linker/patch.cmx \
-    compiler/opcodes.cmx utils/misc.cmx toplevel/meta.cmi compiler/labels.cmx \
-    compiler/instruct.cmx compiler/emitcode.cmx parsing/const.cmx \
-    compiler/buffcode.cmx 
-toplevel/load_phr.cmx: toplevel/zebra_obj.cmi linker/symtable.cmx \
-    compiler/reloc.cmx toplevel/pr_value.cmx linker/patch.cmx \
-    compiler/opcodes.cmx utils/misc.cmx toplevel/meta.cmi compiler/labels.cmx \
-    compiler/instruct.cmx compiler/emitcode.cmx parsing/const.cmx \
-    compiler/buffcode.cmx 
+toplevel/load_phr.cmo: linker/symtable.cmx compiler/reloc.cmx \
+    toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
+    utils/misc.cmx toplevel/meta.cmi toplevel/llama_obj.cmi \
+    compiler/labels.cmx compiler/instruct.cmx compiler/emitcode.cmx \
+    parsing/const.cmx compiler/buffcode.cmx 
+toplevel/load_phr.cmx: linker/symtable.cmx compiler/reloc.cmx \
+    toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
+    utils/misc.cmx toplevel/meta.cmi toplevel/llama_obj.cmi \
+    compiler/labels.cmx compiler/instruct.cmx compiler/emitcode.cmx \
+    parsing/const.cmx compiler/buffcode.cmx 
 toplevel/main.cmo: typing/typing.cmx toplevel/toplevel.cmi \
     linker/symtable.cmx parsing/parser.cmi typing/modules.cmx utils/misc.cmx \
     toplevel/meta.cmi typing/location.cmi toplevel/load_phr.cmx \
@@ -265,12 +265,12 @@ toplevel/main.cmx: typing/typing.cmx toplevel/toplevel.cmx \
     toplevel/meta.cmi typing/location.cmi toplevel/load_phr.cmx \
     parsing/lexer.cmx toplevel/do_phr.cmx parsing/const.cmx utils/config.cmx \
     compiler/compiler.cmx utils/clflags.cmx 
-toplevel/pr_value.cmo: toplevel/zebra_obj.cmi typing/types.cmx \
-    linker/symtable.cmx typing/modules.cmx utils/misc.cmx \
+toplevel/pr_value.cmo: typing/types.cmx linker/symtable.cmx \
+    typing/modules.cmx utils/misc.cmx toplevel/llama_obj.cmi \
     toplevel/fmt_type.cmx parsing/const.cmx typing/builtins.cmx \
     typing/btype.cmx 
-toplevel/pr_value.cmx: toplevel/zebra_obj.cmi typing/types.cmx \
-    linker/symtable.cmx typing/modules.cmx utils/misc.cmx \
+toplevel/pr_value.cmx: typing/types.cmx linker/symtable.cmx \
+    typing/modules.cmx utils/misc.cmx toplevel/llama_obj.cmi \
     toplevel/fmt_type.cmx parsing/const.cmx typing/builtins.cmx \
     typing/btype.cmx 
 toplevel/provide.cmo: typing/types.cmx parsing/prim.cmx typing/modules.cmx \

@@ -27,13 +27,13 @@ PRIMS=compare.c extern.c externcp.c floats.c gc_ctrl.c hash.c \
   intern.c interncp.c interp.c ints.c io.c lexing.c meta.c parsing.c \
   str.c sys.c
 
-all: zebrarun libcaml.a
+all: llamarun libcaml.a
 
-zebrarun: $(OBJS) prims.o main.o
-	$(CC) $(CFLAGS) -o zebrarun prims.o main.o $(OBJS) $(LIBS) -lm
+llamarun: $(OBJS) prims.o main.o
+	$(CC) $(CFLAGS) -o llamarun prims.o main.o $(OBJS) $(LIBS) -lm
 
-zebrarund: $(DOBJS) prims.o main.d.o
-	$(CC) -g $(OPTS) -o zebrarund prims.o main.o $(DOBJS) $(LIBS) -lm
+llamarund: $(DOBJS) prims.o main.d.o
+	$(CC) -g $(OPTS) -o llamarund prims.o main.o $(DOBJS) $(LIBS) -lm
 
 libcaml.a: $(OBJS) prims.o api.o
 	rm -f libcaml.a
@@ -46,12 +46,12 @@ libcamld.a: $(DOBJS) prims.o api.d.o
 	if $(RANLIBTEST); then $(RANLIB) libcamld.a; else true; fi
 
 clean:
-	rm -f zebrarun zebrarund *.o *.a
+	rm -f llamarun llamarund *.o *.a
 	rm -f primitives prims.c opnames.h jumptbl.h version.h
 
 install:
-	cp zebrarun $(BINDIR)/darkrun
-	strip $(BINDIR)/darkrun
+	cp llamarun $(BINDIR)/llamarun
+	strip $(BINDIR)/llamarun
 	cp libcaml.a $(LIBDIR)
 	if $(RANLIBTEST); then cd $(LIBDIR); $(RANLIB) libcaml.a; else true; fi
 	cp mlvalues.h alloc.h misc.h $(LIBDIR)

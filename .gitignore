@@ -33,10 +33,10 @@ toplevel/pr_value.ml
 toplevel/provide
 toplevel/required
 utils/config.ml
-zebra
-zebrac
-runtime/zebrarun
-runtime/zebrarund
+llama
+llamac
+runtime/llamarun
+runtime/llamarund
 runtime/opnames.h
 testprog
 stdlib/header

@@ -37,24 +37,24 @@ LINKER=linker/caml_light_extern.o \
 TOPLEVEL=\
   toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
-  toplevel/main.cmx runtime/libcaml.a toplevel/zebra.o
+  toplevel/main.cmx runtime/libcaml.a toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/parser.ml
 
-all: runtime_dir zebra zebrac zebradep testprog stdlib_dir
+all: runtime_dir llama llamac llamadep testprog stdlib_dir
 .PHONY: all
 
 testprog: testprog.ml runtime_dir stdlib_dir
-	./zebrac -I stdlib $< -o $@
-	runtime/zebrarun testprog
+	./llamac -I stdlib $< -o $@
+	runtime/llamarun testprog
 	@ echo "Is that 10946 on the line above? Good."
-	@ echo "The Zebra system is up and running."
+	@ echo "The Llama system is up and running."
 
-zebra: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+llama: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-zebrac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
+llamac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 %.cmx: %.ml
@@ -66,7 +66,7 @@ zebrac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.c
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
 	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
-            -e 's|%%BYTERUN%%|$(BINDIR)/zebrarun|' \
+            -e 's|%%BYTERUN%%|$(BINDIR)/llamarun|' \
             -e "s|%%VERSION%%|`head -1 VERSION`|" \
             utils/config.mlp > utils/config.ml
 	@chmod -w utils/config.ml
@@ -102,7 +102,7 @@ linker/predef.ml : runtime/globals.h runtime/fail.h
 linker/caml_light_extern.o: linker/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-toplevel/zebra.o: toplevel/zebra.c
+toplevel/llama.o: toplevel/llama.c
 	$(OCAMLOPT) -c -ccopt "-I . -o $@" $<
 
 runtime/primitives:
@@ -118,7 +118,7 @@ stdlib_dir:
 .PHONY: runtime_dir stdlib_dir
 
 semiclean:
-	rm -f zebra zebrac zebrarun stdlib.zo
+	rm -f llama llamac llamarun stdlib.zo
 	rm -f $(GENSOURCES)
 	rm -f {utils,parsing,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
 	rm -f testprog{,.zi,.zo}

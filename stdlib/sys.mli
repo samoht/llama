@@ -104,4 +104,4 @@ val word_size : int
         (* Size of a machine word (in bits). *)
 ;;
 
-external file_exists : string -> bool = 1 "zebra_sys_file_exists"
+external file_exists : string -> bool = 1 "llama_sys_file_exists"
