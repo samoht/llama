@@ -27,54 +27,54 @@ let extract_constant = function
 
 let rec check_letrec_expr expr =
   match expr.e_desc with
-    Zident _ -> ()
-  | Zconstant _ -> ()
-  | Ztuple el -> List.iter check_letrec_expr el
-  | Zconstruct0 cstr -> ()
-  | Zconstruct1(cstr, expr) ->
+    Texp_ident _ -> ()
+  | Texp_constant _ -> ()
+  | Texp_tuple el -> List.iter check_letrec_expr el
+  | Texp_construct0 cstr -> ()
+  | Texp_construct1(cstr, expr) ->
       check_letrec_expr expr;
       begin match cstr.info.cs_kind with
         Constr_superfluous n ->
           begin match expr.e_desc with
-            Ztuple _ -> () | _ -> illegal_letrec_expr expr.e_loc
+            Texp_tuple _ -> () | _ -> illegal_letrec_expr expr.e_loc
           end
       | _ -> ()
       end
-  | Zfunction _ -> ()
-  | Zconstraint(e,_) -> check_letrec_expr e
-  | Zvector el -> List.iter check_letrec_expr el
-  | Zrecord lbl_expr_list ->
+  | Texp_function _ -> ()
+  | Texp_constraint(e,_) -> check_letrec_expr e
+  | Texp_array el -> List.iter check_letrec_expr el
+  | Texp_record lbl_expr_list ->
       List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list
-  | Zlet(flag, pat_expr_list, body) ->
+  | Texp_let(flag, pat_expr_list, body) ->
       List.iter (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
       check_letrec_expr body      
-  | Zparser _ -> ()
+  | Texp_parser _ -> ()
   | _ ->
       illegal_letrec_expr expr.e_loc
 ;;
 
 let rec size_of_expr expr =
   match expr.e_desc with
-    Ztuple el ->
+    Texp_tuple el ->
       List.iter check_letrec_expr el; List.length el
-  | Zconstruct1(cstr, expr) ->
+  | Texp_construct1(cstr, expr) ->
       check_letrec_expr expr;
       begin match cstr.info.cs_kind with
         Constr_superfluous n -> n | _ -> 1
       end
-  | Zfunction _ ->
+  | Texp_function _ ->
       2
-  | Zconstraint(e,_) ->
+  | Texp_constraint(e,_) ->
       size_of_expr e
-  | Zvector el ->
+  | Texp_array el ->
       List.iter check_letrec_expr el; List.length el
-  | Zrecord lbl_expr_list ->
+  | Texp_record lbl_expr_list ->
       List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list;
       List.length lbl_expr_list
-  | Zlet(flag, pat_expr_list, body) ->
+  | Texp_let(flag, pat_expr_list, body) ->
       List.iter (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
       size_of_expr body      
-  | Zparser _ ->
+  | Texp_parser _ ->
       2
   | _ ->
       illegal_letrec_expr expr.e_loc
@@ -126,9 +126,9 @@ let alloc_superfluous_constr cstr n =
 let rec translate_expr env =
   let rec transl expr =
   match expr.e_desc with
-    Zident({contents=Zlocal s}) ->
+    Texp_ident({contents=Zlocal s}) ->
       translate_access s env
-  | Zident({contents=Zglobal g}) ->
+  | Texp_ident({contents=Zglobal g}) ->
       (match g.info.val_prim with
         ValueNotPrim ->
           Lprim(Pget_global g.qualid, [])
@@ -141,9 +141,9 @@ let rec translate_expr env =
             else Lfunction(make_fct (Lvar n :: args) (n+1))
           in
             make_fct [] 0)
-  | Zconstant cst ->
+  | Texp_constant cst ->
       Lconst cst
-  | Ztuple(args) ->
+  | Texp_tuple(args) ->
       let tr_args =
         List.map transl args in
       begin try
@@ -151,7 +151,7 @@ let rec translate_expr env =
       with Not_constant ->
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
-  | Zconstruct0(c) ->
+  | Texp_construct0(c) ->
       begin match c.info.cs_kind with
         Constr_constant ->
           Lconst(SCblock(c.info.cs_tag, []))
@@ -160,11 +160,11 @@ let rec translate_expr env =
       | Constr_superfluous n ->
           Lfunction(alloc_superfluous_constr c n)
       end
-  | Zconstruct1(c,arg) ->
+  | Texp_construct1(c,arg) ->
       begin match c.info.cs_kind with
         Constr_superfluous n ->
           begin match arg.e_desc with
-            Ztuple argl ->
+            Texp_tuple argl ->
               let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
                 Lconst(SCblock(c.info.cs_tag, List.map extract_constant tr_argl))
@@ -182,13 +182,13 @@ let rec translate_expr env =
             Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
           end
       end
-  | Zapply({e_desc = Zfunction ((patl,_)::_ as case_list)} as funct, args) ->
+  | Texp_apply({e_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
       if List.length patl == List.length args then
         Llet(translate_let env args,
              translate_match expr.e_loc env case_list)
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Zapply({e_desc = Zident({contents=Zglobal g})} as fct, args) ->
+  | Texp_apply({e_desc = Texp_ident({contents=Zglobal g})} as fct, args) ->
       begin match g.info.val_prim with
         ValueNotPrim ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
@@ -211,22 +211,22 @@ let rec translate_expr env =
           else
             Event.after env expr (Lapply(transl fct, List.map transl args))
       end
-  | Zapply(funct, args) ->
+  | Texp_apply(funct, args) ->
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Zlet(false, pat_expr_list, body) ->
+  | Texp_let(false, pat_expr_list, body) ->
       let cas = List.map (fun (pat, _) -> pat) pat_expr_list in
         Llet(translate_bind env pat_expr_list,
              translate_match expr.e_loc env [cas, body])
-  | Zlet(true, pat_expr_list, body) ->
+  | Texp_let(true, pat_expr_list, body) ->
       let new_env =
         add_let_rec_to_env env pat_expr_list in
       let translate_rec_bind (pat, expr) =
         (translate_expr new_env expr, size_of_expr expr) in
       Lletrec(List.map translate_rec_bind pat_expr_list,
               Event.before new_env body (translate_expr new_env body))
-  | Zfunction [] ->
+  | Texp_function [] ->
       fatal_error "translate_expr: empty fun"
-  | Zfunction((patl1,act1)::_ as case_list) ->
+  | Texp_function((patl1,act1)::_ as case_list) ->
       let rec transl_fun debug_env = function
           [] ->
             translate_match expr.e_loc env case_list
@@ -238,35 +238,35 @@ let rec translate_expr env =
             Lfunction(Event.after_pat new_debug_env pat
                         (transl_fun new_debug_env patl)) in
       transl_fun env patl1
-  | Ztrywith(body, pat_expr_list) ->
+  | Texp_try(body, pat_expr_list) ->
       Lhandle(transl body,
               translate_simple_match env partial_try pat_expr_list)
-  | Zsequence(e1, e2) ->
+  | Texp_sequence(e1, e2) ->
       Lsequence(transl e1, Event.before env e2 (transl e2))
-  | Zcondition(eif, ethen, eelse) ->
+  | Texp_ifthenelse(eif, ethen, eelse) ->
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.e_desc with
-                       Zconstruct0(cstr) -> cstr == constr_void | _ -> false
+                       Texp_construct0(cstr) -> cstr == constr_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
-  | Zwhile(econd, ebody) ->
+  | Texp_while(econd, ebody) ->
       Lwhile(transl econd, Event.before env ebody (transl ebody))
-  | Zfor(id, estart, estop, up_flag, ebody) ->
+  | Texp_for(id, estart, estop, up_flag, ebody) ->
       let new_env = add_for_parameter_to_env env id in
       Lfor(transl estart,
            translate_expr (Treserved env) estop,
            up_flag,
            Event.before new_env ebody (translate_expr new_env ebody))
-  | Zconstraint(e, _) ->
+  | Texp_constraint(e, _) ->
       transl e
-  | Zvector [] ->
+  | Texp_array [] ->
       Lconst(SCblock(ConstrRegular(0,0), []))
-  | Zvector args ->
+  | Texp_array args ->
       Lprim(Pmakeblock (ConstrRegular(0,0)), List.map transl args)
-  | Zassign(id, e) ->
+  | Texp_assign(id, e) ->
       translate_update id env (transl e)
-  | Zrecord lbl_expr_list ->
+  | Texp_record lbl_expr_list ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter
           (fun (lbl, e) -> v.(lbl.info.lbl_pos) <- transl e)
@@ -281,24 +281,24 @@ let rec translate_expr env =
         with Not_constant ->
           Lprim(Pmakeblock(ConstrRegular(0,0)), Array.to_list v)
         end
-  | Zrecord_access (e, lbl) ->
+  | Texp_field (e, lbl) ->
       Lprim(Pfield lbl.info.lbl_pos, [transl e])
-  | Zrecord_update (e1, lbl, e2) ->
+  | Texp_setfield (e1, lbl, e2) ->
       Lprim(Psetfield lbl.info.lbl_pos, [transl e1; transl e2])
-  | Zstream stream_comp_list ->
+  | Texp_stream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
-  | Zparser case_list ->
+  | Texp_parser case_list ->
       let (stream_type, _) = Btype.filter_arrow expr.e_typ in
       translate_parser translate_expr expr.e_loc env case_list stream_type
-  | Zwhen(e1,e2) ->
-      fatal_error "front: Zwhen"
+  | Texp_when(e1,e2) ->
+      fatal_error "front: Texp_when"
   in transl
 
 and transl_action env (patlist, expr) =
   let (new_env, add_lets, num_pops) = add_pat_list_to_env env patlist in
   let action =
     match expr.e_desc with
-      Zwhen(e1, e2) ->
+      Texp_when(e1, e2) ->
         guard_expression
           (translate_expr new_env e1) (translate_expr new_env e2) num_pops
     | _ ->
@@ -377,7 +377,7 @@ let translate_letdef_rec loc pat_expr_list =
     make_sequence
       (function (i, e) ->
         match e.e_desc with
-          Zfunction _ ->
+          Texp_function _ ->
             Lprim(Pset_global {qual=modname; id=i}, [translate_expression e])
         | _ ->
             raise Complicated_definition)

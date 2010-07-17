@@ -21,17 +21,17 @@ let rec free_vars_of_pat pat =
 
 let rec expr_is_pure expr =
   match expr.e_desc with
-    Zident _ -> true
-  | Zconstant _ -> true
-  | Ztuple el -> List.for_all expr_is_pure el
-  | Zconstruct0 cstr -> true
-  | Zconstruct1(cstr,arg) -> expr_is_pure arg
-  | Zfunction _ -> true
-  | Zconstraint(expr, ty) -> expr_is_pure expr
-  | Zvector el -> List.for_all expr_is_pure el
-  | Zrecord lbl_expr_list ->
+    Texp_ident _ -> true
+  | Texp_constant _ -> true
+  | Texp_tuple el -> List.for_all expr_is_pure el
+  | Texp_construct0 cstr -> true
+  | Texp_construct1(cstr,arg) -> expr_is_pure arg
+  | Texp_function _ -> true
+  | Texp_constraint(expr, ty) -> expr_is_pure expr
+  | Texp_array el -> List.for_all expr_is_pure el
+  | Texp_record lbl_expr_list ->
       List.for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
-  | Zparser _ -> true
+  | Texp_parser _ -> true
   | _ -> false
 ;;
 

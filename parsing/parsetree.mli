@@ -36,29 +36,29 @@ type expression =
     pexp_loc: Location.location }
 
 and expression_desc =
-    Pident of Longident.t
-  | Pconstant of struct_constant
-  | Plet of bool * (pattern * expression) list * expression
-  | Pfunction of (pattern list * expression) list
-  | Papply of expression * expression list
-  | Ptrywith of expression * (pattern * expression) list
-  | Ptuple of expression list
-  | Pconstruct0 of Longident.t
-  | Pconstruct1 of Longident.t * expression
-  | Precord of (Longident.t * expression) list
-  | Precord_access of expression * Longident.t
-  | Precord_update of expression * Longident.t * expression
-  | Pvector of expression list
-  | Pcondition of expression * expression * expression
-  | Psequence of expression * expression
-  | Pwhile of expression * expression
-  | Pfor of string * expression * expression * bool * expression
-  | Pconstraint of expression * core_type
-  | Pwhen of expression * expression
+    Pexp_ident of Longident.t
+  | Pexp_constant of struct_constant
+  | Pexp_let of bool * (pattern * expression) list * expression
+  | Pexp_function of (pattern list * expression) list
+  | Pexp_apply of expression * expression list
+  | Pexp_try of expression * (pattern * expression) list
+  | Pexp_tuple of expression list
+  | Pexp_construct0 of Longident.t
+  | Pexp_construct1 of Longident.t * expression
+  | Pexp_record of (Longident.t * expression) list
+  | Pexp_field of expression * Longident.t
+  | Pexp_setfield of expression * Longident.t * expression
+  | Pexp_array of expression list
+  | Pexp_ifthenelse of expression * expression * expression
+  | Pexp_sequence of expression * expression
+  | Pexp_while of expression * expression
+  | Pexp_for of string * expression * expression * bool * expression
+  | Pexp_constraint of expression * core_type
+  | Pexp_when of expression * expression
 (* the rest are doomed *)
-  | Pstream of stream_component list
-  | Pparser of (stream_pattern list * expression) list
-  | Passign of string * expression
+  | Pexp_stream of stream_component list
+  | Pexp_parser of (stream_pattern list * expression) list
+  | Pexp_assign of string * expression
 
 and stream_component =
     Pterm of expression
@@ -67,12 +67,12 @@ and stream_component =
 and stream_pattern =
     Ptermpat of pattern
   | Pnontermpat of expression * pattern
-  | Pstreampat of string
+  | Pexp_streampat of string
 
 type type_decl =
     Pabstract_type
   | Pvariant_type of constr_decl list
-  | Precord_type of (string * core_type * mutable_flag) list
+  | Pexp_record_type of (string * core_type * mutable_flag) list
   | Pabbrev_type of core_type
 
 and constr_decl =

@@ -181,30 +181,30 @@ and type_pattern_list = tpat_list []
 
 let rec is_nonexpansive expr =
   match expr.e_desc with
-    Zident id -> true
-  | Zconstant sc -> true
-  | Ztuple el -> List.for_all is_nonexpansive el
-  | Zconstruct0 cstr -> true
-  | Zconstruct1(cstr, e) -> is_nonexpansive e
-  | Zlet(rec_flag, bindings, body) ->
+    Texp_ident id -> true
+  | Texp_constant sc -> true
+  | Texp_tuple el -> List.for_all is_nonexpansive el
+  | Texp_construct0 cstr -> true
+  | Texp_construct1(cstr, e) -> is_nonexpansive e
+  | Texp_let(rec_flag, bindings, body) ->
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
-  | Zfunction pat_expr_list -> true
-  | Ztrywith(body, pat_expr_list) ->
+  | Texp_function pat_expr_list -> true
+  | Texp_try(body, pat_expr_list) ->
       is_nonexpansive body &&
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
-  | Zsequence(e1, e2) -> is_nonexpansive e2
-  | Zcondition(cond, ifso, ifnot) ->
+  | Texp_sequence(e1, e2) -> is_nonexpansive e2
+  | Texp_ifthenelse(cond, ifso, ifnot) ->
       is_nonexpansive ifso && is_nonexpansive ifnot
-  | Zconstraint(e, ty) -> is_nonexpansive e
-  | Zvector [] -> true
-  | Zrecord lbl_expr_list ->
+  | Texp_constraint(e, ty) -> is_nonexpansive e
+  | Texp_array [] -> true
+  | Texp_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
                   lbl.info.lbl_mut == Notmutable && is_nonexpansive expr)
               lbl_expr_list
-  | Zrecord_access(e, lbl) -> is_nonexpansive e
-  | Zparser pat_expr_list -> true
-  | Zwhen(cond, act) -> is_nonexpansive act
+  | Texp_field(e, lbl) -> is_nonexpansive e
+  | Texp_parser pat_expr_list -> true
+  | Texp_when(cond, act) -> is_nonexpansive act
   | _ -> false
 ;;
 
@@ -263,7 +263,7 @@ let unify_expr expr expected_ty actual_ty =
 let rec type_expr env expr =
   let inferred_ty =
   match expr.e_desc with
-    Zident r ->
+    Texp_ident r ->
       begin match !r with
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_typ
@@ -279,11 +279,11 @@ let rec type_expr env expr =
               with Desc_not_found ->
                 unbound_value_err (GRname s) expr.e_loc
       end
-  | Zconstant cst ->
+  | Texp_constant cst ->
       type_of_structured_constant cst
-  | Ztuple(args) ->
+  | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
-  | Zconstruct0(cstr) ->
+  | Texp_construct0(cstr) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           type_instance cstr.info.cs_res
@@ -292,7 +292,7 @@ let rec type_expr env expr =
             type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
           type_arrow(ty_arg, ty_res)
       end            
-  | Zconstruct1(cstr, arg) ->
+  | Texp_construct1(cstr, arg) ->
       begin match cstr.info.cs_kind with
         Constr_constant ->
           constant_constr_err cstr expr.e_loc
@@ -302,7 +302,7 @@ let rec type_expr env expr =
           type_expect env arg ty_arg;
           ty_res
       end
-  | Zapply(fct, args) ->
+  | Texp_apply(fct, args) ->
       let ty_fct = type_expr env fct in
       let rec type_args ty_res = function
         [] -> ty_res
@@ -315,11 +315,11 @@ let rec type_expr env expr =
           type_expect env arg1 ty1;
           type_args ty2 argl in
       type_args ty_fct args
-  | Zlet(rec_flag, pat_expr_list, body) ->
+  | Texp_let(rec_flag, pat_expr_list, body) ->
       type_expr (type_let_decl env rec_flag pat_expr_list) body
-  | Zfunction [] ->
+  | Texp_function [] ->
       fatal_error "type_expr: empty matching"
-  | Zfunction ((patl1,expr1)::_ as matching) ->
+  | Texp_function ((patl1,expr1)::_ as matching) ->
       let ty_args = List.map (fun pat -> new_type_var()) patl1 in
       let ty_res = new_type_var() in
       let tcase (patl, action) =
@@ -329,19 +329,19 @@ let rec type_expr env expr =
       List.iter tcase matching;
       List.fold_right (fun ty_arg ty_res -> type_arrow(ty_arg, ty_res))
               ty_args ty_res
-  | Ztrywith (body, matching) ->
+  | Texp_try (body, matching) ->
       let ty = type_expr env body in
       List.iter
         (fun (pat, expr) ->
           type_expect (type_pattern (pat, type_exn, Notmutable) @ env) expr ty)
         matching;
       ty
-  | Zsequence (e1, e2) ->
+  | Texp_sequence (e1, e2) ->
       type_statement env e1; type_expr env e2
-  | Zcondition (cond, ifso, ifnot) ->
+  | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.e_desc
-         with Zconstruct0 cstr -> cstr == constr_void | _ -> false
+         with Texp_construct0 cstr -> cstr == constr_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit
@@ -350,27 +350,27 @@ let rec type_expr env expr =
         type_expect env ifnot ty;
         ty
       end
-  | Zwhen (cond, act) ->
+  | Texp_when (cond, act) ->
       type_expect env cond type_bool;
       type_expr env act
-  | Zwhile (cond, body) ->
+  | Texp_while (cond, body) ->
       type_expect env cond type_bool;
       type_statement env body;
       type_unit
-  | Zfor (id, start, stop, up_flag, body) ->
+  | Texp_for (id, start, stop, up_flag, body) ->
       type_expect env start type_int;
       type_expect env stop type_int;
       type_statement ((id,(type_int,Notmutable)) :: env) body;
       type_unit
-  | Zconstraint (e, ty_expr) ->
+  | Texp_constraint (e, ty_expr) ->
       let ty' = type_of_type_expression false ty_expr in
       type_expect env e ty';
       ty'
-  | Zvector elist ->
+  | Texp_array elist ->
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect env e ty_arg) elist;
       type_vect ty_arg
-  | Zassign(id, e) ->
+  | Texp_assign(id, e) ->
       begin try
         match List.assoc id env with
           (ty_schema, Notmutable) ->
@@ -381,7 +381,7 @@ let rec type_expr env expr =
       with Not_found ->
         unbound_value_err (GRname id) expr.e_loc
       end
-  | Zrecord lbl_expr_list ->
+  | Texp_record lbl_expr_list ->
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
@@ -404,19 +404,19 @@ let rec type_expr env expr =
         if not defined.(i) then label_undefined_err expr label.(i)
       done;
       ty
-  | Zrecord_access (e, lbl) ->
+  | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) =
         type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
       type_expect env e ty_res;
       ty_arg      
-  | Zrecord_update (e1, lbl, e2) ->
+  | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) =
         type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
       if lbl.info.lbl_mut == Notmutable then label_not_mutable_err expr lbl;
       type_expect env e1 ty_res;
       type_expect env e2 ty_arg;
       type_unit
-  | Zstream complist ->
+  | Texp_stream complist ->
       let ty_comp = new_type_var() in
       let ty_res = type_stream ty_comp in
       List.iter
@@ -424,7 +424,7 @@ let rec type_expr env expr =
                 | Znonterm e -> type_expect env e ty_res)
         complist;
       ty_res
-  | Zparser casel ->
+  | Texp_parser casel ->
       let ty_comp = new_type_var() in
       let ty_stream = type_stream ty_comp in
       let ty_res = new_type_var() in
@@ -439,7 +439,7 @@ let rec type_expr env expr =
                       (type_arrow(ty_stream, ty_parser_result));
           type_stream_pat (tpat new_env (p, ty_parser_result, Notmutable))
                           (rest,act)
-      | (Zstreampat s :: rest, act) ->
+      | (Texp_streampat s :: rest, act) ->
           type_stream_pat ((s, (ty_stream, Notmutable)) :: new_env) (rest,act)
       in
       List.iter (type_stream_pat [])  casel;
@@ -453,7 +453,7 @@ let rec type_expr env expr =
 
 and type_expect env exp expected_ty =
   match exp.e_desc with
-    Zconstant(SCatom(ACstring s)) ->
+    Texp_constant(SCatom(ACstring s)) ->
       let actual_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
@@ -464,15 +464,15 @@ and type_expect env exp expected_ty =
         | _ ->
             type_string in
       unify_expr exp expected_ty actual_ty
-  | Zlet(rec_flag, pat_expr_list, body) ->
+  | Texp_let(rec_flag, pat_expr_list, body) ->
       type_expect (type_let_decl env rec_flag pat_expr_list) body expected_ty
-  | Zsequence (e1, e2) ->
+  | Texp_sequence (e1, e2) ->
       type_statement env e1; type_expect env e2 expected_ty
-  | Zcondition (cond, ifso, ifnot) ->
+  | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       type_expect env ifso expected_ty;
       type_expect env ifnot expected_ty
-  | Ztuple el ->
+  | Texp_tuple el ->
       begin try
         List.iter2 (type_expect env)
                  el (filter_product (List.length el) expected_ty)

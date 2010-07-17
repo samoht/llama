@@ -21,24 +21,24 @@ and make_intf desc =
 ;;
 
 let make_apply = function
-    {pexp_desc = Pconstruct0(cstr1)}, [e2] ->
-      make_expr(Pconstruct1(cstr1, e2))
+    {pexp_desc = Pexp_construct0(cstr1)}, [e2] ->
+      make_expr(Pexp_construct1(cstr1, e2))
   | e1, el ->
-      make_expr(Papply(e1,el))
+      make_expr(Pexp_apply(e1,el))
 ;;
 
 let make_unop op ({pexp_loc=Loc(l1,m1)} as e1) =
   let (Loc(l, m) as loc) = get_current_location() in
-    {pexp_desc = Papply({pexp_desc = Pident(Id op);
+    {pexp_desc = Pexp_apply({pexp_desc = Pexp_ident(Id op);
                       pexp_loc = Loc(l, l1);
                       }, [e1]);
      pexp_loc = loc}
 and make_binop op ({pexp_loc=Loc(l1,m1)} as e1) ({pexp_loc=Loc(l2,m2)} as e2) =
-  make_expr(Papply({pexp_desc = Pident(Id op);
+  make_expr(Pexp_apply({pexp_desc = Pexp_ident(Id op);
                     pexp_loc = Loc(m1, l2)},
                    [e1;e2]))
 and make_ternop op ({pexp_loc=Loc(l1,m1)} as e1) ({pexp_loc=Loc(l2,m2)} as e2) e3 =
-  make_expr(Papply({pexp_desc = Pident(Id op);
+  make_expr(Pexp_apply({pexp_desc = Pexp_ident(Id op);
                     pexp_loc = Loc(m1, l2)},
                    [e1;e2;e3]))
 ;;
@@ -48,19 +48,19 @@ let make_list el =
     [] ->
       res
   | e::l ->
-      makel (make_expr(Pconstruct1(Id"::", make_expr(Ptuple [e;res])))) l
-  in makel (make_expr(Pconstruct0(Id"[]"))) el
+      makel (make_expr(Pexp_construct1(Id"::", make_expr(Pexp_tuple [e;res])))) l
+  in makel (make_expr(Pexp_construct0(Id"[]"))) el
 ;;
 
 let make_unary_minus s e = match s, e with
-    "-",  {pexp_desc = Pconstant(SCatom(ACint i))} ->
-      make_expr(Pconstant(SCatom(ACint(- i))))
-  | "-",  {pexp_desc = Pconstant(SCatom(ACfloat f))} ->
-      make_expr(Pconstant(SCatom(ACfloat(-. f))))
+    "-",  {pexp_desc = Pexp_constant(SCatom(ACint i))} ->
+      make_expr(Pexp_constant(SCatom(ACint(- i))))
+  | "-",  {pexp_desc = Pexp_constant(SCatom(ACfloat f))} ->
+      make_expr(Pexp_constant(SCatom(ACfloat(-. f))))
   | "-",  e ->
       make_unop "minus" e
-  | "-.", {pexp_desc = Pconstant(SCatom(ACfloat f))} ->
-      make_expr(Pconstant(SCatom(ACfloat(-. f))))
+  | "-.", {pexp_desc = Pexp_constant(SCatom(ACfloat f))} ->
+      make_expr(Pexp_constant(SCatom(ACfloat(-. f))))
   | "-.", e ->
       make_unop "minus_float" e
   | _, _ ->
@@ -291,13 +291,13 @@ Expr :
       | Simple_expr Simple_expr_list   %prec prec_app
           { make_apply ($1, $2) }
       | Expr_comma_list
-          { make_expr(Ptuple(List.rev $1)) }
+          { make_expr(Pexp_tuple(List.rev $1)) }
       | SUBTRACTIVE Expr  %prec prec_uminus
           { make_unary_minus $1 $2 }
       | NOT Expr
           { make_unop "not" $2 }
       | Ide LESSMINUS Expr
-          { make_expr (Passign($1, $3)) }
+          { make_expr (Pexp_assign($1, $3)) }
       | Expr INFIX4 Expr
           { make_binop $2 $1 $3 }
       | Expr INFIX3 Expr
@@ -315,7 +315,7 @@ Expr :
       | Expr STAR Expr
           { make_binop "*" $1 $3 }
       | Expr COLONCOLON Expr
-          { make_expr(Pconstruct1(Id "::", make_expr(Ptuple [$1; $3]))) }
+          { make_expr(Pexp_construct1(Id "::", make_expr(Pexp_tuple [$1; $3]))) }
       | Expr EQUAL Expr
           { make_binop "=" $1 $3 }
       | Expr EQUALEQUAL Expr
@@ -329,7 +329,7 @@ Expr :
       | Expr BARBAR Expr
           { make_binop "||" $1 $3 }
       | Simple_expr DOT Ext_ident LESSMINUS Expr
-          { make_expr(Precord_update($1, $3, $5)) }
+          { make_expr(Pexp_setfield($1, $3, $5)) }
       | Simple_expr DOT LPAREN Expr RPAREN LESSMINUS Expr
           { make_ternop "vect_assign" $1 $4 $7 }
       | Simple_expr DOT LBRACKET Expr RBRACKET LESSMINUS Expr
@@ -337,67 +337,67 @@ Expr :
       | Expr COLONEQUAL Expr
           { make_binop ":=" $1 $3 }
       | IF Expr THEN Expr ELSE Expr  %prec prec_if
-          { make_expr(Pcondition($2, $4, $6)) }
+          { make_expr(Pexp_ifthenelse($2, $4, $6)) }
       | IF Expr THEN Expr  %prec prec_if
           { make_expr
-             (Pcondition($2, $4, make_expr(Pconstruct0(Id "()")))) }
+             (Pexp_ifthenelse($2, $4, make_expr(Pexp_construct0(Id "()")))) }
       | WHILE Expr DO Opt_expr DONE
-          { make_expr(Pwhile($2, $4)) }
+          { make_expr(Pexp_while($2, $4)) }
       | FOR Ide EQUAL Expr TO Expr DO Opt_expr DONE
-          { make_expr(Pfor($2, $4, $6, true, $8)) }
+          { make_expr(Pexp_for($2, $4, $6, true, $8)) }
       | FOR Ide EQUAL Expr DOWNTO Expr DO Opt_expr DONE
-          { make_expr(Pfor($2, $4, $6, false, $8)) }
+          { make_expr(Pexp_for($2, $4, $6, false, $8)) }
       | Expr SEMI Expr
-          { make_expr(Psequence($1,$3)) }
+          { make_expr(Pexp_sequence($1,$3)) }
       | Expr SEMI
           { $1 }
       | MATCH Expr WITH Opt_bar Function_match
-          { make_expr(Papply(make_expr(Pfunction $5), [$2])) }
+          { make_expr(Pexp_apply(make_expr(Pexp_function $5), [$2])) }
       | MATCH Expr WITH Opt_bar Parser_match
-          { make_expr(Papply(make_expr(Pparser $5), [$2])) }
+          { make_expr(Pexp_apply(make_expr(Pexp_parser $5), [$2])) }
       | LET Binding_list IN Expr  %prec prec_let
-          { make_expr(Plet(false, $2, $4)) }
+          { make_expr(Pexp_let(false, $2, $4)) }
       | LET REC Binding_list IN Expr  %prec prec_let
-          { make_expr(Plet(true, $3, $5)) }
+          { make_expr(Pexp_let(true, $3, $5)) }
       | FUN Opt_bar Fun_match
-          { make_expr(Pfunction $3) }
+          { make_expr(Pexp_function $3) }
       | FUNCTION Opt_bar Function_match
-          { make_expr(Pfunction $3) }
+          { make_expr(Pexp_function $3) }
       | FUNCTION Opt_bar Parser_match
-          { make_expr(Pparser $3) }
+          { make_expr(Pexp_parser $3) }
       | TRY Expr WITH Opt_bar Try_match
-	  { make_expr(Ptrywith($2, $5)) }
+	  { make_expr(Pexp_try($2, $5)) }
       | Expr WHERE Binding_list
-          { make_expr(Plet(false, $3, $1)) }
+          { make_expr(Pexp_let(false, $3, $1)) }
       | Expr WHERE REC Binding_list  %prec WHERE
-          { make_expr(Plet(true, $4, $1)) }
+          { make_expr(Pexp_let(true, $4, $1)) }
 ;
 
 Simple_expr :
         Struct_constant
-          { make_expr(Pconstant $1) }
+          { make_expr(Pexp_constant $1) }
       | Ext_ident
           { let p = $1 in
-            if Longident.is_upper p then make_expr(Pconstruct0(p))
-            else make_expr(Pident(p)) }
+            if Longident.is_upper p then make_expr(Pexp_construct0(p))
+            else make_expr(Pexp_ident(p)) }
       | LBRACKET Expr_sm_list RBRACKET
           { make_list $2 }
       | LBRACKETBAR Expr_sm_list BARRBRACKET
-          { make_expr(Pvector(List.rev $2)) }
+          { make_expr(Pexp_array(List.rev $2)) }
       | LBRACKETLESS Stream_expr GREATERRBRACKET
-          { make_expr(Pstream (List.rev $2)) }
+          { make_expr(Pexp_stream (List.rev $2)) }
       | LPAREN Expr COLON Type RPAREN
-          { make_expr(Pconstraint($2, $4)) }
+          { make_expr(Pexp_constraint($2, $4)) }
       | LPAREN Opt_expr RPAREN
           { $2 }
       | BEGIN Opt_expr END
           { $2 }
       | LBRACE Expr_label_list RBRACE
-          { make_expr (Precord $2) }
+          { make_expr (Pexp_record $2) }
       | PREFIX Simple_expr
           { make_unop $1 $2 }
       | Simple_expr DOT Ext_ident
-          { make_expr(Precord_access($1, $3)) }
+          { make_expr(Pexp_field($1, $3)) }
       | Simple_expr DOT LPAREN Expr RPAREN
           { make_binop "vect_item" $1 $4 }
       | Simple_expr DOT LBRACKET Expr RBRACKET
@@ -431,7 +431,7 @@ Expr_sm_list :
 
 Opt_expr :
         Expr            { $1 }
-      | /*epsilon*/     { make_expr(Pconstruct0(Id "()")) }
+      | /*epsilon*/     { make_expr(Pexp_construct0(Id "()")) }
 
 Expr_label :
         Ext_ident EQUAL Expr
@@ -476,7 +476,7 @@ Action :
         MINUSGREATER Expr
           { $2 }
       | WHEN Expr MINUSGREATER Expr
-          { make_expr (Pwhen($2,$4)) }
+          { make_expr (Pexp_when($2,$4)) }
 ;
 
 Fun_match :
@@ -511,7 +511,7 @@ Binding :
         Pattern EQUAL Expr  %prec prec_define
           { ($1, $3) }
       | Ide Simple_pattern_list EQUAL Expr  %prec prec_define
-          { (pat_constr_or_var $1, make_expr(Pfunction [$2, $4])) }
+          { (pat_constr_or_var $1, make_expr(Pexp_function [$2, $4])) }
 ;
 
 /* Patterns */
@@ -629,7 +629,7 @@ Stream_pattern :
 
 Stream_pattern_component_list :
         LIDENT
-          { [Pstreampat $1] }
+          { [Pexp_streampat $1] }
       | Stream_pattern_component SEMI Stream_pattern_component_list
           { $1 :: $3 }
       | Stream_pattern_component
@@ -783,7 +783,7 @@ Type1_def :
       | EQUAL Opt_bar Constr_decl
           { Pvariant_type $3 }
       | EQUAL LBRACE Label_decl RBRACE
-          { Precord_type $3 }
+          { Pexp_record_type $3 }
       | EQUALEQUAL Type
           { Pabbrev_type $2 }
 ;

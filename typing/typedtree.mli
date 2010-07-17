@@ -38,28 +38,28 @@ type expression =
     mutable e_typ: typ }
 
 and expression_desc =
-    Zident of expr_ident ref
-  | Zconstant of struct_constant
-  | Ztuple of expression list
-  | Zconstruct0 of constr_desc global
-  | Zconstruct1 of constr_desc global * expression
-  | Zapply of expression * expression list
-  | Zlet of bool * (pattern * expression) list * expression
-  | Zfunction of (pattern list * expression) list
-  | Ztrywith of expression * (pattern * expression) list
-  | Zsequence of expression * expression
-  | Zcondition of expression * expression * expression
-  | Zwhile of expression * expression
-  | Zfor of string * expression * expression * bool * expression
-  | Zconstraint of expression * core_type
-  | Zvector of expression list
-  | Zassign of string * expression
-  | Zrecord of (label_desc global * expression) list
-  | Zrecord_access of expression * label_desc global
-  | Zrecord_update of expression * label_desc global * expression
-  | Zstream of stream_component list
-  | Zparser of (stream_pattern list * expression) list
-  | Zwhen of expression * expression
+    Texp_ident of expr_ident ref
+  | Texp_constant of struct_constant
+  | Texp_tuple of expression list
+  | Texp_construct0 of constr_desc global
+  | Texp_construct1 of constr_desc global * expression
+  | Texp_apply of expression * expression list
+  | Texp_let of bool * (pattern * expression) list * expression
+  | Texp_function of (pattern list * expression) list
+  | Texp_try of expression * (pattern * expression) list
+  | Texp_sequence of expression * expression
+  | Texp_ifthenelse of expression * expression * expression
+  | Texp_while of expression * expression
+  | Texp_for of string * expression * expression * bool * expression
+  | Texp_constraint of expression * core_type
+  | Texp_array of expression list
+  | Texp_assign of string * expression
+  | Texp_record of (label_desc global * expression) list
+  | Texp_field of expression * label_desc global
+  | Texp_setfield of expression * label_desc global * expression
+  | Texp_stream of stream_component list
+  | Texp_parser of (stream_pattern list * expression) list
+  | Texp_when of expression * expression
 
 and expr_ident =
     Zglobal of value_desc global
@@ -72,12 +72,12 @@ and stream_component =
 and stream_pattern =
     Ztermpat of pattern
   | Znontermpat of expression * pattern
-  | Zstreampat of string
+  | Texp_streampat of string
 
 type type_decl =
     Zabstract_type
   | Zvariant_type of constr_decl list
-  | Zrecord_type of (string * core_type * mutable_flag) list
+  | Texp_record_type of (string * core_type * mutable_flag) list
   | Zabbrev_type of core_type
 
 and constr_decl =

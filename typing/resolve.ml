@@ -34,47 +34,47 @@ let rec pattern p =
 let rec expr ex =
   { e_desc =
       begin match ex.pexp_desc with
-        | Pident li ->
-            Zident
+        | Pexp_ident li ->
+            Texp_ident
               begin match li with
                 | Longident.Id s -> ref(Zlocal s)
                 | Longident.Qual _ -> ref(Zglobal(Env.lookup_value li ex.pexp_loc))
               end
-        | Pconstant c -> Zconstant c
-        | Ptuple l -> Ztuple (List.map expr l)
-        | Pconstruct0 li -> Zconstruct0 (Env.lookup_constructor li ex.pexp_loc)
-        | Pconstruct1 (li, e) -> Zconstruct1 (Env.lookup_constructor li ex.pexp_loc, expr e)
-        | Papply (f, l) -> Zapply (expr f, List.map expr l)
-        | Plet (b, lpe, e) -> Zlet (b, List.map(fun (p,e) -> pattern p, expr e) lpe, expr e)
-        | Pfunction l -> Zfunction (List.map (fun (lp,e) -> List.map pattern lp, expr e) l)
-        | Ptrywith (e, lpe) -> Ztrywith (expr e, List.map (fun (p,e) -> pattern p,expr e) lpe)
-        | Psequence (e1,e2) -> Zsequence(expr e1,expr e2)
-        | Pcondition(e1,e2,e3) -> Zcondition (expr e1,expr e2, expr e3)
-        | Pwhile(e1,e2) -> Zwhile(expr e1,expr e2)
-        | Pfor(s,e1,e2,b,e3) -> Zfor(s,expr e1,expr e2,b,expr e3)
-        | Pconstraint(e,te) -> Zconstraint(expr e,core_type te)
-        | Pvector l -> Zvector(List.map expr l)
-        | Passign (s,e) -> Zassign(s, expr e)
-        | Precord l -> Zrecord(List.map (fun (li,e) -> Env.lookup_label li ex.pexp_loc,expr e) l)
-        | Precord_access (e,li) -> Zrecord_access(expr e,Env.lookup_label li ex.pexp_loc)
-        | Precord_update(e,li,e2) -> Zrecord_update(expr e, Env.lookup_label li ex.pexp_loc, expr e2)
-        | Pstream l ->
-            Zstream (List.map
+        | Pexp_constant c -> Texp_constant c
+        | Pexp_tuple l -> Texp_tuple (List.map expr l)
+        | Pexp_construct0 li -> Texp_construct0 (Env.lookup_constructor li ex.pexp_loc)
+        | Pexp_construct1 (li, e) -> Texp_construct1 (Env.lookup_constructor li ex.pexp_loc, expr e)
+        | Pexp_apply (f, l) -> Texp_apply (expr f, List.map expr l)
+        | Pexp_let (b, lpe, e) -> Texp_let (b, List.map(fun (p,e) -> pattern p, expr e) lpe, expr e)
+        | Pexp_function l -> Texp_function (List.map (fun (lp,e) -> List.map pattern lp, expr e) l)
+        | Pexp_try (e, lpe) -> Texp_try (expr e, List.map (fun (p,e) -> pattern p,expr e) lpe)
+        | Pexp_sequence (e1,e2) -> Texp_sequence(expr e1,expr e2)
+        | Pexp_ifthenelse(e1,e2,e3) -> Texp_ifthenelse (expr e1,expr e2, expr e3)
+        | Pexp_while(e1,e2) -> Texp_while(expr e1,expr e2)
+        | Pexp_for(s,e1,e2,b,e3) -> Texp_for(s,expr e1,expr e2,b,expr e3)
+        | Pexp_constraint(e,te) -> Texp_constraint(expr e,core_type te)
+        | Pexp_array l -> Texp_array(List.map expr l)
+        | Pexp_assign (s,e) -> Texp_assign(s, expr e)
+        | Pexp_record l -> Texp_record(List.map (fun (li,e) -> Env.lookup_label li ex.pexp_loc,expr e) l)
+        | Pexp_field (e,li) -> Texp_field(expr e,Env.lookup_label li ex.pexp_loc)
+        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr e, Env.lookup_label li ex.pexp_loc, expr e2)
+        | Pexp_stream l ->
+            Texp_stream (List.map
                        (fun cmp ->
                           begin match cmp with
                             | Pterm e -> Zterm (expr e)
                             | Pnonterm e -> Znonterm(expr e)
                           end) l)
-        | Pparser l ->
+        | Pexp_parser l ->
             let aux sp =
               begin match sp with
                 | Ptermpat p -> Ztermpat (pattern p)
                 | Pnontermpat (e, p) -> Znontermpat (expr e, pattern p)
-                | Pstreampat s -> Zstreampat s
+                | Pexp_streampat s -> Texp_streampat s
               end
             in
-            Zparser(List.map (fun (l,e) -> List.map aux l, expr e) l)
-        | Pwhen(e1,e2) -> Zwhen(expr e1,expr e2)
+            Texp_parser(List.map (fun (l,e) -> List.map aux l, expr e) l)
+        | Pexp_when(e1,e2) -> Texp_when(expr e1,expr e2)
       end;
     e_loc = ex.pexp_loc;
     e_typ = no_type }
@@ -89,7 +89,7 @@ let type_decl td =
   begin match td with
     | Pabstract_type -> Zabstract_type
     | Pvariant_type cdl -> Zvariant_type (List.map constr_decl cdl)
-    | Precord_type l -> Zrecord_type (List.map (fun (s,te,m) ->
+    | Pexp_record_type l -> Texp_record_type (List.map (fun (s,te,m) ->
                                                   (s,core_type te, m)) l)
     | Pabbrev_type te -> Zabbrev_type (core_type te)
   end

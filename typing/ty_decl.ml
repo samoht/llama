@@ -132,7 +132,7 @@ let define_new_type loc (ty_desc, params, def) =
         pop_type_level(); Abstract_type
     | Zvariant_type constrs ->
         enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs)
-    | Zrecord_type labels ->
+    | Texp_record_type labels ->
         enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels)
     | Zabbrev_type body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in

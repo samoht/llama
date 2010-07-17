@@ -53,7 +53,7 @@ let term_of_structured_const sc =
 
 let rec term_of_expr c expr =
   begin match expr.e_desc with
-    | Zident id ->
+    | Texp_ident id ->
         begin match !id with
           | Zglobal vdg ->
               begin match vdg.info.val_prim with
@@ -76,27 +76,27 @@ let rec term_of_expr c expr =
               in
               rel.(aux 0 c)
         end
-    | Zconstant sc ->
+    | Texp_constant sc ->
         term_of_structured_const sc
-    | Ztuple l ->
+    | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
-    | Zconstruct0 ct ->
+    | Texp_construct0 ct ->
         Ctor ct
-    | Zconstruct1 (ct, {e_desc=Ztuple l}) ->
+    | Texp_construct1 (ct, {e_desc=Texp_tuple l}) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor ct) l
-    | Zconstruct1 (ct, x) ->
+    | Texp_construct1 (ct, x) ->
         app (Ctor ct) (term_of_expr c x)
-    | Zapply (f, l) ->
+    | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
-    | Zfunction [([{p_desc=Tpat_var s}],e)] ->
+    | Texp_function [([{p_desc=Tpat_var s}],e)] ->
         Lambda (term_of_expr (s::c) e)
-    | Zcondition (i, t, e) ->
+    | Texp_ifthenelse (i, t, e) ->
         app3 (Match constr_type_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
-    | Zwhile _ | Zfor _ ->
+    | Texp_while _ | Texp_for _ ->
         Ctor constr_void
-    | Zconstraint (e, _) ->
+    | Texp_constraint (e, _) ->
         term_of_expr c e
-    | Zvector l ->
+    | Texp_array l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Array (List.length l)) l
     | _ ->
         failwith "term_of_expr"
