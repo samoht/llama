@@ -6,7 +6,7 @@ type valeur =
    | Val_nil
    | Val_cons of valeur * valeur
    | Val_fermeture of fermeture
-   | Val_primitive of valeur -> valeur
+   | Val_primitive of (valeur -> valeur)
 
 and fermeture =
   { définition: (motif * expression) list;

@@ -782,10 +782,14 @@ Type1_def :
 ;
 
 Constr1_decl :
-        Ide OF Type
-          { Pconstr1decl($1, $3) }
+        Ide OF core_type_list
+          { ($1, List.rev $3) }
       | Ide
-          { Pconstr0decl ($1) }
+          { ($1, []) }
+;
+core_type_list:
+    Simple_type                            { [$1] }
+  | core_type_list STAR Simple_type       { $3 :: $1 }
 ;
 
 Label1_decl :

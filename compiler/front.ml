@@ -29,17 +29,7 @@ let rec check_letrec_expr expr =
   match expr.e_desc with
     Texp_ident _ -> ()
   | Texp_constant _ -> ()
-  | Texp_tuple el -> List.iter check_letrec_expr el
-  | Texp_construct(cstr, None) -> ()
-  | Texp_construct(cstr, Some expr) ->
-      check_letrec_expr expr;
-      begin match cstr.info.cs_kind with
-        Constr_superfluous n ->
-          begin match expr.e_desc with
-            Texp_tuple _ -> () | _ -> illegal_letrec_expr expr.e_loc
-          end
-      | _ -> ()
-      end
+  | Texp_tuple el | Texp_construct(_, el) -> List.iter check_letrec_expr el
   | Texp_function _ -> ()
   | Texp_constraint(e,_) -> check_letrec_expr e
   | Texp_array el -> List.iter check_letrec_expr el
@@ -55,13 +45,8 @@ let rec check_letrec_expr expr =
 
 let rec size_of_expr expr =
   match expr.e_desc with
-    Texp_tuple el ->
+    Texp_tuple el | Texp_construct(_, el) ->
       List.iter check_letrec_expr el; List.length el
-  | Texp_construct(cstr, Some expr) ->
-      check_letrec_expr expr;
-      begin match cstr.info.cs_kind with
-        Constr_superfluous n -> n | _ -> 1
-      end
   | Texp_function _ ->
       2
   | Texp_constraint(e,_) ->
@@ -151,36 +136,25 @@ let rec translate_expr env =
       with Not_constant ->
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
-  | Texp_construct(c,None) ->
-      begin match c.info.cs_kind with
-        Constr_constant ->
-          Lconst(SCblock(c.info.cs_tag, []))
-      | Constr_regular ->
-          Lfunction(Lprim(Pmakeblock c.info.cs_tag, [Lvar 0]))
-      | Constr_superfluous n ->
-          Lfunction(alloc_superfluous_constr c n)
-      end
-  | Texp_construct(c,Some arg) ->
+  | Texp_construct(c,argl) ->
       begin match c.info.cs_kind with
         Constr_superfluous n ->
-          begin match arg.e_desc with
-            Texp_tuple argl ->
               let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
                 Lconst(SCblock(c.info.cs_tag, List.map extract_constant tr_argl))
               with Not_constant ->
                 Lprim(Pmakeblock c.info.cs_tag, tr_argl)
               end
-          | _ ->
-              Llet([transl arg], alloc_superfluous_constr c n)
-          end
-      | _ ->
+      | Constr_regular ->
+          let arg = List.hd argl in
           let tr_arg = transl arg in
           begin try
             Lconst(SCblock(c.info.cs_tag, [extract_constant tr_arg]))
           with Not_constant ->
             Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
           end
+      | Constr_constant ->
+          Lconst(SCblock(c.info.cs_tag, []))
       end
   | Texp_apply({e_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
       if List.length patl == List.length args then
@@ -247,7 +221,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.e_desc with
-                       Texp_construct(cstr,None) -> cstr == constr_void | _ -> false
+                       Texp_construct(cstr,[]) -> cstr == constr_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
   | Texp_while(econd, ebody) ->

@@ -59,21 +59,6 @@ let translate_update s env newval =
   in transl 0 env
 ;;
 
-let rec pat_is_named pat =
-  match pat.p_desc with
-    Tpat_var s -> true
-  | Tpat_alias(pat, s) -> true
-  | Tpat_constraint(pat, _) -> pat_is_named pat
-  | _ -> false
-;;
-
-let tuple_path nfields path =
-  let rec list_of_fields i =
-    if i >= nfields then [] else Path_son(i, path) :: list_of_fields (succ i)
-  in
-    Path_tuple(list_of_fields 0)
-;;
-
 let rec paths_of_pat path pat =
   match pat.p_desc with
     Tpat_var s ->
@@ -81,21 +66,12 @@ let rec paths_of_pat path pat =
   | Tpat_alias(pat,s) ->
       {var_name = s; var_path = path; var_typ = pat.p_typ} ::
       paths_of_pat path pat
-  | Tpat_tuple(patlist) ->
+  | Tpat_tuple(patlist) | Tpat_construct(_, patlist) ->
       let rec paths_of_patlist i = function
         [] -> []
       | p::pl ->
           paths_of_pat (Path_son(i,path)) p @ paths_of_patlist (i+1) pl in
       paths_of_patlist 0 patlist
-  | Tpat_construct(cstr, None) ->
-      []
-  | Tpat_construct(cstr, Some p) ->
-      begin match cstr.info.cs_kind with
-        Constr_superfluous n ->
-          paths_of_pat (if pat_is_named p then tuple_path n path else path) p
-      | _ ->
-          paths_of_pat (Path_son(0, path)) p
-      end
   | Tpat_constraint(pat,_) ->
       paths_of_pat path pat
   | Tpat_record lbl_pat_list ->
@@ -121,8 +97,8 @@ let rec mutable_vars_of_pat mut pat =
       else l
   | Tpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
   | Tpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
-  | Tpat_construct(cstr,Some pat) ->
-      mutable_vars_of_pat mut pat
+  | Tpat_construct(cstr,pats) ->
+      List.flatten (List.map (mutable_vars_of_pat mut) pats)
   | Tpat_record lbl_pat_list ->
       List.flatten (List.map
         (fun (lbl,pat) ->

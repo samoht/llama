@@ -27,7 +27,7 @@ let print_constr_decl cstr =
   | _ ->
       printf "%s of %a\n"
              cstr.qualid.id
-             output_type cstr.info.cs_arg
+             output_type (Builtins.type_product cstr.info.cs_args)
 ;;
 
 let print_label_decl lbl =

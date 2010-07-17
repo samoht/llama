@@ -105,9 +105,7 @@ let do_structure_item phr =
   | Tstr_exception decl ->
       let _ = type_excdecl phr.im_loc decl in
       reset_rollback ();
-      Printf.printf "Exception %s defined.\n"
-        (match decl with Zconstr0decl name -> name
-           | Zconstr1decl(name,_) -> name)
+      Printf.printf "Exception %s defined.\n" (fst decl)
   | Tstr_open mn ->
       open_module (String.uncapitalize mn)
   end;

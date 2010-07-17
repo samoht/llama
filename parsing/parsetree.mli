@@ -73,9 +73,7 @@ type type_decl =
   | Pexp_record_type of (string * core_type * mutable_flag) list
   | Pabbrev_type of core_type
 
-and constr_decl =
-    Pconstr0decl of string
-  | Pconstr1decl of string * core_type
+and constr_decl = string * core_type list
 
 type signature_item =
   { psig_desc: signature_item_desc;

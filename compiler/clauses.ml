@@ -51,12 +51,12 @@ let set_fields size l =
 
 let simple_match_args p1 p2 =
   match p2.p_desc with
-    Tpat_construct(_,Some arg) -> [arg]
+    Tpat_construct(_,args) -> args
   | Tpat_tuple(args)  -> args
   | Tpat_record(args) ->  set_fields (record_nargs p1) args
   | (Tpat_any | Tpat_var(_)) ->
       begin match p1.p_desc with
-        Tpat_construct(_,Some _) ->  [omega]
+        Tpat_construct(_,args) -> List.map (fun _ -> omega) args
       | Tpat_tuple(args) -> List.map (fun _ -> omega) args
       | Tpat_record(args) ->  List.map (fun _ -> omega) args
       | _ -> []
@@ -237,10 +237,8 @@ let rec le_pat p q =
   | _,Tpat_or(q1,q2) ->
        le_pat p q1 && le_pat p q2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
-  | Tpat_construct(c1,None), Tpat_construct(c2,None) ->
-      c1.info.cs_tag == c2.info.cs_tag
-  | Tpat_construct(c1,Some p), Tpat_construct(c2,Some q) ->
-      c1.info.cs_tag == c2.info.cs_tag && le_pat p q
+  | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
+      c1.info.cs_tag == c2.info.cs_tag && le_pats ps qs
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->
      let size = record_nargs p in

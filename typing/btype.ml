@@ -195,6 +195,13 @@ and type_pair_instance (ty1,ty2) =
     (ty1', ty2')
 ;;
 
+let instance_constructor cstr =
+  let ty_res = copy_type cstr.cs_res in
+  let ty_args = List.map copy_type cstr.cs_args in
+  cleanup_type cstr.cs_res;
+  List.iter cleanup_type cstr.cs_args;
+  (ty_args, ty_res)
+
 (* Expansion of an abbreviation *)
 
 let bind_variable ty1 ty2 =

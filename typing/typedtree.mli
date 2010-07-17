@@ -26,7 +26,7 @@ and pattern_desc =
   | Tpat_alias of pattern * string
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
-  | Tpat_construct of constr_desc global * pattern option
+  | Tpat_construct of constr_desc global * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * core_type
   | Tpat_record of (label_desc global * pattern) list
@@ -40,7 +40,7 @@ and expression_desc =
     Texp_ident of expr_ident ref
   | Texp_constant of struct_constant
   | Texp_tuple of expression list
-  | Texp_construct of constr_desc global * expression option
+  | Texp_construct of constr_desc global * expression list
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
   | Texp_function of (pattern list * expression) list
@@ -78,9 +78,7 @@ type type_decl =
   | Texp_record_type of (string * core_type * mutable_flag) list
   | Zabbrev_type of core_type
 
-and constr_decl =
-    Zconstr0decl of string
-  | Zconstr1decl of string * core_type
+and constr_decl = string * core_type list
 
 type signature_item =
   { in_desc: signature_item_desc;

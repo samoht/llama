@@ -78,7 +78,7 @@ and type_num =
 let constr_void =
   builtin "()"
     { cs_res = {typ_desc=Tconstr(constr_type_unit,[]); typ_level=notgeneric};
-      cs_arg = type_unit;
+      cs_args = [];
       cs_tag = ConstrRegular(0,1);
       cs_kind= Constr_constant }
 ;;
@@ -87,7 +87,7 @@ let constr_nil =
   let arg = {typ_desc=Tvar(ref Tnolink); typ_level=generic} in
   builtin "[]"
     { cs_res = {typ_desc=Tconstr(constr_type_list, [arg]); typ_level=generic};
-      cs_arg = type_unit;
+      cs_args = [];
       cs_tag = ConstrRegular(0,2);
       cs_kind= Constr_constant }
 
@@ -96,7 +96,7 @@ and constr_cons =
   let arg2 = {typ_desc=Tconstr(constr_type_list, [arg1]); typ_level=generic} in
   builtin "::"
     { cs_res = arg2;
-      cs_arg = {typ_desc=Tproduct[arg1; arg2]; typ_level=generic};
+      cs_args = [arg1;arg2];
       cs_tag = ConstrRegular(1,2);
       cs_kind= Constr_superfluous 2}
 ;;
@@ -106,7 +106,7 @@ let constr_none =
   builtin "None"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
-      cs_arg = type_unit;
+      cs_args = [];
       cs_tag = ConstrRegular(0,2);
       cs_kind= Constr_constant }
 
@@ -115,7 +115,7 @@ and constr_some =
   builtin "Some"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
-      cs_arg = arg;
+      cs_args = [arg];
       cs_tag = ConstrRegular(1,2);
       cs_kind= Constr_regular }
 ;;
@@ -123,14 +123,14 @@ and constr_some =
 let constr_false =
   builtin "false"
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
-      cs_arg = type_unit;
+      cs_args = [];
       cs_tag = ConstrRegular(0,2);
       cs_kind= Constr_constant }
 
 and constr_true =
   builtin "true"
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
-      cs_arg = type_unit;
+      cs_args = [];
       cs_tag = ConstrRegular(1,2);
       cs_kind= Constr_constant }
 ;;
@@ -144,7 +144,7 @@ let match_failure_tag =
 let constr_match_failure =
   builtin "Match_failure"
     { cs_res = {typ_desc=Tconstr(constr_type_exn,[]); typ_level=notgeneric};
-      cs_arg = type_product [type_string; type_int; type_int];
+      cs_args = [type_string; type_int; type_int];
       cs_tag = match_failure_tag;
       cs_kind = Constr_superfluous 3 }
 ;;

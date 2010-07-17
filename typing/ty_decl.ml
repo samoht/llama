@@ -15,42 +15,26 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
     List.length constrs in
   let rec make_constrs constr_idx = function
     [] -> []
-  | Zconstr0decl constr_name :: rest ->
+  | (constr_name, args) :: rest ->
+      let ty_args = List.map (type_of_type_expression true) args in
       let constr_tag =
         if is_extensible then
           ConstrExtensible({qual=compiled_module_name(); id=constr_name},
                            new_exc_stamp())
         else
           ConstrRegular(constr_idx, nbr_constrs) in
-      let constr_glob =
-        defined_global constr_name
-          { cs_res = ty_res;
-            cs_arg = type_unit;
-            cs_tag = constr_tag;
-            cs_kind = Constr_constant }
-      in
-        add_constr constr_glob;
-        constr_glob :: make_constrs (succ constr_idx) rest
-  | Zconstr1decl(constr_name, arg) :: rest ->
-      let ty_arg =
-        type_of_type_expression true arg
-      and constr_tag =
-        if is_extensible then
-          ConstrExtensible({qual=compiled_module_name(); id=constr_name},
-                           new_exc_stamp())
-        else
-          ConstrRegular(constr_idx, nbr_constrs) in
       let kind =
-        match type_repr ty_arg with
-          {typ_desc = Tproduct tylist} -> Constr_superfluous (List.length tylist)
-        | _ ->
-            Constr_regular in
+        match List.length ty_args with
+          | 0 -> Constr_constant
+          | 1 -> Constr_regular
+          | n -> Constr_superfluous n
+      in
       let constr_glob =
         defined_global constr_name
           { cs_res = ty_res;
-            cs_arg = ty_arg;
+            cs_args = ty_args;
             cs_tag = constr_tag;
-            cs_kind = kind }
+            cs_kind = kind; }
       in
         add_constr constr_glob;
         constr_glob :: make_constrs (succ constr_idx) rest
@@ -59,7 +43,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       pop_type_level();
       generalize_type ty_res;
       List.iter
-        (fun cstr -> generalize_type cstr.info.cs_arg)
+        (fun cstr -> List.iter generalize_type cstr.info.cs_args)
         constr_descs;
       Variant_type constr_descs
 ;;

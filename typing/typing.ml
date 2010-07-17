@@ -124,24 +124,15 @@ let rec tpat new_env (pat, ty, mut_flag) =
         pat_wrong_type_err pat ty
           (type_product(new_type_var_list (List.length patl)))
       end
-  | Tpat_construct(cstr,None) ->
-      begin match cstr.info.cs_kind with
-        Constr_constant ->
-          unify_pat pat ty (type_instance cstr.info.cs_res);
-          new_env
-      | _ ->
-          non_constant_constr_err cstr pat.p_loc
-      end
-  | Tpat_construct(cstr, Some arg) ->
-      begin match cstr.info.cs_kind with
-        Constr_constant ->
-          constant_constr_err cstr pat.p_loc
-      | _ ->
-        let (ty_res, ty_arg) =
-          type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
-        unify_pat pat ty ty_res;
-        tpat new_env (arg, ty_arg, Asttypes.Notmutable)
-      end
+  | Tpat_construct(constr, args) ->
+      if List.length args <> arity constr.info then
+        arity_err constr args pat.p_loc;
+      let (ty_args, ty_res) = instance_constructor constr.info in
+      unify_pat pat ty ty_res;
+      List.fold_right2
+        (fun arg ty_arg new_env ->
+           tpat new_env (arg, ty_arg, Asttypes.Notmutable))
+        args ty_args new_env
   | Tpat_or(pat1, pat2) ->
       begin match free_vars_of_pat pat with
         [] -> tpat (tpat new_env (pat1, ty, mut_flag)) (pat2, ty, mut_flag)
@@ -184,8 +175,7 @@ let rec is_nonexpansive expr =
     Texp_ident id -> true
   | Texp_constant sc -> true
   | Texp_tuple el -> List.for_all is_nonexpansive el
-  | Texp_construct(cstr,None) -> true
-  | Texp_construct(cstr, Some e) -> is_nonexpansive e
+  | Texp_construct(cstr, l) -> List.for_all is_nonexpansive l
   | Texp_let(rec_flag, bindings, body) ->
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
@@ -283,25 +273,12 @@ let rec type_expr env expr =
       type_of_structured_constant cst
   | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
-  | Texp_construct(cstr,None) ->
-      begin match cstr.info.cs_kind with
-        Constr_constant ->
-          type_instance cstr.info.cs_res
-      | _ ->
-          let (ty_res, ty_arg) =
-            type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
-          type_arrow(ty_arg, ty_res)
-      end            
-  | Texp_construct(cstr, Some arg) ->
-      begin match cstr.info.cs_kind with
-        Constr_constant ->
-          constant_constr_err cstr expr.e_loc
-      | _ ->            
-          let (ty_res, ty_arg) =
-            type_pair_instance (cstr.info.cs_res, cstr.info.cs_arg) in
-          type_expect env arg ty_arg;
-          ty_res
-      end
+  | Texp_construct(constr, args) ->
+      if List.length args <> arity constr.info then
+        arity_err constr args expr.e_loc;
+      let (ty_args, ty_res) = instance_constructor constr.info in
+      List.iter2 (type_expect env) args ty_args;
+      ty_res
   | Texp_apply(fct, args) ->
       let ty_fct = type_expr env fct in
       let rec type_args ty_res = function
@@ -341,7 +318,7 @@ let rec type_expr env expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.e_desc
-         with Texp_construct (cstr,None) -> cstr == constr_void | _ -> false
+         with Texp_construct (cstr,[]) -> cstr == constr_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit

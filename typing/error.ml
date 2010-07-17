@@ -61,6 +61,16 @@ let type_arity_err cstr args loc =
   raise Toplevel
 ;;
 
+let arity_err cstr args loc =
+  eprintf "%aThe constructor %a expects %d argument(s),\n\
+           but is here given %d argument(s).\n"
+    output_location loc
+    output_constr cstr
+    (Types.arity cstr.info)
+    (List.length args);
+  raise Toplevel
+;;
+
 let non_linear_pattern_err pat name =
   eprintf "%aThe variable %s is bound several times in this pattern.\n"
     output_location pat.p_loc name;

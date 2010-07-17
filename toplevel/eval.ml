@@ -80,12 +80,8 @@ let rec term_of_expr c expr =
         term_of_structured_const sc
     | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
-    | Texp_construct (ct, None) ->
-        Ctor ct
-    | Texp_construct (ct, Some {e_desc=Texp_tuple l}) ->
+    | Texp_construct (ct, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor ct) l
-    | Texp_construct (ct, Some x) ->
-        app (Ctor ct) (term_of_expr c x)
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function [([{p_desc=Tpat_var s}],e)] ->

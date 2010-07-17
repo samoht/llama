@@ -50,17 +50,19 @@ and make_constant_match paths cas = match paths with
 and make_tuple_match arity pathl =
   Matching([], make_path arity pathl)
 
-and make_construct_match cstr pathl0 cas = match pathl0 with
-    path :: pathl ->
-  (match cstr.info.cs_kind with
-    Constr_constant ->
-      Matching([cas], pathl)
-  | Constr_superfluous n ->
-      Matching([cas], pathl0)
-  | _ ->
-      Matching([cas], Lprim(Pfield 0, [path]) :: pathl))
-| _ -> fatal_error "make_construct_match"
-;;
+and make_construct_match cstr pathl0 cas =
+  begin match pathl0 with
+    | path :: pathl ->
+        begin match cstr.info.cs_kind with
+          | Constr_constant ->
+              Matching([cas], pathl)
+          | Constr_superfluous n ->
+              Matching([cas], make_path n pathl0)
+          | _ ->
+              Matching([cas], begin Lprim(Pfield 0, [path]) :: pathl end)
+        end
+    | _ -> fatal_error "make_construct_match"
+  end
 
 (* Auxiliaries for factoring common tests *)
 
@@ -123,17 +125,8 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
 let divide_construct_matching (Matching(casel, pathl)) =
   let rec divide_rec casel =
     match simpl_casel casel with
-      ({p_desc = Tpat_construct(c,None)} :: patl, action) :: rest ->
-        let (constrs, others) =
-          divide_rec rest in
-        add_to_division
-          (make_construct_match c pathl) constrs c.info.cs_tag (patl, action),
-        others
-    | ({p_desc = Tpat_construct(c,Some arg)} :: patl, action) :: rest ->
-        let patl' =
-          match c.info.cs_kind with
-            Constr_constant -> patl
-          |          _      -> arg :: patl in
+    | ({p_desc = Tpat_construct(c,argl)} :: patl, action) :: rest ->
+        let patl' = argl @ patl in
         let (constrs, others) =
           divide_rec rest in
         add_to_division
@@ -207,8 +200,7 @@ let get_span_of_constr cstr =
 
 let get_span_of_matching matching =
   match upper_left_pattern matching with
-      {p_desc = Tpat_construct(c,None)}   -> get_span_of_constr c
-    | {p_desc = Tpat_construct(c,Some _)} -> get_span_of_constr c
+      {p_desc = Tpat_construct(c,_)}   -> get_span_of_constr c
     | _ -> fatal_error "get_span_of_matching"
 ;;
 

@@ -113,8 +113,8 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           if same_type_constr cstr constr_type_exn
           then find_exception tag
           else find_constr tag constr_list in
-        let (ty_res, ty_arg) =
-          type_pair_instance (constr.info.cs_res, constr.info.cs_arg) in
+        let (ty_args, ty_res) =
+          instance_constructor constr.info in
         filter (ty_res, ty);
         match constr.info.cs_kind with
           Constr_constant ->
@@ -124,7 +124,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
              else open_box 1;
             output_constr constr;
             print_space();
-            cautious (print_val 2 (depth - 1) (Zebra_obj.field obj 0)) ty_arg;
+            cautious (print_val 2 (depth - 1) (Zebra_obj.field obj 0)) (List.hd ty_args);
             if prio > 1 then print_string ")";
             close_box()
         | Constr_superfluous n ->
@@ -134,7 +134,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
             print_space();
             open_box 1;
             print_string "(";
-            print_val_list 1 depth obj (filter_product n ty_arg);
+            print_val_list 1 depth obj ty_args;
             print_string ")";
             close_box();
             if prio > 1 then print_string ")";

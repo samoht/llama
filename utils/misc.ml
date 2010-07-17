@@ -51,3 +51,7 @@ let remove_file f =
   with Sys_error _ ->
     ()
 ;;
+
+let rec replicate_list elem n =
+  if n <= 0 then [] else elem :: replicate_list elem (n-1)
+

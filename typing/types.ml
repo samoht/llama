@@ -65,7 +65,7 @@ and type_components =
 
 and constr_desc =
   { cs_res: typ;                       (* Result type *)
-    cs_arg: typ;                       (* Argument type *)
+    cs_args: typ list;                 (* Argument types *)
     cs_tag: constr_tag;                (* Its run-time tag *)
     cs_kind: constr_kind }             (* How it is represented *)
 
@@ -83,6 +83,13 @@ and label_desc =
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
 ;;
+
+let arity cs =
+  begin match cs.cs_kind with
+    | Constr_constant -> 0
+    | Constr_regular -> 1
+    | Constr_superfluous n -> n
+  end
 
 let generic = (-1)
 and notgeneric = 0;;
