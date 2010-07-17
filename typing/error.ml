@@ -73,26 +73,26 @@ let arity_err cstr args loc =
 
 let non_linear_pattern_err pat name =
   eprintf "%aThe variable %s is bound several times in this pattern.\n"
-    output_location pat.p_loc name;
+    output_location pat.pat_loc name;
   raise Toplevel
 ;;
 
 let upper_case_variable_warning pat name =
   eprintf "%aWarning: the variable %s starts with an upper case letter in this pattern.\n"
-    output_location pat.p_loc name;
+    output_location pat.pat_loc name;
   flush stderr
 ;;
 
 let orpat_should_be_closed_err pat =
   eprintf "%aA pattern with \"|\" must not bind variables.\n"
-    output_location pat.p_loc;
+    output_location pat.pat_loc;
   raise Toplevel
 ;;
 
 let pat_wrong_type_err pat actual_ty expected_ty =
   eprintf "%aThis pattern matches values of type %a,\n\
            but should match values of type %a.\n"
-    output_location pat.p_loc
+    output_location pat.pat_loc
     output_one_type actual_ty
     output_type expected_ty;
   raise Toplevel

@@ -9,7 +9,7 @@ open Lambda;;
 open Btype;;
 
 let make_pat desc ty =
-  {p_desc = desc; p_loc = no_location; p_typ = ty};;
+  {pat_desc = desc; pat_loc = no_location; pat_type = ty};;
 
 let omega = make_pat Tpat_any no_type;;
 
@@ -18,7 +18,7 @@ let rec omegas i =
 ;;
 
 let simple_match p1 p2 = 
-  match p1.p_desc, p2.p_desc with
+  match p1.pat_desc, p2.pat_desc with
     Tpat_construct(c1,_),Tpat_construct(c2,_) ->
       c1.info.cs_tag = c2.info.cs_tag
   | Tpat_constant(c1),Tpat_constant(c2) ->
@@ -31,7 +31,7 @@ let simple_match p1 p2 =
 
 
 
-let record_labels p = labels_of_type p.p_typ
+let record_labels p = labels_of_type p.pat_type
 ;;
 
 let record_nargs p = List.length (record_labels p)
@@ -50,12 +50,12 @@ let set_fields size l =
 ;;
 
 let simple_match_args p1 p2 =
-  match p2.p_desc with
+  match p2.pat_desc with
     Tpat_construct(_,args) -> args
   | Tpat_tuple(args)  -> args
   | Tpat_record(args) ->  set_fields (record_nargs p1) args
   | (Tpat_any | Tpat_var(_)) ->
-      begin match p1.p_desc with
+      begin match p1.pat_desc with
         Tpat_construct(_,args) -> List.map (fun _ -> omega) args
       | Tpat_tuple(args) -> List.map (fun _ -> omega) args
       | Tpat_record(args) ->  List.map (fun _ -> omega) args
@@ -71,23 +71,23 @@ let simple_match_args p1 p2 =
 *)
 
 let rec simple_pat q pss = match pss with
-  ({p_desc = Tpat_alias(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
-| ({p_desc = Tpat_constraint(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
-| ({p_desc = Tpat_or(p1,p2)}::ps)::pss -> simple_pat q ((p1::ps)::(p2::ps)::pss)
-| ({p_desc = (Tpat_any | Tpat_var(_))}::_)::pss -> simple_pat q pss
-| (({p_desc = Tpat_tuple(args)} as p)::_)::_ ->
-    make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.p_typ
-| (({p_desc = Tpat_record(args)} as p)::_)::pss ->
-    make_pat(Tpat_record (List.map (fun lbl -> lbl,omega) (record_labels p))) p.p_typ
+  ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
+| ({pat_desc = Tpat_constraint(p,_)}::ps)::pss -> simple_pat q ((p::ps)::pss)
+| ({pat_desc = Tpat_or(p1,p2)}::ps)::pss -> simple_pat q ((p1::ps)::(p2::ps)::pss)
+| ({pat_desc = (Tpat_any | Tpat_var(_))}::_)::pss -> simple_pat q pss
+| (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
+    make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.pat_type
+| (({pat_desc = Tpat_record(args)} as p)::_)::pss ->
+    make_pat(Tpat_record (List.map (fun lbl -> lbl,omega) (record_labels p))) p.pat_type
 | _ -> q
 ;;
 
 let filter_one q pss =
 
   let rec filter_rec pss = match pss with
-    ({p_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Tpat_or(p1,p2)}::ps)::pss ->
+    ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({pat_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({pat_desc = Tpat_or(p1,p2)}::ps)::pss ->
       filter_rec ((p1::ps)::(p2::ps)::pss)
   | (p::ps)::pss ->
       if simple_match q p then
@@ -103,11 +103,11 @@ let filter_one q pss =
 let filter_extra pss =
 
   let rec filter_rec pss = match pss with
-    ({p_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
-  | ({p_desc = Tpat_or(p1,p2)}::ps)::pss ->
+    ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({pat_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_rec ((p::ps)::pss)
+  | ({pat_desc = Tpat_or(p1,p2)}::ps)::pss ->
       filter_rec ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Tpat_any | Tpat_var(_))} :: qs) :: pss -> qs :: filter_rec pss
+  | ({pat_desc = (Tpat_any | Tpat_var(_))} :: qs) :: pss -> qs :: filter_rec pss
   | _::pss  -> filter_rec pss
   | [] -> [] in
 
@@ -125,22 +125,22 @@ let filter_all pat0 pss =
         c::insert q qs env in
 
   let rec filter_rec env pss = match pss with
-    ({p_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec env ((p::ps)::pss)
-  | ({p_desc = Tpat_constraint(p,_)}::ps)::pss ->
+    ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> filter_rec env ((p::ps)::pss)
+  | ({pat_desc = Tpat_constraint(p,_)}::ps)::pss ->
       filter_rec env ((p::ps)::pss)
-  | ({p_desc = Tpat_or(p1,p2)}::ps)::pss ->
+  | ({pat_desc = Tpat_or(p1,p2)}::ps)::pss ->
       filter_rec env ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Tpat_any | Tpat_var(_))}::_)::pss -> filter_rec env pss  
+  | ({pat_desc = (Tpat_any | Tpat_var(_))}::_)::pss -> filter_rec env pss  
   | (p::ps)::pss ->
       filter_rec (insert p ps env) pss
   | _ -> env
 
   and filter_omega env pss = match pss with
-    ({p_desc = Tpat_alias(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
-  | ({p_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
-  | ({p_desc = Tpat_or(p1,p2)}::ps)::pss ->
+    ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
+  | ({pat_desc = Tpat_constraint(p,_)}::ps)::pss -> filter_omega env ((p::ps)::pss)
+  | ({pat_desc = Tpat_or(p1,p2)}::ps)::pss ->
       filter_omega env ((p1::ps)::(p2::ps)::pss)
-  | ({p_desc = (Tpat_any | Tpat_var(_))}::ps)::pss ->
+  | ({pat_desc = (Tpat_any | Tpat_var(_))}::ps)::pss ->
       filter_omega
         (List.map
           (fun (q,qss) ->
@@ -152,7 +152,7 @@ let filter_all pat0 pss =
         
   filter_omega
     (filter_rec
-      (match pat0.p_desc with
+      (match pat0.pat_desc with
         (Tpat_record(_) | Tpat_tuple(_)) -> [pat0,[]]
       | _ -> [])
       pss)
@@ -168,13 +168,13 @@ let get_span_of_constr cstr =
 
 
 let full_match env = match env with
-  ({p_desc = Tpat_construct(c,_)},_) :: _ ->
+  ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
     List.length env ==  get_span_of_constr c
-| ({p_desc = Tpat_constant(ACchar(_))},_) :: _ ->
+| ({pat_desc = Tpat_constant(ACchar(_))},_) :: _ ->
     List.length env == 256
-| ({p_desc = Tpat_constant(_)},_) :: _ -> false
-| ({p_desc = Tpat_tuple(_)},_) :: _ -> true
-| ({p_desc = Tpat_record(_)},_) :: _ -> true
+| ({pat_desc = Tpat_constant(_)},_) :: _ -> false
+| ({pat_desc = Tpat_tuple(_)},_) :: _ -> true
+| ({pat_desc = Tpat_record(_)},_) :: _ -> true
 | _ -> fatal_error "full_match"
 ;;
 
@@ -190,11 +190,11 @@ let rec satisfiable pss qs = match pss with
   [] -> true
 | _ -> match qs with
     [] -> false
-  | {p_desc = Tpat_or(q1,q2)}::qs ->
+  | {pat_desc = Tpat_or(q1,q2)}::qs ->
       satisfiable pss (q1::qs) || satisfiable pss (q2::qs)
-  | {p_desc = Tpat_alias(q,_)}::qs -> satisfiable pss (q::qs)
-  | {p_desc = Tpat_constraint(q,_)}::qs -> satisfiable pss (q::qs)
-  | {p_desc = (Tpat_any | Tpat_var(_))}::qs ->
+  | {pat_desc = Tpat_alias(q,_)}::qs -> satisfiable pss (q::qs)
+  | {pat_desc = Tpat_constraint(q,_)}::qs -> satisfiable pss (q::qs)
+  | {pat_desc = (Tpat_any | Tpat_var(_))}::qs ->
       let q0 = simple_pat omega pss in     
       (match filter_all q0 pss with
 (* first column of pss is made of variables only *)
@@ -226,7 +226,7 @@ let rec make_matrix pses = match pses with
 ;;
 
 let rec le_pat p q =
-  match p.p_desc, q.p_desc with
+  match p.pat_desc, q.pat_desc with
     (Tpat_var(_)|Tpat_any),_ -> true
   | Tpat_alias(p,_),_ -> le_pat p q
   | _,Tpat_alias(q,_) -> le_pat p q
@@ -270,7 +270,7 @@ let partial_match casel =
 
 
 let extract_loc_from_clause clause = match clause with
-  pat :: _ -> pat.p_loc
+  pat :: _ -> pat.pat_loc
 | _ -> fatal_error "extract_loc_from_clause"
 ;;
 

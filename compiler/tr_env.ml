@@ -60,11 +60,11 @@ let translate_update s env newval =
 ;;
 
 let rec paths_of_pat path pat =
-  match pat.p_desc with
+  match pat.pat_desc with
     Tpat_var s ->
-      [{var_name = s; var_path = path; var_typ = pat.p_typ}]
+      [{var_name = s; var_path = path; var_typ = pat.pat_type}]
   | Tpat_alias(pat,s) ->
-      {var_name = s; var_path = path; var_typ = pat.p_typ} ::
+      {var_name = s; var_path = path; var_typ = pat.pat_type} ::
       paths_of_pat path pat
   | Tpat_tuple(patlist) | Tpat_construct(_, patlist) ->
       let rec paths_of_patlist i = function
@@ -85,15 +85,15 @@ let rec paths_of_pat path pat =
 ;;
 
 let rec mutable_vars_of_pat mut pat =
-  match pat.p_desc with
+  match pat.pat_desc with
     Tpat_var v ->
       if mut
-      then [{var_name = v; var_typ = pat.p_typ; var_path = Path_root}]
+      then [{var_name = v; var_typ = pat.pat_type; var_path = Path_root}]
       else []
   | Tpat_alias(pat,v) ->
       let l = mutable_vars_of_pat mut pat in
       if mut
-      then {var_name = v; var_typ = pat.p_typ; var_path = Path_root} :: l
+      then {var_name = v; var_typ = pat.pat_type; var_path = Path_root} :: l
       else l
   | Tpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
   | Tpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
@@ -167,13 +167,13 @@ let var_root id typ =
 
 let add_let_rec_to_env env pat_expr_list =
   let rec add env (pat, expr) =
-    match pat.p_desc with
+    match pat.pat_desc with
       Tpat_var v ->
-        Tenv([{var_name = v; var_path = Path_root; var_typ = pat.p_typ}], env)
+        Tenv([{var_name = v; var_path = Path_root; var_typ = pat.pat_type}], env)
     | Tpat_constraint(p, ty) ->
         add env (p, expr)
     | _ ->
-        illegal_letrec_pat pat.p_loc in
+        illegal_letrec_pat pat.pat_loc in
   List.fold_left add env pat_expr_list
 ;;
     

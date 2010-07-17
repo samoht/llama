@@ -15,9 +15,9 @@ and core_type_desc =
   | Ttyp_constr of global_reference * core_type list
 
 type pattern =
-  { p_desc: pattern_desc;
-    p_loc: Location.t;
-    mutable p_typ: typ }
+  { pat_desc: pattern_desc;
+    pat_loc: Location.t;
+    mutable pat_type: typ }
 
 and pattern_desc =
     Tpat_any

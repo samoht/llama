@@ -16,7 +16,7 @@ let rec core_type te =
     te_loc = te.ptyp_loc }
 
 let rec pattern p =
-  { p_desc =
+  { pat_desc =
       begin match p.ppat_desc with
         | Ppat_any -> Tpat_any
         | Ppat_var s -> Tpat_var s
@@ -39,8 +39,8 @@ let rec pattern p =
         | Ppat_constraint (p, te) -> Tpat_constraint (pattern p, core_type te)
         | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
       end;
-    p_loc = p.ppat_loc;
-    p_typ = no_type }
+    pat_loc = p.ppat_loc;
+    pat_type = no_type }
 
 let rec expr ex =
   { e_desc =

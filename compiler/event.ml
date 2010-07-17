@@ -17,7 +17,7 @@ let before env {e_loc = Loc(p1,p2)} l =
   else l
 ;;
 
-let after_pat env {p_loc = Loc(p1,p2)} l =
+let after_pat env {pat_loc = Loc(p1,p2)} l =
   if !record_events then
     Levent({ev_kind = Lbefore;
             ev_file = (!defined_module).mod_name;

@@ -312,7 +312,7 @@ let rec make_sequence f = function
 let translate_letdef loc pat_expr_list =
   let modname = (!defined_module).mod_name in
   match pat_expr_list with
-    [{p_desc = Tpat_var i}, expr] ->      (* Simple case: let id = expr *)
+    [{pat_desc = Tpat_var i}, expr] ->      (* Simple case: let id = expr *)
       Lprim(Pset_global {qual=modname; id=i}, [translate_expression expr])
   | _ ->                                 (* The general case *)
     let pat_list =
@@ -333,10 +333,10 @@ let translate_letdef loc pat_expr_list =
 
 let extract_variable pat =
   let rec extract p =
-    match p.p_desc with
+    match p.pat_desc with
       Tpat_var id -> id
     | Tpat_constraint(p, ty) -> extract p
-    | _ -> illegal_letrec_pat pat.p_loc
+    | _ -> illegal_letrec_pat pat.pat_loc
   in extract pat
 ;;
 

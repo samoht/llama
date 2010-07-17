@@ -5,7 +5,7 @@ open Asttypes
 open Typedtree
 
 let rec free_vars_of_pat pat =
-  match pat.p_desc with
+  match pat.pat_desc with
     Tpat_any -> []
   | Tpat_var v -> [v]
   | Tpat_alias(pat,v) -> v :: free_vars_of_pat pat
@@ -44,7 +44,7 @@ let single_constructor cstr =
 ;;
 
 let rec pat_irrefutable pat =
-  match pat.p_desc with
+  match pat.pat_desc with
     Tpat_any -> true
   | Tpat_var s -> true
   | Tpat_alias(pat, _) -> pat_irrefutable pat

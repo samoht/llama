@@ -97,8 +97,8 @@ let unify_pat pat expected_ty actual_ty =
 ;;
 
 let rec tpat new_env (pat, ty, mut_flag) =
-  pat.p_typ <- ty;
-  match pat.p_desc with
+  pat.pat_type <- ty;
+  match pat.pat_desc with
     Tpat_any ->
       new_env
   | Tpat_var v ->
@@ -126,7 +126,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
       end
   | Tpat_construct(constr, args) ->
       if List.length args <> arity constr.info then
-        arity_err constr args pat.p_loc;
+        arity_err constr args pat.pat_loc;
       let (ty_args, ty_res) = instance_constructor constr.info in
       unify_pat pat ty ty_res;
       List.fold_right2

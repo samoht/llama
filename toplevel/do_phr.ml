@@ -59,7 +59,7 @@ let do_structure_item phr =
               begin fun (pat, expr) ->
                 let res = Eval.eval [] (Eval.term_of_expr [] expr) in
                 let rec aux pat res =
-                  begin match pat.p_desc, res with
+                  begin match pat.pat_desc, res with
                     | Tpat_any, _ ->
                         ()
                     | Tpat_var s, _ ->
