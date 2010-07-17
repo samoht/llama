@@ -105,7 +105,12 @@ and print_concrete_type prio depth obj cstr ty ty_list =
     type_descr_of_type_constr cstr in
   match typ_descr.info.ty_desc with
     Abstract_type ->
-      print_string "<abstr>"
+      begin match typ_descr.info.ty_manifest with
+        | None ->
+            print_string "<abstr>"
+        | Some body ->
+            print_val prio depth obj (expand_abbrev typ_descr.info.ty_params body ty_list)
+      end
   | Variant_type constr_list ->
       let tag = Llama_obj.tag obj in
       begin try
@@ -176,8 +181,6 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       cautious (print_fields depth) label_list;
       print_string "}";
       close_box()
-  | Abbrev_type(body) ->
-      print_val prio depth obj (expand_abbrev typ_descr.info.ty_params body ty_list)
 
 and print_val_list prio depth obj ty_list =
   let print_list depth i =

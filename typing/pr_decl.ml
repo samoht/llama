@@ -36,7 +36,11 @@ let print_label_decl lbl =
          lbl.qualid.id output_type lbl.info.lbl_arg
 ;;
 
-let print_one_typedecl (ty_res, ty_comp) =
+let print_one_typedecl (newthing, (ty_res, ty_comp)) =
+  let (x,_,_) = newthing in
+  let x=x.info in
+  let manifest=x.ty_manifest in
+
   output_one_type stdout ty_res;
   begin match ty_comp with
     Variant_type(cstr1::cstrl) ->
@@ -46,10 +50,13 @@ let print_one_typedecl (ty_res, ty_comp) =
       print_string " = \n  { "; print_label_decl lbl1;
       List.iter (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
       print_string "  }\n"
-  | Abbrev_type(ty_body) ->
-      printf " == %a\n" output_type ty_body
   | Abstract_type ->
-      print_string "\n"
+      begin match manifest with
+        | None ->
+            print_string "\n"
+        | Some ty_body ->
+            printf " == %a\n" output_type ty_body
+      end
   | _ ->
       fatal_error "print_typedecl"
   end

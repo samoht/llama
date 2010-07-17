@@ -159,33 +159,27 @@ let constr_match_failure =
 
 let module_builtin = new_module "builtin";;
 
-List.iter
+let mkty cstr params desc =
+  {ty_constr = cstr;
+   ty_arity = List.length params;
+   ty_params = params;
+   ty_manifest = None;
+   ty_desc = desc }
+
+let _ = List.iter
   (fun (name,desc) ->
       Hashtbl.add module_builtin.mod_types name (builtin name desc))
-  ["unit",
-   {ty_constr=constr_type_unit; ty_arity=0; ty_params=[]; ty_desc=Variant_type[constr_void]};
-   "exn",
-    {ty_constr=constr_type_exn; ty_arity=0; ty_params=[]; ty_desc=Variant_type []};
-   "bool",
-    {ty_constr=constr_type_bool; ty_arity=0;ty_params=[]; 
-     ty_desc=Variant_type [constr_false; constr_true]};
-   "int",
-    {ty_constr=constr_type_int; ty_arity=0;ty_params=[];  ty_desc=Abstract_type};
-   "float",
-    {ty_constr=constr_type_float; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
-   "string",
-    {ty_constr=constr_type_string; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
-   "char",
-    {ty_constr=constr_type_char; ty_arity=0; ty_params=[]; ty_desc=Abstract_type};
-   "list",
-    {ty_constr=constr_type_list; ty_arity=1; ty_params=[list_tyvar];
-     ty_desc=Variant_type [constr_nil; constr_cons]};
-   "vect",
-    {ty_constr=constr_type_vect; ty_arity=1; ty_params=[vect_tyvar]; ty_desc=Abstract_type};
-   "option",
-    {ty_constr=constr_type_option; ty_arity=1; ty_params=[option_tyvar];
-     ty_desc=Variant_type [constr_none; constr_some]};
-   ]
+  ["unit", mkty constr_type_unit [] (Variant_type[constr_void]);
+   "exn", mkty constr_type_exn [] (Variant_type []);
+   "bool", mkty constr_type_bool [] (Variant_type [constr_false; constr_true]);
+   "int", mkty constr_type_int [] Abstract_type;
+   "float", mkty constr_type_float [] Abstract_type;
+   "string", mkty constr_type_string [] Abstract_type;
+   "char", mkty constr_type_char [] Abstract_type;
+   "list", mkty constr_type_list [list_tyvar] (Variant_type [constr_nil; constr_cons]);
+   "vect", mkty constr_type_vect [vect_tyvar] Abstract_type;
+   "option", mkty constr_type_option [option_tyvar] (Variant_type [constr_none; constr_some])
+  ]
 ;;
 (* The type "stream" is defined in the "stream" module *)
 

@@ -75,7 +75,7 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
     generalize_type ty_body;
     List.iter generalize_type ty_params;
     ty_constr.info.ty_abbr <- Tabbrev(ty_params, ty_body);
-    Abbrev_type(ty_body)
+    Abstract_type, Some ty_body
 ;;
 
 let enter_new_type (ty_name, params, def) =
@@ -87,6 +87,7 @@ let enter_new_type (ty_name, params, def) =
     defined_global ty_name
       { ty_constr = ty_constr;
         ty_arity = List.length params;
+        ty_manifest = None; (* xxx *)
         ty_params = []; (* xxx *)
         ty_desc  = Abstract_type } in
   add_type ty_desc;
@@ -112,17 +113,18 @@ let define_new_type loc (ty_desc, params, def) =
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
       typ_level = notgeneric} in
-  let type_comp =
+  let type_comp,manifest =
     match def with
       Type_abstract ->
-        pop_type_level(); Abstract_type
+        pop_type_level(); Abstract_type,None
     | Type_variant constrs ->
-        enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs)
+        enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs),None
     | Type_record labels ->
-        enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels)
+        enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels),None
     | Type_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.ty_desc <- type_comp;
+  ty_desc.info.ty_manifest <- manifest;
   begin try
     let extdef = List.assoc ty_desc.qualid.id !external_types in
     if extdef.et_manifest || extdef.et_defined then
@@ -153,7 +155,7 @@ let type_typedecl loc decl =
   let newdecl = List.map enter_new_type decl in (* xxx: they need params *)
   let res = List.map (define_new_type loc) newdecl in (* xxx: and they got them now *)
   List.iter (check_recursive_abbrev loc) newdecl;
-  res
+  List.combine newdecl res
 ;;
 
 let type_excdecl loc decl =

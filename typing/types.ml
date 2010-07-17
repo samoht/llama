@@ -52,15 +52,15 @@ and typ_link =
 
 type type_desc =
   { ty_constr: type_constr global;      (* The constructor *)
-    ty_arity: int;                      (* Its arity *)
     mutable ty_params : typ list;
+    ty_arity: int;                      (* Its arity *)
+    mutable ty_manifest : typ option;
     mutable ty_desc: type_components }  (* Its description *)
 
 and type_components =
     Abstract_type
   | Variant_type of constr_desc global list (* Sum type -> list of constr. *)
   | Record_type of label_desc global list (* Record type -> list of labels *)
-  | Abbrev_type of typ         (* Abbreviation *)
 
 (* Value constructors *)
 
