@@ -73,10 +73,10 @@ and stream_pattern =
   | Texp_streampat of string
 
 type type_decl =
-    Zabstract_type
-  | Zvariant_type of constr_decl list
-  | Texp_record_type of (string * core_type * mutable_flag) list
-  | Zabbrev_type of core_type
+    Type_abstract
+  | Type_variant of constr_decl list
+  | Type_record of (string * core_type * mutable_flag) list
+  | Type_abbrev of core_type
 
 and constr_decl = string * core_type list
 

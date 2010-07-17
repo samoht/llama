@@ -112,13 +112,13 @@ let define_new_type loc (ty_desc, params, def) =
       typ_level = notgeneric} in
   let type_comp =
     match def with
-      Zabstract_type ->
+      Type_abstract ->
         pop_type_level(); Abstract_type
-    | Zvariant_type constrs ->
+    | Type_variant constrs ->
         enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs)
-    | Texp_record_type labels ->
+    | Type_record labels ->
         enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels)
-    | Zabbrev_type body ->
+    | Type_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.ty_desc <- type_comp;
   begin try

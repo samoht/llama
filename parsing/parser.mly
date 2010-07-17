@@ -772,13 +772,13 @@ Type1_decl :
 
 Type1_def :
         /* epsilon */
-          { Pabstract_type }
+          { Ptype_abstract }
       | EQUAL Opt_bar Constr_decl
-          { Pvariant_type $3 }
+          { Ptype_variant $3 }
       | EQUAL LBRACE Label_decl RBRACE
-          { Pexp_record_type $3 }
+          { Ptype_record $3 }
       | EQUALEQUAL Type
-          { Pabbrev_type $2 }
+          { Ptype_abbrev $2 }
 ;
 
 Constr1_decl :

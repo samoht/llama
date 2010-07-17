@@ -24,8 +24,8 @@ let value_descriptions env vd1 vd2 =
 (*
 let type_items arity1 rhs1 arity2 rhs2 =
   begin match rhs1, rhs2 with
-    | (_, Zabstract_type) -> true
-    | (Zvariant_type cstrs1, Zvariant_type cstrs2) ->
+    | (_, Type_abstract) -> true
+    | (Type_variant cstrs1, Type_variant cstrs2) ->
         List.for_all2
           
 *)

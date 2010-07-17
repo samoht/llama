@@ -102,11 +102,11 @@ let constr_decl (s,tys) = (s,List.map core_type tys)
 
 let type_decl td =
   begin match td with
-    | Pabstract_type -> Zabstract_type
-    | Pvariant_type cdl -> Zvariant_type (List.map constr_decl cdl)
-    | Pexp_record_type l -> Texp_record_type (List.map (fun (s,te,m) ->
+    | Ptype_abstract -> Type_abstract
+    | Ptype_variant cdl -> Type_variant (List.map constr_decl cdl)
+    | Ptype_record l -> Type_record (List.map (fun (s,te,m) ->
                                                   (s,core_type te, m)) l)
-    | Pabbrev_type te -> Zabbrev_type (core_type te)
+    | Ptype_abbrev te -> Type_abbrev (core_type te)
   end
 
 let primitive o =

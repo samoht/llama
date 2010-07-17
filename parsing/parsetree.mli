@@ -68,10 +68,10 @@ and stream_pattern =
   | Pexp_streampat of string
 
 type type_decl =
-    Pabstract_type
-  | Pvariant_type of constr_decl list
-  | Pexp_record_type of (string * core_type * mutable_flag) list
-  | Pabbrev_type of core_type
+    Ptype_abstract
+  | Ptype_variant of constr_decl list
+  | Ptype_record of (string * core_type * mutable_flag) list
+  | Ptype_abbrev of core_type
 
 and constr_decl = string * core_type list
 
