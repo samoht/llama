@@ -1,6 +1,6 @@
 open Const
 open Location
-open Globals
+open Types
 open Asttypes
 open Typedtree
 

@@ -2,7 +2,7 @@
 
 open Const
 open Location
-open Globals
+open Types
 open Asttypes
 
 type core_type =

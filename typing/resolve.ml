@@ -1,6 +1,6 @@
 type token = Parser.token
 
-open Globals
+open Types
 open Parsetree
 open Typedtree
 

@@ -1,4 +1,4 @@
-open Globals
+open Types
 open Typedtree
 
 val lookup_type : Longident.t -> Location.location -> Path.t

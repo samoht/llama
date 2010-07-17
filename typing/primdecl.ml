@@ -1,7 +1,7 @@
 (* Concrete syntax for primitive declarations *)
 
 open Prim;;
-open Globals;;
+open Types;;
 
 let primitive_names = [
   "identity", Pidentity;

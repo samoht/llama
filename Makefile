@@ -13,15 +13,16 @@ PARSING=parsing/const.cmx \
  parsing/location.cmx parsing/prim.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
-TYPING=typing/lambda.cmx typing/globals.cmx \
+TYPING=typing/types.cmx typing/modules.cmx typing/btype.cmx \
  typing/typedtree_aux.cmx \
- typing/modules.cmx typing/builtins.cmx typing/types.cmx \
+ typing/builtins.cmx \
  typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
  typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
- typing/tr_env.cmx typing/event.cmx typing/clauses.cmx typing/matching.cmx \
  typing/primdecl.cmx typing/resolve.cmx typing/includecore.cmx typing/includemod.cmx
 
-COMPILER=compiler/trstream.cmx compiler/front.cmx \
+COMPILER=compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
+ compiler/event.cmx \
+ compiler/tr_env.cmx compiler/trstream.cmx compiler/front.cmx \
  compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
  compiler/prim_opc.cmx compiler/buffcode.cmx \
  compiler/labels.cmx compiler/reloc.cmx \

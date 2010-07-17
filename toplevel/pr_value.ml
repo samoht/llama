@@ -2,10 +2,10 @@
 
 (**) open Misc;;
 (**) open Const;;
-(**) open Globals;;
+(**) open Types;;
 (**) open Builtins;;
 (**) open Modules;;
-(**) open Types;;
+(**) open Btype;;
 (**) open Format;;
 (**) open Fmt_type;;
 (**) open Symtable;;

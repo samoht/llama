@@ -1,5 +1,5 @@
-open Globals
 open Types
+open Btype
 open Typedtree
 
 let moregeneral ty1 ty2 =

@@ -1,8 +1,8 @@
 (* Printing a type expression *)
 
 open Const;;
-open Globals;;
 open Types;;
+open Btype;;
 open Modules;;
 
 let output_global sel_fct oc gl =

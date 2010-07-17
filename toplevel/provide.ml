@@ -3,7 +3,7 @@
 open Const;;
 open Config;;
 open Misc;;
-open Globals;;
+open Types;;
 open Prim;;
 open Modules;;
 

@@ -3,10 +3,10 @@
 open Misc;;
 open Location;;
 open Const;;
-open Globals;;
+open Types;;
 open Typedtree;;
 open Typedtree_aux;;
-open Types;;
+open Btype;;
 open Pr_type;;
 open Printf;;
 

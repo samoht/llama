@@ -1,9 +1,9 @@
 (* Consistency check between an interface and an implementation *)
 
 open Const;;
-open Globals;;
-open Modules;;
 open Types;;
+open Modules;;
+open Btype;;
 open Error;;
 open Ty_decl;;
 

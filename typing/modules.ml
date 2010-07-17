@@ -2,7 +2,7 @@
 
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 
 (* Informations associated with module names *)
 

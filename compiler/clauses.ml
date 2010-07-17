@@ -2,11 +2,11 @@
 
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 open Location;;
 open Typedtree;;
 open Lambda;;
-open Types;;
+open Btype;;
 
 let make_pat desc ty =
   {p_desc = desc; p_loc = no_location; p_typ = ty};;

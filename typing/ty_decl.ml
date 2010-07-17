@@ -2,11 +2,11 @@
 
 open Asttypes
 open Const;;
-open Globals;;
+open Types;;
 open Builtins;;
 open Typedtree;;
 open Modules;;
-open Types;;
+open Btype;;
 open Error;;
 open Typing;;
 

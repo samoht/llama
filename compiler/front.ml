@@ -3,7 +3,7 @@
 open Asttypes;;
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 open Typedtree;;
 open Typedtree_aux
 open Builtins;;
@@ -88,10 +88,10 @@ let partial_try = Lprim(Praise, [Lvar 0]);;
 
 let translate_compar gen_fun (int_comp, float_comp) ty arg1 arg2 =
   let comparison =
-    if Types.same_base_type ty type_int ||
-       Types.same_base_type ty type_char then
+    if Btype.same_base_type ty type_int ||
+       Btype.same_base_type ty type_char then
       Ptest int_comp
-    else if Types.same_base_type ty type_float then
+    else if Btype.same_base_type ty type_float then
       Ptest float_comp
     else match (int_comp, arg1, arg2) with
       (Pint_test PTeq, Lconst(SCblock(tag, [])), _) -> Ptest Peq_test
@@ -293,7 +293,7 @@ let rec translate_expr env =
   | Zstream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Zparser case_list ->
-      let (stream_type, _) = Types.filter_arrow expr.e_typ in
+      let (stream_type, _) = Btype.filter_arrow expr.e_typ in
       translate_parser translate_expr expr.e_loc env case_list stream_type
   | Zwhen(e1,e2) ->
       fatal_error "front: Zwhen"

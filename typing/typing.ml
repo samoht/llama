@@ -2,12 +2,12 @@
 
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 open Typedtree;;
 open Typedtree_aux
 open Builtins;;
 open Modules;;
-open Types;;
+open Btype;;
 open Error;;
 open Asttypes;;
 

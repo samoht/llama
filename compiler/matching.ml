@@ -2,7 +2,7 @@
 
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 open Builtins;;
 open Error;;
 open Typedtree;;
@@ -159,7 +159,7 @@ let divide_var_matching = function
 ;;
 
 let divide_record_matching ty_record (Matching(casel, pathl)) =
-  let labels = Types.labels_of_type ty_record in
+  let labels = Btype.labels_of_type ty_record in
   let num_labels = List.length labels in
   let rec divide_rec = function
       ({p_desc = Tpat_alias(pat,v)} :: patl, action) :: rest ->

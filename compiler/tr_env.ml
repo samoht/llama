@@ -7,7 +7,7 @@ open Typedtree;;
 open Lambda;;
 open Prim;;
 open Error;;
-open Globals;;
+open Types;;
 
 let translate_path root =
   let rec transl = function

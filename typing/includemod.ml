@@ -1,5 +1,5 @@
-open Globals
 open Types
+open Btype
 open Typedtree
 (*
 type error =

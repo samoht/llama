@@ -1,6 +1,6 @@
 open Const
 open Misc
-open Globals
+open Types
 open Location
 open Typedtree
 open Modules
@@ -9,8 +9,8 @@ open Error
 
 let lookup li =
   begin match li with
-    | Longident.Id s -> Globals.GRname s
-    | Longident.Qual (mn, s) -> Globals.GRmodname {Const.qual=mn; Const.id=s}
+    | Longident.Id s -> Types.GRname s
+    | Longident.Qual (mn, s) -> Types.GRmodname {Const.qual=mn; Const.id=s}
   end
 
 let lookup_type li loc = lookup li

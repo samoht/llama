@@ -3,7 +3,7 @@
 open Asttypes;;
 open Misc;;
 open Const;;
-open Globals;;
+open Types;;
 open Pr_type;;
 open Printf;;
 

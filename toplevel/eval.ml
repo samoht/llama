@@ -1,4 +1,4 @@
-open Globals
+open Types
 open Const
 open Builtins
 open Typedtree

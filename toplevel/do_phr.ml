@@ -5,7 +5,7 @@ open Misc;;
 open Const;;
 open Modules;;
 open Typedtree;;
-open Types;;
+open Btype;;
 open Typing;;
 open Ty_decl;;
 open Front;;

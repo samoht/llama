@@ -1,1 +1,1 @@
-type t = Globals.global_reference
+type t = Types.global_reference

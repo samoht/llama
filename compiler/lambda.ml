@@ -3,7 +3,7 @@
 
 open Const;;
 open Prim;;
-open Globals;;
+open Types;;
 
 (* Structure of compilation environments *)
 
