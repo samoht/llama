@@ -67,13 +67,17 @@ and stream_pattern =
   | Pnontermpat of expression * pattern
   | Pexp_streampat of string
 
-type type_decl =
+type constr_decl = string * core_type list
+
+type type_kind =
     Ptype_abstract
   | Ptype_variant of constr_decl list
   | Ptype_record of (string * core_type * mutable_flag) list
-  | Ptype_abbrev of core_type
 
-and constr_decl = string * core_type list
+type type_declaration =
+  { ptype_params : string list;
+    ptype_kind : type_kind;
+    ptype_manifest : core_type option }
 
 type signature_item =
   { psig_desc: signature_item_desc;
@@ -81,7 +85,7 @@ type signature_item =
 
 and signature_item_desc =
     Psig_value of string * core_type * (int*string) option
-  | Psig_type of (string * string list * type_decl) list
+  | Psig_type of (string * type_declaration) list
   | Psig_exception of constr_decl
   | Psig_open of module_name
 
@@ -93,7 +97,7 @@ and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of bool * (pattern * expression) list
   | Pstr_primitive of string * core_type * (int * string)
-  | Pstr_type of (string * string list * type_decl) list
+  | Pstr_type of (string * type_declaration) list
   | Pstr_exception of constr_decl
   | Pstr_open of module_name
 

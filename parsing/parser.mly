@@ -767,18 +767,18 @@ Prim_decl :
 
 Type1_decl :
         Type_params LIDENT Type1_def
-          { ($2, $1, $3) }
+          { let (tk, m) = $3 in ($2, {ptype_params=$1; ptype_kind=tk; ptype_manifest=m}) }
 ;
 
 Type1_def :
         /* epsilon */
-          { Ptype_abstract }
+          { Ptype_abstract, None }
       | EQUAL Opt_bar Constr_decl
-          { Ptype_variant $3 }
+          { Ptype_variant $3, None }
       | EQUAL LBRACE Label_decl RBRACE
-          { Ptype_record $3 }
+          { Ptype_record $3, None }
       | EQUALEQUAL Type
-          { Ptype_abbrev $2 }
+          { Ptype_abstract, Some $2 }
 ;
 
 Constr1_decl :

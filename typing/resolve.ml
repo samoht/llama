@@ -100,20 +100,24 @@ let rec expr ex =
 
 let constr_decl (s,tys) = (s,List.map core_type tys)
 
-let type_decl td =
-  begin match td with
-    | Ptype_abstract -> Type_abstract
-    | Ptype_variant cdl -> Type_variant (List.map constr_decl cdl)
-    | Ptype_record l -> Type_record (List.map (fun (s,te,m) ->
-                                                  (s,core_type te, m)) l)
-    | Ptype_abbrev te -> Type_abbrev (core_type te)
-  end
-
 let primitive o =
   begin match o with
     | None ->ValueNotPrim
     | Some (arity,s) -> Primdecl.find_primitive arity s 
   end
+
+let type_kind tk =
+  begin match tk with
+    | Ptype_abstract -> Type_abstract
+    | Ptype_variant cdl -> Type_variant (List.map constr_decl cdl)
+    | Ptype_record l -> Type_record (List.map (fun (s,te,m) ->
+                                                  (s,core_type te, m)) l)
+  end
+
+let type_declaration td =
+  { type_params = td.ptype_params;
+    type_kind = type_kind td.ptype_kind;
+    type_manifest = match td.ptype_manifest with None -> None | Some m -> Some (core_type m) }
 
 let structure_item si =
   { str_desc =
@@ -121,7 +125,7 @@ let structure_item si =
         | Pstr_eval e -> Tstr_eval (expr e)
         | Pstr_value(b,l) -> Tstr_value(b,List.map (fun (p,e)->pattern p, expr e) l)
         | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,core_type te, Primdecl.find_primitive arity n)
-        | Pstr_type l -> Tstr_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Pstr_type l -> Tstr_type(List.map (fun (s,td)->(s,type_declaration td)) l)
         | Pstr_exception l -> Tstr_exception (constr_decl l)
         | Pstr_open mn -> Tstr_open mn
       end;
@@ -131,7 +135,7 @@ let signature_item si =
   { sig_desc =
       begin match si.psig_desc with
         | Psig_value (s,te,pr) -> Tsig_value (s,core_type te, primitive pr)
-        | Psig_type l -> Tsig_type(List.map (fun (s,ps,td)->(s,ps,type_decl td)) l)
+        | Psig_type l -> Tsig_type(List.map (fun (s,td)->(s,type_declaration td)) l)
         | Psig_exception l -> Tsig_exception (constr_decl l)
         | Psig_open mn -> Tsig_open mn
       end;
