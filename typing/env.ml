@@ -13,8 +13,8 @@ let unique = ()
 
 let lookup li =
   begin match li with
-    | Longident.Id s -> Types.GRname s
-    | Longident.Qual (mn, s) -> Types.GRmodname {qual=mn; id=s}
+    | Longident.Id s -> Path.Pident s
+    | Longident.Qual (mn, s) -> Path.Pdot (Path.Pident mn, s)
   end
 
 let lookup_type li env =

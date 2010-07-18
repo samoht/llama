@@ -12,14 +12,6 @@ type constr_tag =
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 ;;
 
-(* A reference to a global, in a source file, is either a qualified identifier
-   mod__name, or an unqualified identifier name. *)
-
-type global_reference =
-    GRname of string
-  | GRmodname of qualified_ident
-;;
-
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 

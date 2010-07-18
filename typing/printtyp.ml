@@ -10,11 +10,6 @@ open Types
 
 let qualid ppf id = fprintf ppf "%s.%s" id.qual id.id
 
-let globref ppf gr =
-  function
-    | GRname s -> pp_print_string ppf s
-    | GRmodname qid -> qualid ppf qid
-
 let rec longident ppf = function
 (*
   | Lident s -> fprintf ppf "%s" s
@@ -25,16 +20,16 @@ let rec longident ppf = function
 
 (* Print an identifier *)
 
-let ident ppf id = fprintf ppf "%s" (Ident.name id)
+let ident ppf id = fprintf ppf "%s" (Id.name id)
 
 (* Print a path *)
 
-let ident_pervasive = Ident.create_persistent "Pervasives"
+let ident_pervasive = Id.create_persistent "Pervasives"
 
 let rec path ppf = function
   | Pident id ->
       ident ppf id
-  | Pdot(Pident id, s) when Ident.same id ident_pervasive ->
+  | Pdot(Pident id, s) when Id.same id ident_pervasive ->
       fprintf ppf "%s" s
   | Pdot(p, s) ->
       fprintf ppf "%a.%s" path p s

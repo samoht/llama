@@ -209,14 +209,14 @@ and add_type = add_global_info types_of_module
 exception Desc_not_found;;
 
 let find_desc m sel_fct = function
-    GRmodname q ->
+    Path.Pdot(Path.Pident mn, s) ->
       begin try
-        Hashtbl.find (sel_fct (find_module q.qual)) q.id
+        Hashtbl.find (sel_fct (find_module mn)) s
       with Not_found ->
         raise Desc_not_found
       end
-  | GRname s ->
-      try
+  | Path.Pident s ->
+      begin try
         Hashtbl.find (sel_fct !defined_module) s
       with Not_found ->
         try
@@ -226,10 +226,12 @@ let find_desc m sel_fct = function
           res
         with Not_found ->
           raise Desc_not_found
+      end
+  | _ -> failwith "long path"
 ;;
 
 let lookup_value s m =
-  try find_desc m values_of_module (GRname s)
+  try find_desc m values_of_module (Path.Pident s)
   with Desc_not_found -> raise Not_found
 
 let find_value_desc = find_desc !defined_module values_of_module

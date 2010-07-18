@@ -46,12 +46,12 @@ exception Desc_not_found
 
 val lookup_value : string -> t -> Types.value_desc Types.global
 
-val find_value_desc : Types.global_reference -> Types.value_desc Types.global
+val find_value_desc : Path.t -> Types.value_desc Types.global
 val find_constr_desc :
-  Types.global_reference -> Types.constr_desc Types.global
-val find_label_desc : Types.global_reference -> Types.label_desc Types.global
+  Path.t -> Types.constr_desc Types.global
+val find_label_desc : Path.t -> Types.label_desc Types.global
 val find_type_desc :
-  Types.global_reference -> Types.type_declaration Types.global
+  Path.t -> Types.type_declaration Types.global
 
 val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global

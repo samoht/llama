@@ -18,11 +18,11 @@ let output_longident oc = function
       output_string oc mn; output_string oc "__"; output_string oc s
 ;;
 
-let output_globalref oc = function
-    GRname s ->
+let rec output_path oc = function
+    Path.Pident s ->
       output_string oc s
-  | GRmodname q ->
-      output_string oc q.qual; output_string oc "__"; output_string oc q.id
+  | Path.Pdot (mn, s) ->
+      output_path oc mn; output_string oc "__"; output_string oc s
 ;;
 
 (* Summary of output functions:
