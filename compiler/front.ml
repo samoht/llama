@@ -114,8 +114,7 @@ let rec translate_expr env =
   match expr.exp_desc with
     Texp_ident(Zlocal s) ->
       translate_access (Ident.name s) env (* xxx *)
-    | Texp_ident(Zrec(_,{contents=None})) -> assert false
-  | Texp_ident(Zglobal g | Zrec(_,{contents=Some g})) ->
+  | Texp_ident(Zglobal g) ->
       (match g.info.val_prim with
         ValueNotPrim ->
           Lprim(Pget_global g.qualid, [])

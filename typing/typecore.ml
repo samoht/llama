@@ -257,10 +257,6 @@ let rec type_expr env expr =
         | Zlocal s ->
             let (ty_schema, mut_flag) = List.assoc (Ident.name s) env in
             type_instance ty_schema
-        | Zrec(s,r) ->
-            let glob_desc = find_value_desc(GRname (Ident.name s)) in
-            r := Some glob_desc;
-            type_instance glob_desc.info.val_typ
       end
   | Texp_constant cst ->
       type_of_atomic_constant cst
