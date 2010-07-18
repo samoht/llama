@@ -58,7 +58,7 @@ let type_of_type_expression strict_flag typexp =
           | Tcrec(s, r) ->
               begin match !r with
                 | None ->
-                    let cstr = Resolve.lookup_type (Longident.Id s) typexp.te_loc in
+                    let cstr = Resolve.lookup_type Env.unique (Longident.Id s) typexp.te_loc in
                     r := Some cstr;
                     cstr
                 | Some cstr -> cstr

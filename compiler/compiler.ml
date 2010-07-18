@@ -104,7 +104,7 @@ let compile_interface modname filename =
       input_lexbuf := lexbuf;
       external_types := [];
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      List.iter (fun x -> compile_intf_phrase (Resolve.signature_item x)) l;
+      List.iter (fun x -> compile_intf_phrase (Resolve.signature_item Env.unique x)) l;
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
@@ -164,7 +164,7 @@ let compile_impl modname filename suffix =
     start_emit_phrase oc;
     let l = wrap Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (fun x -> compile_impl_phrase oc (Resolve.structure_item x)) l;
+      List.iter (fun x -> compile_impl_phrase oc (Resolve.structure_item Env.unique x)) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;

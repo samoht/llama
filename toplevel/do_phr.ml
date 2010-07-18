@@ -106,5 +106,5 @@ let do_toplevel_phrase topphr =
               "Warning: unknown directive \"#%s\", ignored.\n" d;
             flush stderr
       end
-    | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item si)
+    | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item Env.unique si)
   end
