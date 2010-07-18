@@ -2,6 +2,7 @@ open Misc;;
 open Asttypes;;
 open More_predef;;
 open Printf;;
+open Types;;
 
 (* symtable.ml : to assign numbers to global variables and so on *)
 

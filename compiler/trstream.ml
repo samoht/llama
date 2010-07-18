@@ -2,6 +2,7 @@
 
 open Asttypes;;
 open Typedtree;;
+open Types;;
 open Prim;;
 open Lambda;;
 open Matching;;

@@ -8,6 +8,7 @@ open Modules
 open Symtable
 open Asttypes
 open Lambda
+open Types
 
 module Warnings = struct
   let parse_options b s = ()

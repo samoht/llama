@@ -10,6 +10,7 @@ open Prim_opc;;
 open Buffcode;;
 open Config;;
 open Labels;;
+open Types;; (* for qualified_ident *)
 
 let out_bool_test tst =
   function PTeq -> out tst

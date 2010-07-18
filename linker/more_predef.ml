@@ -1,4 +1,4 @@
-open Asttypes;;
+open Types;;
 let predef_variables = [
 {qual="meta"; id="global_data"};
 {qual="sys"; id="s_irusr"};

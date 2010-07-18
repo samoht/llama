@@ -2,6 +2,7 @@
 
 open Asttypes;;
 open Prim;;
+open Types;;
 
 type zam_instruction =
     Kquote of Lambda.struct_constant 

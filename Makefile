@@ -107,7 +107,7 @@ linker/prim_c.ml : runtime/primitives
 	 echo '|];;') > $@
 
 linker/more_predef.ml : runtime/globals.h runtime/fail.h
-	(echo 'open Asttypes;;'; \
+	(echo 'open Types;;'; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{qual=\1; id=\2};|p' \
                 $< \

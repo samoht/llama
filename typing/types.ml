@@ -2,6 +2,16 @@
 
 open Asttypes;;
 
+type qualified_ident =
+  { qual: string;
+    id: string }
+;;
+
+type constr_tag =
+    ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
+  | ConstrRegular of int * int             (* tag number & number of constrs *)
+;;
+
 (* A reference to a global, in a source file, is either a qualified identifier
    mod__name, or an unqualified identifier name. *)
 

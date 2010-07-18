@@ -2,6 +2,7 @@
 
 open Misc;;
 open Asttypes;;
+open Types;; (* for qualified_ident *)
 open Lambda;;
 open Prim;;
 open Instruct;;

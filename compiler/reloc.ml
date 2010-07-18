@@ -2,6 +2,7 @@
 
 open Asttypes;;
 open Buffcode;;
+open Types;; (* for qualified_ident *)
 
 type info =
     Reloc_literal of Lambda.struct_constant    (* structured constant *)

@@ -10,6 +10,7 @@ open Reloc;;
 open Emit_phr;;
 open Patch;;
 open Tr_const;;
+open Types;;
 
 (* Production of a bytecode executable file *)
 

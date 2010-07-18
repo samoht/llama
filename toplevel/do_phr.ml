@@ -16,6 +16,7 @@ open Format;;
 open Symtable;;
 open Load_phr;;
 open Compiler;;
+open Types;;
 
 let fwd_load_object = ref(fun s -> failwith "fwd_load_object")
 let fwd_load_file = ref(fun s -> failwith "fwd_load_file")
