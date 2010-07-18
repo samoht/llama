@@ -88,8 +88,6 @@ let warnings = ref false;;
 
 (* Typecore of patterns *)
 
-let typing_let = ref false;;
-
 let unify_pat pat expected_ty actual_ty =
   try
     unify (expected_ty, actual_ty)
@@ -106,8 +104,6 @@ let rec tpat new_env (pat, ty, mut_flag) =
       if List.mem_assoc v new_env then
         non_linear_pattern_err pat v
       else begin
-        if !warnings && (not !typing_let) && v.[0] >= 'A' && v.[0] <= 'Z' then
-          upper_case_variable_warning pat v;
         (v, (ty, mut_flag)) :: new_env
       end
   | Tpat_alias(pat, v) ->
@@ -463,10 +459,8 @@ and type_let_decl env rec_flag pat_expr_list =
   push_type_level();
   let ty_list =
     List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
-  typing_let := true;
   let add_env =
     type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
-  typing_let := false;
   let new_env =
     add_env @ env in
   List.iter2
