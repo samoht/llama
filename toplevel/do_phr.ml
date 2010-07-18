@@ -3,7 +3,7 @@
 open Meta;;
 open Misc;;
 open Asttypes;;
-open Modules;;
+open Module;;
 open Typedtree;;
 open Btype;;
 open Typecore;;

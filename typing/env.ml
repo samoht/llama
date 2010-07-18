@@ -3,7 +3,7 @@ open Misc
 open Types
 open Location
 open Typedtree
-open Modules
+open Module
 open Predef
 open Printf
 

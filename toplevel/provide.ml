@@ -5,7 +5,7 @@ open Config;;
 open Misc;;
 open Types;;
 open Prim;;
-open Modules;;
+open Module;;
 
 let print_entry name valdesc =
   match valdesc.info.val_prim with

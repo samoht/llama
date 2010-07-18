@@ -4,7 +4,7 @@ open Location
 open Do_phr
 open Compiler
 open Clflags
-open Modules
+open Module
 open Symtable
 open Asttypes
 open Lambda

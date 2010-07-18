@@ -52,11 +52,11 @@ let default_output = function
   | None -> "a.out" (*Config.default_executable_name*)
 
 let set_nopervasives () =
-  Modules.default_used_modules := List.assoc "none" Config.default_used_interfaces;
+  Module.default_used_modules := List.assoc "none" Config.default_used_interfaces;
   Clflags.nopervasives := true
 
 let main () =
-  Modules.default_used_modules := List.assoc "cautious" Config.default_used_interfaces;
+  Module.default_used_modules := List.assoc "cautious" Config.default_used_interfaces;
   Misc.load_path := [Config.standard_library];
   Symtable.reset_linker_tables();
   Arg.parse

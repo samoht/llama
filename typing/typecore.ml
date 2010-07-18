@@ -6,7 +6,7 @@ open Types;;
 open Typedtree;;
 open Typedtree_aux
 open Predef;;
-open Modules;;
+open Module;;
 open Btype;;
 open Ctype;;
 open Error;;

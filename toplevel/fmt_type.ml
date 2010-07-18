@@ -3,7 +3,7 @@
 open Asttypes;;
 open Types;;
 open Btype;;
-open Modules;;
+open Module;;
 open Format;;
 
 let print_global sel_fct gl =

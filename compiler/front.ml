@@ -7,7 +7,7 @@ open Types;;
 open Typedtree;;
 open Typedtree_aux
 open Predef;;
-open Modules;;
+open Module;;
 open Lambda;;
 open Prim;;
 open Matching;;

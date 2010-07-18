@@ -4,7 +4,7 @@ open Misc;;
 open Asttypes;;
 open Types;;
 open Predef;;
-open Modules;;
+open Module;;
 open Btype;;
 open Format;;
 open Fmt_type;;

@@ -2,7 +2,7 @@
 
 open Asttypes;;
 open Types;;
-open Modules;;
+open Module;;
 open Asttypes;;
 
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}

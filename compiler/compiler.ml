@@ -8,7 +8,7 @@ open Location;;
 open Parsetree;;
 open Typedtree;;
 open Typedtree_aux
-open Modules;;
+open Module;;
 open Error;;
 open Typecore;;
 open Typedecl;;

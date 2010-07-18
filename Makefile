@@ -15,7 +15,7 @@ PARSING= parsing/location.cmx \
 TYPING=typing/ident.cmx typing/path.cmx \
  typing/primitive.cmx typing/types.cmx \
  typing/btype.cmx \
- typing/modules.cmx \
+ typing/module.cmx \
  typing/predef.cmx \
  typing/env.cmx \
  typing/pr_type.cmx typing/pr_decl.cmx \

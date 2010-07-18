@@ -3,7 +3,7 @@
 open Asttypes;;
 open Types;;
 open Btype;;
-open Modules;;
+open Module;;
 
 let output_global sel_fct oc gl =
   if not (can_omit_qualifier sel_fct gl) then begin

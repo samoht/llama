@@ -3,7 +3,7 @@
 open Lambda;;
 open Typedtree;;
 open Location;;
-open Modules;;
+open Module;;
 
 let record_events = ref false;;
 

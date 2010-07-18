@@ -5,7 +5,7 @@ open Asttypes;;
 open Types;;
 open Predef;;
 open Typedtree;;
-open Modules;;
+open Module;;
 open Btype;;
 open Error;;
 open Typecore;;

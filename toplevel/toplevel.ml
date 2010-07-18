@@ -5,7 +5,7 @@ open Meta;;
 open Misc;;
 open Asttypes;;
 open Location;;
-open Modules;;
+open Module;;
 open Types;;
 open Predef;;
 open Btype;;

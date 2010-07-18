@@ -2,7 +2,7 @@
 
 open Asttypes;;
 open Types;;
-open Modules;;
+open Module;;
 open Btype;;
 open Ctype;;
 open Error;;
