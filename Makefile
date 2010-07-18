@@ -12,7 +12,7 @@ UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx
 PARSING= parsing/location.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
-TYPING=typing/ident.cmx typing/path.cmx typing/prim.cmx \
+TYPING=typing/ident.cmx typing/path.cmx \
  typing/primitive.cmx typing/types.cmx \
  typing/modules.cmx \
  typing/btype.cmx \
@@ -24,7 +24,6 @@ TYPING=typing/ident.cmx typing/path.cmx typing/prim.cmx \
  typing/includecore.cmx typing/includemod.cmx \
  typing/typecore.cmx \
  typing/typedecl.cmx typing/ty_intf.cmx \
- typing/primdecl.cmx \
  typing/resolve.cmx
 
 #TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
@@ -40,7 +39,8 @@ TYPING=typing/ident.cmx typing/path.cmx typing/prim.cmx \
 #  typing/typedecl.cmo typing/typeclass.cmo \
 #  typing/typemod.cmo
 
-COMPILER=compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
+COMPILER=compiler/prim.cmx compiler/primdecl.cmx \
+ compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
  compiler/event.cmx \
  compiler/tr_env.cmx compiler/trstream.cmx compiler/front.cmx \
  compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
