@@ -19,7 +19,6 @@ let rec free_vars_of_pat pat =
   | Ppat_constraint(pat, _) -> free_vars_of_pat pat
   | Ppat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
-;;    
 
 let lookup_type env li loc =
   try Env.lookup_type li env
@@ -179,35 +178,3 @@ let type_kind env c tk =
     | Ptype_record l -> Ttype_record (List.map (fun (s,te,m) ->
                                                   (s,type_expression env c te, m)) l)
   end
-(*
-let structure_item env si =
-  { str_desc =
-      begin match si.pstr_desc with
-        | Pstr_eval e -> Tstr_eval (expr env [] e)
-        | Pstr_value(b,lpe) ->
-            let cond_c =
-              if b then
-                List.fold_right (fun (p,e) c -> extend_context true p c) lpe []
-              else [] in
-            Tstr_value(b,List.map (fun (p,e)->pattern env p, expr env cond_c e) lpe)
-        | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,type_expression env [] te, {prim_arity=arity;prim_name=s})
-        | Pstr_type l ->
-            let c = List.map (fun (s,_,_) -> s) l in
-            Tstr_type(List.map (fun (s,ps,tk)->(s,ps,type_kind env c tk)) l)
-        | Pstr_exception l -> Tstr_exception (constr_decl env [] l)
-        | Pstr_open mn -> Tstr_open mn
-      end;
-    str_loc = si.pstr_loc }
-*)
-let signature_item env si =
-  { sig_desc =
-      begin match si.psig_desc with
-        | Psig_value (s,te,pr) -> Tsig_value (s,type_expression env [] te, primitive pr)
-        | Psig_type l ->
-            let c = List.map (fun (s,_,_) -> s) l in
-            Tsig_type(List.map (fun (s,ps,tk)->(s,ps,type_kind env c tk)) l)
-        | Psig_exception l -> Tsig_exception (constr_decl env [] l)
-        | Psig_open mn -> Tsig_open mn
-      end;
-    sig_loc = si.psig_loc }
-    

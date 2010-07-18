@@ -42,3 +42,31 @@ let type_structure_item pstr =
         let phr = mk (Tstr_open mn) in
         phr
   end
+
+let type_signature_item psig =
+  let env = Env.unique in
+  let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
+  begin match psig.psig_desc with
+    | Psig_value (s,te,pr) ->
+        let te = Resolve.type_expression env [] te in
+        let pr = Resolve.primitive pr in
+        let phr = mk (Tsig_value (s, te, pr)) in
+        type_valuedecl phr.sig_loc s te pr;
+        phr
+    | Psig_type decl ->
+        let c = List.map (fun (s,_,_) -> s) decl in
+        let decl = List.map (fun (s,ps,tk)->(s,ps,Resolve.type_kind env c tk)) decl in
+        let phr = mk (Tsig_type(decl)) in
+        let _ty_decl = type_typedecl psig.psig_loc decl in
+(*      if !verbose then print_typedecl ty_decl *)
+        phr
+    | Psig_exception decl ->
+        let decl = Resolve.constr_decl env [] decl in
+        let phr = mk (Tsig_exception decl) in
+        let _ex_decl = type_excdecl psig.psig_loc decl in
+(*      if !verbose then print_excdecl ex_decl         *)
+        phr
+    | Psig_open mn ->
+        let phr = mk (Tsig_open mn) in
+        phr
+  end

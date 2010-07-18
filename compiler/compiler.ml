@@ -77,16 +77,15 @@ let check_unused_opens () =
 
 let verbose = ref false;;
   
-let compile_intf_phrase phr =
+let compile_intf_phrase psig =
+  let phr = Typemod.type_signature_item psig in
   begin match phr.sig_desc with
     Tsig_value (s,te,pr) ->
-      type_valuedecl phr.sig_loc s te pr; ()
+      ()
   | Tsig_type decl ->
-      let ty_decl = type_typedecl phr.sig_loc decl in
-      if !verbose then print_typedecl ty_decl
+      ()
   | Tsig_exception decl ->
-      let ex_decl = type_excdecl phr.sig_loc decl in
-      if !verbose then print_excdecl ex_decl
+      ()
   | Tsig_open mn ->
       open_module (String.uncapitalize mn)
   end
@@ -105,7 +104,7 @@ let compile_interface modname filename =
       input_lexbuf := lexbuf;
       external_types := [];
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      List.iter (fun x -> compile_intf_phrase (Resolve.signature_item Env.unique x)) l;
+      List.iter compile_intf_phrase l;
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
@@ -160,7 +159,7 @@ let compile_impl modname filename suffix =
     start_emit_phrase oc;
     let l = wrap Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (fun x -> compile_impl_phrase oc x) l;
+      List.iter (compile_impl_phrase oc) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
