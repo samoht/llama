@@ -34,7 +34,6 @@ parsing/prim.cmo: parsing/const.cmx
 parsing/prim.cmx: parsing/const.cmx 
 typing/env.cmi: typing/types.cmx typing/typedtree.cmi parsing/longident.cmi \
     parsing/location.cmi 
-typing/path.cmi: typing/types.cmx 
 typing/typedtree.cmi: typing/types.cmx parsing/location.cmi parsing/const.cmx \
     parsing/asttypes.cmi 
 typing/btype.cmo: typing/types.cmx typing/modules.cmx utils/misc.cmx \
@@ -59,6 +58,8 @@ typing/error.cmo: typing/types.cmx typing/typedtree_aux.cmx \
 typing/error.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     typing/typedtree.cmi typing/pr_type.cmx utils/misc.cmx \
     parsing/location.cmx parsing/const.cmx typing/btype.cmx 
+typing/ident.cmo: 
+typing/ident.cmx: 
 typing/includecore.cmo: typing/types.cmx typing/typedtree.cmi utils/misc.cmx \
     typing/ctype.cmx parsing/const.cmx typing/btype.cmx 
 typing/includecore.cmx: typing/types.cmx typing/typedtree.cmi utils/misc.cmx \
@@ -69,6 +70,8 @@ typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi utils/tbl.cmx \
     typing/includecore.cmx parsing/const.cmx typing/btype.cmx 
 typing/modules.cmo: typing/types.cmx utils/misc.cmx parsing/const.cmx 
 typing/modules.cmx: typing/types.cmx utils/misc.cmx parsing/const.cmx 
+typing/path.cmo: typing/ident.cmx 
+typing/path.cmx: typing/ident.cmx 
 typing/pr_decl.cmo: typing/types.cmx typing/pr_type.cmx utils/misc.cmx \
     parsing/const.cmx typing/builtins.cmx parsing/asttypes.cmi 
 typing/pr_decl.cmx: typing/types.cmx typing/pr_type.cmx utils/misc.cmx \
@@ -79,6 +82,12 @@ typing/pr_type.cmx: typing/types.cmx typing/modules.cmx parsing/const.cmx \
     typing/btype.cmx 
 typing/primdecl.cmo: typing/types.cmx parsing/prim.cmx 
 typing/primdecl.cmx: typing/types.cmx parsing/prim.cmx 
+typing/primitive.cmo: 
+typing/primitive.cmx: 
+typing/printtyp.cmo: typing/types.cmx typing/path.cmx parsing/longident.cmi \
+    typing/ident.cmx parsing/const.cmx 
+typing/printtyp.cmx: typing/types.cmx typing/path.cmx parsing/longident.cmx \
+    typing/ident.cmx parsing/const.cmx 
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi typing/primdecl.cmx \
     parsing/parsetree.cmi parsing/parser.cmi utils/misc.cmx \
     parsing/longident.cmi typing/env.cmi 

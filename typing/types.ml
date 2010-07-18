@@ -47,6 +47,7 @@ and typ_link =
     Tnolink                             (* Free variable *)
   | Tlinkto of typ                      (* Instantiated variable *)
 ;;
+type type_expr = typ
 
 (* Type constructor descriptions *)
 
