@@ -96,7 +96,7 @@ let rec expr env c ex =
                 | Longident.Id s ->
                     begin try
                       let (isrec, ident) = List.assoc s c in
-                      if isrec then Zrec (ident, ref None) else Zlocal ident
+                      if isrec then assert false else Zlocal ident
                     with Not_found -> notlocal() end
                 | _ -> notlocal()
               end
@@ -179,7 +179,7 @@ let type_kind env c tk =
     | Ptype_record l -> Ttype_record (List.map (fun (s,te,m) ->
                                                   (s,type_expression env c te, m)) l)
   end
-
+(*
 let structure_item env si =
   { str_desc =
       begin match si.pstr_desc with
@@ -198,7 +198,7 @@ let structure_item env si =
         | Pstr_open mn -> Tstr_open mn
       end;
     str_loc = si.pstr_loc }
-
+*)
 let signature_item env si =
   { sig_desc =
       begin match si.psig_desc with

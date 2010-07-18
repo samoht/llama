@@ -173,17 +173,19 @@ let type_valuedecl loc name typexp prim =
       add_value (defined_global name { val_typ = ty; val_prim = prim })
 ;;
 
-let type_letdef loc rec_flag pat_expr_list =
+let type_letdef loc rec_flag untyped_pat_expr_list =
+  let env = Env.unique in
   push_type_level();
-  let ty_list =
-    List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
-  let env =
-    type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list in
+  let untyped_pat_list = List.map fst untyped_pat_expr_list in
+  let pat_list = List.map (Resolve.pattern env) untyped_pat_list in
+  let ty_list = List.map (fun _ -> new_type_var ()) pat_list in
+  let c = type_pattern_list pat_list ty_list in
   let enter_val =
     List.iter
       (fun (name,(ty,mut_flag)) ->
         add_value (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
-  if rec_flag then enter_val env;
+  if rec_flag then enter_val c;
+  let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
   List.iter2
     (fun (pat, exp) ty -> type_expect [] exp ty)
     pat_expr_list ty_list;
@@ -193,8 +195,8 @@ let type_letdef loc rec_flag pat_expr_list =
          pat_expr_list ty_list in
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
-  if not rec_flag then enter_val env;
-  env
+  if not rec_flag then enter_val c;
+  pat_expr_list, c
 ;;
   
 let type_expression loc expr =

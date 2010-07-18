@@ -5,6 +5,7 @@ open Printf;;
 open Lexer;;
 open Parser;;
 open Location;;
+open Parsetree;;
 open Typedtree;;
 open Typedtree_aux
 open Modules;;
@@ -118,32 +119,27 @@ let compile_interface modname filename =
 
 (* Compiling an implementation *)
 
-let compile_impl_phrase outstream phr =
+let compile_impl_phrase outstream pstr =
   reset_type_expression_vars();
+  let phr = Typemod.type_structure_item pstr in
   begin match phr.str_desc with
     Tstr_eval expr ->
-      let ty = type_expression phr.str_loc expr in
       emit_phrase outstream
                   (expr_is_pure expr)
                   (compile_lambda false (translate_expression expr));
-      if !verbose then print_expr ty
   | Tstr_value(rec_flag, pat_expr_list) ->
-      let env = type_letdef phr.str_loc rec_flag pat_expr_list in
       emit_phrase outstream
          (letdef_is_pure pat_expr_list)
          (if rec_flag then
             compile_lambda true (translate_letdef_rec phr.str_loc pat_expr_list)
           else
             compile_lambda false (translate_letdef phr.str_loc pat_expr_list));
-      if !verbose then print_valdef env
   | Tstr_primitive(s,te,pr) ->
-      type_valuedecl phr.str_loc s te (Types.ValuePrim pr); ()
+      ()
   | Tstr_type decl ->
-      let ty_decl = type_typedecl phr.str_loc decl in
-      if !verbose then print_typedecl ty_decl
+      ()
   | Tstr_exception decl ->
-      let ex_decl = type_excdecl phr.str_loc decl in
-      if !verbose then print_excdecl ex_decl
+      ()
   | Tstr_open mn ->
       open_module (String.uncapitalize mn)
   end
@@ -164,7 +160,7 @@ let compile_impl modname filename suffix =
     start_emit_phrase oc;
     let l = wrap Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (fun x -> compile_impl_phrase oc (Resolve.structure_item Env.unique x)) l;
+      List.iter (fun x -> compile_impl_phrase oc x) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;

@@ -26,21 +26,19 @@ let fwd_load_file = ref(fun s -> failwith "fwd_load_file")
 let do_structure_item phr =
   reset_type_var();
   reset_type_expression_vars ();
+  let phr = Typemod.type_structure_item phr in
   begin match phr.str_desc with
     Tstr_eval expr ->
-      let ty =
-        type_expression phr.str_loc expr in
       let res =
         load_phrase(compile_lambda false (translate_expression expr)) in
       flush stderr;
       open_box 1;
       print_string "- :"; print_space();
-      print_one_type ty;
+      print_one_type expr.exp_type;
       print_string " ="; print_space();
-      print_value res ty;
+      print_value res expr.exp_type;
       print_newline()
   | Tstr_value(rec_flag, pat_expr_list) ->
-      let env = type_letdef phr.str_loc rec_flag pat_expr_list in
       let _res =
         if rec_flag then
           load_phrase
@@ -52,6 +50,7 @@ let do_structure_item phr =
               (translate_letdef phr.str_loc pat_expr_list)) in
       flush stderr;
       reset_rollback ();
+(*
       List.iter
         (fun (name, (typ, mut_flag)) ->
           open_box 1;
@@ -63,18 +62,16 @@ let do_structure_item phr =
             typ;
           print_newline())
         (List.rev env)
+*)
   | Tstr_primitive (name,te,pr) ->
-      let _ = type_valuedecl phr.str_loc name te (Types.ValuePrim pr) in
       reset_rollback ();
       Printf.printf "Primitive %s defined.\n" name
   | Tstr_type decl ->
-      let _ = type_typedecl phr.str_loc decl in
       reset_rollback ();
       List.iter
         (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
         decl
   | Tstr_exception decl ->
-      let _ = type_excdecl phr.str_loc decl in
       reset_rollback ();
       Printf.printf "Exception %s defined.\n" (fst decl)
   | Tstr_open mn ->
@@ -106,5 +103,5 @@ let do_toplevel_phrase topphr =
               "Warning: unknown directive \"#%s\", ignored.\n" d;
             flush stderr
       end
-    | Parsetree.Ptop_def si -> do_structure_item (Resolve.structure_item Env.unique si)
+    | Parsetree.Ptop_def si -> do_structure_item si
   end
