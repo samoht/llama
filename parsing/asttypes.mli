@@ -17,8 +17,3 @@ type atomic_constant =
   | ACfloat of float
   | ACstring of string
   | ACchar of char
-
-and struct_constant =
-    SCatom of atomic_constant
-  | SCblock of constr_tag * struct_constant list
-;;

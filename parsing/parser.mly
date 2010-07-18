@@ -52,14 +52,14 @@ let make_list el =
 ;;
 
 let make_unary_minus s e = match s, e with
-    "-",  {pexp_desc = Pexp_constant(SCatom(ACint i))} ->
-      make_expr(Pexp_constant(SCatom(ACint(- i))))
-  | "-",  {pexp_desc = Pexp_constant(SCatom(ACfloat f))} ->
-      make_expr(Pexp_constant(SCatom(ACfloat(-. f))))
+    "-",  {pexp_desc = Pexp_constant(ACint i)} ->
+      make_expr(Pexp_constant(ACint(- i)))
+  | "-",  {pexp_desc = Pexp_constant(ACfloat f)} ->
+      make_expr(Pexp_constant(ACfloat(-. f)))
   | "-",  e ->
       make_unop "minus" e
-  | "-.", {pexp_desc = Pexp_constant(SCatom(ACfloat f))} ->
-      make_expr(Pexp_constant(SCatom(ACfloat(-. f))))
+  | "-.", {pexp_desc = Pexp_constant(ACfloat f)} ->
+      make_expr(Pexp_constant(ACfloat(-. f)))
   | "-.", e ->
       make_unop "minus_float" e
   | _, _ ->
@@ -373,7 +373,7 @@ Expr :
 ;
 
 Simple_expr :
-        Struct_constant
+        Atomic_constant
           { make_expr(Pexp_constant $1) }
       | Ext_ident
           { let p = $1 in
@@ -447,11 +447,6 @@ Expr_label_list :
 ;
 
 /* Constants */
-
-Struct_constant :
-        Atomic_constant
-          { SCatom $1 }
-;
 
 Atomic_constant :
         INT

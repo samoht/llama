@@ -4,7 +4,7 @@ open Asttypes;;
 open Prim;;
 
 type zam_instruction =
-    Kquote of struct_constant 
+    Kquote of Lambda.struct_constant 
   | Kget_global of qualified_ident
   | Kset_global of qualified_ident
   | Kaccess of int

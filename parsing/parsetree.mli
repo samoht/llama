@@ -36,7 +36,7 @@ type expression =
 
 and expression_desc =
     Pexp_ident of Longident.t
-  | Pexp_constant of struct_constant
+  | Pexp_constant of atomic_constant
   | Pexp_let of bool * (pattern * expression) list * expression
   | Pexp_function of (pattern list * expression) list
   | Pexp_apply of expression * expression list

@@ -7,6 +7,7 @@ open Clflags
 open Modules
 open Symtable
 open Asttypes
+open Lambda
 
 module Warnings = struct
   let parse_options b s = ()

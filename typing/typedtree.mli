@@ -46,7 +46,7 @@ type expression =
 
 and expression_desc =
     Texp_ident of value_identifier
-  | Texp_constant of struct_constant
+  | Texp_constant of atomic_constant
   | Texp_tuple of expression list
   | Texp_construct of constr_desc global * expression list
   | Texp_apply of expression * expression list

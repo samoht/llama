@@ -82,14 +82,6 @@ let type_of_atomic_constant = function
   | ACchar _ -> type_char
 ;;
 
-let rec type_of_structured_constant = function
-    SCatom ac ->
-      type_of_atomic_constant ac
-  | SCblock(cstr, args) ->
-      fatal_error "type_of_structured_constant" (* to do? *)
-;;
-
-
 (* Enables warnings *)
 let warnings = ref false;;
 
@@ -274,7 +266,7 @@ let rec type_expr env expr =
             type_instance glob_desc.info.val_typ
       end
   | Texp_constant cst ->
-      type_of_structured_constant cst
+      type_of_atomic_constant cst
   | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
   | Texp_construct(constr, args) ->
@@ -434,7 +426,7 @@ let rec type_expr env expr =
 
 and type_expect env exp expected_ty =
   match exp.exp_desc with
-    Texp_constant(SCatom(ACstring s)) ->
+    Texp_constant(ACstring s) ->
       let actual_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)

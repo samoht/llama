@@ -5,6 +5,11 @@ open Asttypes;;
 open Prim;;
 open Types;;
 
+type struct_constant =
+    SCatom of atomic_constant
+  | SCblock of constr_tag * struct_constant list
+;;
+
 let const_unit =
     SCblock(ConstrRegular(0,1), [])
 ;;

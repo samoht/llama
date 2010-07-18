@@ -7,7 +7,7 @@ open Opcodes;;
 open Buffcode;;
 open Symtable;;
 open Emitcode;;
-(*open Tr_const;;*)
+open Lambda;;
 open Pr_value;;
 open Format;;
 

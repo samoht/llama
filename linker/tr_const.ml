@@ -1,6 +1,7 @@
 open Asttypes;;
 open Obj;;
 open Symtable;;
+open Lambda;;
 
 (* To translate a structured constant into an object. *)
   

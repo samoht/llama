@@ -45,12 +45,6 @@ let rec count_args tm =
     | _ -> 0
   end
 
-let term_of_structured_const sc =
-  begin match sc with
-    | SCatom c -> Const c
-    | SCblock _ -> failwith "term_of_structured_const"
-  end
-
 let rec term_of_expr c expr =
   begin match expr.exp_desc with
     | Texp_ident id ->
@@ -77,8 +71,8 @@ let rec term_of_expr c expr =
               in
               rel.(aux 0 c)
         end
-    | Texp_constant sc ->
-        term_of_structured_const sc
+    | Texp_constant c ->
+        Const c
     | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
     | Texp_construct (ct, l) ->

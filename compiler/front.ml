@@ -128,7 +128,7 @@ let rec translate_expr env =
           in
             make_fct [] 0)
   | Texp_constant cst ->
-      Lconst cst
+      Lconst (SCatom cst)
   | Texp_tuple(args) ->
       let tr_args =
         List.map transl args in

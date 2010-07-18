@@ -180,8 +180,10 @@ compiler/labels.cmo: utils/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
 compiler/labels.cmx: utils/misc.cmx compiler/instruct.cmx \
     compiler/buffcode.cmx 
-compiler/lambda.cmo: typing/types.cmx typing/prim.cmx parsing/asttypes.cmi 
-compiler/lambda.cmx: typing/types.cmx typing/prim.cmx parsing/asttypes.cmi 
+compiler/lambda.cmo: typing/types.cmx typing/prim.cmx utils/misc.cmx \
+    parsing/asttypes.cmi 
+compiler/lambda.cmx: typing/types.cmx typing/prim.cmx utils/misc.cmx \
+    parsing/asttypes.cmi 
 compiler/librarian.cmo: utils/misc.cmx compiler/emit_phr.cmx 
 compiler/librarian.cmx: utils/misc.cmx compiler/emit_phr.cmx 
 compiler/matching.cmo: typing/types.cmx typing/typedtree.cmi typing/prim.cmx \
@@ -196,8 +198,10 @@ compiler/opcodes.cmo:
 compiler/opcodes.cmx: 
 compiler/prim_opc.cmo: typing/prim.cmx compiler/opcodes.cmx utils/misc.cmx 
 compiler/prim_opc.cmx: typing/prim.cmx compiler/opcodes.cmx utils/misc.cmx 
-compiler/reloc.cmo: compiler/buffcode.cmx parsing/asttypes.cmi 
-compiler/reloc.cmx: compiler/buffcode.cmx parsing/asttypes.cmi 
+compiler/reloc.cmo: compiler/lambda.cmx compiler/buffcode.cmx \
+    parsing/asttypes.cmi 
+compiler/reloc.cmx: compiler/lambda.cmx compiler/buffcode.cmx \
+    parsing/asttypes.cmi 
 compiler/tr_env.cmo: typing/types.cmx typing/typedtree.cmi typing/prim.cmx \
     typing/predef.cmx utils/misc.cmx compiler/lambda.cmx typing/error.cmx \
     parsing/asttypes.cmi 
@@ -218,8 +222,8 @@ linker/link.cmx: linker/tr_const.cmx linker/symtable.cmx compiler/reloc.cmx \
     linker/patch.cmx compiler/opcodes.cmx utils/misc.cmx compiler/lambda.cmx \
     compiler/emit_phr.cmx utils/config.cmx utils/clflags.cmx \
     parsing/asttypes.cmi 
-linker/more_predef.cmo: 
-linker/more_predef.cmx: 
+linker/more_predef.cmo: parsing/asttypes.cmi 
+linker/more_predef.cmx: parsing/asttypes.cmi 
 linker/patch.cmo: linker/symtable.cmx compiler/reloc.cmx 
 linker/patch.cmx: linker/symtable.cmx compiler/reloc.cmx 
 linker/prim_c.cmo: 
@@ -227,11 +231,13 @@ linker/prim_c.cmx:
 linker/readword.cmo: 
 linker/readword.cmx: 
 linker/symtable.cmo: linker/prim_c.cmx linker/more_predef.cmx utils/misc.cmx \
-    parsing/asttypes.cmi 
+    compiler/lambda.cmx parsing/asttypes.cmi 
 linker/symtable.cmx: linker/prim_c.cmx linker/more_predef.cmx utils/misc.cmx \
+    compiler/lambda.cmx parsing/asttypes.cmi 
+linker/tr_const.cmo: linker/symtable.cmx compiler/lambda.cmx \
     parsing/asttypes.cmi 
-linker/tr_const.cmo: linker/symtable.cmx parsing/asttypes.cmi 
-linker/tr_const.cmx: linker/symtable.cmx parsing/asttypes.cmi 
+linker/tr_const.cmx: linker/symtable.cmx compiler/lambda.cmx \
+    parsing/asttypes.cmi 
 toplevel/llama_obj.cmi: 
 toplevel/meta.cmi: toplevel/llama_obj.cmi 
 toplevel/toplevel.cmi: 
@@ -262,23 +268,25 @@ toplevel/fmt_type.cmx: typing/types.cmx typing/modules.cmx typing/btype.cmx \
 toplevel/load_phr.cmo: linker/symtable.cmx compiler/reloc.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
     utils/misc.cmx toplevel/meta.cmi toplevel/llama_obj.cmi \
-    compiler/labels.cmx compiler/instruct.cmx compiler/emitcode.cmx \
-    compiler/buffcode.cmx parsing/asttypes.cmi 
+    compiler/lambda.cmx compiler/labels.cmx compiler/instruct.cmx \
+    compiler/emitcode.cmx compiler/buffcode.cmx parsing/asttypes.cmi 
 toplevel/load_phr.cmx: linker/symtable.cmx compiler/reloc.cmx \
     toplevel/pr_value.cmx linker/patch.cmx compiler/opcodes.cmx \
     utils/misc.cmx toplevel/meta.cmi toplevel/llama_obj.cmi \
-    compiler/labels.cmx compiler/instruct.cmx compiler/emitcode.cmx \
-    compiler/buffcode.cmx parsing/asttypes.cmi 
+    compiler/lambda.cmx compiler/labels.cmx compiler/instruct.cmx \
+    compiler/emitcode.cmx compiler/buffcode.cmx parsing/asttypes.cmi 
 toplevel/main.cmo: typing/typecore.cmx toplevel/toplevel.cmi \
     linker/symtable.cmx parsing/parser.cmi typing/modules.cmx utils/misc.cmx \
     toplevel/meta.cmi parsing/location.cmi toplevel/load_phr.cmx \
-    parsing/lexer.cmi toplevel/do_phr.cmx utils/config.cmi \
-    compiler/compiler.cmx utils/clflags.cmi 
+    parsing/lexer.cmi compiler/lambda.cmx toplevel/do_phr.cmx \
+    utils/config.cmi compiler/compiler.cmx utils/clflags.cmi \
+    parsing/asttypes.cmi 
 toplevel/main.cmx: typing/typecore.cmx toplevel/toplevel.cmx \
     linker/symtable.cmx parsing/parser.cmx typing/modules.cmx utils/misc.cmx \
     toplevel/meta.cmi parsing/location.cmx toplevel/load_phr.cmx \
-    parsing/lexer.cmx toplevel/do_phr.cmx utils/config.cmx \
-    compiler/compiler.cmx utils/clflags.cmx 
+    parsing/lexer.cmx compiler/lambda.cmx toplevel/do_phr.cmx \
+    utils/config.cmx compiler/compiler.cmx utils/clflags.cmx \
+    parsing/asttypes.cmi 
 toplevel/pr_value.cmo: typing/types.cmx linker/symtable.cmx typing/predef.cmx \
     typing/modules.cmx utils/misc.cmx toplevel/llama_obj.cmi \
     toplevel/fmt_type.cmx typing/btype.cmx parsing/asttypes.cmi 
