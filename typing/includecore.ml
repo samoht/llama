@@ -4,7 +4,7 @@ open Btype
 open Typedtree
 
 let moregeneral ty1 ty2 =
-  try ignore (filter (ty1, ty2)); true with Unify -> false
+  try ignore (Ctype.filter (ty1, ty2)); true with Ctype.OldUnify -> false
 
 (* Inclusion between value descriptions *)
 

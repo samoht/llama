@@ -31,7 +31,7 @@ let simple_match p1 p2 =
 
 
 
-let record_labels p = labels_of_type p.pat_type
+let record_labels p = Ctype.labels_of_type p.pat_type
 ;;
 
 let record_nargs p = List.length (record_labels p)

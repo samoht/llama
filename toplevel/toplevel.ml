@@ -9,6 +9,7 @@ open Modules;;
 open Types;;
 open Predef;;
 open Btype;;
+open Ctype;;
 open Patch;;
 open Emit_phr;;
 open Symtable;;
@@ -163,7 +164,7 @@ let install_printer name =
       printers := (name, ty_arg, (Obj.magic (get_global_data pos) : t -> unit))
                :: !printers
 *)
-    with Unify ->
+    with OldUnify ->
       Printf.eprintf "%s has the wrong type for a printing function.\n" name
     end
   with Desc_not_found ->

@@ -9,6 +9,7 @@ open Typedtree_aux;;
 open Btype;;
 open Pr_type;;
 open Printf;;
+open Ctype;;
 
 let output_globalref oc = function
     GRname s ->
@@ -120,7 +121,7 @@ let application_of_non_function_err exp ty =
     let _ = filter_arrow ty in
     eprintf "%aThis function is applied to too many arguments.\n"
       output_location exp.exp_loc
-  with Unify ->
+  with OldUnify ->
     eprintf "%aThis expression is not a function, it cannot be applied.\n"
       output_location exp.exp_loc
   end;

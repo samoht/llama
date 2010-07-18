@@ -4,6 +4,7 @@ open Asttypes;;
 open Types;;
 open Modules;;
 open Btype;;
+open Ctype;;
 open Error;;
 open Typedecl;;
 
@@ -49,7 +50,7 @@ let check_value_match val_decl =
   let nongen_vars = free_type_vars notgeneric val_impl.info.val_typ in
   begin try
     filter (type_instance val_impl.info.val_typ, val_decl.info.val_typ)
-  with Unify ->
+  with OldUnify ->
     type_mismatch_err val_decl val_impl
   end;
   if List.exists (fun ty -> free_type_vars generic ty != []) nongen_vars then

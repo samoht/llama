@@ -1,14 +1,15 @@
 (* To print values *)
 
-(**) open Misc;;
-(**) open Asttypes;;
-(**) open Types;;
-(**) open Predef;;
-(**) open Modules;;
-(**) open Btype;;
-(**) open Format;;
-(**) open Fmt_type;;
-(**) open Symtable;;
+open Misc;;
+open Asttypes;;
+open Types;;
+open Predef;;
+open Modules;;
+open Btype;;
+open Format;;
+open Fmt_type;;
+open Symtable;;
+open Ctype;;
 
 exception Constr_not_found;;
 
@@ -60,7 +61,7 @@ let find_printer ty =
   | (name, sch, printer) :: remainder ->
       try
         filter (type_instance sch, ty); printer
-      with Unify ->
+      with OldUnify ->
         find remainder
   in find !printers
 ;;
@@ -149,7 +150,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           print_string "<unknown constructor>"
       | Exception_not_found ->
           print_string "<local exception>"
-      | Unify ->
+      | OldUnify ->
           fatal_error "print_val: types should match"
       end
   | Type_record label_list ->
@@ -161,7 +162,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
         begin try
           filter (ty_res, ty)
-        with Unify ->
+        with OldUnify ->
           fatal_error "print_val: types should match"
         end;
         cautious (print_val 0 (depth - 1)

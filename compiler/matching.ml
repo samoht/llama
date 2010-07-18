@@ -152,7 +152,7 @@ let divide_var_matching = function
 ;;
 
 let divide_record_matching ty_record (Matching(casel, pathl)) =
-  let labels = Btype.labels_of_type ty_record in
+  let labels = Ctype.labels_of_type ty_record in
   let num_labels = List.length labels in
   let rec divide_rec = function
       ({pat_desc = Tpat_alias(pat,v)} :: patl, action) :: rest ->

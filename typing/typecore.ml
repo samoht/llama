@@ -8,6 +8,7 @@ open Typedtree_aux
 open Predef;;
 open Modules;;
 open Btype;;
+open Ctype;;
 open Error;;
 open Asttypes;;
 
@@ -92,7 +93,7 @@ let typing_let = ref false;;
 let unify_pat pat expected_ty actual_ty =
   try
     unify (expected_ty, actual_ty)
-  with Unify ->
+  with OldUnify ->
     pat_wrong_type_err pat actual_ty expected_ty
 ;;
 
@@ -120,7 +121,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
   | Tpat_tuple(patl) ->
       begin try
         tpat_list new_env patl (filter_product (List.length patl) ty)
-      with Unify ->
+      with OldUnify ->
         pat_wrong_type_err pat ty
           (type_product(new_type_var_list (List.length patl)))
       end
@@ -246,7 +247,7 @@ let type_format loc fmt =
 let unify_expr expr expected_ty actual_ty =
   try
     unify (expected_ty, actual_ty)
-  with Unify ->
+  with OldUnify ->
     expr_wrong_type_err expr actual_ty expected_ty
 ;;
 
@@ -283,7 +284,7 @@ let rec type_expr env expr =
           let (ty1, ty2) =
             try
               filter_arrow ty_res
-            with Unify ->
+            with OldUnify ->
               application_of_non_function_err fct ty_fct in
           type_expect env arg1 ty1;
           type_args ty2 argl in
@@ -361,7 +362,7 @@ let rec type_expr env expr =
           let (ty_res, ty_arg) =
             type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
           begin try unify (ty, ty_res)
-          with Unify -> label_not_belong_err expr lbl ty
+          with OldUnify -> label_not_belong_err expr lbl ty
           end;
           type_expect env exp ty_arg)
         lbl_expr_list;
@@ -449,7 +450,7 @@ and type_expect env exp expected_ty =
       begin try
         List.iter2 (type_expect env)
                  el (filter_product (List.length el) expected_ty)
-      with Unify ->
+      with OldUnify ->
         unify_expr exp expected_ty (type_expr env exp)
       end
 (* To do: try...with, match...with ? *)

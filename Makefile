@@ -14,12 +14,13 @@ PARSING= parsing/location.cmx \
 
 TYPING=typing/ident.cmx typing/path.cmx \
  typing/primitive.cmx typing/types.cmx \
- typing/modules.cmx \
  typing/btype.cmx \
+ typing/modules.cmx \
  typing/predef.cmx \
- typing/pr_type.cmx typing/pr_decl.cmx typing/error.cmx \
  typing/env.cmx \
+ typing/pr_type.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \
+ typing/error.cmx \
  typing/printtyp.cmx \
  typing/includecore.cmx typing/includemod.cmx \
  typing/typecore.cmx \

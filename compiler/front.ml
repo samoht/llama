@@ -267,7 +267,7 @@ let rec translate_expr env =
   | Texp_stream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Texp_parser case_list ->
-      let (stream_type, _) = Btype.filter_arrow expr.exp_type in
+      let (stream_type, _) = Ctype.filter_arrow expr.exp_type in
       translate_parser translate_expr expr.exp_loc env case_list stream_type
   | Texp_when(e1,e2) ->
       fatal_error "front: Texp_when"
