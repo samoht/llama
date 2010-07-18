@@ -121,3 +121,23 @@ let rec keys_aux stack accu = function
       keys_aux (l :: stack) (k.ident :: accu) r
 
 let keys tbl = keys_aux [] [] tbl
+
+let find_all p =
+  let rec aux acc = function
+      Empty ->
+        acc
+    | Node(l, k, r, _) ->
+        let acc = aux acc l in
+        let acc = if p k.data then k.ident::acc else acc in
+        let acc = aux acc r in
+        acc
+  in
+  aux []
+
+let rec iter f = function
+    Empty ->
+      ()
+  | Node (l, k, r, _) ->
+      iter f l;
+      f k.data;
+      iter f r
