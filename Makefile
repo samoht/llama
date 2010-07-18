@@ -12,7 +12,7 @@ UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx
 PARSING= parsing/location.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
-TYPING=typing/ident.cmx typing/path.cmx \
+TYPING=typing/id.cmx typing/ident.cmx typing/path.cmx \
  typing/primitive.cmx typing/types.cmx \
  typing/btype.cmx \
  typing/module.cmx \

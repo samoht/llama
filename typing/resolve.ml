@@ -77,9 +77,9 @@ let rec pattern env p =
 
 let extend_context isrec pat c =
   let vs = free_vars_of_pat pat in
-  List.map (fun v -> (v, (isrec, Ident.create v))) vs @ c
+  List.map (fun v -> (v, (isrec, Id.create v))) vs @ c
 
-let ext isrec s c = (s, (isrec, Ident.create s)) :: c
+let ext isrec s c = (s, (isrec, Id.create s)) :: c
 
 let rec expr env c ex =
   { exp_desc =

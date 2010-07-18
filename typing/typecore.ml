@@ -242,7 +242,7 @@ let rec type_expr env expr =
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_typ
         | Zlocal s ->
-            let (ty_schema, mut_flag) = List.assoc (Ident.name s) env in
+            let (ty_schema, mut_flag) = List.assoc (Id.name s) env in
             type_instance ty_schema
       end
   | Texp_constant cst ->

@@ -113,7 +113,7 @@ let rec translate_expr env =
   let rec transl expr =
   match expr.exp_desc with
     Texp_ident(Zlocal s) ->
-      translate_access (Ident.name s) env (* xxx *)
+      translate_access (Id.name s) env (* xxx *)
   | Texp_ident(Zglobal g) ->
       (match g.info.val_prim with
         ValueNotPrim ->
