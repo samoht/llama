@@ -6,7 +6,7 @@ open Types;;
 
 (* Informations associated with module names *)
 
-type module_ =
+type t =
   { mod_name: string;                        (* name of the module *)
     mod_values: (string, value_desc global) Hashtbl.t;
                                              (* table of values *)
@@ -31,7 +31,7 @@ and types_of_module   md = md.mod_types
 
 (* The table of module interfaces already loaded in memory *)
 
-let module_table = (Hashtbl.create 37 : (string, module_) Hashtbl.t);;
+let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
 
 let new_module nm =
   let md =
@@ -52,7 +52,7 @@ let new_module nm =
 let read_module basename filename =
   let ic = open_in_bin filename in
   try
-    let md = (input_value ic : module_) in
+    let md = (input_value ic : t) in
     close_in ic;
     md.mod_persistent <- true;
     md
@@ -129,11 +129,11 @@ let add_table t1 t2 =
   Hashtbl.iter (Hashtbl.add t2) t1;;
 
 let open_module name =
-  let module_ = find_module name in
-  add_table module_.mod_values (!opened_modules).mod_values;
-  add_table module_.mod_constrs (!opened_modules).mod_constrs;
-  add_table module_.mod_labels (!opened_modules).mod_labels;
-  add_table module_.mod_types (!opened_modules).mod_types;
+  let t = find_module name in
+  add_table t.mod_values (!opened_modules).mod_values;
+  add_table t.mod_constrs (!opened_modules).mod_constrs;
+  add_table t.mod_labels (!opened_modules).mod_labels;
+  add_table t.mod_types (!opened_modules).mod_types;
   opened_modules_names := name :: !opened_modules_names;
   Hashtbl.add !used_opened_modules name (ref false);;
 
