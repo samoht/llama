@@ -19,13 +19,14 @@ let clear q =
   q.head <- Nil; q.tail <- Nil
 ;;
 
-let add x = function
-    { head = h; tail = Nil as t } ->    (* if tail = Nil then head = Nil *)
+let add x q =
+  match q with
+    { head = h; tail = Nil } ->    (* if tail = Nil then head = Nil *)
       let c = Cons(x, {contents=Nil}) in
-        h <- c; t <- c
-  | { tail = Cons(_, {contents=newtail}) as oldtail } ->
+        q.head <- c; q.tail <- c
+  | { tail = Cons(_, newtail) } ->
       let c = Cons(x, ref Nil) in
-        newtail <- c; oldtail <- c
+        newtail := c; q.tail <- c
 ;;
 
 let peek q =

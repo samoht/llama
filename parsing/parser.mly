@@ -295,8 +295,6 @@ Expr :
           { make_unary_minus $1 $2 }
       | NOT Expr
           { make_unop "not" $2 }
-      | Ide LESSMINUS Expr
-          { make_expr (Pexp_assign($1, $3)) }
       | Expr INFIX4 Expr
           { make_binop $2 $1 $3 }
       | Expr INFIX3 Expr

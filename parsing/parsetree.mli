@@ -56,7 +56,6 @@ and expression_desc =
 (* the rest are doomed *)
   | Pexp_stream of stream_component list
   | Pexp_parser of (stream_pattern list * expression) list
-  | Pexp_assign of string * expression
 
 and stream_component =
     Pterm of expression

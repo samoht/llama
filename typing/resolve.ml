@@ -6,6 +6,16 @@ open Parsetree
 open Typedtree
 open Primitive
 
+exception Multiply_bound_variable of string
+exception Duplicate_constructor of string
+exception Duplicate_label of string
+
+let id_create_nodup lref s cb =
+  if List.mem s !lref then cb () else lref := s :: !lref; Id.create s
+
+let type_variables = ref (Tbl.empty : (string, Id.t) Tbl.t)
+let reset_type_variables () = type_variables := Tbl.empty
+
 let rec free_vars_of_pat pat =
   match pat.ppat_desc with
     Ppat_any -> []
@@ -39,7 +49,13 @@ let lookup_value env li loc =
 let rec type_expression env c te =
   { te_desc =
       begin match te.ptyp_desc with
-        | Ptyp_var s -> Ttyp_var s
+        | Ptyp_var name ->
+            Ttyp_var
+              begin try Tbl.find name !type_variables with Not_found -> 
+                let v = Id.create name in
+                type_variables := Tbl.add name v !type_variables;
+                v
+              end
         | Ptyp_arrow (x, y) -> Ttyp_arrow (type_expression env c x, type_expression env c y)
         | Ptyp_tuple l -> Ttyp_tuple (List.map (type_expression env c) l)
         | Ptyp_constr (li, l) ->
@@ -48,12 +64,18 @@ let rec type_expression env c te =
       end;
     te_loc = te.ptyp_loc }
 
+(* pattern environment, xxx make local *)
+let pattern_variables = ref ([] : string list)
+let reset_pattern_variables () = pattern_variables := []
+let mkpatvar s =
+  id_create_nodup pattern_variables s (fun () -> raise (Multiply_bound_variable s))
+
 let rec pattern env p =
   { pat_desc =
       begin match p.ppat_desc with
         | Ppat_any -> Tpat_any
-        | Ppat_var s -> Tpat_var s
-        | Ppat_alias (p, s) -> Tpat_alias (pattern env p, s)
+        | Ppat_var s -> Tpat_var (mkpatvar s)
+        | Ppat_alias (p, s) -> Tpat_alias (pattern env p, mkpatvar s)
         | Ppat_constant c -> Tpat_constant c
         | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
         | Ppat_construct (li,sarg) ->
@@ -74,6 +96,10 @@ let rec pattern env p =
       end;
     pat_loc = p.ppat_loc;
     pat_type = no_type }
+
+let pattern env p =
+  pattern_variables := [];
+  pattern env p
 
 let extend_context isrec pat c =
   let vs = free_vars_of_pat pat in
@@ -122,10 +148,9 @@ let rec expr env c ex =
         | Pexp_sequence (e1,e2) -> Texp_sequence(expr env c e1,expr env c e2)
         | Pexp_ifthenelse(e1,e2,e3) -> Texp_ifthenelse (expr env c e1,expr env c e2, expr env c e3)
         | Pexp_while(e1,e2) -> Texp_while(expr env c e1,expr env c e2)
-        | Pexp_for(s,e1,e2,b,e3) -> Texp_for(s,expr env c e1,expr env c e2,b,expr env (ext false s c) e3)
+        | Pexp_for(s,e1,e2,b,e3) -> Texp_for(Id.create s,expr env c e1,expr env c e2,b,expr env (ext false s c) e3)
         | Pexp_constraint(e,te) -> Texp_constraint(expr env c e,type_expression env [] te)
         | Pexp_array l -> Texp_array(List.map (expr env c) l)
-        | Pexp_assign (s,e) -> Texp_assign(s, expr env c e)
         | Pexp_record l -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env c e) l)
         | Pexp_field (e,li) -> Texp_field(expr env c e,lookup_label env li ex.pexp_loc)
         | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env c e, lookup_label env li ex.pexp_loc, expr env c e2)
@@ -146,7 +171,7 @@ let rec expr env c ex =
                       | Ptermpat p -> Ztermpat (pattern env p),(extend_context false p c)
                       | Pnontermpat (e, p) ->
                           Znontermpat (expr env c e, pattern env p), (extend_context false p c)
-                      | Pexp_streampat s ->          Texp_streampat s , (ext false s c)
+                      | Pexp_streampat s ->          Texp_streampat (Id.create s) , (ext false s c)
                     end
                     in
                     let rest,e = aux c rest e in
@@ -158,7 +183,11 @@ let rec expr env c ex =
     exp_loc = ex.pexp_loc;
     exp_type = no_type }
 
-let constr_decl env c (s,tys) = (s,List.map (type_expression env c) tys)
+
+let constr_decl env c (s,tys) =
+  let cs = ref [] in
+  (id_create_nodup cs s (fun () -> raise (Duplicate_constructor s)),
+   List.map (type_expression env c) tys)
 
 let primitive o =
   begin match o with
@@ -170,7 +199,11 @@ let type_kind env c tk =
   begin match tk with
     | Ptype_abstract -> Ttype_abstract
     | Ptype_abbrev te -> Ttype_abbrev (type_expression env c te)
-    | Ptype_variant cdl -> Ttype_variant (List.map (constr_decl env c) cdl)
-    | Ptype_record l -> Ttype_record (List.map (fun (s,te,m) ->
-                                                  (s,type_expression env c te, m)) l)
+    | Ptype_variant cdl ->
+        Ttype_variant (List.map (constr_decl env c) cdl)
+    | Ptype_record l ->
+        let lbls = ref [] in
+        Ttype_record (List.map (fun (s,te,m) ->
+                                  (id_create_nodup lbls s (fun () -> raise (Duplicate_label s)),
+                                   type_expression env c te, m)) l)
   end

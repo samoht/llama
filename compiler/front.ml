@@ -242,8 +242,6 @@ let rec translate_expr env =
       Lconst(SCblock(ConstrRegular(0,0), []))
   | Texp_array args ->
       Lprim(Pmakeblock (ConstrRegular(0,0)), List.map transl args)
-  | Texp_assign(id, e) ->
-      translate_update id env (transl e)
   | Texp_record lbl_expr_list ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter

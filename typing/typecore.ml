@@ -323,17 +323,6 @@ let rec type_expr env expr =
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect env e ty_arg) elist;
       type_vect ty_arg
-  | Texp_assign(id, e) ->
-      begin try
-        match List.assoc id env with
-          (ty_schema, Notmutable) ->
-            not_mutable_err id expr.exp_loc
-        | (ty_schema, Mutable) ->
-            type_expect env e (type_instance ty_schema);
-            type_unit
-      with Not_found ->
-        unbound_value_err (Longident.Id id) expr.exp_loc
-      end
   | Texp_record lbl_expr_list ->
       let ty = new_type_var() in
       List.iter
