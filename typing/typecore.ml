@@ -52,20 +52,7 @@ let type_of_type_expression strict_flag typexp =
       type_arrow(type_of arg1, type_of arg2)
   | Ttyp_tuple argl ->
       type_product(List.map type_of argl)
-  | Ttyp_constr(ident, args) ->
-      let cstr =
-        begin match ident with
-          | Tcrec(s, r) ->
-              begin match !r with
-                | None ->
-                    let cstr = Resolve.lookup_type Env.unique (Longident.Id s) typexp.te_loc in
-                    r := Some cstr;
-                    cstr
-                | Some cstr -> cstr
-              end
-          | Tcglobal cstr -> cstr
-        end
-      in
+  | Ttyp_constr(cstr, args) ->
       if List.length args != cstr.info.type_arity then
         type_arity_err cstr args typexp.te_loc
       else

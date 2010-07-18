@@ -43,12 +43,8 @@ let rec type_expression env c te =
         | Ptyp_arrow (x, y) -> Ttyp_arrow (type_expression env c x, type_expression env c y)
         | Ptyp_tuple l -> Ttyp_tuple (List.map (type_expression env c) l)
         | Ptyp_constr (li, l) ->
-            Ttyp_constr
-              (begin match li with
-                 | Longident.Id s when List.mem s c -> Tcrec (s, ref None)
-                 | _ -> Tcglobal (lookup_type env li te.ptyp_loc)
-               end,
-               List.map (type_expression env c) l)
+            Ttyp_constr (lookup_type env li te.ptyp_loc,
+                         List.map (type_expression env c) l)
       end;
     te_loc = te.ptyp_loc }
 

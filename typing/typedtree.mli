@@ -4,10 +4,6 @@ open Asttypes
 open Types
 open Asttypes
 
-type tconstr_identifier =
-  | Tcglobal of type_declaration global
-  | Tcrec of string * type_declaration global option ref
-
 type type_expression =
   { te_desc: type_expression_desc;
     te_loc: Location.t }
@@ -16,7 +12,7 @@ and type_expression_desc =
     Ttyp_var of string
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
-  | Ttyp_constr of tconstr_identifier * type_expression list
+  | Ttyp_constr of type_declaration global * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
