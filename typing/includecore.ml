@@ -13,10 +13,10 @@ exception Dont_match
 let value_descriptions vd1 vd2 =
   if moregeneral vd1.val_typ vd2.val_typ then begin
     match (vd1.val_prim, vd2.val_prim) with
-        (ValuePrim (_,p1), ValuePrim (_,p2)) ->
+        (ValuePrim (p1), ValuePrim (p2)) ->
           if p1 = p2 then Tcoerce_none else raise Dont_match
-      | (ValuePrim _ as p, _) -> Tcoerce_primitive p
-      | (_, ValuePrim (_,p)) -> raise Dont_match
+      | (ValuePrim p, _) -> Tcoerce_primitive p
+      | (_, ValuePrim (p)) -> raise Dont_match
       | (_, _) -> Tcoerce_none
   end else
     raise Dont_match

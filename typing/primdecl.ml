@@ -74,7 +74,7 @@ let primitive_names = [
 
 let find_primitive arity name =
   try
-    ValuePrim(arity, List.assoc name primitive_names)
+    List.assoc name primitive_names
   with Not_found ->
-    ValuePrim(arity, Pccall(name, arity))
+    Pccall(name, arity)
 ;;

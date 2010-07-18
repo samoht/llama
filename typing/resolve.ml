@@ -4,6 +4,7 @@ open Misc
 open Types
 open Parsetree
 open Typedtree
+open Primitive
 
 let rec type_expression c te =
   { te_desc =
@@ -151,7 +152,7 @@ let constr_decl c (s,tys) = (s,List.map (type_expression c) tys)
 let primitive o =
   begin match o with
     | None ->ValueNotPrim
-    | Some (arity,s) -> Primdecl.find_primitive arity s 
+    | Some (arity,s) -> ValuePrim {prim_arity=arity;prim_name=s}
   end
 
 let type_kind c tk =
@@ -173,7 +174,7 @@ let structure_item si =
                 List.fold_right (fun (p,e) c -> extend_context true p c) lpe []
               else [] in
             Tstr_value(b,List.map (fun (p,e)->pattern p, expr cond_c e) lpe)
-        | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,type_expression [] te, Primdecl.find_primitive arity n)
+        | Pstr_primitive(s,te,(arity,n)) -> Tstr_primitive(s,type_expression [] te, {prim_arity=arity;prim_name=s})
         | Pstr_type l ->
             let c = List.map (fun (s,_,_) -> s) l in
             Tstr_type(List.map (fun (s,ps,tk)->(s,ps,type_kind c tk)) l)

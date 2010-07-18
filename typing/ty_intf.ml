@@ -26,7 +26,7 @@ let enter_interface_definitions intf =
   Hashtbl.iter
     (fun name val_desc ->
       match val_desc.info.val_prim with
-        ValuePrim(_,_) -> add_value val_desc
+        ValuePrim(_) -> add_value val_desc
       |       _        -> ())
     (values_of_module intf);
   Hashtbl.iter

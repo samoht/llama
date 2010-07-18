@@ -63,7 +63,7 @@ let do_structure_item phr =
           print_newline())
         (List.rev env)
   | Tstr_primitive (name,te,pr) ->
-      let _ = type_valuedecl phr.str_loc name te pr in
+      let _ = type_valuedecl phr.str_loc name te (Types.ValuePrim pr) in
       reset_rollback ();
       Printf.printf "Primitive %s defined.\n" name
   | Tstr_type decl ->

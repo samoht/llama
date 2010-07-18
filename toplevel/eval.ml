@@ -3,6 +3,8 @@ open Asttypes
 open Predef
 open Typedtree
 open Prim
+open Primdecl
+open Primitive
 open Symtable
 
 type term =
@@ -59,8 +61,8 @@ let rec term_of_expr c expr =
                     with
                       | Not_found -> Global qid
                     end
-                | ValuePrim (_, prim) ->
-                    Prim prim
+                | ValuePrim prim ->
+                    Prim (find_primitive prim.prim_arity prim.prim_name)
               end
           | Zlocal s ->
               let rec aux i c =

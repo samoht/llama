@@ -105,7 +105,7 @@ type value_desc =
 
 and prim_desc =
     ValueNotPrim
-  | ValuePrim of int * primitive        (* arity & implementation *)
+  | ValuePrim of Primitive.description        (* arity & implementation *)
 ;;
 
 type exception_declaration = typ list

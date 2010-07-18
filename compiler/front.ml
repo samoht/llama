@@ -14,6 +14,7 @@ open Matching;;
 open Tr_env;;
 open Trstream;;
 open Error;;
+open Primitive;;
 
 (* Propagation of constants *)
 
@@ -118,15 +119,17 @@ let rec translate_expr env =
       (match g.info.val_prim with
         ValueNotPrim ->
           Lprim(Pget_global g.qualid, [])
-      | ValuePrim(0, p) ->
-          Lprim(Pget_global g.qualid, [])
-      | ValuePrim(arity, p) ->
-          let rec make_fct args n =
-            if n >= arity
-            then Lprim(p, args)
-            else Lfunction(make_fct (Lvar n :: args) (n+1))
-          in
-            make_fct [] 0)
+         | ValuePrim p ->
+             let arity = p.prim_arity in
+             if arity = 0 then
+               Lprim(Pget_global g.qualid, []) (* xxx *)
+             else
+               let rec make_fct args n =
+                 if n >= arity
+                 then Lprim(Primdecl.find_primitive arity p.prim_name, args)
+                 else Lfunction(make_fct (Lvar n :: args) (n+1))
+               in
+               make_fct [] 0)
   | Texp_constant cst ->
       Lconst (SCatom cst)
   | Texp_tuple(args) ->
@@ -167,8 +170,9 @@ let rec translate_expr env =
       begin match g.info.val_prim with
         ValueNotPrim ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
-      | ValuePrim(arity, p) ->
+      | ValuePrim {prim_arity=arity;prim_name=name} ->
           if arity == List.length args then
+            let p = Primdecl.find_primitive arity name in
             match (p, args) with
               (Praise, [arg1]) ->
                 Lprim(p, [Event.after env arg1 (transl arg1)])

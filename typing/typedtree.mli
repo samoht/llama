@@ -101,7 +101,7 @@ type structure_item =
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
-  | Tstr_primitive of string * type_expression * prim_desc
+  | Tstr_primitive of string * type_expression * Primitive.description
   | Tstr_type of (string * string list * type_kind) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
@@ -109,4 +109,4 @@ and structure_item_desc =
 type module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_primitive of prim_desc
+  | Tcoerce_primitive of Primitive.description
