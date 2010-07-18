@@ -58,7 +58,7 @@ let type_of_type_expression strict_flag typexp =
           | Tcrec(s, r) ->
               begin match !r with
                 | None ->
-                    let cstr = Env.lookup_type (Longident.Id s) typexp.te_loc in
+                    let cstr = Resolve.lookup_type (Longident.Id s) typexp.te_loc in
                     r := Some cstr;
                     cstr
                 | Some cstr -> cstr
@@ -353,7 +353,7 @@ let rec type_expr env expr =
             type_expect env e (type_instance ty_schema);
             type_unit
       with Not_found ->
-        unbound_value_err (GRname id) expr.exp_loc
+        unbound_value_err (Longident.Id id) expr.exp_loc
       end
   | Texp_record lbl_expr_list ->
       let ty = new_type_var() in

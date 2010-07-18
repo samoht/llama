@@ -11,6 +11,13 @@ open Pr_type;;
 open Printf;;
 open Ctype;;
 
+let output_longident oc = function
+    Longident.Id s ->
+      output_string oc s
+  | Longident.Qual (mn, s) ->
+      output_string oc mn; output_string oc "__"; output_string oc s
+;;
+
 let output_globalref oc = function
     GRname s ->
       output_string oc s
@@ -32,19 +39,19 @@ let output_globalref oc = function
 
 let unbound_value_err name loc =
   eprintf "%aThe value identifier %a is unbound.\n" 
-    output_location loc output_globalref name;
+    output_location loc output_longident name;
   raise Toplevel
 and unbound_constr_err name loc =
   eprintf "%aThe constructor %a is unbound.\n"
-    output_location loc output_globalref name;
+    output_location loc output_longident name;
   raise Toplevel
 and unbound_label_err name loc =
   eprintf "%aThe label %a is unbound.\n"
-    output_location loc output_globalref name;
+    output_location loc output_longident name;
   raise Toplevel
 and unbound_type_constr_err name loc =
   eprintf "%aThe type constructor %a is unbound.\n"
-    output_location loc output_globalref name;
+    output_location loc output_longident name;
   raise Toplevel
 and unbound_type_var_err v ty =
   eprintf "%aThe type variable %s is unbound.\n"

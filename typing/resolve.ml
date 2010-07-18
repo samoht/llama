@@ -6,6 +6,22 @@ open Parsetree
 open Typedtree
 open Primitive
 
+let lookup_type li loc =
+  try Env.lookup_type li
+  with Not_found -> Error.unbound_type_constr_err li loc
+
+let lookup_constructor li loc =
+  try Env.lookup_constructor li
+  with Not_found -> Error.unbound_constr_err li loc
+
+let lookup_label li loc =
+  try Env.lookup_label li
+  with Not_found -> Error.unbound_label_err li loc
+
+let lookup_value li loc =
+  try Env.lookup_value li
+  with Not_found -> Error.unbound_value_err li loc
+
 let rec type_expression c te =
   { te_desc =
       begin match te.ptyp_desc with
@@ -16,7 +32,7 @@ let rec type_expression c te =
             Ttyp_constr
               (begin match li with
                  | Longident.Id s when List.mem s c -> Tcrec (s, ref None)
-                 | _ -> Tcglobal (Env.lookup_type li te.ptyp_loc)
+                 | _ -> Tcglobal (lookup_type li te.ptyp_loc)
                end,
                List.map (type_expression c) l)
       end;
@@ -31,7 +47,7 @@ let rec pattern p =
         | Ppat_constant c -> Tpat_constant c
         | Ppat_tuple l -> Tpat_tuple (List.map pattern l)
         | Ppat_construct (li,sarg) ->
-            let cs = Env.lookup_constructor li p.ppat_loc in
+            let cs = lookup_constructor li p.ppat_loc in
             let arity = arity cs.info in
             let sargs =
               match sarg with
@@ -44,7 +60,7 @@ let rec pattern p =
             Tpat_construct (cs, List.map pattern sargs)
         | Ppat_or (p1, p2) -> Tpat_or (pattern p1, pattern p2)
         | Ppat_constraint (p, te) -> Tpat_constraint (pattern p, type_expression [] te)
-        | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (Env.lookup_label li p.ppat_loc, pattern p)) l)
+        | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label li p.ppat_loc, pattern p)) l)
       end;
     pat_loc = p.ppat_loc;
     pat_type = no_type }
@@ -74,7 +90,7 @@ let rec expr c ex =
   { exp_desc =
       begin match ex.pexp_desc with
         | Pexp_ident li ->
-            let notlocal() = Zglobal(Env.lookup_value li ex.pexp_loc) in
+            let notlocal() = Zglobal(lookup_value li ex.pexp_loc) in
             Texp_ident
               begin match li with
                 | Longident.Id s ->
@@ -87,7 +103,7 @@ let rec expr c ex =
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr c) l)
         | Pexp_construct (li,sarg) ->
-            let cs = Env.lookup_constructor li ex.pexp_loc in
+            let cs = lookup_constructor li ex.pexp_loc in
             let arity = arity cs.info in
             let sargs =
               match sarg with
@@ -115,9 +131,9 @@ let rec expr c ex =
         | Pexp_constraint(e,te) -> Texp_constraint(expr c e,type_expression [] te)
         | Pexp_array l -> Texp_array(List.map (expr c) l)
         | Pexp_assign (s,e) -> Texp_assign(s, expr c e)
-        | Pexp_record l -> Texp_record(List.map (fun (li,e) -> Env.lookup_label li ex.pexp_loc,expr c e) l)
-        | Pexp_field (e,li) -> Texp_field(expr c e,Env.lookup_label li ex.pexp_loc)
-        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr c e, Env.lookup_label li ex.pexp_loc, expr c e2)
+        | Pexp_record l -> Texp_record(List.map (fun (li,e) -> lookup_label li ex.pexp_loc,expr c e) l)
+        | Pexp_field (e,li) -> Texp_field(expr c e,lookup_label li ex.pexp_loc)
+        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr c e, lookup_label li ex.pexp_loc, expr c e2)
         | Pexp_stream l ->
             Texp_stream (List.map
                        (fun cmp ->

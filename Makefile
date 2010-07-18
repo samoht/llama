@@ -23,9 +23,9 @@ TYPING=typing/ident.cmx typing/path.cmx \
  typing/error.cmx \
  typing/printtyp.cmx \
  typing/includecore.cmx typing/includemod.cmx \
+ typing/resolve.cmx \
  typing/typecore.cmx \
- typing/typedecl.cmx typing/ty_intf.cmx \
- typing/resolve.cmx
+ typing/typedecl.cmx typing/ty_intf.cmx
 
 #TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 #  typing/primitive.cmo typing/types.cmo \
