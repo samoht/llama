@@ -13,38 +13,35 @@ open Typedecl;;
 
 let enter_interface_definitions intf =
   external_types := [];
-  Hashtbl.iter
-    (fun name ty_desc ->
-      let manifest =
-        match ty_desc.info.type_kind with
+  Module.iter intf types_of_module begin fun ty_desc ->
+    let manifest =
+      match ty_desc.info.type_kind with
           Type_abstract -> false
-        | _ -> add_type !defined_module ty_desc; true in
-      external_types :=
-        (ty_desc.qualid.id,
-         {et_descr = ty_desc; et_manifest = manifest; et_defined = false})
-        :: !external_types)
-    (types_of_module intf);
-  Hashtbl.iter
-    (fun name val_desc ->
-      match val_desc.info.val_prim with
+        | _ -> add_type !defined_module ty_desc; true
+    in
+    external_types :=
+      ((ty_desc.qualid.id,
+        {et_descr = ty_desc; et_manifest = manifest; et_defined = false})
+       :: !external_types);
+  end;
+  Module.iter intf values_of_module begin fun val_desc ->
+    match val_desc.info.val_prim with
         ValuePrim(_) -> add_value !defined_module val_desc
-      |       _        -> ())
-    (values_of_module intf);
-  Hashtbl.iter
-    (fun name constr_desc -> add_constr !defined_module constr_desc)
-    (constrs_of_module intf);
-  Hashtbl.iter
-    (fun name label_desc -> add_label !defined_module label_desc)
-    (labels_of_module intf)
-;;
+      |       _        -> ()
+  end;
+  Module.iter intf constrs_of_module begin fun constr_desc ->
+    add_constr !defined_module constr_desc
+  end;
+  Module.iter intf labels_of_module begin fun label_desc ->
+    add_label !defined_module label_desc
+  end
 
 (* Check that an implementation matches an explicit interface *)
 
 let check_value_match val_decl =
   let val_impl =
     try
-      Hashtbl.find (values_of_module !defined_module)
-                    (little_name_of_global val_decl)
+      Module.lookup_value (little_name_of_global val_decl) !defined_module
     with Not_found ->
       undefined_value_err val_decl in
   let nongen_vars = free_type_vars notgeneric val_impl.info.val_typ in
@@ -58,21 +55,17 @@ let check_value_match val_decl =
 ;;
 
 let check_interface intf =
-  Hashtbl.iter
-    (fun name val_desc ->
+  Module.iter intf values_of_module begin fun val_desc ->
       match val_desc.info.val_prim with
         ValueNotPrim -> check_value_match val_desc
-      |      _       -> ())
-    (values_of_module intf)
-;;
+      |      _       -> ()
+  end
 
 (* Check that an implementation without interface does not export values
    with non-generalizable types. *)
 
 let check_nongen_values () =
-  Hashtbl.iter
-    (fun name val_impl ->
-      if free_type_vars notgeneric val_impl.info.val_typ != [] then
-        cannot_generalize_err val_impl)
-    (values_of_module !defined_module)
-;;
+  Module.iter !defined_module values_of_module begin fun val_impl ->
+    if free_type_vars notgeneric val_impl.info.val_typ != [] then
+      cannot_generalize_err val_impl
+  end

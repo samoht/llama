@@ -22,12 +22,18 @@ type t =
                       (* true if this interface comes from a .zi file *)
 ;;
 
+type 'a selector = (t -> (string, 'a Types.global) Hashtbl.t)
+
 let name_of_module    md = md.mod_name
 and values_of_module  md = md.mod_values
 and constrs_of_module md = md.mod_constrs
 and labels_of_module  md = md.mod_labels
 and types_of_module   md = md.mod_types
+
+let iter m sel cb =
+  Hashtbl.iter (fun _ v -> cb v) (sel m)
 ;;
+let find_all m sel p = Hashtbl.find_all (sel m) p
 
 (* The table of module interfaces already loaded in memory *)
 
@@ -202,7 +208,7 @@ and add_type = add_global_info types_of_module
 
 exception Desc_not_found;;
 
-let find_desc sel_fct = function
+let find_desc m sel_fct = function
     GRmodname q ->
       begin try
         Hashtbl.find (sel_fct (find_module q.qual)) q.id
@@ -222,11 +228,14 @@ let find_desc sel_fct = function
           raise Desc_not_found
 ;;
 
-let find_value_desc = find_desc values_of_module
-and find_constr_desc = find_desc constrs_of_module
-and find_label_desc = find_desc labels_of_module
-and find_type_desc = find_desc types_of_module
-;;
+let lookup_value s m =
+  try find_desc m values_of_module (GRname s)
+  with Desc_not_found -> raise Not_found
+
+let find_value_desc = find_desc !defined_module values_of_module
+and find_constr_desc = find_desc !defined_module  constrs_of_module
+and find_label_desc = find_desc !defined_module labels_of_module
+and find_type_desc = find_desc !defined_module types_of_module
 
 let type_descr_of_type_constr cstr =
   let rec select_type_descr = function

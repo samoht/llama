@@ -1,12 +1,15 @@
 type t
+type 'a selector
+
+val iter : t -> 'a selector -> ('a Types.global -> unit) -> unit
+val find_all : t -> 'a selector -> string -> 'a Types.global list
 
 val name_of_module : t -> string
-val values_of_module : t -> (string, Types.value_desc Types.global) Hashtbl.t
-val constrs_of_module :
-  t -> (string, Types.constr_desc Types.global) Hashtbl.t
-val labels_of_module : t -> (string, Types.label_desc Types.global) Hashtbl.t
-val types_of_module :
-  t -> (string, Types.type_declaration Types.global) Hashtbl.t
+val values_of_module : Types.value_desc selector
+val constrs_of_module : Types.constr_desc selector
+val labels_of_module : Types.label_desc selector
+val types_of_module : Types.type_declaration selector
+
 val module_table : (string, t) Hashtbl.t
 
 val new_module : string -> t
@@ -41,6 +44,8 @@ val add_type : t -> Types.type_declaration Types.global -> unit
 
 exception Desc_not_found
 
+val lookup_value : string -> t -> Types.value_desc Types.global
+
 val find_value_desc : Types.global_reference -> Types.value_desc Types.global
 val find_constr_desc :
   Types.global_reference -> Types.constr_desc Types.global
@@ -52,5 +57,5 @@ val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
 val flush_module_cache : unit -> unit
-val can_omit_qualifier :
-  (t -> (string, 'a Types.global) Hashtbl.t) -> 'b Types.global -> bool
+val can_omit_qualifier : 'a selector -> 'b Types.global -> bool
+
