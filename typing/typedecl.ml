@@ -36,7 +36,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
             cs_tag = constr_tag;
             cs_kind = kind; }
       in
-        add_constr constr_glob;
+        add_constr !defined_module constr_glob;
         constr_glob :: make_constrs (succ constr_idx) rest
   in
     let constr_descs = make_constrs 0 constrs in
@@ -58,7 +58,7 @@ let enter_new_record loc (ty_constr, ty_res, labels) =
           { lbl_res = ty_res; lbl_arg = ty_arg;
             lbl_mut = mut_flag; lbl_pos = i }
       in
-        add_label lbl_glob;
+        add_label !defined_module lbl_glob;
         lbl_glob :: make_labels (succ i) rest in
   let label_descs = make_labels 0 labels in
     pop_type_level();
@@ -141,7 +141,7 @@ let type_typedecl loc decl =
                type_manifest = None; (* xxx *)
                type_params = []; (* xxx *)
                type_kind  = Type_abstract (* xxx *) } in
-         add_type ty_desc;
+         add_type !defined_module ty_desc;
          ty_desc)
       decl
   in
@@ -178,7 +178,7 @@ let type_valuedecl loc name typexp prim =
     let ty = type_of_type_expression false typexp in
       pop_type_level();
       generalize_type ty;
-      add_value (defined_global name { val_typ = ty; val_prim = prim })
+      add_value !defined_module (defined_global name { val_typ = ty; val_prim = prim })
 ;;
 
 let type_letdef loc rec_flag untyped_pat_expr_list =
@@ -191,7 +191,7 @@ let type_letdef loc rec_flag untyped_pat_expr_list =
   let enter_val =
     List.iter
       (fun (name,(ty,mut_flag)) ->
-        add_value (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
+        add_value !defined_module (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
   if rec_flag then enter_val c;
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
   List.iter2

@@ -37,7 +37,7 @@ let find_exception tag =
           if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  select_exn(Hashtbl.find_all (find_module qualid.qual).mod_constrs qualid.id)
+  select_exn(Hashtbl.find_all (constrs_of_module (find_module qualid.qual)) qualid.id)
 ;;
 
 let printers = ref [

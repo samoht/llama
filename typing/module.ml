@@ -182,8 +182,8 @@ let new_exc_stamp () =
 
 (* Additions to the module being compiled *)
 
-let add_global_info sel_fct glob =
-  let tbl = sel_fct !defined_module in
+let add_global_info sel_fct m glob =
+  let tbl = sel_fct m in
     if !toplevel then
       add_rollback (fun () -> Hashtbl.remove tbl glob.qualid.id);
     Hashtbl.add tbl glob.qualid.id glob

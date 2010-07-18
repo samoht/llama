@@ -314,7 +314,7 @@ let rec make_sequence f = function
 ;;
 
 let translate_letdef loc pat_expr_list =
-  let modname = (!defined_module).mod_name in
+  let modname = name_of_module (!defined_module) in
   match pat_expr_list with
     [{pat_desc = Tpat_var i}, expr] ->      (* Simple case: let id = expr *)
       Lprim(Pset_global {qual=modname; id=i}, [translate_expression expr])
@@ -350,7 +350,7 @@ let translate_letdef_rec loc pat_expr_list =
   (* First check that all patterns are variables *)
   let var_expr_list =
     List.map (fun (pat, expr) -> (extract_variable pat, expr)) pat_expr_list in
-  let modname = (!defined_module).mod_name in
+  let modname = name_of_module (!defined_module) in
   try                                   (* Simple case: let rec id = fun *)
     make_sequence
       (function (i, e) ->

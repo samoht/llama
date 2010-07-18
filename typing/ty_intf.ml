@@ -18,7 +18,7 @@ let enter_interface_definitions intf =
       let manifest =
         match ty_desc.info.type_kind with
           Type_abstract -> false
-        | _ -> add_type ty_desc; true in
+        | _ -> add_type !defined_module ty_desc; true in
       external_types :=
         (ty_desc.qualid.id,
          {et_descr = ty_desc; et_manifest = manifest; et_defined = false})
@@ -27,14 +27,14 @@ let enter_interface_definitions intf =
   Hashtbl.iter
     (fun name val_desc ->
       match val_desc.info.val_prim with
-        ValuePrim(_) -> add_value val_desc
+        ValuePrim(_) -> add_value !defined_module val_desc
       |       _        -> ())
     (values_of_module intf);
   Hashtbl.iter
-    (fun name constr_desc -> add_constr constr_desc)
+    (fun name constr_desc -> add_constr !defined_module constr_desc)
     (constrs_of_module intf);
   Hashtbl.iter
-    (fun name label_desc -> add_label label_desc)
+    (fun name label_desc -> add_label !defined_module label_desc)
     (labels_of_module intf)
 ;;
 

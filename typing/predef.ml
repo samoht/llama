@@ -168,7 +168,7 @@ let mkty cstr params desc =
 
 let _ = List.iter
   (fun (name,desc) ->
-      Hashtbl.add module_builtin.mod_types name (builtin name desc))
+     add_type module_builtin (builtin name desc))
   ["unit", mkty constr_type_unit [] (Type_variant[constr_void]);
    "exn", mkty constr_type_exn [] (Type_variant []);
    "bool", mkty constr_type_bool [] (Type_variant [constr_false; constr_true]);
@@ -184,7 +184,7 @@ let _ = List.iter
 (* The type "stream" is defined in the "stream" module *)
 
 List.iter
-  (fun desc -> Hashtbl.add module_builtin.mod_constrs desc.qualid.id desc)
+  (fun desc -> add_constr module_builtin desc)
   [constr_void; constr_nil; constr_cons; constr_none; constr_some;
    constr_true; constr_false;
    constr_match_failure ]

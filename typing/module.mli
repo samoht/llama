@@ -1,13 +1,5 @@
-type t = {
-  mod_name : string;
-  mod_values : (string, Types.value_desc Types.global) Hashtbl.t;
-  mod_constrs : (string, Types.constr_desc Types.global) Hashtbl.t;
-  mod_labels : (string, Types.label_desc Types.global) Hashtbl.t;
-  mod_types : (string, Types.type_declaration Types.global) Hashtbl.t;
-  mutable mod_type_stamp : int;
-  mutable mod_exc_stamp : int;
-  mutable mod_persistent : bool;
-}
+type t
+
 val name_of_module : t -> string
 val values_of_module : t -> (string, Types.value_desc Types.global) Hashtbl.t
 val constrs_of_module :
@@ -37,12 +29,10 @@ val compiled_module_name : unit -> string
 val defined_global : string -> 'a -> 'a Types.global
 val new_type_stamp : unit -> int
 val new_exc_stamp : unit -> int
-val add_global_info :
-  (t -> (string, 'a Types.global) Hashtbl.t) -> 'a Types.global -> unit
-val add_value : Types.value_desc Types.global -> unit
-val add_constr : Types.constr_desc Types.global -> unit
-val add_label : Types.label_desc Types.global -> unit
-val add_type : Types.type_declaration Types.global -> unit
+val add_value : t -> Types.value_desc Types.global -> unit
+val add_constr : t -> Types.constr_desc Types.global -> unit
+val add_label : t -> Types.label_desc Types.global -> unit
+val add_type : t -> Types.type_declaration Types.global -> unit
 exception Desc_not_found
 val find_desc :
   (t -> (string, 'a Types.global) Hashtbl.t) ->
