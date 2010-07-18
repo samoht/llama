@@ -78,22 +78,6 @@ let enter_new_abbrev (ty_constr, ty_params, body) =
     Type_abstract, Some ty_body
 ;;
 
-let enter_new_type (ty_name, params, def) =
-  let ty_constr =
-    defined_global ty_name
-      { ty_stamp = new_type_stamp();
-        ty_abbr = Tnotabbrev } in
-  let ty_desc =
-    defined_global ty_name
-      { ty_constr = ty_constr;
-        type_arity = List.length params;
-        type_manifest = None; (* xxx *)
-        type_params = []; (* xxx *)
-        type_kind  = Type_abstract } in
-  add_type ty_desc;
-  ty_desc, params, def
-;;
-
 type external_type =
   { et_descr: type_declaration global;
     et_manifest: bool;
@@ -142,21 +126,45 @@ let define_new_type loc (ty_desc, params, def) =
   (ty_res, type_comp)
 ;;
 
-(* Check if an abbreviation is recursive *)
-
-let check_recursive_abbrev loc (ty, params, def) =
-  try
-    check_recursive_abbrev ty.info.ty_constr
-  with Recursive_abbrev ->
-    recursive_abbrev_err loc ty
-;;
-
 let type_typedecl loc decl =
-  let newdecl = List.map enter_new_type decl in (* xxx: they need params *)
-  let res = List.map (define_new_type loc) newdecl in (* xxx: and they got them now *)
-  List.iter (check_recursive_abbrev loc) newdecl;
-  List.combine newdecl res
-;;
+  let newdecl =
+    List.map
+      (fun (ty_name, params, def) ->
+         let ty_constr =
+           defined_global ty_name
+             { ty_stamp = new_type_stamp();
+               ty_abbr = Tnotabbrev } in
+         let ty_desc =
+           defined_global ty_name
+             { ty_constr = ty_constr;
+               type_arity = List.length params;
+               type_manifest = None; (* xxx *)
+               type_params = []; (* xxx *)
+               type_kind  = Type_abstract (* xxx *) } in
+         add_type ty_desc;
+         ty_desc)
+      decl
+  in
+  let decl =
+    List.map
+      (fun (ty_name, params, def) -> (ty_name, params, Resolve.type_kind Env.unique [] def))
+      decl
+  in
+  let res =
+    List.map2
+      (fun (ty_name, params, def) ty_desc ->
+         define_new_type loc (ty_desc, params, def))
+      decl newdecl
+  in
+  List.iter2
+    begin fun (ty_name, params, def) ty_desc ->
+      try
+        check_recursive_abbrev ty_desc.info.ty_constr
+      with Recursive_abbrev ->
+        recursive_abbrev_err loc ty_desc
+    end
+    decl newdecl;
+  decl
 
 let type_excdecl loc decl =
   push_type_level();

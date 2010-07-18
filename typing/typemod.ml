@@ -26,10 +26,8 @@ let type_structure_item pstr =
         type_valuedecl pstr.pstr_loc s te (Types.ValuePrim pr);
         phr
     | Pstr_type decl ->
-        let c = List.map (fun (s,_,_) -> s) decl in
-        let decl = List.map (fun (s,ps,tk)->(s,ps,Resolve.type_kind env c tk)) decl in
+        let decl = type_typedecl pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
-        let _ty_decl = type_typedecl pstr.pstr_loc decl in
 (*      if !verbose then print_typedecl ty_decl *)
         phr
     | Pstr_exception decl ->
@@ -54,10 +52,8 @@ let type_signature_item psig =
         type_valuedecl phr.sig_loc s te pr;
         phr
     | Psig_type decl ->
-        let c = List.map (fun (s,_,_) -> s) decl in
-        let decl = List.map (fun (s,ps,tk)->(s,ps,Resolve.type_kind env c tk)) decl in
+        let decl = type_typedecl psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in
-        let _ty_decl = type_typedecl psig.psig_loc decl in
 (*      if !verbose then print_typedecl ty_decl *)
         phr
     | Psig_exception decl ->
