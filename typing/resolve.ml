@@ -65,7 +65,9 @@ let rec free_vars_of_pat pat =
 
 let extend_context isrec pat c =
   let vs = free_vars_of_pat pat in
-  List.map (fun v -> (v, isrec)) vs @ c
+  List.map (fun v -> (v, (isrec, Ident.create v))) vs @ c
+
+let ext isrec s c = (s, (isrec, Ident.create s)) :: c
 
 let rec expr c ex =
   { exp_desc =
@@ -76,7 +78,8 @@ let rec expr c ex =
               begin match li with
                 | Longident.Id s ->
                     begin try
-                      if List.assoc s c then Zrec (s, ref None) else Zlocal s
+                      let (isrec, ident) = List.assoc s c in
+                      if isrec then Zrec (ident, ref None) else Zlocal ident
                     with Not_found -> notlocal() end
                 | _ -> notlocal()
               end
@@ -107,7 +110,7 @@ let rec expr c ex =
         | Pexp_sequence (e1,e2) -> Texp_sequence(expr c e1,expr c e2)
         | Pexp_ifthenelse(e1,e2,e3) -> Texp_ifthenelse (expr c e1,expr c e2, expr c e3)
         | Pexp_while(e1,e2) -> Texp_while(expr c e1,expr c e2)
-        | Pexp_for(s,e1,e2,b,e3) -> Texp_for(s,expr c e1,expr c e2,b,expr ((s,false)::c) e3)
+        | Pexp_for(s,e1,e2,b,e3) -> Texp_for(s,expr c e1,expr c e2,b,expr (ext false s c) e3)
         | Pexp_constraint(e,te) -> Texp_constraint(expr c e,type_expression [] te)
         | Pexp_array l -> Texp_array(List.map (expr c) l)
         | Pexp_assign (s,e) -> Texp_assign(s, expr c e)
@@ -131,7 +134,7 @@ let rec expr c ex =
                       | Ptermpat p -> Ztermpat (pattern p),(extend_context false p c)
                       | Pnontermpat (e, p) ->
                           Znontermpat (expr c e, pattern p), (extend_context false p c)
-                      | Pexp_streampat s ->          Texp_streampat s , ((s,false)::c)
+                      | Pexp_streampat s ->          Texp_streampat s , (ext false s c)
                     end
                     in
                     let rest,e = aux c rest e in

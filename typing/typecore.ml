@@ -266,10 +266,10 @@ let rec type_expr env expr =
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_typ
         | Zlocal s ->
-            let (ty_schema, mut_flag) = List.assoc s env in
+            let (ty_schema, mut_flag) = List.assoc (Ident.name s) env in
             type_instance ty_schema
         | Zrec(s,r) ->
-            let glob_desc = find_value_desc(GRname s) in
+            let glob_desc = find_value_desc(GRname (Ident.name s)) in
             r := Some glob_desc;
             type_instance glob_desc.info.val_typ
       end

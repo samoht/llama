@@ -72,7 +72,7 @@ let rec term_of_expr c expr =
               let rec aux i c =
                 begin match c with
                   | [] -> assert false
-                  | (hd :: tl) -> if hd = s then i else aux (i+1) tl
+                  | (hd :: tl) -> if hd = Ident.name s then i else aux (i+1) tl (* xxx *)
                 end
               in
               rel.(aux 0 c)

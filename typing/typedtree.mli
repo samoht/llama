@@ -36,8 +36,8 @@ and pattern_desc =
 
 type value_identifier =
     Zglobal of value_desc global
-  | Zlocal of string
-  | Zrec of string * value_desc global option ref
+  | Zlocal of Ident.t
+  | Zrec of Ident.t * value_desc global option ref
 
 type expression =
   { exp_desc: expression_desc;
