@@ -1,6 +1,6 @@
 (* To hide the global variables internal to the toplevel system. *)
 
-open Const;;
+open Asttypes;;
 open Sys;;
 open Symtable;;
 

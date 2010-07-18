@@ -1,6 +1,6 @@
 (* Printing a type expression *)
 
-open Const;;
+open Asttypes;;
 open Types;;
 open Btype;;
 open Modules;;

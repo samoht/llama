@@ -1,9 +1,24 @@
 (* The intermediate language: extended lambda-calculus in de
     Bruijn's notation *)
 
-open Const;;
+open Asttypes;;
 open Prim;;
 open Types;;
+
+let const_unit =
+    SCblock(ConstrRegular(0,1), [])
+;;
+
+let int_of_atom = function
+    ACint i -> i
+  | ACchar c -> int_of_char c
+  | _ -> Misc.fatal_error "int_of_atom"
+;;
+
+let int_of_constr_tag = function
+    ConstrRegular(i,_) -> i
+  | ConstrExtensible _ -> Misc.fatal_error "int_of_constr_tag"
+;;
 
 (* Structure of compilation environments *)
 

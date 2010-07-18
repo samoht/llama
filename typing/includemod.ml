@@ -1,6 +1,7 @@
 open Types
 open Btype
 open Typedtree
+open Asttypes
 
 type error =
     Missing_field of string
@@ -45,9 +46,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Sig_value gl -> (gl.qualid, Field_value gl.qualid.Const.id)
-  | Sig_type(gl) -> (gl.qualid, Field_type gl.qualid.Const.id)
-  | Sig_exception(gl) -> (gl.qualid, Field_exception gl.qualid.Const.id)
+    Sig_value gl -> (gl.qualid, Field_value gl.qualid.id)
+  | Sig_type(gl) -> (gl.qualid, Field_type gl.qualid.id)
+  | Sig_exception(gl) -> (gl.qualid, Field_exception gl.qualid.id)
 
 (* Simplify a structure coercion *)
 

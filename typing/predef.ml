@@ -1,6 +1,6 @@
 (* builtins.ml : the pre-defined global identifiers *)
 
-open Const;;
+open Asttypes;;
 open Types;;
 open Modules;;
 open Asttypes;;

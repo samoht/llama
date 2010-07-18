@@ -1,6 +1,6 @@
 (* To determine the identifiers exported by an interface *)
 
-open Const;;
+open Asttypes;;
 open Config;;
 open Misc;;
 open Types;;

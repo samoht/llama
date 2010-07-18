@@ -1,7 +1,7 @@
 (*  back.ml : translation of lambda terms to lists of instructions. *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Lambda;;
 open Prim;;
 open Instruct;;

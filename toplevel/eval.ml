@@ -1,5 +1,5 @@
 open Types
-open Const
+open Asttypes
 open Predef
 open Typedtree
 open Prim

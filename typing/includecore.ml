@@ -1,4 +1,4 @@
-open Const
+open Asttypes
 open Types
 open Btype
 open Typedtree

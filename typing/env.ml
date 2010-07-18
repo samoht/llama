@@ -1,4 +1,4 @@
-open Const
+open Asttypes
 open Misc
 open Types
 open Location
@@ -10,7 +10,7 @@ open Error
 let lookup li =
   begin match li with
     | Longident.Id s -> Types.GRname s
-    | Longident.Qual (mn, s) -> Types.GRmodname {Const.qual=mn; Const.id=s}
+    | Longident.Qual (mn, s) -> Types.GRmodname {qual=mn; id=s}
   end
 
 let lookup_type li loc =

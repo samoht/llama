@@ -1,6 +1,6 @@
 (* Printing functions *)
 
-open Const
+open Asttypes
 open Format
 open Longident
 open Path

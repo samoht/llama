@@ -11,7 +11,7 @@ open Emitcode;;
 open Pr_value;;
 open Format;;
 
-open Const;;
+open Asttypes;;
 let rec transl_structured_const = function
     SCatom(ACint i) -> Llama_obj.of_int i
   | SCatom(ACfloat f) -> Llama_obj.of_float f

@@ -1,6 +1,6 @@
 (* The type of the instructions of the abstract machine *)
 
-open Const;;
+open Asttypes;;
 open Prim;;
 
 type zam_instruction =

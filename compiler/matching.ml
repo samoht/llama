@@ -1,7 +1,7 @@
 (*  match.ml : expansion of pattern-matching as a cascade of tests. *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Predef;;
 open Error;;

@@ -1,7 +1,7 @@
 (* Generation of bytecode for .zo files *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Lambda;;
 open Instruct;;
 open Prim;;

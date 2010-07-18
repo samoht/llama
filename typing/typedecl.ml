@@ -1,7 +1,7 @@
 (* Typecore toplevel phrases *)
 
 open Asttypes
-open Const;;
+open Asttypes;;
 open Types;;
 open Predef;;
 open Typedtree;;

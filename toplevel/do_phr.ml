@@ -2,7 +2,7 @@
 
 open Meta;;
 open Misc;;
-open Const;;
+open Asttypes;;
 open Modules;;
 open Typedtree;;
 open Btype;;

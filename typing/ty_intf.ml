@@ -1,6 +1,6 @@
 (* Consistency check between an interface and an implementation *)
 
-open Const;;
+open Asttypes;;
 open Types;;
 open Modules;;
 open Btype;;

@@ -1,7 +1,7 @@
 (* typing.ml : type inference *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux

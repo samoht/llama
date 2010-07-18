@@ -1,5 +1,5 @@
 open Misc;;
-open Const;;
+open Asttypes;;
 open More_predef;;
 open Printf;;
 

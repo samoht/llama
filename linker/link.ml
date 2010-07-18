@@ -1,6 +1,6 @@
 open Sys;;
 open Obj;;
-open Const;;
+open Asttypes;;
 open Misc;;
 open Lambda;;
 open Config;;

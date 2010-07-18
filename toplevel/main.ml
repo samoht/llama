@@ -6,6 +6,7 @@ open Compiler
 open Clflags
 open Modules
 open Symtable
+open Asttypes
 
 module Warnings = struct
   let parse_options b s = ()
@@ -16,7 +17,7 @@ let interactive_loop () =
   print_newline();
   Sys.catch_break true;
   (* set Sys.interactive to true *)
-  let const_true = Const.SCblock(Const.ConstrRegular(1,2), []) in
+  let const_true = SCblock(ConstrRegular(1,2), []) in
   let repr_true = Load_phr.transl_structured_const const_true in
   Meta.set_global_data 16 repr_true; (* 16: cf ../runtime/globals.h *)
   (* start parsing stdin *)

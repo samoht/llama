@@ -1,6 +1,6 @@
 (* The abstract syntax for the language *)
 
-open Const
+open Asttypes
 open Types
 open Asttypes
 

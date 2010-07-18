@@ -1,7 +1,6 @@
 /* The parser definition */
 
 %{
-open Const;;
 open Parsetree;;
 open Location;;
 open Misc;;

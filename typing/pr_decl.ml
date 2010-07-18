@@ -2,7 +2,7 @@
 
 open Asttypes;;
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Pr_type;;
 open Printf;;

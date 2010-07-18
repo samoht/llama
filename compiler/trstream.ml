@@ -1,6 +1,6 @@
 (* streams.ml: translation of streams *)
 
-open Const;;
+open Asttypes;;
 open Typedtree;;
 open Prim;;
 open Lambda;;

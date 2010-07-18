@@ -1,6 +1,6 @@
 (* Relocation information *)
 
-open Const;;
+open Asttypes;;
 open Buffcode;;
 
 type info =

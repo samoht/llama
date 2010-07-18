@@ -2,7 +2,7 @@
 
 open Misc;;
 open Location;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux;;

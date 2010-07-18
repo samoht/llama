@@ -1,7 +1,7 @@
 (* clauses.ml : detection of unused match clauses and uncomplete matchings *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Location;;
 open Typedtree;;

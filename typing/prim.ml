@@ -1,6 +1,6 @@
 (* The type of primitives *)
 
-open Const;;
+open Asttypes;;
 
 type primitive =
     Pidentity

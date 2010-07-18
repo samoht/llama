@@ -9,11 +9,10 @@ FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx
 
-PARSING=parsing/const.cmx \
- parsing/location.cmx parsing/prim.cmx \
+PARSING= parsing/location.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
-TYPING=typing/ident.cmx typing/path.cmx \
+TYPING=typing/ident.cmx typing/path.cmx typing/prim.cmx \
  typing/primitive.cmx typing/types.cmx \
  typing/modules.cmx \
  typing/btype.cmx \
@@ -108,7 +107,7 @@ linker/prim_c.ml : runtime/primitives
 	 echo '|];;') > $@
 
 linker/more_predef.ml : runtime/globals.h runtime/fail.h
-	(echo 'open Const;;'; \
+	(echo 'open Asttypes;;'; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{qual=\1; id=\2};|p' \
                 $< \

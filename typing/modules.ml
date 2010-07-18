@@ -1,7 +1,7 @@
 (* modules.ml : handling of modules and global symbol tables *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 
 (* Informations associated with module names *)

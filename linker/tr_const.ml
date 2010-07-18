@@ -1,4 +1,4 @@
-open Const;;
+open Asttypes;;
 open Obj;;
 open Symtable;;
 

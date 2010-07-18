@@ -3,7 +3,7 @@
 open Obj;;
 open Meta;;
 open Misc;;
-open Const;;
+open Asttypes;;
 open Location;;
 open Modules;;
 open Types;;

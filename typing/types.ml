@@ -1,8 +1,7 @@
 (* Global symbol tables *)
 
-open Const;;
-open Prim;;
 open Asttypes;;
+open Prim;;
 
 (* A reference to a global, in a source file, is either a qualified identifier
    mod__name, or an unqualified identifier name. *)

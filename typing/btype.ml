@@ -1,7 +1,7 @@
 (* basic operations over types *)
 
 open Misc;;
-open Const;;
+open Asttypes;;
 open Types;;
 open Modules;;
 
