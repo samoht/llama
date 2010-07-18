@@ -5,7 +5,7 @@ open Types;;
 open Modules;;
 open Btype;;
 open Error;;
-open Ty_decl;;
+open Typedecl;;
 
 (* Create the initial environment for compiling an implementation
    when an explicit interface exists. *)

@@ -7,7 +7,7 @@ open Const;;
 open Location;;
 open Modules;;
 open Types;;
-open Builtins;;
+open Predef;;
 open Btype;;
 open Patch;;
 open Emit_phr;;

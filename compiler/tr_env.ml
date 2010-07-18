@@ -153,7 +153,7 @@ let add_for_parameter_to_env env id =
   let var =
     {var_name = id;
      var_path = Path_root;
-     var_typ = Builtins.type_int} in
+     var_typ = Predef.type_int} in
   Tenv([var], Treserved(Treserved(env)))
 ;;
 

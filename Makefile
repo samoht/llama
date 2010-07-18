@@ -13,14 +13,33 @@ PARSING=parsing/const.cmx \
  parsing/location.cmx parsing/prim.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
-TYPING=typing/ident.cmx typing/path.cmx typing/primitive.cmx \
- typing/types.cmx typing/printtyp.cmx \
- typing/modules.cmx typing/btype.cmx \
- typing/typedtree_aux.cmx \
- typing/builtins.cmx \
- typing/pr_type.cmx typing/error.cmx typing/env.cmx typing/typing.cmx \
- typing/ty_decl.cmx typing/pr_decl.cmx typing/ty_intf.cmx \
- typing/primdecl.cmx typing/resolve.cmx typing/ctype.cmx typing/includecore.cmx typing/includemod.cmx
+TYPING=typing/ident.cmx typing/path.cmx \
+ typing/primitive.cmx typing/types.cmx \
+ typing/modules.cmx \
+ typing/btype.cmx \
+ typing/predef.cmx \
+ typing/pr_type.cmx typing/pr_decl.cmx typing/error.cmx \
+ typing/env.cmx \
+ typing/typedtree_aux.cmx typing/ctype.cmx \
+ typing/printtyp.cmx \
+ typing/includecore.cmx typing/includemod.cmx \
+ typing/typecore.cmx \
+ typing/typedecl.cmx typing/ty_intf.cmx \
+ typing/primdecl.cmx \
+ typing/resolve.cmx
+
+#TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
+#  typing/primitive.cmo typing/types.cmo \
+#  typing/btype.cmo typing/oprint.cmo \
+#  typing/subst.cmo typing/predef.cmo \
+#  typing/datarepr.cmo typing/env.cmo \
+#  typing/typedtree.cmo typing/ctype.cmo \
+#  typing/printtyp.cmo typing/includeclass.cmo \
+#  typing/mtype.cmo typing/includecore.cmo \
+#  typing/includemod.cmo typing/parmatch.cmo \
+#  typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
+#  typing/typedecl.cmo typing/typeclass.cmo \
+#  typing/typemod.cmo
 
 COMPILER=compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
  compiler/event.cmx \
@@ -32,7 +51,7 @@ COMPILER=compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
  compiler/compiler.cmx
 
 LINKER=linker/caml_light_extern.o \
-  linker/predef.cmx linker/prim_c.cmx linker/symtable.cmx \
+  linker/more_predef.cmx linker/prim_c.cmx linker/symtable.cmx \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
@@ -42,7 +61,7 @@ TOPLEVEL=\
   toplevel/main.cmx runtime/libcaml.a toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
- compiler/opcodes.ml linker/prim_c.ml linker/predef.ml parsing/parser.ml
+ compiler/opcodes.ml linker/prim_c.ml linker/more_predef.ml parsing/parser.ml
 
 all: runtime_dir llama llamac llamadep testprog stdlib_dir
 .PHONY: all
@@ -88,7 +107,7 @@ linker/prim_c.ml : runtime/primitives
 	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' runtime/primitives; \
 	 echo '|];;') > $@
 
-linker/predef.ml : runtime/globals.h runtime/fail.h
+linker/more_predef.ml : runtime/globals.h runtime/fail.h
 	(echo 'open Const;;'; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{qual=\1; id=\2};|p' \

@@ -1,6 +1,6 @@
 open Types
 open Const
-open Builtins
+open Predef
 open Typedtree
 open Prim
 open Symtable

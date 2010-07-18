@@ -1,6 +1,6 @@
 open Misc;;
 open Const;;
-open Predef;;
+open More_predef;;
 open Printf;;
 
 (* symtable.ml : to assign numbers to global variables and so on *)

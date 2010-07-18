@@ -3,7 +3,7 @@
 (**) open Misc;;
 (**) open Const;;
 (**) open Types;;
-(**) open Builtins;;
+(**) open Predef;;
 (**) open Modules;;
 (**) open Btype;;
 (**) open Format;;

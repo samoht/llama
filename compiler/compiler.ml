@@ -9,8 +9,8 @@ open Typedtree;;
 open Typedtree_aux
 open Modules;;
 open Error;;
-open Typing;;
-open Ty_decl;;
+open Typecore;;
+open Typedecl;;
 open Pr_decl;;
 open Ty_intf;;
 open Front;;
@@ -64,7 +64,7 @@ let wrap parsing_fun lexing_fun lexbuf =
 (* Warn for unused #open *)
 
 let check_unused_opens () =
-  if !Typing.warnings then
+  if !Typecore.warnings then
    Hashtbl.iter
      (fun name used ->
        if not !used && not (List.mem name !default_used_modules)

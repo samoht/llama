@@ -54,7 +54,7 @@ let do_code may_free code entrypoint len =
       print_string ("Uncaught exception: ");
       begin try
         failwith "foo"
-(*      print_value (Obj.repr x) Builtins.type_exn *)
+(*      print_value (Obj.repr x) Predef.type_exn *)
       with _ ->
         print_string
           ("<Internal error while printing the exception>")

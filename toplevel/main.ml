@@ -72,7 +72,7 @@ let print_version () =
 
 let main () =
   toplevel := true;
-  Typing.warnings := true;
+  Typecore.warnings := true;
   load_path := [standard_library];
   Arg.parse
     [

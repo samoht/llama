@@ -5,7 +5,7 @@ open Const;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux
-open Builtins;;
+open Predef;;
 open Modules;;
 open Btype;;
 open Error;;
@@ -73,7 +73,7 @@ let type_of_type_expression strict_flag typexp =
   in type_of typexp
 ;;
 
-(* Typing of constants *)
+(* Typecore of constants *)
 
 let type_of_atomic_constant = function
     ACint _ -> type_int
@@ -93,7 +93,7 @@ let rec type_of_structured_constant = function
 (* Enables warnings *)
 let warnings = ref false;;
 
-(* Typing of patterns *)
+(* Typecore of patterns *)
 
 let typing_let = ref false;;
 
@@ -206,7 +206,7 @@ let rec is_nonexpansive expr =
   | _ -> false
 ;;
 
-(* Typing of printf formats *)
+(* Typecore of printf formats *)
 
 let type_format loc fmt =
   let len = String.length fmt in
@@ -249,7 +249,7 @@ let type_format loc fmt =
    typ_level=notgeneric}
 ;;
 
-(* Typing of expressions *)
+(* Typecore of expressions *)
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -429,7 +429,7 @@ let rec type_expr env expr =
     expr.exp_type <- inferred_ty;
     inferred_ty
 
-(* Typing of an expression with an expected type.
+(* Typecore of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and type_expect env exp expected_ty =
@@ -464,7 +464,7 @@ and type_expect env exp expected_ty =
   | _ ->
       unify_expr exp expected_ty (type_expr env exp)
   
-(* Typing of "let" definitions *)
+(* Typecore of "let" definitions *)
 
 and type_let_decl env rec_flag pat_expr_list =
   push_type_level();
@@ -488,7 +488,7 @@ and type_let_decl env rec_flag pat_expr_list =
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   new_env
 
-(* Typing of statements (expressions whose values are ignored) *)
+(* Typecore of statements (expressions whose values are ignored) *)
 
 and type_statement env expr =
   let ty = type_expr env expr in

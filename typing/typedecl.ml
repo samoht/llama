@@ -1,14 +1,14 @@
-(* Typing toplevel phrases *)
+(* Typecore toplevel phrases *)
 
 open Asttypes
 open Const;;
 open Types;;
-open Builtins;;
+open Predef;;
 open Typedtree;;
 open Modules;;
 open Btype;;
 open Error;;
-open Typing;;
+open Typecore;;
 
 let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =

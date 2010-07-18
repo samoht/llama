@@ -4,7 +4,7 @@ open Types
 open Location
 open Typedtree
 open Modules
-open Builtins
+open Predef
 open Error
 
 let lookup li =

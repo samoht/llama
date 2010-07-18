@@ -6,7 +6,7 @@ open Const;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux
-open Builtins;;
+open Predef;;
 open Modules;;
 open Lambda;;
 open Prim;;
