@@ -1,13 +1,13 @@
 open Types
 open Btype
 open Typedtree
-(*
+
 type error =
     Missing_field of string
-  | Value_descriptions of string * value_desc * value_desc
-  | Type_declarations of string * type_declaration * type_declaration
+  | Value_descriptions of value_desc global * value_desc global
+  | Type_declarations of type_declaration global * type_declaration global
   | Exception_declarations of
-      string * exception_declaration * exception_declaration
+      exception_declaration global * exception_declaration global
 
 exception Error of error list
 
@@ -17,25 +17,25 @@ exception Error of error list
 
 (* Inclusion between value descriptions *)
 
-let value_descriptions id vd1 vd2 =
+let value_descriptions vd1 vd2 =
   try
-    Includecore.value_descriptions vd1 vd2
+    Includecore.value_descriptions vd1.info vd2.info
   with Includecore.Dont_match ->
-    raise(Error[Value_descriptions(id, vd1, vd2)])
+    raise(Error[Value_descriptions(vd1, vd2)])
 
 (* Inclusion between type declarations *)
 
-let type_declarations id decl1 decl2 =
-  if Includecore.type_declarations id decl1 decl2
+let type_declarations decl1 decl2 =
+  if Includecore.type_declarations decl1.info.ty_constr decl1.info decl2.info
   then ()
-  else raise(Error[Type_declarations(id, decl1, decl2)])
+  else raise(Error[Type_declarations(decl1, decl2)])
 
 (* Inclusion between exception declarations *)
 
-let exception_declarations id decl1 decl2 =
-  if Includecore.exception_declarations env decl1 decl2
+let exception_declarations decl1 decl2 =
+  if Includecore.exception_declarations decl1.info decl2.info
   then ()
-  else raise(Error[Exception_declarations(id, decl1, decl2)])
+  else raise(Error[Exception_declarations(decl1, decl2)])
 
 (* Extract name, kind and ident from a signature item *)
 
@@ -45,9 +45,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Tsig_value(id, _) -> (id, Field_value id)
-  | Tsig_type(id, _, _) -> (id, Field_type id)
-  | Tsig_exception(id, _) -> (id, Field_exception id)
+    Sig_value gl -> (gl.qualid, Field_value gl.qualid.Const.id)
+  | Sig_type(gl) -> (gl.qualid, Field_type gl.qualid.Const.id)
+  | Sig_exception(gl) -> (gl.qualid, Field_exception gl.qualid.Const.id)
 
 (* Simplify a structure coercion *)
 
@@ -70,10 +70,10 @@ let rec signatures sig1 sig2 =
         let (id, name) = item_ident_name item in
         let nextpos =
           match item with
-            Tsig_value(_,{val_kind = Val_prim _})
-          | Tsig_type(_,_,_) -> pos
-          | Tsig_value(_,_)
-          | Tsig_exception(_,_) -> pos+1 in
+            Sig_value({info={val_prim = ValuePrim _}})
+          | Sig_type _ -> pos
+          | Sig_value _
+          | Sig_exception _ -> pos+1 in
         build_component_table nextpos
                               (Tbl.add name (id, item, pos) tbl) rem in
   let comps1 =
@@ -86,7 +86,7 @@ let rec signatures sig1 sig2 =
   let rec pair_components paired unpaired = function
       [] ->
         begin match unpaired with
-            [] -> signature_components subst (List.rev paired)
+            [] -> signature_components (List.rev paired)
           | _  -> raise(Error unpaired)
         end
     | item2 :: rem ->
@@ -98,24 +98,22 @@ let rec signatures sig1 sig2 =
           pair_components paired unpaired rem
         end in
   (* Do the pairing and checking, and return the final coercion *)
-  simplify_structure_coercion (pair_components subst [] [] sig2)
+  simplify_structure_coercion (pair_components [] [] sig2)
 
 and signature_components = function
     [] -> []
-  | (Tsig_value(id1, valdecl1), Tsig_value(id2, valdecl2), pos) :: rem ->
-      let cc = value_descriptions id1 valdecl1 valdecl2 in
-      begin match valdecl2.val_prim with
-        ValuePrim p -> signature_components env subst rem
-      | _ -> (pos, cc) :: signature_components env subst rem
+  | (Sig_value(valdecl1), Sig_value(valdecl2), pos) :: rem ->
+      let cc = value_descriptions valdecl1 valdecl2 in
+      begin match valdecl2.info.val_prim with
+        ValuePrim _ -> signature_components rem
+      | _ -> (pos, cc) :: signature_components rem
       end
-  | (Tsig_type(id1, tydecl1, _), Tsig_type(id2, tydecl2, _), pos) :: rem ->
-      type_declarations id1 tydecl1 tydecl2;
+  | (Sig_type(tydecl1), Sig_type(tydecl2), pos) :: rem ->
+      type_declarations tydecl1 tydecl2;
       signature_components rem
-  | (Tsig_exception(id1, excdecl1), Tsig_exception(id2, excdecl2), pos)
+  | (Sig_exception(excdecl1), Sig_exception(excdecl2), pos)
     :: rem ->
-      exception_declarations id1 excdecl1 excdecl2;
-      (pos, Tcoerce_none) :: signature_components env subst rem
+      exception_declarations excdecl1 excdecl2;
+      (pos, Tcoerce_none) :: signature_components rem
   | _ ->
       assert false
-
-*)

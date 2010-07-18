@@ -108,3 +108,9 @@ and prim_desc =
   | ValuePrim of int * primitive        (* arity & implementation *)
 ;;
 
+type exception_declaration = typ list
+
+type core_item =
+    Sig_value of value_desc global
+  | Sig_type of type_declaration global
+  | Sig_exception of exception_declaration global

@@ -1,11 +1,14 @@
 utils/clflags.cmi: 
 utils/config.cmi: 
+utils/tbl.cmi: 
 utils/clflags.cmo: utils/config.cmi utils/clflags.cmi 
 utils/clflags.cmx: utils/config.cmx utils/clflags.cmi 
 utils/config.cmo: utils/config.cmi 
 utils/config.cmx: utils/config.cmi 
 utils/misc.cmo: 
 utils/misc.cmx: 
+utils/tbl.cmo: utils/tbl.cmi 
+utils/tbl.cmx: utils/tbl.cmi 
 parsing/asttypes.cmi: 
 parsing/lexer.cmi: parsing/parser.cmi 
 parsing/location.cmi: 
@@ -56,12 +59,14 @@ typing/error.cmo: typing/types.cmx typing/typedtree_aux.cmx \
 typing/error.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     typing/typedtree.cmi typing/pr_type.cmx utils/misc.cmx \
     parsing/location.cmx parsing/const.cmx typing/btype.cmx 
-typing/includecore.cmo: typing/types.cmx typing/typedtree.cmi \
-    typing/ctype.cmx typing/btype.cmx 
-typing/includecore.cmx: typing/types.cmx typing/typedtree.cmi \
-    typing/ctype.cmx typing/btype.cmx 
-typing/includemod.cmo: typing/types.cmx typing/typedtree.cmi typing/btype.cmx 
-typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi typing/btype.cmx 
+typing/includecore.cmo: typing/types.cmx typing/typedtree.cmi utils/misc.cmx \
+    typing/ctype.cmx parsing/const.cmx typing/btype.cmx 
+typing/includecore.cmx: typing/types.cmx typing/typedtree.cmi utils/misc.cmx \
+    typing/ctype.cmx parsing/const.cmx typing/btype.cmx 
+typing/includemod.cmo: typing/types.cmx typing/typedtree.cmi utils/tbl.cmi \
+    typing/includecore.cmx parsing/const.cmx typing/btype.cmx 
+typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi utils/tbl.cmx \
+    typing/includecore.cmx parsing/const.cmx typing/btype.cmx 
 typing/modules.cmo: typing/types.cmx utils/misc.cmx parsing/const.cmx 
 typing/modules.cmx: typing/types.cmx utils/misc.cmx parsing/const.cmx 
 typing/pr_decl.cmo: typing/types.cmx typing/pr_type.cmx utils/misc.cmx \

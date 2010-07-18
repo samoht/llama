@@ -52,6 +52,12 @@ let remove_file f =
     ()
 ;;
 
+let rec for_all2 pred l1 l2 =
+  match (l1, l2) with
+    ([], []) -> true
+  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 && for_all2 pred tl1 tl2
+  | (_, _) -> false
+
 let rec replicate_list elem n =
   if n <= 0 then [] else elem :: replicate_list elem (n-1)
 
