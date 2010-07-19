@@ -23,27 +23,31 @@ val opened_modules_names : string list ref
 val default_used_modules : string list ref
 val defined_module : t ref
 
-val open_module : string -> unit
+val open_module : string -> Env.t -> Env.t
 
-val start_compiling_interface : string -> unit
-val start_compiling_implementation : string -> t -> unit
+val start_compiling_interface : string -> Env.t
+val start_compiling_implementation : string -> t -> Env.t
 val compiled_module_name : unit -> string
 val defined_global : string -> 'a -> 'a Types.global
 
 val new_type_stamp : unit -> int
 val new_exc_stamp : unit -> int
 
-val add_value : t -> Types.value_description Types.global -> unit
-val add_constr : t -> Types.constructor_description Types.global -> unit
-val add_label : t -> Types.label_description Types.global -> unit
-val add_type : t -> Types.type_declaration Types.global -> unit
+val add_value_MODONLY : t -> Types.value_description Types.global -> unit
+val add_constr_MODONLY : t -> Types.constructor_description Types.global -> unit
+val add_label_MODONLY : t -> Types.label_description Types.global -> unit
+val add_type_MODONLY : t -> Types.type_declaration Types.global -> unit
+val add_value_to_open : t -> Types.value_description Types.global -> Env.t -> Env.t
+val add_constr_to_open : t -> Types.constructor_description Types.global -> Env.t -> Env.t
+val add_label_to_open : t -> Types.label_description Types.global -> Env.t -> Env.t
+val add_type_to_open : t -> Types.type_declaration Types.global -> Env.t -> Env.t
 
 val lookup_value : string -> t -> Types.value_description Types.global
 
 val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
-val flush_module_cache : unit -> unit
+val flush_module_cache : unit -> Env.t
 
 val env : t -> Env.t
-val glob_env : Env.t ref
+

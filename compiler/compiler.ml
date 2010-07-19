@@ -66,35 +66,20 @@ let wrap parsing_fun lexing_fun lexbuf =
 
 let verbose = ref false;;
   
-let compile_intf_phrase env psig =
-  let phr = Typemod.type_signature_item env psig in
-  begin match phr.sig_desc with
-    Tsig_value (s,te,pr) ->
-      ()
-  | Tsig_type decl ->
-      ()
-  | Tsig_exception decl ->
-      ()
-  | Tsig_open mn ->
-      open_module (String.uncapitalize mn)
-  end
-;;
-
 let compile_interface modname filename =
-  glob_env := !Env.initial;
   let source_name = filename ^ ".mli"
   and intf_name = filename ^ ".zi" in
   let ic = open_in_bin source_name (* See compile_impl *)
   and oc = open_out_bin intf_name in
     try
-      start_compiling_interface modname;
+      let env = start_compiling_interface modname in
       let lexbuf = Lexing.from_channel ic in
       input_name := source_name;
       input_chan := ic;
       input_lexbuf := lexbuf;
       external_types := [];
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      List.iter (fun x -> compile_intf_phrase !glob_env x) l;
+      let _l, env = Typemod.type_signature env l in
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
@@ -107,9 +92,7 @@ let compile_interface modname filename =
 
 (* Compiling an implementation *)
 
-let compile_impl_phrase env outstream pstr =
-  reset_type_expression_vars();
-  let phr = Typemod.type_structure_item env pstr in
+let compile_impl_phrase outstream phr =
   begin match phr.str_desc with
     Tstr_eval expr ->
       emit_phrase outstream
@@ -122,18 +105,10 @@ let compile_impl_phrase env outstream pstr =
             compile_lambda true (translate_letdef_rec phr.str_loc pat_expr_list)
           else
             compile_lambda false (translate_letdef phr.str_loc pat_expr_list));
-  | Tstr_primitive(s,te,pr) ->
-      ()
-  | Tstr_type decl ->
-      ()
-  | Tstr_exception decl ->
-      ()
-  | Tstr_open mn ->
-      open_module (String.uncapitalize mn)
-  end
-;;
+  | _ -> ()
+ end
 
-let compile_impl modname filename suffix =
+let compile_impl env modname filename suffix =
   let source_name = filename ^ suffix
   and obj_name = filename ^ ".zo" in
   let ic = open_in_bin source_name
@@ -146,9 +121,10 @@ let compile_impl modname filename suffix =
     input_chan := ic;
     input_lexbuf := lexbuf;
     start_emit_phrase oc;
-    let l = wrap Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (fun x -> compile_impl_phrase !glob_env oc x) l;
+      let l = wrap Parser.implementation Lexer.main lexbuf in
+      let l, env = Typemod.type_structure env l in
+      List.iter (compile_impl_phrase oc) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
@@ -162,7 +138,6 @@ let compile_impl modname filename suffix =
 let write_extended_intf = ref false;;
 
 let compile_implementation modname filename suffix =
-  glob_env := !Env.initial;
   external_types := [];
   if file_exists (filename ^ ".mli") then begin
     try
@@ -175,9 +150,9 @@ let compile_implementation modname filename suffix =
             modname filename;
           raise Toplevel in
       let intf = read_module modname intfname in
-      start_compiling_implementation modname intf;
-      enter_interface_definitions intf;
-      compile_impl modname filename suffix;
+      let env = start_compiling_implementation modname intf in
+      let env = enter_interface_definitions env intf in
+      compile_impl env modname filename suffix;
       check_interface intf;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
@@ -198,8 +173,8 @@ let compile_implementation modname filename suffix =
     let intf_name = filename ^ ".zi" in
     let oc = open_out_bin intf_name in
     try
-      start_compiling_interface modname;
-      compile_impl modname filename suffix;
+      let env = start_compiling_interface modname in
+      compile_impl env modname filename suffix;
       check_nongen_values();
       write_compiled_interface oc;
       close_out oc

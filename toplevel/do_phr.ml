@@ -26,7 +26,7 @@ let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 let do_structure_item env phr =
   reset_type_var();
   reset_type_expression_vars ();
-  let phr = Typemod.type_structure_item env phr in
+  let phr, env = Typemod.type_structure_item env phr in
   begin match phr.str_desc with
     Tstr_eval expr ->
       let res =
@@ -75,10 +75,10 @@ let do_structure_item env phr =
       reset_rollback ();
       Printf.printf "Exception %s defined.\n" (fst decl)
   | Tstr_open mn ->
-      open_module (String.uncapitalize mn)
+      ()
   end;
-  flush stdout
-;;
+  flush stdout;
+  env
 
 open Parsetree
 let do_toplevel_phrase env topphr =
@@ -102,6 +102,7 @@ let do_toplevel_phrase env topphr =
             eprintf 
               "Warning: unknown directive \"#%s\", ignored.\n" d;
             flush stderr
-      end
+      end;
+        env
     | Parsetree.Ptop_def si -> do_structure_item env si
   end

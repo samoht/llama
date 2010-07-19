@@ -26,13 +26,14 @@ let interactive_loop () =
   (* start parsing stdin *)
   let lexbuf = Lexing.from_channel stdin in
   input_lexbuf := lexbuf;
+  let envref = ref !Env.initial in
   while true do
     try
       Format.print_string toplevel_input_prompt;
       Format.print_flush ();
       reset_rollback();
       let phr = Parser.toplevel_phrase Lexer.main lexbuf in
-      do_toplevel_phrase !glob_env phr
+      envref := do_toplevel_phrase env phr
     with
       | End_of_file ->
           print_newline();

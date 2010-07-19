@@ -85,7 +85,6 @@ let kill_module name =
 (* The table of all opened modules. Associate to each unqualified name
    the corresponding descriptor from the right opened module. *)
 
-let glob_env = ref Env.empty
 let opened_modules_names = ref ([]: string list);;
 
 (* Open a module and add its definitions to the table of opened modules. *)
@@ -93,10 +92,10 @@ let opened_modules_names = ref ([]: string list);;
 let add_table t1 t2 =
   Hashtbl.iter (Hashtbl.add t2) t1;;
 
-let open_module name =
-  let env, _, _, _ = Env.open_pers_signature name !glob_env in
-  glob_env := env;
-  opened_modules_names := name :: !opened_modules_names
+let open_module name env =
+  opened_modules_names := name :: !opened_modules_names;
+  let env, _, _, _ = Env.open_pers_signature name env in
+  env
 
 (* The current state of the compiler *)
 
@@ -106,14 +105,14 @@ let defined_module = ref (new_module "");;
 
 let start_compiling_interface name =
   defined_module := new_module name;
-  glob_env := !Env.initial;
   opened_modules_names := [];
-  List.iter open_module !default_used_modules;;
+  List.fold_left (fun x y->open_module y x ) !Env.initial !default_used_modules
 
 let start_compiling_implementation name intf =
-  start_compiling_interface name;
+  let env = start_compiling_interface name in
   !defined_module.mod_type_stamp <- intf.mod_type_stamp;
-  !defined_module.mod_exc_stamp  <- intf.mod_exc_stamp;;
+  !defined_module.mod_exc_stamp  <- intf.mod_exc_stamp;
+  env
 
 let compiled_module_name () =
   !defined_module.mod_name
@@ -142,18 +141,26 @@ let add_global_info sel_fct m glob =
     Hashtbl.add tbl glob.qualid.id glob
 ;;
 
-let add_value m vd =
-  glob_env := Env.store_value vd.qualid.id vd !glob_env;
-  m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env 
-let add_constr m cd =
-  glob_env := Env.store_constructor cd.qualid.id cd !glob_env;
-  m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env 
-let add_label m cd =
-  glob_env := Env.store_label cd.qualid.id cd !glob_env;
-  m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env 
-let add_type m cd =
-  glob_env := Env.store_type cd.qualid.id cd !glob_env;
-  m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env 
+let add_value m vd = m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env
+let add_value_MODONLY = add_value
+let add_value_to_open m vd env =
+  add_value m vd;
+  Env.store_value vd.qualid.id vd env
+let add_constr m cd = m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
+let add_constr_MODONLY = add_constr
+let add_constr_to_open m cd env =
+  add_constr m cd;
+  Env.store_constructor cd.qualid.id cd env
+let add_label m cd = m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
+let add_label_MODONLY = add_label
+let add_label_to_open m cd env =
+  add_label m cd;
+  Env.store_label cd.qualid.id cd env
+let add_type m cd = m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env
+let add_type_MODONLY = add_type
+let add_type_to_open m cd env =
+  add_type m cd;
+  Env.store_type cd.qualid.id cd env
 
 let lookup_value s m =
   Env.lookup_value (Longident.Lident s) m.mod_env
@@ -190,9 +197,8 @@ let flush_module_cache () =
   Hashtbl.iter
     (fun name md -> if md.mod_persistent then kill_module name)
     module_table;
-  glob_env := !Env.initial;
   opened_modules_names := [];
-  List.iter open_module (List.rev opened)
-;;
+  List.fold_right open_module (List.rev opened) !Env.initial
+
 
 let env m = m.mod_env

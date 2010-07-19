@@ -10,7 +10,7 @@ open Btype;;
 open Error;;
 open Typecore;;
 
-let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
+let enter_new_variant envref is_extensible loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =
     List.length constrs in
   let rec make_constrs constr_idx = function
@@ -30,7 +30,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
             cs_arity = List.length ty_args;
             cs_tag = constr_tag; }
       in
-        add_constr !defined_module constr_glob;
+      envref := add_constr_to_open !defined_module constr_glob !envref;
         constr_glob :: make_constrs (succ constr_idx) rest
   in
     let constructor_descriptions = make_constrs 0 constrs in
@@ -42,7 +42,7 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       Type_variant constructor_descriptions
 ;;
 
-let enter_new_record loc (ty_constr, ty_res, labels) =
+let enter_new_record envref loc (ty_constr, ty_res, labels) =
   let rec make_labels i = function
     [] -> []
   | (name, typexp, mut_flag) :: rest ->
@@ -52,7 +52,7 @@ let enter_new_record loc (ty_constr, ty_res, labels) =
           { lbl_res = ty_res; lbl_arg = ty_arg;
             lbl_mut = mut_flag; lbl_pos = i }
       in
-        add_label !defined_module lbl_glob;
+      envref := add_label_to_open !defined_module lbl_glob !envref;
         lbl_glob :: make_labels (succ i) rest in
   let label_descriptions = make_labels 0 labels in
     pop_type_level();
@@ -80,7 +80,7 @@ type external_type =
 let external_types =
   ref ([] : (string * external_type) list);;
 
-let define_new_type loc (ty_desc, ty_params, def) =
+let define_new_type envref loc (ty_desc, ty_params, def) =
   push_type_level();
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
@@ -90,9 +90,9 @@ let define_new_type loc (ty_desc, ty_params, def) =
       Ttype_abstract ->
         pop_type_level(); Type_abstract,None
     | Ttype_variant constrs ->
-        enter_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs),None
+        enter_new_variant envref false loc (ty_desc.info.ty_constr, ty_res, constrs),None
     | Ttype_record labels ->
-        enter_new_record loc (ty_desc.info.ty_constr, ty_res, labels),None
+        enter_new_record envref loc (ty_desc.info.ty_constr, ty_res, labels),None
     | Ttype_abbrev body ->
         enter_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.type_kind <- type_comp;
@@ -127,6 +127,7 @@ let type_typedecl env loc decl =
          ty_name, params, ty_params, def)
       decl
   in
+  let envref = ref env in
   let newdecl =
     List.map
       (fun (ty_name, params, ty_params, def) ->
@@ -141,20 +142,19 @@ let type_typedecl env loc decl =
                type_manifest = None; (* xxx *)
                type_params = ty_params; (* xxx will get generalized *)
                type_kind  = Type_abstract (* xxx *) } in
-         add_type !defined_module ty_desc;
+         envref := add_type_to_open !defined_module ty_desc !envref;
          ty_desc)
       decl
   in
-  let env = !glob_env in
   let decl =
     List.map
-      (fun (ty_name, params, ty_params, def) -> (ty_name, params, ty_params, Resolve.type_kind env [] def))
+      (fun (ty_name, params, ty_params, def) -> (ty_name, params, ty_params, Resolve.type_kind !envref [] def))
       decl
   in
   let res =
     List.map2
       (fun (ty_name, params, ty_params, def) ty_desc ->
-         define_new_type loc (ty_desc, ty_params, def))
+         define_new_type envref loc (ty_desc, ty_params, def))
       decl newdecl
   in
   List.iter2
@@ -170,22 +170,22 @@ let type_typedecl env loc decl =
       (fun (ty_name, params, ty_params, def) -> ty_name, params, def)
       decl
   in
-  decl
+  decl, !envref
 
-let type_excdecl loc decl =
+let type_excdecl env loc decl =
   push_type_level();
   reset_type_expression_vars ();
-  enter_new_variant true loc (constr_type_exn, type_exn, [decl])
-;;
+  let envref = ref env in
+  enter_new_variant envref true loc (constr_type_exn, type_exn, [decl]);
+  !envref
 
-let type_valuedecl loc name typexp prim =
+let type_valuedecl env loc name typexp prim =
     push_type_level();
     reset_type_expression_vars ();
     let ty = type_of_type_expression false typexp in
       pop_type_level();
       generalize_type ty;
-      add_value !defined_module (defined_global name { val_type = ty; val_kind = prim })
-;;
+      add_value_to_open !defined_module (defined_global name { val_type = ty; val_kind = prim }) env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
   push_type_level();
@@ -193,12 +193,14 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   let pat_list = List.map (Resolve.pattern env) untyped_pat_list in
   let ty_list = List.map (fun _ -> new_type_var ()) pat_list in
   let c = type_pattern_list pat_list ty_list in
-  let enter_val =
+  let enter_val c env =
+    let env = ref env in
     List.iter
       (fun (name,(ty,mut_flag)) ->
-        add_value !defined_module (defined_global name {val_type=ty; val_kind=Val_reg})) in
-  if rec_flag then enter_val c;
-  let env = !glob_env in
+         env := add_value_to_open !defined_module (defined_global name {val_type=ty; val_kind=Val_reg}) !env) c;
+    !env
+  in
+  let env = if rec_flag then enter_val c env else env in
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
   List.iter2
     (fun (pat, exp) ty -> type_expect [] exp ty)
@@ -209,8 +211,8 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
          pat_expr_list ty_list in
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
-  if not rec_flag then enter_val c;
-  pat_expr_list, c
+  let env = if rec_flag then env else enter_val c env in
+  pat_expr_list, env
 ;;
   
 let type_expression loc expr =

@@ -206,7 +206,7 @@ let debug_mode status =
   use_extended_interfaces := status;
   Event.record_events := status;
   Compiler.write_extended_intf := status;
-  flush_module_cache()
+  ignore(flush_module_cache())
 ;;
 
 (* Set whether compilation prints the inferred types. *)

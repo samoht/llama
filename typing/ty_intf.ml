@@ -11,13 +11,14 @@ open Typedecl;;
 (* Create the initial environment for compiling an implementation
    when an explicit interface exists. *)
 
-let enter_interface_definitions intf =
+let enter_interface_definitions env intf =
+  let envref = ref env in
   external_types := [];
   Module.iter_types intf begin fun ty_desc ->
     let manifest =
       match ty_desc.info.type_kind with
           Type_abstract -> false
-        | _ -> add_type !defined_module ty_desc; true
+        | _ -> envref := add_type_to_open !defined_module ty_desc !envref; true
     in
     external_types :=
       ((ty_desc.qualid.id,
@@ -26,15 +27,16 @@ let enter_interface_definitions intf =
   end;
   Module.iter_values intf begin fun val_desc ->
     match val_desc.info.val_kind with
-        Val_prim(_) -> add_value !defined_module val_desc
+        Val_prim(_) -> envref := add_value_to_open !defined_module val_desc !envref
       |       _        -> ()
   end;
   Module.iter_constrs intf begin fun constructor_description ->
-    add_constr !defined_module constructor_description
+    envref := add_constr_to_open !defined_module constructor_description !envref
   end;
   Module.iter_labels intf begin fun label_description ->
-    add_label !defined_module label_description
-  end
+    envref := add_label_to_open !defined_module label_description !envref
+  end;
+  !envref
 
 (* Check that an implementation matches an explicit interface *)
 
