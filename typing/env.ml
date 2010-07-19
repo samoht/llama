@@ -19,29 +19,17 @@ let lookup li =
 
 let lookup_type li env =
   let gr = lookup li in
-  try
-    find_type_desc gr
-  with Desc_not_found ->
-    raise Not_found
+  find_type_desc gr
 
 let lookup_constructor li env =
   let gr = lookup li in
-  try
-    find_constr_desc gr
-  with Desc_not_found ->
-    raise Not_found
+  find_constr_desc gr
 
 let lookup_label li env =
   let gr = lookup li in
-  try
-    find_label_desc gr
-  with Desc_not_found ->
-    raise Not_found
+  find_label_desc gr
 
 let lookup_value li env =
   let gr = lookup li in
-  try
-    find_value_desc gr
-  with Desc_not_found ->
-    raise Not_found
+  find_value_desc gr
 

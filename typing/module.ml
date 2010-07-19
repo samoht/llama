@@ -206,33 +206,23 @@ and add_type = add_global_info types_of_module
    If the identifier is not qualified, look inside the current module,
    then inside the table of opened modules. *)
 
-exception Desc_not_found;;
-
 let find_desc m sel_fct = function
     Path.Pdot(Path.Pident mn, s) ->
-      begin try
-        Hashtbl.find (sel_fct (find_module mn)) s
-      with Not_found ->
-        raise Desc_not_found
-      end
+      Hashtbl.find (sel_fct (find_module mn)) s
   | Path.Pident s ->
       begin try
         Hashtbl.find (sel_fct !defined_module) s
       with Not_found ->
-        try
-          let res = Hashtbl.find (sel_fct !opened_modules) s in
-          (* Record the module as actually used *)
-          (Hashtbl.find !used_opened_modules res.qualid.qual) := true;
-          res
-        with Not_found ->
-          raise Desc_not_found
+        let res = Hashtbl.find (sel_fct !opened_modules) s in
+        (* Record the module as actually used *)
+        (Hashtbl.find !used_opened_modules res.qualid.qual) := true;
+        res
       end
   | _ -> failwith "long path"
 ;;
 
 let lookup_value s m =
-  try find_desc m values_of_module (Path.Pident s)
-  with Desc_not_found -> raise Not_found
+  find_desc m values_of_module (Path.Pident s)
 
 let find_value_desc = find_desc !defined_module values_of_module
 and find_constr_desc = find_desc !defined_module  constrs_of_module
@@ -241,7 +231,7 @@ and find_type_desc = find_desc !defined_module types_of_module
 
 let type_descr_of_type_constr cstr =
   let rec select_type_descr = function
-    [] -> raise Desc_not_found
+    [] -> raise Not_found
   | desc::rest ->
       if desc.info.ty_constr.info.ty_stamp = cstr.info.ty_stamp
       then desc

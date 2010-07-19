@@ -167,7 +167,7 @@ let install_printer name =
     with OldUnify ->
       Printf.eprintf "%s has the wrong type for a printing function.\n" name
     end
-  with Desc_not_found ->
+  with Not_found ->
     Printf.eprintf "Unknown function %s.\n" name
   end
 ;;

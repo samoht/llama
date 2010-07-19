@@ -42,8 +42,6 @@ val add_constr : t -> Types.constr_desc Types.global -> unit
 val add_label : t -> Types.label_desc Types.global -> unit
 val add_type : t -> Types.type_declaration Types.global -> unit
 
-exception Desc_not_found
-
 val lookup_value : string -> t -> Types.value_desc Types.global
 
 val find_value_desc : Path.t -> Types.value_desc Types.global
