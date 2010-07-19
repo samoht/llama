@@ -30,16 +30,12 @@ and constrs_of_module md = md.mod_constrs
 and labels_of_module  md = md.mod_labels
 and types_of_module   md = md.mod_types
 
-let iter m sel cb =
-  Hashtbl.iter (fun _ v -> cb v) (sel m)
-;;
-let find_all m sel p = Hashtbl.find_all (sel m) p
-
+let iter m sel cb = Hashtbl.iter (fun _ v -> cb v) (sel m)
 let iter_types m cb = iter m types_of_module cb
 let iter_constrs m cb = iter m constrs_of_module cb
 let iter_labels m cb = iter m labels_of_module cb
 let iter_values m cb = iter m values_of_module cb
-let find_all_constrs m = find_all m constrs_of_module
+let find_all_constrs m p = Hashtbl.find_all m.mod_constrs p
 
 (* The table of module interfaces already loaded in memory *)
 

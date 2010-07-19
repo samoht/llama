@@ -164,6 +164,11 @@ let open_pers_signature name env =
   let env = Hashtbl.fold (fun k v env -> store_constructor k v env) ps.mod_constrs env in
   env
 
+let iter_labels env cb = Id.iter cb env.labels
+let iter_constrs env cb = Id.iter cb env.constrs
+let iter_types env cb = Id.iter (fun (_, x) -> cb x) env.types
+let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
+let find_all_constrs env s = Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
 
 (* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *)
 
