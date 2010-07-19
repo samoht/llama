@@ -40,7 +40,7 @@ let parse_global s =
 
 (* Loading in core a compiled bytecode file *)
 
-let load_object name =
+let load_object env name =
   let (_, filename) = add_suffix name ".zo" in
   let truename = 
     try
@@ -107,7 +107,7 @@ let protect_current_input fct =
 
 (* Loading an ML source file *)
 
-let loadfile filename =
+let loadfile env filename =
   let truename =
     try
       find_in_path filename
@@ -122,24 +122,24 @@ let loadfile filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       while true do
-        do_toplevel_phrase (Parser.toplevel_phrase Lexer.main lexbuf)
+        do_toplevel_phrase env (Parser.toplevel_phrase Lexer.main lexbuf)
       done)
   with End_of_file -> close_in ic
      | x -> close_in ic; raise x
 ;;
 let _ = fwd_load_file := loadfile;;
 
-let include_file name =
+let include_file env name =
   let (simplename, filename) = add_suffix name ".ml" in
-    loadfile filename
+    loadfile env filename
 ;;
 
-let load name =
+let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
   let modname = Filename.basename simplename in
   protect_current_module (fun () ->
     start_compiling_interface modname;
-    loadfile filename)
+    loadfile env filename)
 ;;
 
 (* To quit. (Alternative: ctrl-D) *)

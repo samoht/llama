@@ -2,7 +2,7 @@
 
 val quit : unit -> unit
         (* Exit the toplevel loop and terminate the [camllight] command. *)
-val include_file : string -> unit
+val include_file : Env.t -> string -> unit
         (* Read, compile and execute source phrases from the given file.
            The [.ml] extension is automatically added to the file name,
            if not present.
@@ -10,7 +10,7 @@ val include_file : string -> unit
            they were typed on standard input. In particular, global
            identifiers defined by these phrases are entered in the
            module named [top], not in a new module. *)
-val load : string -> unit
+val load : Env.t -> string -> unit
         (* Load in memory the source code for a module
            implementation. Read, compile and execute source phrases
            from the given file. The [.ml] extension is automatically
@@ -40,7 +40,7 @@ val compile : string -> unit
            the compilation is left in files ([.zo], [.zi],
            [.zix]). The compiled code is not loaded in memory. Use
            [load_object] to load a [.zo] file produced by [compile]. *)
-val load_object : string -> unit
+val load_object : Env.t -> string -> unit
         (* Load in memory the compiled bytecode contained in the given
            file.  The [.zo] extension is automatically added to the
            file name, if not present. The bytecode file has been

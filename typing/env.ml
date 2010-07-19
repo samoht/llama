@@ -9,7 +9,7 @@ open Printf
 
 type t = unit
 
-let unique = ()
+let initial = ()
 
 let lookup li =
   begin match li with

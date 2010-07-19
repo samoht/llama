@@ -126,7 +126,7 @@ let define_new_type loc (ty_desc, params, def) =
   (ty_res, type_comp)
 ;;
 
-let type_typedecl loc decl =
+let type_typedecl env loc decl =
   let newdecl =
     List.map
       (fun (ty_name, params, def) ->
@@ -147,7 +147,7 @@ let type_typedecl loc decl =
   in
   let decl =
     List.map
-      (fun (ty_name, params, def) -> (ty_name, params, Resolve.type_kind Env.unique [] def))
+      (fun (ty_name, params, def) -> (ty_name, params, Resolve.type_kind env [] def))
       decl
   in
   let res =
@@ -181,8 +181,7 @@ let type_valuedecl loc name typexp prim =
       add_value !defined_module (defined_global name { val_typ = ty; val_prim = prim })
 ;;
 
-let type_letdef loc rec_flag untyped_pat_expr_list =
-  let env = Env.unique in
+let type_letdef env loc rec_flag untyped_pat_expr_list =
   push_type_level();
   let untyped_pat_list = List.map fst untyped_pat_expr_list in
   let pat_list = List.map (Resolve.pattern env) untyped_pat_list in

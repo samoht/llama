@@ -17,6 +17,7 @@ end
 let interactive_loop () =
   Printf.printf "\tLlama version %s\n" Config.version;
   print_newline();
+  let env = Env.initial in
   Sys.catch_break true;
   (* set Sys.interactive to true *)
   let const_true = SCblock(ConstrRegular(1,2), []) in
@@ -31,7 +32,7 @@ let interactive_loop () =
       Format.print_flush ();
       reset_rollback();
       let phr = Parser.toplevel_phrase Lexer.main lexbuf in
-      do_toplevel_phrase phr
+      do_toplevel_phrase env phr
     with
       | End_of_file ->
           print_newline();
@@ -55,7 +56,7 @@ let initialize () =
   Symtable.reset_linker_tables();
   set_c_primitives (Meta.available_primitives ()); (* currently a no-op *)
   (* load things *)
-  List.iter Toplevel.load_object (List.rev !preload_objects);
+  List.iter (Toplevel.load_object Env.initial) (List.rev !preload_objects);
   (* open things *)
   default_used_modules := List.assoc "cautious" default_used_interfaces;
   start_compiling_interface "top"
@@ -65,7 +66,7 @@ let file_argument name =
   then preload_objects := name :: !preload_objects
   else begin
     initialize ();
-    Toplevel.load name;
+    Toplevel.load Env.initial name;
     exit 0
   end
 

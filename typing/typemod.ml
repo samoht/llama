@@ -4,8 +4,7 @@ open Typedtree
 open Primitive
 open Typedecl
 
-let type_structure_item pstr =
-  let env = Env.unique in
+let type_structure_item env pstr =
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval expr ->
@@ -15,7 +14,7 @@ let type_structure_item pstr =
 (*      if !verbose then print_expr ty *)
         phr
     | Pstr_value(rec_flag, pat_expr_list) ->
-        let pat_expr_list, _env = type_letdef pstr.pstr_loc rec_flag pat_expr_list in
+        let pat_expr_list, _env = type_letdef env pstr.pstr_loc rec_flag pat_expr_list in
         let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
 (*      if !verbose then print_valdef env *)
         phr
@@ -26,7 +25,7 @@ let type_structure_item pstr =
         type_valuedecl pstr.pstr_loc s te (Types.ValuePrim pr);
         phr
     | Pstr_type decl ->
-        let decl = type_typedecl pstr.pstr_loc decl in
+        let decl = type_typedecl env pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
 (*      if !verbose then print_typedecl ty_decl *)
         phr
@@ -41,8 +40,7 @@ let type_structure_item pstr =
         phr
   end
 
-let type_signature_item psig =
-  let env = Env.unique in
+let type_signature_item env psig =
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
     | Psig_value (s,te,pr) ->
@@ -52,7 +50,7 @@ let type_signature_item psig =
         type_valuedecl phr.sig_loc s te pr;
         phr
     | Psig_type decl ->
-        let decl = type_typedecl psig.psig_loc decl in
+        let decl = type_typedecl env psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in
 (*      if !verbose then print_typedecl ty_decl *)
         phr

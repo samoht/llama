@@ -18,15 +18,15 @@ open Load_phr;;
 open Compiler;;
 open Types;;
 
-let fwd_load_object = ref(fun s -> failwith "fwd_load_object")
-let fwd_load_file = ref(fun s -> failwith "fwd_load_file")
+let fwd_load_object = ref(fun env s -> failwith "fwd_load_object")
+let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 
 (* Executing phrases *)
 
-let do_structure_item phr =
+let do_structure_item env phr =
   reset_type_var();
   reset_type_expression_vars ();
-  let phr = Typemod.type_structure_item phr in
+  let phr = Typemod.type_structure_item env phr in
   begin match phr.str_desc with
     Tstr_eval expr ->
       let res =
@@ -81,14 +81,14 @@ let do_structure_item phr =
 ;;
 
 open Parsetree
-let do_toplevel_phrase topphr =
+let do_toplevel_phrase env topphr =
   begin match topphr with
     | Parsetree.Ptop_dir dir ->
       begin match dir with
         | Pdir ("load", filename) ->
-            !fwd_load_object filename
+            !fwd_load_object env filename
         | Pdir ("use", filename) ->
-            !fwd_load_file filename
+            !fwd_load_file env filename
         | Pdir ("disasm", s) ->
             Meta.set_trace_flag (s<>"")
         | Pdir("infix", name) ->
@@ -103,5 +103,5 @@ let do_toplevel_phrase topphr =
               "Warning: unknown directive \"#%s\", ignored.\n" d;
             flush stderr
       end
-    | Parsetree.Ptop_def si -> do_structure_item si
+    | Parsetree.Ptop_def si -> do_structure_item env si
   end
