@@ -62,17 +62,6 @@ let wrap parsing_fun lexing_fun lexbuf =
          raise Toplevel
 ;;
 
-(* Warn for unused #open *)
-
-let check_unused_opens () =
-  if !Typecore.warnings then
-   Hashtbl.iter
-     (fun name used ->
-       if not !used && not (List.mem name !default_used_modules)
-       then unused_open_warning name)
-     !used_opened_modules
-;;
-
 (* Compiling an interface *)
 
 let verbose = ref false;;
@@ -109,7 +98,6 @@ let compile_interface modname filename =
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
-      check_unused_opens()
     with x ->
       close_in ic;
       close_out oc;
@@ -164,7 +152,6 @@ let compile_impl env modname filename suffix =
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
-      check_unused_opens()
     with x ->
       close_in ic;
       close_out oc;

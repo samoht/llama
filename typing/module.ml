@@ -114,7 +114,6 @@ let opened_modules = ref
     mod_exc_stamp = 1;
     mod_persistent = false };;
 let opened_modules_names = ref ([]: string list);;
-let used_opened_modules = ref (Hashtbl.create 1: (string, bool ref) Hashtbl.t);;
 
 let reset_opened_modules () =
   opened_modules :=
@@ -126,8 +125,7 @@ let reset_opened_modules () =
       mod_type_stamp = 0;
       mod_exc_stamp = 0;
       mod_persistent = false };
-  opened_modules_names := [];
-  used_opened_modules := Hashtbl.create 13;;
+  opened_modules_names := []
 
 (* Open a module and add its definitions to the table of opened modules. *)
 
@@ -140,8 +138,7 @@ let open_module name =
   add_table t.mod_constrs (!opened_modules).mod_constrs;
   add_table t.mod_labels (!opened_modules).mod_labels;
   add_table t.mod_types (!opened_modules).mod_types;
-  opened_modules_names := name :: !opened_modules_names;
-  Hashtbl.add !used_opened_modules name (ref false);;
+  opened_modules_names := name :: !opened_modules_names
 
 (* Close a module and remove its definitions from the table of opened modules.
    To avoid heavy hashtbl hacking, we just rebuild the table from scratch.
@@ -213,10 +210,7 @@ let find_desc m sel_fct = function
       begin try
         Hashtbl.find (sel_fct !defined_module) s
       with Not_found ->
-        let res = Hashtbl.find (sel_fct !opened_modules) s in
-        (* Record the module as actually used *)
-        (Hashtbl.find !used_opened_modules res.qualid.qual) := true;
-        res
+        Hashtbl.find (sel_fct !opened_modules) s
       end
   | _ -> failwith "long path"
 ;;

@@ -22,7 +22,6 @@ val kill_module : string -> unit
 val use_extended_interfaces : bool ref
 val opened_modules : t ref
 val opened_modules_names : string list ref
-val used_opened_modules : (string, bool ref) Hashtbl.t ref
 val reset_opened_modules : unit -> unit
 val default_used_modules : string list ref
 val defined_module : t ref
