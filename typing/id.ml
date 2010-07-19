@@ -1,6 +1,7 @@
 type t = string
 let create x = x
 let create_persistent x = x
+let persistent x = true
 let name x = x
 let same x y = (x = y)
 

@@ -13,6 +13,8 @@ let create s =
 let create_persistent s =
   { name = s; stamp = 0 }
 
+let persistent i = (i.stamp = 0)
+
 let name i = i.name
 
 let same i1 i2 = i1 = i2
