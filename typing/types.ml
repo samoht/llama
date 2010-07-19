@@ -47,7 +47,7 @@ type type_expr = typ
 
 type type_declaration =
   { ty_constr: type_constr global;      (* The constructor *)
-    mutable type_params : typ list;
+    type_params : typ list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : typ option;
     mutable type_kind: type_components }  (* Its description *)

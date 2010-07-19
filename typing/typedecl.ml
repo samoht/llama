@@ -80,14 +80,8 @@ type external_type =
 let external_types =
   ref ([] : (string * external_type) list);;
 
-let define_new_type loc (ty_desc, params, def) =
+let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
-  let ty_params =
-    try
-      bind_type_expression_vars params
-    with Failure "bind_type_expression_vars" ->
-      duplicate_param_in_type_decl_err loc in
-  ty_desc.info.type_params <- ty_params; (* they may get generalized by enter_new_abbrev... *)
   let ty_res =
     { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
       typ_level = notgeneric} in
@@ -121,9 +115,21 @@ let define_new_type loc (ty_desc, params, def) =
 ;;
 
 let type_typedecl env loc decl =
-  let newdecl =
+  let decl =
     List.map
       (fun (ty_name, params, def) ->
+         let ty_params =
+           try
+             bind_type_expression_vars params
+           with Failure "bind_type_expression_vars" ->
+             duplicate_param_in_type_decl_err loc
+         in
+         ty_name, params, ty_params, def)
+      decl
+  in
+  let newdecl =
+    List.map
+      (fun (ty_name, params, ty_params, def) ->
          let ty_constr =
            defined_global ty_name
              { ty_stamp = new_type_stamp();
@@ -131,9 +137,9 @@ let type_typedecl env loc decl =
          let ty_desc =
            defined_global ty_name
              { ty_constr = ty_constr;
-               type_arity = List.length params;
+               type_arity = List.length ty_params;
                type_manifest = None; (* xxx *)
-               type_params = []; (* xxx *)
+               type_params = ty_params; (* xxx will get generalized *)
                type_kind  = Type_abstract (* xxx *) } in
          add_type !defined_module ty_desc;
          ty_desc)
@@ -142,23 +148,28 @@ let type_typedecl env loc decl =
   let env = !glob_env in
   let decl =
     List.map
-      (fun (ty_name, params, def) -> (ty_name, params, Resolve.type_kind env [] def))
+      (fun (ty_name, params, ty_params, def) -> (ty_name, params, ty_params, Resolve.type_kind env [] def))
       decl
   in
   let res =
     List.map2
-      (fun (ty_name, params, def) ty_desc ->
-         define_new_type loc (ty_desc, params, def))
+      (fun (ty_name, params, ty_params, def) ty_desc ->
+         define_new_type loc (ty_desc, ty_params, def))
       decl newdecl
   in
   List.iter2
-    begin fun (ty_name, params, def) ty_desc ->
+    begin fun (ty_name, params, ty_params, def) ty_desc ->
       try
         check_recursive_abbrev ty_desc.info.ty_constr
       with Recursive_abbrev ->
         recursive_abbrev_err loc ty_desc
     end
     decl newdecl;
+  let decl =
+    List.map
+      (fun (ty_name, params, ty_params, def) -> ty_name, params, def)
+      decl
+  in
   decl
 
 let type_excdecl loc decl =
