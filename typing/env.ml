@@ -8,8 +8,8 @@ open Path
 open Longident
 
 type t = {
-  values: (Path.t * value_desc global) Id.tbl;
-  constrs: constr_desc global Id.tbl;
+  values: (Path.t * value_description global) Id.tbl;
+  constrs: constructor_description global Id.tbl;
   labels: label_desc global Id.tbl;
   types: (Path.t * type_declaration global) Id.tbl;
 }
@@ -23,9 +23,9 @@ let initial = ref empty
 
 type pers_struct =
   { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value_desc global) Hashtbl.t;
+    mod_values: (string, value_description global) Hashtbl.t;
                                              (* table of values *)
-    mod_constrs: (string, constr_desc global) Hashtbl.t;
+    mod_constrs: (string, constructor_description global) Hashtbl.t;
                                              (* table of constructors *)
     mod_labels: (string, label_desc global) Hashtbl.t;
                                              (* table of labels *)
@@ -184,31 +184,3 @@ let write_pers_struct oc mn env s1 s2 =
   iter_types env (fun gl -> Hashtbl.add ps.mod_types gl.qualid.id gl);
   iter_values env (fun gl -> Hashtbl.add ps.mod_values gl.qualid.id gl);
   output_value oc ps
-  
-    
-
-
-(* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *)
-(*
-let rec lookup li =
-  begin match li with
-    | Longident.Lident s -> Path.Pident s
-    | Longident.Ldot (mn, s) -> Path.Pdot (lookup mn, s)
-  end
-
-let lookup_type li env =
-  let gr = lookup li in
-  find_type_desc gr
-
-let lookup_constructor li env =
-  let gr = lookup li in
-  find_constr_desc gr
-
-let lookup_label li env =
-  let gr = lookup li in
-  find_label_desc gr
-
-let lookup_value li env =
-  let gr = lookup li in
-  find_value_desc gr
-*)

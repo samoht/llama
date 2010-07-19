@@ -30,7 +30,7 @@ let rec output_path oc = function
       %t unit                   output_input_name
       %a type_desc global       output_type_constr
       %a value_desc global      output_value
-      %a constr_desc global     output_constr
+      %a constructor_description global     output_constr
       %a label_desc global      output_label
       %a typ                    output_type, output_one_type, output_schema
       %a global_reference       output_globalref *)
@@ -170,8 +170,8 @@ let type_mismatch_err val_desc val_desc' =
            but defined with type %a.\n"
     output_input_name
     output_value val_desc
-    output_schema val_desc.info.val_typ
-    output_schema val_desc'.info.val_typ;
+    output_schema val_desc.info.val_type
+    output_schema val_desc'.info.val_type;
   raise Toplevel
 ;;
 
@@ -181,7 +181,7 @@ let cannot_generalize_err val_desc =
            contains type variables that cannot be generalized.\n"
     output_input_name
     output_value val_desc
-    output_schema val_desc.info.val_typ;
+    output_schema val_desc.info.val_type;
   raise Toplevel
 ;;
 

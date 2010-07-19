@@ -191,8 +191,8 @@ let constr_decl env c (s,tys) =
 
 let primitive o =
   begin match o with
-    | None ->ValueNotPrim
-    | Some (arity,s) -> ValuePrim {prim_arity=arity;prim_name=s}
+    | None ->Val_reg
+    | Some (arity,s) -> Val_prim {prim_arity=arity;prim_name=s}
   end
 
 let type_kind env c tk =

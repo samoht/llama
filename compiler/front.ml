@@ -115,10 +115,10 @@ let rec translate_expr env =
     Texp_ident(Zlocal s) ->
       translate_access (Id.name s) env (* xxx *)
   | Texp_ident(Zglobal g) ->
-      (match g.info.val_prim with
-        ValueNotPrim ->
+      (match g.info.val_kind with
+        Val_reg ->
           Lprim(Pget_global g.qualid, [])
-         | ValuePrim p ->
+         | Val_prim p ->
              let arity = p.prim_arity in
              if arity = 0 then
                Lprim(Pget_global g.qualid, []) (* xxx *)
@@ -166,10 +166,10 @@ let rec translate_expr env =
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
   | Texp_apply({exp_desc = Texp_ident(Zglobal g)} as fct, args) ->
-      begin match g.info.val_prim with
-        ValueNotPrim ->
+      begin match g.info.val_kind with
+        Val_reg ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
-      | ValuePrim {prim_arity=arity;prim_name=name} ->
+      | Val_prim {prim_arity=arity;prim_name=name} ->
           if arity == List.length args then
             let p = Primdecl.find_primitive arity name in
             match (p, args) with

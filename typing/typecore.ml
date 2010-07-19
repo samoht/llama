@@ -240,7 +240,7 @@ let rec type_expr env expr =
     Texp_ident ident ->
       begin match ident with
           Zglobal glob_desc ->
-            type_instance glob_desc.info.val_typ
+            type_instance glob_desc.info.val_type
         | Zlocal s ->
             let (ty_schema, mut_flag) = List.assoc (Id.name s) env in
             type_instance ty_schema

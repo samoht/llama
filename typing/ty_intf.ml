@@ -25,12 +25,12 @@ let enter_interface_definitions intf =
        :: !external_types);
   end;
   Module.iter_values intf begin fun val_desc ->
-    match val_desc.info.val_prim with
-        ValuePrim(_) -> add_value !defined_module val_desc
+    match val_desc.info.val_kind with
+        Val_prim(_) -> add_value !defined_module val_desc
       |       _        -> ()
   end;
-  Module.iter_constrs intf begin fun constr_desc ->
-    add_constr !defined_module constr_desc
+  Module.iter_constrs intf begin fun constructor_description ->
+    add_constr !defined_module constructor_description
   end;
   Module.iter_labels intf begin fun label_desc ->
     add_label !defined_module label_desc
@@ -44,9 +44,9 @@ let check_value_match val_decl =
       Module.lookup_value val_decl.qualid.id !defined_module
     with Not_found ->
       undefined_value_err val_decl in
-  let nongen_vars = free_type_vars notgeneric val_impl.info.val_typ in
+  let nongen_vars = free_type_vars notgeneric val_impl.info.val_type in
   begin try
-    filter (type_instance val_impl.info.val_typ, val_decl.info.val_typ)
+    filter (type_instance val_impl.info.val_type, val_decl.info.val_type)
   with OldUnify ->
     type_mismatch_err val_decl val_impl
   end;
@@ -56,8 +56,8 @@ let check_value_match val_decl =
 
 let check_interface intf =
   Module.iter_values intf begin fun val_desc ->
-      match val_desc.info.val_prim with
-        ValueNotPrim -> check_value_match val_desc
+      match val_desc.info.val_kind with
+        Val_reg -> check_value_match val_desc
       |      _       -> ()
   end
 
@@ -66,6 +66,6 @@ let check_interface intf =
 
 let check_nongen_values () =
   Module.iter_values !defined_module begin fun val_impl ->
-    if free_type_vars notgeneric val_impl.info.val_typ != [] then
+    if free_type_vars notgeneric val_impl.info.val_type != [] then
       cannot_generalize_err val_impl
   end

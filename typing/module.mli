@@ -4,10 +4,10 @@ val name_of_module : t -> string
 
 open Types
 val iter_labels : t -> (label_desc global -> unit) -> unit
-val iter_constrs : t -> (constr_desc global -> unit) -> unit
-val iter_values : t -> (value_desc global -> unit) -> unit
+val iter_constrs : t -> (constructor_description global -> unit) -> unit
+val iter_values : t -> (value_description global -> unit) -> unit
 val iter_types : t -> (type_declaration global -> unit) -> unit
-val find_all_constrs : t -> string -> constr_desc global list
+val find_all_constrs : t -> string -> constructor_description global list
 
 val module_table : (string, t) Hashtbl.t
 
@@ -33,21 +33,13 @@ val defined_global : string -> 'a -> 'a Types.global
 val new_type_stamp : unit -> int
 val new_exc_stamp : unit -> int
 
-val add_value : t -> Types.value_desc Types.global -> unit
-val add_constr : t -> Types.constr_desc Types.global -> unit
+val add_value : t -> Types.value_description Types.global -> unit
+val add_constr : t -> Types.constructor_description Types.global -> unit
 val add_label : t -> Types.label_desc Types.global -> unit
 val add_type : t -> Types.type_declaration Types.global -> unit
 
-val lookup_value : string -> t -> Types.value_desc Types.global
+val lookup_value : string -> t -> Types.value_description Types.global
 
-(*
-val find_value_desc : Path.t -> Types.value_desc Types.global
-val find_constr_desc :
-  Path.t -> Types.constr_desc Types.global
-val find_label_desc : Path.t -> Types.label_desc Types.global
-val find_type_desc :
-  Path.t -> Types.type_declaration Types.global
-  *)
 val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit

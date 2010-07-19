@@ -24,13 +24,13 @@ and pattern_desc =
   | Tpat_alias of pattern * Id.t
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
-  | Tpat_construct of constr_desc global * pattern list
+  | Tpat_construct of constructor_description global * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label_desc global * pattern) list
 
 type value_identifier =
-    Zglobal of value_desc global
+    Zglobal of value_description global
   | Zlocal of Id.t
 
 type expression =
@@ -42,7 +42,7 @@ and expression_desc =
     Texp_ident of value_identifier
   | Texp_constant of atomic_constant
   | Texp_tuple of expression list
-  | Texp_construct of constr_desc global * expression list
+  | Texp_construct of constructor_description global * expression list
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
   | Texp_function of (pattern list * expression) list
@@ -82,7 +82,7 @@ type signature_item =
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of Id.t * type_expression * prim_desc
+    Tsig_value of Id.t * type_expression * value_kind
   | Tsig_type of (Id.t * Id.t list * type_kind) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name

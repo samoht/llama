@@ -5,7 +5,7 @@ open Asttypes
 
 type error =
     Missing_field of string
-  | Value_descriptions of value_desc global * value_desc global
+  | Value_descriptions of value_description global * value_description global
   | Type_declarations of type_declaration global * type_declaration global
   | Exception_declarations of
       exception_declaration global * exception_declaration global
@@ -46,9 +46,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Sig_value gl -> (gl.qualid, Field_value gl.qualid.id)
-  | Sig_type(gl) -> (gl.qualid, Field_type gl.qualid.id)
-  | Sig_exception(gl) -> (gl.qualid, Field_exception gl.qualid.id)
+    Gen_value gl -> (gl.qualid, Field_value gl.qualid.id)
+  | Gen_type(gl, _) -> (gl.qualid, Field_type gl.qualid.id)
+  | Gen_exception(gl) -> (gl.qualid, Field_exception gl.qualid.id)
 
 (* Simplify a structure coercion *)
 
@@ -71,10 +71,10 @@ let rec signatures sig1 sig2 =
         let (id, name) = item_ident_name item in
         let nextpos =
           match item with
-            Sig_value({info={val_prim = ValuePrim _}})
-          | Sig_type _ -> pos
-          | Sig_value _
-          | Sig_exception _ -> pos+1 in
+            Gen_value({info={val_kind = Val_prim _}})
+          | Gen_type _ -> pos
+          | Gen_value _
+          | Gen_exception _ -> pos+1 in
         build_component_table nextpos
                               (Tbl.add name (id, item, pos) tbl) rem in
   let comps1 =
@@ -103,16 +103,16 @@ let rec signatures sig1 sig2 =
 
 and signature_components = function
     [] -> []
-  | (Sig_value(valdecl1), Sig_value(valdecl2), pos) :: rem ->
+  | (Gen_value(valdecl1), Gen_value(valdecl2), pos) :: rem ->
       let cc = value_descriptions valdecl1 valdecl2 in
-      begin match valdecl2.info.val_prim with
-        ValuePrim _ -> signature_components rem
+      begin match valdecl2.info.val_kind with
+        Val_prim _ -> signature_components rem
       | _ -> (pos, cc) :: signature_components rem
       end
-  | (Sig_type(tydecl1), Sig_type(tydecl2), pos) :: rem ->
+  | (Gen_type(tydecl1, _), Gen_type(tydecl2, _), pos) :: rem ->
       type_declarations tydecl1 tydecl2;
       signature_components rem
-  | (Sig_exception(excdecl1), Sig_exception(excdecl2), pos)
+  | (Gen_exception(excdecl1), Gen_exception(excdecl2), pos)
     :: rem ->
       exception_declarations excdecl1 excdecl2;
       (pos, Tcoerce_none) :: signature_components rem

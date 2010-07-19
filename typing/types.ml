@@ -1,7 +1,3 @@
-(* Global symbol tables *)
-
-open Asttypes;;
-
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
@@ -16,6 +12,10 @@ type 'a global =
 type constr_tag =
     ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
+
+(* Representation of types and declarations *)
+
+open Asttypes
 
 (* Type constructors *)
 
@@ -54,12 +54,12 @@ type type_declaration =
 
 and type_components =
     Type_abstract
-  | Type_variant of constr_desc global list (* Sum type -> list of constr. *)
+  | Type_variant of constructor_description global list (* Sum type -> list of constr. *)
   | Type_record of label_desc global list (* Record type -> list of labels *)
 
 (* Value constructors *)
 
-and constr_desc =
+and constructor_description =
   { cs_res: typ;                       (* Result type *)
     cs_args: typ list;                 (* Argument types *)
     cs_tag: constr_tag;                (* Its run-time tag *)
@@ -78,7 +78,6 @@ and label_desc =
     lbl_arg: typ;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
-;;
 
 let arity cs =
   begin match cs.cs_kind with
@@ -94,18 +93,22 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 
 (* Global variables *)
 
-type value_desc =
-  { val_typ: typ;                       (* Type *)
-    val_prim: prim_desc }               (* Is this a primitive? *)
+type value_description =
+  { val_type: type_expr;                (* Type of the value *)
+    val_kind: value_kind }
 
-and prim_desc =
-    ValueNotPrim
-  | ValuePrim of Primitive.description        (* arity & implementation *)
-;;
+and value_kind =
+    Val_reg                             (* Regular value *)
+  | Val_prim of Primitive.description   (* Primitive *)
 
 type exception_declaration = typ list
 
-type core_item =
-    Sig_value of value_desc global
-  | Sig_type of type_declaration global
-  | Sig_exception of exception_declaration global
+type generated_item =
+    Gen_value of value_description global
+  | Gen_type of type_declaration global * rec_status
+  | Gen_exception of exception_declaration global
+
+and rec_status =
+    Rec_not
+  | Rec_first
+  | Rec_next

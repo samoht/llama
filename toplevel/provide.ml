@@ -8,12 +8,12 @@ open Prim;;
 open Module;;
 
 let print_entry name valdesc =
-  match valdesc.info.val_prim with
-    ValueNotPrim ->
+  match valdesc.info.val_kind with
+    Val_reg ->
       print_string "val ";
       print_string valdesc.qualid.qual; print_string " ";
       print_endline valdesc.qualid.id
-  | ValuePrim(arity, Pccall(name, _)) ->
+  | Val_prim(arity, Pccall(name, _)) ->
       print_string "prim ";
       print_endline name
   | _ ->

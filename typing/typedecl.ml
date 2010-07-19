@@ -39,13 +39,13 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
         add_constr !defined_module constr_glob;
         constr_glob :: make_constrs (succ constr_idx) rest
   in
-    let constr_descs = make_constrs 0 constrs in
+    let constructor_descriptions = make_constrs 0 constrs in
       pop_type_level();
       generalize_type ty_res;
       List.iter
         (fun cstr -> List.iter generalize_type cstr.info.cs_args)
-        constr_descs;
-      Type_variant constr_descs
+        constructor_descriptions;
+      Type_variant constructor_descriptions
 ;;
 
 let enter_new_record loc (ty_constr, ty_res, labels) =
@@ -179,7 +179,7 @@ let type_valuedecl loc name typexp prim =
     let ty = type_of_type_expression false typexp in
       pop_type_level();
       generalize_type ty;
-      add_value !defined_module (defined_global name { val_typ = ty; val_prim = prim })
+      add_value !defined_module (defined_global name { val_type = ty; val_kind = prim })
 ;;
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -191,7 +191,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   let enter_val =
     List.iter
       (fun (name,(ty,mut_flag)) ->
-        add_value !defined_module (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
+        add_value !defined_module (defined_global name {val_type=ty; val_kind=Val_reg})) in
   if rec_flag then enter_val c;
   let env = !glob_env in
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in

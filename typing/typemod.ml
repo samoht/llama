@@ -22,7 +22,7 @@ let type_structure_item env pstr =
         let te = Resolve.type_expression env [] te in
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(s, te, pr)) in
-        type_valuedecl pstr.pstr_loc s te (Types.ValuePrim pr);
+        type_valuedecl pstr.pstr_loc s te (Types.Val_prim pr);
         phr
     | Pstr_type decl ->
         let decl = type_typedecl env pstr.pstr_loc decl in

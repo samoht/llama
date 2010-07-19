@@ -13,7 +13,7 @@ type term =
   | App of term * term
   | Const of atomic_constant
   | Prim of primitive
-  | Ctor of constr_desc global
+  | Ctor of constructor_description global
   | Tuple of int
   | Array of int
   | Match of type_constr global
@@ -52,15 +52,15 @@ let rec term_of_expr c expr =
     | Texp_ident id ->
         begin match id with
           | Zglobal vdg ->
-              begin match vdg.info.val_prim with
-                | ValueNotPrim ->
+              begin match vdg.info.val_kind with
+                | Val_reg ->
                     let qid = vdg.qualid in
                     begin try
                       find_global qid
                     with
                       | Not_found -> Global qid
                     end
-                | ValuePrim prim ->
+                | Val_prim prim ->
                     Prim (find_primitive prim.prim_arity prim.prim_name)
               end
           | Zlocal s ->
