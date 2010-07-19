@@ -76,18 +76,12 @@ let kill_module name =
   Hashtbl.remove module_table name
 ;;
 
-(* The table of all opened modules. Associate to each unqualified name
-   the corresponding descriptor from the right opened module. *)
-
-let opened_modules_names = ref ([]: string list);;
-
 (* Open a module and add its definitions to the table of opened modules. *)
 
 let add_table t1 t2 =
   Hashtbl.iter (Hashtbl.add t2) t1;;
 
 let open_module name env =
-  opened_modules_names := name :: !opened_modules_names;
   let env, _ = Env.open_pers_signature name env in
   env
 
@@ -99,7 +93,6 @@ let defined_module = ref (new_module "");;
 
 let start_compiling_interface name =
   defined_module := new_module name;
-  opened_modules_names := [];
   List.fold_left (fun x y->open_module y x ) !Env.initial !default_used_modules
 
 let start_compiling_implementation name intf =

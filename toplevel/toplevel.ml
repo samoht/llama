@@ -70,16 +70,13 @@ let _ = fwd_load_object := load_object;;
 (* To preserve the current toplevel module while compiling another module. *)
 
 let protect_current_module fct =
-  let saved_defined_module = !defined_module
-  and saved_opened_modules_names = !opened_modules_names in
+  let saved_defined_module = !defined_module in
   try
     fct();
     defined_module := saved_defined_module;
-    opened_modules_names := saved_opened_modules_names;
   with x ->
     kill_module (compiled_module_name());
     defined_module := saved_defined_module;
-    opened_modules_names := saved_opened_modules_names;
     raise x
 ;;
 

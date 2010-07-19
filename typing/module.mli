@@ -19,7 +19,6 @@ val find_module : string -> t
 val kill_module : string -> unit
 
 val use_extended_interfaces : bool ref
-val opened_modules_names : string list ref
 val default_used_modules : string list ref
 val defined_module : t ref
 
