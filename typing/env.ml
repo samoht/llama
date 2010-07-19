@@ -31,7 +31,9 @@ type pers_struct =
                                              (* table of labels *)
     mod_types: (string, type_declaration global) Hashtbl.t;
                                              (* table of type constructors *)
-    mutable mod_persistent: bool }
+    mutable mod_persistent: bool;
+    mutable working : generated_item list;
+ }
                       (* true if this interface comes from a .zi file *)
 
 (* The name of the compilation unit currently compiled.
@@ -158,7 +160,7 @@ let open_pers_signature name env =
   let env = Hashtbl.fold (fun k v env -> store_type k v env) ps.mod_types env in
   let env = Hashtbl.fold (fun k v env -> store_label k v env) ps.mod_labels env in
   let env = Hashtbl.fold (fun k v env -> store_constructor k v env) ps.mod_constrs env in
-  env, ps.mod_name
+  env, ps.mod_name, ps.working
 
 let iter_labels env cb = Id.iter cb env.labels
 let iter_constrs env cb = Id.iter cb env.constrs
@@ -167,13 +169,14 @@ let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
 let find_all_constrs env s = Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
 let find_all_types env s = List.map snd (Id.find_all (fun (_, cs) -> cs.qualid.id = s) env.types)
 
-let write_pers_struct oc mn env =
+let write_pers_struct oc mn env working =
   let ps = { mod_name = mn;
              mod_values = Hashtbl.create 10;
              mod_constrs = Hashtbl.create 10;
              mod_labels = Hashtbl.create 10;
              mod_types = Hashtbl.create 10;
-             mod_persistent = true }
+             mod_persistent = true;
+             working = working }
   in
   iter_labels env (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl);
   iter_constrs env (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl);

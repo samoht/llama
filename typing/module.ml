@@ -11,10 +11,11 @@ let next_exc_stamp = ref 1
 
 type t =
   { mod_name: string;                        (* name of the module *)
-    mutable mod_env : Env.t }
+    mutable mod_env : Env.t;
+    mutable working : generated_item list;
+ }
                                              (* table of type constructors *)
                       (* true if this interface comes from a .zi file *)
-;;
 
 
 
@@ -33,7 +34,9 @@ let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
 let new_module nm =
   let md =
     { mod_name = nm;
-      mod_env = Env.empty }
+      mod_env = Env.empty;
+      working = [];
+ }
   in
     Hashtbl.add module_table nm md; md
 ;;
@@ -41,9 +44,10 @@ let new_module nm =
 (* To load an interface from a file *)
 
 let read_module basename filename =
-  let env,mn = Env.open_pers_signature basename Env.empty in
+  let env,mn,working = Env.open_pers_signature basename Env.empty in
   { mod_name = mn;
-    mod_env = env }
+    mod_env = env;
+    working = working }
 
 let use_extended_interfaces = ref false;;
 
@@ -82,7 +86,7 @@ let add_table t1 t2 =
   Hashtbl.iter (Hashtbl.add t2) t1;;
 
 let open_module name env =
-  let env, _ = Env.open_pers_signature name env in
+  let env, _, _ = Env.open_pers_signature name env in
   env
 
 (* The current state of the compiler *)
@@ -117,29 +121,26 @@ let new_exc_stamp () =
 
 (* Additions to the module being compiled *)
 
-let add_global_info sel_fct m glob =
-  let tbl = sel_fct m in
-    if !toplevel then
-      add_rollback (fun () -> Hashtbl.remove tbl glob.qualid.id);
-    Hashtbl.add tbl glob.qualid.id glob
-;;
-
-let add_value m vd = m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env
+let add_value m vd =
+  m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env
 let add_value_MODONLY = add_value
 let add_value_to_open m vd env =
   add_value m vd;
   Env.store_value vd.qualid.id vd env
-let add_constr m cd = m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
+let add_constr m cd =
+  m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
 let add_constr_MODONLY = add_constr
 let add_constr_to_open m cd env =
   add_constr m cd;
   Env.store_constructor cd.qualid.id cd env
-let add_label m cd = m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
+let add_label m cd =
+  m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
 let add_label_MODONLY = add_label
 let add_label_to_open m cd env =
   add_label m cd;
   Env.store_label cd.qualid.id cd env
-let add_type m cd = m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env
+let add_type m cd =
+  m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env
 let add_type_MODONLY = add_type
 let add_type_to_open m cd env =
   add_type m cd;
@@ -171,7 +172,7 @@ let type_descr_of_type_constr cstr =
 
 let write_compiled_interface oc =
   let m = !defined_module in
-  Env.write_pers_struct oc m.mod_name m.mod_env
+  Env.write_pers_struct oc m.mod_name m.mod_env m.working
 
 
 
