@@ -31,7 +31,7 @@ let rec output_path oc = function
       %a type_desc global       output_type_constr
       %a value_desc global      output_value
       %a constructor_description global     output_constr
-      %a label_desc global      output_label
+      %a label_description global      output_label
       %a typ                    output_type, output_one_type, output_schema
       %a global_reference       output_globalref *)
 
@@ -74,7 +74,7 @@ let arity_err cstr args loc =
            but is here given %d argument(s).\n"
     output_location loc
     output_constr cstr
-    (Types.arity cstr.info)
+    cstr.info.cs_arity
     (List.length args);
   raise Toplevel
 ;;

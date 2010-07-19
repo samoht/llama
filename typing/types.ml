@@ -55,36 +55,23 @@ type type_declaration =
 and type_components =
     Type_abstract
   | Type_variant of constructor_description global list (* Sum type -> list of constr. *)
-  | Type_record of label_desc global list (* Record type -> list of labels *)
+  | Type_record of label_description global list (* Record type -> list of labels *)
 
 (* Value constructors *)
 
 and constructor_description =
   { cs_res: typ;                       (* Result type *)
     cs_args: typ list;                 (* Argument types *)
-    cs_tag: constr_tag;                (* Its run-time tag *)
-    cs_kind: constr_kind }             (* How it is represented *)
-
-and constr_kind =
-    Constr_constant                     (* Constant constructor *)
-  | Constr_regular                      (* Usual constructor *)
-  | Constr_superfluous of int           (* Superfluous constructor
-                                           with its arity *)
+    cs_arity: int;                     (* Number of arguments *)
+    cs_tag: constr_tag }               (* Its run-time tag *)
 
 (* Labels *)
 
-and label_desc =
+and label_description =
   { lbl_res: typ;                      (* Result type *)
     lbl_arg: typ;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
-
-let arity cs =
-  begin match cs.cs_kind with
-    | Constr_constant -> 0
-    | Constr_regular -> 1
-    | Constr_superfluous n -> n
-  end
 
 let generic = (-1)
 and notgeneric = 0;;

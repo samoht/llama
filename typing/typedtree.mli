@@ -27,7 +27,7 @@ and pattern_desc =
   | Tpat_construct of constructor_description global * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
-  | Tpat_record of (label_desc global * pattern) list
+  | Tpat_record of (label_description global * pattern) list
 
 type value_identifier =
     Zglobal of value_description global
@@ -53,9 +53,9 @@ and expression_desc =
   | Texp_for of Id.t * expression * expression * bool * expression
   | Texp_constraint of expression * type_expression
   | Texp_array of expression list
-  | Texp_record of (label_desc global * expression) list
-  | Texp_field of expression * label_desc global
-  | Texp_setfield of expression * label_desc global * expression
+  | Texp_record of (label_description global * expression) list
+  | Texp_field of expression * label_description global
+  | Texp_setfield of expression * label_description global * expression
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
   | Texp_when of expression * expression

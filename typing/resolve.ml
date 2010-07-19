@@ -80,7 +80,7 @@ let rec pattern env p =
         | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
         | Ppat_construct (li,sarg) ->
             let cs = lookup_constructor env li p.ppat_loc in
-            let arity = arity cs.info in
+            let arity = cs.info.cs_arity in
             let sargs =
               match sarg with
                   None -> []
@@ -125,7 +125,7 @@ let rec expr env c ex =
         | Pexp_tuple l -> Texp_tuple (List.map (expr env c) l)
         | Pexp_construct (li,sarg) ->
             let cs = lookup_constructor env li ex.pexp_loc in
-            let arity = arity cs.info in
+            let arity = cs.info.cs_arity in
             let sargs =
               match sarg with
                   None -> []

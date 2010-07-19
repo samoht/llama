@@ -10,7 +10,7 @@ open Longident
 type t = {
   values: (Path.t * value_description global) Id.tbl;
   constrs: constructor_description global Id.tbl;
-  labels: label_desc global Id.tbl;
+  labels: label_description global Id.tbl;
   types: (Path.t * type_declaration global) Id.tbl;
 }
 
@@ -27,7 +27,7 @@ type pers_struct =
                                              (* table of values *)
     mod_constrs: (string, constructor_description global) Hashtbl.t;
                                              (* table of constructors *)
-    mod_labels: (string, label_desc global) Hashtbl.t;
+    mod_labels: (string, label_description global) Hashtbl.t;
                                              (* table of labels *)
     mod_types: (string, type_declaration global) Hashtbl.t;
                                              (* table of type constructors *)

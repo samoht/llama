@@ -23,18 +23,12 @@ let enter_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
                            new_exc_stamp())
         else
           ConstrRegular(constr_idx, nbr_constrs) in
-      let kind =
-        match List.length ty_args with
-          | 0 -> Constr_constant
-          | 1 -> Constr_regular
-          | n -> Constr_superfluous n
-      in
       let constr_glob =
         defined_global constr_name
           { cs_res = ty_res;
             cs_args = ty_args;
-            cs_tag = constr_tag;
-            cs_kind = kind; }
+            cs_arity = List.length ty_args;
+            cs_tag = constr_tag; }
       in
         add_constr !defined_module constr_glob;
         constr_glob :: make_constrs (succ constr_idx) rest
@@ -60,13 +54,13 @@ let enter_new_record loc (ty_constr, ty_res, labels) =
       in
         add_label !defined_module lbl_glob;
         lbl_glob :: make_labels (succ i) rest in
-  let label_descs = make_labels 0 labels in
+  let label_descriptions = make_labels 0 labels in
     pop_type_level();
     generalize_type ty_res;
     List.iter
       (function lbl -> generalize_type lbl.info.lbl_arg)
-      label_descs;
-    Type_record label_descs
+      label_descriptions;
+    Type_record label_descriptions
 ;;
     
 let enter_new_abbrev (ty_constr, ty_params, body) =

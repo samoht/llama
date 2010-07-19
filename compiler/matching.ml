@@ -53,13 +53,13 @@ and make_tuple_match arity pathl =
 and make_construct_match cstr pathl0 cas =
   begin match pathl0 with
     | path :: pathl ->
-        begin match cstr.info.cs_kind with
-          | Constr_constant ->
+        begin match cstr.info.cs_arity with
+          | 0 ->
               Matching([cas], pathl)
-          | Constr_superfluous n ->
-              Matching([cas], make_path n pathl0)
-          | _ ->
+          | 1 ->
               Matching([cas], begin Lprim(Pfield 0, [path]) :: pathl end)
+          | n ->
+              Matching([cas], make_path n pathl0)
         end
     | _ -> fatal_error "make_construct_match"
   end

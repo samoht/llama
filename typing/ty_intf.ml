@@ -32,8 +32,8 @@ let enter_interface_definitions intf =
   Module.iter_constrs intf begin fun constructor_description ->
     add_constr !defined_module constructor_description
   end;
-  Module.iter_labels intf begin fun label_desc ->
-    add_label !defined_module label_desc
+  Module.iter_labels intf begin fun label_description ->
+    add_label !defined_module label_description
   end
 
 (* Check that an implementation matches an explicit interface *)

@@ -83,27 +83,24 @@ and type_num =
 let constr_void =
   builtin "()"
     { cs_res = {typ_desc=Tconstr(constr_type_unit,[]); typ_level=notgeneric};
-      cs_args = [];
-      cs_tag = ConstrRegular(0,1);
-      cs_kind= Constr_constant }
+      cs_args = []; cs_arity = 0;
+      cs_tag = ConstrRegular(0,1); }
 ;;
 
 let constr_nil =
   let arg = list_tyvar in
   builtin "[]"
     { cs_res = {typ_desc=Tconstr(constr_type_list, [arg]); typ_level=generic};
-      cs_args = [];
-      cs_tag = ConstrRegular(0,2);
-      cs_kind= Constr_constant }
+      cs_args = []; cs_arity = 0;
+      cs_tag = ConstrRegular(0,2); }
 
 and constr_cons =
   let arg1 = list_tyvar in
   let arg2 = {typ_desc=Tconstr(constr_type_list, [arg1]); typ_level=generic} in
   builtin "::"
     { cs_res = arg2;
-      cs_args = [arg1;arg2];
-      cs_tag = ConstrRegular(1,2);
-      cs_kind= Constr_superfluous 2}
+      cs_args = [arg1;arg2]; cs_arity = 2; 
+      cs_tag = ConstrRegular(1,2); }
 ;;
 
 let constr_none =
@@ -111,48 +108,40 @@ let constr_none =
   builtin "None"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
-      cs_args = [];
-      cs_tag = ConstrRegular(0,2);
-      cs_kind= Constr_constant }
+      cs_args = []; cs_arity = 0; 
+      cs_tag = ConstrRegular(0,2); }
 
 and constr_some =
   let arg = option_tyvar in
   builtin "Some"
     { cs_res =
        {typ_desc=Tconstr(constr_type_option, [arg]); typ_level=generic};
-      cs_args = [arg];
-      cs_tag = ConstrRegular(1,2);
-      cs_kind= Constr_regular }
+      cs_args = [arg]; cs_arity = 1;
+      cs_tag = ConstrRegular(1,2); }
 ;;
 
 let constr_false =
   builtin "false"
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
-      cs_args = [];
-      cs_tag = ConstrRegular(0,2);
-      cs_kind= Constr_constant }
+      cs_args = []; cs_arity = 0; 
+      cs_tag = ConstrRegular(0,2); }
 
 and constr_true =
   builtin "true"
     { cs_res = {typ_desc=Tconstr(constr_type_bool,[]); typ_level=notgeneric};
-      cs_args = [];
-      cs_tag = ConstrRegular(1,2);
-      cs_kind= Constr_constant }
-;;
+      cs_args = []; cs_arity = 0;
+      cs_tag = ConstrRegular(1,2); }
 
 (* Some exceptions that must be known to the compiler *)
 
 let match_failure_tag =
   ConstrExtensible ({qual="builtin"; id="Match_failure"}, 1)
-;;
 
 let constr_match_failure =
   builtin "Match_failure"
     { cs_res = {typ_desc=Tconstr(constr_type_exn,[]); typ_level=notgeneric};
-      cs_args = [type_string; type_int; type_int];
-      cs_tag = match_failure_tag;
-      cs_kind = Constr_superfluous 3 }
-;;
+      cs_args = [type_string; type_int; type_int]; cs_arity = 3;
+      cs_tag = match_failure_tag; }
 
 (* Construction of the "builtin" module *)
 

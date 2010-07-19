@@ -140,15 +140,10 @@ let rec translate_expr env =
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
   | Texp_construct(c,argl) ->
-      begin match c.info.cs_kind with
-        Constr_superfluous n ->
-              let tr_argl = List.map transl argl in
-              begin try                           (* superfluous ==> pure *)
-                Lconst(SCblock(c.info.cs_tag, List.map extract_constant tr_argl))
-              with Not_constant ->
-                Lprim(Pmakeblock c.info.cs_tag, tr_argl)
-              end
-      | Constr_regular ->
+      begin match c.info.cs_arity with
+      | 0 ->
+          Lconst(SCblock(c.info.cs_tag, []))
+      | 1 ->
           let arg = List.hd argl in
           let tr_arg = transl arg in
           begin try
@@ -156,8 +151,13 @@ let rec translate_expr env =
           with Not_constant ->
             Lprim(Pmakeblock c.info.cs_tag, [tr_arg])
           end
-      | Constr_constant ->
-          Lconst(SCblock(c.info.cs_tag, []))
+      | n ->
+              let tr_argl = List.map transl argl in
+              begin try                           (* superfluous ==> pure *)
+                Lconst(SCblock(c.info.cs_tag, List.map extract_constant tr_argl))
+              with Not_constant ->
+                Lprim(Pmakeblock c.info.cs_tag, tr_argl)
+              end
       end
   | Texp_apply({exp_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
       if List.length patl == List.length args then

@@ -109,7 +109,7 @@ let rec tpat new_env (pat, ty, mut_flag) =
           (type_product(new_type_var_list (List.length patl)))
       end
   | Tpat_construct(constr, args) ->
-      if List.length args <> arity constr.info then
+      if List.length args <> constr.info.cs_arity then
         arity_err constr args pat.pat_loc;
       let (ty_args, ty_res) = instance_constructor constr.info in
       unify_pat pat ty ty_res;
@@ -250,7 +250,7 @@ let rec type_expr env expr =
   | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
   | Texp_construct(constr, args) ->
-      if List.length args <> arity constr.info then
+      if List.length args <> constr.info.cs_arity then
         arity_err constr args expr.exp_loc;
       let (ty_args, ty_res) = instance_constructor constr.info in
       List.iter2 (type_expect env) args ty_args;

@@ -21,8 +21,8 @@ let print_valdef env =
 ;;
 
 let print_constr_decl cstr =
-  match cstr.info.cs_kind with
-    Constr_constant ->
+  match cstr.info.cs_arity with
+    0 ->
       printf "%s\n" cstr.qualid.id
   | _ ->
       printf "%s of %a\n"

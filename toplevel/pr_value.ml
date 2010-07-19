@@ -122,10 +122,10 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         let (ty_args, ty_res) =
           instance_constructor constr.info in
         filter (ty_res, ty);
-        match constr.info.cs_kind with
-          Constr_constant ->
+        match constr.info.cs_arity with
+          0 ->
             output_constr constr
-        | Constr_regular ->
+        | 1 ->
             if prio > 1 then begin open_box 2; print_string "(" end
              else open_box 1;
             output_constr constr;
@@ -133,7 +133,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
             cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
             if prio > 1 then print_string ")";
             close_box()
-        | Constr_superfluous n ->
+        | n ->
             if prio > 1 then begin open_box 2; print_string "(" end
             else open_box 1;
             output_constr constr;
