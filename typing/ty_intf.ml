@@ -41,7 +41,7 @@ let enter_interface_definitions intf =
 let check_value_match val_decl =
   let val_impl =
     try
-      Module.lookup_value (little_name_of_global val_decl) !defined_module
+      Module.lookup_value val_decl.qualid.id !defined_module
     with Not_found ->
       undefined_value_err val_decl in
   let nongen_vars = free_type_vars notgeneric val_impl.info.val_typ in

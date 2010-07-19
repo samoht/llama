@@ -2,26 +2,20 @@
 
 open Asttypes;;
 
+(* Internally, a global is represented by its fully qualified name,
+   plus associated information. *)
+
 type qualified_ident =
   { qual: string;
     id: string }
-;;
-
-type constr_tag =
-    ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
-  | ConstrRegular of int * int             (* tag number & number of constrs *)
-;;
-
-(* Internally, a global is represented by its fully qualified name,
-   plus associated information. *)
 
 type 'a global =
   { qualid: qualified_ident; (* Full name *)
     info: 'a }               (* Description *)
-;;
 
-let little_name_of_global g = g.qualid.id
-;;
+type constr_tag =
+    ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
+  | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 (* Type constructors *)
 
