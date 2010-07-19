@@ -114,7 +114,7 @@ let rec expr env c ex =
             let notlocal() = Zglobal(lookup_value env li ex.pexp_loc) in
             Texp_ident
               begin match li with
-                | Longident.Id s ->
+                | Longident.Lident s ->
                     begin try
                       let (isrec, ident) = List.assoc s c in
                       if isrec then assert false else Zlocal ident

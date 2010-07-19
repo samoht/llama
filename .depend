@@ -41,17 +41,17 @@ typing/ctype.cmo: typing/types.cmx typing/module.cmi utils/misc.cmx \
 typing/ctype.cmx: typing/types.cmx typing/module.cmx utils/misc.cmx \
     typing/btype.cmx 
 typing/env.cmo: typing/types.cmx typing/typedtree.cmi typing/predef.cmx \
-    typing/module.cmi utils/misc.cmx parsing/longident.cmi \
+    typing/path.cmx typing/module.cmi utils/misc.cmx parsing/longident.cmi \
     parsing/location.cmi parsing/asttypes.cmi typing/env.cmi 
 typing/env.cmx: typing/types.cmx typing/typedtree.cmi typing/predef.cmx \
-    typing/module.cmx utils/misc.cmx parsing/longident.cmx \
+    typing/path.cmx typing/module.cmx utils/misc.cmx parsing/longident.cmx \
     parsing/location.cmx parsing/asttypes.cmi typing/env.cmi 
 typing/error.cmo: typing/types.cmx typing/typedtree_aux.cmx \
-    typing/typedtree.cmi typing/pr_type.cmx utils/misc.cmx \
+    typing/typedtree.cmi typing/pr_type.cmx typing/path.cmx utils/misc.cmx \
     parsing/longident.cmi parsing/location.cmi typing/ctype.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
 typing/error.cmx: typing/types.cmx typing/typedtree_aux.cmx \
-    typing/typedtree.cmi typing/pr_type.cmx utils/misc.cmx \
+    typing/typedtree.cmi typing/pr_type.cmx typing/path.cmx utils/misc.cmx \
     parsing/longident.cmx parsing/location.cmx typing/ctype.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
 typing/id.cmo: typing/id.cmi 
@@ -85,9 +85,9 @@ typing/predef.cmx: typing/types.cmx typing/module.cmx parsing/asttypes.cmi
 typing/primitive.cmo: 
 typing/primitive.cmx: 
 typing/printtyp.cmo: typing/types.cmx typing/path.cmx parsing/longident.cmi \
-    typing/ident.cmi parsing/asttypes.cmi 
+    typing/id.cmi parsing/asttypes.cmi 
 typing/printtyp.cmx: typing/types.cmx typing/path.cmx parsing/longident.cmx \
-    typing/ident.cmx parsing/asttypes.cmi 
+    typing/id.cmx parsing/asttypes.cmi 
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi utils/tbl.cmi \
     typing/primitive.cmx parsing/parsetree.cmi parsing/parser.cmi \
     utils/misc.cmx parsing/longident.cmi typing/id.cmi typing/error.cmx \
@@ -110,22 +110,20 @@ typing/typecore.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     parsing/asttypes.cmi 
 typing/typedecl.cmo: typing/types.cmx typing/typedtree.cmi \
     typing/typecore.cmx typing/resolve.cmx typing/predef.cmx \
-    typing/module.cmi typing/error.cmx typing/env.cmi typing/btype.cmx \
-    parsing/asttypes.cmi 
+    typing/module.cmi typing/error.cmx typing/btype.cmx parsing/asttypes.cmi 
 typing/typedecl.cmx: typing/types.cmx typing/typedtree.cmi \
     typing/typecore.cmx typing/resolve.cmx typing/predef.cmx \
-    typing/module.cmx typing/error.cmx typing/env.cmx typing/btype.cmx \
-    parsing/asttypes.cmi 
+    typing/module.cmx typing/error.cmx typing/btype.cmx parsing/asttypes.cmi 
 typing/typedtree_aux.cmo: typing/types.cmx typing/typedtree.cmi \
     parsing/location.cmi parsing/asttypes.cmi 
 typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
     parsing/location.cmx parsing/asttypes.cmi 
 typing/typemod.cmo: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
     typing/typecore.cmx typing/resolve.cmx typing/primitive.cmx \
-    parsing/parsetree.cmi typing/env.cmi 
+    parsing/parsetree.cmi 
 typing/typemod.cmx: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
     typing/typecore.cmx typing/resolve.cmx typing/primitive.cmx \
-    parsing/parsetree.cmi typing/env.cmx 
+    parsing/parsetree.cmi 
 typing/types.cmo: typing/primitive.cmx parsing/asttypes.cmi 
 typing/types.cmx: typing/primitive.cmx parsing/asttypes.cmi 
 compiler/back.cmo: typing/types.cmx compiler/prim.cmx utils/misc.cmx \
@@ -144,13 +142,13 @@ compiler/compiler.cmo: typing/typemod.cmx typing/typedtree_aux.cmx \
     typing/typedtree.cmi typing/typedecl.cmx typing/typecore.cmx \
     typing/ty_intf.cmx typing/pr_decl.cmx parsing/parsetree.cmi \
     parsing/parser.cmi typing/module.cmi utils/misc.cmx parsing/location.cmi \
-    parsing/lexer.cmi compiler/front.cmx typing/error.cmx \
+    parsing/lexer.cmi compiler/front.cmx typing/error.cmx typing/env.cmi \
     compiler/emit_phr.cmx compiler/back.cmx 
 compiler/compiler.cmx: typing/typemod.cmx typing/typedtree_aux.cmx \
     typing/typedtree.cmi typing/typedecl.cmx typing/typecore.cmx \
     typing/ty_intf.cmx typing/pr_decl.cmx parsing/parsetree.cmi \
     parsing/parser.cmx typing/module.cmx utils/misc.cmx parsing/location.cmx \
-    parsing/lexer.cmx compiler/front.cmx typing/error.cmx \
+    parsing/lexer.cmx compiler/front.cmx typing/error.cmx typing/env.cmx \
     compiler/emit_phr.cmx compiler/back.cmx 
 compiler/driver.cmo: linker/symtable.cmx typing/module.cmi utils/misc.cmx \
     linker/link.cmx compiler/librarian.cmx utils/config.cmi \
@@ -264,7 +262,7 @@ linker/tr_const.cmx: linker/symtable.cmx compiler/lambda.cmx \
     parsing/asttypes.cmi 
 toplevel/llama_obj.cmi: 
 toplevel/meta.cmi: toplevel/llama_obj.cmi 
-toplevel/toplevel.cmi: 
+toplevel/toplevel.cmi: typing/env.cmi 
 toplevel/do_phr.cmo: typing/types.cmx typing/typemod.cmx typing/typedtree.cmi \
     typing/typedecl.cmx typing/typecore.cmx linker/symtable.cmx \
     toplevel/pr_value.cmx parsing/parsetree.cmi typing/module.cmi \
@@ -302,13 +300,13 @@ toplevel/load_phr.cmx: linker/symtable.cmx compiler/reloc.cmx \
 toplevel/main.cmo: typing/types.cmx typing/typecore.cmx toplevel/toplevel.cmi \
     linker/symtable.cmx parsing/parser.cmi typing/module.cmi utils/misc.cmx \
     toplevel/meta.cmi parsing/location.cmi toplevel/load_phr.cmx \
-    parsing/lexer.cmi compiler/lambda.cmx toplevel/do_phr.cmx \
+    parsing/lexer.cmi compiler/lambda.cmx typing/env.cmi toplevel/do_phr.cmx \
     utils/config.cmi compiler/compiler.cmx utils/clflags.cmi \
     parsing/asttypes.cmi 
 toplevel/main.cmx: typing/types.cmx typing/typecore.cmx toplevel/toplevel.cmx \
     linker/symtable.cmx parsing/parser.cmx typing/module.cmx utils/misc.cmx \
     toplevel/meta.cmi parsing/location.cmx toplevel/load_phr.cmx \
-    parsing/lexer.cmx compiler/lambda.cmx toplevel/do_phr.cmx \
+    parsing/lexer.cmx compiler/lambda.cmx typing/env.cmx toplevel/do_phr.cmx \
     utils/config.cmx compiler/compiler.cmx utils/clflags.cmx \
     parsing/asttypes.cmi 
 toplevel/pr_value.cmo: typing/types.cmx linker/symtable.cmx typing/predef.cmx \
@@ -324,14 +322,14 @@ toplevel/provide.cmo: typing/types.cmx compiler/prim.cmx typing/module.cmi \
 toplevel/provide.cmx: typing/types.cmx compiler/prim.cmx typing/module.cmx \
     utils/misc.cmx utils/config.cmx parsing/asttypes.cmi 
 toplevel/toplevel.cmo: typing/types.cmx linker/symtable.cmx typing/predef.cmx \
-    toplevel/pr_value.cmx linker/patch.cmx parsing/parser.cmi \
+    toplevel/pr_value.cmx typing/path.cmx linker/patch.cmx parsing/parser.cmi \
     compiler/opcodes.cmx typing/module.cmi utils/misc.cmx toplevel/meta.cmi \
     parsing/location.cmi toplevel/load_phr.cmx parsing/lexer.cmi \
     compiler/event.cmx compiler/emit_phr.cmx toplevel/do_phr.cmx \
     typing/ctype.cmx compiler/compiler.cmx typing/btype.cmx \
     parsing/asttypes.cmi toplevel/toplevel.cmi 
 toplevel/toplevel.cmx: typing/types.cmx linker/symtable.cmx typing/predef.cmx \
-    toplevel/pr_value.cmx linker/patch.cmx parsing/parser.cmx \
+    toplevel/pr_value.cmx typing/path.cmx linker/patch.cmx parsing/parser.cmx \
     compiler/opcodes.cmx typing/module.cmx utils/misc.cmx toplevel/meta.cmi \
     parsing/location.cmx toplevel/load_phr.cmx parsing/lexer.cmx \
     compiler/event.cmx compiler/emit_phr.cmx toplevel/do_phr.cmx \

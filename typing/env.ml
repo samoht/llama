@@ -6,17 +6,33 @@ open Typedtree
 open Module
 open Predef
 open Printf
-
+(*
+type t = {
+  values: (Path.t * value_description) Id.tbl;
+  constrs: constructor_description Id.tbl;
+  labels: label_description Id.tbl;
+  types: (Path.t * type_declaration) Id.tbl;
+}
+*)
 type t = unit
 
 let initial = ()
 
-let lookup li =
+let rec lookup li =
   begin match li with
-    | Longident.Id s -> Path.Pident s
-    | Longident.Qual (mn, s) -> Path.Pdot (Path.Pident mn, s)
+    | Longident.Lident s -> Path.Pident s
+    | Longident.Ldot (mn, s) -> Path.Pdot (lookup mn, s)
   end
-
+(*
+let lookup_value =
+  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
+and lookup_constructor =
+  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
+and lookup_label =
+  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
+and lookup_type =
+  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
+*)
 let lookup_type li env =
   let gr = lookup li in
   find_type_desc gr

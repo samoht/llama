@@ -11,12 +11,8 @@ open Types
 let qualid ppf id = fprintf ppf "%s.%s" id.qual id.id
 
 let rec longident ppf = function
-(*
   | Lident s -> fprintf ppf "%s" s
   | Ldot(p, s) -> fprintf ppf "%a.%s" longident p s
-*)
-  | Id s ->fprintf ppf "%s" s
-  | Qual(p, s) -> fprintf ppf "%s.%s" p s
 
 (* Print an identifier *)
 

@@ -11,11 +11,11 @@ open Pr_type;;
 open Printf;;
 open Ctype;;
 
-let output_longident oc = function
-    Longident.Id s ->
+let rec output_longident oc = function
+    Longident.Lident s ->
       output_string oc s
-  | Longident.Qual (mn, s) ->
-      output_string oc mn; output_string oc "__"; output_string oc s
+  | Longident.Ldot (mn, s) ->
+      output_longident oc mn; output_string oc "__"; output_string oc s
 ;;
 
 let rec output_path oc = function

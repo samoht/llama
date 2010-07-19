@@ -1,7 +1,6 @@
 type t =
-  | Id of string
-  | Qual of string * string
-
+  | Lident of string
+  | Ldot of t * string
 
 let is_string_upper s =
   s = "true" || s = "false" ||
@@ -12,5 +11,5 @@ let is_string_upper s =
 
 let is_upper x =
   begin match x with
-    | Id s | Qual (_, s) -> is_string_upper s
+    | Lident s | Ldot (_, s) -> is_string_upper s
   end
