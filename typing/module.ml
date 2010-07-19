@@ -146,6 +146,12 @@ let add_type_to_open m cd env =
   add_type m cd;
   Env.store_type cd.qualid.id cd env
 
+
+let add_full_type_to_open m cd env =
+  m.mod_env <- Env.store_full_type  cd.qualid.id cd m.mod_env;
+  Env.store_full_type cd.qualid.id cd env
+
+
 let lookup_value s m =
   Env.lookup_value (Longident.Lident s) m.mod_env
 

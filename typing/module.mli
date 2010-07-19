@@ -40,6 +40,7 @@ val add_value_to_open : t -> Types.value_description Types.global -> Env.t -> En
 val add_constr_to_open : t -> Types.constructor_description Types.global -> Env.t -> Env.t
 val add_label_to_open : t -> Types.label_description Types.global -> Env.t -> Env.t
 val add_type_to_open : t -> Types.type_declaration Types.global -> Env.t -> Env.t
+val add_full_type_to_open : t -> Types.type_declaration Types.global -> Env.t -> Env.t
 
 val lookup_value : string -> t -> Types.value_description Types.global
 

@@ -22,6 +22,7 @@ val open_pers_signature : string -> t -> t * string * generated_item list
 
 val store_label : string -> label_description global -> t -> t
 val store_type : string -> type_declaration global -> t -> t
+val store_full_type : string -> type_declaration global -> t -> t
 val store_value : string -> value_description global -> t -> t
 val store_constructor : string -> constructor_description global -> t -> t
 

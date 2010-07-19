@@ -154,6 +154,34 @@ let store_type s decl env =
   { env with
     types = Id.add id (path, decl) env.types }
 
+let constructors_of_type ty_path decl =
+  match decl.info.type_kind with
+    Type_variant cstrs -> cstrs
+  | Type_record _ | Type_abstract -> []
+
+let labels_of_type ty_path decl =
+  match decl.info.type_kind with
+    Type_record(labels) ->labels
+  | Type_variant _ | Type_abstract -> []
+
+let store_full_type s info env =
+  let id = Id.create s in
+  let path = Path.Pdot(Path.Pident id, s) in
+  { env with
+    constrs =
+      List.fold_right
+        (fun (descr) constrs ->
+          Id.add descr.qualid.id descr constrs)
+        (constructors_of_type path info)
+        env.constrs;
+    labels =
+      List.fold_right
+        (fun (descr) labels ->
+          Id.add descr.qualid.id descr labels)
+        (labels_of_type path info)
+        env.labels;
+    types = Id.add id (path, info) env.types }
+
 let open_pers_signature name env =
   let ps = find_pers_struct name in
   let env = Hashtbl.fold (fun k v env -> store_value k v env) ps.mod_values env in
