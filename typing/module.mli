@@ -47,7 +47,6 @@ val lookup_value : string -> t -> Types.value_description Types.global
 val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
-val flush_module_cache : unit -> Env.t
 
 val env : t -> Env.t
 

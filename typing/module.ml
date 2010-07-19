@@ -11,9 +11,8 @@ let next_exc_stamp = ref 1
 
 type t =
   { mod_name: string;                        (* name of the module *)
-    mutable mod_env : Env.t;
+    mutable mod_env : Env.t }
                                              (* table of type constructors *)
-    mutable mod_persistent: bool }
                       (* true if this interface comes from a .zi file *)
 ;;
 
@@ -34,8 +33,7 @@ let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
 let new_module nm =
   let md =
     { mod_name = nm;
-      mod_env = Env.empty;
-      mod_persistent = false }
+      mod_env = Env.empty }
   in
     Hashtbl.add module_table nm md; md
 ;;
@@ -45,8 +43,7 @@ let new_module nm =
 let read_module basename filename =
   let env,mn = Env.open_pers_signature basename Env.empty in
   { mod_name = mn;
-    mod_env = env;
-    mod_persistent = true }
+    mod_env = env }
 
 let use_extended_interfaces = ref false;;
 
@@ -183,15 +180,6 @@ let write_compiled_interface oc =
   let m = !defined_module in
   Env.write_pers_struct oc m.mod_name m.mod_env
 
-(* To flush all in-core modules coming from .zi files *)
-
-let flush_module_cache () =
-  let opened = !opened_modules_names in
-  Hashtbl.iter
-    (fun name md -> if md.mod_persistent then kill_module name)
-    module_table;
-  opened_modules_names := [];
-  List.fold_right open_module (List.rev opened) !Env.initial
 
 
 let env m = m.mod_env
