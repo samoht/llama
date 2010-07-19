@@ -51,3 +51,5 @@ val flush_module_cache : unit -> Env.t
 
 val env : t -> Env.t
 
+val next_type_stamp : int ref
+val next_exc_stamp : int ref

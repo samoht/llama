@@ -18,11 +18,11 @@ val iter_types : t -> (type_declaration global -> unit) -> unit
 val find_all_constrs : t -> string -> constructor_description global list
 val find_all_types : t -> string -> type_declaration global list
 
-val open_pers_signature : string -> t -> t * string * int * int
+val open_pers_signature : string -> t -> t * string
 
 val store_label : string -> label_description global -> t -> t
 val store_type : string -> type_declaration global -> t -> t
 val store_value : string -> value_description global -> t -> t
 val store_constructor : string -> constructor_description global -> t -> t
 
-val write_pers_struct : out_channel -> string -> t -> int -> int -> unit
+val write_pers_struct : out_channel -> string -> t -> unit

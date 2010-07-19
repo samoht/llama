@@ -24,14 +24,21 @@ let enter_interface_definitions env intf =
       ((ty_desc.qualid.id,
         {et_descr = ty_desc; et_manifest = manifest; et_defined = false})
        :: !external_types);
+    let stamp = ty_desc.info.ty_constr.info.ty_stamp in
+    if stamp >= !next_type_stamp then
+      next_type_stamp := stamp + 1
   end;
   Module.iter_values intf begin fun val_desc ->
     match val_desc.info.val_kind with
         Val_prim(_) -> envref := add_value_to_open !defined_module val_desc !envref
       |       _        -> ()
   end;
-  Module.iter_constrs intf begin fun constructor_description ->
-    envref := add_constr_to_open !defined_module constructor_description !envref
+  Module.iter_constrs intf begin fun cd ->
+    envref := add_constr_to_open !defined_module cd !envref;
+    begin match cd.info.cs_tag with
+      | ConstrExtensible(_,stamp) when stamp >= !next_exc_stamp -> next_exc_stamp := stamp+1
+      | _ -> ()
+    end
   end;
   Module.iter_labels intf begin fun label_description ->
     envref := add_label_to_open !defined_module label_description !envref

@@ -4,14 +4,15 @@ open Misc;;
 open Asttypes;;
 open Types;;
 
+let next_type_stamp = ref 1
+let next_exc_stamp = ref 1
+
 (* Informations associated with module names *)
 
 type t =
   { mod_name: string;                        (* name of the module *)
     mutable mod_env : Env.t;
                                              (* table of type constructors *)
-    mutable mod_type_stamp: int;             (* stamp for type constructors *)
-    mutable mod_exc_stamp: int;              (* stamp for exceptions *)
     mutable mod_persistent: bool }
                       (* true if this interface comes from a .zi file *)
 ;;
@@ -34,8 +35,6 @@ let new_module nm =
   let md =
     { mod_name = nm;
       mod_env = Env.empty;
-      mod_type_stamp = 0;
-      mod_exc_stamp = 0;
       mod_persistent = false }
   in
     Hashtbl.add module_table nm md; md
@@ -44,11 +43,9 @@ let new_module nm =
 (* To load an interface from a file *)
 
 let read_module basename filename =
-  let env,mn,s1,s2 = Env.open_pers_signature basename Env.empty in
+  let env,mn = Env.open_pers_signature basename Env.empty in
   { mod_name = mn;
     mod_env = env;
-    mod_type_stamp = s1;
-    mod_exc_stamp = s2;
     mod_persistent = true }
 
 let use_extended_interfaces = ref false;;
@@ -94,7 +91,7 @@ let add_table t1 t2 =
 
 let open_module name env =
   opened_modules_names := name :: !opened_modules_names;
-  let env, _, _, _ = Env.open_pers_signature name env in
+  let env, _ = Env.open_pers_signature name env in
   env
 
 (* The current state of the compiler *)
@@ -110,8 +107,6 @@ let start_compiling_interface name =
 
 let start_compiling_implementation name intf =
   let env = start_compiling_interface name in
-  !defined_module.mod_type_stamp <- intf.mod_type_stamp;
-  !defined_module.mod_exc_stamp  <- intf.mod_exc_stamp;
   env
 
 let compiled_module_name () =
@@ -123,14 +118,12 @@ let defined_global name desc =
 ;;
 
 let new_type_stamp () =
-  let s = succ !defined_module.mod_type_stamp in
-  !defined_module.mod_type_stamp <- s; s
-;;
+  let n = !next_type_stamp in
+  incr next_type_stamp; n
 
 let new_exc_stamp () =
-  let s = succ !defined_module.mod_exc_stamp in
-  !defined_module.mod_exc_stamp <- s; s
-;;
+  let n = !next_exc_stamp in
+  incr next_exc_stamp; n
 
 (* Additions to the module being compiled *)
 
@@ -188,7 +181,7 @@ let type_descr_of_type_constr cstr =
 
 let write_compiled_interface oc =
   let m = !defined_module in
-  Env.write_pers_struct oc m.mod_name m.mod_env m.mod_type_stamp m.mod_exc_stamp
+  Env.write_pers_struct oc m.mod_name m.mod_env
 
 (* To flush all in-core modules coming from .zi files *)
 
