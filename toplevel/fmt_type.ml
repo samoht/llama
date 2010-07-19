@@ -6,23 +6,18 @@ open Btype;;
 open Module;;
 open Format;;
 
-let print_global sel_fct gl =
-  if not (can_omit_qualifier sel_fct gl) then begin
+let print_global gl =
+  if gl.qualid.qual <> "builtin" then begin
     print_string gl.qualid.qual;
-    print_string "__"
+    print_string "__";
   end;
   print_string gl.qualid.id
 ;;
 
-let output_type_constr = 
-  (print_global types_of_module: type_declaration global -> unit)
-and output_value =
-  (print_global values_of_module: value_desc global -> unit)
-and output_constr =
-  (print_global constrs_of_module: constr_desc global -> unit)
-and output_label =
-  (print_global labels_of_module: label_desc global -> unit)
-;;
+let output_type_constr = print_global
+and output_value = print_global
+and output_constr = print_global
+and output_label = print_global
 
 let int_to_alpha i =
   if i < 26
@@ -83,7 +78,7 @@ let rec print_typ priority ty =
           close_box();
           print_space()
       end;
-      print_global types_of_module cstr;
+      print_global cstr;
       close_box()
 
 and print_typ_list priority sep = function

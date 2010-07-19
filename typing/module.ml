@@ -35,6 +35,12 @@ let iter m sel cb =
 ;;
 let find_all m sel p = Hashtbl.find_all (sel m) p
 
+let iter_types m cb = iter m types_of_module cb
+let iter_constrs m cb = iter m constrs_of_module cb
+let iter_labels m cb = iter m labels_of_module cb
+let iter_values m cb = iter m values_of_module cb
+let find_all_constrs m = find_all m constrs_of_module
+
 (* The table of module interfaces already loaded in memory *)
 
 let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
@@ -252,16 +258,3 @@ let flush_module_cache () =
   reset_opened_modules();
   List.iter open_module (List.rev opened)
 ;;
-
-let can_omit_qualifier sel_fct gl =
-  try
-    let gl' =
-      try
-        Hashtbl.find (sel_fct !defined_module) gl.qualid.id
-      with Not_found ->
-        Hashtbl.find (sel_fct !opened_modules) gl.qualid.id in
-    gl.qualid = gl'.qualid
-  with Not_found ->
-    false
-;;
-

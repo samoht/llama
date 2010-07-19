@@ -13,7 +13,7 @@ open Typedecl;;
 
 let enter_interface_definitions intf =
   external_types := [];
-  Module.iter intf types_of_module begin fun ty_desc ->
+  Module.iter_types intf begin fun ty_desc ->
     let manifest =
       match ty_desc.info.type_kind with
           Type_abstract -> false
@@ -24,15 +24,15 @@ let enter_interface_definitions intf =
         {et_descr = ty_desc; et_manifest = manifest; et_defined = false})
        :: !external_types);
   end;
-  Module.iter intf values_of_module begin fun val_desc ->
+  Module.iter_values intf begin fun val_desc ->
     match val_desc.info.val_prim with
         ValuePrim(_) -> add_value !defined_module val_desc
       |       _        -> ()
   end;
-  Module.iter intf constrs_of_module begin fun constr_desc ->
+  Module.iter_constrs intf begin fun constr_desc ->
     add_constr !defined_module constr_desc
   end;
-  Module.iter intf labels_of_module begin fun label_desc ->
+  Module.iter_labels intf begin fun label_desc ->
     add_label !defined_module label_desc
   end
 
@@ -55,7 +55,7 @@ let check_value_match val_decl =
 ;;
 
 let check_interface intf =
-  Module.iter intf values_of_module begin fun val_desc ->
+  Module.iter_values intf begin fun val_desc ->
       match val_desc.info.val_prim with
         ValueNotPrim -> check_value_match val_desc
       |      _       -> ()
@@ -65,7 +65,7 @@ let check_interface intf =
    with non-generalizable types. *)
 
 let check_nongen_values () =
-  Module.iter !defined_module values_of_module begin fun val_impl ->
+  Module.iter_values !defined_module begin fun val_impl ->
     if free_type_vars notgeneric val_impl.info.val_typ != [] then
       cannot_generalize_err val_impl
   end

@@ -5,23 +5,17 @@ open Types;;
 open Btype;;
 open Module;;
 
-let output_global sel_fct oc gl =
-  if not (can_omit_qualifier sel_fct gl) then begin
+let output_global oc gl =
+  if gl.qualid.qual <> "builtin" then begin
     output_string oc gl.qualid.qual;
-    output_string oc "__"
+    output_string oc "__";
   end;
   output_string oc gl.qualid.id
-;;
 
-let output_type_constr = 
-  (output_global types_of_module: out_channel -> type_declaration global -> unit)
-and output_value =
-  (output_global values_of_module: out_channel -> value_desc global -> unit)
-and output_constr =
-  (output_global constrs_of_module: out_channel -> constr_desc global -> unit)
-and output_label =
-  (output_global labels_of_module: out_channel -> label_desc global -> unit)
-;;
+let output_type_constr = output_global
+and output_value = output_global
+and output_constr = output_global
+and output_label = output_global
 
 let int_to_alpha i =
   if i < 26
@@ -73,7 +67,7 @@ let rec output_typ oc sch priority ty =
           output_typ_list oc sch 0 ", " tyl;
           output_string oc ") "
       end;
-      output_global types_of_module oc cstr
+      output_global oc cstr
 
 and output_typ_list oc sch priority sep = function
     [] ->

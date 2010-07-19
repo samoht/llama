@@ -1,14 +1,14 @@
 type t
 type 'a selector
 
-val iter : t -> 'a selector -> ('a Types.global -> unit) -> unit
-val find_all : t -> 'a selector -> string -> 'a Types.global list
-
 val name_of_module : t -> string
-val values_of_module : Types.value_desc selector
-val constrs_of_module : Types.constr_desc selector
-val labels_of_module : Types.label_desc selector
-val types_of_module : Types.type_declaration selector
+
+open Types
+val iter_labels : t -> (label_desc global -> unit) -> unit
+val iter_constrs : t -> (constr_desc global -> unit) -> unit
+val iter_values : t -> (value_desc global -> unit) -> unit
+val iter_types : t -> (type_declaration global -> unit) -> unit
+val find_all_constrs : t -> string -> constr_desc global list
 
 val module_table : (string, t) Hashtbl.t
 
@@ -54,5 +54,3 @@ val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
 val flush_module_cache : unit -> unit
-val can_omit_qualifier : 'a selector -> 'b Types.global -> bool
-
