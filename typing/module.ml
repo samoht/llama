@@ -8,13 +8,7 @@ open Types;;
 
 type t =
   { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value_desc global) Hashtbl.t;
-                                             (* table of values *)
-    mod_constrs: (string, constr_desc global) Hashtbl.t;
-                                             (* table of constructors *)
-    mod_labels: (string, label_desc global) Hashtbl.t;
-                                             (* table of labels *)
-    mod_types: (string, type_declaration global) Hashtbl.t;
+    mutable mod_env : Env.t;
                                              (* table of type constructors *)
     mutable mod_type_stamp: int;             (* stamp for type constructors *)
     mutable mod_exc_stamp: int;              (* stamp for exceptions *)
@@ -22,20 +16,15 @@ type t =
                       (* true if this interface comes from a .zi file *)
 ;;
 
-type 'a selector = (t -> (string, 'a Types.global) Hashtbl.t)
+
 
 let name_of_module    md = md.mod_name
-and values_of_module  md = md.mod_values
-and constrs_of_module md = md.mod_constrs
-and labels_of_module  md = md.mod_labels
-and types_of_module   md = md.mod_types
 
-let iter m sel cb = Hashtbl.iter (fun _ v -> cb v) (sel m)
-let iter_types m cb = iter m types_of_module cb
-let iter_constrs m cb = iter m constrs_of_module cb
-let iter_labels m cb = iter m labels_of_module cb
-let iter_values m cb = iter m values_of_module cb
-let find_all_constrs m p = Hashtbl.find_all m.mod_constrs p
+let iter_types m cb = Env.iter_types m.mod_env cb
+let iter_constrs m cb = Env.iter_constrs m.mod_env cb
+let iter_labels m cb = Env.iter_labels m.mod_env cb
+let iter_values m cb = Env.iter_values m.mod_env cb
+let find_all_constrs m p = Env.find_all_constrs m.mod_env p
 
 (* The table of module interfaces already loaded in memory *)
 
@@ -44,10 +33,7 @@ let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
 let new_module nm =
   let md =
     { mod_name = nm;
-      mod_values = Hashtbl.create 17;
-      mod_constrs = Hashtbl.create 13;
-      mod_labels = Hashtbl.create 11;
-      mod_types = Hashtbl.create 7;
+      mod_env = Env.empty;
       mod_type_stamp = 0;
       mod_exc_stamp = 0;
       mod_persistent = false }
@@ -58,19 +44,12 @@ let new_module nm =
 (* To load an interface from a file *)
 
 let read_module basename filename =
-  let ic = open_in_bin filename in
-  try
-    let md = (input_value ic : t) in
-    close_in ic;
-    md.mod_persistent <- true;
-    md
-  with End_of_file | Failure _ ->
-    close_in ic;
-    Printf.eprintf "Corrupted compiled interface file %s.\n\
-                       Please recompile %s.mli or %s.ml first.\n"
-      filename basename basename;
-    raise Toplevel
-;;
+  let env,mn,s1,s2 = Env.open_pers_signature basename Env.empty in
+  { mod_name = mn;
+    mod_env = env;
+    mod_type_stamp = s1;
+    mod_exc_stamp = s2;
+    mod_persistent = true }
 
 let use_extended_interfaces = ref false;;
 
@@ -106,28 +85,8 @@ let kill_module name =
 (* The table of all opened modules. Associate to each unqualified name
    the corresponding descriptor from the right opened module. *)
 
-let opened_modules = ref
-  { mod_name = "";
-    mod_values = Hashtbl.create 1;
-    mod_constrs = Hashtbl.create 1;
-    mod_labels = Hashtbl.create 1;
-    mod_types = Hashtbl.create 1;
-    mod_type_stamp = 1;
-    mod_exc_stamp = 1;
-    mod_persistent = false };;
+let glob_env = ref Env.empty
 let opened_modules_names = ref ([]: string list);;
-
-let reset_opened_modules () =
-  opened_modules :=
-    { mod_name = "";
-      mod_values = Hashtbl.create 73;
-      mod_constrs = Hashtbl.create 53;
-      mod_labels = Hashtbl.create 41;
-      mod_types = Hashtbl.create 29;
-      mod_type_stamp = 0;
-      mod_exc_stamp = 0;
-      mod_persistent = false };
-  opened_modules_names := []
 
 (* Open a module and add its definitions to the table of opened modules. *)
 
@@ -135,21 +94,9 @@ let add_table t1 t2 =
   Hashtbl.iter (Hashtbl.add t2) t1;;
 
 let open_module name =
-  let t = find_module name in
-  add_table t.mod_values (!opened_modules).mod_values;
-  add_table t.mod_constrs (!opened_modules).mod_constrs;
-  add_table t.mod_labels (!opened_modules).mod_labels;
-  add_table t.mod_types (!opened_modules).mod_types;
+  let env, _, _, _ = Env.open_pers_signature name !glob_env in
+  glob_env := env;
   opened_modules_names := name :: !opened_modules_names
-
-(* Close a module and remove its definitions from the table of opened modules.
-   To avoid heavy hashtbl hacking, we just rebuild the table from scratch.
-   Inefficient, but #close is not frequently used. *)
-
-let close_module name =
-  let other_modules_names = List.filter ((<>) name) !opened_modules_names in
-  reset_opened_modules();
-  List.iter open_module (List.rev other_modules_names);;
 
 (* The current state of the compiler *)
 
@@ -159,7 +106,8 @@ let defined_module = ref (new_module "");;
 
 let start_compiling_interface name =
   defined_module := new_module name;
-  reset_opened_modules();
+  glob_env := !Env.initial;
+  opened_modules_names := [];
   List.iter open_module !default_used_modules;;
 
 let start_compiling_implementation name intf =
@@ -194,36 +142,27 @@ let add_global_info sel_fct m glob =
     Hashtbl.add tbl glob.qualid.id glob
 ;;
 
-let add_value = add_global_info values_of_module
-and add_constr = add_global_info constrs_of_module
-and add_label = add_global_info labels_of_module
-and add_type = add_global_info types_of_module
-;;
+let add_value m vd =
+  glob_env := Env.store_value vd.qualid.id vd !glob_env;
+  m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env 
+let add_constr m cd =
+  glob_env := Env.store_constructor cd.qualid.id cd !glob_env;
+  m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env 
+let add_label m cd =
+  glob_env := Env.store_label cd.qualid.id cd !glob_env;
+  m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env 
+let add_type m cd =
+  glob_env := Env.store_type cd.qualid.id cd !glob_env;
+  m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env 
+
+let lookup_value s m =
+  Env.lookup_value (Longident.Lident s) m.mod_env
 
 (* Find the descriptor for a reference to a global identifier.
    If the identifier is qualified (mod__name), just look into module mod.
    If the identifier is not qualified, look inside the current module,
    then inside the table of opened modules. *)
 
-let find_desc m sel_fct = function
-    Path.Pdot(Path.Pident mn, s) ->
-      Hashtbl.find (sel_fct (find_module mn)) s
-  | Path.Pident s ->
-      begin try
-        Hashtbl.find (sel_fct !defined_module) s
-      with Not_found ->
-        Hashtbl.find (sel_fct !opened_modules) s
-      end
-  | _ -> failwith "long path"
-;;
-
-let lookup_value s m =
-  find_desc m values_of_module (Path.Pident s)
-
-let find_value_desc = find_desc !defined_module values_of_module
-and find_constr_desc = find_desc !defined_module  constrs_of_module
-and find_label_desc = find_desc !defined_module labels_of_module
-and find_type_desc = find_desc !defined_module types_of_module
 
 let type_descr_of_type_constr cstr =
   let rec select_type_descr = function
@@ -233,16 +172,16 @@ let type_descr_of_type_constr cstr =
       then desc
       else select_type_descr rest in
   select_type_descr
-    (Hashtbl.find_all
-      (types_of_module (find_module cstr.qualid.qual))
+    (Env.find_all_types
+      (find_module cstr.qualid.qual).mod_env
       cstr.qualid.id)
 ;;
 
 (* To write the interface of the module currently compiled *)
 
 let write_compiled_interface oc =
-  output_value oc !defined_module
-;;
+  let m = !defined_module in
+  Env.write_pers_struct oc m.mod_name m.mod_env m.mod_type_stamp m.mod_exc_stamp
 
 (* To flush all in-core modules coming from .zi files *)
 
@@ -251,6 +190,9 @@ let flush_module_cache () =
   Hashtbl.iter
     (fun name md -> if md.mod_persistent then kill_module name)
     module_table;
-  reset_opened_modules();
+  glob_env := !Env.initial;
+  opened_modules_names := [];
   List.iter open_module (List.rev opened)
 ;;
+
+let env m = m.mod_env

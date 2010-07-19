@@ -1,5 +1,4 @@
 type t
-type 'a selector
 
 val name_of_module : t -> string
 
@@ -20,9 +19,7 @@ val find_module : string -> t
 val kill_module : string -> unit
 
 val use_extended_interfaces : bool ref
-val opened_modules : t ref
 val opened_modules_names : string list ref
-val reset_opened_modules : unit -> unit
 val default_used_modules : string list ref
 val defined_module : t ref
 
@@ -43,14 +40,18 @@ val add_type : t -> Types.type_declaration Types.global -> unit
 
 val lookup_value : string -> t -> Types.value_desc Types.global
 
+(*
 val find_value_desc : Path.t -> Types.value_desc Types.global
 val find_constr_desc :
   Path.t -> Types.constr_desc Types.global
 val find_label_desc : Path.t -> Types.label_desc Types.global
 val find_type_desc :
   Path.t -> Types.type_declaration Types.global
-
+  *)
 val type_descr_of_type_constr :
   Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
 val flush_module_cache : unit -> unit
+
+val env : t -> Env.t
+val glob_env : Env.t ref

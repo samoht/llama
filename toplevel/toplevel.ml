@@ -71,17 +71,14 @@ let _ = fwd_load_object := load_object;;
 
 let protect_current_module fct =
   let saved_defined_module = !defined_module
-  and saved_opened_modules = !opened_modules
   and saved_opened_modules_names = !opened_modules_names in
   try
     fct();
     defined_module := saved_defined_module;
-    opened_modules := saved_opened_modules;
     opened_modules_names := saved_opened_modules_names;
   with x ->
     kill_module (compiled_module_name());
     defined_module := saved_defined_module;
-    opened_modules := saved_opened_modules;
     opened_modules_names := saved_opened_modules_names;
     raise x
 ;;
@@ -148,7 +145,7 @@ let quit x = exit 0
 
 let install_printer name =
   begin try
-    let val_desc = find_value_desc (parse_global name) in
+     let val_desc = assert false in (* find_value_desc (parse_global name) in *)
     begin try
       push_type_level();
       let ty_arg = new_type_var() in

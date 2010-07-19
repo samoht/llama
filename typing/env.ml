@@ -3,8 +3,6 @@ open Misc
 open Types
 open Location
 open Typedtree
-open Module
-open Predef
 open Printf
 open Path
 open Longident
@@ -21,7 +19,7 @@ let empty = { values = Id.empty;
               labels = Id.empty;
               types = Id.empty }
 
-let initial = empty
+let initial = ref empty
 
 type pers_struct =
   { mod_name: string;                        (* name of the module *)
@@ -46,7 +44,7 @@ let current_unit = ref ""
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
-let read_pers_struct basename filename =
+let read_pers_struct modname filename =
   let ic = open_in_bin filename in
   try
     let md = (input_value ic : pers_struct) in
@@ -57,7 +55,7 @@ let read_pers_struct basename filename =
     close_in ic;
     Printf.eprintf "Corrupted compiled interface file %s.\n\
                        Please recompile %s.mli or %s.ml first.\n"
-      filename basename basename;
+      filename modname modname;
     raise Toplevel
 
 let find_pers_struct name =
@@ -162,16 +160,36 @@ let open_pers_signature name env =
   let env = Hashtbl.fold (fun k v env -> store_type k v env) ps.mod_types env in
   let env = Hashtbl.fold (fun k v env -> store_label k v env) ps.mod_labels env in
   let env = Hashtbl.fold (fun k v env -> store_constructor k v env) ps.mod_constrs env in
-  env
+  env, ps.mod_name, ps.mod_type_stamp, ps.mod_exc_stamp
 
 let iter_labels env cb = Id.iter cb env.labels
 let iter_constrs env cb = Id.iter cb env.constrs
 let iter_types env cb = Id.iter (fun (_, x) -> cb x) env.types
 let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
 let find_all_constrs env s = Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
+let find_all_types env s = List.map snd (Id.find_all (fun (_, cs) -> cs.qualid.id = s) env.types)
+
+let write_pers_struct oc mn env s1 s2 =
+  let ps = { mod_name = mn;
+             mod_values = Hashtbl.create 10;
+             mod_constrs = Hashtbl.create 10;
+             mod_labels = Hashtbl.create 10;
+             mod_types = Hashtbl.create 10;
+             mod_type_stamp = s1;
+             mod_exc_stamp = s2;
+             mod_persistent = true }
+  in
+  iter_labels env (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl);
+  iter_constrs env (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl);
+  iter_types env (fun gl -> Hashtbl.add ps.mod_types gl.qualid.id gl);
+  iter_values env (fun gl -> Hashtbl.add ps.mod_values gl.qualid.id gl);
+  output_value oc ps
+  
+    
+
 
 (* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *)
-
+(*
 let rec lookup li =
   begin match li with
     | Longident.Lident s -> Path.Pident s
@@ -193,3 +211,4 @@ let lookup_label li env =
 let lookup_value li env =
   let gr = lookup li in
   find_value_desc gr
+*)

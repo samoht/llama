@@ -145,6 +145,7 @@ let type_typedecl env loc decl =
          ty_desc)
       decl
   in
+  let env = !glob_env in
   let decl =
     List.map
       (fun (ty_name, params, def) -> (ty_name, params, Resolve.type_kind env [] def))
@@ -192,6 +193,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
       (fun (name,(ty,mut_flag)) ->
         add_value !defined_module (defined_global name {val_typ=ty; val_prim=ValueNotPrim})) in
   if rec_flag then enter_val c;
+  let env = !glob_env in
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
   List.iter2
     (fun (pat, exp) ty -> type_expect [] exp ty)

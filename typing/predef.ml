@@ -1,9 +1,8 @@
 (* builtins.ml : the pre-defined global identifiers *)
 
-open Asttypes;;
-open Types;;
-open Module;;
-open Asttypes;;
+open Asttypes
+open Types
+open Module
 
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
 ;;
@@ -193,3 +192,4 @@ List.iter
 Hashtbl.add module_table "builtin" module_builtin
 ;;
 
+let _ = Env.initial := Module.env module_builtin

@@ -81,7 +81,7 @@ let compile_intf_phrase env psig =
 ;;
 
 let compile_interface modname filename =
-  let env = Env.initial in
+  glob_env := !Env.initial;
   let source_name = filename ^ ".mli"
   and intf_name = filename ^ ".zi" in
   let ic = open_in_bin source_name (* See compile_impl *)
@@ -94,7 +94,7 @@ let compile_interface modname filename =
       input_lexbuf := lexbuf;
       external_types := [];
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      List.iter (compile_intf_phrase env) l;
+      List.iter (fun x -> compile_intf_phrase !glob_env x) l;
       close_in ic;
       write_compiled_interface oc;
       close_out oc;
@@ -133,7 +133,7 @@ let compile_impl_phrase env outstream pstr =
   end
 ;;
 
-let compile_impl env modname filename suffix =
+let compile_impl modname filename suffix =
   let source_name = filename ^ suffix
   and obj_name = filename ^ ".zo" in
   let ic = open_in_bin source_name
@@ -148,7 +148,7 @@ let compile_impl env modname filename suffix =
     start_emit_phrase oc;
     let l = wrap Parser.implementation Lexer.main lexbuf in
     try
-      List.iter (compile_impl_phrase env oc) l;
+      List.iter (fun x -> compile_impl_phrase !glob_env oc x) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
@@ -162,7 +162,7 @@ let compile_impl env modname filename suffix =
 let write_extended_intf = ref false;;
 
 let compile_implementation modname filename suffix =
-  let env = Env.initial in
+  glob_env := !Env.initial;
   external_types := [];
   if file_exists (filename ^ ".mli") then begin
     try
@@ -177,7 +177,7 @@ let compile_implementation modname filename suffix =
       let intf = read_module modname intfname in
       start_compiling_implementation modname intf;
       enter_interface_definitions intf;
-      compile_impl env modname filename suffix;
+      compile_impl modname filename suffix;
       check_interface intf;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
@@ -199,7 +199,7 @@ let compile_implementation modname filename suffix =
     let oc = open_out_bin intf_name in
     try
       start_compiling_interface modname;
-      compile_impl env modname filename suffix;
+      compile_impl modname filename suffix;
       check_nongen_values();
       write_compiled_interface oc;
       close_out oc
