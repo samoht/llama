@@ -88,12 +88,12 @@ and value_kind =
     Val_reg                             (* Regular value *)
   | Val_prim of Primitive.description   (* Primitive *)
 
-type exception_declaration = typ list
+type exception_declaration = constructor_description (* typ list *)
 
 type generated_item =
     Gen_value of value_description global
-  | Gen_type of type_declaration global * rec_status
-  | Gen_exception of exception_declaration global
+  | Gen_type of type_declaration global (*  * rec_status *)
+  | Gen_exception of constructor_description global
 
 and rec_status =
     Rec_not

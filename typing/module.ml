@@ -126,12 +126,17 @@ let add_value m vd =
 let add_value_MODONLY = add_value
 let add_value_to_open m vd env =
   add_value m vd;
+  m.working <- Gen_value vd :: m.working;
   Env.store_value vd.qualid.id vd env
 let add_constr m cd =
   m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
 let add_constr_MODONLY = add_constr
 let add_constr_to_open m cd env =
   add_constr m cd;
+  Env.store_constructor cd.qualid.id cd env
+let add_exception_to_open m cd env =
+  add_constr m cd;
+  m.working <- Gen_exception cd (* {qualid=cd.qualid; info=cd.info.cs_args} *) :: m.working;
   Env.store_constructor cd.qualid.id cd env
 let add_label m cd =
   m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
@@ -149,6 +154,7 @@ let add_type_to_open m cd env =
 
 let add_full_type_to_open m cd env =
   m.mod_env <- Env.store_full_type  cd.qualid.id cd m.mod_env;
+  m.working <- Gen_type cd :: m.working;
   Env.store_full_type cd.qualid.id cd env
 
 

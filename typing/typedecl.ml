@@ -181,7 +181,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  add_constr_to_open !defined_module cd env
+  add_exception_to_open !defined_module cd env
 
 let type_valuedecl env loc name typexp prim =
     push_type_level();

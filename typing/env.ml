@@ -164,6 +164,10 @@ let labels_of_type ty_path decl =
     Type_record(labels) ->labels
   | Type_variant _ | Type_abstract -> []
 
+let store_exception s info env =
+  store_constructor s info env (* xxx *)
+      
+
 let store_full_type s info env =
   let id = Id.create s in
   let path = Path.Pdot(Path.Pident id, s) in
@@ -184,10 +188,25 @@ let store_full_type s info env =
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
+
+  let envref = ref env in
+  List.iter
+    (fun x ->
+       envref :=
+         begin match x with
+           | Gen_value vd -> store_value vd.qualid.id vd !envref
+           | Gen_exception ed -> store_exception ed.qualid.id ed !envref
+           | Gen_type td -> store_full_type td.qualid.id td !envref
+         end
+    )
+    ps.working;
+  let env = !envref in
+(*
   let env = Hashtbl.fold (fun k v env -> store_value k v env) ps.mod_values env in
   let env = Hashtbl.fold (fun k v env -> store_type k v env) ps.mod_types env in
   let env = Hashtbl.fold (fun k v env -> store_label k v env) ps.mod_labels env in
   let env = Hashtbl.fold (fun k v env -> store_constructor k v env) ps.mod_constrs env in
+*)
   env, ps.mod_name, ps.working
 
 let iter_labels env cb = Id.iter cb env.labels

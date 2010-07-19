@@ -47,7 +47,7 @@ type field_desc =
 
 let item_ident_name = function
     Gen_value gl -> (gl.qualid, Field_value gl.qualid.id)
-  | Gen_type(gl, _) -> (gl.qualid, Field_type gl.qualid.id)
+  | Gen_type(gl) -> (gl.qualid, Field_type gl.qualid.id)
   | Gen_exception(gl) -> (gl.qualid, Field_exception gl.qualid.id)
 
 (* Simplify a structure coercion *)
@@ -109,7 +109,7 @@ and signature_components = function
         Val_prim _ -> signature_components rem
       | _ -> (pos, cc) :: signature_components rem
       end
-  | (Gen_type(tydecl1, _), Gen_type(tydecl2, _), pos) :: rem ->
+  | (Gen_type(tydecl1), Gen_type(tydecl2), pos) :: rem ->
       type_declarations tydecl1 tydecl2;
       signature_components rem
   | (Gen_exception(excdecl1), Gen_exception(excdecl2), pos)
