@@ -82,7 +82,7 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 
 (* Global variables *)
 
-type value_description =
+type value =
   { val_type: core_type;                (* Type of the value *)
     val_kind: value_kind }
 
@@ -93,7 +93,7 @@ and value_kind =
 type exception_declaration = constructor (* typ list *)
 
 type generated_item =
-    Gen_value of value_description record
+    Gen_value of value record
   | Gen_type of type_constructor record (*  * rec_status *)
   | Gen_exception of constructor record
 

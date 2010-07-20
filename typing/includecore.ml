@@ -10,7 +10,7 @@ let moregeneral ty1 ty2 =
 
 exception Dont_match
 
-let value_descriptions vd1 vd2 =
+let values vd1 vd2 =
   if moregeneral vd1.val_type vd2.val_type then begin
     match (vd1.val_kind, vd2.val_kind) with
         (Val_prim (p1), Val_prim (p2)) ->

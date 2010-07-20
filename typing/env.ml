@@ -7,7 +7,7 @@ open Printf
 open Longident
 
 type t = {
-  values: (value_description record) Id.tbl;
+  values: (value record) Id.tbl;
   constrs: constructor record Id.tbl;
   labels: label record Id.tbl;
   types: (type_constructor record) Id.tbl;
@@ -22,7 +22,7 @@ let initial = ref empty
 
 type pers_struct =
   { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value_description record) Hashtbl.t;
+    mod_values: (string, value record) Hashtbl.t;
                                              (* table of values *)
     mod_constrs: (string, constructor record) Hashtbl.t;
                                              (* table of constructors *)

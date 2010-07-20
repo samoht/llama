@@ -5,7 +5,7 @@ open Asttypes
 
 type error =
     Missing_field of string
-  | Value_descriptions of value_description record * value_description record
+  | Value_descriptions of value record * value record
   | Type_declarations of type_constructor record * type_constructor record
   | Exception_declarations of
       exception_declaration record * exception_declaration record
@@ -18,9 +18,9 @@ exception Error of error list
 
 (* Inclusion between value descriptions *)
 
-let value_descriptions vd1 vd2 =
+let values vd1 vd2 =
   try
-    Includecore.value_descriptions vd1.info vd2.info
+    Includecore.values vd1.info vd2.info
   with Includecore.Dont_match ->
 (*    Error.type_mismatch_err vd2 vd1; *)
     raise(Error[Value_descriptions(vd1, vd2)])
@@ -106,7 +106,7 @@ let rec signatures sig1 sig2 =
 and signature_components = function
     [] -> []
   | (Gen_value(valdecl1), Gen_value(valdecl2), pos) :: rem ->
-      let cc = value_descriptions valdecl1 valdecl2 in
+      let cc = values valdecl1 valdecl2 in
       begin match valdecl2.info.val_kind with
         Val_prim _ -> signature_components rem
       | _ -> (pos, cc) :: signature_components rem

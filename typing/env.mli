@@ -9,10 +9,10 @@ val initial : t ref
 val lookup_type : Longident.t -> t -> Path.t * type_constructor
 val lookup_constructor : Longident.t -> t -> Path.t * constructor
 val lookup_label : Longident.t -> t -> Path.t * label
-val lookup_value : Longident.t -> t -> Path.t * value_description
+val lookup_value : Longident.t -> t -> Path.t * value
 
 val store_type : string -> type_constructor record -> t -> t
-val store_value : string -> value_description record -> t -> t
+val store_value : string -> value record -> t -> t
 val store_exception : string -> exception_declaration record -> t -> t
 
 val read_signature: string -> generated_item list

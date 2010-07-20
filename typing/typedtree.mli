@@ -30,7 +30,7 @@ and pattern_desc =
   | Tpat_record of (label reference * pattern) list
 
 type value_identifier =
-    Zglobal of value_description reference
+    Zglobal of value reference
   | Zlocal of Id.t
 
 type expression =
