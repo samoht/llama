@@ -21,19 +21,13 @@ let empty = { values = Id.empty;
 let initial = ref empty
 
 type pers_struct =
-  { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value record) Hashtbl.t;
-                                             (* table of values *)
-    mod_constrs: (string, constructor record) Hashtbl.t;
-                                             (* table of constructors *)
-    mod_labels: (string, label record) Hashtbl.t;
-                                             (* table of labels *)
-    mod_types: (string, type_constructor record) Hashtbl.t;
-                                             (* table of type constructors *)
-    mutable mod_persistent: bool;
-    mutable working : generated_item list;
+  { mod_name: string;
+    mod_values: (string, value) Hashtbl.t;
+    mod_constrs: (string, constructor) Hashtbl.t;
+    mod_labels: (string, label) Hashtbl.t;
+    mod_types: (string, type_constructor) Hashtbl.t;
+    working : generated_item list;
  }
-                      (* true if this interface comes from a .zi file *)
 
 (* The name of the compilation unit currently compiled.
    "" if outside a compilation unit. *)
@@ -64,23 +58,22 @@ let read_pers_struct modname filename =
                mod_constrs = Hashtbl.create 10;
                mod_labels = Hashtbl.create 10;
                mod_types = Hashtbl.create 10;
-               mod_persistent = true;
                working = working }
     in
     List.iter
       begin fun item ->
         begin match item with
           | Gen_value gl ->
-              Hashtbl.add ps.mod_values gl.qualid.id gl
+              Hashtbl.add ps.mod_values gl.qualid.id gl.info
           | Gen_exception gl ->
-              Hashtbl.add ps.mod_constrs gl.qualid.id gl
+              Hashtbl.add ps.mod_constrs gl.qualid.id gl.info
           | Gen_type gl ->
-              Hashtbl.add ps.mod_types gl.qualid.id gl;
+              Hashtbl.add ps.mod_types gl.qualid.id gl.info;
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl)
+                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl.info)
                 (constructors_of_type gl);
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl)
+                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl.info)
                 (labels_of_type gl)
         end
       end
@@ -145,16 +138,14 @@ let lookup proj1 proj2 lid env =
       (s, data)
 
 let lookup_simple proj1 proj2 lid env =
-  let record =
   match lid with
     Lident s ->
-      Id.find_name s (proj1 env)
+      let record = Id.find_name s (proj1 env) in
+      record.qualid, record.info
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      data
-  in
-  record.qualid, record.info
+      {qual=String.uncapitalize p; id=s}, data
 
 let lookup_value =
   lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
@@ -211,7 +202,7 @@ let open_pers_signature name env =
 let read_signature modname = (find_pers_struct modname).working
 
 let ps_find_all_constrs ps s =
-  List.map (fun x -> x.info) (Hashtbl.find_all ps.mod_constrs s)
+  Hashtbl.find_all ps.mod_constrs s
 
 let write_pers_struct oc mn working =
   output_value oc mn;
