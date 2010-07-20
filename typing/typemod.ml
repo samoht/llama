@@ -40,7 +40,7 @@ let type_structure_item env pstr =
         phr, [Gen_exception sg], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open mn) in
-        let env, _, _ = Env.open_pers_signature (String.uncapitalize mn) env in
+        let env = Env.open_pers_signature (String.uncapitalize mn) env in
         phr, [], env
   end
 
@@ -65,7 +65,7 @@ let type_signature_item env psig =
         phr, [Gen_exception sg], env
     | Psig_open mn ->
         let phr = mk (Tsig_open mn) in
-        let env, _, _ = Env.open_pers_signature (String.uncapitalize mn) env in
+        let env = Env.open_pers_signature (String.uncapitalize mn) env in
         phr, [], env
   end
 

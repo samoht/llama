@@ -58,7 +58,6 @@ let initialize () =
   (* load things *)
   List.iter (Toplevel.load_object !Env.initial) (List.rev !preload_objects);
   (* open things *)
-  default_used_modules := List.assoc "cautious" default_used_interfaces;
   start_compiling "top"
 
 let file_argument name =

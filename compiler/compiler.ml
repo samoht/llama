@@ -79,7 +79,7 @@ let compile_interface modname filename =
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
       let _l, sg, env = Typemod.type_signature env l in
       close_in ic;
-      write_compiled_interface oc sg;
+      Env.write_pers_struct oc !current_unit sg;
       close_out oc;
     with x ->
       close_in ic;
@@ -134,8 +134,6 @@ let compile_impl env modname filename suffix =
       raise x
 ;;
 
-let write_extended_intf = ref false;;
-
 let compile_implementation modname filename suffix =
   if file_exists (filename ^ ".mli") then begin
     try
@@ -147,21 +145,10 @@ let compile_implementation modname filename suffix =
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
-      let _, name, intf_sg = Env.open_pers_signature modname Env.empty in
+      let intf_sg = Env.read_signature modname in
       let env = start_compiling modname in
       let impl_sg, env = compile_impl env modname filename suffix in
-      Includemod.signatures impl_sg intf_sg;
-      if !write_extended_intf then begin
-        let ext_intf_name = filename ^ ".zix" in
-        let oc = open_out_bin ext_intf_name in
-        try
-          write_compiled_interface oc;
-          close_out oc
-        with x ->
-          close_out oc;
-          remove_file (ext_intf_name);
-          raise x
-      end
+      ignore (Includemod.signatures impl_sg intf_sg)
     with Sys_error _ as x -> (* xxx *)
       remove_file (filename ^ ".zo");
       raise x
@@ -170,8 +157,8 @@ let compile_implementation modname filename suffix =
     let oc = open_out_bin intf_name in
     try
       let env = start_compiling modname in
-      compile_impl env modname filename suffix;
-      write_compiled_interface oc;
+      let sg, env = compile_impl env modname filename suffix in
+      Env.write_pers_struct oc !current_unit sg;
       close_out oc
     with x ->
       close_out oc;

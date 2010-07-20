@@ -198,7 +198,6 @@ let store_type s info env =
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
-
   let envref = ref env in
   List.iter
     (fun x ->
@@ -211,7 +210,9 @@ let open_pers_signature name env =
     )
     ps.working;
   let env = !envref in
-  env, ps.mod_name, ps.working
+  env
+
+let read_signature modname = (find_pers_struct modname).working
 
 let ps_find_all_constrs ps s =
   Hashtbl.find_all ps.mod_constrs s

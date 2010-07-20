@@ -15,8 +15,11 @@ val store_type : string -> type_declaration global -> t -> t
 val store_value : string -> value_description global -> t -> t
 val store_exception : string -> exception_declaration global -> t -> t
 
-type pers_struct
-val open_pers_signature : string -> t -> t * string * generated_item list
+val read_signature: string -> generated_item list
+
+val open_pers_signature : string -> t -> t
 val write_pers_struct : out_channel -> string -> generated_item list -> unit
+
+type pers_struct
 val find_pers_struct : string -> pers_struct
 val ps_find_all_constrs : pers_struct -> string -> constructor_description global list

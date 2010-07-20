@@ -200,9 +200,8 @@ let compile s =
 
 let debug_mode status =
   failwith "debug_mode";
-  use_extended_interfaces := status;
-  Event.record_events := status;
-  Compiler.write_extended_intf := status
+  Event.record_events := status
+(*  Compiler.write_extended_intf := status *)
 (*  ignore(flush_module_cache()) *)
 
 (* Set whether compilation prints the inferred types. *)
