@@ -29,11 +29,6 @@ val defined_global : string -> 'a -> 'a Types.global
 val new_type_stamp : unit -> int
 val new_exc_stamp : unit -> int
 
-val add_value_goofy : t -> Types.value_description Types.global -> Env.t -> Env.t
-val add_constr_goofy : t -> Types.constructor_description Types.global -> Env.t -> Env.t
-val add_label_goofy : t -> Types.label_description Types.global -> Env.t -> Env.t
-val add_type_goofy : t -> Types.type_declaration Types.global -> Env.t -> Env.t
-
 val add_value_to_open : t -> Types.value_description Types.global -> Env.t -> Env.t
 val add_exception_to_open : t -> Types.constructor_description Types.global -> Env.t -> Env.t
 val add_full_type_to_open : t -> Types.type_declaration Types.global -> Env.t -> Env.t

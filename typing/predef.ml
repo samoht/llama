@@ -153,7 +153,7 @@ let constr_match_failure =
 
 let env_builtin = ref Env.empty
 let add_type_predef gl = env_builtin := Env.store_type gl.qualid.id gl !env_builtin
-let add_constr_predef gl = env_builtin := Env.store_constructor gl.qualid.id gl !env_builtin
+let add_exc_predef gl = env_builtin := Env.store_exception gl.qualid.id gl !env_builtin
 
 let _ = List.iter
   (fun (ty,desc) ->
@@ -171,16 +171,8 @@ let _ = List.iter
      constr_type_option, (Type_variant [constr_none; constr_some])
   ]
 
-(* The type "stream" is defined in the "stream" module *)
-
 let _ = List.iter
-  (fun desc -> add_constr_predef desc)
-  [constr_void; constr_nil; constr_cons; constr_none; constr_some;
-   constr_true; constr_false;
-   constr_match_failure ]
-;;
-
-(*Hashtbl.add module_table "builtin" module_builtin*)
-
+  (fun desc -> add_exc_predef desc)
+  [constr_match_failure ]
 
 let _ = Env.initial := !env_builtin

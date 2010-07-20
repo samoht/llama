@@ -44,11 +44,6 @@ let current_unit = ref ""
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
-let iter_labels env cb = Id.iter cb env.labels
-let iter_constrs env cb = Id.iter cb env.constrs
-let iter_types env cb = Id.iter (fun (_, x) -> cb x) env.types
-let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
-
 let constructors_of_type decl =
   match decl.info.type_kind with
     Type_variant cstrs -> cstrs
@@ -177,29 +172,13 @@ let store_value s decl env =
   { env with
     values = Id.add id (path, decl) env.values }
 
-let store_constructor s decl env =
+let store_exception s decl env =
   let id = Id.create s in
   let path = Path.Pdot (Path.Pident id, s) in
   { env with
     constrs = Id.add id decl env.constrs }
 
-let store_label s decl env =
-  let id = Id.create s in
-  let path = Path.Pdot (Path.Pident id, s) in
-  { env with
-    labels = Id.add id decl env.labels }
-
-let store_type s decl env =
-  let id = Id.create s in
-  let path = Path.Pdot (Path.Pident id, s) in
-  { env with
-    types = Id.add id (path, decl) env.types }
-
-let store_exception s info env =
-  store_constructor s info env (* xxx *)
-      
-
-let store_full_type s info env =
+let store_type s info env =
   let id = Id.create s in
   let path = Path.Pdot(Path.Pident id, s) in
   { env with
@@ -227,29 +206,15 @@ let open_pers_signature name env =
          begin match x with
            | Gen_value vd -> store_value vd.qualid.id vd !envref
            | Gen_exception ed -> store_exception ed.qualid.id ed !envref
-           | Gen_type td -> store_full_type td.qualid.id td !envref
+           | Gen_type td -> store_type td.qualid.id td !envref
          end
     )
     ps.working;
   let env = !envref in
-(*
-  let env = Hashtbl.fold (fun k v env -> store_value k v env) ps.mod_values env in
-  let env = Hashtbl.fold (fun k v env -> store_type k v env) ps.mod_types env in
-  let env = Hashtbl.fold (fun k v env -> store_label k v env) ps.mod_labels env in
-  let env = Hashtbl.fold (fun k v env -> store_constructor k v env) ps.mod_constrs env in
-*)
   env, ps.mod_name, ps.working
-
-let find_all_constrs env s =
-  Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
 
 let ps_find_all_constrs ps s =
   Hashtbl.find_all ps.mod_constrs s
-
-let find_all_types env s = List.map snd (Id.find_all (fun (_, cs) -> cs.qualid.id = s) env.types)
-
-let ps_find_all_types ps s =
-  Hashtbl.find_all ps.mod_types s
 
 let write_pers_struct oc mn working =
   output_value oc mn;

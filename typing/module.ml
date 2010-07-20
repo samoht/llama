@@ -120,35 +120,17 @@ let new_exc_stamp () =
 
 (* Additions to the module being compiled *)
 
-let add_value_goofy m vd env =
-  begin match vd.info.val_kind with
-    | Val_prim _ -> m.working <- Gen_value vd :: m.working
-    | _ -> ()
-  end;
-  Env.store_value vd.qualid.id vd env
-let add_constr_goofy m cd env =
-  begin match cd.info.cs_tag with
-    | ConstrExtensible _ -> m.working <- Gen_exception cd :: m.working
-    | _ -> ()
-  end;
-  Env.store_constructor cd.qualid.id cd env
-let add_label_goofy m cd env =
-  Env.store_label cd.qualid.id cd env
-let add_type_goofy m cd env =
-  m.working <- Gen_type cd :: m.working;
-  Env.store_type cd.qualid.id cd env
-
 let add_value_to_open m vd env =
   m.working <- Gen_value vd :: m.working;
   Env.store_value vd.qualid.id vd env
 
 let add_exception_to_open m cd env =
   m.working <- Gen_exception cd (* {qualid=cd.qualid; info=cd.info.cs_args} *) :: m.working;
-  Env.store_constructor cd.qualid.id cd env
+  Env.store_exception cd.qualid.id cd env
 
 let add_full_type_to_open m cd env =
   m.working <- Gen_type cd :: m.working;
-  Env.store_full_type cd.qualid.id cd env
+  Env.store_type cd.qualid.id cd env
 
 (* To write the interface of the module currently compiled *)
 
