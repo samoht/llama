@@ -13,7 +13,6 @@ open Error;;
 open Typecore;;
 open Typedecl;;
 open Pr_decl;;
-open Ty_intf;;
 open Front;;
 open Back;;
 open Emit_phr;;
@@ -77,7 +76,6 @@ let compile_interface modname filename =
       input_name := source_name;
       input_chan := ic;
       input_lexbuf := lexbuf;
-      external_types := [];
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
       let _l, env = Typemod.type_signature env l in
       close_in ic;
@@ -139,7 +137,6 @@ let compile_impl env modname filename suffix =
 let write_extended_intf = ref false;;
 
 let compile_implementation modname filename suffix =
-  external_types := [];
   if file_exists (filename ^ ".mli") then begin
     try
       let intfname =
@@ -176,7 +173,6 @@ let compile_implementation modname filename suffix =
     try
       let env = start_compiling_interface modname in
       compile_impl env modname filename suffix;
-      check_nongen_values();
       write_compiled_interface oc;
       close_out oc
     with x ->

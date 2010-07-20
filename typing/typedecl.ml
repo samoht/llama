@@ -72,14 +72,6 @@ let make_new_abbrev (ty_constr, ty_params, body) =
     Type_abstract, Some ty_body
 ;;
 
-type external_type =
-  { et_descr: type_declaration global;
-    et_manifest: bool;
-    mutable et_defined: bool };;
-
-let external_types =
-  ref ([] : (string * external_type) list);;
-
 let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
   let ty_res =
@@ -97,20 +89,6 @@ let define_new_type loc (ty_desc, ty_params, def) =
         make_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
   ty_desc.info.type_kind <- type_comp;
   ty_desc.info.type_manifest <- manifest;
-  begin try
-    let extdef = List.assoc ty_desc.qualid.id !external_types in
-    if extdef.et_manifest || extdef.et_defined then
-      illegal_type_redefinition loc extdef.et_descr;
-    if extdef.et_descr.info.type_arity <> ty_desc.info.type_arity then
-      type_decl_arity_err loc extdef.et_descr ty_desc;
-    extdef.et_defined <- true;
-    let extconstr = extdef.et_descr.info.ty_constr
-    and intconstr = ty_desc.info.ty_constr in
-    intconstr.info.ty_stamp <- extconstr.info.ty_stamp;
-    extconstr.info.ty_abbr  <- intconstr.info.ty_abbr
-  with Not_found ->
-    ()
-  end;
   (ty_res, type_comp)
 ;;
 
