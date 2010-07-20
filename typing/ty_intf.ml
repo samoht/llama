@@ -14,7 +14,7 @@ open Typedecl;;
 let enter_interface_definitions env intf =
   let envref = ref env in
   external_types := [];
-  Module.iter_types intf begin fun ty_desc ->
+  Env.iter_types intf begin fun ty_desc ->
     let manifest =
       match ty_desc.info.type_kind with
           Type_abstract -> false
@@ -28,29 +28,29 @@ let enter_interface_definitions env intf =
     if stamp >= !next_type_stamp then
       next_type_stamp := stamp + 1
   end;
-  Module.iter_values intf begin fun val_desc ->
+  Env.iter_values intf begin fun val_desc ->
     match val_desc.info.val_kind with
         Val_prim(_) -> envref := add_value_to_open !defined_module val_desc !envref
       |       _        -> ()
   end;
-  Module.iter_constrs intf begin fun cd ->
+  Env.iter_constrs intf begin fun cd ->
     envref := add_constr_to_open !defined_module cd !envref;
     begin match cd.info.cs_tag with
       | ConstrExtensible(_,stamp) when stamp >= !next_exc_stamp -> next_exc_stamp := stamp+1
       | _ -> ()
     end
   end;
-  Module.iter_labels intf begin fun label_description ->
+  Env.iter_labels intf begin fun label_description ->
     envref := add_label_to_open !defined_module label_description !envref
   end;
   !envref
 
 (* Check that an implementation matches an explicit interface *)
 
-let check_value_match val_decl =
+let check_value_match env val_decl =
   let val_impl =
     try
-      Module.lookup_value val_decl.qualid.id !defined_module
+      Env.lookup_value (Longident.Lident val_decl.qualid.id) env
     with Not_found ->
       undefined_value_err val_decl in
   let nongen_vars = free_type_vars notgeneric val_impl.info.val_type in
@@ -64,9 +64,9 @@ let check_value_match val_decl =
 ;;
 
 let check_interface intf =
-  Module.iter_values intf begin fun val_desc ->
+  Env.iter_values intf begin fun val_desc ->
       match val_desc.info.val_kind with
-        Val_reg -> check_value_match val_desc
+        Val_reg -> check_value_match intf val_desc
       |      _       -> ()
   end
 

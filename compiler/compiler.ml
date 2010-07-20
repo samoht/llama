@@ -149,11 +149,11 @@ let compile_implementation modname filename suffix =
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
-      let intf = read_module modname intfname in
+      let intf, intf_env = read_module modname intfname in
       let env = start_compiling_implementation modname intf in
-      let env = enter_interface_definitions env intf in
+      let env = enter_interface_definitions env intf_env in
       compile_impl env modname filename suffix;
-      check_interface intf;
+      check_interface intf_env;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
         let oc = open_out_bin ext_intf_name in

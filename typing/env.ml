@@ -240,9 +240,17 @@ let open_pers_signature name env =
 *)
   env, ps.mod_name, ps.working
 
-let find_all_constrs env s = Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
+let find_all_constrs env s =
+  Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
+
+let ps_find_all_constrs ps s =
+  Hashtbl.find_all ps.mod_constrs s
+
 let find_all_types env s = List.map snd (Id.find_all (fun (_, cs) -> cs.qualid.id = s) env.types)
 
-let write_pers_struct oc mn env working =
+let ps_find_all_types ps s =
+  Hashtbl.find_all ps.mod_types s
+
+let write_pers_struct oc mn working =
   output_value oc mn;
   output_value oc working

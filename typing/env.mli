@@ -26,4 +26,10 @@ val store_full_type : string -> type_declaration global -> t -> t
 val store_value : string -> value_description global -> t -> t
 val store_constructor : string -> constructor_description global -> t -> t
 
-val write_pers_struct : out_channel -> string -> t -> generated_item list -> unit
+val write_pers_struct : out_channel -> string -> generated_item list -> unit
+
+
+type pers_struct
+val find_pers_struct : string -> pers_struct
+val ps_find_all_constrs : pers_struct -> string -> constructor_description global list
+val ps_find_all_types : pers_struct -> string -> type_declaration global list

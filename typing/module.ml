@@ -21,11 +21,13 @@ type t =
 
 let name_of_module    md = md.mod_name
 
-let iter_types m cb = Env.iter_types m.mod_env cb
-let iter_constrs m cb = Env.iter_constrs m.mod_env cb
-let iter_labels m cb = Env.iter_labels m.mod_env cb
-let iter_values m cb = Env.iter_values m.mod_env cb
-let find_all_constrs m p = Env.find_all_constrs m.mod_env p
+let iter_values m cb =
+  List.iter
+    begin function 
+      | Gen_value vd -> cb vd
+      | _ -> ()
+    end
+    m.working
 
 (* The table of module interfaces already loaded in memory *)
 
@@ -47,7 +49,7 @@ let read_module basename filename =
   let env,mn,working = Env.open_pers_signature basename Env.empty in
   { mod_name = mn;
     mod_env = env;
-    working = working }
+    working = working }, env
 
 let use_extended_interfaces = ref false;;
 
@@ -55,9 +57,9 @@ let load_module name =
   try
     let fullname = find_in_path (name ^ ".zi") in
     let extname = fullname ^ "x" in
-    read_module name
+    fst (read_module name
       (if !use_extended_interfaces && file_exists extname
-       then extname else fullname)
+       then extname else fullname))
   with Cannot_find_file _ ->
     Printf.eprintf "Cannot find the compiled interface file %s.zi.\n" name;
     raise Toplevel
@@ -123,14 +125,12 @@ let new_exc_stamp () =
 
 let add_value m vd =
   m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env
-let add_value_MODONLY = add_value
 let add_value_to_open m vd env =
   add_value m vd;
   m.working <- Gen_value vd :: m.working;
   Env.store_value vd.qualid.id vd env
 let add_constr m cd =
   m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
-let add_constr_MODONLY = add_constr
 let add_constr_to_open m cd env =
   add_constr m cd;
   Env.store_constructor cd.qualid.id cd env
@@ -140,13 +140,11 @@ let add_exception_to_open m cd env =
   Env.store_constructor cd.qualid.id cd env
 let add_label m cd =
   m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
-let add_label_MODONLY = add_label
 let add_label_to_open m cd env =
   add_label m cd;
   Env.store_label cd.qualid.id cd env
 let add_type m cd =
   m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env
-let add_type_MODONLY = add_type
 let add_type_to_open m cd env =
   add_type m cd;
   Env.store_type cd.qualid.id cd env
@@ -156,10 +154,6 @@ let add_full_type_to_open m cd env =
   m.mod_env <- Env.store_full_type  cd.qualid.id cd m.mod_env;
   m.working <- Gen_type cd :: m.working;
   Env.store_full_type cd.qualid.id cd env
-
-
-let lookup_value s m =
-  Env.lookup_value (Longident.Lident s) m.mod_env
 
 (* Find the descriptor for a reference to a global identifier.
    If the identifier is qualified (mod__name), just look into module mod.
@@ -175,8 +169,8 @@ let type_descr_of_type_constr cstr =
       then desc
       else select_type_descr rest in
   select_type_descr
-    (Env.find_all_types
-      (find_module cstr.qualid.qual).mod_env
+    (Env.ps_find_all_types
+      (Env.find_pers_struct cstr.qualid.qual)
       cstr.qualid.id)
 ;;
 
@@ -184,8 +178,4 @@ let type_descr_of_type_constr cstr =
 
 let write_compiled_interface oc =
   let m = !defined_module in
-  Env.write_pers_struct oc m.mod_name m.mod_env m.working
-
-
-
-let env m = m.mod_env
+  Env.write_pers_struct oc m.mod_name m.working
