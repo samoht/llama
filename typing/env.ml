@@ -7,10 +7,10 @@ open Printf
 open Longident
 
 type t = {
-  values: (value record) Id.tbl;
-  constrs: constructor record Id.tbl;
-  labels: label record Id.tbl;
-  types: (type_constructor record) Id.tbl;
+  values: (Path.t * value) Id.tbl;
+  constrs: (Path.t * constructor) Id.tbl;
+  labels: (Path.t * label) Id.tbl;
+  types: (Path.t * type_constructor) Id.tbl;
 }
 
 let empty = { values = Id.empty;
@@ -140,8 +140,7 @@ let lookup proj1 proj2 lid env =
 let lookup_simple proj1 proj2 lid env =
   match lid with
     Lident s ->
-      let record = Id.find_name s (proj1 env) in
-      record.qualid, record.info
+      Id.find_name s (proj1 env)
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
@@ -159,12 +158,12 @@ and lookup_type =
 let store_value s path decl env =
   let id = Id.create s in
   { env with
-    values = Id.add id {qualid=path;info=decl} env.values }
+    values = Id.add id (path,decl) env.values }
 
 let store_exception s path decl env =
   let id = Id.create s in
   { env with
-    constrs = Id.add id {qualid=path;info=decl} env.constrs }
+    constrs = Id.add id (path,decl) env.constrs }
 
 let store_type s path info env =
   let id = Id.create s in
@@ -172,16 +171,16 @@ let store_type s path info env =
     constrs =
       List.fold_right
         (fun (descr) constrs ->
-          Id.add (little_id descr.qualid) descr constrs)
+          Id.add (little_id descr.qualid) (descr.qualid,descr.info) constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun (descr) labels ->
-          Id.add (little_id descr.qualid) descr labels)
+          Id.add (little_id descr.qualid) (descr.qualid,descr.info) labels)
         (labels_of_type info)
         env.labels;
-    types = Id.add id {qualid=path;info=info} env.types }
+    types = Id.add id (path,info) env.types }
 
 let add_value id desc env = store_value id (Pident id) desc env
 let add_type id desc env = store_type id (Pident id) desc env
