@@ -145,6 +145,7 @@ let lookup proj1 proj2 lid env =
       (s, data)
 
 let lookup_simple proj1 proj2 lid env =
+  let record =
   match lid with
     Lident s ->
       Id.find_name s (proj1 env)
@@ -152,6 +153,8 @@ let lookup_simple proj1 proj2 lid env =
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
       data
+  in
+  record.qualid, record.info
 
 let lookup_value =
   lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)

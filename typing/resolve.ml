@@ -30,20 +30,22 @@ let rec free_vars_of_pat pat =
   | Ppat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 
+let mkref (p,d) = {qualid=p; info=d}
+
 let lookup_type env li loc =
-  try Env.lookup_type li env
+  try mkref(Env.lookup_type li env)
   with Not_found -> Error.unbound_type_constr_err li loc
 
 let lookup_constructor env li loc =
-  try Env.lookup_constructor li env
+  try mkref(Env.lookup_constructor li env)
   with Not_found -> Error.unbound_constr_err li loc
 
 let lookup_label env li loc =
-  try Env.lookup_label li env
+  try mkref(Env.lookup_label li env)
   with Not_found -> Error.unbound_label_err li loc
 
 let lookup_value env li loc =
-  try Env.lookup_value li env
+  try mkref(Env.lookup_value li env)
   with Not_found -> Error.unbound_value_err li loc
 
 let rec type_expression env c te =

@@ -6,10 +6,10 @@ type t
 val empty : t
 val initial : t ref
 
-val lookup_type : Longident.t -> t -> type_constructor record
-val lookup_constructor : Longident.t -> t -> constructor record
-val lookup_label : Longident.t -> t -> label record
-val lookup_value : Longident.t -> t -> value_description record
+val lookup_type : Longident.t -> t -> Path.t * type_constructor
+val lookup_constructor : Longident.t -> t -> Path.t * constructor
+val lookup_label : Longident.t -> t -> Path.t * label
+val lookup_value : Longident.t -> t -> Path.t * value_description
 
 val store_type : string -> type_constructor record -> t -> t
 val store_value : string -> value_description record -> t -> t

@@ -5,6 +5,10 @@ type qualified_ident =
     { qual: string;
       id: string }
 
+module Path = struct
+  type t = qualified_ident
+end
+
 type 'a record =
   { qualid: qualified_ident; (* Full name *)
     info: 'a }               (* Description *)
