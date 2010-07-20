@@ -63,7 +63,6 @@ let main () =
     [ "-a", Arg.Set make_archive, " Build a library";
       "-c", Arg.Set compile_only, " Compile only (do not link)";
       "-g", Arg.Set debug, " Save debugging information";
-      "-nogoofy", Arg.Clear goofy, "don't copy stuff from the interface into the implementation";
       "-i", Arg.Unit (fun () -> print_types := true; compile_only := true),
       " Print inferred interface";
       "-I", Arg.String (fun s -> Misc.load_path := s :: !Misc.load_path),

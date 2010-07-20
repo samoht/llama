@@ -2,7 +2,7 @@
 
 include ../config/Makefile
 
-LLAMAC=../llamac -nopervasives -I . -nogoofy
+LLAMAC=../llamac -nopervasives -I .
 LLAMADEP=ocamldep
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-g

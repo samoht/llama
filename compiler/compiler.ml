@@ -152,7 +152,6 @@ let compile_implementation modname filename suffix =
           raise Toplevel in
       let intf, intf_env = read_module modname intfname in
       let env = start_compiling_implementation modname intf in
-      let env = if !Clflags.goofy then enter_interface_definitions env intf_env else env in
       let env = compile_impl env modname filename suffix in
       Includemod.signatures (Module.signature !defined_module) (Module.signature intf);
 (*      check_interface env intf_env;   *)
