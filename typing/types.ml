@@ -3,7 +3,10 @@
 
 type qualified_ident =
   | Pdot of string * string
-let little_id = function Pdot(_,s) -> s
+  | Pident of Id.t
+let little_id = function
+  | Pdot(_,s) -> s
+  | Pident id -> Id.name id
 
 module Path = struct
   type t = qualified_ident
