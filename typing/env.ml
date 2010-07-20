@@ -38,12 +38,12 @@ let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let constructors_of_type decl =
-  match decl.info.type_kind with
+  match decl.type_kind with
     Type_variant cstrs -> cstrs
   | Type_record _ | Type_abstract -> []
 
 let labels_of_type decl =
-  match decl.info.type_kind with
+  match decl.type_kind with
     Type_record(labels) ->labels
   | Type_variant _ | Type_abstract -> []
 
@@ -65,16 +65,16 @@ let read_pers_struct modname filename =
         begin match item with
           | Gen_value gl ->
               Hashtbl.add ps.mod_values gl.qualid.id gl.info
-          | Gen_exception gl ->
+          | Gen_exception (gl) ->
               Hashtbl.add ps.mod_constrs gl.qualid.id gl.info
-          | Gen_type gl ->
+          | Gen_type (gl) ->
               Hashtbl.add ps.mod_types gl.qualid.id gl.info;
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl.info)
-                (constructors_of_type gl);
+                (constructors_of_type gl.info);
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl.info)
-                (labels_of_type gl)
+                (labels_of_type gl.info)
         end
       end
       working;
@@ -156,17 +156,17 @@ and lookup_label =
 and lookup_type =
   lookup_simple (fun env -> env.types) (fun sc -> sc.mod_types)
 
-let store_value s decl env =
+let store_value s path decl env =
   let id = Id.create s in
   { env with
-    values = Id.add id (decl) env.values }
+    values = Id.add id {qualid=path;info=decl} env.values }
 
-let store_exception s decl env =
+let store_exception s path decl env =
   let id = Id.create s in
   { env with
-    constrs = Id.add id decl env.constrs }
+    constrs = Id.add id {qualid=path;info=decl} env.constrs }
 
-let store_type s info env =
+let store_type s path info env =
   let id = Id.create s in
   { env with
     constrs =
@@ -181,8 +181,15 @@ let store_type s info env =
           Id.add descr.qualid.id descr labels)
         (labels_of_type info)
         env.labels;
-    types = Id.add id (info) env.types }
-
+    types = Id.add id {qualid=path;info=info} env.types }
+(*
+let enter store_fun name data env =
+  let id = Id.create name in
+  (id, store_fun id XXX data env)
+let enter_value = enter store_value
+and enter_type = enter store_type
+and enter_exception = enter store_exception
+*)
 let open_pers_signature name env =
   let ps = find_pers_struct name in
   let envref = ref env in
@@ -190,9 +197,15 @@ let open_pers_signature name env =
     (fun x ->
        envref :=
          begin match x with
-           | Gen_value vd -> store_value vd.qualid.id vd !envref
-           | Gen_exception ed -> store_exception ed.qualid.id ed !envref
-           | Gen_type td -> store_type td.qualid.id td !envref
+           | Gen_value (vd) ->
+(*               let path = {qual=name; id=s} in*)
+               store_value vd.qualid.id vd.qualid vd.info !envref
+           | Gen_exception (ed) ->
+(*               let path = {qual=name; id=s} in*)
+               store_exception ed.qualid.id ed.qualid ed.info !envref
+           | Gen_type (td) ->
+(*               let path = {qual=name; id=s} in*)
+               store_type td.qualid.id td.qualid td.info !envref
          end
     )
     ps.working;

@@ -152,8 +152,10 @@ let constr_match_failure =
 (* Construction of the "builtin" module *)
 
 let env_builtin = ref Env.empty
-let add_type_predef gl = env_builtin := Env.store_type gl.qualid.id gl !env_builtin
-let add_exc_predef gl = env_builtin := Env.store_exception gl.qualid.id gl !env_builtin
+let add_type_predef gl =
+  env_builtin := Env.store_type gl.qualid.id gl.qualid gl.info !env_builtin
+let add_exc_predef gl =
+  env_builtin := Env.store_exception gl.qualid.id gl.qualid gl.info !env_builtin
 
 let _ = List.iter
   (fun (ty,desc) ->

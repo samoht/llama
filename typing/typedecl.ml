@@ -112,7 +112,7 @@ let type_typedecl env loc decl =
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
-         temp_env := Env.store_type ty_desc.qualid.id ty_desc !temp_env;
+         temp_env := Env.store_type ty_desc.qualid.id ty_desc.qualid ty_desc.info !temp_env;
          ty_desc)
       decl
   in
@@ -132,7 +132,7 @@ let type_typedecl env loc decl =
   let final_env = ref env in
   List.iter
     (fun ty_desc ->
-       final_env := Env.store_type ty_desc.qualid.id ty_desc !final_env)
+       final_env := Env.store_type ty_desc.qualid.id ty_desc.qualid ty_desc.info !final_env)
     newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -150,7 +150,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  let env = Env.store_exception cd.qualid.id cd env in
+  let env = Env.store_exception cd.qualid.id cd.qualid cd.info env in
   cd, env
 
 let type_valuedecl env loc name typexp prim =
@@ -160,7 +160,7 @@ let type_valuedecl env loc name typexp prim =
   pop_type_level();
   generalize_type ty;
   let vd = defined_global name { val_type = ty; val_kind = prim } in
-  let env = Env.store_value vd.qualid.id vd env in
+  let env = Env.store_value vd.qualid.id vd.qualid vd.info env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -174,7 +174,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
          let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
-         env := Env.store_value vd.qualid.id vd !env;
+         env := Env.store_value vd.qualid.id vd.qualid vd.info !env;
          vd) c
     in
     !env, vds

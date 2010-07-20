@@ -11,10 +11,15 @@ val lookup_constructor : Longident.t -> t -> Path.t * constructor
 val lookup_label : Longident.t -> t -> Path.t * label
 val lookup_value : Longident.t -> t -> Path.t * value
 
-val store_type : string -> type_constructor record -> t -> t
-val store_value : string -> value record -> t -> t
-val store_exception : string -> exception_declaration record -> t -> t
+val store_type : string -> Path.t -> type_constructor -> t -> t
+val store_value : string -> Path.t -> value -> t -> t
+val store_exception : string -> Path.t -> exception_declaration -> t -> t
 
+(*
+val enter_value: string -> value -> t -> Ident.t * t
+val enter_type: string -> type_constructor -> t -> Ident.t * t
+val enter_exception: string -> exception_declaration -> t -> Ident.t * t
+*)
 val read_signature: string -> generated_item list
 
 val open_pers_signature : string -> t -> t
