@@ -1,3 +1,7 @@
+external int_of_char : char -> int = 1 "identity"
+external char_of_int : int -> char = 1 "identity"
+external is_printable : char -> bool = 1 "is_printable"
+
 (* Character operations, without sanity checks *)
 
 open Int

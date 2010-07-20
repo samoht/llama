@@ -1,3 +1,5 @@
+external is_relative : string -> bool = 1 "llama_filename_is_relative"
+
 (* filename.mlp *)
 
 open Bool

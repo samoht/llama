@@ -1,3 +1,5 @@
+external vect_length : 'a vect -> int = 1 "vect_length"
+
 (* Operations on vectors, with sanity checks *)
 
 open Bool;;

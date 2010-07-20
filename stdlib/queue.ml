@@ -1,3 +1,5 @@
+exception Empty;;
+
 open Pervasives
 open Int
 open Exc

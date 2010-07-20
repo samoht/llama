@@ -73,3 +73,5 @@ val dont_write_files : bool ref
 val std_include_dir : unit -> string list
 val shared : bool ref
 val dlcode : bool ref
+
+val goofy : bool ref

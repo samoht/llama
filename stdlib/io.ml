@@ -1,3 +1,30 @@
+type in_channel
+type out_channel
+external open_descriptor_out : int -> out_channel = 1 "open_descriptor"
+external flush : out_channel -> unit = 1 "flush"
+external output_char : out_channel -> char -> unit = 2 "output_char"
+external output_byte : out_channel -> int -> unit = 2 "output_char"
+external output_binary_int : out_channel -> int -> unit = 2 "output_int"
+external output_value : out_channel -> 'a -> unit = 2 "extern_val"
+external output_compact_value : out_channel -> 'a -> unit = 2 "extern_compact_val"
+external seek_out : out_channel -> int -> unit = 2 "seek_out"
+external pos_out : out_channel -> int = 1 "pos_out"
+external out_channel_length : out_channel -> int = 1 "channel_size"
+external close_out : out_channel -> unit = 1 "close_out"
+external open_descriptor_in : int -> in_channel = 1 "open_descriptor"
+external input_char : in_channel -> char = 1 "input_char"
+external input_byte : in_channel -> int = 1 "input_char"
+external input_binary_int : in_channel -> int = 1 "input_int"
+external input_value : in_channel -> 'a = 1 "intern_val"
+external seek_in : in_channel -> int -> unit = 2 "seek_in"
+external pos_in : in_channel -> int = 1 "pos_in"
+external in_channel_length : in_channel -> int = 1 "channel_size"
+external close_in : in_channel -> unit = 1 "close_in"
+external fast_input : in_channel -> string -> int -> int -> int = 4 "input"
+external fast_output : out_channel -> string -> int -> int -> unit = 4 "output"
+external input_scan_line: in_channel -> int = 1 "input_scan_line"
+exception End_of_file
+
 (* Input-output *)
 
 open Bool
@@ -6,10 +33,6 @@ open Exc
 open Int
 open Sys
 open Fstring;;
-
-type in_channel
- and out_channel
-;;
 
 let std_in = open_descriptor_in 0
 and std_out = open_descriptor_out 1

@@ -1,5 +1,36 @@
 open Printf
 
+type stat = {
+  minor_words : int;
+  promoted_words : int;
+  major_words : int;
+  minor_collections : int;
+  major_collections : int;
+  heap_words : int;
+  heap_chunks : int;
+  live_words : int;
+  live_blocks : int;
+  free_words : int;
+  free_blocks : int;
+  largest_words : int;
+  fragments : int
+};;
+
+type control = {
+  mutable minor_heap_size : int;
+  mutable major_heap_increment : int;
+  mutable space_overhead : int;
+  mutable verbose : bool
+};;
+
+
+external stat : unit -> stat = 1 "gc_stat";;
+external get : unit -> control = 1 "gc_get";;
+external set : control -> unit = 1 "gc_set";;
+external minor : unit -> unit = 1 "gc_minor";;
+external major : unit -> unit = 1 "gc_major";;
+external full_major : unit -> unit = 1 "gc_full_major";;
+
 let print_stat c =
   let st = stat () in
   fprintf c "minor_words: %d\n" st.minor_words;

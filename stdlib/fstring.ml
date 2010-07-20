@@ -1,3 +1,19 @@
+external string_length : string -> int = 1 "string_length"
+external nth_char : string -> int -> char = 2 "get_nth_char"
+external set_nth_char : string -> int -> char -> unit = 3 "set_nth_char"
+external create_string : int -> string = 1 "create_string"
+external fill_string : string -> int -> int -> char -> unit
+    = 4 "fill_string"
+external blit_string : string -> int -> string -> int -> int -> unit
+    = 5 "blit_string"
+external eq_string : string -> string -> bool = 2 "=string"
+external neq_string : string -> string -> bool = 2 "<>string"
+external le_string : string -> string -> bool = 2 "<=string"
+external lt_string : string -> string -> bool = 2 "<string"
+external ge_string : string -> string -> bool = 2 ">=string"
+external gt_string : string -> string -> bool = 2 ">string"
+external compare_strings : string -> string -> int = 2 "compare_strings"
+
 (* Operations on strings, without sanity checks *)
 
 open Pervasives

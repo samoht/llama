@@ -7,6 +7,9 @@ open Int
 open Eq
 open Exc
 
+type 'a t = Empty | Node of 'a t * 'a * 'a t * int;;
+type 'a contents = Nothing | Something of 'a;;
+
 (* Compute the height of a tree. *)
 
 let height = function

@@ -1,3 +1,5 @@
+exception Empty;;
+
 open List
 open Exc
 

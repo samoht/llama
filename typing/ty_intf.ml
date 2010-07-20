@@ -63,10 +63,10 @@ let check_value_match env val_decl =
     cannot_generalize_err val_impl
 ;;
 
-let check_interface intf =
-  Env.iter_values intf begin fun val_desc ->
+let check_interface impl_env intf_env =
+  Env.iter_values intf_env begin fun val_desc ->
       match val_desc.info.val_kind with
-        Val_reg -> check_value_match intf val_desc
+        Val_reg -> check_value_match impl_env val_desc
       |      _       -> ()
   end
 

@@ -9,6 +9,23 @@ open Obj
 open Lexing
 open Iparsing
 
+exception Parse_error;;
+exception yyexit of obj;;
+
+type parse_tables =
+  { actions : (unit -> obj) vect;
+    transl : int vect;
+    lhs : string;
+    len : string;
+    defred : string;
+    dgoto : string;
+    sindex : string;
+    rindex : string;
+    gindex : string;
+    tablesize : int;
+    table : string;
+    check : string }
+
 let env =
   { s_stack = make_vect 100 0;
     v_stack = make_vect 100 (repr ());

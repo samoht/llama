@@ -1,3 +1,8 @@
+external vect_length : 'a vect -> int = 1 "vect_length"
+external vect_item : 'a vect -> int -> 'a = 2 "get_vect_item"
+external vect_assign : 'a vect -> int -> 'a -> unit = 3 "set_vect_item"
+external make_vect : int -> 'a -> 'a vect = 2 "make_vect"
+
 (* Operations on vectors, without sanity checks *)
 
 open Eq;;

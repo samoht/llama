@@ -128,6 +128,7 @@ let compile_impl env modname filename suffix =
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
+      env
     with x ->
       close_in ic;
       close_out oc;
@@ -151,10 +152,10 @@ let compile_implementation modname filename suffix =
           raise Toplevel in
       let intf, intf_env = read_module modname intfname in
       let env = start_compiling_implementation modname intf in
-      let env = enter_interface_definitions env intf_env in
-      compile_impl env modname filename suffix;
+      let env = if !Clflags.goofy then enter_interface_definitions env intf_env else env in
+      let env = compile_impl env modname filename suffix in
       Includemod.signatures (Module.signature !defined_module) (Module.signature intf);
-(*      check_interface intf_env; *)
+(*      check_interface env intf_env;   *)
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
         let oc = open_out_bin ext_intf_name in

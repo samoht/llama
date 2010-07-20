@@ -7,6 +7,17 @@ open Exc
 open Io
 open Obj
 
+type lexbuf =
+  { refill_buff : lexbuf -> unit;
+    lex_buffer : string;
+    mutable lex_abs_pos : int;
+    mutable lex_start_pos : int;
+    mutable lex_curr_pos : int;
+    mutable lex_last_pos : int;
+    mutable lex_last_action : lexbuf -> obj }
+
+external get_next_char : lexbuf -> char = 1 "get_next_char"
+
 let lex_aux_buffer =
   create_string 1024
 ;;

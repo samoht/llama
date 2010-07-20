@@ -1,3 +1,12 @@
+external length : string -> int = 1 "string_length"
+external eq_string : string -> string -> bool = 2 "=string"
+external neq_string : string -> string -> bool = 2 "<>string"
+external le_string : string -> string -> bool = 2 "<=string"
+external lt_string : string -> string -> bool = 2 "<string"
+external ge_string : string -> string -> bool = 2 ">=string"
+external gt_string : string -> string -> bool = 2 ">string"
+external compare_strings : string -> string -> int = 2 "compare_strings"
+
 (* Operation on strings, with sanity checks *)
 
 open Bool

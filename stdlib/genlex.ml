@@ -10,6 +10,14 @@ open Fchar
 open Fstring
 open Stream
 
+type token =
+    Kwd of string
+  | Ident of string
+  | Int of int
+  | Float of float
+  | String of string
+  | Char of char;;
+
 (* The string buffering machinery *)
 
 let initial_buffer = create_string 32;;

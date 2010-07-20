@@ -7,9 +7,11 @@ open Types;;
 (* Type constructor equality *)
 
 let same_type_constr cstr1 cstr2 =
+(*
   cstr1.info.ty_stamp == cstr2.info.ty_stamp &&
   cstr1.qualid.qual = cstr2.qualid.qual
-;;
+*)
+  cstr1.qualid = cstr2.qualid
 
 (* To take the canonical representative of a type.
    We do path compression there. *)

@@ -1,3 +1,5 @@
+exception Bad of string
+
 (* arg.ml *)
 
 open Bool
@@ -9,6 +11,11 @@ open Fstring
 open Io
 open List
 
+type spec =
+  String of (string -> unit)
+| Int of (int -> unit)
+| Unit of (unit -> unit)
+| Float of (float -> unit)
 
 type error =
   Unknown of string

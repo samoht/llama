@@ -1,3 +1,6 @@
+external fst : 'a * 'b -> 'a = 1 "field0"
+external snd : 'a * 'b -> 'b = 1 "field1"
+
 open Exc
 
 let rec split = function
