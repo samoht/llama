@@ -14,10 +14,9 @@ module Warnings = struct
   let parse_options b s = ()
 end
 
-let interactive_loop () =
+let interactive_loop env =
   Printf.printf "\tLlama version %s\n" Config.version;
   print_newline();
-  let env = !Env.initial in
   Sys.catch_break true;
   (* set Sys.interactive to true *)
   let const_true = SCblock(ConstrRegular(1,2), []) in
@@ -26,14 +25,14 @@ let interactive_loop () =
   (* start parsing stdin *)
   let lexbuf = Lexing.from_channel stdin in
   input_lexbuf := lexbuf;
-  let envref = ref !Env.initial in
+  let envref = ref env in
   while true do
     try
       Format.print_string toplevel_input_prompt;
       Format.print_flush ();
       reset_rollback();
       let phr = Parser.toplevel_phrase Lexer.main lexbuf in
-      envref := do_toplevel_phrase env phr
+      envref := do_toplevel_phrase !envref phr
     with
       | End_of_file ->
           print_newline();
@@ -66,8 +65,8 @@ let file_argument name =
   if Filename.check_suffix name ".zo" || Filename.check_suffix name ".za"
   then preload_objects := name :: !preload_objects
   else begin
-    initialize ();
-    Toplevel.load !Env.initial name;
+    let env = initialize () in
+    Toplevel.load env name;
     exit 0
   end
 
@@ -111,7 +110,7 @@ let main () =
          \032    default setting is a (all warnings are non-fatal)";
     ]
     file_argument usage;
-  initialize ();
-  interactive_loop ()
+  let env = initialize () in
+  interactive_loop env
 
 let _ = main ()

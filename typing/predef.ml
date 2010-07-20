@@ -145,7 +145,9 @@ let constr_match_failure =
 
 (* Construction of the "builtin" module *)
 
-let module_builtin = new_module "builtin";;
+let env_builtin = ref Env.empty
+let add_type_predef gl = env_builtin := Env.store_type gl.qualid.id gl !env_builtin
+let add_constr_predef gl = env_builtin := Env.store_constructor gl.qualid.id gl !env_builtin
 
 let mkty cstr params desc =
   {ty_constr = cstr;
@@ -156,7 +158,7 @@ let mkty cstr params desc =
 
 let _ = List.iter
   (fun (name,desc) ->
-     add_type_MODONLY module_builtin (builtin name desc))
+     add_type_predef (builtin name desc))
   ["unit", mkty constr_type_unit [] (Type_variant[constr_void]);
    "exn", mkty constr_type_exn [] (Type_variant []);
    "bool", mkty constr_type_bool [] (Type_variant [constr_false; constr_true]);
@@ -172,13 +174,13 @@ let _ = List.iter
 (* The type "stream" is defined in the "stream" module *)
 
 List.iter
-  (fun desc -> add_constr_MODONLY module_builtin desc)
+  (fun desc -> add_constr_predef desc)
   [constr_void; constr_nil; constr_cons; constr_none; constr_some;
    constr_true; constr_false;
    constr_match_failure ]
 ;;
 
-Hashtbl.add module_table "builtin" module_builtin
-;;
+(*Hashtbl.add module_table "builtin" module_builtin*)
 
-let _ = Env.initial := Module.env module_builtin
+
+let _ = Env.initial := !env_builtin
