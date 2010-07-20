@@ -3,6 +3,9 @@ open Parsetree
 open Typedtree
 open Primitive
 open Typedecl
+open Module
+open Btype
+open Types
 
 let type_structure_item env pstr =
   reset_type_expression_vars();
@@ -73,14 +76,25 @@ let rec type_structure env l =
         hd :: tl, hd_gens @ tl_gens, env
 *)
 
-let rec type_structure env l =
+let rec type_structure_raw env l =
   match l with
       [] ->
         [], env
     | hd :: tl ->
         let hd, env = type_structure_item env hd in
-        let tl, env = type_structure env tl in
+        let tl, env = type_structure_raw env tl in
         hd :: tl, env
+
+let check_nongen_values () =
+  Module.iter_values !defined_module begin fun val_impl ->
+    if free_type_vars notgeneric val_impl.info.val_type != [] then
+      Error.cannot_generalize_err val_impl
+  end
+
+let type_structure env l =
+  let l, env = type_structure_raw env l in
+  check_nongen_values ();
+  l, env
 
 let rec type_signature env l =
   match l with
