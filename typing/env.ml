@@ -22,13 +22,13 @@ let initial = ref empty
 
 type pers_struct =
   { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value_description global) Hashtbl.t;
+    mod_values: (string, value_description) Hashtbl.t;
                                              (* table of values *)
-    mod_constrs: (string, constructor_description global) Hashtbl.t;
+    mod_constrs: (string, constructor_description) Hashtbl.t;
                                              (* table of constructors *)
-    mod_labels: (string, label_description global) Hashtbl.t;
+    mod_labels: (string, label_description) Hashtbl.t;
                                              (* table of labels *)
-    mod_types: (string, type_declaration global) Hashtbl.t;
+    mod_types: (string, type_declaration) Hashtbl.t;
                                              (* table of type constructors *)
     mutable mod_persistent: bool;
     mutable working : generated_item list;
@@ -71,16 +71,16 @@ let read_pers_struct modname filename =
       begin fun item ->
         begin match item with
           | Gen_value gl ->
-              Hashtbl.add ps.mod_values gl.qualid.id gl
+              Hashtbl.add ps.mod_values gl.qualid.id gl.info
           | Gen_exception gl ->
-              Hashtbl.add ps.mod_constrs gl.qualid.id gl
+              Hashtbl.add ps.mod_constrs gl.qualid.id gl.info
           | Gen_type gl ->
-              Hashtbl.add ps.mod_types gl.qualid.id gl;
+              Hashtbl.add ps.mod_types gl.qualid.id gl.info;
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl)
+                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl.info)
                 (constructors_of_type gl);
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl)
+                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl.info)
                 (labels_of_type gl)
         end
       end
@@ -131,7 +131,7 @@ let lookup_module lid env =
     Lident s ->
       if s = !current_unit then raise Not_found;
       let ps = find_pers_struct s in
-      (s, ps)
+      s, ps
   | Ldot _ ->
       raise Not_found
 
@@ -140,9 +140,9 @@ let lookup proj1 proj2 lid env =
     Lident s ->
       Id.find_name s (proj1 env)
   | Ldot(l, s) ->
-      let (desc) = lookup_module l env in
+      let p, desc = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      (s, data)
+      {qualid={qual=String.uncapitalize p; id=s}; info=data}
 
 let lookup_simple proj1 proj2 lid env =
   match lid with
@@ -151,16 +151,16 @@ let lookup_simple proj1 proj2 lid env =
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      data
+      p, data
 
 let lookup_value =
-  lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
+  lookup (fun env -> env.values) (fun sc -> sc.mod_values)
 and lookup_constructor =
-  lookup_simple (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
+  lookup (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
 and lookup_label =
-  lookup_simple (fun env -> env.labels) (fun sc -> sc.mod_labels)
+  lookup (fun env -> env.labels) (fun sc -> sc.mod_labels)
 and lookup_type =
-  lookup_simple (fun env -> env.types) (fun sc -> sc.mod_types)
+  lookup (fun env -> env.types) (fun sc -> sc.mod_types)
 
 let store_value s decl env =
   let id = Id.create s in
@@ -208,7 +208,9 @@ let open_pers_signature name env =
 let read_signature modname = (find_pers_struct modname).working
 
 let ps_find_all_constrs ps s =
-  Hashtbl.find_all ps.mod_constrs s
+  List.map
+    (fun info -> {qualid={qual=ps.mod_name; id=s}; info=info})
+    (Hashtbl.find_all ps.mod_constrs s)
 
 let write_pers_struct oc mn working =
   output_value oc mn;
