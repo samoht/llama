@@ -21,7 +21,7 @@ let new_exc_stamp () =
 let iter_values m cb =
   List.iter
     begin function 
-      | Gen_value (_,vd) -> cb vd
+      | Gen_value vd -> cb vd
       | _ -> ()
     end
     m
