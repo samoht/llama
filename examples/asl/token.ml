@@ -1,5 +1,11 @@
 (* $Id: token.ml,v 1.5 1998-03-12 18:44:02 weis Exp $ *)
 
+type token_type =
+  IDENT of string | INT of int | OP of string
+| BSLASH | DOT | ELSE | EQUAL | FI | IF | LET | LPAREN | RPAREN | SEMICOL
+| THEN
+;;
+
 let id x = x;;
 
 let keywords =
