@@ -150,7 +150,7 @@ let compile_implementation modname filename suffix =
       let _, name, sg = Env.open_pers_signature modname Env.empty in
       let env = start_compiling modname in
       let env = compile_impl env modname filename suffix in
-      Includemod.signatures (Module.signature !defined_module) sg;
+      Includemod.signatures !defined_module sg;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
         let oc = open_out_bin ext_intf_name in
