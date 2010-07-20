@@ -20,8 +20,15 @@ open Asttypes
 (* Type constructors *)
 
 type type_constr =
-  { mutable ty_stamp: int;              (* Stamp *)
+  { ty_stamp: int;              (* Stamp *)
     mutable ty_abbr: type_abbrev }      (* Abbreviation or not *)
+
+and type_declaration =
+  { ty_constr: type_constr global;      (* The constructor *)
+    type_params : typ list;
+    type_arity: int;                      (* Its arity *)
+    mutable type_manifest : typ option;
+    mutable type_kind: type_components }  (* Its description *)
 
 and type_abbrev =
     Tnotabbrev
@@ -40,17 +47,8 @@ and typ_desc =
 and typ_link =
     Tnolink                             (* Free variable *)
   | Tlinkto of typ                      (* Instantiated variable *)
-;;
-type type_expr = typ
 
 (* Type constructor descriptions *)
-
-type type_declaration =
-  { ty_constr: type_constr global;      (* The constructor *)
-    type_params : typ list;
-    type_arity: int;                      (* Its arity *)
-    mutable type_manifest : typ option;
-    mutable type_kind: type_components }  (* Its description *)
 
 and type_components =
     Type_abstract
@@ -72,6 +70,8 @@ and label_description =
     lbl_arg: typ;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
+
+type type_expr = typ
 
 let generic = (-1)
 and notgeneric = 0;;
