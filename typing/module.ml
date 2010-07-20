@@ -11,7 +11,6 @@ let next_exc_stamp = ref 1
 
 type t =
   { mod_name: string;                        (* name of the module *)
-    mutable mod_env : Env.t;
     mutable working : generated_item list;
  }
                                              (* table of type constructors *)
@@ -36,7 +35,6 @@ let module_table = (Hashtbl.create 37 : (string, t) Hashtbl.t);;
 let new_module nm =
   let md =
     { mod_name = nm;
-      mod_env = Env.empty;
       working = [];
  }
   in
@@ -48,7 +46,6 @@ let new_module nm =
 let read_module basename filename =
   let env,mn,working = Env.open_pers_signature basename Env.empty in
   { mod_name = mn;
-    mod_env = env;
     working = working }, env
 
 let use_extended_interfaces = ref false;;
@@ -123,35 +120,21 @@ let new_exc_stamp () =
 
 (* Additions to the module being compiled *)
 
-let add_value m vd =
-  m.mod_env <- Env.store_value vd.qualid.id vd m.mod_env
 let add_value_to_open m vd env =
-  add_value m vd;
   m.working <- Gen_value vd :: m.working;
   Env.store_value vd.qualid.id vd env
-let add_constr m cd =
-  m.mod_env <- Env.store_constructor cd.qualid.id cd m.mod_env
 let add_constr_to_open m cd env =
-  add_constr m cd;
   Env.store_constructor cd.qualid.id cd env
 let add_exception_to_open m cd env =
-  add_constr m cd;
   m.working <- Gen_exception cd (* {qualid=cd.qualid; info=cd.info.cs_args} *) :: m.working;
   Env.store_constructor cd.qualid.id cd env
-let add_label m cd =
-  m.mod_env <- Env.store_label cd.qualid.id cd m.mod_env
 let add_label_to_open m cd env =
-  add_label m cd;
   Env.store_label cd.qualid.id cd env
-let add_type m cd =
-  m.mod_env <- Env.store_type cd.qualid.id cd m.mod_env
 let add_type_to_open m cd env =
-  add_type m cd;
   Env.store_type cd.qualid.id cd env
 
 
 let add_full_type_to_open m cd env =
-  m.mod_env <- Env.store_full_type  cd.qualid.id cd m.mod_env;
   m.working <- Gen_type cd :: m.working;
   Env.store_full_type cd.qualid.id cd env
 
