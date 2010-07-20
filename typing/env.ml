@@ -211,7 +211,7 @@ let open_pers_signature name env =
 let read_signature modname = (find_pers_struct modname).working
 
 let ps_find_all_constrs ps s =
-  Hashtbl.find_all ps.mod_constrs s
+  List.map (fun x -> x.info) (Hashtbl.find_all ps.mod_constrs s)
 
 let write_pers_struct oc mn working =
   output_value oc mn;

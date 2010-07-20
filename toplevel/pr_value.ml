@@ -32,9 +32,9 @@ let find_exception tag =
     [] ->
       raise Exception_not_found
   | constr :: rest ->
-      match constr.info.cs_tag with
-        ConstrExtensible(_,st) ->
-          if st == stamp then constr else select_exn rest
+      match constr.cs_tag with
+        ConstrExtensible(qualid,st) ->
+          if st == stamp then {qualid=qualid;info=constr} else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
   select_exn(Env.ps_find_all_constrs (Env.find_pers_struct qualid.qual) qualid.id)
