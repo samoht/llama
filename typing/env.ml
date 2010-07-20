@@ -44,13 +44,54 @@ let current_unit = ref ""
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
+let iter_labels env cb = Id.iter cb env.labels
+let iter_constrs env cb = Id.iter cb env.constrs
+let iter_types env cb = Id.iter (fun (_, x) -> cb x) env.types
+let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
+
+let constructors_of_type decl =
+  match decl.info.type_kind with
+    Type_variant cstrs -> cstrs
+  | Type_record _ | Type_abstract -> []
+
+let labels_of_type decl =
+  match decl.info.type_kind with
+    Type_record(labels) ->labels
+  | Type_variant _ | Type_abstract -> []
+
 let read_pers_struct modname filename =
   let ic = open_in_bin filename in
   try
-    let md = (input_value ic : pers_struct) in
+    let mn = (input_value ic : string) in
+    let working = (input_value ic : generated_item list) in
     close_in ic;
-    md.mod_persistent <- true;
-    md
+    let ps = { mod_name = mn;
+               mod_values = Hashtbl.create 10;
+               mod_constrs = Hashtbl.create 10;
+               mod_labels = Hashtbl.create 10;
+               mod_types = Hashtbl.create 10;
+               mod_persistent = true;
+               working = working }
+    in
+    List.iter
+      begin fun item ->
+        begin match item with
+          | Gen_value gl ->
+              Hashtbl.add ps.mod_values gl.qualid.id gl
+          | Gen_exception gl ->
+              Hashtbl.add ps.mod_constrs gl.qualid.id gl
+          | Gen_type gl ->
+              Hashtbl.add ps.mod_types gl.qualid.id gl;
+              List.iter
+                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl)
+                (constructors_of_type gl);
+              List.iter
+                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl)
+                (labels_of_type gl)
+        end
+      end
+      working;
+    ps
   with End_of_file | Failure _ ->
     close_in ic;
     Printf.eprintf "Corrupted compiled interface file %s.\n\
@@ -154,16 +195,6 @@ let store_type s decl env =
   { env with
     types = Id.add id (path, decl) env.types }
 
-let constructors_of_type ty_path decl =
-  match decl.info.type_kind with
-    Type_variant cstrs -> cstrs
-  | Type_record _ | Type_abstract -> []
-
-let labels_of_type ty_path decl =
-  match decl.info.type_kind with
-    Type_record(labels) ->labels
-  | Type_variant _ | Type_abstract -> []
-
 let store_exception s info env =
   store_constructor s info env (* xxx *)
       
@@ -176,13 +207,13 @@ let store_full_type s info env =
       List.fold_right
         (fun (descr) constrs ->
           Id.add descr.qualid.id descr constrs)
-        (constructors_of_type path info)
+        (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun (descr) labels ->
           Id.add descr.qualid.id descr labels)
-        (labels_of_type path info)
+        (labels_of_type info)
         env.labels;
     types = Id.add id (path, info) env.types }
 
@@ -209,24 +240,9 @@ let open_pers_signature name env =
 *)
   env, ps.mod_name, ps.working
 
-let iter_labels env cb = Id.iter cb env.labels
-let iter_constrs env cb = Id.iter cb env.constrs
-let iter_types env cb = Id.iter (fun (_, x) -> cb x) env.types
-let iter_values env cb = Id.iter (fun (_, x) -> cb x) env.values
 let find_all_constrs env s = Id.find_all (fun cs -> cs.qualid.id = s) env.constrs
 let find_all_types env s = List.map snd (Id.find_all (fun (_, cs) -> cs.qualid.id = s) env.types)
 
 let write_pers_struct oc mn env working =
-  let ps = { mod_name = mn;
-             mod_values = Hashtbl.create 10;
-             mod_constrs = Hashtbl.create 10;
-             mod_labels = Hashtbl.create 10;
-             mod_types = Hashtbl.create 10;
-             mod_persistent = true;
-             working = working }
-  in
-  iter_labels env (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl);
-  iter_constrs env (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl);
-  iter_types env (fun gl -> Hashtbl.add ps.mod_types gl.qualid.id gl);
-  iter_values env (fun gl -> Hashtbl.add ps.mod_values gl.qualid.id gl);
-  output_value oc ps
+  output_value oc mn;
+  output_value oc working
