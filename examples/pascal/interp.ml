@@ -2,6 +2,8 @@ open Syntaxe
 open Valeur
 open Envir
 
+exception Erreur_exécution of string;;
+
 let rec valeur_initiale = function
   | Integer | Boolean -> Inconnue
   | Array(inf, sup, ty) ->

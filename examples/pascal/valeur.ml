@@ -1,4 +1,11 @@
 open Interp
+
+type valeur =
+    Inconnue
+  | Ent of int
+  | Bool of bool
+  | Tableau of int * valeur vect;;
+
 let ent_val = function
   | Ent n -> n
   | _ -> raise(Erreur_exécution "entier attendu")

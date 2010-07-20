@@ -6,6 +6,8 @@ type état_du_processeur =
      mutable code: instruction vect;
      mutable mémoire: int vect };;
 
+exception Erreur of string * int;;
+
 let pico =
   { registres = make_vect nombre_de_registres 0;
     pc = 0;

@@ -5,6 +5,8 @@ type 'a env =
     procs: (string * décl_proc) list;
     foncs: (string * décl_fonc) list };;
 
+exception Pas_trouvé of string;;
+
 let environnement_initial p f =
   { vars=[]; procs=p; foncs=f };;
 

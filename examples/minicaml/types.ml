@@ -14,6 +14,9 @@ type schéma_de_types =
   { paramètres: variable_de_type list;
     corps: type_simple };;
 
+exception Conflit of type_simple * type_simple
+exception Circularité of type_simple * type_simple
+
 let type_int = Terme("int", [||])
 and type_bool = Terme("bool", [||])
 and type_flèche t1 t2 = Terme("->", [|t1; t2|])

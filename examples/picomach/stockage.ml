@@ -6,6 +6,8 @@ type état_de_l'assembleur =
      mutable table_étiq: (string, int) Hashtbl.t;
      mutable à_résoudre: (int * string) list };;
 
+exception Erreur of string;;
+
 let asm =
   { pc = 0; code = [||]; table_étiq = Hashtbl.create 0;
     à_résoudre = [] };;

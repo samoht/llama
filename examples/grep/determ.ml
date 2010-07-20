@@ -1,5 +1,12 @@
 exception Échec;;
 
+type état =
+  { mutable dtransitions : transition vect;
+    dterminal : bool }
+and transition =
+    Vers of état
+  | Rejet;;
+
 let reconnaît automate chaîne =
   let état_courant = ref automate in 
   try

@@ -1,6 +1,10 @@
 open Syntaxe
 open Types
 
+type environnement == (string * schéma_de_types) list;;
+
+exception Erreur of string;;
+
 let rec type_motif env = function
   | Motif_variable id ->
       let ty = nouvelle_inconnue() in

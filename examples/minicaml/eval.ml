@@ -1,5 +1,21 @@
 open Syntaxe
 
+type valeur =
+     Val_nombre of int
+   | Val_booléenne of bool
+   | Val_paire of valeur * valeur
+   | Val_nil
+   | Val_cons of valeur * valeur
+   | Val_fermeture of fermeture
+   | Val_primitive of (valeur -> valeur)
+
+and fermeture =
+  { définition: (motif * expression) list;
+    mutable environnement: environnement }
+
+and environnement == (string * valeur) list;;
+
+exception Erreur of string;;
 exception Échec_filtrage;;
 
 let rec filtrage valeur motif =

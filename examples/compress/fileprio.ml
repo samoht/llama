@@ -1,4 +1,5 @@
 type 'a t = Vide | File of int * 'a * 'a t * 'a t;;
+exception File_vide;;
 let vide = Vide;;
 let rec enlève_sommet = function
   | Vide -> raise File_vide

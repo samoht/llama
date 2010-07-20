@@ -1,5 +1,11 @@
 open Expr
 
+type état =
+  { mutable transitions : (char * état) list;
+    mutable epsilon_transitions : état list;
+    mutable terminal : bool;
+    numéro : int };;
+
 let compteur_d'états = ref 0;;
 
 let nouvel_état () =

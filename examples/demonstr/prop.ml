@@ -1,3 +1,15 @@
+type proposition =
+     Vrai
+   | Faux
+   | Non of proposition
+   | Et of proposition * proposition
+   | Ou of proposition * proposition
+   | Implique of proposition * proposition
+   | Équivalent of proposition * proposition
+   | Variable of string;;
+
+exception Réfutation of (string * bool) list;;
+
 let rec évalue_dans liaisons = function
   | Vrai -> true
   | Faux -> false

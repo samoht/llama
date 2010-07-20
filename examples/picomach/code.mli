@@ -1,18 +1,18 @@
 type registre == int;;
 
-type opérande =
+type operande =
      Reg of registre
    | Imm of int;;
 
 type instruction =
-     Op of opération * registre * opérande * registre
-   | Jmp of opérande * registre
+     Op of operation * registre * operande * registre
+   | Jmp of operande * registre
    | Braz of registre * int
    | Branz of registre * int
    | Scall of int
    | Stop
 
-and opération =
+and operation =
     Load | Store | Add | Mult | Sub | Div
   | And | Or | Xor | Shl | Shr
   | Slt | Sle | Seq;;

@@ -1,3 +1,11 @@
+type expr =
+    Epsilon
+  | Caractères of char list
+  | Alternative of expr * expr
+  | Séquence of expr * expr
+  | Répétition of expr;;
+
+
 let intervalle c1 c2 =
   let rec interv n1 n2 =
     if n1 > n2 then [] else char_of_int n1 :: interv (n1 + 1) n2 in

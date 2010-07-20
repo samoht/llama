@@ -87,4 +87,4 @@ let shared = ref false (* -shared *)
 let dlcode = ref true (* not -nodynlink *)
 
 
-let goofy = ref true
+let goofy = ref false

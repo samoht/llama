@@ -1,3 +1,8 @@
+type lexème =
+     MC of string
+   | Ident of string
+   | Entier of int;;
+
 let rec lire_entier accumulateur flux =
   match flux with
   | [< `('0'..'9' as c) >] ->
