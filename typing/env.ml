@@ -182,14 +182,18 @@ let store_type s path info env =
         (labels_of_type info)
         env.labels;
     types = Id.add id {qualid=path;info=info} env.types }
-(*
+
+let add_value id desc env = store_value id (Pident id) desc env
+let add_type id desc env = store_type id (Pident id) desc env
+let add_exception id desc env = store_exception id (Pident id) desc env
+
 let enter store_fun name data env =
   let id = Id.create name in
-  (id, store_fun id XXX data env)
+  (id, store_fun id (Pident name) data env)
 let enter_value = enter store_value
 and enter_type = enter store_type
 and enter_exception = enter store_exception
-*)
+
 let open_pers_signature name env =
   let ps = find_pers_struct name in
   let envref = ref env in
