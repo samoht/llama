@@ -30,7 +30,6 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
             cs_arity = List.length ty_args;
             cs_tag = constr_tag; }
       in
-(*      envref := add_constr_to_open !defined_module constr_glob !envref; *)
         constr_glob :: make_constrs (succ constr_idx) rest
   in
     let constructor_descriptions = make_constrs 0 constrs in
@@ -52,7 +51,6 @@ let make_new_record loc (ty_constr, ty_res, labels) =
           { lbl_res = ty_res; lbl_arg = ty_arg;
             lbl_mut = mut_flag; lbl_pos = i }
       in
-(*      envref := add_label_to_open !defined_module lbl_glob !envref; *)
         lbl_glob :: make_labels (succ i) rest in
   let label_descriptions = make_labels 0 labels in
     pop_type_level();
@@ -135,7 +133,7 @@ let type_typedecl env loc decl =
   List.iter
     (fun ty_desc ->
        final_env :=
-         Module.add_full_type_to_open defined_module ty_desc !final_env)
+         Module.add_full_type_to_open ty_desc !final_env)
     newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -146,22 +144,25 @@ let type_typedecl env loc decl =
         recursive_abbrev_err loc desc
     end
     newdecl;
-  decl, !final_env
+  decl, newdecl, !final_env
 
 let type_excdecl env loc decl =
   push_type_level();
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  add_exception_to_open defined_module cd env
+  let env = add_exception_to_open cd env in
+  cd, env
 
 let type_valuedecl env loc name typexp prim =
-    push_type_level();
-    reset_type_expression_vars ();
-    let ty = type_of_type_expression false typexp in
-      pop_type_level();
-      generalize_type ty;
-      add_value_to_open defined_module (defined_global name { val_type = ty; val_kind = prim }) env
+  push_type_level();
+  reset_type_expression_vars ();
+  let ty = type_of_type_expression false typexp in
+  pop_type_level();
+  generalize_type ty;
+  let vd = defined_global name { val_type = ty; val_kind = prim } in
+  let env = add_value_to_open  vd env in
+  vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
   push_type_level();
@@ -171,12 +172,16 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   let c = type_pattern_list pat_list ty_list in
   let enter_val c env =
     let env = ref env in
-    List.iter
+    let vds =List.map
       (fun (name,(ty,mut_flag)) ->
-         env := add_value_to_open defined_module (defined_global name {val_type=ty; val_kind=Val_reg}) !env) c;
-    !env
+         let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
+         env := add_value_to_open  vd !env;
+         vd) c
+    in
+    !env, vds
   in
-  let env = if rec_flag then enter_val c env else env in
+  let vds = [] in
+  let env, vds = if rec_flag then enter_val c env else env, vds in
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
   List.iter2
     (fun (pat, exp) ty -> type_expect [] exp ty)
@@ -187,9 +192,8 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
          pat_expr_list ty_list in
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
-  let env = if rec_flag then env else enter_val c env in
-  pat_expr_list, env
-;;
+  let env, vds = if rec_flag then env, vds else enter_val c env in
+  pat_expr_list, vds, env
   
 let type_expression loc expr =
   push_type_level();

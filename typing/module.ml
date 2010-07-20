@@ -7,8 +7,6 @@ open Types;;
 let next_type_stamp = ref 1
 let next_exc_stamp = ref 1
 
-let defined_module = ref []
-
 let iter_values m cb =
   List.iter
     begin function 
@@ -47,21 +45,17 @@ let current_unit = ref ""
 
 (* Additions to the module being compiled *)
 
-let add_value_to_open m vd env =
-  m := Gen_value vd :: !m;
+let add_value_to_open vd env =
   Env.store_value vd.qualid.id vd env
 
-let add_exception_to_open m cd env =
-  m := Gen_exception cd :: !m;
+let add_exception_to_open cd env =
   Env.store_exception cd.qualid.id cd env
 
-let add_full_type_to_open m cd env =
-  m := Gen_type cd :: !m;
+let add_full_type_to_open cd env =
   Env.store_type cd.qualid.id cd env
 
 let start_compiling name =
   current_unit := name;
-  defined_module := [];
   List.fold_left
     (fun env m ->
        let (env, _, _) = Env.open_pers_signature m env in
@@ -73,5 +67,5 @@ let compiled_module_name () =
 let defined_global name desc =
   { qualid = { qual=compiled_module_name(); id=name }; info = desc }
 
-let write_compiled_interface oc =
-  Env.write_pers_struct oc !current_unit !defined_module
+let write_compiled_interface oc l =
+  Env.write_pers_struct oc !current_unit l

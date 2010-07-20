@@ -77,9 +77,9 @@ let compile_interface modname filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      let _l, env = Typemod.type_signature env l in
+      let _l, sg, env = Typemod.type_signature env l in
       close_in ic;
-      write_compiled_interface oc;
+      write_compiled_interface oc sg;
       close_out oc;
     with x ->
       close_in ic;
@@ -121,12 +121,12 @@ let compile_impl env modname filename suffix =
     start_emit_phrase oc;
     try
       let l = wrap Parser.implementation Lexer.main lexbuf in
-      let l, env = Typemod.type_structure env l in
+      let l, sg, env = Typemod.type_structure env l in
       List.iter (compile_impl_phrase oc) l;
       end_emit_phrase oc;
       close_in ic;
       close_out oc;
-      env
+      sg, env
     with x ->
       close_in ic;
       close_out oc;
@@ -147,10 +147,10 @@ let compile_implementation modname filename suffix =
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
-      let _, name, sg = Env.open_pers_signature modname Env.empty in
+      let _, name, intf_sg = Env.open_pers_signature modname Env.empty in
       let env = start_compiling modname in
-      let env = compile_impl env modname filename suffix in
-      Includemod.signatures !defined_module sg;
+      let impl_sg, env = compile_impl env modname filename suffix in
+      Includemod.signatures impl_sg intf_sg;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
         let oc = open_out_bin ext_intf_name in

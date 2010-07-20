@@ -26,7 +26,7 @@ let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 let do_structure_item env phr =
   reset_type_var();
   reset_type_expression_vars ();
-  let phr, env = Typemod.type_structure_item env phr in
+  let phr, sg, env = Typemod.type_structure_item env phr in
   begin match phr.str_desc with
     Tstr_eval expr ->
       let res =
@@ -50,19 +50,14 @@ let do_structure_item env phr =
               (translate_letdef phr.str_loc pat_expr_list)) in
       flush stderr;
       reset_rollback ();
-(*
       List.iter
-        (fun (name, (typ, mut_flag)) ->
+        (fun (Gen_value vd) ->
           open_box 1;
-          print_string name; print_string " :"; print_space();
-          print_one_type typ; print_string " ="; print_space();
-          print_value
-            (get_global_data (get_slot_for_variable
-                                {qual=compiled_module_name(); id=name}))
-            typ;
+          print_string vd.qualid.id; print_string " :"; print_space();
+          print_one_type vd.info.val_type; print_string " ="; print_space();
+          print_value (get_global_data (get_slot_for_variable vd.qualid)) vd.info.val_type;
           print_newline())
-        (List.rev env)
-*)
+        (List.rev sg)
   | Tstr_primitive (name,te,pr) ->
       reset_rollback ();
       Printf.printf "Primitive %s defined.\n" name

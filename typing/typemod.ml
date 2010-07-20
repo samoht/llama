@@ -7,6 +7,9 @@ open Module
 open Btype
 open Types
 
+let gen_value x = Gen_value x
+let gen_type x = Gen_type x
+
 let type_structure_item env pstr =
   reset_type_expression_vars();
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
@@ -15,30 +18,30 @@ let type_structure_item env pstr =
         let expr = Resolve.expr env [] expr in
         let phr = mk (Tstr_eval expr) in
         let _ty = type_expression pstr.pstr_loc expr in
-        phr, env
+        phr, [], env
     | Pstr_value(rec_flag, pat_expr_list) ->
-        let pat_expr_list, env = type_letdef env pstr.pstr_loc rec_flag pat_expr_list in
+        let pat_expr_list, sg, env = type_letdef env pstr.pstr_loc rec_flag pat_expr_list in
         let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
-        phr, env
+        phr, List.map gen_value sg, env
     | Pstr_primitive(s,te,(arity,n)) ->
         let te = Resolve.type_expression env [] te in
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(s, te, pr)) in
-        let env = type_valuedecl env pstr.pstr_loc s te (Types.Val_prim pr) in
-        phr, env
+        let sg, env = type_valuedecl env pstr.pstr_loc s te (Types.Val_prim pr) in
+        phr, [Gen_value sg], env
     | Pstr_type decl ->
-        let decl, env = type_typedecl env pstr.pstr_loc decl in
+        let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
-        phr, env
+        phr, (List.map gen_type sg), env
     | Pstr_exception decl ->
         let decl = Resolve.constr_decl env [] decl in
         let phr = mk (Tstr_exception decl) in
-        let env = type_excdecl env pstr.pstr_loc decl in
-        phr, env
+        let sg, env = type_excdecl env pstr.pstr_loc decl in
+        phr, [Gen_exception sg], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open mn) in
         let env, _, _ = Env.open_pers_signature (String.uncapitalize mn) env in
-        phr, env
+        phr, [], env
   end
 
 let type_signature_item env psig =
@@ -49,33 +52,32 @@ let type_signature_item env psig =
         let te = Resolve.type_expression env [] te in
         let pr = Resolve.primitive pr in
         let phr = mk (Tsig_value (s, te, pr)) in
-        let env = type_valuedecl env phr.sig_loc s te pr in 
-        phr, env
+        let sg, env = type_valuedecl env phr.sig_loc s te pr in 
+        phr, [Gen_value sg], env
     | Psig_type decl ->
-        let decl, env = type_typedecl env psig.psig_loc decl in
+        let decl, sg, env = type_typedecl env psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in
-        phr, env
+        phr, List.map gen_type sg, env
     | Psig_exception decl ->
         let decl = Resolve.constr_decl env [] decl in
         let phr = mk (Tsig_exception decl) in
-        let env = type_excdecl env psig.psig_loc decl in
-        phr, env
+        let sg, env = type_excdecl env psig.psig_loc decl in
+        phr, [Gen_exception sg], env
     | Psig_open mn ->
         let phr = mk (Tsig_open mn) in
         let env, _, _ = Env.open_pers_signature (String.uncapitalize mn) env in
-        phr, env
+        phr, [], env
   end
-(*
-let rec type_structure env l =
+
+let rec type_structure_raw env l =
   match l with
       [] ->
         ([], [], env)
     | hd :: tl ->
         let hd, hd_gens, env = type_structure_item env hd in
-        let tl, tl_gens, env = type_structure env tl in
+        let tl, tl_gens, env = type_structure_raw env tl in
         hd :: tl, hd_gens @ tl_gens, env
-*)
-
+(*
 let rec type_structure_raw env l =
   match l with
       [] ->
@@ -84,23 +86,23 @@ let rec type_structure_raw env l =
         let hd, env = type_structure_item env hd in
         let tl, env = type_structure_raw env tl in
         hd :: tl, env
-
-let check_nongen_values () =
-  Module.iter_values !defined_module begin fun val_impl ->
+*)
+let check_nongen_values sg =
+  Module.iter_values sg begin fun val_impl ->
     if free_type_vars notgeneric val_impl.info.val_type != [] then
       Error.cannot_generalize_err val_impl
   end
 
 let type_structure env l =
-  let l, env = type_structure_raw env l in
-  check_nongen_values ();
-  l, env
+  let l, sg, env = type_structure_raw env l in
+  check_nongen_values sg;
+  l, sg, env
 
 let rec type_signature env l =
   match l with
       [] ->
-        [], env
+        [], [], env
     | hd :: tl ->
-        let hd, env = type_signature_item env hd in
-        let tl, env = type_signature env tl in
-        hd :: tl, env
+        let hd, hd_gens, env = type_signature_item env hd in
+        let tl, tl_gens, env = type_signature env tl in
+        hd :: tl, hd_gens @ tl_gens, env
