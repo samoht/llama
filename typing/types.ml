@@ -93,9 +93,9 @@ and value_kind =
 type exception_declaration = constructor_description (* typ list *)
 
 type generated_item =
-    Gen_value of value_description global
-  | Gen_type of type_declaration global (*  * rec_status *)
-  | Gen_exception of constructor_description global
+    Gen_value of Id.t * value_description
+  | Gen_type of Id.t * type_declaration (*  * rec_status *)
+  | Gen_exception of Id.t * constructor_description
 
 and rec_status =
     Rec_not

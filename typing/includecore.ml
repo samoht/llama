@@ -48,10 +48,12 @@ let type_declarations id decl1 decl2 =
         Ctype.equal true params1 params2
     | (Some ty1, Some ty2) ->
 	type_manifest params1 params2 ty1 ty2
+(*
     | (None, Some ty2) ->
         let ty1 = {typ_desc=Tconstr(id, params2); typ_level=generic} in
         Ctype.equal true params1 params2 &&
         Ctype.equal false [ty1] [ty2]
+*)
   end
 
 let exception_declarations ed1 ed2 =

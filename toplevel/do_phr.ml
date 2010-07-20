@@ -51,10 +51,11 @@ let do_structure_item env phr =
       flush stderr;
       reset_rollback ();
       List.iter
-        (fun (Gen_value vd) ->
+        (fun (Gen_value (s, info)) ->
+           let vd = Module.defined_global s info in
           open_box 1;
-          print_string vd.qualid.id; print_string " :"; print_space();
-          print_one_type vd.info.val_type; print_string " ="; print_space();
+          print_string s; print_string " :"; print_space();
+          print_one_type info.val_type; print_string " ="; print_space();
           print_value (get_global_data (get_slot_for_variable vd.qualid)) vd.info.val_type;
           print_newline())
         (List.rev sg)

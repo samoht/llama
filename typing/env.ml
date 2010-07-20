@@ -44,12 +44,12 @@ let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let constructors_of_type decl =
-  match decl.info.type_kind with
+  match decl.type_kind with
     Type_variant cstrs -> cstrs
   | Type_record _ | Type_abstract -> []
 
 let labels_of_type decl =
-  match decl.info.type_kind with
+  match decl.type_kind with
     Type_record(labels) ->labels
   | Type_variant _ | Type_abstract -> []
 
@@ -70,18 +70,18 @@ let read_pers_struct modname filename =
     List.iter
       begin fun item ->
         begin match item with
-          | Gen_value gl ->
-              Hashtbl.add ps.mod_values gl.qualid.id gl.info
-          | Gen_exception gl ->
-              Hashtbl.add ps.mod_constrs gl.qualid.id gl.info
-          | Gen_type gl ->
-              Hashtbl.add ps.mod_types gl.qualid.id gl.info;
+          | Gen_value (s,info) ->
+              Hashtbl.add ps.mod_values s info
+          | Gen_exception (s,info) ->
+              Hashtbl.add ps.mod_constrs s info
+          | Gen_type (s,info) ->
+              Hashtbl.add ps.mod_types s info;
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl.info)
-                (constructors_of_type gl);
+                (constructors_of_type info);
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl.info)
-                (labels_of_type gl)
+                (labels_of_type info)
         end
       end
       working;
@@ -179,26 +179,29 @@ let store_type s info env =
       List.fold_right
         (fun (descr) constrs ->
           Id.add descr.qualid.id descr constrs)
-        (constructors_of_type info)
+        (constructors_of_type info.info)
         env.constrs;
     labels =
       List.fold_right
         (fun (descr) labels ->
           Id.add descr.qualid.id descr labels)
-        (labels_of_type info)
+        (labels_of_type info.info)
         env.labels;
     types = Id.add id (info) env.types }
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
   let envref = ref env in
+  let subst s nongl =
+    { qualid= {qual=String.uncapitalize name; id=s}; info = nongl }
+  in
   List.iter
     (fun x ->
        envref :=
          begin match x with
-           | Gen_value vd -> store_value vd.qualid.id vd !envref
-           | Gen_exception ed -> store_exception ed.qualid.id ed !envref
-           | Gen_type td -> store_type td.qualid.id td !envref
+           | Gen_value (s,vd) -> store_value s (subst s vd) !envref
+           | Gen_exception (s,ed) -> store_exception s (subst s ed) !envref
+           | Gen_type (s,td) -> store_type s (subst s td) !envref
          end
     )
     ps.working;
