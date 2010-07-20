@@ -11,12 +11,12 @@ and type_expression_desc =
     Ttyp_var of Id.t
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
-  | Ttyp_constr of type_declaration global * type_expression list
+  | Ttyp_constr of type_constructor global * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
-    mutable pat_type: typ }
+    mutable pat_type: core_type }
 
 and pattern_desc =
     Tpat_any
@@ -24,10 +24,10 @@ and pattern_desc =
   | Tpat_alias of pattern * Id.t
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
-  | Tpat_construct of constructor_description global * pattern list
+  | Tpat_construct of constructor global * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
-  | Tpat_record of (label_description global * pattern) list
+  | Tpat_record of (label global * pattern) list
 
 type value_identifier =
     Zglobal of value_description global
@@ -36,13 +36,13 @@ type value_identifier =
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
-    mutable exp_type: typ }
+    mutable exp_type: core_type }
 
 and expression_desc =
     Texp_ident of value_identifier
   | Texp_constant of atomic_constant
   | Texp_tuple of expression list
-  | Texp_construct of constructor_description global * expression list
+  | Texp_construct of constructor global * expression list
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
   | Texp_function of (pattern list * expression) list
@@ -53,9 +53,9 @@ and expression_desc =
   | Texp_for of Id.t * expression * expression * bool * expression
   | Texp_constraint of expression * type_expression
   | Texp_array of expression list
-  | Texp_record of (label_description global * expression) list
-  | Texp_field of expression * label_description global
-  | Texp_setfield of expression * label_description global * expression
+  | Texp_record of (label global * expression) list
+  | Texp_field of expression * label global
+  | Texp_setfield of expression * label global * expression
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
   | Texp_when of expression * expression
@@ -69,7 +69,7 @@ and stream_pattern =
   | Znontermpat of expression * pattern
   | Texp_streampat of Id.t
 
-type type_kind =
+type type_rhs =
     Ttype_abstract
   | Ttype_variant of constr_decl list
   | Ttype_record of (Id.t * type_expression * mutable_flag) list
@@ -83,7 +83,7 @@ type signature_item =
 
 and signature_item_desc =
     Tsig_value of Id.t * type_expression * value_kind
-  | Tsig_type of (Id.t * Id.t list * type_kind) list
+  | Tsig_type of (Id.t * Id.t list * type_rhs) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
 
@@ -95,7 +95,7 @@ and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of Id.t * type_expression * Primitive.description
-  | Tstr_type of (Id.t * Id.t list * type_kind) list
+  | Tstr_type of (Id.t * Id.t list * type_rhs) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
 

@@ -32,13 +32,13 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       in
         constr_glob :: make_constrs (succ constr_idx) rest
   in
-    let constructor_descriptions = make_constrs 0 constrs in
+    let constructors = make_constrs 0 constrs in
       pop_type_level();
       generalize_type ty_res;
       List.iter
         (fun cstr -> List.iter generalize_type cstr.info.cs_args)
-        constructor_descriptions;
-      Type_variant constructor_descriptions
+        constructors;
+      Type_variant constructors
 ;;
 
 let make_new_record loc (ty_constr, ty_res, labels) =
@@ -52,13 +52,13 @@ let make_new_record loc (ty_constr, ty_res, labels) =
             lbl_mut = mut_flag; lbl_pos = i }
       in
         lbl_glob :: make_labels (succ i) rest in
-  let label_descriptions = make_labels 0 labels in
+  let labels = make_labels 0 labels in
     pop_type_level();
     generalize_type ty_res;
     List.iter
       (function lbl -> generalize_type lbl.info.lbl_arg)
-      label_descriptions;
-    Type_record label_descriptions
+      labels;
+    Type_record labels
 ;;
     
 let make_new_abbrev (ty_constr, ty_params, body) =

@@ -24,7 +24,7 @@ let int_to_alpha i =
 ;;
 
 let type_vars_counter = ref 0
-and type_vars_names = ref ([] : (typ * string) list);;
+and type_vars_names = ref ([] : (core_type * string) list);;
 
 let reset_type_var_name () =
   type_vars_counter := 0; type_vars_names := [];;

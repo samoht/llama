@@ -36,7 +36,7 @@ type access_path =
 type lambda_variable =
   { var_name: string;
     var_path: access_path;
-    var_typ: typ }
+    var_typ: core_type }
 ;;
 
 type transl_env =
@@ -49,7 +49,7 @@ type transl_env =
 
 type event_kind =
     Lbefore
-  | Lafter of typ
+  | Lafter of core_type
 ;;
 
 type event =

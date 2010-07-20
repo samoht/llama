@@ -15,7 +15,7 @@ open Asttypes;;
 (* To convert type expressions to types *)
 
 let type_expr_vars =
-  ref ([] : (string * typ) list);;
+  ref ([] : (string * core_type) list);;
 
 let reset_type_expression_vars () =
   type_expr_vars := []

@@ -24,7 +24,7 @@ let rec labels_of_type ty =
 (* The occur check *)
 
 exception OldUnify
-exception Unify of (typ * typ) list
+exception Unify of (core_type * core_type) list
 
 let occur_check level0 v =
   let rec occurs_rec ty =

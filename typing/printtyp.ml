@@ -32,7 +32,7 @@ let rec path ppf = function
 *)
 (* Print a type expression *)
 
-let names = ref ([] : (type_expr * string) list)
+let names = ref ([] : (core_type * string) list)
 let name_counter = ref 0
 
 let reset_names () = names := []; name_counter := 0

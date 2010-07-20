@@ -33,7 +33,7 @@ let labels params1 params2 lbl1 lbl2 =
   lbl1.qualid.id = lbl2.qualid.id &&
   Ctype.equal true (lbl1.info.lbl_res::params1) (lbl2.info.lbl_res::params2)
 
-let type_declarations id decl1 decl2 =
+let type_constructors id decl1 decl2 =
   let params1 = decl1.type_params in
   let params2 = decl2.type_params in
   decl1.type_arity = decl2.type_arity &&

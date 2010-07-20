@@ -6,7 +6,7 @@ open Asttypes
 type error =
     Missing_field of string
   | Value_descriptions of value_description global * value_description global
-  | Type_declarations of type_declaration global * type_declaration global
+  | Type_declarations of type_constructor global * type_constructor global
   | Exception_declarations of
       exception_declaration global * exception_declaration global
 
@@ -27,8 +27,8 @@ let value_descriptions vd1 vd2 =
 
 (* Inclusion between type declarations *)
 
-let type_declarations decl1 decl2 =
-  if Includecore.type_declarations decl1 decl1.info decl2.info
+let type_constructors decl1 decl2 =
+  if Includecore.type_constructors decl1 decl1.info decl2.info
   then ()
   else raise(Error[Type_declarations(decl1, decl2)])
 
@@ -112,7 +112,7 @@ and signature_components = function
       | _ -> (pos, cc) :: signature_components rem
       end
   | (Gen_type(tydecl1), Gen_type(tydecl2), pos) :: rem ->
-      type_declarations tydecl1 tydecl2;
+      type_constructors tydecl1 tydecl2;
       signature_components rem
   | (Gen_exception(excdecl1), Gen_exception(excdecl2), pos)
     :: rem ->

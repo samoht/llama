@@ -30,8 +30,8 @@ let rec output_path oc = function
       %t unit                   output_input_name
       %a type_desc global       output_type_constr
       %a value_desc global      output_value
-      %a constructor_description global     output_constr
-      %a label_description global      output_label
+      %a constructor global     output_constr
+      %a label global      output_label
       %a typ                    output_type, output_one_type, output_schema
       %a global_reference       output_globalref *)
 

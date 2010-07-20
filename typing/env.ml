@@ -8,9 +8,9 @@ open Longident
 
 type t = {
   values: (value_description global) Id.tbl;
-  constrs: constructor_description global Id.tbl;
-  labels: label_description global Id.tbl;
-  types: (type_declaration global) Id.tbl;
+  constrs: constructor global Id.tbl;
+  labels: label global Id.tbl;
+  types: (type_constructor global) Id.tbl;
 }
 
 let empty = { values = Id.empty;
@@ -24,11 +24,11 @@ type pers_struct =
   { mod_name: string;                        (* name of the module *)
     mod_values: (string, value_description global) Hashtbl.t;
                                              (* table of values *)
-    mod_constrs: (string, constructor_description global) Hashtbl.t;
+    mod_constrs: (string, constructor global) Hashtbl.t;
                                              (* table of constructors *)
-    mod_labels: (string, label_description global) Hashtbl.t;
+    mod_labels: (string, label global) Hashtbl.t;
                                              (* table of labels *)
-    mod_types: (string, type_declaration global) Hashtbl.t;
+    mod_types: (string, type_constructor global) Hashtbl.t;
                                              (* table of type constructors *)
     mutable mod_persistent: bool;
     mutable working : generated_item list;
