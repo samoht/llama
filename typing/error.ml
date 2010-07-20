@@ -175,13 +175,13 @@ let type_mismatch_err val_desc val_desc' =
   raise Toplevel
 ;;
 
-let cannot_generalize_err val_desc =
-  eprintf "%tThe type inferred for the value %a,\n\
+let cannot_generalize_err s val_desc =
+  eprintf "%tThe type inferred for the value %s,\n\
            that is, %a,\n\
            contains type variables that cannot be generalized.\n"
     output_input_name
-    output_value val_desc
-    output_schema val_desc.info.val_type;
+    s
+    output_schema val_desc.val_type;
   raise Toplevel
 ;;
 

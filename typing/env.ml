@@ -63,18 +63,18 @@ let read_pers_struct modname filename =
     List.iter
       begin fun item ->
         begin match item with
-          | Gen_value gl ->
-              Hashtbl.add ps.mod_values (little_id gl.qualid) gl.info
-          | Gen_exception (gl) ->
-              Hashtbl.add ps.mod_constrs (little_id gl.qualid) gl.info
-          | Gen_type (gl) ->
-              Hashtbl.add ps.mod_types (little_id gl.qualid) gl.info;
+          | Gen_value (s,gl) ->
+              Hashtbl.add ps.mod_values s gl
+          | Gen_exception (s,gl) ->
+              Hashtbl.add ps.mod_constrs s gl
+          | Gen_type (s,gl) ->
+              Hashtbl.add ps.mod_types s gl;
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_constrs (little_id gl.qualid) gl.info)
-                (constructors_of_type gl.info);
+                (constructors_of_type gl);
               List.iter
                 (fun gl -> Hashtbl.add ps.mod_labels (little_id gl.qualid) gl.info)
-                (labels_of_type gl.info)
+                (labels_of_type gl)
         end
       end
       working;
@@ -201,15 +201,15 @@ let open_pers_signature name env =
     (fun x ->
        envref :=
          begin match x with
-           | Gen_value (vd) ->
-(*               let path = {qual=name; id=s} in*)
-               store_value (little_id vd.qualid) vd.qualid vd.info !envref
-           | Gen_exception (ed) ->
-(*               let path = {qual=name; id=s} in*)
-               store_exception (little_id ed.qualid) ed.qualid ed.info !envref
-           | Gen_type (td) ->
-(*               let path = {qual=name; id=s} in*)
-               store_type (little_id td.qualid) td.qualid td.info !envref
+           | Gen_value (s,vd) ->
+               let path = Pdot(name,s) in
+               store_value s path vd !envref
+           | Gen_exception (s,ed) ->
+               let path = Pdot(name,s) in
+               store_exception s path ed !envref
+           | Gen_type (s,td) ->
+               let path = Pdot(name,s) in
+               store_type s path td !envref
          end
     )
     ps.working;

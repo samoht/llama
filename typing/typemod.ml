@@ -7,8 +7,9 @@ open Module
 open Btype
 open Types
 
-let gen_value x = Gen_value x
-let gen_type x = Gen_type x
+let gen_value x = Gen_value (little_id x.qualid, x.info)
+let gen_type x = Gen_type (little_id x.qualid, x.info)
+let gen_exception x = Gen_exception (little_id x.qualid, x.info)
 
 let type_structure_item env pstr =
   reset_type_expression_vars();
@@ -28,7 +29,7 @@ let type_structure_item env pstr =
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(s, te, pr)) in
         let sg, env = type_valuedecl env pstr.pstr_loc s te (Types.Val_prim pr) in
-        phr, [Gen_value sg], env
+        phr, [gen_value sg], env
     | Pstr_type decl ->
         let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
@@ -37,7 +38,7 @@ let type_structure_item env pstr =
         let decl = Resolve.constr_decl env [] decl in
         let phr = mk (Tstr_exception decl) in
         let sg, env = type_excdecl env pstr.pstr_loc decl in
-        phr, [Gen_exception sg], env
+        phr, [gen_exception sg], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open mn) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in
@@ -53,7 +54,7 @@ let type_signature_item env psig =
         let pr = Resolve.primitive pr in
         let phr = mk (Tsig_value (s, te, pr)) in
         let sg, env = type_valuedecl env phr.sig_loc s te pr in 
-        phr, [Gen_value sg], env
+        phr, [gen_value sg], env
     | Psig_type decl ->
         let decl, sg, env = type_typedecl env psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in
@@ -62,7 +63,7 @@ let type_signature_item env psig =
         let decl = Resolve.constr_decl env [] decl in
         let phr = mk (Tsig_exception decl) in
         let sg, env = type_excdecl env psig.psig_loc decl in
-        phr, [Gen_exception sg], env
+        phr, [gen_exception sg], env
     | Psig_open mn ->
         let phr = mk (Tsig_open mn) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in
@@ -88,9 +89,9 @@ let rec type_structure_raw env l =
         hd :: tl, env
 *)
 let check_nongen_values sg =
-  Module.iter_values sg begin fun val_impl ->
-    if free_type_vars notgeneric val_impl.info.val_type != [] then
-      Error.cannot_generalize_err val_impl
+  Module.iter_values sg begin fun s val_impl ->
+    if free_type_vars notgeneric val_impl.val_type != [] then
+      Error.cannot_generalize_err s val_impl
   end
 
 let type_structure env l =
