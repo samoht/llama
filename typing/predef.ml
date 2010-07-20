@@ -4,7 +4,7 @@ open Asttypes
 open Types
 open Module
 
-let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
+let builtin n d = {qualid=Pdot("builtin", n); info=d}
 
 let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
 let list_tyvar = newgenvar()
@@ -43,16 +43,16 @@ and constr_type_vect =
 and constr_type_option =
   builtin "option" (mkty 11 [option_tyvar])
 and constr_type_stream =
-  {qualid = {qual="stream"; id="stream"};
+  {qualid = Pdot("stream", "stream");
    info   = mkty 1 []}
     (* This assumes that "stream" is the first type defined in "stream". *)
 and constr_type_format =
-  {qualid = {qual="printf"; id="format"};
+  {qualid = Pdot("printf", "format");
    info   = mkty 1 []}
     (* This assumes that "format" is the first type defined in "printf". *)
 and constr_type_num =
   (* This is needed only for the Windows port. *)
-  {qualid = {qual="num"; id="num"};
+  {qualid = Pdot("num", "num");
    info   = mkty 1 []}
     (* This assumes that "num" is the first type defined in "num". *)
 
@@ -141,7 +141,7 @@ and constr_true =
 (* Some exceptions that must be known to the compiler *)
 
 let match_failure_tag =
-  ConstrExtensible ({qual="builtin"; id="Match_failure"}, 1)
+  ConstrExtensible (Pdot("builtin", "Match_failure"), 1)
 
 let constr_match_failure =
   builtin "Match_failure"
@@ -153,9 +153,9 @@ let constr_match_failure =
 
 let env_builtin = ref Env.empty
 let add_type_predef gl =
-  env_builtin := Env.store_type gl.qualid.id gl.qualid gl.info !env_builtin
+  env_builtin := Env.store_type (little_id gl.qualid) gl.qualid gl.info !env_builtin
 let add_exc_predef gl =
-  env_builtin := Env.store_exception gl.qualid.id gl.qualid gl.info !env_builtin
+  env_builtin := Env.store_exception (little_id gl.qualid) gl.qualid gl.info !env_builtin
 
 let _ = List.iter
   (fun (ty,desc) ->

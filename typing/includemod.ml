@@ -47,9 +47,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Gen_value gl -> (gl.qualid, Field_value gl.qualid.id)
-  | Gen_type(gl) -> (gl.qualid, Field_type gl.qualid.id)
-  | Gen_exception(gl) -> (gl.qualid, Field_exception gl.qualid.id)
+    Gen_value gl -> (gl.qualid, Field_value (little_id gl.qualid))
+  | Gen_type(gl) -> (gl.qualid, Field_type (little_id gl.qualid))
+  | Gen_exception(gl) -> (gl.qualid, Field_exception (little_id gl.qualid))
 
 (* Simplify a structure coercion *)
 
@@ -97,7 +97,7 @@ let rec signatures sig1 sig2 =
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
           pair_components ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
-          failwith ("ERROR: unpaired: "^id2.id)
+          failwith ("ERROR: unpaired: "^little_id id2)
 (*           pair_components paired unpaired rem *)
         end in
   (* Do the pairing and checking, and return the final coercion *)

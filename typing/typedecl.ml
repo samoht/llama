@@ -19,7 +19,7 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       let ty_args = List.map (type_of_type_expression true) args in
       let constr_tag =
         if is_extensible then
-          ConstrExtensible({qual= !current_unit; id=constr_name},
+          ConstrExtensible(Pdot(!current_unit, constr_name),
                            new_exc_stamp())
         else
           ConstrRegular(constr_idx, nbr_constrs) in
@@ -112,7 +112,7 @@ let type_typedecl env loc decl =
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
-         temp_env := Env.store_type ty_desc.qualid.id ty_desc.qualid ty_desc.info !temp_env;
+         temp_env := Env.store_type (little_id ty_desc.qualid) ty_desc.qualid ty_desc.info !temp_env;
          ty_desc)
       decl
   in
@@ -132,7 +132,7 @@ let type_typedecl env loc decl =
   let final_env = ref env in
   List.iter
     (fun ty_desc ->
-       final_env := Env.store_type ty_desc.qualid.id ty_desc.qualid ty_desc.info !final_env)
+       final_env := Env.store_type (little_id ty_desc.qualid) ty_desc.qualid ty_desc.info !final_env)
     newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -150,7 +150,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  let env = Env.store_exception cd.qualid.id cd.qualid cd.info env in
+  let env = Env.store_exception (little_id cd.qualid) cd.qualid cd.info env in
   cd, env
 
 let type_valuedecl env loc name typexp prim =
@@ -160,7 +160,7 @@ let type_valuedecl env loc name typexp prim =
   pop_type_level();
   generalize_type ty;
   let vd = defined_global name { val_type = ty; val_kind = prim } in
-  let env = Env.store_value vd.qualid.id vd.qualid vd.info env in
+  let env = Env.store_value (little_id  vd.qualid) vd.qualid vd.info env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -174,7 +174,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
          let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
-         env := Env.store_value vd.qualid.id vd.qualid vd.info !env;
+         env := Env.store_value (little_id vd.qualid) vd.qualid vd.info !env;
          vd) c
     in
     !env, vds

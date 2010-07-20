@@ -67,16 +67,14 @@ let rec unify (ty1, ty2) =
         | Tproduct tyl1, Tproduct tyl2 ->
             unify_list (tyl1, tyl2)
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when cstr1.info.ty_stamp == cstr2.info.ty_stamp (* inline exp. of *)
-             && cstr1.qualid.qual = cstr2.qualid.qual -> (* same_type_constr *)
+          when same_type_constr cstr1 cstr2 ->
             ()
         | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args), _ ->
             unify (expand_abbrev params body args, ty2)
         | _, Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
             unify (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when cstr1.info.ty_stamp == cstr2.info.ty_stamp (* inline exp. of *)
-             && cstr1.qualid.qual = cstr2.qualid.qual -> (* same_type_constr *)
+          when same_type_constr cstr1 cstr2 ->
             unify_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify

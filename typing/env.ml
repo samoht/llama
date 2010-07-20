@@ -64,16 +64,16 @@ let read_pers_struct modname filename =
       begin fun item ->
         begin match item with
           | Gen_value gl ->
-              Hashtbl.add ps.mod_values gl.qualid.id gl.info
+              Hashtbl.add ps.mod_values (little_id gl.qualid) gl.info
           | Gen_exception (gl) ->
-              Hashtbl.add ps.mod_constrs gl.qualid.id gl.info
+              Hashtbl.add ps.mod_constrs (little_id gl.qualid) gl.info
           | Gen_type (gl) ->
-              Hashtbl.add ps.mod_types gl.qualid.id gl.info;
+              Hashtbl.add ps.mod_types (little_id gl.qualid) gl.info;
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_constrs gl.qualid.id gl.info)
+                (fun gl -> Hashtbl.add ps.mod_constrs (little_id gl.qualid) gl.info)
                 (constructors_of_type gl.info);
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_labels gl.qualid.id gl.info)
+                (fun gl -> Hashtbl.add ps.mod_labels (little_id gl.qualid) gl.info)
                 (labels_of_type gl.info)
         end
       end
@@ -145,7 +145,7 @@ let lookup_simple proj1 proj2 lid env =
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      {qual=String.uncapitalize p; id=s}, data
+      Pdot (String.uncapitalize p, s), data
 
 let lookup_value =
   lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
@@ -172,13 +172,13 @@ let store_type s path info env =
     constrs =
       List.fold_right
         (fun (descr) constrs ->
-          Id.add descr.qualid.id descr constrs)
+          Id.add (little_id descr.qualid) descr constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun (descr) labels ->
-          Id.add descr.qualid.id descr labels)
+          Id.add (little_id descr.qualid) descr labels)
         (labels_of_type info)
         env.labels;
     types = Id.add id {qualid=path;info=info} env.types }
@@ -199,13 +199,13 @@ let open_pers_signature name env =
          begin match x with
            | Gen_value (vd) ->
 (*               let path = {qual=name; id=s} in*)
-               store_value vd.qualid.id vd.qualid vd.info !envref
+               store_value (little_id vd.qualid) vd.qualid vd.info !envref
            | Gen_exception (ed) ->
 (*               let path = {qual=name; id=s} in*)
-               store_exception ed.qualid.id ed.qualid ed.info !envref
+               store_exception (little_id ed.qualid) ed.qualid ed.info !envref
            | Gen_type (td) ->
 (*               let path = {qual=name; id=s} in*)
-               store_type td.qualid.id td.qualid td.info !envref
+               store_type (little_id td.qualid) td.qualid td.info !envref
          end
     )
     ps.working;

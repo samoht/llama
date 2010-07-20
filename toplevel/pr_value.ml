@@ -37,7 +37,8 @@ let find_exception tag =
           if st == stamp then {qualid=qualid;info=constr} else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  select_exn(Env.ps_find_all_constrs (Env.find_pers_struct qualid.qual) qualid.id)
+  let Pdot(mn,s) = qualid in
+  select_exn(Env.ps_find_all_constrs (Env.find_pers_struct mn) s)
 ;;
 
 let printers = ref [

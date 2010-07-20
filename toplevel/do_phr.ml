@@ -53,7 +53,7 @@ let do_structure_item env phr =
       List.iter
         (fun (Gen_value vd) ->
           open_box 1;
-          print_string vd.qualid.id; print_string " :"; print_space();
+          print_string (little_id vd.qualid); print_string " :"; print_space();
           print_one_type vd.info.val_type; print_string " ="; print_space();
           print_value (get_global_data (get_slot_for_variable vd.qualid)) vd.info.val_type;
           print_newline())

@@ -52,12 +52,12 @@ let get_slot_for_variable qualid =
         "The global value %s.%s is referenced (from %s) \
          before being defined.\n\
          Please link %s.zo before %s.\n"
-        qualid.qual qualid.id !object_name qualid.qual !object_name
+        "qualid.qual" "qualid.id" !object_name "qualid.qual" !object_name
     else
       Printf.eprintf
         "The global value %s.%s is referenced before being defined.\n\
          Please load an implementation of module %s first.\n"
-        qualid.qual qualid.id qualid.qual;
+        "qualid.qual" "qualid.id" "qualid.qual";
     raise Toplevel
 ;;
 
@@ -88,7 +88,7 @@ let number_of_globals () = (!global_table).num_cnt;;
 
 let exn_tag_table = ref(new_numtable 1 : (qualified_ident * int) numtable)
 and tag_exn_table = ref( [| |] : (qualified_ident * int) array )
-and unknown_exn_name = ({qual="?"; id="?"}, 0)
+and unknown_exn_name = (Pdot("?", "?"), 0)
 ;;
 
 let get_num_of_exn (name, stamp) =

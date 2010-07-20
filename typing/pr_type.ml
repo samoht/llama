@@ -6,11 +6,14 @@ open Btype;;
 open Module;;
 
 let output_global oc gl =
-  if gl.qualid.qual <> "builtin" then begin
-    output_string oc gl.qualid.qual;
-    output_string oc "__";
-  end;
-  output_string oc gl.qualid.id
+  begin match gl.qualid with
+    | Pdot(mn, s) ->
+        if mn <> "builtin" then begin
+          output_string oc mn;
+          output_string oc "__";
+        end;
+        output_string oc s
+  end
 
 let output_type_constr = output_global
 and output_value = output_global

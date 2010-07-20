@@ -2,8 +2,8 @@
    plus associated information. *)
 
 type qualified_ident =
-    { qual: string;
-      id: string }
+  | Pdot of string * string
+let little_id = function Pdot(_,s) -> s
 
 module Path = struct
   type t = qualified_ident

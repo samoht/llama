@@ -17,8 +17,11 @@ open Types;;
 (* First pass : determine which phrases are required *)
 
 let compare_qualids q1 q2 =
-  let c = compare q1.id q2.id in
-  if c != 0 then c else compare q1.qual q2.qual;;
+  begin match q1, q2 with
+    | Pdot(m1,s1),Pdot(m2,s2) ->
+        let c = compare m1 m2 in
+        if c != 0 then c else compare s1 s2
+  end
 
 module QualidSet = Set.Make(struct
                               type t = qualified_ident
@@ -64,7 +67,7 @@ let scan_file tolink name =
 ;;
 
 let require_qualid qual id =
-  missing_globals := QualidSet.add {qual=qual; id=id} !missing_globals;;
+  missing_globals := QualidSet.add (Pdot(qual,id)) !missing_globals;;
 
 (* Second pass : link in the required phrases. *)
 

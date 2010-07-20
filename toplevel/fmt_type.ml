@@ -7,12 +7,14 @@ open Module;;
 open Format;;
 
 let print_global gl =
-  if gl.qualid.qual <> "builtin" then begin
-    print_string gl.qualid.qual;
-    print_string "__";
-  end;
-  print_string gl.qualid.id
-;;
+  begin match gl.qualid with
+    | Pdot(mn,s) ->
+        if mn <> "builtin" then begin
+          print_string mn;
+          print_string "__";
+        end;
+        print_string s
+  end
 
 let output_type_constr = print_global
 and output_value = print_global

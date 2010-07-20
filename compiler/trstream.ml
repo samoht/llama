@@ -48,12 +48,12 @@ let translate_stream translate_expr env stream_comp_list =
 (* Translation of stream parsers *)
 
 let stream_oper name =
-  Lprim(Pget_global {qual="stream"; id=name}, [])
+  Lprim(Pget_global (Pdot("stream",name)), [])
 ;;
 
 let stream_raise name tag =
   Lprim(Praise,
-        [Lconst(SCblock(ConstrExtensible({qual="stream"; id=name}, tag), []))])
+        [Lconst(SCblock(ConstrExtensible(Pdot("stream",name), tag), []))])
 ;;
 
 let raise_parse_failure = stream_raise "Parse_failure" 1
