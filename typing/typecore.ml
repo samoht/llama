@@ -56,7 +56,7 @@ let type_of_type_expression strict_flag typexp =
       if List.length args != cstr.info.type_arity then
         type_arity_err cstr args typexp.te_loc
       else
-        { typ_desc = Tconstr(cstr.info.ty_constr, List.map type_of args);
+        { typ_desc = Tconstr(cstr, List.map type_of args);
           typ_level = notgeneric }
   in type_of typexp
 ;;

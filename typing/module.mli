@@ -38,8 +38,6 @@ val add_value_to_open : t -> Types.value_description Types.global -> Env.t -> En
 val add_exception_to_open : t -> Types.constructor_description Types.global -> Env.t -> Env.t
 val add_full_type_to_open : t -> Types.type_declaration Types.global -> Env.t -> Env.t
 
-val type_descr_of_type_constr :
-  Types.type_constr Types.global -> Types.type_declaration Types.global
 val write_compiled_interface : out_channel -> unit
 
 val next_type_stamp : int ref

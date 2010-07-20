@@ -28,7 +28,7 @@ let value_descriptions vd1 vd2 =
 (* Inclusion between type declarations *)
 
 let type_declarations decl1 decl2 =
-  if Includecore.type_declarations decl1.info.ty_constr decl1.info decl2.info
+  if Includecore.type_declarations decl1 decl1.info decl2.info
   then ()
   else raise(Error[Type_declarations(decl1, decl2)])
 

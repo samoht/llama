@@ -5,7 +5,6 @@ open Types
 open Module
 
 let builtin n d = {qualid={qual="builtin"; id=n}; info=d}
-;;
 
 let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
 let list_tyvar = newgenvar()
@@ -15,40 +14,47 @@ let option_tyvar = newgenvar()
 
 (* Some types that must be known to the type checker *)
 
+let mkty stamp params =
+  { ty_stamp = stamp;
+    ty_abbr = Tnotabbrev;
+    type_params = params;
+    type_arity = List.length params;
+    type_manifest = None;
+    type_kind = Type_abstract }
+
 let constr_type_unit =
-  builtin "unit" {ty_stamp=2; ty_abbr=Tnotabbrev}
+  builtin "unit" (mkty 2 [])
 and constr_type_exn =
-  builtin "exn" {ty_stamp=3; ty_abbr=Tnotabbrev}
+  builtin "exn" (mkty 3 [])
 and constr_type_bool =
-  builtin "bool" {ty_stamp=4; ty_abbr=Tnotabbrev}
+  builtin "bool" (mkty 4 [])
 and constr_type_int =
-  builtin "int" {ty_stamp=5; ty_abbr=Tnotabbrev}
+  builtin "int" (mkty 5 [])
 and constr_type_float =
-  builtin "float" {ty_stamp=6; ty_abbr=Tnotabbrev}
+  builtin "float" (mkty 6 [])
 and constr_type_string =
-  builtin "string" {ty_stamp=7; ty_abbr=Tnotabbrev}
+  builtin "string" (mkty 7 [])
 and constr_type_char =
-  builtin "char" {ty_stamp=8; ty_abbr=Tnotabbrev}
+  builtin "char" (mkty 8 [])
 and constr_type_list =
-  builtin "list" {ty_stamp=9; ty_abbr=Tnotabbrev}
+  builtin "list" (mkty 9 [list_tyvar])
 and constr_type_vect =
-  builtin "vect" {ty_stamp=10; ty_abbr=Tnotabbrev}
+  builtin "vect" (mkty 10 [vect_tyvar] )
 and constr_type_option =
-  builtin "option" {ty_stamp=11; ty_abbr=Tnotabbrev}
+  builtin "option" (mkty 11 [option_tyvar])
 and constr_type_stream =
   {qualid = {qual="stream"; id="stream"};
-   info   = {ty_stamp=1; ty_abbr=Tnotabbrev}}
+   info   = mkty 1 []}
     (* This assumes that "stream" is the first type defined in "stream". *)
 and constr_type_format =
   {qualid = {qual="printf"; id="format"};
-   info   = {ty_stamp=1; ty_abbr=Tnotabbrev}}
+   info   = mkty 1 []}
     (* This assumes that "format" is the first type defined in "printf". *)
 and constr_type_num =
   (* This is needed only for the Windows port. *)
   {qualid = {qual="num"; id="num"};
-   info   = {ty_stamp=1; ty_abbr=Tnotabbrev}}
+   info   = mkty 1 []}
     (* This assumes that "num" is the first type defined in "num". *)
-;;
 
 let type_arrow (t1,t2) =
   {typ_desc=Tarrow(t1, t2); typ_level=notgeneric}
@@ -149,31 +155,25 @@ let env_builtin = ref Env.empty
 let add_type_predef gl = env_builtin := Env.store_type gl.qualid.id gl !env_builtin
 let add_constr_predef gl = env_builtin := Env.store_constructor gl.qualid.id gl !env_builtin
 
-let mkty cstr params desc =
-  {ty_constr = cstr;
-   type_arity = List.length params;
-   type_params = params;
-   type_manifest = None;
-   type_kind = desc }
-
 let _ = List.iter
-  (fun (name,desc) ->
-     add_type_predef (builtin name desc))
-  ["unit", mkty constr_type_unit [] (Type_variant[constr_void]);
-   "exn", mkty constr_type_exn [] (Type_variant []);
-   "bool", mkty constr_type_bool [] (Type_variant [constr_false; constr_true]);
-   "int", mkty constr_type_int [] Type_abstract;
-   "float", mkty constr_type_float [] Type_abstract;
-   "string", mkty constr_type_string [] Type_abstract;
-   "char", mkty constr_type_char [] Type_abstract;
-   "list", mkty constr_type_list [list_tyvar] (Type_variant [constr_nil; constr_cons]);
-   "vect", mkty constr_type_vect [vect_tyvar] Type_abstract;
-   "option", mkty constr_type_option [option_tyvar] (Type_variant [constr_none; constr_some])
+  (fun (ty,desc) ->
+     ty.info.type_kind <- desc;
+     add_type_predef ty)
+  [constr_type_unit, (Type_variant[constr_void]);
+   constr_type_exn, (Type_variant []);
+    constr_type_bool, (Type_variant [constr_false; constr_true]);
+    constr_type_int, Type_abstract;
+     constr_type_float, Type_abstract;
+     constr_type_string, Type_abstract;
+    constr_type_char, Type_abstract;
+    constr_type_list, (Type_variant [constr_nil; constr_cons]);
+     constr_type_vect, Type_abstract;
+     constr_type_option, (Type_variant [constr_none; constr_some])
   ]
-;;
+
 (* The type "stream" is defined in the "stream" module *)
 
-List.iter
+let _ = List.iter
   (fun desc -> add_constr_predef desc)
   [constr_void; constr_nil; constr_cons; constr_none; constr_some;
    constr_true; constr_false;

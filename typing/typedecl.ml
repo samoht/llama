@@ -75,18 +75,18 @@ let make_new_abbrev (ty_constr, ty_params, body) =
 let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
   let ty_res =
-    { typ_desc = Tconstr(ty_desc.info.ty_constr, ty_params);
+    { typ_desc = Tconstr(ty_desc, ty_params);
       typ_level = notgeneric} in
   let type_comp,manifest =
     match def with
       Ttype_abstract ->
         pop_type_level(); Type_abstract,None
     | Ttype_variant constrs ->
-        make_new_variant false loc (ty_desc.info.ty_constr, ty_res, constrs),None
+        make_new_variant false loc (ty_desc, ty_res, constrs),None
     | Ttype_record labels ->
-        make_new_record loc (ty_desc.info.ty_constr, ty_res, labels),None
+        make_new_record loc (ty_desc, ty_res, labels),None
     | Ttype_abbrev body ->
-        make_new_abbrev (ty_desc.info.ty_constr, ty_params, body) in
+        make_new_abbrev (ty_desc, ty_params, body) in
   ty_desc.info.type_kind <- type_comp;
   ty_desc.info.type_manifest <- manifest;
   (ty_res, type_comp)
@@ -109,13 +109,10 @@ let type_typedecl env loc decl =
   let newdecl =
     List.map
       (fun (ty_name, params, ty_params, def) ->
-         let ty_constr =
-           defined_global ty_name
-             { ty_stamp = new_type_stamp();
-               ty_abbr = Tnotabbrev } in
          let ty_desc =
            defined_global ty_name
-             { ty_constr = ty_constr;
+             { ty_stamp = new_type_stamp();
+               ty_abbr = Tnotabbrev;
                type_arity = List.length ty_params;
                type_manifest = None; (* xxx *)
                type_params = ty_params; (* xxx will get generalized *)
@@ -138,7 +135,7 @@ let type_typedecl env loc decl =
   List.iter2
     begin fun (ty_name, params, ty_params, def) ty_desc ->
       try
-        check_recursive_abbrev ty_desc.info.ty_constr
+        check_recursive_abbrev ty_desc
       with Recursive_abbrev ->
         recursive_abbrev_err loc ty_desc
     end

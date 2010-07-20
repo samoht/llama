@@ -19,12 +19,9 @@ open Asttypes
 
 (* Type constructors *)
 
-type type_constr =
+type type_declaration =
   { ty_stamp: int;              (* Stamp *)
-    mutable ty_abbr: type_abbrev }      (* Abbreviation or not *)
-
-and type_declaration =
-  { ty_constr: type_constr global;      (* The constructor *)
+    mutable ty_abbr: type_abbrev;      (* Abbreviation or not *)
     type_params : typ list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : typ option;
@@ -43,7 +40,7 @@ and typ_desc =
     Tvar of typ_link ref                (* A type variable *)
   | Tarrow of typ * typ                 (* A function type *)
   | Tproduct of typ list                (* A tuple type *)
-  | Tconstr of type_constr global * typ list  (* A constructed type *)
+  | Tconstr of type_declaration global * typ list  (* A constructed type *)
 and typ_link =
     Tnolink                             (* Free variable *)
   | Tlinkto of typ                      (* Instantiated variable *)

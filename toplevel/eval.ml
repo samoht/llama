@@ -16,7 +16,7 @@ type term =
   | Ctor of constructor_description global
   | Tuple of int
   | Array of int
-  | Match of type_constr global
+  | Match of type_declaration global
   | Global of qualified_ident
 
 let global_terms = ref (Hashtbl.create 10)

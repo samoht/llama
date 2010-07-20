@@ -150,42 +150,6 @@ let add_full_type_to_open m cd env =
   m.working <- Gen_type cd :: m.working;
   Env.store_full_type cd.qualid.id cd env
 
-(* Find the descriptor for a reference to a global identifier.
-   If the identifier is qualified (mod__name), just look into module mod.
-   If the identifier is not qualified, look inside the current module,
-   then inside the table of opened modules. *)
-
-
-let type_descr_of_type_constr cstr =
-  let rec select_type_descr = function
-    [] -> raise Not_found
-  | desc::rest ->
-      if desc.info.ty_constr.info.ty_stamp = cstr.info.ty_stamp
-      then desc
-      else select_type_descr rest in
-  if cstr.qualid.qual = (!defined_module).mod_name then
-    try
-    let x=
-      List.find
-        begin function
-          | Gen_type td when td.qualid.id = cstr.qualid.id -> true
-          | _ -> false
-        end
-        (!defined_module).working
-    in
-    match x with
-        Gen_type td -> td
-      | _ -> assert false
-    with Not_found ->
-      print_endline cstr.qualid.id;
-      raise Not_found
-  else
-  select_type_descr
-    (Env.ps_find_all_types
-      (Env.find_pers_struct cstr.qualid.qual)
-      cstr.qualid.id)
-;;
-
 (* To write the interface of the module currently compiled *)
 
 let write_compiled_interface oc =
