@@ -96,7 +96,8 @@ let rec signatures sig1 sig2 =
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
           pair_components ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
-          pair_components paired unpaired rem
+          failwith ("ERROR: unpaired: "^id2.id)
+(*           pair_components paired unpaired rem *)
         end in
   (* Do the pairing and checking, and return the final coercion *)
   simplify_structure_coercion (pair_components [] [] sig2)

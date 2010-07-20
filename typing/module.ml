@@ -120,19 +120,31 @@ let new_exc_stamp () =
 
 (* Additions to the module being compiled *)
 
+let add_value_goofy m vd env =
+  begin match vd.info.val_kind with
+    | Val_prim _ -> m.working <- Gen_value vd :: m.working
+    | _ -> ()
+  end;
+  Env.store_value vd.qualid.id vd env
+let add_constr_goofy m cd env =
+  begin match cd.info.cs_tag with
+    | ConstrExtensible _ -> m.working <- Gen_exception cd :: m.working
+    | _ -> ()
+  end;
+  Env.store_constructor cd.qualid.id cd env
+let add_label_goofy m cd env =
+  Env.store_label cd.qualid.id cd env
+let add_type_goofy m cd env =
+  m.working <- Gen_type cd :: m.working;
+  Env.store_type cd.qualid.id cd env
+
 let add_value_to_open m vd env =
   m.working <- Gen_value vd :: m.working;
   Env.store_value vd.qualid.id vd env
-let add_constr_to_open m cd env =
-  Env.store_constructor cd.qualid.id cd env
+
 let add_exception_to_open m cd env =
   m.working <- Gen_exception cd (* {qualid=cd.qualid; info=cd.info.cs_args} *) :: m.working;
   Env.store_constructor cd.qualid.id cd env
-let add_label_to_open m cd env =
-  Env.store_label cd.qualid.id cd env
-let add_type_to_open m cd env =
-  Env.store_type cd.qualid.id cd env
-
 
 let add_full_type_to_open m cd env =
   m.working <- Gen_type cd :: m.working;
@@ -151,6 +163,23 @@ let type_descr_of_type_constr cstr =
       if desc.info.ty_constr.info.ty_stamp = cstr.info.ty_stamp
       then desc
       else select_type_descr rest in
+  if cstr.qualid.qual = (!defined_module).mod_name then
+    try
+    let x=
+      List.find
+        begin function
+          | Gen_type td when td.qualid.id = cstr.qualid.id -> true
+          | _ -> false
+        end
+        (!defined_module).working
+    in
+    match x with
+        Gen_type td -> td
+      | _ -> assert false
+    with Not_found ->
+      print_endline cstr.qualid.id;
+      raise Not_found
+  else
   select_type_descr
     (Env.ps_find_all_types
       (Env.find_pers_struct cstr.qualid.qual)
@@ -162,3 +191,5 @@ let type_descr_of_type_constr cstr =
 let write_compiled_interface oc =
   let m = !defined_module in
   Env.write_pers_struct oc m.mod_name m.working
+
+let signature m = m.working

@@ -17,8 +17,8 @@ let enter_interface_definitions env intf =
   Env.iter_types intf begin fun ty_desc ->
     let manifest =
       match ty_desc.info.type_kind with
-          Type_abstract -> false
-        | _ -> envref := add_type_to_open !defined_module ty_desc !envref; true
+          Type_abstract when ty_desc.info.type_manifest = None -> false
+        | _ -> envref := add_type_goofy !defined_module ty_desc !envref; true
     in
     external_types :=
       ((ty_desc.qualid.id,
@@ -30,18 +30,18 @@ let enter_interface_definitions env intf =
   end;
   Env.iter_values intf begin fun val_desc ->
     match val_desc.info.val_kind with
-        Val_prim(_) -> envref := add_value_to_open !defined_module val_desc !envref
+        Val_prim(_) -> envref := add_value_goofy !defined_module val_desc !envref
       |       _        -> ()
   end;
   Env.iter_constrs intf begin fun cd ->
-    envref := add_constr_to_open !defined_module cd !envref;
+    envref := add_constr_goofy !defined_module cd !envref;
     begin match cd.info.cs_tag with
       | ConstrExtensible(_,stamp) when stamp >= !next_exc_stamp -> next_exc_stamp := stamp+1
       | _ -> ()
     end
   end;
   Env.iter_labels intf begin fun label_description ->
-    envref := add_label_to_open !defined_module label_description !envref
+    envref := add_label_goofy !defined_module label_description !envref
   end;
   !envref
 
