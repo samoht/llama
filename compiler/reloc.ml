@@ -6,9 +6,9 @@ open Types;; (* for qualified_ident *)
 
 type info =
     Reloc_literal of Lambda.struct_constant    (* structured constant *)
-  | Reloc_getglobal of qualified_ident  (* reference to a global *)
-  | Reloc_setglobal of qualified_ident  (* definition of a global *)
-  | Reloc_tag of qualified_ident * int  (* exception tag *)
+  | Reloc_getglobal of Path.t  (* reference to a global *)
+  | Reloc_setglobal of Path.t  (* definition of a global *)
+  | Reloc_tag of Path.t * int  (* exception tag *)
   | Reloc_primitive of string           (* C primitive number *)
 ;;
 

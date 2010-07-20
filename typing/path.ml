@@ -1,3 +1,4 @@
+(*
 type t =
   | Pident of Id.t
   | Pdot of t * string
@@ -8,3 +9,5 @@ let rec same p1 p2 =
     | Pdot (p1, s1), Pdot (p2, s2) -> same p1 p2 && s1 = s2
     | _, _ -> false
   end
+*)
+

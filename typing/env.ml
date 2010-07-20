@@ -4,14 +4,13 @@ open Types
 open Location
 open Typedtree
 open Printf
-open Path
 open Longident
 
 type t = {
-  values: (Path.t * value_description global) Id.tbl;
+  values: (value_description global) Id.tbl;
   constrs: constructor_description global Id.tbl;
   labels: label_description global Id.tbl;
-  types: (Path.t * type_declaration global) Id.tbl;
+  types: (type_declaration global) Id.tbl;
 }
 
 let empty = { values = Id.empty;
@@ -101,7 +100,7 @@ let find_pers_struct name =
     read_pers_struct name (find_in_path (name ^ ".zi"))
 
 (* Lookup by identifier *)
-
+(*
 let rec find_module_descr path env =
   match path with
     Pident id ->
@@ -124,7 +123,7 @@ let find_value =
   find (fun env -> env.values) (fun sc -> sc.mod_values)
 and find_type =
   find (fun env -> env.types) (fun sc -> sc.mod_types)
-
+*)
 (* Lookup by name *)
 
 let lookup_module lid env =
@@ -132,7 +131,7 @@ let lookup_module lid env =
     Lident s ->
       if s = !current_unit then raise Not_found;
       let ps = find_pers_struct s in
-      (Pident(Id.create_persistent s), ps)
+      (s, ps)
   | Ldot _ ->
       raise Not_found
 
@@ -141,9 +140,9 @@ let lookup proj1 proj2 lid env =
     Lident s ->
       Id.find_name s (proj1 env)
   | Ldot(l, s) ->
-      let (p, desc) = lookup_module l env in
+      let (desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      (Pdot(p, s), data)
+      (s, data)
 
 let lookup_simple proj1 proj2 lid env =
   match lid with
@@ -155,32 +154,26 @@ let lookup_simple proj1 proj2 lid env =
       data
 
 let lookup_value =
-  lookup (fun env -> env.values) (fun sc -> sc.mod_values)
+  lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
 and lookup_constructor =
   lookup_simple (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
 and lookup_label =
   lookup_simple (fun env -> env.labels) (fun sc -> sc.mod_labels)
 and lookup_type =
-  lookup (fun env -> env.types) (fun sc -> sc.mod_types)
-
-let lookup_value li env = snd (lookup_value li env)
-let lookup_type li env = snd (lookup_type li env)
+  lookup_simple (fun env -> env.types) (fun sc -> sc.mod_types)
 
 let store_value s decl env =
   let id = Id.create s in
-  let path = Path.Pdot (Path.Pident id, s) in
   { env with
-    values = Id.add id (path, decl) env.values }
+    values = Id.add id (decl) env.values }
 
 let store_exception s decl env =
   let id = Id.create s in
-  let path = Path.Pdot (Path.Pident id, s) in
   { env with
     constrs = Id.add id decl env.constrs }
 
 let store_type s info env =
   let id = Id.create s in
-  let path = Path.Pdot(Path.Pident id, s) in
   { env with
     constrs =
       List.fold_right
@@ -194,7 +187,7 @@ let store_type s info env =
           Id.add descr.qualid.id descr labels)
         (labels_of_type info)
         env.labels;
-    types = Id.add id (path, info) env.types }
+    types = Id.add id (info) env.types }
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in

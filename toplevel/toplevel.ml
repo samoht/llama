@@ -26,7 +26,7 @@ let add_suffix name suffix =
   then (Filename.chop_suffix name suffix, name)
   else (name, name ^ suffix)
 ;;
-
+(*
 let parse_global s =
   let rec parse n =
     if n + 2 >= String.length s then
@@ -37,7 +37,7 @@ let parse_global s =
     else
       parse (n+1)
   in parse 0;;
-
+*)
 (* Loading in core a compiled bytecode file *)
 
 let load_object env name =

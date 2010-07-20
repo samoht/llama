@@ -17,7 +17,7 @@ type term =
   | Tuple of int
   | Array of int
   | Match of type_declaration global
-  | Global of qualified_ident
+  | Global of Path.t
 
 let global_terms = ref (Hashtbl.create 10)
 let find_global qualid = Hashtbl.find !global_terms qualid

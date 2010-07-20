@@ -5,8 +5,8 @@ open Types;;
 
 type primitive =
     Pidentity
-  | Pget_global of qualified_ident
-  | Pset_global of qualified_ident
+  | Pget_global of Path.t
+  | Pset_global of Path.t
   | Pdummy of int
   | Pupdate
   | Ptest of bool_test
