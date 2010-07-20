@@ -1,28 +1,19 @@
+open Types
+
 type t
 
 val name_of_module : t -> string
 
-open Types
 val iter_values : t -> (value_description global -> unit) -> unit
 
-
-val module_table : (string, t) Hashtbl.t
-
 val new_module : string -> t
-val read_module : string -> string -> t * Env.t
-
 val load_module : string -> t
-val find_module : string -> t
-val kill_module : string -> unit
 
 val use_extended_interfaces : bool ref
 val default_used_modules : string list ref
 val defined_module : t ref
 
-val open_module : string -> Env.t -> Env.t
-
-val start_compiling_interface : string -> Env.t
-val start_compiling_implementation : string -> t -> Env.t
+val start_compiling : string -> Env.t
 val compiled_module_name : unit -> string
 val defined_global : string -> 'a -> 'a Types.global
 

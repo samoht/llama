@@ -59,7 +59,7 @@ let initialize () =
   List.iter (Toplevel.load_object !Env.initial) (List.rev !preload_objects);
   (* open things *)
   default_used_modules := List.assoc "cautious" default_used_interfaces;
-  start_compiling_interface "top"
+  start_compiling "top"
 
 let file_argument name =
   if Filename.check_suffix name ".zo" || Filename.check_suffix name ".za"

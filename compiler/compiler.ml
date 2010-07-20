@@ -71,7 +71,7 @@ let compile_interface modname filename =
   let ic = open_in_bin source_name (* See compile_impl *)
   and oc = open_out_bin intf_name in
     try
-      let env = start_compiling_interface modname in
+      let env = start_compiling modname in
       let lexbuf = Lexing.from_channel ic in
       input_name := source_name;
       input_chan := ic;
@@ -147,11 +147,10 @@ let compile_implementation modname filename suffix =
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
-      let intf, intf_env = read_module modname intfname in
-      let env = start_compiling_implementation modname intf in
+      let _, name, sg = Env.open_pers_signature modname Env.empty in
+      let env = start_compiling modname in
       let env = compile_impl env modname filename suffix in
-      Includemod.signatures (Module.signature !defined_module) (Module.signature intf);
-(*      check_interface env intf_env;   *)
+      Includemod.signatures (Module.signature !defined_module) sg;
       if !write_extended_intf then begin
         let ext_intf_name = filename ^ ".zix" in
         let oc = open_out_bin ext_intf_name in
@@ -162,8 +161,7 @@ let compile_implementation modname filename suffix =
           close_out oc;
           remove_file (ext_intf_name);
           raise x
-      end;
-      kill_module modname
+      end
     with Sys_error _ as x -> (* xxx *)
       remove_file (filename ^ ".zo");
       raise x
@@ -171,7 +169,7 @@ let compile_implementation modname filename suffix =
     let intf_name = filename ^ ".zi" in
     let oc = open_out_bin intf_name in
     try
-      let env = start_compiling_interface modname in
+      let env = start_compiling modname in
       compile_impl env modname filename suffix;
       write_compiled_interface oc;
       close_out oc

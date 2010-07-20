@@ -75,7 +75,6 @@ let protect_current_module fct =
     fct();
     defined_module := saved_defined_module;
   with x ->
-    kill_module (compiled_module_name());
     defined_module := saved_defined_module;
     raise x
 ;;
@@ -129,7 +128,7 @@ let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
   let modname = Filename.basename simplename in
   protect_current_module (fun () ->
-    start_compiling_interface modname;
+    start_compiling modname;
     loadfile env filename)
 ;;
 
