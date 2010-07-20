@@ -7,10 +7,10 @@ open Printf
 open Longident
 
 type t = {
-  values: (value_description global) Id.tbl;
-  constrs: constructor global Id.tbl;
-  labels: label global Id.tbl;
-  types: (type_constructor global) Id.tbl;
+  values: (value_description record) Id.tbl;
+  constrs: constructor record Id.tbl;
+  labels: label record Id.tbl;
+  types: (type_constructor record) Id.tbl;
 }
 
 let empty = { values = Id.empty;
@@ -22,13 +22,13 @@ let initial = ref empty
 
 type pers_struct =
   { mod_name: string;                        (* name of the module *)
-    mod_values: (string, value_description global) Hashtbl.t;
+    mod_values: (string, value_description record) Hashtbl.t;
                                              (* table of values *)
-    mod_constrs: (string, constructor global) Hashtbl.t;
+    mod_constrs: (string, constructor record) Hashtbl.t;
                                              (* table of constructors *)
-    mod_labels: (string, label global) Hashtbl.t;
+    mod_labels: (string, label record) Hashtbl.t;
                                              (* table of labels *)
-    mod_types: (string, type_constructor global) Hashtbl.t;
+    mod_types: (string, type_constructor record) Hashtbl.t;
                                              (* table of type constructors *)
     mutable mod_persistent: bool;
     mutable working : generated_item list;

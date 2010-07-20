@@ -10,9 +10,11 @@ module Path = struct
   let same p1 p2 = (p1 = p2)
 end
 
-type 'a global =
+type 'a record =
   { qualid: Path.t; (* Full name *)
     info: 'a }               (* Description *)
+
+type 'a reference = 'a record
 
 type constr_tag =
     ConstrExtensible of Path.t * int (* name of constructor & stamp *)
@@ -45,7 +47,7 @@ and typ_desc =
     Tvar of typ_link ref                (* A type variable *)
   | Tarrow of core_type * core_type                 (* A function type *)
   | Tproduct of core_type list                (* A tuple type *)
-  | Tconstr of type_constructor global * core_type list  (* A constructed type *)
+  | Tconstr of type_constructor reference * core_type list  (* A constructed type *)
 and typ_link =
     Tnolink                             (* Free variable *)
   | Tlinkto of core_type                      (* Instantiated variable *)
@@ -54,8 +56,8 @@ and typ_link =
 
 and type_kind =
     Type_abstract
-  | Type_variant of constructor global list (* Sum type -> list of constr. *)
-  | Type_record of label global list (* Record type -> list of labels *)
+  | Type_variant of constructor record list (* Sum type -> list of constr. *)
+  | Type_record of label record list (* Record type -> list of labels *)
 
 (* Value constructors *)
 
@@ -92,9 +94,9 @@ and value_kind =
 type exception_declaration = constructor (* typ list *)
 
 type generated_item =
-    Gen_value of value_description global
-  | Gen_type of type_constructor global (*  * rec_status *)
-  | Gen_exception of constructor global
+    Gen_value of value_description record
+  | Gen_type of type_constructor record (*  * rec_status *)
+  | Gen_exception of constructor record
 
 and rec_status =
     Rec_not

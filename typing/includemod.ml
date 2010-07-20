@@ -5,10 +5,10 @@ open Asttypes
 
 type error =
     Missing_field of string
-  | Value_descriptions of value_description global * value_description global
-  | Type_declarations of type_constructor global * type_constructor global
+  | Value_descriptions of value_description record * value_description record
+  | Type_declarations of type_constructor record * type_constructor record
   | Exception_declarations of
-      exception_declaration global * exception_declaration global
+      exception_declaration record * exception_declaration record
 
 exception Error of error list
 

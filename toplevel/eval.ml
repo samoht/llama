@@ -13,10 +13,10 @@ type term =
   | App of term * term
   | Const of atomic_constant
   | Prim of primitive
-  | Ctor of constructor global
+  | Ctor of constructor reference
   | Tuple of int
   | Array of int
-  | Match of type_constructor global
+  | Match of type_constructor reference
   | Global of Path.t
 
 let global_terms = ref (Hashtbl.create 10)
