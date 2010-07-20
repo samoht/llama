@@ -21,7 +21,7 @@ let compare_qualids q1 q2 =
   if c != 0 then c else compare q1.qual q2.qual;;
 
 module QualidSet = Set.Make(struct
-                              type t = Path.t
+                              type t = qualified_ident
                               let compare = compare_qualids
                             end)
 

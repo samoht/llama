@@ -1,23 +1,18 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-type path =
+type qualified_ident =
     { qual: string;
       id: string }
 
-module Path = struct
-  type t = path
-  let same p1 p2 = (p1 = p2)
-end
-
 type 'a record =
-  { qualid: Path.t; (* Full name *)
+  { qualid: qualified_ident; (* Full name *)
     info: 'a }               (* Description *)
 
 type 'a reference = 'a record
 
 type constr_tag =
-    ConstrExtensible of Path.t * int (* name of constructor & stamp *)
+    ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 (* Representation of types and declarations *)
