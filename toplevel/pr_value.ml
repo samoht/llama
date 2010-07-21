@@ -94,33 +94,33 @@ let rec print_val prio depth obj ty =
         print_val_list 1 depth obj ty_list;
         if prio > 0 then print_string ")";
         close_box()
-    | Tconstr({info = {type_manifest=Some body;type_params=params}}, ty_list) ->
+    | Tconstr({type_manifest=Some body;type_params=params}, ty_list) ->
         print_val prio depth obj (expand_abbrev params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type  cstr.info) path_list ->
+    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type  cstr) path_list ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type cstr.info) path_vect ->
+    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type cstr) path_vect ->
         print_vect depth obj ty_arg
     | Tconstr(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
 
 and print_concrete_type prio depth obj cstr ty ty_list =
-  match cstr.info.type_kind with
+  match cstr.type_kind with
     Type_abstract ->
-      begin match cstr.info.type_manifest with
+      begin match cstr.type_manifest with
         | None ->
             print_string "<abstr>"
         | Some body ->
-            print_val prio depth obj (expand_abbrev cstr.info.type_params body ty_list)
+            print_val prio depth obj (expand_abbrev cstr.type_params body ty_list)
       end
   | Type_variant constr_list ->
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
-          if Path.same (path_of_type cstr.info) path_exn
+          if Path.same (path_of_type cstr) path_exn
           then find_exception tag
           else
             let cs = find_constr tag constr_list in
-            adj_path (path_of_type cstr.info) cs.cs_name, cs
+            adj_path (path_of_type cstr) cs.cs_name, cs
         in
         let (ty_args, ty_res) =
           instance_constructor (snd constr) in
@@ -159,7 +159,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
   | Type_record label_list ->
       let label_list =
         List.map
-          (fun(lbl) -> adj_path (path_of_type cstr.info) lbl.lbl_name, lbl)
+          (fun(lbl) -> adj_path (path_of_type cstr) lbl.lbl_name, lbl)
           label_list
       in
       let print_field depth lbl =

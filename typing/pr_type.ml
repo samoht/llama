@@ -11,10 +11,10 @@ let output_path oc p = output_string oc (Path.name p)
 let output_global oc gl =
   output_path oc gl.qualid
 *)
-let output_type_constr oc x = output_path oc (path_of_type x.info)
-let output_value oc x = output_path oc (path_of_value x.info)
-and output_constr oc x= output_path oc (path_of_constructor x.info)
-and output_label oc x= output_path oc (path_of_label x.info)
+let output_type_constr oc x = output_path oc (path_of_type x)
+let output_value oc x = output_path oc (path_of_value x)
+and output_constr oc x= output_path oc (path_of_constructor x)
+and output_label oc x= output_path oc (path_of_label x)
 
 
 let int_to_alpha i =

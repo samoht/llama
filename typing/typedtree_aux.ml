@@ -38,7 +38,7 @@ let letdef_is_pure pat_expr_list =
 ;;
 
 let single_constructor cstr =
-  match cstr.info.cs_tag with
+  match cstr.cs_tag with
     ConstrRegular(_, span) -> span == 1
   | ConstrExtensible(_,_) -> false
 ;;

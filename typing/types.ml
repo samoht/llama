@@ -7,8 +7,7 @@ let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
 
-type 'a reference =
-  { info: 'a }               (* Description *)
+type 'a reference = 'a
 
 type constr_tag =
     ConstrExtensible of Path.t * int (* name of constructor & stamp *)

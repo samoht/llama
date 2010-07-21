@@ -53,7 +53,7 @@ let type_of_type_expression strict_flag typexp =
   | Ttyp_tuple argl ->
       type_product(List.map type_of argl)
   | Ttyp_constr(cstr, args) ->
-      if List.length args != cstr.info.type_arity then
+      if List.length args != cstr.type_arity then
         type_arity_err cstr args typexp.te_loc
       else
         { typ_desc = Tconstr(cstr, List.map type_of args);
@@ -109,9 +109,9 @@ let rec tpat new_env (pat, ty, mut_flag) =
           (type_product(new_type_var_list (List.length patl)))
       end
   | Tpat_construct(constr, args) ->
-      if List.length args <> constr.info.cs_arity then
+      if List.length args <> constr.cs_arity then
         arity_err constr args pat.pat_loc;
-      let (ty_args, ty_res) = instance_constructor constr.info in
+      let (ty_args, ty_res) = instance_constructor constr in
       unify_pat pat ty ty_res;
       List.fold_right2
         (fun arg ty_arg new_env ->
@@ -132,9 +132,9 @@ let rec tpat new_env (pat, ty, mut_flag) =
         [] -> new_env
       | (lbl,p) :: rest ->
           let (ty_res, ty_arg) =
-            type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
+            type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
           unify_pat pat ty ty_res;
-          tpat_lbl (tpat new_env (p, ty_arg, lbl.info.lbl_mut)) rest
+          tpat_lbl (tpat new_env (p, ty_arg, lbl.lbl_mut)) rest
       in
         tpat_lbl new_env lbl_pat_list
 
@@ -174,7 +174,7 @@ let rec is_nonexpansive expr =
   | Texp_array [] -> true
   | Texp_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
-                  lbl.info.lbl_mut == Notmutable && is_nonexpansive expr)
+                  lbl.lbl_mut == Notmutable && is_nonexpansive expr)
               lbl_expr_list
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_parser pat_expr_list -> true
@@ -240,7 +240,7 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
     Texp_ident ident ->
       begin match ident with
           Zglobal glob_desc ->
-            type_instance glob_desc.info.val_type
+            type_instance glob_desc.val_type
         | Zlocal s ->
             let (ty_schema, mut_flag) = List.assoc s env in
             type_instance ty_schema
@@ -250,9 +250,9 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
   | Texp_tuple(args) ->
       type_product(List.map (type_expr env) args)
   | Texp_construct(constr, args) ->
-      if List.length args <> constr.info.cs_arity then
+      if List.length args <> constr.cs_arity then
         arity_err constr args expr.exp_loc;
-      let (ty_args, ty_res) = instance_constructor constr.info in
+      let (ty_args, ty_res) = instance_constructor constr in
       List.iter2 (type_expect env) args ty_args;
       ty_res
   | Texp_apply(fct, args) ->
@@ -294,7 +294,7 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) -> Path.same (path_of_constructor cstr.info) path_void | _ -> false
+         with Texp_construct (cstr,[]) -> Path.same (path_of_constructor cstr) path_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit
@@ -328,7 +328,7 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
       List.iter
         (fun (lbl, exp) ->
           let (ty_res, ty_arg) =
-            type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
+            type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
           begin try unify (ty, ty_res)
           with OldUnify -> label_not_belong_err expr lbl ty
           end;
@@ -336,12 +336,12 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
         lbl_expr_list;
       let label =
         match lbl_expr_list with
-          | ((lbl1,_)::_) -> Array.of_list (labels_of_type lbl1.info.lbl_parent)
+          | ((lbl1,_)::_) -> Array.of_list (labels_of_type lbl1.lbl_parent)
           | [] -> assert false
       in
       let defined = Array.make (Array.length label) false in
       List.iter (fun (lbl, exp) ->
-        let p = lbl.info.lbl_pos in
+        let p = lbl.lbl_pos in
           if defined.(p)
           then label_multiply_defined_err expr lbl
           else defined.(p) <- true)
@@ -352,13 +352,13 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
       ty
   | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) =
-        type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
+        type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
       type_expect env e ty_res;
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) =
-        type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
-      if lbl.info.lbl_mut == Notmutable then label_not_mutable_err expr lbl;
+        type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
+      if lbl.lbl_mut == Notmutable then label_not_mutable_err expr lbl;
       type_expect env e1 ty_res;
       type_expect env e2 ty_arg;
       type_unit
@@ -404,7 +404,7 @@ and type_expect env exp expected_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if Path.same (path_of_type cstr.info)path_format
+            if Path.same (path_of_type cstr)path_format
             then type_format exp.exp_loc s
             else type_string
         | _ ->

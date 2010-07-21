@@ -14,7 +14,7 @@ let list_tyvar = newgenvar()
 let vect_tyvar = newgenvar()
 let option_tyvar = newgenvar()
 
-let doref (p,d) = {info=d}
+let doref (p,d) = d
 
 (* Some types that must be known to the type checker *)
 

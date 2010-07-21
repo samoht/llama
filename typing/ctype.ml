@@ -67,14 +67,14 @@ let rec unify (ty1, ty2) =
         | Tproduct tyl1, Tproduct tyl2 ->
             unify_list (tyl1, tyl2)
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when Path.same (path_of_type cstr1.info) (path_of_type cstr2.info) ->
+          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
             ()
-        | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
+        | Tconstr({type_params=params; type_manifest = Some(body)}, args), _ ->
             unify (expand_abbrev params body args, ty2)
-        | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
+        | _, Tconstr({type_params=params; type_manifest = Some(body)}, args) ->
             unify (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when Path.same (path_of_type cstr1.info) (path_of_type cstr2.info) ->
+          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
             unify_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -98,7 +98,7 @@ let rec filter_arrow ty =
         (ty1, ty2)
   | {typ_desc = Tarrow(ty1, ty2)} ->
       (ty1, ty2)
-  | {typ_desc = Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args)} ->
+  | {typ_desc = Tconstr( {type_params=params; type_manifest = Some(body)}, args)} ->
       filter_arrow (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -112,7 +112,7 @@ let rec filter_product arity ty =
       tyl
   | {typ_desc = Tproduct tyl} ->
       if List.length tyl == arity then tyl else raise OldUnify
-  | {typ_desc = Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args)} ->
+  | {typ_desc = Tconstr({type_params=params; type_manifest = Some(body)}, args)} ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -139,14 +139,14 @@ let rec filter (ty1, ty2) =
         | Tproduct(t1args), Tproduct(t2args) ->
             filter_list (t1args, t2args)
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when Path.same (path_of_type cstr1.info) (path_of_type cstr2.info) ->
+          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
             ()
-        | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
+        | Tconstr({type_params=params; type_manifest = Some(body)}, args), _ ->
             filter (expand_abbrev params body args, ty2)
-        | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
+        | _, Tconstr( {type_params=params; type_manifest = Some(body)}, args) ->
             filter (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when Path.same (path_of_type cstr1.info) (path_of_type cstr2.info) ->
+          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
             filter_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -174,7 +174,7 @@ let repr = Btype.type_repr
 let rec expand ty =
   let ty = repr ty in
   begin match ty.typ_desc with
-    | Tconstr ({info={type_params=params; type_manifest=Some(body)}}, args) ->
+    | Tconstr ({type_params=params; type_manifest=Some(body)}, args) ->
         expand (Btype.expand_abbrev params body args)
     | _ ->
         ty
@@ -207,7 +207,7 @@ let rec eqtype rename subst t1 t2 =
           subst := (t1, t2) :: !subst
         end
     | (Tconstr (p1, []), Tconstr (p2, [])) 
-          when Path.same (path_of_type p1.info) (path_of_type p2.info) ->
+          when Path.same (path_of_type p1) (path_of_type p2) ->
         ()
     | _ ->
         let t1' = expand t1 in
@@ -232,7 +232,7 @@ let rec eqtype rename subst t1 t2 =
           | (Tproduct tl1, Tproduct tl2) ->
               eqtype_list rename subst tl1 tl2
           | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when
-               Path.same (path_of_type p1.info) (path_of_type p2.info) ->
+               Path.same (path_of_type p1) (path_of_type p2) ->
               eqtype_list rename subst tl1 tl2
           | (_, _) ->
               raise (Unify [])

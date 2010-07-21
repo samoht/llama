@@ -31,7 +31,7 @@ let rec free_vars_of_pat pat =
   | Ppat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 
-let mkref (p,d) = {info=d}
+let mkref (p,d) = d
 
 let lookup_type env li loc =
   try mkref(Env.lookup_type li env)
@@ -83,7 +83,7 @@ let rec pattern env p =
         | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
         | Ppat_construct (li,sarg) ->
             let cs = lookup_constructor env li p.ppat_loc in
-            let arity = cs.info.cs_arity in
+            let arity = cs.cs_arity in
             let sargs =
               match sarg with
                   None -> []
@@ -128,7 +128,7 @@ let rec expr env c ex =
         | Pexp_tuple l -> Texp_tuple (List.map (expr env c) l)
         | Pexp_construct (li,sarg) ->
             let cs = lookup_constructor env li ex.pexp_loc in
-            let arity = cs.info.cs_arity in
+            let arity = cs.cs_arity in
             let sargs =
               match sarg with
                   None -> []
