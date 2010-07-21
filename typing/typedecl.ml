@@ -22,8 +22,7 @@ let make_new_variant loc (ty_constr, ty_res, constrs) =
     | (constr_name, args) :: rest ->
         let ty_args = List.map (type_of_type_expression true) args in
         let constr_tag =
-          ConstrExtensible(Pdot(Pident !current_unit, constr_name),
-                           new_exc_stamp()) in
+          ConstrRegular(constr_idx, nbr_constrs) in
       let constr_glob =
          constr_name,
           { cs_res = ty_res;
