@@ -103,7 +103,6 @@ let type_format t1 t2 t3 =
 (* Some constructors that must be known to the parser *)
 
 let constr_void =
-  Id.create "()",
     { cs_parent = snd tref_unit;
       cs_name = "()";
       cs_res = {typ_desc=Tconstr(doref tref_unit,[]); typ_level=notgeneric};
@@ -113,7 +112,6 @@ let constr_void =
 
 let constr_nil =
   let arg = list_tyvar in
-   Id.create "[]",
     { cs_parent = snd tref_list;
       cs_name = "[]";
       cs_res = {typ_desc=Tconstr(doref tref_list, [arg]); typ_level=generic};
@@ -123,7 +121,6 @@ let constr_nil =
 and constr_cons =
   let arg1 = list_tyvar in
   let arg2 = {typ_desc=Tconstr(doref tref_list, [arg1]); typ_level=generic} in
-   Id.create "::",
   { cs_parent = snd tref_list;
     cs_name = "::";
     cs_res = arg2;
@@ -133,7 +130,6 @@ and constr_cons =
 
 let constr_none =
   let arg = option_tyvar in
-   Id.create "None",
     { cs_parent = snd tref_option;
       cs_name = "None";
       cs_res =
@@ -143,7 +139,6 @@ let constr_none =
 
 and constr_some =
   let arg = option_tyvar in
-   Id.create "Some",
     { cs_parent = snd tref_option;
       cs_name = "Some";
       cs_res =
@@ -153,7 +148,6 @@ and constr_some =
 ;;
 
 let constr_false =
-  Id.create "false",
     { cs_parent = snd tref_bool;
       cs_name = "false";
       cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};
@@ -161,7 +155,6 @@ let constr_false =
       cs_tag = ConstrRegular(0,2); }
 
 and constr_true =
-  Id.create  "true",
     { cs_parent = snd tref_bool;
       cs_name = "true";
       cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};

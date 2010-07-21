@@ -80,7 +80,7 @@ let rec simple_pat q pss = match pss with
     let ty_path = lbl1.qualid in
     let ty_record = lbl1.info.lbl_parent in
     let labels = Ctype.labels_of_type ty_record in
-    make_pat(Tpat_record (List.map (fun lbl -> {qualid=ty_path;info=snd lbl},omega) labels)) p.pat_type
+    make_pat(Tpat_record (List.map (fun lbl -> {qualid=ty_path;info=lbl},omega) labels)) p.pat_type
 | _ -> q
 ;;
 

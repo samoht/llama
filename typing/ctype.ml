@@ -11,10 +11,10 @@ let labels_of_type ty =
     | _ -> assert false
   end
 
-let adj_path path id =
+let adj_path path s =
   begin match path with
-    | Pident _ -> Pident id
-    | Pdot (m, _) -> Pdot (m, Id.name id)
+    | Pident _ -> s
+    | Pdot (m, _) -> Path.name m ^ "." ^ s
   end
 
 (* ---------------------------------------------------------------------- *)

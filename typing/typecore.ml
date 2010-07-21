@@ -347,7 +347,7 @@ let rec type_expr env expr =
           else defined.(p) <- true)
         lbl_expr_list;
       for i = 0 to Array.length label - 1 do
-        if not defined.(i) then label_undefined_err expr (snd label.(i))
+        if not defined.(i) then label_undefined_err expr label.(i)
       done;
       ty
   | Texp_field (e, lbl) ->

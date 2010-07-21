@@ -26,7 +26,7 @@ let make_new_variant loc (ty_constr, ty_res, constrs) =
   pop_type_level();
   generalize_type ty_res;
   List.iter
-    (fun cstr -> List.iter generalize_type (snd cstr).cs_args)
+    (fun cstr -> List.iter generalize_type cstr.cs_args)
     constructors;
   Type_variant constructors
 
@@ -42,7 +42,7 @@ let make_new_record loc (ty_constr, ty_res, labels) =
   pop_type_level();
   generalize_type ty_res;
   List.iter
-    (function lbl -> generalize_type (snd lbl).lbl_arg)
+    (function lbl -> generalize_type lbl.lbl_arg)
     labels;
   Type_record labels
     

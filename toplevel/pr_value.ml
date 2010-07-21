@@ -18,7 +18,7 @@ let rec find_constr tag = function
     [] ->
       raise Constr_not_found
   | constr::rest ->
-      match (snd constr).cs_tag with
+      match constr.cs_tag with
         ConstrRegular(t, _) ->
           if t == tag then constr else find_constr tag rest
       | ConstrExtensible _ ->
@@ -35,7 +35,7 @@ let find_exception tag =
   | constr :: rest ->
       match constr.cs_tag with
         ConstrExtensible(qualid,st) ->
-          if st == stamp then qualid, constr else select_exn rest
+          if st == stamp then Path.name qualid, constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
   let Pdot(Pident mn,s) = qualid in
@@ -119,19 +119,19 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           if Path.same cstr.qualid path_exn
           then find_exception tag
           else
-            let id,d = find_constr tag constr_list in
-            adj_path cstr.qualid id, d
+            let cs = find_constr tag constr_list in
+            adj_path cstr.qualid cs.cs_name, cs
         in
         let (ty_args, ty_res) =
           instance_constructor (snd constr) in
         filter (ty_res, ty);
         match (snd constr).cs_arity with
           0 ->
-            print_path (fst constr)
+            print_string (fst constr)
         | 1 ->
             if prio > 1 then begin open_box 2; print_string "(" end
              else open_box 1;
-            print_path (fst constr);
+            print_string (fst constr);
             print_space();
             cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
             if prio > 1 then print_string ")";
@@ -139,7 +139,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         | n ->
             if prio > 1 then begin open_box 2; print_string "(" end
             else open_box 1;
-            print_path (fst constr);
+            print_string (fst constr);
             print_space();
             open_box 1;
             print_string "(";
@@ -159,12 +159,12 @@ and print_concrete_type prio depth obj cstr ty ty_list =
   | Type_record label_list ->
       let label_list =
         List.map
-          (fun(id,lbl) -> adj_path cstr.qualid id, lbl)
+          (fun(lbl) -> adj_path cstr.qualid lbl.lbl_name, lbl)
           label_list
       in
       let print_field depth lbl =
         open_box 1;
-        print_path (fst lbl);
+        print_string (fst lbl);
         print_string " ="; print_space();
         let (ty_res, ty_arg) =
           type_pair_instance ((snd lbl).lbl_res, (snd lbl).lbl_arg) in

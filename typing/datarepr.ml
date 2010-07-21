@@ -18,7 +18,7 @@ let constructor_descrs ty_desc ty_res cstrs =
             cs_args = ty_args;
             cs_arity = List.length ty_args;
             cs_tag = tag } in
-        (name, cstr) :: descr_rem in
+        cstr :: descr_rem in
   describe_constructors 0 cstrs
 (*
 let constructors_of_type ty_path decl =
@@ -48,7 +48,7 @@ let label_descrs ty_desc ty_res lbls =
             lbl_arg = ty_arg;
             lbl_mut = mut_flag;
             lbl_pos = num} in
-        (name, lbl) :: describe_labels (num+1) rest in
+        lbl :: describe_labels (num+1) rest in
   describe_labels 0 lbls
 
 (*

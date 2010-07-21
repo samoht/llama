@@ -45,8 +45,8 @@ and typ_link =
 
 and type_kind =
     Type_abstract
-  | Type_variant of (Id.t * constructor) list (* Sum type -> list of constr. *)
-  | Type_record of (Id.t * label) list (* Record type -> list of labels *)
+  | Type_variant of constructor list (* Sum type -> list of constr. *)
+  | Type_record of label list (* Record type -> list of labels *)
 
 (* Value constructors *)
 

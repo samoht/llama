@@ -78,10 +78,10 @@ let read_pers_struct modname filename =
           | Gen_type (s,gl) ->
               Hashtbl.add ps.mod_types (Id.name s) gl;
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_constrs (Id.name p) gl)
+                (fun gl -> Hashtbl.add ps.mod_constrs gl.cs_name gl)
                 (constructors_of_type gl);
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_labels (Id.name p) gl)
+                (fun gl -> Hashtbl.add ps.mod_labels gl.lbl_name gl)
                 (labels_of_type gl)
         end
       end
@@ -177,18 +177,14 @@ let store_type_internal do_hide id path info env =
   { env with
     constrs =
       List.fold_right
-        (fun (p,descr) constrs ->
-           let cid = if do_hide then Id.hide p else p in
-           let cpath = adj_path path cid in
-           Id.add cid (cpath,descr) constrs)
+        (fun cs constrs ->
+           Id.add (Id.create cs.cs_name) (path,cs) constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
-        (fun (p,descr) labels ->
-           let lid = if do_hide then Id.hide p else p in
-           let lpath = adj_path path lid in
-           Id.add lid (lpath,descr) labels)
+        (fun lbl labels ->
+           Id.add (Id.create lbl.lbl_name) (path,lbl) labels)
         (labels_of_type info)
         env.labels;
     types = Id.add id (path,info) env.types }
