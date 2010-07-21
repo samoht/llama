@@ -88,7 +88,9 @@ let type_typedecl env loc decl =
              duplicate_param_in_type_decl_err loc
          in
          let ty_desc =
-             { type_arity = List.length ty_params;
+             { type_module = !current_module;
+               type_name = ty_name;
+               type_arity = List.length ty_params;
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
@@ -155,7 +157,12 @@ let type_valuedecl env loc id typexp prim =
   let ty = type_of_type_expression false typexp in
   pop_type_level();
   generalize_type ty;
-  let vd = defined_global id { val_type = ty; val_kind = prim } in
+  let vd = defined_global id { 
+    val_module = !current_module;
+    val_name = Id.name id;
+    val_type = ty;
+    val_kind = prim }
+  in
   let env = Env.store_value (horrible (fst vd)) (fst vd) (snd vd) env in
   vd, env
 
@@ -169,7 +176,11 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let env = ref env in
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
-         let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
+         let vd = (defined_global name
+                     {val_module = !current_module;
+                      val_name = name;
+                       val_type=ty;
+                      val_kind=Val_reg}) in
          env := Env.store_value (horrible (fst vd)) (fst vd) (snd vd) !env;
          vd) c
     in

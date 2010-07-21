@@ -18,8 +18,10 @@ let doref (p,d) = {qualid=p; info=d}
 
 (* Some types that must be known to the type checker *)
 
-let mkty params =
-  { type_params = params;
+let mkty ?(m=Module_builtin) nm params =
+  { type_module = Module_builtin;
+    type_name = nm;
+    type_params = params;
     type_arity = List.length params;
     type_manifest = None;
     type_kind = Type_abstract }
@@ -47,20 +49,20 @@ and path_vect = preident ident_vect
 and path_list = preident ident_list
 and path_option = preident ident_option
 
-let tref_unit = path_unit, (mkty [])
-and tref_exn = path_exn, (mkty [])
-and tref_bool = path_bool, (mkty [])
-and tref_int = path_int, (mkty [])
-and tref_float = path_float, (mkty [])
-and tref_string = path_string, (mkty [])
-and tref_char = path_char, (mkty [])
-and tref_list = path_list, (mkty [list_tyvar])
-and tref_vect = path_vect, (mkty [vect_tyvar] )
-and tref_option = path_option, (mkty [option_tyvar])
-and tref_stream = Pdot(Pident(Id.create_persistent "stream"), "stream"), mkty []
+let tref_unit = path_unit, (mkty "unit" [])
+and tref_exn = path_exn, (mkty "exn" [])
+and tref_bool = path_bool, (mkty "bool" [])
+and tref_int = path_int, (mkty "int" [])
+and tref_float = path_float, (mkty "float" [])
+and tref_string = path_string, (mkty "string" [])
+and tref_char = path_char, (mkty "char" [])
+and tref_list = path_list, (mkty "list" [list_tyvar])
+and tref_vect = path_vect, (mkty "vect" [vect_tyvar] )
+and tref_option = path_option, (mkty "option" [option_tyvar])
+and tref_stream = Pdot(Pident(Id.create_persistent "stream"), "stream"), mkty ~m:(Module "stream") "stream" []
 and tref_num =
   (* This is needed only for the Windows port. *)
-  Pdot(Pident(Id.create_persistent "num"), "num"),mkty []
+  Pdot(Pident(Id.create_persistent "num"), "num"),mkty ~m:(Module "num") "num" []
 
 let type_arrow (t1,t2) =
   {typ_desc=Tarrow(t1, t2); typ_level=notgeneric}
@@ -91,7 +93,9 @@ let path_format = Pdot(Pident(Id.create_persistent"printf"), "format")
 let tref_format =
   let params = [newgenvar();newgenvar();newgenvar()] in
   path_format,
-  { type_params = params;
+  { type_module = Module "printf";
+    type_name = "format";
+    type_params = params;
     type_arity = 3;
     type_manifest = Some type_string;
     type_kind = Type_abstract }

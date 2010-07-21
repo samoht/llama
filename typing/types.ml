@@ -21,8 +21,15 @@ open Asttypes
 
 (* Type constructors *)
 
+type module_t =
+  | Module_builtin
+  | Module of string
+  | Module_toplevel
+
 type type_constructor =
-  { type_params : core_type list;
+  { type_module : module_t;
+    type_name : string;
+    type_params : core_type list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : core_type option;
     mutable type_kind: type_kind }  (* Its description *)
@@ -77,7 +84,9 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 (* Global variables *)
 
 type value =
-  { val_type: core_type;                (* Type of the value *)
+  { val_module: module_t;
+    val_name: string;
+    val_type: core_type;                (* Type of the value *)
     val_kind: value_kind }
 
 and value_kind =
