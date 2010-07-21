@@ -312,10 +312,10 @@ let rec make_sequence f = function
 ;;
 
 let translate_letdef loc pat_expr_list =
-  let modname = !current_unit in
+  let mkpath i = Pdot(Pident !current_unit, i) in
   match pat_expr_list with
     [{pat_desc = Tpat_var i}, expr] ->      (* Simple case: let id = expr *)
-      Lprim(Pset_global (Pdot(modname,i)), [translate_expression expr])
+      Lprim(Pset_global (mkpath i), [translate_expression expr])
   | _ ->                                 (* The general case *)
     let pat_list =
       List.map (fun (p, _) -> p) pat_expr_list in
@@ -324,7 +324,7 @@ let translate_letdef loc pat_expr_list =
     let env =
       env_for_toplevel_let pat_list in
     let store_global var =
-      Lprim(Pset_global (Pdot(modname,var)),
+      Lprim(Pset_global (mkpath var),
             [translate_access var env]) in
     Llet(translate_bind Tnullenv pat_expr_list,
          translate_matching_check_failure
@@ -348,13 +348,13 @@ let translate_letdef_rec loc pat_expr_list =
   (* First check that all patterns are variables *)
   let var_expr_list =
     List.map (fun (pat, expr) -> (extract_variable pat, expr)) pat_expr_list in
-  let modname = !current_unit in
+  let mkpath i = Pdot(Pident !current_unit, i) in
   try                                   (* Simple case: let rec id = fun *)
     make_sequence
       (function (i, e) ->
         match e.exp_desc with
           Texp_function _ ->
-            Lprim(Pset_global (Pdot(modname,i)), [translate_expression e])
+            Lprim(Pset_global (mkpath i), [translate_expression e])
         | _ ->
             raise Complicated_definition)
       var_expr_list
@@ -362,13 +362,13 @@ let translate_letdef_rec loc pat_expr_list =
     let dummies =
       make_sequence
         (function (i, e) ->
-          Lprim (Pset_global (Pdot(modname,i)),
+          Lprim (Pset_global (mkpath i),
                  [Lprim(Pdummy(size_of_expr e), [])]))
         var_expr_list in
     let updates =
       make_sequence
         (function (i, e) ->
-          Lprim(Pupdate, [Lprim(Pget_global (Pdot(modname,i)), []);
+          Lprim(Pupdate, [Lprim(Pget_global (mkpath i), []);
                           translate_expression e]))
         var_expr_list in
     Lsequence(dummies, updates)

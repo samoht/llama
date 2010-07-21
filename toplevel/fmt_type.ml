@@ -7,14 +7,7 @@ open Module;;
 open Format;;
 
   let print_path p =
-  begin match p with
-    | Pdot(mn,s) ->
-        if mn <> "builtin" then begin
-          print_string mn;
-          print_string "__";
-        end;
-        print_string s
-  end
+    print_string (Path.name p)
 
 let print_global gl = print_path (fst gl)
 

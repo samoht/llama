@@ -165,13 +165,13 @@ let undefined_value_err val_desc =
   raise Toplevel
 ;;
 
-let type_mismatch_err val_desc val_desc' =
-  eprintf "%tThe value %a is declared with type %a,\n\
+let type_mismatch_err s val_desc val_desc' =
+  eprintf "%tThe value %s is declared with type %a,\n\
            but defined with type %a.\n"
     output_input_name
-    output_value val_desc
-    output_schema val_desc.info.val_type
-    output_schema val_desc'.info.val_type;
+    s
+    output_schema val_desc.val_type
+    output_schema val_desc'.val_type;
   raise Toplevel
 ;;
 

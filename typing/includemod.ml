@@ -22,8 +22,8 @@ let values id vd1 vd2 =
   try
     Includecore.values vd1 vd2
   with Includecore.Dont_match ->
-(*    Error.type_mismatch_err vd2 vd1; *)
-    raise(Error[Value_descriptions(id, vd1, vd2)])
+    Error.type_mismatch_err id vd2 vd1
+(*    raise(Error[Value_descriptions(id, vd1, vd2)])*)
 
 (* Inclusion between type declarations *)
 

@@ -8,10 +8,7 @@ open Types
 
 (* Print a long identifier *)
 
-let qualid ppf id =
-  begin match id with
-    | Pdot (qual, id) -> fprintf ppf "%s.%s" qual id
-  end
+let qualid ppf id = pp_print_string ppf (Path.name id)
 
 let rec longident ppf = function
   | Lident s -> fprintf ppf "%s" s

@@ -1,24 +1,30 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-type qualified_ident =
-  | Pdot of string * string
+type path =
+  | Pdot of path * string
   | Pident of Id.t
+
 let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
 
 module Path = struct
-  type t = qualified_ident
+  type t = path
   let same p1 p2 = (p1 = p2)
+
+  let rec name = function
+      Pident id -> Id.name id
+    | Pdot(p, s) -> name p ^ "." ^ s
+
 end
 
 type 'a reference =
-  { qualid: qualified_ident; (* Full name *)
+  { qualid: Path.t; (* Full name *)
     info: 'a }               (* Description *)
 
 type constr_tag =
-    ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
+    ConstrExtensible of Path.t * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 (* Representation of types and declarations *)

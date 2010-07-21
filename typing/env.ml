@@ -124,7 +124,7 @@ let lookup_module lid env =
     Lident s ->
       if s = !current_unit then raise Not_found;
       let ps = find_pers_struct s in
-      (s, ps)
+      (Pident (String.uncapitalize s), ps)
   | Ldot _ ->
       raise Not_found
 
@@ -144,7 +144,7 @@ let lookup_simple proj1 proj2 lid env =
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      Pdot (String.uncapitalize p, s), data
+      Pdot (p, s), data
 
 let lookup_value =
   lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
@@ -195,6 +195,7 @@ and enter_exception = enter store_exception
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
+  let name = Pident(Id.create_persistent name) in
   let envref = ref env in
   List.iter
     (fun x ->

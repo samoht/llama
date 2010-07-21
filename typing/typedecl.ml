@@ -10,18 +10,19 @@ open Btype;;
 open Error;;
 open Typecore;;
 
-let splitit gl = gl.qualid, gl.info
+let defined_global name desc =
+  Pdot (Pident !current_unit, name), desc
 
 let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =
     List.length constrs in
   let rec make_constrs constr_idx = function
-    [] -> []
-  | (constr_name, args) :: rest ->
-      let ty_args = List.map (type_of_type_expression true) args in
-      let constr_tag =
-        if is_extensible then
-          ConstrExtensible(Pdot(!current_unit, constr_name),
+      [] -> []
+    | (constr_name, args) :: rest ->
+        let ty_args = List.map (type_of_type_expression true) args in
+        let constr_tag =
+          if is_extensible then
+          ConstrExtensible(Pdot(Pident !current_unit, constr_name),
                            new_exc_stamp())
         else
           ConstrRegular(constr_idx, nbr_constrs) in

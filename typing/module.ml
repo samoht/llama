@@ -2,10 +2,7 @@ open Misc;;
 open Asttypes;;
 open Types;;
 
-let current_unit = ref ""
-
-let defined_global name desc =
-  Pdot (!current_unit, name), desc
+let current_unit = ref (Id.create_persistent "")
 
 let next_exc_stamp = ref 1
 
@@ -22,7 +19,7 @@ let iter_values m cb =
     m
 
 let start_compiling name =
-  current_unit := name;
+  current_unit := Id.create_persistent name;
   let s = if !Clflags.nopervasives then "none" else "cautious" in
   let l = List.assoc s Config.default_used_interfaces in
   List.fold_left (fun env m -> Env.open_pers_signature m env) !Env.initial l

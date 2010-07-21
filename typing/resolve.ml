@@ -32,9 +32,10 @@ let rec free_vars_of_pat pat =
 
 let mkdot p =
   begin match p with
-    | Pident s -> Pdot(!Module.current_unit, s)
+    | Pident s -> Pdot(Pident !Module.current_unit, s)
     | _ -> p
   end
+
 let mkref (p,d) = {qualid=mkdot p; info=d}
 
 let lookup_type env li loc =

@@ -108,14 +108,14 @@ linker/prim_c.ml : runtime/primitives
 	 echo '|];;') > $@
 
 linker/more_predef.ml : runtime/globals.h runtime/fail.h
-	(echo 'open Types;;'; \
+	(echo 'open Types;;   let mkpers i = Pident(Id.create_persistent i);;   '; \
          echo 'let predef_variables = ['; \
-	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|Pdot(\1, \2);|p' \
+	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|Pdot(mkpers \1, \2);|p' \
                 $< \
            | sed -e '$$s|;$$||'; \
          echo '];;'; \
          echo 'let predef_exn = ['; \
-         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|(Pdot(\1, \2), \3);|p' \
+         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|(Pdot(mkpers \1, \2), \3);|p' \
                 runtime/fail.h \
            | sed -e '$$s|;$$||'; \
          echo '];;') > $@

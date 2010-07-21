@@ -4,16 +4,9 @@ open Asttypes;;
 open Types;;
 open Btype;;
 open Module;;
+open Predef
 
-let output_path oc p =
-  begin match p with
-    | Pdot(mn, s) ->
-        if mn <> "builtin" then begin
-          output_string oc mn;
-          output_string oc "__";
-        end;
-        output_string oc s
-  end
+let output_path oc p = output_string oc (Path.name p)
 
 let output_global oc gl =
   output_path oc gl.qualid

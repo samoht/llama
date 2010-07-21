@@ -1,37 +1,37 @@
-open Types;;
+open Types;;   let mkpers i = Pident(Id.create_persistent i);;   
 let predef_variables = [
-Pdot("meta", "global_data");
-Pdot("sys", "s_irusr");
-Pdot("sys", "s_iwusr");
-Pdot("sys", "s_ixusr");
-Pdot("sys", "s_irgrp");
-Pdot("sys", "s_iwgrp");
-Pdot("sys", "s_ixgrp");
-Pdot("sys", "s_iroth");
-Pdot("sys", "s_iwoth");
-Pdot("sys", "s_ixoth");
-Pdot("sys", "s_isuid");
-Pdot("sys", "s_isgid");
-Pdot("sys", "s_irall");
-Pdot("sys", "s_iwall");
-Pdot("sys", "s_ixall");
-Pdot("sys", "command_line");
-Pdot("sys", "interactive");
-Pdot("sys", "max_string_length");
-Pdot("sys", "max_vect_length");
-Pdot("sys", "word_size")
+Pdot(mkpers "meta", "global_data");
+Pdot(mkpers "sys", "s_irusr");
+Pdot(mkpers "sys", "s_iwusr");
+Pdot(mkpers "sys", "s_ixusr");
+Pdot(mkpers "sys", "s_irgrp");
+Pdot(mkpers "sys", "s_iwgrp");
+Pdot(mkpers "sys", "s_ixgrp");
+Pdot(mkpers "sys", "s_iroth");
+Pdot(mkpers "sys", "s_iwoth");
+Pdot(mkpers "sys", "s_ixoth");
+Pdot(mkpers "sys", "s_isuid");
+Pdot(mkpers "sys", "s_isgid");
+Pdot(mkpers "sys", "s_irall");
+Pdot(mkpers "sys", "s_iwall");
+Pdot(mkpers "sys", "s_ixall");
+Pdot(mkpers "sys", "command_line");
+Pdot(mkpers "sys", "interactive");
+Pdot(mkpers "sys", "max_string_length");
+Pdot(mkpers "sys", "max_vect_length");
+Pdot(mkpers "sys", "word_size")
 ];;
 let predef_exn = [
-(Pdot("exc", "Out_of_memory"), 1);
-(Pdot("sys", "Sys_error"), 1);
-(Pdot("exc", "Failure"), 3);
-(Pdot("exc", "Invalid_argument"), 2);
-(Pdot("io", "End_of_file"), 1);
-(Pdot("int", "Division_by_zero"), 1);
-(Pdot("sys", "Break"), 2);
-(Pdot("exc", "Not_found"), 4);
-(Pdot("unix", "Unix_error"), 1);
-(Pdot("graphics", "Graphic_failure"), 1);
-(Pdot("stream", "Parse_failure"), 1);
-(Pdot("protocol", "TkError"), 1)
+(Pdot(mkpers "exc", "Out_of_memory"), 1);
+(Pdot(mkpers "sys", "Sys_error"), 1);
+(Pdot(mkpers "exc", "Failure"), 3);
+(Pdot(mkpers "exc", "Invalid_argument"), 2);
+(Pdot(mkpers "io", "End_of_file"), 1);
+(Pdot(mkpers "int", "Division_by_zero"), 1);
+(Pdot(mkpers "sys", "Break"), 2);
+(Pdot(mkpers "exc", "Not_found"), 4);
+(Pdot(mkpers "unix", "Unix_error"), 1);
+(Pdot(mkpers "graphics", "Graphic_failure"), 1);
+(Pdot(mkpers "stream", "Parse_failure"), 1);
+(Pdot(mkpers "protocol", "TkError"), 1)
 ];;

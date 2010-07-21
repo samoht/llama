@@ -4,7 +4,9 @@ open Asttypes
 open Types
 open Module
 
-let builtin n d = (Pdot("builtin", n), d)
+let path_builtin = Pident(Id.create_persistent "builtin")
+
+let builtin n d = (Pdot(path_builtin, n), d)
 
 let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
 let list_tyvar = newgenvar()
@@ -42,10 +44,10 @@ and constr_type_vect =
 and constr_type_option =
   builtin "option" (mkty [option_tyvar])
 and constr_type_stream =
-   Pdot("stream", "stream"), mkty []
+   Pdot(Pident(Id.create_persistent "stream"), "stream"), mkty []
 and constr_type_num =
   (* This is needed only for the Windows port. *)
-  Pdot("num", "num"),mkty []
+  Pdot(Pident(Id.create_persistent "num"), "num"),mkty []
 
 let type_arrow (t1,t2) =
   {typ_desc=Tarrow(t1, t2); typ_level=notgeneric}
@@ -73,7 +75,7 @@ and type_num =
   {typ_desc=Tconstr(doref constr_type_num, []); typ_level=notgeneric}
 ;;
 let constr_type_format =
-  Pdot("printf", "format"),
+  Pdot(Pident(Id.create_persistent"printf"), "format"),
 let params = [newgenvar();newgenvar();newgenvar()] in
   { type_params = params;
     type_arity = 3;
@@ -141,7 +143,7 @@ and constr_true =
 (* Some exceptions that must be known to the compiler *)
 
 let match_failure_tag =
-  ConstrExtensible (Pdot("builtin", "Match_failure"), 1)
+  ConstrExtensible (Pdot(path_builtin, "Match_failure"), 1)
 
 let constr_match_failure =
   builtin "Match_failure"

@@ -24,7 +24,7 @@ let compare_qualids q1 q2 =
   end
 
 module QualidSet = Set.Make(struct
-                              type t = qualified_ident
+                              type t = Path.t
                               let compare = compare_qualids
                             end)
 
