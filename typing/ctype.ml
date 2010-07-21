@@ -5,27 +5,17 @@ open Path
 
 (* Extract the list of labels of a record type. *)
 
+let labels_of_type ty =
+  begin match ty.type_kind with
+    | Type_record l -> l
+    | _ -> assert false
+  end
+
 let adj_path path id =
   begin match path with
     | Pident _ -> Pident id
     | Pdot (m, _) -> Pdot (m, Id.name id)
   end
-
-let rec labels_of_type ty =
-  match (Btype.type_repr ty).typ_desc with
-    Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
-      labels_of_type (Btype.expand_abbrev params body args)
-  | Tconstr(cstr, _) ->
-      begin match cstr.info.type_kind with
-        Type_record lbl_list ->
-          List.map
-            (fun (id,lbl) -> adj_path cstr.qualid id, lbl)
-            lbl_list
-        | _ -> fatal_error "labels_of_type"
-      end
-  | _ ->
-      fatal_error "labels_of_type"
-;;
 
 (* ---------------------------------------------------------------------- *)
 (* unification                                                            *)

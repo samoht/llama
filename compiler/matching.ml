@@ -265,8 +265,8 @@ let rec conquer_matching =
             let condlist1, _ = conquer_divided_matching constants
             and lambda2, total2 = conquer_matching vars in
               (Lstatichandle(Lcond(path, condlist1), lambda2), total2)
-      | {pat_desc = Tpat_record _; pat_type = ty} ->
-          conquer_matching (divide_record_matching ty matching)
+      | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
+          conquer_matching (divide_record_matching lbl.info.lbl_parent matching)
       | _ ->
           fatal_error "conquer_matching 2"
       end

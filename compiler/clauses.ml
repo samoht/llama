@@ -31,12 +31,11 @@ let simple_match p1 p2 =
 
 
 
-let record_labels p = Ctype.labels_of_type p.pat_type
+let record_nargs someofthem =
+  match someofthem with
+    | [] -> assert false
+    | ((lbl1,_)::_) -> List.length (Ctype.labels_of_type lbl1.info.lbl_parent)
 ;;
-
-let record_nargs p = List.length (record_labels p)
-;;
-
 
 let set_fields size l =
 
@@ -53,7 +52,7 @@ let simple_match_args p1 p2 =
   match p2.pat_desc with
     Tpat_construct(_,args) -> args
   | Tpat_tuple(args)  -> args
-  | Tpat_record(args) ->  set_fields (record_nargs p1) args
+  | Tpat_record(args) ->  set_fields (record_nargs args) args
   | (Tpat_any | Tpat_var(_)) ->
       begin match p1.pat_desc with
         Tpat_construct(_,args) -> List.map (fun _ -> omega) args
@@ -77,8 +76,11 @@ let rec simple_pat q pss = match pss with
 | ({pat_desc = (Tpat_any | Tpat_var(_))}::_)::pss -> simple_pat q pss
 | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
     make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.pat_type
-| (({pat_desc = Tpat_record(args)} as p)::_)::pss ->
-    make_pat(Tpat_record (List.map (fun lbl -> {qualid=fst lbl;info=snd lbl},omega) (record_labels p))) p.pat_type
+| (({pat_desc = Tpat_record((lbl1,_)::_)} as p)::_)::pss ->
+    let ty_path = lbl1.qualid in
+    let ty_record = lbl1.info.lbl_parent in
+    let labels = Ctype.labels_of_type ty_record in
+    make_pat(Tpat_record (List.map (fun lbl -> {qualid=ty_path;info=snd lbl},omega) labels)) p.pat_type
 | _ -> q
 ;;
 
@@ -241,7 +243,7 @@ let rec le_pat p q =
       c1.info.cs_tag == c2.info.cs_tag && le_pats ps qs
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->
-     let size = record_nargs p in
+     let size = record_nargs l1 in
      le_pats (set_fields size l1) (set_fields size l2)
   | _,_ -> false  
 

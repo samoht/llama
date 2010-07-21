@@ -334,7 +334,11 @@ let rec type_expr env expr =
           end;
           type_expect env exp ty_arg)
         lbl_expr_list;
-      let label = Array.of_list (labels_of_type ty) in
+      let label =
+        match lbl_expr_list with
+          | ((lbl1,_)::_) -> Array.of_list (labels_of_type lbl1.info.lbl_parent)
+          | [] -> assert false
+      in
       let defined = Array.make (Array.length label) false in
       List.iter (fun (lbl, exp) ->
         let p = lbl.info.lbl_pos in
@@ -343,7 +347,7 @@ let rec type_expr env expr =
           else defined.(p) <- true)
         lbl_expr_list;
       for i = 0 to Array.length label - 1 do
-        if not defined.(i) then label_undefined_err expr label.(i)
+        if not defined.(i) then label_undefined_err expr (snd label.(i))
       done;
       ty
   | Texp_field (e, lbl) ->

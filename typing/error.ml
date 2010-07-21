@@ -195,7 +195,7 @@ let label_multiply_defined_err exp lbl =
 let label_undefined_err exp lbl =
   eprintf "%aThe label %a is not defined in this record.\n"
     output_location exp.exp_loc
-    output_path (fst lbl);
+    output_string lbl.lbl_name;
   raise Toplevel
 ;;
 
