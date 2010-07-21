@@ -14,7 +14,7 @@ open Path
 let defined_global name desc =
   Pdot (Pident !current_unit, name), desc
 
-let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
+let make_new_variant loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =
     List.length constrs in
   let rec make_constrs constr_idx = function
@@ -22,11 +22,8 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
     | (constr_name, args) :: rest ->
         let ty_args = List.map (type_of_type_expression true) args in
         let constr_tag =
-          if is_extensible then
           ConstrExtensible(Pdot(Pident !current_unit, constr_name),
-                           new_exc_stamp())
-        else
-          ConstrRegular(constr_idx, nbr_constrs) in
+                           new_exc_stamp()) in
       let constr_glob =
          constr_name,
           { cs_res = ty_res;
@@ -82,7 +79,7 @@ let define_new_type loc (ty_desc, ty_params, def) =
       Ttype_abstract ->
         pop_type_level(); Type_abstract,None
     | Ttype_variant constrs ->
-        make_new_variant false loc (ty_desc, ty_res, constrs),None
+        make_new_variant loc (ty_desc, ty_res, constrs),None
     | Ttype_record labels ->
         make_new_record loc (ty_desc, ty_res, labels),None
     | Ttype_abbrev body ->
@@ -147,9 +144,19 @@ let type_typedecl env loc decl =
 let type_excdecl env loc decl =
   push_type_level();
   reset_type_expression_vars ();
-  let cd = make_new_variant true loc (tref_exn, type_exn, [decl]) in
-  let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  let name = fst cd in
+  let (constr_name, args) = decl in
+  let ty_args = List.map (type_of_type_expression true) args in
+  let constr_tag = ConstrExtensible(Pdot(Pident !current_unit, constr_name),
+                                    new_exc_stamp()) in
+  let cd =
+    constr_name,
+    { cs_res = type_exn;
+      cs_args = ty_args;
+      cs_arity = List.length ty_args;
+      cs_tag = constr_tag }
+  in
+  pop_type_level ();
+  List.iter generalize_type ty_args;
   let id = Id.create (fst cd) in
   let env = Env.add_exception id (snd cd) env in
   (id, snd cd), env
