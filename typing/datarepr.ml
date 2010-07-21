@@ -52,8 +52,7 @@ let label_descrs ty_res lbls =
             lbl_pos = num} in
         all_labels.(num) <- lbl;
         (name, lbl) :: describe_labels (num+1) rest in
-  describe_labels 0 lbls;
-  Array.to_list all_labels
+  describe_labels 0 lbls
 
 (*
 let labels_of_type ty_path decl =

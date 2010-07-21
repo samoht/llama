@@ -15,50 +15,36 @@ let defined_global name desc =
   Pdot (Pident !current_unit, name), desc
 
 let make_new_variant loc (ty_constr, ty_res, constrs) =
-  let nbr_constrs =
-    List.length constrs in
-  let rec make_constrs constr_idx = function
-      [] -> []
-    | (constr_name, args) :: rest ->
-        let ty_args = List.map (type_of_type_expression true) args in
-        let constr_tag =
-          ConstrRegular(constr_idx, nbr_constrs) in
-      let constr_glob =
-         constr_name,
-          { cs_res = ty_res;
-            cs_args = ty_args;
-            cs_arity = List.length ty_args;
-            cs_tag = constr_tag; }
-      in
-        constr_glob :: make_constrs (succ constr_idx) rest
+  let constrs =
+    List.map
+      (fun (constr_name, args) ->
+         let ty_args = List.map (type_of_type_expression true) args in
+         (constr_name, ty_args))
+      constrs
   in
-    let constructors = make_constrs 0 constrs in
-      pop_type_level();
-      generalize_type ty_res;
-      List.iter
-        (fun cstr -> List.iter generalize_type (snd cstr).cs_args)
-        constructors;
-      Type_variant constructors
+  let constructors = Datarepr.constructor_descrs ty_res constrs in
+  pop_type_level();
+  generalize_type ty_res;
+  List.iter
+    (fun cstr -> List.iter generalize_type (snd cstr).cs_args)
+    constructors;
+  Type_variant constructors
 
 let make_new_record loc (ty_constr, ty_res, labels) =
-  let rec make_labels i = function
-    [] -> []
-  | (name, typexp, mut_flag) :: rest ->
-      let ty_arg = type_of_type_expression true typexp in
-      let lbl_glob =
-         name,
-          { lbl_res = ty_res; lbl_arg = ty_arg;
-            lbl_mut = mut_flag; lbl_pos = i }
-      in
-        lbl_glob :: make_labels (succ i) rest in
-  let labels = make_labels 0 labels in
-    pop_type_level();
-    generalize_type ty_res;
-    List.iter
-      (function lbl -> generalize_type (snd lbl).lbl_arg)
-      labels;
-    Type_record labels
-;;
+  let labels =
+    List.map
+      (fun (name, typexp, mut_flag) ->
+         let ty_arg = type_of_type_expression true typexp in
+         (name, mut_flag, ty_arg))
+      labels
+  in
+  let labels = Datarepr.label_descrs ty_res labels in
+  pop_type_level();
+  generalize_type ty_res;
+  List.iter
+    (function lbl -> generalize_type (snd lbl).lbl_arg)
+    labels;
+  Type_record labels
     
 let make_new_abbrev (ty_constr, ty_params, body) =
   let ty_body = type_of_type_expression true body in
@@ -66,7 +52,6 @@ let make_new_abbrev (ty_constr, ty_params, body) =
     generalize_type ty_body;
     List.iter generalize_type ty_params;
     Type_abstract, Some ty_body
-;;
 
 let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
@@ -86,7 +71,6 @@ let define_new_type loc (ty_desc, ty_params, def) =
   (snd ty_desc).type_kind <- type_comp;
   (snd ty_desc).type_manifest <- manifest;
   (ty_res, type_comp)
-;;
 
 let type_typedecl env loc decl =
   (* Create identifiers. *)
