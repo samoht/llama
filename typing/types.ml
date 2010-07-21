@@ -112,3 +112,5 @@ let path_of_module = function
     
 let path_of_type ty = Pdot(path_of_module ty.type_module, ty.type_name)
 let path_of_value v = Pdot(path_of_module v.val_module, v.val_name)
+let path_of_constructor c = Pdot(path_of_module c.cs_parent.type_module, c.cs_name)
+let path_of_label lbl = Pdot(path_of_module lbl.lbl_parent.type_module, lbl.lbl_name)

@@ -118,11 +118,11 @@ let rec translate_expr env =
   | Texp_ident(Zglobal g) ->
       (match g.info.val_kind with
         Val_reg ->
-          Lprim(Pget_global g.qualid, [])
+          Lprim(Pget_global (path_of_value g.info), [])
          | Val_prim p ->
              let arity = p.prim_arity in
              if arity = 0 then
-               Lprim(Pget_global g.qualid, []) (* xxx *)
+               Lprim(Pget_global (path_of_value g.info), []) (* xxx *)
              else
                let rec make_fct args n =
                  if n >= arity
@@ -226,7 +226,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> Path.same cstr.qualid path_void | _ -> false
+                       Texp_construct(cstr,[]) -> Path.same (path_of_constructor cstr.info) path_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
   | Texp_while(econd, ebody) ->

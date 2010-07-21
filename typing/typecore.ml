@@ -294,7 +294,7 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) -> Path.same cstr.qualid path_void | _ -> false
+         with Texp_construct (cstr,[]) -> Path.same (path_of_constructor cstr.info) path_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit
@@ -404,7 +404,7 @@ and type_expect env exp expected_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if Path.same cstr.qualid path_format
+            if Path.same (path_of_type cstr.info)path_format
             then type_format exp.exp_loc s
             else type_string
         | _ ->

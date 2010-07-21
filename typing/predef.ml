@@ -19,7 +19,7 @@ let doref (p,d) = {qualid=p; info=d}
 (* Some types that must be known to the type checker *)
 
 let mkty ?(m=Module_builtin) nm params =
-  { type_module = Module_builtin;
+  { type_module = m;
     type_name = nm;
     type_params = params;
     type_arity = List.length params;

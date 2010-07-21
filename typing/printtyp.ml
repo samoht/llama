@@ -79,7 +79,7 @@ and print_out_type_2 ppf ty =
 and print_simple_out_type ppf ty =
   match ty.typ_desc with
   | Tconstr (id, tyl) ->
-      fprintf ppf "@[%a%a@]" print_typargs tyl qualid id.qualid
+      fprintf ppf "@[%a%a@]" print_typargs tyl qualid (path_of_type id.info)
 (*| Tvar -> fprintf ppf "'%s%s" (if ng then "_" else "") s *)
   | Tarrow _ | Tproduct _ ->
       fprintf ppf "@[<1>(%a)@]" print_out_type ty

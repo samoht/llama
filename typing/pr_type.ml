@@ -7,14 +7,14 @@ open Module;;
 open Predef
 
 let output_path oc p = output_string oc (Path.name p)
-
+(*
 let output_global oc gl =
   output_path oc gl.qualid
-
-let output_type_constr = output_global
-and output_value = output_global
-and output_constr = output_global
-and output_label = output_global
+*)
+let output_type_constr oc x = output_path oc (path_of_type x.info)
+let output_value oc x = output_path oc (path_of_value x.info)
+and output_constr oc x= output_path oc (path_of_constructor x.info)
+and output_label oc x= output_path oc (path_of_label x.info)
 
 
 let int_to_alpha i =
@@ -67,7 +67,7 @@ let rec output_typ oc sch priority ty =
           output_typ_list oc sch 0 ", " tyl;
           output_string oc ") "
       end;
-      output_global oc cstr
+      output_type_constr oc cstr
 
 and output_typ_list oc sch priority sep = function
     [] ->

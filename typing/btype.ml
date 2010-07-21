@@ -223,13 +223,13 @@ let check_recursive_abbrev cstr =
         | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
         | Tproduct tlist -> List.iter (check_abbrev seen) tlist
         | Tconstr(c, tlist) ->
-            if List.exists (Path.same c.qualid) seen then
+            if List.exists (Path.same (path_of_type c.info)) seen then
               raise Recursive_abbrev
             else begin
               List.iter (check_abbrev seen) tlist;
               begin match c.info.type_manifest with
                 None -> ()
-              | Some( body) -> check_abbrev (c.qualid :: seen) body
+              | Some( body) -> check_abbrev (path_of_type c.info :: seen) body
               end
             end
       in check_abbrev [fst cstr] body

@@ -96,9 +96,9 @@ let rec print_val prio depth obj ty =
         close_box()
     | Tconstr({info = {type_manifest=Some body;type_params=params}}, ty_list) ->
         print_val prio depth obj (expand_abbrev params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid path_list ->
+    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type  cstr.info) path_list ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid path_vect ->
+    | Tconstr(cstr, [ty_arg]) when Path.same (path_of_type cstr.info) path_vect ->
         print_vect depth obj ty_arg
     | Tconstr(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
@@ -116,11 +116,11 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
-          if Path.same cstr.qualid path_exn
+          if Path.same (path_of_type cstr.info) path_exn
           then find_exception tag
           else
             let cs = find_constr tag constr_list in
-            adj_path cstr.qualid cs.cs_name, cs
+            adj_path (path_of_type cstr.info) cs.cs_name, cs
         in
         let (ty_args, ty_res) =
           instance_constructor (snd constr) in
@@ -159,7 +159,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
   | Type_record label_list ->
       let label_list =
         List.map
-          (fun(lbl) -> adj_path cstr.qualid lbl.lbl_name, lbl)
+          (fun(lbl) -> adj_path (path_of_type cstr.info) lbl.lbl_name, lbl)
           label_list
       in
       let print_field depth lbl =

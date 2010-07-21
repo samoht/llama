@@ -77,7 +77,7 @@ let rec simple_pat q pss = match pss with
 | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
     make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.pat_type
 | (({pat_desc = Tpat_record((lbl1,_)::_)} as p)::_)::pss ->
-    let ty_path = lbl1.qualid in
+    let ty_path = path_of_type lbl1.info.lbl_parent in
     let ty_record = lbl1.info.lbl_parent in
     let labels = Ctype.labels_of_type ty_record in
     make_pat(Tpat_record (List.map (fun lbl -> {qualid=ty_path;info=lbl},omega) labels)) p.pat_type
