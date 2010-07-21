@@ -104,3 +104,11 @@ and rec_status =
     Rec_not
   | Rec_first
   | Rec_next
+
+let path_of_module = function
+    Module_builtin -> Pident("builtin")
+  | Module n -> Pident(n)
+  | Module_toplevel -> Pident("top")
+    
+let path_of_type ty = Pdot(path_of_module ty.type_module, ty.type_name)
+let path_of_value v = Pdot(path_of_module v.val_module, v.val_name)
