@@ -6,8 +6,8 @@ open Btype;;
 open Module;;
 open Format;;
 
-let print_global gl =
-  begin match gl.qualid with
+  let print_path p =
+  begin match p with
     | Pdot(mn,s) ->
         if mn <> "builtin" then begin
           print_string mn;
@@ -15,6 +15,8 @@ let print_global gl =
         end;
         print_string s
   end
+
+let print_global gl = print_path (fst gl)
 
 let output_type_constr = print_global
 and output_value = print_global
@@ -80,7 +82,7 @@ let rec print_typ priority ty =
           close_box();
           print_space()
       end;
-      print_global cstr;
+      print_path cstr.qualid;
       close_box()
 
 and print_typ_list priority sep = function

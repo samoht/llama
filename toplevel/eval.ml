@@ -83,9 +83,9 @@ let rec term_of_expr c expr =
     | Texp_function [([{pat_desc=Tpat_var s}],e)] ->
         Lambda (term_of_expr (s::c) e)
     | Texp_ifthenelse (i, t, e) ->
-        app3 (Match constr_type_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
+        app3 (Match (doref constr_type_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
-        Ctor constr_void
+        Ctor (doref constr_void)
     | Texp_constraint (e, _) ->
         term_of_expr c e
     | Texp_array l ->
@@ -111,7 +111,7 @@ let rec eval env tm =
         List.nth env i
     | App (App (Prim Psequor, x), y) ->
         begin match scrutinize (eval env x) with
-          | 0 -> Ctor constr_false
+          | 0 -> Ctor (doref constr_false)
           | 1 -> eval env y
           | _ -> assert false
         end

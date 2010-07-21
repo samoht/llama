@@ -70,10 +70,10 @@ let read_pers_struct modname filename =
           | Gen_type (s,gl) ->
               Hashtbl.add ps.mod_types s gl;
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_constrs (little_id gl.qualid) gl.info)
+                (fun (p,gl) -> Hashtbl.add ps.mod_constrs (little_id p) gl)
                 (constructors_of_type gl);
               List.iter
-                (fun gl -> Hashtbl.add ps.mod_labels (little_id gl.qualid) gl.info)
+                (fun (p,gl) -> Hashtbl.add ps.mod_labels (little_id p) gl)
                 (labels_of_type gl)
         end
       end
@@ -170,14 +170,14 @@ let store_type s path info env =
   { env with
     constrs =
       List.fold_right
-        (fun (descr) constrs ->
-          Id.add (little_id descr.qualid) (descr.qualid,descr.info) constrs)
+        (fun (p,descr) constrs ->
+          Id.add (little_id p) (p,descr) constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
-        (fun (descr) labels ->
-          Id.add (little_id descr.qualid) (descr.qualid,descr.info) labels)
+        (fun (p,descr) labels ->
+          Id.add (little_id p) (p,descr) labels)
         (labels_of_type info)
         env.labels;
     types = Id.add id (path,info) env.types }

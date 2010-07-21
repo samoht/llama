@@ -10,13 +10,12 @@ let little_id = function
 
 module Path = struct
   type t = qualified_ident
+  let same p1 p2 = (p1 = p2)
 end
 
-type 'a record =
+type 'a reference =
   { qualid: qualified_ident; (* Full name *)
     info: 'a }               (* Description *)
-
-type 'a reference = 'a record
 
 type constr_tag =
     ConstrExtensible of qualified_ident * int (* name of constructor & stamp *)
@@ -58,8 +57,8 @@ and typ_link =
 
 and type_kind =
     Type_abstract
-  | Type_variant of constructor record list (* Sum type -> list of constr. *)
-  | Type_record of label record list (* Record type -> list of labels *)
+  | Type_variant of (Path.t * constructor) list (* Sum type -> list of constr. *)
+  | Type_record of (Path.t * label) list (* Record type -> list of labels *)
 
 (* Value constructors *)
 

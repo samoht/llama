@@ -221,7 +221,7 @@ let type_format loc fmt =
             bad_format_letter loc c
         end
     | _ -> scan_format (succ i) in
-  {typ_desc=Tconstr(constr_type_format, [scan_format 0; ty_input; ty_result]);
+  {typ_desc=Tconstr(doref constr_type_format, [scan_format 0; ty_input; ty_result]);
    typ_level=notgeneric}
 ;;
 
@@ -294,7 +294,7 @@ let rec type_expr env expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) -> cstr == constr_void | _ -> false
+         with Texp_construct (cstr,[]) -> Path.same cstr.qualid (fst constr_void) | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit
@@ -400,7 +400,7 @@ and type_expect env exp expected_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if cstr = constr_type_format
+            if Path.same cstr.qualid (fst constr_type_format)
             then type_format exp.exp_loc s
             else type_string
         | _ ->

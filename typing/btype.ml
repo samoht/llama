@@ -7,11 +7,7 @@ open Types;;
 (* Type constructor equality *)
 
 let same_type_constr cstr1 cstr2 =
-(*
-  cstr1.info.ty_stamp == cstr2.info.ty_stamp &&
-  cstr1.qualid.qual = cstr2.qualid.qual
-*)
-  cstr1.qualid = cstr2.qualid
+  Path.same cstr1.qualid cstr2.qualid
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -237,7 +233,7 @@ let rec same_base_type ty base_ty =
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  match cstr.info.ty_abbr with
+  match (snd cstr).ty_abbr with
     Tnotabbrev -> ()
   | Tabbrev(params, body) ->
       let rec check_abbrev seen ty =
@@ -246,14 +242,14 @@ let check_recursive_abbrev cstr =
         | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
         | Tproduct tlist -> List.iter (check_abbrev seen) tlist
         | Tconstr(c, tlist) ->
-            if List.memq c seen then
+            if List.exists (Path.same c.qualid) seen then
               raise Recursive_abbrev
             else begin
               List.iter (check_abbrev seen) tlist;
               begin match c.info.ty_abbr with
                 Tnotabbrev -> ()
-              | Tabbrev(params, body) -> check_abbrev (c :: seen) body
+              | Tabbrev(params, body) -> check_abbrev (c.qualid :: seen) body
               end
             end
-      in check_abbrev [cstr] body
+      in check_abbrev [fst cstr] body
 ;;

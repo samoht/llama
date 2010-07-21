@@ -5,7 +5,7 @@ open Types;;
 let current_unit = ref ""
 
 let defined_global name desc =
-  { qualid = Pdot( !current_unit, name); info = desc }
+  Pdot (!current_unit, name), desc
 
 let next_type_stamp = ref 1
 let next_exc_stamp = ref 1

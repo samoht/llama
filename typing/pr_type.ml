@@ -5,8 +5,8 @@ open Types;;
 open Btype;;
 open Module;;
 
-let output_global oc gl =
-  begin match gl.qualid with
+let output_path oc p =
+  begin match p with
     | Pdot(mn, s) ->
         if mn <> "builtin" then begin
           output_string oc mn;
@@ -15,10 +15,14 @@ let output_global oc gl =
         output_string oc s
   end
 
+let output_global oc gl =
+  output_path oc gl.qualid
+
 let output_type_constr = output_global
 and output_value = output_global
 and output_constr = output_global
 and output_label = output_global
+
 
 let int_to_alpha i =
   if i < 26

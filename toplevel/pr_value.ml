@@ -17,7 +17,7 @@ let rec find_constr tag = function
     [] ->
       raise Constr_not_found
   | constr::rest ->
-      match constr.info.cs_tag with
+      match (snd constr).cs_tag with
         ConstrRegular(t, _) ->
           if t == tag then constr else find_constr tag rest
       | ConstrExtensible _ ->
@@ -34,7 +34,7 @@ let find_exception tag =
   | constr :: rest ->
       match constr.cs_tag with
         ConstrExtensible(qualid,st) ->
-          if st == stamp then {qualid=qualid;info=constr} else select_exn rest
+          if st == stamp then qualid, constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
   let Pdot(mn,s) = qualid in
@@ -95,9 +95,9 @@ let rec print_val prio depth obj ty =
         close_box()
     | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, ty_list) ->
         print_val prio depth obj (expand_abbrev params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when same_type_constr cstr constr_type_list ->
+    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid (fst constr_type_list) ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when same_type_constr cstr constr_type_vect ->
+    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid (fst constr_type_vect) ->
         print_vect depth obj ty_arg
     | Tconstr(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
@@ -115,19 +115,19 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
-          if same_type_constr cstr constr_type_exn
+          if Path.same cstr.qualid (fst constr_type_exn)
           then find_exception tag
           else find_constr tag constr_list in
         let (ty_args, ty_res) =
-          instance_constructor constr.info in
+          instance_constructor (snd constr) in
         filter (ty_res, ty);
-        match constr.info.cs_arity with
+        match (snd constr).cs_arity with
           0 ->
-            output_constr constr
+            print_path (fst constr)
         | 1 ->
             if prio > 1 then begin open_box 2; print_string "(" end
              else open_box 1;
-            output_constr constr;
+            print_path (fst constr);
             print_space();
             cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
             if prio > 1 then print_string ")";
@@ -135,7 +135,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         | n ->
             if prio > 1 then begin open_box 2; print_string "(" end
             else open_box 1;
-            output_constr constr;
+            print_path (fst constr);
             print_space();
             open_box 1;
             print_string "(";
@@ -155,17 +155,17 @@ and print_concrete_type prio depth obj cstr ty ty_list =
   | Type_record label_list ->
       let print_field depth lbl =
         open_box 1;
-        output_label lbl;
+        print_path (fst lbl);
         print_string " ="; print_space();
         let (ty_res, ty_arg) =
-          type_pair_instance (lbl.info.lbl_res, lbl.info.lbl_arg) in
+          type_pair_instance ((snd lbl).lbl_res, (snd lbl).lbl_arg) in
         begin try
           filter (ty_res, ty)
         with OldUnify ->
           fatal_error "print_val: types should match"
         end;
         cautious (print_val 0 (depth - 1)
-                 (Llama_obj.field obj lbl.info.lbl_pos)) ty_arg;
+                 (Llama_obj.field obj (snd lbl).lbl_pos)) ty_arg;
         close_box() in
       let print_fields depth label_list =
           let rec loop depth b = function

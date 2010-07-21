@@ -20,20 +20,20 @@ let print_valdef env =
   flush stdout
 ;;
 
-let print_constr_decl cstr =
-  match cstr.info.cs_arity with
+let print_constr_decl (p,cstr) =
+  match cstr.cs_arity with
     0 ->
-      printf "%s\n" (little_id cstr.qualid)
+      printf "%s\n" (little_id p)
   | _ ->
       printf "%s of %a\n"
-        (little_id cstr.qualid)
-             output_type (Predef.type_product cstr.info.cs_args)
+        (little_id p)
+             output_type (Predef.type_product cstr.cs_args)
 ;;
 
-let print_label_decl lbl =
+let print_label_decl (p,lbl) =
   printf "%s%s : %a\n"
-         (match lbl.info.lbl_mut with Mutable -> "mutable " | _ -> "")
-    (little_id lbl.qualid) output_type lbl.info.lbl_arg
+         (match lbl.lbl_mut with Mutable -> "mutable " | _ -> "")
+    (little_id p) output_type lbl.lbl_arg
 ;;
 
 let print_one_typedecl (newthing, (ty_res, ty_comp)) =

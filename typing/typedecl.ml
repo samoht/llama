@@ -10,6 +10,8 @@ open Btype;;
 open Error;;
 open Typecore;;
 
+let splitit gl = gl.qualid, gl.info
+
 let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
   let nbr_constrs =
     List.length constrs in
@@ -36,10 +38,9 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
       pop_type_level();
       generalize_type ty_res;
       List.iter
-        (fun cstr -> List.iter generalize_type cstr.info.cs_args)
+        (fun cstr -> List.iter generalize_type (snd cstr).cs_args)
         constructors;
       Type_variant constructors
-;;
 
 let make_new_record loc (ty_constr, ty_res, labels) =
   let rec make_labels i = function
@@ -56,7 +57,7 @@ let make_new_record loc (ty_constr, ty_res, labels) =
     pop_type_level();
     generalize_type ty_res;
     List.iter
-      (function lbl -> generalize_type lbl.info.lbl_arg)
+      (function lbl -> generalize_type (snd lbl).lbl_arg)
       labels;
     Type_record labels
 ;;
@@ -66,14 +67,14 @@ let make_new_abbrev (ty_constr, ty_params, body) =
     pop_type_level();
     generalize_type ty_body;
     List.iter generalize_type ty_params;
-    ty_constr.info.ty_abbr <- Tabbrev(ty_params, ty_body);
+    (snd ty_constr).ty_abbr <- Tabbrev(ty_params, ty_body);
     Type_abstract, Some ty_body
 ;;
 
 let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
   let ty_res =
-    { typ_desc = Tconstr(ty_desc, ty_params);
+    { typ_desc = Tconstr(doref ty_desc, ty_params);
       typ_level = notgeneric} in
   let type_comp,manifest =
     match def with
@@ -85,8 +86,8 @@ let define_new_type loc (ty_desc, ty_params, def) =
         make_new_record loc (ty_desc, ty_res, labels),None
     | Ttype_abbrev body ->
         make_new_abbrev (ty_desc, ty_params, body) in
-  ty_desc.info.type_kind <- type_comp;
-  ty_desc.info.type_manifest <- manifest;
+  (snd ty_desc).type_kind <- type_comp;
+  (snd ty_desc).type_manifest <- manifest;
   (ty_res, type_comp)
 ;;
 
@@ -112,7 +113,7 @@ let type_typedecl env loc decl =
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
-         temp_env := Env.store_type (little_id ty_desc.qualid) ty_desc.qualid ty_desc.info !temp_env;
+         temp_env := Env.store_type (little_id (fst ty_desc)) (fst ty_desc) (snd ty_desc) !temp_env;
          ty_desc)
       decl
   in
@@ -126,13 +127,13 @@ let type_typedecl env loc decl =
   in
   List.iter2
     begin fun (_, _, tk) desc ->
-      ignore (define_new_type loc (desc, desc.info.type_params, tk));
+      ignore (define_new_type loc (desc, (snd desc).type_params, tk));
     end
     decl newdecl;
   let final_env = ref env in
   List.iter
     (fun ty_desc ->
-       final_env := Env.store_type (little_id ty_desc.qualid) ty_desc.qualid ty_desc.info !final_env)
+       final_env := Env.store_type (little_id (fst ty_desc)) (fst ty_desc) (snd ty_desc) !final_env)
     newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -150,7 +151,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  let env = Env.store_exception (little_id cd.qualid) cd.qualid cd.info env in
+  let env = Env.store_exception (little_id (fst cd)) (fst cd) (snd cd) env in
   cd, env
 
 let type_valuedecl env loc name typexp prim =
@@ -160,7 +161,7 @@ let type_valuedecl env loc name typexp prim =
   pop_type_level();
   generalize_type ty;
   let vd = defined_global name { val_type = ty; val_kind = prim } in
-  let env = Env.store_value (little_id  vd.qualid) vd.qualid vd.info env in
+  let env = Env.store_value (little_id (fst vd)) (fst vd) (snd vd) env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -174,7 +175,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
          let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
-         env := Env.store_value (little_id vd.qualid) vd.qualid vd.info !env;
+         env := Env.store_value (little_id (fst vd)) (fst vd) (snd vd) !env;
          vd) c
     in
     !env, vds

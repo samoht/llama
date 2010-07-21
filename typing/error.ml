@@ -195,7 +195,7 @@ let label_multiply_defined_err exp lbl =
 let label_undefined_err exp lbl =
   eprintf "%aThe label %a is not defined in this record.\n"
     output_location exp.exp_loc
-    output_label lbl;
+    output_path (fst lbl);
   raise Toplevel
 ;;
 
@@ -271,7 +271,7 @@ let type_decl_arity_err loc ty_desc1 ty_desc2 =
 let recursive_abbrev_err loc ty_cstr =
   eprintf "%aThe type abbreviation %a is a cyclic (infinite) type.\n"
     output_location loc 
-    output_type_constr ty_cstr;
+    output_path (fst  ty_cstr);
   raise Toplevel
 ;;
 
