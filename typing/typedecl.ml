@@ -22,7 +22,7 @@ let make_new_variant loc (ty_constr, ty_res, constrs) =
          (constr_name, ty_args))
       constrs
   in
-  let constructors = Datarepr.constructor_descrs ty_res constrs in
+  let constructors = Datarepr.constructor_descrs (snd ty_constr) ty_res constrs in
   pop_type_level();
   generalize_type ty_res;
   List.iter
@@ -38,7 +38,7 @@ let make_new_record loc (ty_constr, ty_res, labels) =
          (name, mut_flag, ty_arg))
       labels
   in
-  let labels = Datarepr.label_descrs ty_res labels in
+  let labels = Datarepr.label_descrs (snd ty_constr) ty_res labels in
   pop_type_level();
   generalize_type ty_res;
   List.iter
@@ -133,7 +133,9 @@ let type_excdecl env loc decl =
                                     new_exc_stamp()) in
   let cd =
     constr_name,
-    { cs_res = type_exn;
+    { cs_parent = snd tref_exn;
+      cs_name = constr_name;
+      cs_res = type_exn;
       cs_args = ty_args;
       cs_arity = List.length ty_args;
       cs_tag = constr_tag }

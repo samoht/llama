@@ -51,7 +51,9 @@ and type_kind =
 (* Value constructors *)
 
 and constructor =
-  { cs_res: core_type;                       (* Result type *)
+  { cs_parent: type_constructor;
+    cs_name: string;
+    cs_res: core_type;                       (* Result type *)
     cs_args: core_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
     cs_tag: constr_tag }               (* Its run-time tag *)
@@ -59,7 +61,9 @@ and constructor =
 (* Labels *)
 
 and label =
-  { lbl_res: core_type;                      (* Result type *)
+  { lbl_parent: type_constructor;
+    lbl_name: string;
+    lbl_res: core_type;                      (* Result type *)
     lbl_arg: core_type;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)

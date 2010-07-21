@@ -43,6 +43,8 @@ typing/ctype.cmo: typing/types.cmx typing/path.cmx utils/misc.cmx \
     typing/id.cmi typing/btype.cmx 
 typing/ctype.cmx: typing/types.cmx typing/path.cmx utils/misc.cmx \
     typing/id.cmx typing/btype.cmx 
+typing/datarepr.cmo: typing/types.cmx 
+typing/datarepr.cmx: typing/types.cmx 
 typing/env.cmo: typing/types.cmx typing/typedtree.cmi typing/path.cmx \
     utils/misc.cmx parsing/longident.cmi parsing/location.cmi typing/id.cmi \
     parsing/asttypes.cmi typing/env.cmi 
@@ -116,11 +118,11 @@ typing/typecore.cmx: typing/types.cmx typing/typedtree_aux.cmx \
 typing/typedecl.cmo: typing/types.cmx typing/typedtree.cmi \
     typing/typecore.cmx typing/resolve.cmx typing/predef.cmx typing/path.cmx \
     typing/module.cmi typing/id.cmi typing/error.cmx typing/env.cmi \
-    typing/btype.cmx parsing/asttypes.cmi 
+    typing/datarepr.cmx typing/btype.cmx parsing/asttypes.cmi 
 typing/typedecl.cmx: typing/types.cmx typing/typedtree.cmi \
     typing/typecore.cmx typing/resolve.cmx typing/predef.cmx typing/path.cmx \
     typing/module.cmx typing/id.cmx typing/error.cmx typing/env.cmx \
-    typing/btype.cmx parsing/asttypes.cmi 
+    typing/datarepr.cmx typing/btype.cmx parsing/asttypes.cmi 
 typing/typedtree_aux.cmo: typing/types.cmx typing/typedtree.cmi \
     parsing/location.cmi parsing/asttypes.cmi 
 typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
@@ -192,15 +194,13 @@ compiler/front.cmo: typing/types.cmx typing/typedtree_aux.cmx \
     typing/primitive.cmx compiler/primdecl.cmx compiler/prim.cmx \
     typing/predef.cmx typing/path.cmx typing/module.cmi utils/misc.cmx \
     compiler/matching.cmx compiler/lambda.cmx typing/id.cmi \
-    compiler/event.cmx typing/error.cmx typing/ctype.cmx typing/btype.cmx \
-    parsing/asttypes.cmi 
+    compiler/event.cmx typing/error.cmx typing/ctype.cmx parsing/asttypes.cmi 
 compiler/front.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     typing/typedtree.cmi compiler/trstream.cmx compiler/tr_env.cmx \
     typing/primitive.cmx compiler/primdecl.cmx compiler/prim.cmx \
     typing/predef.cmx typing/path.cmx typing/module.cmx utils/misc.cmx \
     compiler/matching.cmx compiler/lambda.cmx typing/id.cmx \
-    compiler/event.cmx typing/error.cmx typing/ctype.cmx typing/btype.cmx \
-    parsing/asttypes.cmi 
+    compiler/event.cmx typing/error.cmx typing/ctype.cmx parsing/asttypes.cmi 
 compiler/instruct.cmo: typing/types.cmx compiler/prim.cmx typing/path.cmx \
     compiler/lambda.cmx parsing/asttypes.cmi 
 compiler/instruct.cmx: typing/types.cmx compiler/prim.cmx typing/path.cmx \

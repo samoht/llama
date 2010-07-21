@@ -104,7 +104,9 @@ let type_format t1 t2 t3 =
 
 let constr_void =
   Id.create "()",
-    { cs_res = {typ_desc=Tconstr(doref tref_unit,[]); typ_level=notgeneric};
+    { cs_parent = snd tref_unit;
+      cs_name = "()";
+      cs_res = {typ_desc=Tconstr(doref tref_unit,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(0,1); }
 ;;
@@ -112,7 +114,9 @@ let constr_void =
 let constr_nil =
   let arg = list_tyvar in
    Id.create "[]",
-    { cs_res = {typ_desc=Tconstr(doref tref_list, [arg]); typ_level=generic};
+    { cs_parent = snd tref_list;
+      cs_name = "[]";
+      cs_res = {typ_desc=Tconstr(doref tref_list, [arg]); typ_level=generic};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(0,2); }
 
@@ -120,7 +124,9 @@ and constr_cons =
   let arg1 = list_tyvar in
   let arg2 = {typ_desc=Tconstr(doref tref_list, [arg1]); typ_level=generic} in
    Id.create "::",
-    { cs_res = arg2;
+  { cs_parent = snd tref_list;
+    cs_name = "::";
+    cs_res = arg2;
       cs_args = [arg1;arg2]; cs_arity = 2; 
       cs_tag = ConstrRegular(1,2); }
 ;;
@@ -128,7 +134,9 @@ and constr_cons =
 let constr_none =
   let arg = option_tyvar in
    Id.create "None",
-    { cs_res =
+    { cs_parent = snd tref_option;
+      cs_name = "None";
+      cs_res =
        {typ_desc=Tconstr(doref tref_option, [arg]); typ_level=generic};
       cs_args = []; cs_arity = 0; 
       cs_tag = ConstrRegular(0,2); }
@@ -136,7 +144,9 @@ let constr_none =
 and constr_some =
   let arg = option_tyvar in
    Id.create "Some",
-    { cs_res =
+    { cs_parent = snd tref_option;
+      cs_name = "Some";
+      cs_res =
        {typ_desc=Tconstr(doref tref_option, [arg]); typ_level=generic};
       cs_args = [arg]; cs_arity = 1;
       cs_tag = ConstrRegular(1,2); }
@@ -144,13 +154,17 @@ and constr_some =
 
 let constr_false =
   Id.create "false",
-    { cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};
+    { cs_parent = snd tref_bool;
+      cs_name = "false";
+      cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0; 
       cs_tag = ConstrRegular(0,2); }
 
 and constr_true =
   Id.create  "true",
-    { cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};
+    { cs_parent = snd tref_bool;
+      cs_name = "true";
+      cs_res = {typ_desc=Tconstr(doref tref_bool,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(1,2); }
 
@@ -161,7 +175,9 @@ let match_failure_tag =
 
 let constr_match_failure =
   builtin "Match_failure"
-    { cs_res = {typ_desc=Tconstr(doref tref_exn,[]); typ_level=notgeneric};
+    { cs_parent = snd tref_exn;
+      cs_name = "Match_failure";
+      cs_res = {typ_desc=Tconstr(doref tref_exn,[]); typ_level=notgeneric};
       cs_args = [type_string; type_int; type_int]; cs_arity = 3;
       cs_tag = match_failure_tag; }
 

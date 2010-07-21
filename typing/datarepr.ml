@@ -2,7 +2,7 @@ open Types
 
 let newgenty desc = {typ_desc=desc;typ_level=generic}
 
-let constructor_descrs ty_res cstrs =
+let constructor_descrs ty_desc ty_res cstrs =
   let n = List.length cstrs in
   let rec describe_constructors idx = function
       [] -> []
@@ -12,7 +12,9 @@ let constructor_descrs ty_res cstrs =
               _ -> (ConstrRegular (idx, n),
                     describe_constructors (idx+1) rem) in
         let cstr =
-          { cs_res = ty_res;
+          { cs_parent = ty_desc;
+            cs_name = name;
+            cs_res = ty_res;
             cs_args = ty_args;
             cs_arity = List.length ty_args;
             cs_tag = tag } in
@@ -34,23 +36,18 @@ let exception_descr path_exc decl num =
     cs_arity = List.length decl;
     cs_tag = ConstrExtensible (path_exc, num) }
 *)
-let none = {typ_desc = Tproduct []; typ_level = -1}
 
-let dummy_label =
-  { lbl_res = none; lbl_arg = none; lbl_mut = Asttypes.Notmutable;
-    lbl_pos = (-1) }
-
-let label_descrs ty_res lbls =
-  let all_labels = Array.create (List.length lbls) dummy_label in
+let label_descrs ty_desc ty_res lbls =
   let rec describe_labels num = function
       [] -> []
     | (name, mut_flag, ty_arg) :: rest ->
         let lbl =
-          { lbl_res = ty_res;
+          { lbl_parent = ty_desc;
+            lbl_name = name;
+            lbl_res = ty_res;
             lbl_arg = ty_arg;
             lbl_mut = mut_flag;
             lbl_pos = num} in
-        all_labels.(num) <- lbl;
         (name, lbl) :: describe_labels (num+1) rest in
   describe_labels 0 lbls
 
