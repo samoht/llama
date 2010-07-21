@@ -6,6 +6,11 @@ type t
 val empty : t
 val initial : t ref
 
+val find_value: Path.t -> t -> value
+val find_constructor: Path.t -> t -> constructor
+val find_label: Path.t -> t -> label
+val find_type: Path.t -> t -> type_constructor
+
 val lookup_type : Longident.t -> t -> Path.t * type_constructor
 val lookup_constructor : Longident.t -> t -> Path.t * constructor
 val lookup_label : Longident.t -> t -> Path.t * label

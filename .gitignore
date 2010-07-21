@@ -55,3 +55,4 @@ examples/pascal/cpascal
 examples/pascal/ipascal
 examples/picomach/asm
 examples/picomach/exec
+linker/more_predef.ml

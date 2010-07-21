@@ -7,6 +7,11 @@ open Printf
 open Longident
 open Path
 
+type error =
+    Illegal_renaming of string * string
+
+exception Error of error
+
 type t = {
   values: (Path.t * value) Id.tbl;
   constrs: (Path.t * constructor) Id.tbl;
@@ -61,6 +66,8 @@ let read_pers_struct modname filename =
                mod_types = Hashtbl.create 10;
                working = working }
     in
+    if ps.mod_name <> String.uncapitalize(*xxx*) modname then
+      raise(Error(Illegal_renaming(ps.mod_name, modname)));
     List.iter
       begin fun item ->
         begin match item with
@@ -79,6 +86,7 @@ let read_pers_struct modname filename =
         end
       end
       working;
+    Hashtbl.add persistent_structures modname ps;    
     ps
   with End_of_file | Failure _ ->
     close_in ic;
@@ -94,15 +102,15 @@ let find_pers_struct name =
     read_pers_struct name (find_in_path (name ^ ".zi"))
 
 (* Lookup by identifier *)
-(*
-let rec find_module_descr path env =
+
+let rec find_module path env =
   match path with
     Pident id ->
         if Id.persistent id
         then find_pers_struct (Id.name id)
         else raise Not_found
   | Pdot(p, s) ->
-      assert false
+      raise Not_found
 
 let find proj1 proj2 path env =
   match path with
@@ -110,14 +118,18 @@ let find proj1 proj2 path env =
       let (p, data) = Id.find_same id (proj1 env)
       in data
   | Pdot(p, s) ->
-      let ps = find_module_descr p env in
+      let ps = find_module p env in
       Hashtbl.find (proj2 ps) s
 
 let find_value =
   find (fun env -> env.values) (fun sc -> sc.mod_values)
 and find_type =
   find (fun env -> env.types) (fun sc -> sc.mod_types)
-*)
+and find_constructor =
+  find (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
+and find_label =
+  find (fun env -> env.labels) (fun sc -> sc.mod_labels)
+
 (* Lookup by name *)
 
 let lookup_module lid env =
@@ -134,27 +146,18 @@ let lookup proj1 proj2 lid env =
     Lident s ->
       Id.find_name s (proj1 env)
   | Ldot(l, s) ->
-      let (desc) = lookup_module l env in
-      let data = Hashtbl.find (proj2 desc) s in
-      (s, data)
-
-let lookup_simple proj1 proj2 lid env =
-  match lid with
-    Lident s ->
-      Id.find_name s (proj1 env)
-  | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
       Pdot (p, s), data
 
 let lookup_value =
-  lookup_simple (fun env -> env.values) (fun sc -> sc.mod_values)
+  lookup (fun env -> env.values) (fun sc -> sc.mod_values)
 and lookup_constructor =
-  lookup_simple (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
+  lookup (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
 and lookup_label =
-  lookup_simple (fun env -> env.labels) (fun sc -> sc.mod_labels)
+  lookup (fun env -> env.labels) (fun sc -> sc.mod_labels)
 and lookup_type =
-  lookup_simple (fun env -> env.types) (fun sc -> sc.mod_types)
+  lookup (fun env -> env.types) (fun sc -> sc.mod_types)
 
 let store_value id path decl env =
   { env with

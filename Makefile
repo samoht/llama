@@ -13,9 +13,9 @@ PARSING= parsing/location.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
 
 TYPING=typing/id.cmx typing/ident.cmx typing/path.cmx \
- typing/primitive.cmx typing/types.cmx \
- typing/btype.cmx \
- typing/env.cmx \
+ typing/primitive.cmx \
+ typing/types.cmx \
+ typing/env.cmx typing/btype.cmx \
  typing/predef.cmx \
  typing/module.cmx \
  typing/pr_type.cmx typing/pr_decl.cmx \

@@ -27,10 +27,6 @@ type type_constructor =
     mutable type_manifest : core_type option;
     mutable type_kind: type_kind }  (* Its description *)
 
-and type_abbrev =
-    Tnotabbrev
-  | Tabbrev of core_type list * core_type           (* Parameters and body *)
-
 (* Type expressions *)
 
 and core_type =
