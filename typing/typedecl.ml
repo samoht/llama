@@ -97,8 +97,8 @@ let type_typedecl env loc decl =
   (* Enter types. *)
   let temp_env = ref env in
   let newdecl =
-    List.map
-      (fun (ty_name, sparams, def) ->
+    List.map2
+      (fun id (ty_name, sparams, def) ->
          let ty_params =
            try
              bind_type_expression_vars sparams
@@ -106,21 +106,20 @@ let type_typedecl env loc decl =
              duplicate_param_in_type_decl_err loc
          in
          let ty_desc =
-           defined_global ty_name
              { type_arity = List.length ty_params;
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
-         temp_env := Env.store_type (little_id (fst ty_desc)) (fst ty_desc) (snd ty_desc) !temp_env;
-         ty_desc)
-      decl
+         temp_env := Env.add_type id ty_desc !temp_env;
+         defined_global ty_name ty_desc)
+      id_list decl
   in
   let temp_env = !temp_env in
   (* Translate each declaration. *)
   let decl =
     List.map2
-      (fun (name, params, tk) desc -> (name, params,
-                                       Resolve.type_kind temp_env [] tk))
+      (fun (name, params, tk) desc ->
+         (name, params, Resolve.type_kind temp_env [] tk))
       decl newdecl
   in
   List.iter2
@@ -129,10 +128,10 @@ let type_typedecl env loc decl =
     end
     decl newdecl;
   let final_env = ref env in
-  List.iter
-    (fun ty_desc ->
-       final_env := Env.store_type (little_id (fst ty_desc)) (fst ty_desc) (snd ty_desc) !final_env)
-    newdecl;
+  List.iter2
+    (fun id ty_desc ->
+       final_env := Env.add_type id (snd ty_desc) !final_env)
+    id_list newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
     begin fun desc ->

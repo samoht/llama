@@ -252,4 +252,3 @@ let check_recursive_abbrev cstr =
               end
             end
       in check_abbrev [fst cstr] body
-;;
