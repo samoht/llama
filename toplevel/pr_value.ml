@@ -95,9 +95,9 @@ let rec print_val prio depth obj ty =
         close_box()
     | Tconstr({info = {type_manifest=Some body;type_params=params}}, ty_list) ->
         print_val prio depth obj (expand_abbrev params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid (fst constr_type_list) ->
+    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid path_list ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid (fst constr_type_vect) ->
+    | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid path_vect ->
         print_vect depth obj ty_arg
     | Tconstr(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
@@ -115,7 +115,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
-          if Path.same cstr.qualid (fst constr_type_exn)
+          if Path.same cstr.qualid path_exn
           then find_exception tag
           else
             let id,d = find_constr tag constr_list in

@@ -146,7 +146,7 @@ let type_typedecl env loc decl =
 let type_excdecl env loc decl =
   push_type_level();
   reset_type_expression_vars ();
-  let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
+  let cd = make_new_variant true loc (tref_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
   let name = fst cd in
   let id = Id.create (fst cd) in

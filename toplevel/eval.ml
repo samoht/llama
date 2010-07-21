@@ -83,7 +83,7 @@ let rec term_of_expr c expr =
     | Texp_function [([{pat_desc=Tpat_var s}],e)] ->
         Lambda (term_of_expr (s::c) e)
     | Texp_ifthenelse (i, t, e) ->
-        app3 (Match (doref constr_type_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
+        app3 (Match (doref tref_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
         Ctor {qualid=path_void; info = snd constr_void}
     | Texp_constraint (e, _) ->

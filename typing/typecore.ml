@@ -221,7 +221,7 @@ let type_format loc fmt =
             bad_format_letter loc c
         end
     | _ -> scan_format (succ i) in
-  {typ_desc=Tconstr(doref constr_type_format, [scan_format 0; ty_input; ty_result]);
+  {typ_desc=Tconstr(doref tref_format, [scan_format 0; ty_input; ty_result]);
    typ_level=notgeneric}
 ;;
 
@@ -400,7 +400,7 @@ and type_expect env exp expected_ty =
         match (type_repr expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if Path.same cstr.qualid (fst constr_type_format)
+            if Path.same cstr.qualid path_format
             then type_format exp.exp_loc s
             else type_string
         | _ ->
