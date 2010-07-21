@@ -22,7 +22,7 @@ let values id vd1 vd2 =
   try
     Includecore.values vd1 vd2
   with Includecore.Dont_match ->
-    Error.type_mismatch_err id vd2 vd1
+    Error.type_mismatch_err (Id.name id) vd2 vd1
 (*    raise(Error[Value_descriptions(id, vd1, vd2)])*)
 
 (* Inclusion between type declarations *)
@@ -97,7 +97,7 @@ let rec signatures sig1 sig2 =
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
           pair_components ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
-          failwith ("ERROR: unpaired: "^id2)
+          failwith ("ERROR: unpaired: "^Id.name id2)
 (*           pair_components paired unpaired rem *)
         end in
   (* Do the pairing and checking, and return the final coercion *)

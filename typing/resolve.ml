@@ -32,7 +32,7 @@ let rec free_vars_of_pat pat =
 
 let mkdot p =
   begin match p with
-    | Pident s -> Pdot(Pident !Module.current_unit, s)
+    | Pident s -> Pdot(Pident !Module.current_unit, Id.name s)
     | _ -> p
   end
 

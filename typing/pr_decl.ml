@@ -23,17 +23,17 @@ let print_valdef env =
 let print_constr_decl (p,cstr) =
   match cstr.cs_arity with
     0 ->
-      printf "%s\n" p
+      printf "%s\n" (Id.name p)
   | _ ->
       printf "%s of %a\n"
-        p
+        (Id.name p)
              output_type (Predef.type_product cstr.cs_args)
 ;;
 
 let print_label_decl (p,lbl) =
   printf "%s%s : %a\n"
          (match lbl.lbl_mut with Mutable -> "mutable " | _ -> "")
-    p output_type lbl.lbl_arg
+    (Id.name p) output_type lbl.lbl_arg
 ;;
 
 let print_one_typedecl (newthing, (ty_res, ty_comp)) =
