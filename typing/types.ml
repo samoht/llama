@@ -1,22 +1,11 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-type path =
-  | Pdot of path * string
-  | Pident of Id.t
+open Path
 
 let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
-
-module Path = struct
-  type t = path
-  let same p1 p2 = (p1 = p2)
-
-  let rec name = function
-      Pident id -> Id.name id
-    | Pdot(p, s) -> name p ^ "." ^ s
-end
 
 type 'a reference =
   { qualid: Path.t; (* Full name *)

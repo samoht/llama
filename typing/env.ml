@@ -5,6 +5,7 @@ open Location
 open Typedtree
 open Printf
 open Longident
+open Path
 
 type t = {
   values: (Path.t * value) Id.tbl;

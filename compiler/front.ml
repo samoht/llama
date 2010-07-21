@@ -15,6 +15,7 @@ open Tr_env;;
 open Trstream;;
 open Error;;
 open Primitive;;
+open Path
 
 (* Propagation of constants *)
 

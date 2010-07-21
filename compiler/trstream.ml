@@ -7,6 +7,7 @@ open Prim;;
 open Lambda;;
 open Matching;;
 open Tr_env;;
+open Path
 
 (* The following constants must be kept in sync with the definition
    of type stream in file ../lib/stream.ml *)

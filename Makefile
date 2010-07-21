@@ -108,7 +108,7 @@ linker/prim_c.ml : runtime/primitives
 	 echo '|];;') > $@
 
 linker/more_predef.ml : runtime/globals.h runtime/fail.h
-	(echo 'open Types;;   let mkpers i = Pident(Id.create_persistent i);;   '; \
+	(echo 'open Types;; open Path;;  let mkpers i = Pident(Id.create_persistent i);;   '; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|Pdot(mkpers \1, \2);|p' \
                 $< \

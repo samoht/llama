@@ -3,6 +3,7 @@ open Asttypes;;
 open More_predef;;
 open Printf;;
 open Types;;
+open Path
 
 (* symtable.ml : to assign numbers to global variables and so on *)
 

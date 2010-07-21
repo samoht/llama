@@ -9,6 +9,7 @@ open Module;;
 open Btype;;
 open Error;;
 open Typecore;;
+open Path
 
 let defined_global name desc =
   Pdot (Pident !current_unit, name), desc

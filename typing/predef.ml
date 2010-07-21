@@ -3,6 +3,7 @@
 open Asttypes
 open Types
 open Module
+open Path
 
 let path_builtin = Pident(Id.create_persistent "builtin")
 

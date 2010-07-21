@@ -1,4 +1,4 @@
-open Types;;   let mkpers i = Pident(Id.create_persistent i);;   
+open Types;; open Path;;  let mkpers i = Pident(Id.create_persistent i);;   
 let predef_variables = [
 Pdot(mkpers "meta", "global_data");
 Pdot(mkpers "sys", "s_irusr");

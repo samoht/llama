@@ -5,6 +5,7 @@ open Types
 open Parsetree
 open Typedtree
 open Primitive
+open Path
 
 exception Multiply_bound_variable of string
 exception Duplicate_constructor of string
