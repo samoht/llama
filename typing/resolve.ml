@@ -195,8 +195,7 @@ let rec expr env c ex =
 
 let constr_decl env c (s,tys) =
   let cs = ref [] in
-  (id_create_nodup cs s (fun () -> raise (Duplicate_constructor s)),
-   List.map (type_expression env c) tys)
+  (s, List.map (type_expression env c) tys)
 
 let primitive o =
   begin match o with
@@ -213,6 +212,5 @@ let type_kind env c tk =
     | Ptype_record l ->
         let lbls = ref [] in
         Ttype_record (List.map (fun (s,te,m) ->
-                                  (id_create_nodup lbls s (fun () -> raise (Duplicate_label s)),
-                                   type_expression env c te, m)) l)
+                                  (s, type_expression env c te, m)) l)
   end

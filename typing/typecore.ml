@@ -15,7 +15,7 @@ open Asttypes;;
 (* To convert type expressions to types *)
 
 let type_expr_vars =
-  ref ([] : (string * core_type) list);;
+  ref ([] : (Id.t * core_type) list);;
 
 let reset_type_expression_vars () =
   type_expr_vars := []
@@ -42,7 +42,7 @@ let type_of_type_expression strict_flag typexp =
         List.assoc v !type_expr_vars
       with Not_found ->
         if strict_flag then
-          unbound_type_var_err v typexp
+          unbound_type_var_err (Id.name v) typexp
         else begin
           let t = new_global_type_var() in
           type_expr_vars := (v,t) :: !type_expr_vars; t
@@ -89,13 +89,13 @@ let rec tpat new_env (pat, ty, mut_flag) =
       new_env
   | Tpat_var v ->
       if List.mem_assoc v new_env then
-        non_linear_pattern_err pat v
+        non_linear_pattern_err pat (Id.name v)
       else begin
         (v, (ty, mut_flag)) :: new_env
       end
   | Tpat_alias(pat, v) ->
       if List.mem_assoc v new_env then
-        non_linear_pattern_err pat v
+        non_linear_pattern_err pat (Id.name v)
       else
         tpat ((v, (ty, mut_flag)) :: new_env) (pat, ty, mut_flag)
   | Tpat_constant cst ->
@@ -234,7 +234,7 @@ let unify_expr expr expected_ty actual_ty =
     expr_wrong_type_err expr actual_ty expected_ty
 ;;
 
-let rec type_expr env expr =
+let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
   let inferred_ty =
   match expr.exp_desc with
     Texp_ident ident ->
@@ -242,7 +242,7 @@ let rec type_expr env expr =
           Zglobal glob_desc ->
             type_instance glob_desc.info.val_type
         | Zlocal s ->
-            let (ty_schema, mut_flag) = List.assoc (Id.name s) env in
+            let (ty_schema, mut_flag) = List.assoc s env in
             type_instance ty_schema
       end
   | Texp_constant cst ->

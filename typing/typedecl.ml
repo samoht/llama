@@ -11,8 +11,9 @@ open Error;;
 open Typecore;;
 open Path
 
-let defined_global name desc =
-  Pdot (Pident !current_unit, name), desc
+(* let defined_global id desc = Pident id, desc *)
+
+let defined_global id desc = Pdot (Pident !current_unit, Id.name id), desc
 
 let make_new_variant loc (ty_constr, ty_res, constrs) =
   let constrs =
@@ -92,7 +93,7 @@ let type_typedecl env loc decl =
                type_params = ty_params;
                type_kind  = Type_abstract } in
          temp_env := Env.add_type id ty_desc !temp_env;
-         defined_global ty_name ty_desc)
+         defined_global id ty_desc)
       id_list decl
   in
   let temp_env = !temp_env in
@@ -146,14 +147,16 @@ let type_excdecl env loc decl =
   let env = Env.add_exception id (snd cd) env in
   (id, snd cd), env
 
-let type_valuedecl env loc name typexp prim =
+let horrible p = Id.create(little_id p)
+
+let type_valuedecl env loc id typexp prim =
   push_type_level();
   reset_type_expression_vars ();
   let ty = type_of_type_expression false typexp in
   pop_type_level();
   generalize_type ty;
-  let vd = defined_global name { val_type = ty; val_kind = prim } in
-  let env = Env.store_value (little_id (fst vd)) (fst vd) (snd vd) env in
+  let vd = defined_global id { val_type = ty; val_kind = prim } in
+  let env = Env.store_value (horrible (fst vd)) (fst vd) (snd vd) env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -167,7 +170,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
          let vd = (defined_global name {val_type=ty; val_kind=Val_reg}) in
-         env := Env.store_value (little_id (fst vd)) (fst vd) (snd vd) !env;
+         env := Env.store_value (horrible (fst vd)) (fst vd) (snd vd) !env;
          vd) c
     in
     !env, vds

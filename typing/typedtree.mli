@@ -72,10 +72,10 @@ and stream_pattern =
 type type_rhs =
     Ttype_abstract
   | Ttype_variant of constr_decl list
-  | Ttype_record of (Id.t * type_expression * mutable_flag) list
+  | Ttype_record of (string * type_expression * mutable_flag) list
   | Ttype_abbrev of type_expression
 
-and constr_decl = Id.t * type_expression list
+and constr_decl = string * type_expression list
 
 type signature_item =
   { sig_desc: signature_item_desc;

@@ -7,8 +7,8 @@ open Module
 open Btype
 open Types
 
-let gen_value x = Gen_value (little_id (fst x), snd x)
-let gen_type x = Gen_type (little_id (fst x), snd x)
+let gen_value x = Gen_value (horrible (fst x), snd x)
+let gen_type x = Gen_type (horrible (fst x), snd x)
 let gen_exception x = Gen_exception (fst x, snd x)
 
 let type_structure_item env pstr =
@@ -25,10 +25,11 @@ let type_structure_item env pstr =
         let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
         phr, List.map gen_value sg, env
     | Pstr_primitive(s,te,(arity,n)) ->
+        let id = Id.create s in
         let te = Resolve.type_expression env [] te in
         let pr = { prim_arity = arity; prim_name = n } in
-        let phr = mk (Tstr_primitive(s, te, pr)) in
-        let sg, env = type_valuedecl env pstr.pstr_loc s te (Types.Val_prim pr) in
+        let phr = mk (Tstr_primitive(id, te, pr)) in
+        let sg, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
         phr, [gen_value sg], env
     | Pstr_type decl ->
         let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
