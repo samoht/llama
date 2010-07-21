@@ -70,10 +70,10 @@ let read_pers_struct modname filename =
           | Gen_type (s,gl) ->
               Hashtbl.add ps.mod_types (Id.name s) gl;
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_constrs p gl)
+                (fun (p,gl) -> Hashtbl.add ps.mod_constrs (Id.name p) gl)
                 (constructors_of_type gl);
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_labels p gl)
+                (fun (p,gl) -> Hashtbl.add ps.mod_labels (Id.name p) gl)
                 (labels_of_type gl)
         end
       end
@@ -169,12 +169,12 @@ let adj_path path id =
     | Pdot (m, _) -> Pdot (m, Id.name id)
   end
 
-let store_type id path info env =
+let store_type_internal do_hide id path info env =
   { env with
     constrs =
       List.fold_right
         (fun (p,descr) constrs ->
-           let cid = Id.create p in
+           let cid = if do_hide then Id.hide p else p in
            let cpath = adj_path path cid in
            Id.add cid (cpath,descr) constrs)
         (constructors_of_type info)
@@ -182,12 +182,14 @@ let store_type id path info env =
     labels =
       List.fold_right
         (fun (p,descr) labels ->
-           let lid = Id.create p in
+           let lid = if do_hide then Id.hide p else p in
            let lpath = adj_path path lid in
            Id.add lid (lpath,descr) labels)
         (labels_of_type info)
         env.labels;
     types = Id.add id (path,info) env.types }
+
+let store_type = store_type_internal false
 
 let add_value id desc env = store_value id (Pident id) desc env
 let add_type id desc env = store_type id (Pident id) desc env
@@ -216,7 +218,7 @@ let open_pers_signature name env =
                store_exception (Id.hide id) path ed !envref
            | Gen_type (id, td) ->
                let path = Pdot (name, Id.name id) in
-               store_type (Id.hide id) path td !envref
+               store_type_internal true (Id.hide id) path td !envref
          end
     )
     ps.working;
