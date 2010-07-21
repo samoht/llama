@@ -93,7 +93,7 @@ let rec print_val prio depth obj ty =
         print_val_list 1 depth obj ty_list;
         if prio > 0 then print_string ")";
         close_box()
-    | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, ty_list) ->
+    | Tconstr({info = {type_manifest=Some body;type_params=params}}, ty_list) ->
         print_val prio depth obj (expand_abbrev params body ty_list)
     | Tconstr(cstr, [ty_arg]) when Path.same cstr.qualid (fst constr_type_list) ->
         print_list depth obj ty_arg

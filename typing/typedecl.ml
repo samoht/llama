@@ -67,7 +67,6 @@ let make_new_abbrev (ty_constr, ty_params, body) =
     pop_type_level();
     generalize_type ty_body;
     List.iter generalize_type ty_params;
-    (snd ty_constr).ty_abbr <- Tabbrev(ty_params, ty_body);
     Type_abstract, Some ty_body
 ;;
 
@@ -108,7 +107,6 @@ let type_typedecl env loc decl =
          let ty_desc =
            defined_global ty_name
              { ty_stamp = new_type_stamp();
-               ty_abbr = Tnotabbrev;
                type_arity = List.length ty_params;
                type_manifest = None;
                type_params = ty_params;

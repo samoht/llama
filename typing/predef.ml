@@ -17,7 +17,6 @@ let doref (p,d) = {qualid=p; info=d}
 
 let mkty stamp params =
   { ty_stamp = stamp;
-    ty_abbr = Tnotabbrev;
     type_params = params;
     type_arity = List.length params;
     type_manifest = None;
@@ -82,7 +81,6 @@ let constr_type_format =
   Pdot("printf", "format"),
 let params = [newgenvar();newgenvar();newgenvar()] in
   { ty_stamp = 1;
-    ty_abbr = Tabbrev(params,type_string);
     type_params = params;
     type_arity = 3;
     type_manifest = Some type_string;

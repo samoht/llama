@@ -6,7 +6,7 @@ open Btype
 
 let rec labels_of_type ty =
   match (Btype.type_repr ty).typ_desc with
-    Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
+    Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
       labels_of_type (Btype.expand_abbrev params body args)
   | Tconstr(cstr, _) ->
       begin match cstr.info.type_kind with
@@ -69,9 +69,9 @@ let rec unify (ty1, ty2) =
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
           when same_type_constr cstr1 cstr2 ->
             ()
-        | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args), _ ->
+        | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
             unify (expand_abbrev params body args, ty2)
-        | _, Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
+        | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
             unify (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
           when same_type_constr cstr1 cstr2 ->
@@ -98,7 +98,7 @@ let rec filter_arrow ty =
         (ty1, ty2)
   | {typ_desc = Tarrow(ty1, ty2)} ->
       (ty1, ty2)
-  | {typ_desc = Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args)} ->
+  | {typ_desc = Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args)} ->
       filter_arrow (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -112,7 +112,7 @@ let rec filter_product arity ty =
       tyl
   | {typ_desc = Tproduct tyl} ->
       if List.length tyl == arity then tyl else raise OldUnify
-  | {typ_desc = Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args)} ->
+  | {typ_desc = Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args)} ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -141,9 +141,9 @@ let rec filter (ty1, ty2) =
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
           when same_type_constr cstr1 cstr2 ->
             ()
-        | Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args), _ ->
+        | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
             filter (expand_abbrev params body args, ty2)
-        | _, Tconstr({info = {ty_abbr = Tabbrev(params, body)}}, args) ->
+        | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
             filter (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
           when same_type_constr cstr1 cstr2 ->
@@ -174,7 +174,7 @@ let repr = Btype.type_repr
 let rec expand ty =
   let ty = repr ty in
   begin match ty.typ_desc with
-    | Tconstr ({info={ty_abbr=Tabbrev(params,body)}}, args) ->
+    | Tconstr ({info={type_params=params; type_manifest=Some(body)}}, args) ->
         expand (Btype.expand_abbrev params body args)
     | _ ->
         ty

@@ -29,7 +29,6 @@ open Asttypes
 
 type type_constructor =
   { ty_stamp: int;              (* Stamp *)
-    mutable ty_abbr: type_abbrev;      (* Abbreviation or not *)
     type_params : core_type list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : core_type option;

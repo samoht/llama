@@ -218,9 +218,9 @@ let expand_abbrev params body args =
 
 let rec same_base_type ty base_ty =
   match ((type_repr ty).typ_desc, (type_repr base_ty).typ_desc) with
-    Tconstr({info = {ty_abbr = Tabbrev(params,body)}}, args), _ ->
+    Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
       same_base_type (expand_abbrev params body args) base_ty
-  | _, Tconstr({info = {ty_abbr = Tabbrev(params,body)}}, args) ->
+  | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
       same_base_type ty (expand_abbrev params body args)
   | Tconstr(cstr1, []), Tconstr(cstr2, []) ->
       same_type_constr cstr1 cstr2
@@ -233,9 +233,9 @@ let rec same_base_type ty base_ty =
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  match (snd cstr).ty_abbr with
-    Tnotabbrev -> ()
-  | Tabbrev(params, body) ->
+  match (snd cstr).type_manifest with
+    None -> ()
+  | Some body ->
       let rec check_abbrev seen ty =
         match (type_repr ty).typ_desc with
           Tvar _ -> ()
@@ -246,9 +246,9 @@ let check_recursive_abbrev cstr =
               raise Recursive_abbrev
             else begin
               List.iter (check_abbrev seen) tlist;
-              begin match c.info.ty_abbr with
-                Tnotabbrev -> ()
-              | Tabbrev(params, body) -> check_abbrev (c.qualid :: seen) body
+              begin match c.info.type_manifest with
+                None -> ()
+              | Some( body) -> check_abbrev (c.qualid :: seen) body
               end
             end
       in check_abbrev [fst cstr] body
