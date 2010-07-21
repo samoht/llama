@@ -25,12 +25,12 @@ let type_manifest params1 params2 ty1 ty2 =
   Ctype.equal true (ty1 :: params1) (ty2 :: params2)
 
 let constructors params1 params2 (p1, cs1) (p2, cs2) =
-  little_id p1 = little_id p2 &&
+  p1 = p2 &&
   List.for_all2 (fun ty1 ty2 -> Ctype.equal true (ty1::params1) (ty2::params2))
   cs1.cs_args cs2.cs_args
      
 let labels params1 params2 (p1, lbl1) (p2, lbl2) =
-  little_id p1 = little_id p2 &&
+  p1 = p2 &&
   Ctype.equal true (lbl1.lbl_res::params1) (lbl2.lbl_res::params2)
 
 let type_constructors id decl1 decl2 =

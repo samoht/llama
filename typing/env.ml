@@ -70,10 +70,10 @@ let read_pers_struct modname filename =
           | Gen_type (s,gl) ->
               Hashtbl.add ps.mod_types (Id.name s) gl;
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_constrs (little_id p) gl)
+                (fun (p,gl) -> Hashtbl.add ps.mod_constrs p gl)
                 (constructors_of_type gl);
               List.iter
-                (fun (p,gl) -> Hashtbl.add ps.mod_labels (little_id p) gl)
+                (fun (p,gl) -> Hashtbl.add ps.mod_labels p gl)
                 (labels_of_type gl)
         end
       end
@@ -163,18 +163,28 @@ let store_exception id path decl env =
   { env with
     constrs = Id.add id (path,decl) env.constrs }
 
+let adj_path path id =
+  begin match path with
+    | Pident _ -> Pident id
+    | Pdot (m, _) -> Pdot (m, Id.name id)
+  end
+
 let store_type id path info env =
   { env with
     constrs =
       List.fold_right
         (fun (p,descr) constrs ->
-          Id.add (Id.create (little_id p)) (p,descr) constrs) (* xxx *)
+           let cid = Id.create p in
+           let cpath = adj_path path cid in
+           Id.add cid (cpath,descr) constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun (p,descr) labels ->
-          Id.add (Id.create (little_id p)) (p,descr) labels) (* xxx *)
+           let lid = Id.create p in
+           let lpath = adj_path path lid in
+           Id.add lid (lpath,descr) labels)
         (labels_of_type info)
         env.labels;
     types = Id.add id (path,info) env.types }

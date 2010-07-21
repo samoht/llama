@@ -294,7 +294,7 @@ let rec type_expr env expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect env cond type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) -> Path.same cstr.qualid (fst constr_void) | _ -> false
+         with Texp_construct (cstr,[]) -> Path.same cstr.qualid path_void | _ -> false
       then begin
         type_expect env ifso type_unit;
         type_unit

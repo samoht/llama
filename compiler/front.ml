@@ -225,7 +225,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> Path.same cstr.qualid (fst constr_void) | _ -> false
+                       Texp_construct(cstr,[]) -> Path.same cstr.qualid path_void | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
   | Texp_while(econd, ebody) ->

@@ -117,7 +117,10 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         let constr = 
           if Path.same cstr.qualid (fst constr_type_exn)
           then find_exception tag
-          else find_constr tag constr_list in
+          else
+            let id,d = find_constr tag constr_list in
+            adj_path cstr.qualid id, d
+        in
         let (ty_args, ty_res) =
           instance_constructor (snd constr) in
         filter (ty_res, ty);
@@ -153,6 +156,11 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           fatal_error "print_val: types should match"
       end
   | Type_record label_list ->
+      let label_list =
+        List.map
+          (fun(id,lbl) -> adj_path cstr.qualid id, lbl)
+          label_list
+      in
       let print_field depth lbl =
         open_box 1;
         print_path (fst lbl);

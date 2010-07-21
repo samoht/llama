@@ -16,7 +16,6 @@ module Path = struct
   let rec name = function
       Pident id -> Id.name id
     | Pdot(p, s) -> name p ^ "." ^ s
-
 end
 
 type 'a reference =
@@ -61,8 +60,8 @@ and typ_link =
 
 and type_kind =
     Type_abstract
-  | Type_variant of (Path.t * constructor) list (* Sum type -> list of constr. *)
-  | Type_record of (Path.t * label) list (* Record type -> list of labels *)
+  | Type_variant of (Id.t * constructor) list (* Sum type -> list of constr. *)
+  | Type_record of (Id.t * label) list (* Record type -> list of labels *)
 
 (* Value constructors *)
 

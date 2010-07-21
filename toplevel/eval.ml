@@ -85,7 +85,7 @@ let rec term_of_expr c expr =
     | Texp_ifthenelse (i, t, e) ->
         app3 (Match (doref constr_type_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
-        Ctor (doref constr_void)
+        Ctor {qualid=path_void; info = snd constr_void}
     | Texp_constraint (e, _) ->
         term_of_expr c e
     | Texp_array l ->
@@ -111,7 +111,7 @@ let rec eval env tm =
         List.nth env i
     | App (App (Prim Psequor, x), y) ->
         begin match scrutinize (eval env x) with
-          | 0 -> Ctor (doref constr_false)
+          | 0 -> Ctor {qualid=path_false; info = snd constr_false}
           | 1 -> eval env y
           | _ -> assert false
         end

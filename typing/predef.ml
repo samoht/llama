@@ -89,7 +89,7 @@ let type_format t1 t2 t3 =
 (* Some constructors that must be known to the parser *)
 
 let constr_void =
-  builtin "()"
+ "()",
     { cs_res = {typ_desc=Tconstr(doref constr_type_unit,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(0,1); }
@@ -97,7 +97,7 @@ let constr_void =
 
 let constr_nil =
   let arg = list_tyvar in
-  builtin "[]"
+   "[]",
     { cs_res = {typ_desc=Tconstr(doref constr_type_list, [arg]); typ_level=generic};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(0,2); }
@@ -105,7 +105,7 @@ let constr_nil =
 and constr_cons =
   let arg1 = list_tyvar in
   let arg2 = {typ_desc=Tconstr(doref constr_type_list, [arg1]); typ_level=generic} in
-  builtin "::"
+   "::",
     { cs_res = arg2;
       cs_args = [arg1;arg2]; cs_arity = 2; 
       cs_tag = ConstrRegular(1,2); }
@@ -113,7 +113,7 @@ and constr_cons =
 
 let constr_none =
   let arg = option_tyvar in
-  builtin "None"
+   "None",
     { cs_res =
        {typ_desc=Tconstr(doref constr_type_option, [arg]); typ_level=generic};
       cs_args = []; cs_arity = 0; 
@@ -121,7 +121,7 @@ let constr_none =
 
 and constr_some =
   let arg = option_tyvar in
-  builtin "Some"
+   "Some",
     { cs_res =
        {typ_desc=Tconstr(doref constr_type_option, [arg]); typ_level=generic};
       cs_args = [arg]; cs_arity = 1;
@@ -129,13 +129,13 @@ and constr_some =
 ;;
 
 let constr_false =
-  builtin "false"
+  "false",
     { cs_res = {typ_desc=Tconstr(doref constr_type_bool,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0; 
       cs_tag = ConstrRegular(0,2); }
 
 and constr_true =
-  builtin "true"
+   "true",
     { cs_res = {typ_desc=Tconstr(doref constr_type_bool,[]); typ_level=notgeneric};
       cs_args = []; cs_arity = 0;
       cs_tag = ConstrRegular(1,2); }
@@ -174,6 +174,9 @@ let _ = List.iter
      constr_type_vect, Type_abstract;
      constr_type_option, (Type_variant [constr_none; constr_some])
   ]
+
+let path_void = fst (Env.lookup_constructor (Longident.Lident "()") !env_builtin)
+let path_false = fst (Env.lookup_constructor (Longident.Lident "false") !env_builtin)
 
 let _ = List.iter
   (fun desc -> add_exc_predef desc)

@@ -27,7 +27,7 @@ let make_new_variant is_extensible loc (ty_constr, ty_res, constrs) =
         else
           ConstrRegular(constr_idx, nbr_constrs) in
       let constr_glob =
-        defined_global constr_name
+         constr_name,
           { cs_res = ty_res;
             cs_args = ty_args;
             cs_arity = List.length ty_args;
@@ -49,7 +49,7 @@ let make_new_record loc (ty_constr, ty_res, labels) =
   | (name, typexp, mut_flag) :: rest ->
       let ty_arg = type_of_type_expression true typexp in
       let lbl_glob =
-        defined_global name
+         name,
           { lbl_res = ty_res; lbl_arg = ty_arg;
             lbl_mut = mut_flag; lbl_pos = i }
       in
@@ -148,8 +148,10 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let cd = make_new_variant true loc (constr_type_exn, type_exn, [decl]) in
   let cd = match cd with Type_variant [cd] ->  cd | _ -> assert false in
-  let env = Env.store_exception (little_id (fst cd)) (fst cd) (snd cd) env in
-  cd, env
+  let name = fst cd in
+  let id = Id.create (fst cd) in
+  let env = Env.add_exception id (snd cd) env in
+  (id, snd cd), env
 
 let type_valuedecl env loc name typexp prim =
   push_type_level();
