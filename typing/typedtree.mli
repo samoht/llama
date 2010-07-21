@@ -11,7 +11,7 @@ and type_expression_desc =
     Ttyp_var of Id.t
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
-  | Ttyp_constr of type_constructor reference * type_expression list
+  | Ttyp_constr of type_constructor * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
@@ -24,13 +24,13 @@ and pattern_desc =
   | Tpat_alias of pattern * Id.t
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
-  | Tpat_construct of constructor reference * pattern list
+  | Tpat_construct of constructor * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
-  | Tpat_record of (label reference * pattern) list
+  | Tpat_record of (label * pattern) list
 
 type value_identifier =
-    Zglobal of value reference
+    Zglobal of value
   | Zlocal of Id.t
 
 type expression =
@@ -42,7 +42,7 @@ and expression_desc =
     Texp_ident of value_identifier
   | Texp_constant of atomic_constant
   | Texp_tuple of expression list
-  | Texp_construct of constructor reference * expression list
+  | Texp_construct of constructor * expression list
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
   | Texp_function of (pattern list * expression) list
@@ -53,9 +53,9 @@ and expression_desc =
   | Texp_for of Id.t * expression * expression * bool * expression
   | Texp_constraint of expression * type_expression
   | Texp_array of expression list
-  | Texp_record of (label reference * expression) list
-  | Texp_field of expression * label reference
-  | Texp_setfield of expression * label reference * expression
+  | Texp_record of (label * expression) list
+  | Texp_field of expression * label
+  | Texp_setfield of expression * label * expression
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
   | Texp_when of expression * expression
