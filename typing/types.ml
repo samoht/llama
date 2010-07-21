@@ -8,8 +8,7 @@ let little_id = function
   | Pident id -> Id.name id
 
 type 'a reference =
-  { qualid: Path.t; (* Full name *)
-    info: 'a }               (* Description *)
+  { info: 'a }               (* Description *)
 
 type constr_tag =
     ConstrExtensible of Path.t * int (* name of constructor & stamp *)

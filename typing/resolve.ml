@@ -31,13 +31,7 @@ let rec free_vars_of_pat pat =
   | Ppat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 
-let mkdot p =
-  begin match p with
-    | Pident s -> Pdot(Pident !Module.current_unit, Id.name s)
-    | _ -> p
-  end
-
-let mkref (p,d) = {qualid=mkdot p; info=d}
+let mkref (p,d) = {info=d}
 
 let lookup_type env li loc =
   try mkref(Env.lookup_type li env)
