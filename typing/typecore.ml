@@ -455,5 +455,4 @@ and type_statement env expr =
   | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
   | Tvar _ -> ()
   | _ ->
-      if not (same_base_type ty type_unit) then not_unit_type_warning expr ty
-;;
+      if not (Ctype.equal false [ty] [type_unit]) then not_unit_type_warning expr ty

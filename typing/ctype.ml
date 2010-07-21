@@ -77,14 +77,14 @@ let rec unify (ty1, ty2) =
         | Tproduct tyl1, Tproduct tyl2 ->
             unify_list (tyl1, tyl2)
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when same_type_constr cstr1 cstr2 ->
+          when Path.same cstr1.qualid cstr2.qualid ->
             ()
         | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
             unify (expand_abbrev params body args, ty2)
         | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
             unify (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when same_type_constr cstr1 cstr2 ->
+          when Path.same cstr1.qualid cstr2.qualid ->
             unify_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -149,14 +149,14 @@ let rec filter (ty1, ty2) =
         | Tproduct(t1args), Tproduct(t2args) ->
             filter_list (t1args, t2args)
         | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when same_type_constr cstr1 cstr2 ->
+          when Path.same cstr1.qualid cstr2.qualid ->
             ()
         | Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
             filter (expand_abbrev params body args, ty2)
         | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
             filter (ty1, expand_abbrev params body args)
         | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when same_type_constr cstr1 cstr2 ->
+          when Path.same cstr1.qualid cstr2.qualid ->
             filter_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -216,7 +216,7 @@ let rec eqtype rename subst t1 t2 =
         with Not_found ->
           subst := (t1, t2) :: !subst
         end
-    | (Tconstr (p1, []), Tconstr (p2, [])) when Btype.same_type_constr p1 p2 ->
+    | (Tconstr (p1, []), Tconstr (p2, [])) when Path.same p1.qualid p2.qualid ->
         ()
     | _ ->
         let t1' = expand t1 in
@@ -240,7 +240,7 @@ let rec eqtype rename subst t1 t2 =
               eqtype rename subst u1 u2;
           | (Tproduct tl1, Tproduct tl2) ->
               eqtype_list rename subst tl1 tl2
-          | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when Btype.same_type_constr p1 p2 ->
+          | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when Path.same p1.qualid p2.qualid ->
               eqtype_list rename subst tl1 tl2
           | (_, _) ->
               raise (Unify [])

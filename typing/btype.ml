@@ -4,11 +4,6 @@ open Misc;;
 open Asttypes;;
 open Types;;
 
-(* Type constructor equality *)
-
-let same_type_constr cstr1 cstr2 =
-  Path.same cstr1.qualid cstr2.qualid
-
 (* To take the canonical representative of a type.
    We do path compression there. *)
 
@@ -213,20 +208,6 @@ let expand_abbrev params body args =
   cleanup_type body;
   List.iter2 bind_variable params' args;
   body';;
-
-(* Simple equality between base types. *)
-
-let rec same_base_type ty base_ty =
-  match ((type_repr ty).typ_desc, (type_repr base_ty).typ_desc) with
-    Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args), _ ->
-      same_base_type (expand_abbrev params body args) base_ty
-  | _, Tconstr({info = {type_params=params; type_manifest = Some(body)}}, args) ->
-      same_base_type ty (expand_abbrev params body args)
-  | Tconstr(cstr1, []), Tconstr(cstr2, []) ->
-      same_type_constr cstr1 cstr2
-  | _, _ ->
-      false
-;;
 
 (* Check whether a type constructor is a recursive abbrev *)
 

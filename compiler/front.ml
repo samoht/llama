@@ -75,10 +75,10 @@ let partial_try = Lprim(Praise, [Lvar 0]);;
 
 let translate_compar gen_fun (int_comp, float_comp) ty arg1 arg2 =
   let comparison =
-    if Btype.same_base_type ty type_int ||
-       Btype.same_base_type ty type_char then
+    if Ctype.equal false [ty] [type_int] ||
+      Ctype.equal false [ty] [type_char] then
       Ptest int_comp
-    else if Btype.same_base_type ty type_float then
+    else if Ctype.equal false [ty] [type_float] then
       Ptest float_comp
     else match (int_comp, arg1, arg2) with
       (Pint_test PTeq, Lconst(SCblock(tag, [])), _) -> Ptest Peq_test
