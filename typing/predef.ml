@@ -15,42 +15,37 @@ let doref (p,d) = {qualid=p; info=d}
 
 (* Some types that must be known to the type checker *)
 
-let mkty stamp params =
-  { ty_stamp = stamp;
-    type_params = params;
+let mkty params =
+  { type_params = params;
     type_arity = List.length params;
     type_manifest = None;
     type_kind = Type_abstract }
 
 let constr_type_unit =
-  builtin "unit" (mkty 2 [])
+  builtin "unit" (mkty [])
 and constr_type_exn =
-  builtin "exn" (mkty 3 [])
+  builtin "exn" (mkty [])
 and constr_type_bool =
-  builtin "bool" (mkty 4 [])
+  builtin "bool" (mkty [])
 and constr_type_int =
-  builtin "int" (mkty 5 [])
+  builtin "int" (mkty [])
 and constr_type_float =
-  builtin "float" (mkty 6 [])
+  builtin "float" (mkty [])
 and constr_type_string =
-  builtin "string" (mkty 7 [])
+  builtin "string" (mkty [])
 and constr_type_char =
-  builtin "char" (mkty 8 [])
+  builtin "char" (mkty [])
 and constr_type_list =
-  builtin "list" (mkty 9 [list_tyvar])
+  builtin "list" (mkty [list_tyvar])
 and constr_type_vect =
-  builtin "vect" (mkty 10 [vect_tyvar] )
+  builtin "vect" (mkty [vect_tyvar] )
 and constr_type_option =
-  builtin "option" (mkty 11 [option_tyvar])
+  builtin "option" (mkty [option_tyvar])
 and constr_type_stream =
-   Pdot("stream", "stream"),
-    mkty 1 []
-    (* This assumes that "stream" is the first type defined in "stream". *)
+   Pdot("stream", "stream"), mkty []
 and constr_type_num =
   (* This is needed only for the Windows port. *)
-  Pdot("num", "num"),
-   mkty 1 []
-    (* This assumes that "num" is the first type defined in "num". *)
+  Pdot("num", "num"),mkty []
 
 let type_arrow (t1,t2) =
   {typ_desc=Tarrow(t1, t2); typ_level=notgeneric}
@@ -80,8 +75,7 @@ and type_num =
 let constr_type_format =
   Pdot("printf", "format"),
 let params = [newgenvar();newgenvar();newgenvar()] in
-  { ty_stamp = 1;
-    type_params = params;
+  { type_params = params;
     type_arity = 3;
     type_manifest = Some type_string;
     type_kind = Type_abstract }

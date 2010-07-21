@@ -106,8 +106,7 @@ let type_typedecl env loc decl =
          in
          let ty_desc =
            defined_global ty_name
-             { ty_stamp = new_type_stamp();
-               type_arity = List.length ty_params;
+             { type_arity = List.length ty_params;
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in

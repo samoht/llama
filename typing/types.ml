@@ -28,8 +28,7 @@ open Asttypes
 (* Type constructors *)
 
 type type_constructor =
-  { ty_stamp: int;              (* Stamp *)
-    type_params : core_type list;
+  { type_params : core_type list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : core_type option;
     mutable type_kind: type_kind }  (* Its description *)

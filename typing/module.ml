@@ -7,12 +7,7 @@ let current_unit = ref ""
 let defined_global name desc =
   Pdot (!current_unit, name), desc
 
-let next_type_stamp = ref 1
 let next_exc_stamp = ref 1
-
-let new_type_stamp () =
-  let n = !next_type_stamp in
-  incr next_type_stamp; n
 
 let new_exc_stamp () =
   let n = !next_exc_stamp in
