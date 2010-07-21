@@ -4,7 +4,7 @@ let create_persistent x = x
 let persistent x = true
 let name x = x
 let same x y = (x = y)
-
+let hide x = x
 
 module M = Map.Make(struct
                       type t = string

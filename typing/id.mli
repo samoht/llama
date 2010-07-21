@@ -4,6 +4,7 @@ val create_persistent : string -> t
 val persistent : t -> bool
 val name : t -> string
 val same : t -> t -> bool
+val hide : t -> t
 
 type 'a tbl
 

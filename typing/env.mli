@@ -11,9 +11,9 @@ val lookup_constructor : Longident.t -> t -> Path.t * constructor
 val lookup_label : Longident.t -> t -> Path.t * label
 val lookup_value : Longident.t -> t -> Path.t * value
 
-val store_type : string -> Path.t -> type_constructor -> t -> t
-val store_value : string -> Path.t -> value -> t -> t
-val store_exception : string -> Path.t -> exception_declaration -> t -> t
+val store_type : Id.t -> Path.t -> type_constructor -> t -> t
+val store_value : Id.t -> Path.t -> value -> t -> t
+val store_exception : Id.t -> Path.t -> exception_declaration -> t -> t
 
 (* Insertion by identifier *)
 

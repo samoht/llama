@@ -64,11 +64,11 @@ let read_pers_struct modname filename =
       begin fun item ->
         begin match item with
           | Gen_value (s,gl) ->
-              Hashtbl.add ps.mod_values s gl
+              Hashtbl.add ps.mod_values (Id.name s) gl
           | Gen_exception (s,gl) ->
-              Hashtbl.add ps.mod_constrs s gl
+              Hashtbl.add ps.mod_constrs (Id.name s) gl
           | Gen_type (s,gl) ->
-              Hashtbl.add ps.mod_types s gl;
+              Hashtbl.add ps.mod_types (Id.name s) gl;
               List.iter
                 (fun (p,gl) -> Hashtbl.add ps.mod_constrs (little_id p) gl)
                 (constructors_of_type gl);
@@ -124,7 +124,7 @@ let lookup_module lid env =
     Lident s ->
       if s = !current_unit then raise Not_found;
       let ps = find_pers_struct s in
-      (Pident (String.uncapitalize s), ps)
+      (Pident (Id.create_persistent (String.uncapitalize s)), ps)
   | Ldot _ ->
       raise Not_found
 
@@ -155,29 +155,26 @@ and lookup_label =
 and lookup_type =
   lookup_simple (fun env -> env.types) (fun sc -> sc.mod_types)
 
-let store_value s path decl env =
-  let id = Id.create s in
+let store_value id path decl env =
   { env with
     values = Id.add id (path,decl) env.values }
 
-let store_exception s path decl env =
-  let id = Id.create s in
+let store_exception id path decl env =
   { env with
     constrs = Id.add id (path,decl) env.constrs }
 
-let store_type s path info env =
-  let id = Id.create s in
+let store_type id path info env =
   { env with
     constrs =
       List.fold_right
         (fun (p,descr) constrs ->
-          Id.add (little_id p) (p,descr) constrs)
+          Id.add (Id.create (little_id p)) (p,descr) constrs) (* xxx *)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun (p,descr) labels ->
-          Id.add (little_id p) (p,descr) labels)
+          Id.add (Id.create (little_id p)) (p,descr) labels) (* xxx *)
         (labels_of_type info)
         env.labels;
     types = Id.add id (path,info) env.types }
@@ -188,7 +185,7 @@ let add_exception id desc env = store_exception id (Pident id) desc env
 
 let enter store_fun name data env =
   let id = Id.create name in
-  (id, store_fun id (Pident name) data env)
+  (id, store_fun id (Pident id) data env)
 let enter_value = enter store_value
 and enter_type = enter store_type
 and enter_exception = enter store_exception
@@ -201,15 +198,15 @@ let open_pers_signature name env =
     (fun x ->
        envref :=
          begin match x with
-           | Gen_value (s,vd) ->
-               let path = Pdot(name,s) in
-               store_value s path vd !envref
-           | Gen_exception (s,ed) ->
-               let path = Pdot(name,s) in
-               store_exception s path ed !envref
-           | Gen_type (s,td) ->
-               let path = Pdot(name,s) in
-               store_type s path td !envref
+           | Gen_value (id, vd) ->
+               let path = Pdot (name, Id.name id) in
+               store_value (Id.hide id) path vd !envref
+           | Gen_exception (id, ed) ->
+               let path = Pdot (name, Id.name id) in
+               store_exception (Id.hide id) path ed !envref
+           | Gen_type (id, td) ->
+               let path = Pdot (name, Id.name id) in
+               store_type (Id.hide id) path td !envref
          end
     )
     ps.working;
