@@ -39,7 +39,7 @@ let find_exception tag =
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
   let Pdot(Pident mn,s) = qualid in
-  select_exn(Env.ps_find_all_constrs (Env.find_pers_struct (Id.name mn)) s)
+  select_exn(Env.ps_find_all_constrs (Module.find_pers_struct (Id.name mn)) s)
 ;;
 
 let printers = ref [
