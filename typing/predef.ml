@@ -191,6 +191,10 @@ let constr_match_failure =
 
 (* Construction of the "builtin" module *)
 
+let little_id = function
+  | Pdot(_,s) -> s
+  | Pident id -> Id.name id
+
 let env_builtin = ref Env.empty
 let add_type_predef (p,gl) =
   Hashtbl.add ps_builtin.mod_types (little_id p) gl;

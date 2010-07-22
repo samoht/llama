@@ -7,8 +7,8 @@ open Module
 open Btype
 open Types
 
-let gen_value x = Gen_value (little_id (fst x), snd x)
-let gen_type x = Gen_type (little_id (fst x), snd x)
+let gen_value x = Gen_value (fst x, snd x)
+let gen_type x = Gen_type (fst x, snd x)
 let gen_exception x = Gen_exception (fst x, snd x)
 
 let type_structure_item env pstr =
@@ -29,8 +29,8 @@ let type_structure_item env pstr =
         let te = Resolve.type_expression env [] te in
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(id, te, pr)) in
-        let sg, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
-        phr, [gen_value sg], env
+        let vd, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
+        phr, [Gen_value (id, vd)], env
     | Pstr_type decl ->
         let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
@@ -54,8 +54,8 @@ let type_signature_item env psig =
         let te = Resolve.type_expression env [] te in
         let pr = Resolve.primitive pr in
         let phr = mk (Tsig_value (s, te, pr)) in
-        let sg, env = type_valuedecl env phr.sig_loc s te pr in 
-        phr, [gen_value sg], env
+        let vd, env = type_valuedecl env phr.sig_loc s te pr in 
+        phr, [Gen_value (s, vd)], env
     | Psig_type decl ->
         let decl, sg, env = type_typedecl env psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in

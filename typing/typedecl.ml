@@ -1,19 +1,13 @@
 (* Typecore toplevel phrases *)
 
 open Asttypes
-open Asttypes;;
-open Types;;
-open Predef;;
-open Typedtree;;
-open Module;;
-open Btype;;
-open Error;;
-open Typecore;;
-open Path
-
-(* let defined_global id desc = Pident id, desc *)
-
-let defined_global id desc = Pdot (Pident !Env.current_unit, Id.name id), desc
+open Types
+open Predef
+open Typedtree
+open Module
+open Btype
+open Error
+open Typecore
 
 let make_new_variant loc (ty_constr, ty_res, constrs) =
   let constrs =
@@ -23,7 +17,7 @@ let make_new_variant loc (ty_constr, ty_res, constrs) =
          (constr_name, ty_args))
       constrs
   in
-  let constructors = Datarepr.constructor_descrs (snd ty_constr) ty_res constrs in
+  let constructors = Datarepr.constructor_descrs ty_constr ty_res constrs in
   pop_type_level();
   generalize_type ty_res;
   List.iter
@@ -39,7 +33,7 @@ let make_new_record loc (ty_constr, ty_res, labels) =
          (name, mut_flag, ty_arg))
       labels
   in
-  let labels = Datarepr.label_descrs (snd ty_constr) ty_res labels in
+  let labels = Datarepr.label_descrs  ty_constr ty_res labels in
   pop_type_level();
   generalize_type ty_res;
   List.iter
@@ -57,7 +51,7 @@ let make_new_abbrev (ty_constr, ty_params, body) =
 let define_new_type loc (ty_desc, ty_params, def) =
   push_type_level();
   let ty_res =
-    { typ_desc = Tconstr(doref ty_desc, ty_params);
+    { typ_desc = Tconstr(ref_type_constr ty_desc, ty_params);
       typ_level = notgeneric} in
   let type_comp,manifest =
     match def with
@@ -69,8 +63,8 @@ let define_new_type loc (ty_desc, ty_params, def) =
         make_new_record loc (ty_desc, ty_res, labels),None
     | Ttype_abbrev body ->
         make_new_abbrev (ty_desc, ty_params, body) in
-  (snd ty_desc).type_kind <- type_comp;
-  (snd ty_desc).type_manifest <- manifest;
+  ty_desc.type_kind <- type_comp;
+  ty_desc.type_manifest <- manifest;
   (ty_res, type_comp)
 
 let type_typedecl env loc decl =
@@ -95,26 +89,26 @@ let type_typedecl env loc decl =
                type_params = ty_params;
                type_kind  = Type_abstract } in
          temp_env := Env.add_type id ty_desc !temp_env;
-         defined_global id ty_desc)
+         ty_desc)
       id_list decl
   in
   let temp_env = !temp_env in
   (* Translate each declaration. *)
   let decl =
-    List.map2
-      (fun (name, params, tk) desc ->
+    List.map
+      (fun (name, params, tk) ->
          (name, params, Resolve.type_kind temp_env [] tk))
-      decl newdecl
+      decl 
   in
   List.iter2
     begin fun (_, _, tk) desc ->
-      ignore (define_new_type loc (desc, (snd desc).type_params, tk));
+      ignore (define_new_type loc (desc, desc.type_params, tk));
     end
     decl newdecl;
   let final_env = ref env in
   List.iter2
     (fun id ty_desc ->
-       final_env := Env.add_type id (snd ty_desc) !final_env)
+       final_env := Env.add_type id ty_desc !final_env)
     id_list newdecl;
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -124,15 +118,15 @@ let type_typedecl env loc decl =
       with Recursive_abbrev ->
         recursive_abbrev_err loc desc
     end
-    (List.map snd newdecl);
-  decl, newdecl, !final_env
+    newdecl;
+  decl, List.combine id_list newdecl, !final_env
 
 let type_excdecl env loc decl =
   push_type_level();
   reset_type_expression_vars ();
   let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
-  let constr_tag = ConstrExtensible(Pdot(Pident !Env.current_unit, constr_name),
+  let constr_tag = ConstrExtensible(Path.Pdot(Path.Pident !Env.current_unit, constr_name),
                                     new_exc_stamp()) in
   let cd =
     constr_name,
@@ -155,13 +149,13 @@ let type_valuedecl env loc id typexp prim =
   let ty = type_of_type_expression false typexp in
   pop_type_level();
   generalize_type ty;
-  let vd = defined_global id { 
+  let vd = { 
     val_module = !Env.current_module;
     val_name = Id.name id;
     val_type = ty;
     val_kind = prim }
   in
-  let env = Env.add_value (little_id (fst vd)) (snd vd) env in
+  let env = Env.add_value id vd env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -174,12 +168,11 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let env = ref env in
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
-         let vd = (defined_global name
-                     {val_module = !Env.current_module;
+         let vd =  {val_module = !Env.current_module;
                       val_name = name;
                        val_type=ty;
-                      val_kind=Val_reg}) in
-         env := Env.add_value (little_id (fst vd)) (snd vd) !env;
+                      val_kind=Val_reg} in
+         env := Env.add_value name vd !env;
          vd) c
     in
     !env, vds
@@ -197,7 +190,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   let env, vds = if rec_flag then env, vds else enter_val c env in
-  pat_expr_list, vds, env
+  pat_expr_list, List.combine (List.map (fun x -> x.val_name) vds) vds, env
   
 let type_expression loc expr =
   push_type_level();

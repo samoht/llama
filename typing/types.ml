@@ -9,10 +9,6 @@ end
 
 open Path
 
-let little_id = function
-  | Pdot(_,s) -> s
-  | Pident id -> Id.name id
-
 type module_t =
   | Module of string
 
