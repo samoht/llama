@@ -149,8 +149,6 @@ let type_excdecl env loc decl =
   let env = Env.add_exception id (snd cd) env in
   (id, snd cd), env
 
-let horrible p = Id.create(little_id p)
-
 let type_valuedecl env loc id typexp prim =
   push_type_level();
   reset_type_expression_vars ();
@@ -163,7 +161,7 @@ let type_valuedecl env loc id typexp prim =
     val_type = ty;
     val_kind = prim }
   in
-  let env = Env.store_value (horrible (fst vd)) (fst vd) (snd vd) env in
+  let env = Env.add_value (little_id (fst vd)) (snd vd) env in
   vd, env
 
 let type_letdef env loc rec_flag untyped_pat_expr_list =
@@ -181,7 +179,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
                       val_name = name;
                        val_type=ty;
                       val_kind=Val_reg}) in
-         env := Env.store_value (horrible (fst vd)) (fst vd) (snd vd) !env;
+         env := Env.add_value (little_id (fst vd)) (snd vd) !env;
          vd) c
     in
     !env, vds

@@ -200,10 +200,10 @@ let add_type_predef (p,gl) =
        Hashtbl.add ps_builtin.mod_constrs gl.cs_name gl
     )
     (constructors_of_type gl);
-  env_builtin := Env.store_type (horrible p) p gl !env_builtin
+  env_builtin := Env.add_type (little_id p) gl !env_builtin
 let add_exc_predef (p,gl) =
   Hashtbl.add ps_builtin.mod_constrs (horrible p) gl;
-  env_builtin := Env.store_exception (horrible p) p gl !env_builtin
+  env_builtin := Env.add_exception (little_id p) gl !env_builtin
 
 let _ = List.iter
   (fun ((p,ty),desc) ->

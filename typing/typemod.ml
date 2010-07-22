@@ -7,8 +7,8 @@ open Module
 open Btype
 open Types
 
-let gen_value x = Gen_value (horrible (fst x), snd x)
-let gen_type x = Gen_type (horrible (fst x), snd x)
+let gen_value x = Gen_value (little_id (fst x), snd x)
+let gen_type x = Gen_type (little_id (fst x), snd x)
 let gen_exception x = Gen_exception (fst x, snd x)
 
 let type_structure_item env pstr =

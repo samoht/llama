@@ -9,16 +9,16 @@ open Path
 open Module
 
 type t = {
-  values: (Path.t * value) Id.tbl;
-  constrs: (Path.t * constructor) Id.tbl;
-  labels: (Path.t * label) Id.tbl;
-  types: (Path.t * type_constructor) Id.tbl;
+  values: (string, value) Tbl.t;
+  constrs: (string, constructor) Tbl.t;
+  labels: (string, label) Tbl.t;
+  types: (string, type_constructor) Tbl.t;
 }
 
-let empty = { values = Id.empty;
-              constrs = Id.empty;
-              labels = Id.empty;
-              types = Id.empty }
+let empty = { values = Tbl.empty;
+              constrs = Tbl.empty;
+              labels = Tbl.empty;
+              types = Tbl.empty }
 
 let initial = ref empty
 
@@ -41,7 +41,7 @@ let lookup_module lid env =
 let lookup proj1 proj2 lid env =
   match lid with
     Lident s ->
-      snd (Id.find_name s (proj1 env))
+      Tbl.find s (proj1 env)
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
@@ -56,71 +56,41 @@ and lookup_label =
 and lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.mod_types)
 
-let store_value id path decl env =
+let add_value id decl env =
   { env with
-    values = Id.add id (path,decl) env.values }
+      values = Tbl.add id decl env.values }
 
-let store_exception id path decl env =
+let add_exception id decl env =
   { env with
-    constrs = Id.add id (path,decl) env.constrs }
+    constrs = Tbl.add id decl env.constrs }
 
-let adj_path path id =
-  begin match path with
-    | Pident _ -> Pident id
-    | Pdot (m, _) -> Pdot (m, Id.name id)
-  end
-
-let store_type_internal do_hide id path info env =
+let add_type id info env =
   { env with
     constrs =
       List.fold_right
         (fun cs constrs ->
-           Id.add (Id.create cs.cs_name) (path,cs) constrs)
+           Tbl.add (Id.create cs.cs_name) cs constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun lbl labels ->
-           Id.add (Id.create lbl.lbl_name) (path,lbl) labels)
+           Tbl.add (Id.create lbl.lbl_name) lbl labels)
         (labels_of_type info)
         env.labels;
-    types = Id.add id (path,info) env.types }
-
-let store_type = store_type_internal false
-
-let add_value id desc env = store_value id (Pident id) desc env
-let add_type id desc env = store_type id (Pident id) desc env
-let add_exception id desc env = store_exception id (Pident id) desc env
-
-let enter store_fun name data env =
-  let id = Id.create name in
-  (id, store_fun id (Pident id) data env)
-let enter_value = enter store_value
-and enter_type = enter store_type
-and enter_exception = enter store_exception
+    types = Tbl.add id info env.types }
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
-  let name = Pident(Id.create_persistent name) in
-  let envref = ref env in
-  List.iter
-    (fun x ->
-       envref :=
-         begin match x with
-           | Gen_value (id, vd) ->
-               let path = Pdot (name, Id.name id) in
-               store_value (Id.hide id) path vd !envref
-           | Gen_exception (id, ed) ->
-               let path = Pdot (name, Id.name id) in
-               store_exception (Id.hide id) path ed !envref
-           | Gen_type (id, td) ->
-               let path = Pdot (name, Id.name id) in
-               store_type_internal true (Id.hide id) path td !envref
-         end
-    )
-    ps.working;
-  let env = !envref in
-  env
+  List.fold_left
+    (fun env -> function
+       | Gen_value (id, vd) ->
+           add_value id vd env
+       | Gen_exception (id, ed) ->
+           add_exception id ed env
+       | Gen_type (id, td) ->
+           add_type id td env)
+    env ps.working
 
 let read_signature modname = (find_pers_struct modname).working
 
