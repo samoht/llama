@@ -4,8 +4,11 @@
 type module_id =
   | Module_builtin
   | Module of string
+  | Module_toplevel
 
-type global_id = module_id * string
+type global_id = {
+  gl_module : module_id;
+  gl_name : string }
 
 type 'a reference = {
   ref_module : module_id;
@@ -101,4 +104,4 @@ and rec_status =
   | Rec_first
   | Rec_next
 
-let path_of_value v = (v.val_module, v.val_name)
+let path_of_value v = {gl_module=v.val_module; gl_name=v.val_name}

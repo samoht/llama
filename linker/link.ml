@@ -60,7 +60,7 @@ let scan_file tolink name =
 ;;
 
 let require_qualid qual id =
-  missing_globals := QualidSet.add (qual,id) !missing_globals;;
+  missing_globals := QualidSet.add {gl_module=qual; gl_name=id} !missing_globals;;
 
 (* Second pass : link in the required phrases. *)
 

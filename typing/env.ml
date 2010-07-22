@@ -21,17 +21,13 @@ let empty = { values = Tbl.empty;
 
 let initial = ref empty
 
-(* The name of the compilation unit currently compiled.
-   "" if outside a compilation unit. *)
-
-let current_unit = ref ""
 
 (* Lookup by name *)
 
 let lookup_module lid env =
   match lid with
     Lident s ->
-      if s = !current_unit then raise Not_found;
+(*      if s = !current_unit then raise Not_found; *)
       Module.find_pers_struct s 
   | Ldot _ ->
       raise Not_found
@@ -101,9 +97,14 @@ let write_pers_struct oc mn working =
 
 let current_module = ref (Module_builtin)
 
-let start_compiling name =
-  current_unit := Id.create_persistent name;
-  current_module := Module name;
+let current_unit () =
+  begin match !current_module with
+    | Module s -> s
+    | Module_builtin | Module_toplevel -> failwith "current_unit"
+  end
+
+let start_compiling m =
+  current_module := m;
   let s = if !Clflags.nopervasives then "none" else "cautious" in
   let l = List.assoc s Config.default_used_interfaces in
   List.fold_left (fun env m -> open_pers_signature m env) !initial l

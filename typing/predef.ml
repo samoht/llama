@@ -162,7 +162,7 @@ and constr_true =
 (* Some exceptions that must be known to the compiler *)
 
 let match_failure_tag =
-  ConstrExtensible ((module_builtin, "Match_failure"), 1)
+  ConstrExtensible ({gl_module=module_builtin; gl_name="Match_failure"}, 1)
 
 let constr_match_failure =
     { cs_parent = snd tref_exn;

@@ -7,7 +7,9 @@ open Module;;
 open Format;;
 
 let print_module = function
-    Module m -> print_string m
+    Module_builtin -> print_string "builtin"
+  | Module m -> print_string m
+  | Module_toplevel -> print_string "toplevel"
 
 let print_type_constr tcs =
   print_module tcs.type_module;

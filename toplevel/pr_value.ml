@@ -38,8 +38,7 @@ let find_exception tag =
           if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  let (Module mn,s) = qualid in
-  select_exn(Env.ps_find_all_constrs (Module.find_pers_struct (Id.name mn)) s)
+  select_exn(Env.ps_find_all_constrs (Module.new_find_module qualid.gl_module) qualid.gl_name)
 ;;
 
 let printers = ref [

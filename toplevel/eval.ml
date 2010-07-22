@@ -59,7 +59,7 @@ let rec term_of_expr c expr =
                     begin try
                       find_global qid
                     with
-                      | Not_found -> Global (fst qid, snd qid)
+                      | Not_found -> Global qid
                     end
                 | Val_prim prim ->
                     Prim (find_primitive prim.prim_arity prim.prim_name)
