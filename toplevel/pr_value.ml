@@ -36,7 +36,7 @@ let find_exception tag =
   | constr :: rest ->
       match constr.cs_tag with
         ConstrExtensible(qualid,st) ->
-          if st == stamp then Path.name qualid, constr else select_exn rest
+          if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
   let Pdot(Pident mn,s) = qualid in
@@ -121,19 +121,18 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           if get_type_constr cstr == snd tref_exn 
           then find_exception tag
           else
-            let cs = find_constr tag constr_list in
-            adj_path (path_of_type (get_type_constr cstr)) cs.cs_name, cs
+            find_constr tag constr_list
         in
         let (ty_args, ty_res) =
-          instance_constructor (snd constr) in
+          instance_constructor constr in
         filter (ty_res, ty);
-        match (snd constr).cs_arity with
+        match constr.cs_arity with
           0 ->
-            print_string (fst constr)
+            print_string constr.cs_name
         | 1 ->
             if prio > 1 then begin open_box 2; print_string "(" end
              else open_box 1;
-            print_string (fst constr);
+            print_string constr.cs_name;
             print_space();
             cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
             if prio > 1 then print_string ")";
@@ -141,7 +140,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         | n ->
             if prio > 1 then begin open_box 2; print_string "(" end
             else open_box 1;
-            print_string (fst constr);
+            print_string constr.cs_name;
             print_space();
             open_box 1;
             print_string "(";
@@ -159,24 +158,19 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           fatal_error "print_val: types should match"
       end
   | Type_record label_list ->
-      let label_list =
-        List.map
-          (fun(lbl) -> adj_path (path_of_type (get_type_constr cstr)) lbl.lbl_name, lbl)
-          label_list
-      in
       let print_field depth lbl =
         open_box 1;
-        print_string (fst lbl);
+        print_string lbl.lbl_name;
         print_string " ="; print_space();
         let (ty_res, ty_arg) =
-          type_pair_instance ((snd lbl).lbl_res, (snd lbl).lbl_arg) in
+          type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
         begin try
           filter (ty_res, ty)
         with OldUnify ->
           fatal_error "print_val: types should match"
         end;
         cautious (print_val 0 (depth - 1)
-                 (Llama_obj.field obj (snd lbl).lbl_pos)) ty_arg;
+                 (Llama_obj.field obj lbl.lbl_pos)) ty_arg;
         close_box() in
       let print_fields depth label_list =
           let rec loop depth b = function
