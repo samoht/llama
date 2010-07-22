@@ -9,8 +9,7 @@ type error =
 exception Error of error
 
 type pers_struct =
-  { mod_name: string;
-    mod_values: (string, value) Hashtbl.t;
+  { mod_values: (string, value) Hashtbl.t;
     mod_constrs: (string, constructor) Hashtbl.t;
     mod_labels: (string, label) Hashtbl.t;
     mod_types: (string, type_constructor) Hashtbl.t;
@@ -21,14 +20,11 @@ let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let ps_builtin =
-  { mod_name = "builtin";
-    mod_values = Hashtbl.create 10;
+  { mod_values = Hashtbl.create 10;
     mod_constrs = Hashtbl.create 10;
     mod_labels = Hashtbl.create 10;
     mod_types = Hashtbl.create 10;
     working = [] }
-
-let _ = Hashtbl.add persistent_structures "builtin" ps_builtin
 
 let constructors_of_type decl =
   match decl.type_kind with
@@ -46,15 +42,14 @@ let read_pers_struct modname filename =
     let mn = (input_value ic : string) in
     let working = (input_value ic : generated_item list) in
     close_in ic;
-    let ps = { mod_name = mn;
-               mod_values = Hashtbl.create 10;
+    if mn <> String.uncapitalize(*xxx*) modname then
+      raise(Error(Illegal_renaming(mn, modname)));
+    let ps = { mod_values = Hashtbl.create 10;
                mod_constrs = Hashtbl.create 10;
                mod_labels = Hashtbl.create 10;
                mod_types = Hashtbl.create 10;
                working = working }
     in
-    if ps.mod_name <> String.uncapitalize(*xxx*) modname then
-      raise(Error(Illegal_renaming(ps.mod_name, modname)));
     List.iter
       begin fun item ->
         begin match item with
@@ -110,7 +105,7 @@ let iter_values m cb =
 
 let new_find_module m =
   match m with
-(*    | Module_builtin -> find_pers_struct "builtin"*)
+    | Module_builtin -> ps_builtin
     | Module m ->
         assert (m = String.lowercase m);
         find_pers_struct m

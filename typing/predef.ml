@@ -4,7 +4,7 @@ open Asttypes
 open Types
 open Module
 
-let module_builtin = Module "builtin"
+let module_builtin = Module_builtin
 
 let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
 let list_tyvar = newgenvar()

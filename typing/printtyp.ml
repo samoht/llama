@@ -8,7 +8,7 @@ open Types
 (* Print a long identifier *)
 
 let module_name ppf = function
-(*    Module_builtin -> fprintf ppf "builtin"*)
+    Module_builtin -> fprintf ppf "builtin"
   | Module m -> fprintf ppf "%s" m
 (*  | Module_toplevel -> fprintf ppf "top"*)
 

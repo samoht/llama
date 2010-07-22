@@ -6,8 +6,8 @@ open Types;;
 
 type zam_instruction =
     Kquote of Lambda.struct_constant 
-  | Kget_global of path
-  | Kset_global of path
+  | Kget_global of global_id
+  | Kset_global of global_id
   | Kaccess of int
   | Kgrab
   | Kpush

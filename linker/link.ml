@@ -17,7 +17,7 @@ open Types;;
 (* First pass : determine which phrases are required *)
 
 module QualidSet = Set.Make(struct
-                              type t = path
+                              type t = global_id
                               let compare = compare
                             end)
 

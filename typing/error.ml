@@ -12,10 +12,12 @@ open Printf;;
 open Ctype;;
 
 let output_reference oc r =
-  output_string oc (match r.ref_module with
-(*                      | Module_builtin -> "builtin"*)
-                      | Module m -> m);
-  output_char oc '.';
+  begin match r.ref_module with
+    | Module_builtin -> ()
+    | Module m ->
+        output_string oc m;
+        output_char oc '.'
+  end;
   output_string oc r.ref_name
 
 let rec output_longident oc = function

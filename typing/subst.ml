@@ -2,7 +2,7 @@ open Types
 open Module
 
 type t = {
-  subst_module : module_t;
+  subst_module : module_id;
   types : (type_constructor * type_constructor) list;
   values : (value * value) list; (* currently unused *)
 }

@@ -1,18 +1,19 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-type module_t =
+type module_id =
+  | Module_builtin
   | Module of string
 
-type path = module_t * string
+type global_id = module_id * string
 
 type 'a reference = {
-  ref_module : module_t;
+  ref_module : module_id;
   ref_name : string;
   mutable ref_contents : 'a option }
 
 type constr_tag =
-    ConstrExtensible of path * int (* name of constructor & stamp *)
+    ConstrExtensible of global_id * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 (* Representation of types and declarations *)
@@ -22,7 +23,7 @@ open Asttypes
 (* Type constructors *)
 
 type type_constructor =
-  { type_module : module_t;
+  { type_module : module_id;
     type_name : string;
     type_params : core_type list;
     type_arity: int;                      (* Its arity *)
@@ -79,7 +80,7 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 (* Global variables *)
 
 type value =
-  { val_module: module_t;
+  { val_module: module_id;
     val_name: string;
     val_type: core_type;                (* Type of the value *)
     val_kind: value_kind }
