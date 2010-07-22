@@ -37,7 +37,7 @@ clean:
 
 install:
 	cp -f stdlib.zo *.zi *.zix *.mli *.ml $(LIBDIR)
-	rm $(LIBDIR)/iparsing.mli
+#	rm $(LIBDIR)/iparsing.mli
 
 %.zi: %.mli
 	$(LLAMAC) -c $(COMPFLAGS) $<

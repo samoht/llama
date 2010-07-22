@@ -2,6 +2,7 @@ open Types
 open Misc
 open Btype
 open Path
+open Module
 
 (* Extract the list of labels of a record type. *)
 
@@ -44,6 +45,11 @@ let occur_check level0 v =
 
 (* Unification *)
 
+let has_abbrev r = (get_type_constr r).type_manifest <> None
+let get_abbrev r =
+  let c = get_type_constr r in
+  c.type_params, (match c.type_manifest with None -> assert false | Some x -> x)
+
 let rec unify (ty1, ty2) =
   if ty1 == ty2 then () else begin
     let ty1 = type_repr ty1
@@ -66,15 +72,15 @@ let rec unify (ty1, ty2) =
             unify (t1res, t2res)
         | Tproduct tyl1, Tproduct tyl2 ->
             unify_list (tyl1, tyl2)
-        | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
+        | Tconstr(cstr1, []), Tconstr(cstr2, []) when same_type_constr cstr1 cstr2 ->
             ()
-        | Tconstr({type_params=params; type_manifest = Some(body)}, args), _ ->
+        | Tconstr(c, args), _ when has_abbrev c ->
+            let params, body = get_abbrev c in
             unify (expand_abbrev params body args, ty2)
-        | _, Tconstr({type_params=params; type_manifest = Some(body)}, args) ->
+        | _, Tconstr(c, args) when has_abbrev c ->
+            let params, body = get_abbrev c in
             unify (ty1, expand_abbrev params body args)
-        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
+        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
             unify_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -98,7 +104,8 @@ let rec filter_arrow ty =
         (ty1, ty2)
   | {typ_desc = Tarrow(ty1, ty2)} ->
       (ty1, ty2)
-  | {typ_desc = Tconstr( {type_params=params; type_manifest = Some(body)}, args)} ->
+  | {typ_desc = Tconstr(c, args)} when has_abbrev c ->
+      let params, body = get_abbrev c in
       filter_arrow (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -112,7 +119,8 @@ let rec filter_product arity ty =
       tyl
   | {typ_desc = Tproduct tyl} ->
       if List.length tyl == arity then tyl else raise OldUnify
-  | {typ_desc = Tconstr({type_params=params; type_manifest = Some(body)}, args)} ->
+  | {typ_desc = Tconstr(c, args)} when has_abbrev c ->
+      let params, body = get_abbrev c in
       filter_product arity (expand_abbrev params body args)
   | _ ->
       raise OldUnify
@@ -138,15 +146,15 @@ let rec filter (ty1, ty2) =
             filter (t1res, t2res)
         | Tproduct(t1args), Tproduct(t2args) ->
             filter_list (t1args, t2args)
-        | Tconstr(cstr1, []), Tconstr(cstr2, [])
-          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
+        | Tconstr(cstr1, []), Tconstr(cstr2, []) when same_type_constr cstr1 cstr2 ->
             ()
-        | Tconstr({type_params=params; type_manifest = Some(body)}, args), _ ->
+        | Tconstr(c, args), _ when has_abbrev c ->
+            let params, body = get_abbrev c in
             filter (expand_abbrev params body args, ty2)
-        | _, Tconstr( {type_params=params; type_manifest = Some(body)}, args) ->
+        | _, Tconstr(c, args) when has_abbrev c ->
+            let params, body = get_abbrev c in
             filter (ty1, expand_abbrev params body args)
-        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2)
-          when Path.same (path_of_type cstr1) (path_of_type cstr2) ->
+        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
             filter_list (tyl1, tyl2)
         | _, _ ->
             raise OldUnify
@@ -174,7 +182,8 @@ let repr = Btype.type_repr
 let rec expand ty =
   let ty = repr ty in
   begin match ty.typ_desc with
-    | Tconstr ({type_params=params; type_manifest=Some(body)}, args) ->
+    | Tconstr (c, args) when has_abbrev c ->
+        let params, body = get_abbrev c in
         expand (Btype.expand_abbrev params body args)
     | _ ->
         ty
@@ -206,8 +215,7 @@ let rec eqtype rename subst t1 t2 =
         with Not_found ->
           subst := (t1, t2) :: !subst
         end
-    | (Tconstr (p1, []), Tconstr (p2, [])) 
-          when Path.same (path_of_type p1) (path_of_type p2) ->
+    | (Tconstr (p1, []), Tconstr (p2, []))  when same_type_constr p1 p2 ->
         ()
     | _ ->
         let t1' = expand t1 in
@@ -231,8 +239,7 @@ let rec eqtype rename subst t1 t2 =
               eqtype rename subst u1 u2;
           | (Tproduct tl1, Tproduct tl2) ->
               eqtype_list rename subst tl1 tl2
-          | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when
-               Path.same (path_of_type p1) (path_of_type p2) ->
+          | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when same_type_constr p1 p2 ->
               eqtype_list rename subst tl1 tl2
           | (_, _) ->
               raise (Unify [])

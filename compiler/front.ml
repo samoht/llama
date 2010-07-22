@@ -105,7 +105,7 @@ let alloc_superfluous_constr cstr n =
   let rec extract_fields i =
     if i >= n then [] else
       Lprim(Pfield i, [Lvar 0]) :: extract_fields (succ i) in
-  Lprim(Pmakeblock cstr.cs_tag, extract_fields 0)
+  Lprim(Pmakeblock (get_constr cstr).cs_tag, extract_fields 0)
 ;;
 
 (* Translation of expressions *)
@@ -116,13 +116,13 @@ let rec translate_expr env =
     Texp_ident(Zlocal s) ->
       translate_access (Id.name s) env (* xxx *)
   | Texp_ident(Zglobal g) ->
-      (match g.val_kind with
+      (match (get_value g).val_kind with
         Val_reg ->
-          Lprim(Pget_global (path_of_value g), [])
+          Lprim(Pget_global (path_of_value (get_value g)), [])
          | Val_prim p ->
              let arity = p.prim_arity in
              if arity = 0 then
-               Lprim(Pget_global (path_of_value g), []) (* xxx *)
+               Lprim(Pget_global (path_of_value (get_value g)), []) (* xxx *)
              else
                let rec make_fct args n =
                  if n >= arity
@@ -141,23 +141,23 @@ let rec translate_expr env =
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
   | Texp_construct(c,argl) ->
-      begin match c.cs_arity with
+      begin match (get_constr c).cs_arity with
       | 0 ->
-          Lconst(SCblock(c.cs_tag, []))
+          Lconst(SCblock((get_constr c).cs_tag, []))
       | 1 ->
           let arg = List.hd argl in
           let tr_arg = transl arg in
           begin try
-            Lconst(SCblock(c.cs_tag, [extract_constant tr_arg]))
+            Lconst(SCblock((get_constr c).cs_tag, [extract_constant tr_arg]))
           with Not_constant ->
-            Lprim(Pmakeblock c.cs_tag, [tr_arg])
+            Lprim(Pmakeblock (get_constr c).cs_tag, [tr_arg])
           end
       | n ->
               let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
-                Lconst(SCblock(c.cs_tag, List.map extract_constant tr_argl))
+                Lconst(SCblock((get_constr c).cs_tag, List.map extract_constant tr_argl))
               with Not_constant ->
-                Lprim(Pmakeblock c.cs_tag, tr_argl)
+                Lprim(Pmakeblock (get_constr c).cs_tag, tr_argl)
               end
       end
   | Texp_apply({exp_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
@@ -167,7 +167,7 @@ let rec translate_expr env =
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
   | Texp_apply({exp_desc = Texp_ident(Zglobal g)} as fct, args) ->
-      begin match g.val_kind with
+      begin match (get_value g).val_kind with
         Val_reg ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
       | Val_prim {prim_arity=arity;prim_name=name} ->
@@ -226,7 +226,8 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> Path.same (path_of_constructor cstr) path_void | _ -> false
+                       Texp_construct(cstr,[]) -> get_constr cstr == constr_void
+                    | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
   | Texp_while(econd, ebody) ->
@@ -246,11 +247,11 @@ let rec translate_expr env =
   | Texp_record lbl_expr_list ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter
-          (fun (lbl, e) -> v.(lbl.lbl_pos) <- transl e)
+          (fun (lbl, e) -> v.((get_label lbl).lbl_pos) <- transl e)
           lbl_expr_list;
         begin try
           if List.for_all
-               (fun (lbl, e) -> lbl.lbl_mut == Notmutable)
+               (fun (lbl, e) -> (get_label lbl).lbl_mut == Notmutable)
                lbl_expr_list
           then Lconst(SCblock(ConstrRegular(0,0),
                               Array.to_list (Array.map extract_constant v)))
@@ -259,9 +260,9 @@ let rec translate_expr env =
           Lprim(Pmakeblock(ConstrRegular(0,0)), Array.to_list v)
         end
   | Texp_field (e, lbl) ->
-      Lprim(Pfield lbl.lbl_pos, [transl e])
+      Lprim(Pfield (get_label lbl).lbl_pos, [transl e])
   | Texp_setfield (e1, lbl, e2) ->
-      Lprim(Psetfield lbl.lbl_pos, [transl e1; transl e2])
+      Lprim(Psetfield (get_label lbl).lbl_pos, [transl e1; transl e2])
   | Texp_stream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Texp_parser case_list ->

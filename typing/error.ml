@@ -11,6 +11,13 @@ open Pr_type;;
 open Printf;;
 open Ctype;;
 
+let output_reference oc r =
+  output_string oc (match r.ref_module with
+(*                      | Module_builtin -> "builtin"*)
+                      | Module m -> m);
+  output_char oc '.';
+  output_string oc r.ref_name
+
 let rec output_longident oc = function
     Longident.Lident s ->
       output_string oc s
@@ -269,9 +276,9 @@ let type_decl_arity_err loc ty_desc1 ty_desc2 =
 ;;
 
 let recursive_abbrev_err loc ty_cstr =
-  eprintf "%aThe type abbreviation %a is a cyclic (infinite) type.\n"
-    output_location loc 
-    output_path (fst  ty_cstr);
+  eprintf "%aThe type abbreviation is a cyclic (infinite) type.\n"
+    output_location loc ;
+
   raise Toplevel
 ;;
 

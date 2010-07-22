@@ -5,6 +5,7 @@ open Types
 open Parsetree
 open Typedtree
 open Primitive
+open Module
 open Path
 
 exception Multiply_bound_variable of string
@@ -31,22 +32,20 @@ let rec free_vars_of_pat pat =
   | Ppat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
 
-let mkref (p,d) = d
-
 let lookup_type env li loc =
-  try mkref(Env.lookup_type li env)
+  try ref_type_constr(snd(Env.lookup_type li env))
   with Not_found -> Error.unbound_type_constr_err li loc
 
 let lookup_constructor env li loc =
-  try mkref(Env.lookup_constructor li env)
+  try ref_constr(snd(Env.lookup_constructor li env))
   with Not_found -> Error.unbound_constr_err li loc
 
 let lookup_label env li loc =
-  try mkref(Env.lookup_label li env)
+  try ref_label(snd(Env.lookup_label li env))
   with Not_found -> Error.unbound_label_err li loc
 
 let lookup_value env li loc =
-  try mkref(Env.lookup_value li env)
+  try ref_value(snd(Env.lookup_value li env))
   with Not_found -> Error.unbound_value_err li loc
 
 let rec type_expression env c te =
@@ -83,7 +82,7 @@ let rec pattern env p =
         | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
         | Ppat_construct (li,sarg) ->
             let cs = lookup_constructor env li p.ppat_loc in
-            let arity = cs.cs_arity in
+            let arity = (get_constr cs).cs_arity in
             let sargs =
               match sarg with
                   None -> []
@@ -128,7 +127,7 @@ let rec expr env c ex =
         | Pexp_tuple l -> Texp_tuple (List.map (expr env c) l)
         | Pexp_construct (li,sarg) ->
             let cs = lookup_constructor env li ex.pexp_loc in
-            let arity = cs.cs_arity in
+            let arity = (get_constr cs).cs_arity in
             let sargs =
               match sarg with
                   None -> []

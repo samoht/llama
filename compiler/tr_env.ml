@@ -8,6 +8,7 @@ open Lambda;;
 open Prim;;
 open Error;;
 open Types;;
+open Module
 
 let translate_path root =
   let rec transl = function
@@ -78,7 +79,7 @@ let rec paths_of_pat path pat =
       let rec paths_of_lbl_pat_list = function
         [] -> []
       | (lbl,p)::pl ->
-          paths_of_pat (Path_son(lbl.lbl_pos,path)) p @
+          paths_of_pat (Path_son((get_label lbl).lbl_pos,path)) p @
           paths_of_lbl_pat_list pl in
       paths_of_lbl_pat_list lbl_pat_list
   | _ -> []
@@ -103,7 +104,7 @@ let rec mutable_vars_of_pat mut pat =
       List.flatten (List.map
         (fun (lbl,pat) ->
           let mut' =
-            match lbl.lbl_mut with
+            match (get_label lbl).lbl_mut with
               Mutable -> true
             | Notmutable -> mut in
           mutable_vars_of_pat mut' pat)

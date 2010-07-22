@@ -124,7 +124,7 @@ let type_typedecl env loc decl =
       with Recursive_abbrev ->
         recursive_abbrev_err loc desc
     end
-    newdecl;
+    (List.map snd newdecl);
   decl, newdecl, !final_env
 
 let type_excdecl env loc decl =
@@ -138,7 +138,7 @@ let type_excdecl env loc decl =
     constr_name,
     { cs_parent = snd tref_exn;
       cs_name = constr_name;
-      cs_res = type_exn;
+      cs_res = type_exn();
       cs_args = ty_args;
       cs_arity = List.length ty_args;
       cs_tag = constr_tag }

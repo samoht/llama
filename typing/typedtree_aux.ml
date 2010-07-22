@@ -50,7 +50,7 @@ let rec pat_irrefutable pat =
   | Tpat_alias(pat, _) -> pat_irrefutable pat
   | Tpat_constant _ -> false
   | Tpat_tuple patl -> List.for_all pat_irrefutable patl
-  | Tpat_construct(cstr, pats) -> single_constructor cstr && List.for_all pat_irrefutable pats
+  | Tpat_construct(cstr, pats) -> single_constructor (Module.get_constr cstr) && List.for_all pat_irrefutable pats
   | Tpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
   | Tpat_constraint(pat, _) -> pat_irrefutable pat
   | Tpat_record lbl_pat_list ->

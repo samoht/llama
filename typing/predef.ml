@@ -14,11 +14,19 @@ let list_tyvar = newgenvar()
 let vect_tyvar = newgenvar()
 let option_tyvar = newgenvar()
 
-let doref (p,d) = d
+let doref (p,d) =
+  match p with
+    | Pdot(Pident m, s) ->
+        { ref_module = Module m;
+          ref_name = s;
+          ref_contents = Some d }
+    | _ -> assert false
+
+let fwdref m s = { ref_module = Module m; ref_name = s; ref_contents = None }
 
 (* Some types that must be known to the type checker *)
 
-let mkty ?(m=Module_builtin) nm params =
+let mkty ?(m=Module "builtin") nm params =
   { type_module = m;
     type_name = nm;
     type_params = params;
@@ -59,7 +67,6 @@ and tref_char = path_char, (mkty "char" [])
 and tref_list = path_list, (mkty "list" [list_tyvar])
 and tref_vect = path_vect, (mkty "vect" [vect_tyvar] )
 and tref_option = path_option, (mkty "option" [option_tyvar])
-and tref_stream = Pdot(Pident(Id.create_persistent "stream"), "stream"), mkty ~m:(Module "stream") "stream" []
 and tref_num =
   (* This is needed only for the Windows port. *)
   Pdot(Pident(Id.create_persistent "num"), "num"),mkty ~m:(Module "num") "num" []
@@ -70,7 +77,7 @@ and type_product tlist =
   {typ_desc=Tproduct(tlist); typ_level=notgeneric}
 and type_unit =
   {typ_desc=Tconstr(doref tref_unit, []); typ_level=notgeneric}
-and type_exn =
+and type_exn() =
   {typ_desc=Tconstr(doref tref_exn, []); typ_level=notgeneric}
 and type_bool =
   {typ_desc=Tconstr(doref tref_bool, []); typ_level=notgeneric}
@@ -85,11 +92,14 @@ and type_char =
 and type_vect t =
   {typ_desc=Tconstr(doref tref_vect, [t]); typ_level=notgeneric}
 and type_stream t =
-  {typ_desc=Tconstr(doref tref_stream, [t]); typ_level=notgeneric}
+  {typ_desc=Tconstr(fwdref "stream" "stream", [t]); typ_level=notgeneric}
 and type_num =
   {typ_desc=Tconstr(doref tref_num, []); typ_level=notgeneric}
+
 ;;
 let path_format = Pdot(Pident(Id.create_persistent"printf"), "format")
+let ref_format = fwdref "printf" "format"
+(*
 let tref_format =
   let params = [newgenvar();newgenvar();newgenvar()] in
   path_format,
@@ -99,10 +109,11 @@ let tref_format =
     type_arity = 3;
     type_manifest = None; (* Some type_string; *)
     type_kind = Type_abstract }
+*)
 
     (* This assumes that "format" is the first type defined in "printf". *)
 let type_format t1 t2 t3 =
-  {typ_desc=Tconstr(doref tref_format, [t1;t2;t3]); typ_level=notgeneric}
+  {typ_desc=Tconstr(ref_format, [t1;t2;t3]); typ_level=notgeneric}
 
 (* Some constructors that must be known to the parser *)
 
@@ -183,8 +194,15 @@ let constr_match_failure =
 let env_builtin = ref Env.empty
 let horrible p = Id.create(little_id p)
 let add_type_predef (p,gl) =
+  Hashtbl.add ps_builtin.mod_types (horrible p) gl;
+  List.iter
+    (fun gl ->
+       Hashtbl.add ps_builtin.mod_constrs gl.cs_name gl
+    )
+    (constructors_of_type gl);
   env_builtin := Env.store_type (horrible p) p gl !env_builtin
 let add_exc_predef (p,gl) =
+  Hashtbl.add ps_builtin.mod_constrs (horrible p) gl;
   env_builtin := Env.store_exception (horrible p) p gl !env_builtin
 
 let _ = List.iter

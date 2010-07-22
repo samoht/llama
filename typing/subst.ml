@@ -1,16 +1,21 @@
 open Types
+open Module
 
 type t = {
+  subst_module : module_t;
   types : (type_constructor * type_constructor) list;
   values : (value * value) list; (* currently unused *)
 }
 
-let identity = { types = []; values = [] }
+let identity m = { subst_module = m; types = []; values = [] }
 
 let add_type_constructor c1 c2 s = { s with types = (c1, c2) :: s.types }
 
-let type_constructor s c =
-  try List.assq c s.types with Not_found -> c
+let type_constructor s r =
+  if r.ref_module = s.subst_module then
+    { r with ref_contents = Some (List.assq (get_type_constr r) s.types) }
+  else
+    r
 
 let mkgenty desc = { typ_desc = desc; typ_level = generic }
 

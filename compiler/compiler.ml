@@ -16,6 +16,7 @@ open Pr_decl;;
 open Front;;
 open Back;;
 open Emit_phr;;
+open Types
 
 (* Parsing functions *)
 
@@ -148,7 +149,7 @@ let compile_implementation modname filename suffix =
       let intf_sg = Env.read_signature modname in
       let env = Env.start_compiling modname in
       let impl_sg, env = compile_impl env modname filename suffix in
-      ignore (Includemod.signatures Subst.identity impl_sg intf_sg)
+      ignore (Includemod.signatures (Subst.identity (Module modname)) impl_sg intf_sg)
     with Sys_error _ as x -> (* xxx *)
       remove_file (filename ^ ".zo");
       raise x

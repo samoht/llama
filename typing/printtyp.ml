@@ -10,6 +10,14 @@ open Types
 
 let qualid ppf id = pp_print_string ppf (Path.name id)
 
+let module_name ppf = function
+(*    Module_builtin -> fprintf ppf "builtin"*)
+  | Module m -> fprintf ppf "%s" m
+(*  | Module_toplevel -> fprintf ppf "top"*)
+
+let reference ppf r =
+  fprintf ppf "%a.%s" module_name r.ref_module r.ref_name
+
 let rec longident ppf = function
   | Lident s -> fprintf ppf "%s" s
   | Ldot(p, s) -> fprintf ppf "%a.%s" longident p s
@@ -79,7 +87,7 @@ and print_out_type_2 ppf ty =
 and print_simple_out_type ppf ty =
   match ty.typ_desc with
   | Tconstr (id, tyl) ->
-      fprintf ppf "@[%a%a@]" print_typargs tyl qualid (path_of_type id)
+      fprintf ppf "@[%a%a@]" print_typargs tyl reference id
 (*| Tvar -> fprintf ppf "'%s%s" (if ng then "_" else "") s *)
   | Tarrow _ | Tproduct _ ->
       fprintf ppf "@[<1>(%a)@]" print_out_type ty

@@ -75,7 +75,7 @@ let rec print_typ priority ty =
           close_box();
           print_space()
       end;
-      print_path (path_of_type cstr);
+      print_path (path_of_type (get_type_constr cstr));
       close_box()
 
 and print_typ_list priority sep = function

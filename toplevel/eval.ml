@@ -6,6 +6,7 @@ open Prim
 open Primdecl
 open Primitive
 open Symtable
+open Module
 
 type term =
   | Lambda of term
@@ -13,10 +14,10 @@ type term =
   | App of term * term
   | Const of atomic_constant
   | Prim of primitive
-  | Ctor of constructor reference
+  | Ctor of constructor 
   | Tuple of int
   | Array of int
-  | Match of type_constructor reference
+  | Match of type_constructor 
   | Global of Path.t
 
 let global_terms = ref (Hashtbl.create 10)
@@ -52,9 +53,9 @@ let rec term_of_expr c expr =
     | Texp_ident id ->
         begin match id with
           | Zglobal vdg ->
-              begin match vdg.val_kind with
+              begin match (get_value vdg).val_kind with
                 | Val_reg ->
-                    let qid = path_of_value vdg in
+                    let qid = path_of_value (get_value vdg) in
                     begin try
                       find_global qid
                     with
@@ -77,13 +78,13 @@ let rec term_of_expr c expr =
     | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
     | Texp_construct (ct, l) ->
-        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor ct) l
+        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor (get_constr ct)) l
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function [([{pat_desc=Tpat_var s}],e)] ->
         Lambda (term_of_expr (s::c) e)
     | Texp_ifthenelse (i, t, e) ->
-        app3 (Match (doref tref_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
+        app3 (Match (snd tref_bool)) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
         Ctor  constr_void
     | Texp_constraint (e, _) ->

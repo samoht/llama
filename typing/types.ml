@@ -7,7 +7,13 @@ let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
 
-type 'a reference = 'a
+type module_t =
+  | Module of string
+
+type 'a reference = {
+  ref_module : module_t;
+  ref_name : string;
+  mutable ref_contents : 'a option }
 
 type constr_tag =
     ConstrExtensible of Path.t * int (* name of constructor & stamp *)
@@ -18,11 +24,6 @@ type constr_tag =
 open Asttypes
 
 (* Type constructors *)
-
-type module_t =
-  | Module_builtin
-  | Module of string
-  | Module_toplevel
 
 type type_constructor =
   { type_module : module_t;
@@ -104,9 +105,7 @@ and rec_status =
   | Rec_next
 
 let path_of_module = function
-    Module_builtin -> Pident("builtin")
   | Module n -> Pident(n)
-  | Module_toplevel -> Pident("top")
     
 let path_of_type ty = Pdot(path_of_module ty.type_module, ty.type_name)
 let path_of_value v = Pdot(path_of_module v.val_module, v.val_name)

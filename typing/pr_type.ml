@@ -67,7 +67,7 @@ let rec output_typ oc sch priority ty =
           output_typ_list oc sch 0 ", " tyl;
           output_string oc ") "
       end;
-      output_type_constr oc cstr
+      output_type_constr oc (Module.get_type_constr cstr)
 
 and output_typ_list oc sch priority sep = function
     [] ->

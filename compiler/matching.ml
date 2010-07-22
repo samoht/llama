@@ -10,6 +10,7 @@ open Location;;
 open Lambda;;
 open Prim;;
 open Clauses;;
+open Module
 
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
@@ -53,7 +54,7 @@ and make_tuple_match arity pathl =
 and make_construct_match cstr pathl0 cas =
   begin match pathl0 with
     | path :: pathl ->
-        begin match cstr.cs_arity with
+        begin match (get_constr cstr).cs_arity with
           | 0 ->
               Matching([cas], pathl)
           | 1 ->
@@ -130,7 +131,7 @@ let divide_construct_matching (Matching(casel, pathl)) =
         let (constrs, others) =
           divide_rec rest in
         add_to_division
-          (make_construct_match c pathl) constrs c.cs_tag (patl', action),
+          (make_construct_match c pathl) constrs (get_constr c).cs_tag (patl', action),
         others
     | casel ->
         [], Matching(casel, pathl)
@@ -171,7 +172,7 @@ let divide_record_matching ty_record (Matching(casel, pathl)) =
         fatal_error "divide_record_matching"
   and divide_rec_cont pat_expr_list patl action rest =
     let v = Array.make num_labels wildcard_pat in
-    List.iter (fun (lbl, pat) -> v.(lbl.lbl_pos) <- pat) pat_expr_list;
+    List.iter (fun (lbl, pat) -> v.((get_label lbl).lbl_pos) <- pat) pat_expr_list;
     add_to_match (divide_rec rest) (Array.to_list v @ patl, action)
   in
     divide_rec casel
@@ -193,7 +194,7 @@ let upper_left_pattern =
 ;;
 
 let get_span_of_constr cstr =
-  match cstr.cs_tag with
+  match (get_constr cstr).cs_tag with
     ConstrExtensible _      -> 0       (* Meaningless ... *)
   | ConstrRegular(tag,span) -> span
 ;;
@@ -266,7 +267,7 @@ let rec conquer_matching =
             and lambda2, total2 = conquer_matching vars in
               (Lstatichandle(Lcond(path, condlist1), lambda2), total2)
       | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
-          conquer_matching (divide_record_matching lbl.lbl_parent matching)
+          conquer_matching (divide_record_matching (get_label lbl).lbl_parent matching)
       | _ ->
           fatal_error "conquer_matching 2"
       end

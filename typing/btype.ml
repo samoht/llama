@@ -3,6 +3,7 @@
 open Misc;;
 open Asttypes;;
 open Types;;
+open Module
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -214,7 +215,7 @@ let expand_abbrev params body args =
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  match (snd cstr).type_manifest with
+  match cstr.type_manifest with
     None -> ()
   | Some body ->
       let rec check_abbrev seen ty =
@@ -223,13 +224,14 @@ let check_recursive_abbrev cstr =
         | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
         | Tproduct tlist -> List.iter (check_abbrev seen) tlist
         | Tconstr(c, tlist) ->
-            if List.exists (Path.same (path_of_type c)) seen then
+            let c = get_type_constr c in
+            if List.memq c seen then
               raise Recursive_abbrev
             else begin
               List.iter (check_abbrev seen) tlist;
               begin match c.type_manifest with
                 None -> ()
-              | Some( body) -> check_abbrev (path_of_type c :: seen) body
+              | Some( body) -> check_abbrev ( c :: seen) body
               end
             end
-      in check_abbrev [fst cstr] body
+      in check_abbrev [cstr] body

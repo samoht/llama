@@ -149,10 +149,11 @@ let ps_find_all_constrs ps s =
   Hashtbl.find_all ps.mod_constrs s
 
 let write_pers_struct oc mn working =
+  Module.erase_sig (Module mn) working;
   output_value oc mn;
   output_value oc working
 
-let current_module = ref Module_builtin
+let current_module = ref (Module"builtin")
 
 let start_compiling name =
   current_unit := Id.create_persistent name;
