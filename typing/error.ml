@@ -12,13 +12,13 @@ open Printf;;
 open Ctype;;
 
 let output_reference oc r =
-  begin match r.ref_module with
+  begin match r.ref_id.gl_module with
     | Module_builtin -> ()
     | Module m ->
         output_string oc m;
         output_char oc '.'
   end;
-  output_string oc r.ref_name
+  output_string oc r.ref_id.gl_name
 
 let rec output_longident oc = function
     Longident.Lident s ->

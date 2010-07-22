@@ -14,12 +14,11 @@ let option_tyvar = newgenvar()
 let doref (p,d) =
   match p with
     | (m, s) ->
-        { ref_module = m;
-          ref_name = s;
+        { ref_id = {gl_module=m; gl_name=s};
           ref_contents = Some d }
     | _ -> assert false
 
-let fwdref m s = { ref_module = Module m; ref_name = s; ref_contents = None }
+let fwdref m s = { ref_id = {gl_module=Module m;gl_name = s};  ref_contents = None }
 
 (* Some types that must be known to the type checker *)
 

@@ -7,13 +7,15 @@ open Types
 
 (* Print a long identifier *)
 
-let module_name ppf = function
+let module_id ppf = function
     Module_builtin -> fprintf ppf "builtin"
   | Module m -> fprintf ppf "%s" m
-(*  | Module_toplevel -> fprintf ppf "top"*)
+  | Module_toplevel -> fprintf ppf "toplevel"
 
-let reference ppf r =
-  fprintf ppf "%a.%s" module_name r.ref_module r.ref_name
+let global_id ppf gl =
+  fprintf ppf "%a.%s" module_id gl.gl_module gl.gl_name
+
+let reference ppf r = global_id ppf r.ref_id
 
 let rec longident ppf = function
   | Lident s -> fprintf ppf "%s" s

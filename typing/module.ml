@@ -115,9 +115,7 @@ let get proj r =
   begin match r.ref_contents with
     | Some x -> x
     | None ->
-        if r.ref_module = Module "baltree" && r.ref_name = "t" then
-          print_endline"cache miss for baltree.t";
-        let x = Hashtbl.find (proj (new_find_module r.ref_module)) r.ref_name in
+        let x = Hashtbl.find (proj (new_find_module r.ref_id.gl_module)) r.ref_id.gl_name in
         r.ref_contents <- Some x;
         x
   end
@@ -128,20 +126,13 @@ let get_value = get (fun ps -> ps.mod_values)
 let get_label = get (fun ps -> ps.mod_labels)
 
 let same_type_constr r1 r2 =
-  if r1.ref_module = Module "baltree" && r1.ref_name = "t" &&
-    r2.ref_module = Module "baltree" && r2.ref_name = "t" then begin
-    let x1 = get_type_constr r1 in
-    let x2 = get_type_constr r2 in
-    assert (x1 == x2);
-  end;
   get_type_constr r1 == get_type_constr r2
 let same_constr r1 r2 = get_constr r1 == get_constr r2
 let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
 
 let makeref stor m n c =
-  let ret ={ ref_module = m;
-             ref_name = n;
+  let ret ={ ref_id = {gl_module=m; gl_name=n};
              ref_contents = Some c }
   in
   stor := ret :: !stor;
@@ -162,10 +153,7 @@ let rec erase_type m t = match t.typ_desc with
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Tproduct l -> List.iter (erase_type m) l
   | Tconstr (r, l) ->
-      if r.ref_module <> m then begin
-(*         print_endline("Tossing "^r.ref_name); *)
-        r.ref_contents <- None;
-      end;
+      if r.ref_id.gl_module <> m then r.ref_contents <- None;
       List.iter (erase_type m) l
 let erase_constr m cs =
   erase_type m cs.cs_res;
@@ -189,17 +177,3 @@ let erase_item m = function
   | Gen_type (_,t) -> erase_type_constr m t
   | Gen_exception (_,c) -> erase_constr m c
 let erase_sig m l = List.iter (erase_item m) l
-
-let prepare_to_marshal m =
-  let f stor =
-    List.iter (fun r ->
-                 if r.ref_module <> m then begin
-                   if r.ref_name = "exn" then print_endline ("Tossing "^r.ref_name);
-                   r.ref_contents <- None
-                 end) !stor;
-    stor := []
-  in
-  f stor_label;
-  f stor_constr;
-  f stor_type_constr;
-  f stor_value

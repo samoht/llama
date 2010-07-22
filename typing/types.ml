@@ -11,8 +11,7 @@ type global_id = {
   gl_name : string }
 
 type 'a reference = {
-  ref_module : module_id;
-  ref_name : string;
+  ref_id : global_id;
   mutable ref_contents : 'a option }
 
 type constr_tag =
