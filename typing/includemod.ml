@@ -18,24 +18,24 @@ exception Error of error list
 
 (* Inclusion between value descriptions *)
 
-let values id vd1 vd2 =
+let values s id vd1 vd2 =
   try
-    Includecore.values vd1 vd2
+    Includecore.values s vd1 vd2
   with Includecore.Dont_match ->
     Error.type_mismatch_err (Id.name id) vd2 vd1
 (*    raise(Error[Value_descriptions(id, vd1, vd2)])*)
 
 (* Inclusion between type declarations *)
 
-let type_constructors id decl1 decl2 =
-  if Includecore.type_constructors id decl1 decl2
+let type_constructors s id decl1 decl2 =
+  if Includecore.type_constructors s id decl1 decl2
   then ()
   else raise(Error[Type_declarations(id, decl1, decl2)])
 
 (* Inclusion between exception declarations *)
 
-let exception_declarations id decl1 decl2 =
-  if Includecore.exception_declarations decl1 decl2
+let exception_declarations s id decl1 decl2 =
+  if Includecore.exception_declarations s decl1 decl2
   then ()
   else raise(Error[Exception_declarations(id, decl1, decl2)])
 
@@ -63,7 +63,7 @@ let simplify_structure_coercion cc =
   then Tcoerce_none
   else Tcoerce_structure cc
 
-let rec signatures sig1 sig2 =
+let rec signatures subst sig1 sig2 =
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
   let rec build_component_table pos tbl = function
@@ -85,38 +85,45 @@ let rec signatures sig1 sig2 =
      Return a coercion list indicating, for all run-time components
      of sig2, the position of the matching run-time components of sig1
      and the coercion to be applied to it. *)
-  let rec pair_components paired unpaired = function
+  let rec pair_components subst paired unpaired = function
       [] ->
         begin match unpaired with
-            [] -> signature_components (List.rev paired)
+            [] -> signature_components subst (List.rev paired)
           | _  -> raise(Error unpaired)
         end
     | item2 :: rem ->
         let (id2, name2) = item_ident_name item2 in
         begin try
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
-          pair_components ((item1, item2, pos1) :: paired) unpaired rem
+          let new_subst =
+            match item2, item1 with
+                Gen_type (_, td2), Gen_type (_, td1) ->
+                  Subst.add_type_constructor td2 td1 subst
+              | _ ->
+                  subst
+          in
+          pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
           failwith ("ERROR: unpaired: "^Id.name id2)
 (*           pair_components paired unpaired rem *)
         end in
   (* Do the pairing and checking, and return the final coercion *)
-  simplify_structure_coercion (pair_components [] [] sig2)
+  simplify_structure_coercion (pair_components subst [] [] sig2)
 
-and signature_components = function
+and signature_components subst = function
     [] -> []
   | (Gen_value(id1,valdecl1), Gen_value(id2,valdecl2), pos) :: rem ->
-      let cc = values id1 valdecl1 valdecl2 in
+      let cc = values subst id1 valdecl1 valdecl2 in
       begin match valdecl2.val_kind with
-        Val_prim _ -> signature_components rem
-      | _ -> (pos, cc) :: signature_components rem
+        Val_prim _ -> signature_components subst rem
+      | _ -> (pos, cc) :: signature_components subst rem
       end
   | (Gen_type(id1,tydecl1), Gen_type(id2,tydecl2), pos) :: rem ->
-      type_constructors id1 tydecl1 tydecl2;
-      signature_components rem
+      type_constructors subst id1 tydecl1 tydecl2;
+      signature_components subst rem
   | (Gen_exception(id1,excdecl1), Gen_exception(id2,excdecl2), pos)
     :: rem ->
-      exception_declarations id1 excdecl1 excdecl2;
-      (pos, Tcoerce_none) :: signature_components rem
+      exception_declarations subst id1 excdecl1 excdecl2;
+      (pos, Tcoerce_none) :: signature_components subst rem
   | _ ->
       assert false

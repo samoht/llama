@@ -97,7 +97,7 @@ let tref_format =
     type_name = "format";
     type_params = params;
     type_arity = 3;
-    type_manifest = Some type_string;
+    type_manifest = None; (* Some type_string; *)
     type_kind = Type_abstract }
 
     (* This assumes that "format" is the first type defined in "printf". *)

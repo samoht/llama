@@ -2,7 +2,7 @@
 
 open Io
 
-type ('a, 'b, 'c) format == string;; (* XXX: MAKE THIS ABSTRACT *)
+type ('a, 'b, 'c) format;; (* XXX: MAKE THIS ABSTRACT *)
         (* The type of format strings. ['a] is the type of the parameters
            of the string, ['c] is the result type for the [printf]-style
            function, and ['b] is the type of the first argument given to
