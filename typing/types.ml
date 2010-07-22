@@ -7,6 +7,8 @@ let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
 
+type 'a reference = 'a
+
 type constr_tag =
     ConstrExtensible of Path.t * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
@@ -39,7 +41,7 @@ and typ_desc =
     Tvar of typ_link ref                (* A type variable *)
   | Tarrow of core_type * core_type                 (* A function type *)
   | Tproduct of core_type list                (* A tuple type *)
-  | Tconstr of type_constructor * core_type list  (* A constructed type *)
+  | Tconstr of type_constructor reference * core_type list  (* A constructed type *)
 and typ_link =
     Tnolink                             (* Free variable *)
   | Tlinkto of core_type                      (* Instantiated variable *)
