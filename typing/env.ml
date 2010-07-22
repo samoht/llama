@@ -62,11 +62,11 @@ let lookup_module lid env =
 let lookup proj1 proj2 lid env =
   match lid with
     Lident s ->
-      Id.find_name s (proj1 env)
+      snd (Id.find_name s (proj1 env))
   | Ldot(l, s) ->
       let (p, desc) = lookup_module l env in
       let data = Hashtbl.find (proj2 desc) s in
-      Pdot (p, s), data
+      data
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.mod_values)

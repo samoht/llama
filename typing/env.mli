@@ -11,10 +11,10 @@ val find_constructor: Path.t -> t -> constructor
 val find_label: Path.t -> t -> label
 val find_type: Path.t -> t -> type_constructor
 
-val lookup_type : Longident.t -> t -> Path.t * type_constructor
-val lookup_constructor : Longident.t -> t -> Path.t * constructor
-val lookup_label : Longident.t -> t -> Path.t * label
-val lookup_value : Longident.t -> t -> Path.t * value
+val lookup_type : Longident.t -> t -> type_constructor
+val lookup_constructor : Longident.t -> t -> constructor
+val lookup_label : Longident.t -> t -> label
+val lookup_value : Longident.t -> t -> value
 
 val store_type : Id.t -> Path.t -> type_constructor -> t -> t
 val store_value : Id.t -> Path.t -> value -> t -> t

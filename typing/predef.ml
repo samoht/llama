@@ -221,9 +221,6 @@ let _ = List.iter
      tref_option, (Type_variant [constr_none; constr_some])
   ]
 
-let path_void = fst (Env.lookup_constructor (Longident.Lident "()") !env_builtin)
-let path_false = fst (Env.lookup_constructor (Longident.Lident "false") !env_builtin)
-
 let _ = List.iter
   (fun desc -> add_exc_predef desc)
   [constr_match_failure ]
