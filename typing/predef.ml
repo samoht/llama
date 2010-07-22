@@ -3,12 +3,8 @@
 open Asttypes
 open Types
 open Module
-open Path
 
-let path_builtin = Pident(Id.create_persistent "builtin")
 let module_builtin = Module "builtin"
-
-let builtin n d = (Pdot(path_builtin, n), d)
 
 let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
 let list_tyvar = newgenvar()
@@ -17,8 +13,8 @@ let option_tyvar = newgenvar()
 
 let doref (p,d) =
   match p with
-    | Pdot(Pident m, s) ->
-        { ref_module = Module m;
+    | (m, s) ->
+        { ref_module = m;
           ref_name = s;
           ref_contents = Some d }
     | _ -> assert false
@@ -46,7 +42,7 @@ and ident_vect = Id.create "vect"
 and ident_list = Id.create "list"
 and ident_option = Id.create "option"
 
-let preident id = Pdot(path_builtin, Id.name id)
+let preident id = (module_builtin, id)
 let path_int = preident ident_int
 and path_char = preident ident_char
 and path_string = preident ident_string
@@ -68,9 +64,10 @@ and tref_char = path_char, (mkty "char" [])
 and tref_list = path_list, (mkty "list" [list_tyvar])
 and tref_vect = path_vect, (mkty "vect" [vect_tyvar] )
 and tref_option = path_option, (mkty "option" [option_tyvar])
-and tref_num =
+
   (* This is needed only for the Windows port. *)
-  Pdot(Pident(Id.create_persistent "num"), "num"),mkty ~m:(Module "num") "num" []
+let path_num = (Module "num", "num")
+let tref_num = path_num, mkty ~m:(Module "num") "num" []
 
 let type_arrow (t1,t2) =
   {typ_desc=Tarrow(t1, t2); typ_level=notgeneric}
@@ -97,22 +94,7 @@ and type_stream t =
 and type_num =
   {typ_desc=Tconstr(doref tref_num, []); typ_level=notgeneric}
 
-;;
-let path_format = Pdot(Pident(Id.create_persistent"printf"), "format")
 let ref_format = fwdref "printf" "format"
-(*
-let tref_format =
-  let params = [newgenvar();newgenvar();newgenvar()] in
-  path_format,
-  { type_module = Module "printf";
-    type_name = "format";
-    type_params = params;
-    type_arity = 3;
-    type_manifest = None; (* Some type_string; *)
-    type_kind = Type_abstract }
-*)
-
-    (* This assumes that "format" is the first type defined in "printf". *)
 let type_format t1 t2 t3 =
   {typ_desc=Tconstr(ref_format, [t1;t2;t3]); typ_level=notgeneric}
 
@@ -183,7 +165,6 @@ let match_failure_tag =
   ConstrExtensible ((module_builtin, "Match_failure"), 1)
 
 let constr_match_failure =
-  builtin "Match_failure"
     { cs_parent = snd tref_exn;
       cs_name = "Match_failure";
       cs_res = {typ_desc=Tconstr(doref tref_exn,[]); typ_level=notgeneric};
@@ -192,22 +173,18 @@ let constr_match_failure =
 
 (* Construction of the "builtin" module *)
 
-let little_id = function
-  | Pdot(_,s) -> s
-  | Pident id -> Id.name id
-
 let env_builtin = ref Env.empty
 let add_type_predef (p,gl) =
-  Hashtbl.add ps_builtin.mod_types (little_id p) gl;
+  Hashtbl.add ps_builtin.mod_types (snd p) gl;
   List.iter
     (fun gl ->
        Hashtbl.add ps_builtin.mod_constrs gl.cs_name gl
     )
     (constructors_of_type gl);
-  env_builtin := Env.add_type (little_id p) gl !env_builtin
+  env_builtin := Env.add_type (snd p) gl !env_builtin
 let add_exc_predef (p,gl) =
-  Hashtbl.add ps_builtin.mod_constrs (little_id p) gl;
-  env_builtin := Env.add_exception (little_id p) gl !env_builtin
+  Hashtbl.add ps_builtin.mod_constrs p gl;
+  env_builtin := Env.add_exception p gl !env_builtin
 
 let _ = List.iter
   (fun ((p,ty),desc) ->
@@ -227,6 +204,6 @@ let _ = List.iter
 
 let _ = List.iter
   (fun desc -> add_exc_predef desc)
-  [constr_match_failure ]
+  ["Match_failure", constr_match_failure ]
 
 let _ = Env.initial := !env_builtin

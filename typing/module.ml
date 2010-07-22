@@ -1,7 +1,6 @@
 open Misc;;
 open Asttypes;;
 open Types;;
-open Path
 open Longident
 
 type error =
@@ -90,14 +89,6 @@ let find_pers_struct name =
   with Not_found ->
     read_pers_struct name (find_in_path (name ^ ".zi"))
 
-let rec find_module path env =
-  match path with
-    Pident id ->
-        if Id.persistent id
-        then find_pers_struct (Id.name id)
-        else raise Not_found
-  | Pdot(p, s) ->
-      raise Not_found
 
 
 

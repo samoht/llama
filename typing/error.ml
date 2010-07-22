@@ -24,14 +24,7 @@ let rec output_longident oc = function
   | Longident.Ldot (mn, s) ->
       output_longident oc mn; output_string oc "__"; output_string oc s
 ;;
-(*
-let rec output_path oc = function
-    Path.Pident s ->
-      output_string oc s
-  | Path.Pdot (mn, s) ->
-      output_path oc mn; output_string oc "__"; output_string oc s
-;;
-*)
+
 (* Summary of output functions:
       %a location               output_location
       %t unit                   output_input_name

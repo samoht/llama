@@ -1,7 +1,6 @@
 open Types
 open Misc
 open Btype
-open Path
 open Module
 
 (* Extract the list of labels of a record type. *)

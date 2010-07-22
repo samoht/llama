@@ -17,7 +17,6 @@ open Symtable;;
 open Load_phr;;
 open Compiler;;
 open Types;;
-open Path
 
 let fwd_load_object = ref(fun env s -> failwith "fwd_load_object")
 let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")

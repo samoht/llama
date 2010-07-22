@@ -5,7 +5,6 @@ open Location
 open Typedtree
 open Printf
 open Longident
-open Path
 open Module
 
 type t = {
@@ -33,8 +32,7 @@ let lookup_module lid env =
   match lid with
     Lident s ->
       if s = !current_unit then raise Not_found;
-      let ps = Module.find_pers_struct s in
-      (Pident (Id.create_persistent (String.uncapitalize s)), ps)
+      Module.find_pers_struct s 
   | Ldot _ ->
       raise Not_found
 
@@ -43,9 +41,8 @@ let lookup proj1 proj2 lid env =
     Lident s ->
       Tbl.find s (proj1 env)
   | Ldot(l, s) ->
-      let (p, desc) = lookup_module l env in
-      let data = Hashtbl.find (proj2 desc) s in
-      data
+      let (desc) = lookup_module l env in
+      Hashtbl.find (proj2 desc) s
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.mod_values)

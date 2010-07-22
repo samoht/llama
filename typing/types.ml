@@ -1,14 +1,6 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-module Path = struct
-  type t =
-    | Pident of Id.t
-    | Pdot of t * string
-end
-
-open Path
-
 type module_t =
   | Module of string
 
@@ -108,10 +100,4 @@ and rec_status =
   | Rec_first
   | Rec_next
 
-let path_of_module = function
-  | Module n -> Pident(n)
-    
-let path_of_type ty = Pdot(path_of_module ty.type_module, ty.type_name)
 let path_of_value v = (v.val_module, v.val_name)
-let path_of_constructor c = Pdot(path_of_module c.cs_parent.type_module, c.cs_name)
-let path_of_label lbl = Pdot(path_of_module lbl.lbl_parent.type_module, lbl.lbl_name)

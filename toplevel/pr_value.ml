@@ -10,7 +10,6 @@ open Format;;
 open Fmt_type;;
 open Symtable;;
 open Ctype;;
-open Path
 open Btype
 
 exception Constr_not_found;;

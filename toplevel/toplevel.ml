@@ -30,9 +30,9 @@ let add_suffix name suffix =
 let parse_global s =
   let rec parse n =
     if n + 2 >= String.length s then
-      Path.Pident s
+       s
     else if s.[n] == '.' then
-      Path.Pdot (Path.Pident (String.sub s 0 n),
+       (String.sub s 0 n,
                  String.sub s (n + 1) (String.length s - n - 1))
     else
       parse (n+1)

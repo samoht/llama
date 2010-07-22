@@ -78,7 +78,6 @@ let rec simple_pat q pss = match pss with
 | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
     make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.pat_type
 | (({pat_desc = Tpat_record((lbl1,_)::_)} as p)::_)::pss ->
-    let ty_path = path_of_type (get_label lbl1).lbl_parent in
     let ty_record = (get_label lbl1).lbl_parent in
     let labels = Ctype.labels_of_type ty_record in
     make_pat(Tpat_record (List.map (fun lbl -> ref_label lbl,omega) labels)) p.pat_type

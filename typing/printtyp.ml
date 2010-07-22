@@ -26,15 +26,7 @@ let ident ppf id = fprintf ppf "%s" (Id.name id)
 (* Print a path *)
 
 let ident_pervasive = Id.create_persistent "Pervasives"
-(*
-let rec path ppf = function
-  | Pident id ->
-      ident ppf id
-  | Pdot(Pident id, s) when Id.same id ident_pervasive ->
-      fprintf ppf "%s" s
-  | Pdot(p, s) ->
-      fprintf ppf "%a.%s" path p s
-*)
+
 (* Print a type expression *)
 
 let names = ref ([] : (core_type * string) list)

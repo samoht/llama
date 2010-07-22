@@ -11,7 +11,6 @@ open Emit_phr;;
 open Patch;;
 open Tr_const;;
 open Types;;
-open Path
 
 (* Production of a bytecode executable file *)
 
