@@ -48,14 +48,14 @@ let translate_stream translate_expr env stream_comp_list =
 
 (* Translation of stream parsers *)
 
-let path_stream = Pident(Id.create_persistent "stream")
+let module_stream = Module "stream"
 let stream_oper name =
-  Lprim(Pget_global (Pdot(path_stream,name)), [])
+  Lprim(Pget_global ((module_stream,name)), [])
 ;;
 
 let stream_raise name tag =
   Lprim(Praise,
-        [Lconst(SCblock(ConstrExtensible(Pdot(path_stream,name), tag), []))])
+        [Lconst(SCblock(ConstrExtensible((module_stream,name), tag), []))])
 ;;
 
 let raise_parse_failure = stream_raise "Parse_failure" 1

@@ -17,16 +17,9 @@ open Path
 
 (* First pass : determine which phrases are required *)
 
-let compare_qualids q1 q2 =
-  begin match q1, q2 with
-    | Pdot(m1,s1),Pdot(m2,s2) ->
-        let c = compare m1 m2 in
-        if c != 0 then c else compare s1 s2
-  end
-
 module QualidSet = Set.Make(struct
-                              type t = Path.t
-                              let compare = compare_qualids
+                              type t = path
+                              let compare = compare
                             end)
 
 let missing_globals = ref QualidSet.empty
@@ -68,7 +61,7 @@ let scan_file tolink name =
 ;;
 
 let require_qualid qual id =
-  missing_globals := QualidSet.add (Pdot(qual,id)) !missing_globals;;
+  missing_globals := QualidSet.add (qual,id) !missing_globals;;
 
 (* Second pass : link in the required phrases. *)
 

@@ -6,6 +6,7 @@ open Module
 open Path
 
 let path_builtin = Pident(Id.create_persistent "builtin")
+let module_builtin = Module "builtin"
 
 let builtin n d = (Pdot(path_builtin, n), d)
 
@@ -26,7 +27,7 @@ let fwdref m s = { ref_module = Module m; ref_name = s; ref_contents = None }
 
 (* Some types that must be known to the type checker *)
 
-let mkty ?(m=Module "builtin") nm params =
+let mkty ?(m=module_builtin) nm params =
   { type_module = m;
     type_name = nm;
     type_params = params;
@@ -179,7 +180,7 @@ and constr_true =
 (* Some exceptions that must be known to the compiler *)
 
 let match_failure_tag =
-  ConstrExtensible (Pdot(path_builtin, "Match_failure"), 1)
+  ConstrExtensible ((module_builtin, "Match_failure"), 1)
 
 let constr_match_failure =
   builtin "Match_failure"

@@ -12,13 +12,15 @@ open Path
 type module_t =
   | Module of string
 
+type path = module_t * string
+
 type 'a reference = {
   ref_module : module_t;
   ref_name : string;
   mutable ref_contents : 'a option }
 
 type constr_tag =
-    ConstrExtensible of Path.t * int (* name of constructor & stamp *)
+    ConstrExtensible of path * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 (* Representation of types and declarations *)
@@ -110,6 +112,6 @@ let path_of_module = function
   | Module n -> Pident(n)
     
 let path_of_type ty = Pdot(path_of_module ty.type_module, ty.type_name)
-let path_of_value v = Pdot(path_of_module v.val_module, v.val_name)
+let path_of_value v = (v.val_module, v.val_name)
 let path_of_constructor c = Pdot(path_of_module c.cs_parent.type_module, c.cs_name)
 let path_of_label lbl = Pdot(path_of_module lbl.lbl_parent.type_module, lbl.lbl_name)

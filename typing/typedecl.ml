@@ -126,7 +126,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
-  let constr_tag = ConstrExtensible(Path.Pdot(Path.Pident !Env.current_unit, constr_name),
+  let constr_tag = ConstrExtensible((!Env.current_module, constr_name),
                                     new_exc_stamp()) in
   let cd =
     constr_name,
