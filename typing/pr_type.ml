@@ -6,23 +6,22 @@ open Btype;;
 open Module;;
 open Predef
 
-let output_module oc = function
+let output_module_id oc = function
     Module m -> output_string oc m
 
-let output_type_constr oc tcs =
-  output_module oc tcs.type_module;
+let output_global_id oc gl =
+  output_module_id oc gl.gl_module;
   output_string oc ".";
-  output_string oc tcs.type_name
+  output_string oc gl.gl_name
+
+let output_type_constr oc tcs =
+  output_global_id oc tcs.type_id
 
 let output_constr oc cs =
-  output_module oc cs.cs_parent.type_module;
-  output_string oc ".";
-  output_string oc cs.cs_name
+  output_global_id oc (constr_global_id cs)
 
 let output_label oc lbl =
-  output_module oc lbl.lbl_parent.type_module;
-  output_string oc ".";
-  output_string oc lbl.lbl_name
+  output_global_id oc (label_global_id lbl)
 
 let int_to_alpha i =
   if i < 26

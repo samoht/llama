@@ -23,8 +23,7 @@ let fwdref m s = { ref_id = {gl_module=Module m;gl_name = s};  ref_contents = No
 (* Some types that must be known to the type checker *)
 
 let mkty ?(m=module_builtin) nm params =
-  { type_module = m;
-    type_name = nm;
+  { type_id = { gl_module = m; gl_name = nm };
     type_params = params;
     type_arity = List.length params;
     type_manifest = None;

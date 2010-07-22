@@ -131,14 +131,20 @@ let same_constr r1 r2 = get_constr r1 == get_constr r2
 let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
 
-let makeref m n c =
-  { ref_id = {gl_module=m; gl_name=n};
-    ref_contents = Some c }
-
-let ref_label lbl = makeref  lbl.lbl_parent.type_module lbl.lbl_name lbl
-let ref_constr cs = makeref  cs.cs_parent.type_module cs.cs_name cs
-let ref_value v = makeref  v.val_module v.val_name v
-let ref_type_constr t = makeref  t.type_module t.type_name t
+let ref_label lbl =
+  { ref_id = { gl_module = lbl.lbl_parent.type_id.gl_module;
+               gl_name = lbl.lbl_name };
+    ref_contents = Some lbl }
+let ref_constr cs =
+  { ref_id = { gl_module = cs.cs_parent.type_id.gl_module;
+               gl_name = cs.cs_name };
+    ref_contents = Some cs }
+let ref_value v =
+  { ref_id = v.val_id;
+    ref_contents = Some v }
+let ref_type_constr t =
+  { ref_id = t.type_id;
+    ref_contents = Some t }
 
 let rec erase_type m t = match t.typ_desc with
     Tvar {contents=Tlinkto x} -> erase_type m x

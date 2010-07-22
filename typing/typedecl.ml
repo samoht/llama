@@ -82,8 +82,7 @@ let type_typedecl env loc decl =
              duplicate_param_in_type_decl_err loc
          in
          let ty_desc =
-             { type_module = !Env.current_module;
-               type_name = ty_name;
+             { type_id = Env.make_global_id ty_name;
                type_arity = List.length ty_params;
                type_manifest = None;
                type_params = ty_params;
@@ -150,8 +149,7 @@ let type_valuedecl env loc id typexp prim =
   pop_type_level();
   generalize_type ty;
   let vd = { 
-    val_module = !Env.current_module;
-    val_name = Id.name id;
+    val_id = Env.make_global_id id;
     val_type = ty;
     val_kind = prim }
   in
@@ -168,8 +166,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let env = ref env in
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
-         let vd =  {val_module = !Env.current_module;
-                      val_name = name;
+         let vd =  {val_id = Env.make_global_id name;
                        val_type=ty;
                       val_kind=Val_reg} in
          env := Env.add_value name vd !env;
@@ -190,7 +187,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   let env, vds = if rec_flag then env, vds else enter_val c env in
-  pat_expr_list, List.combine (List.map (fun x -> x.val_name) vds) vds, env
+  pat_expr_list, List.combine (List.map (fun x -> x.val_id.gl_name) vds) vds, env
   
 let type_expression loc expr =
   push_type_level();

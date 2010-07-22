@@ -55,7 +55,7 @@ let rec term_of_expr c expr =
           | Zglobal vdg ->
               begin match (get_value vdg).val_kind with
                 | Val_reg ->
-                    let qid = path_of_value (get_value vdg) in
+                    let qid =  (get_value vdg).val_id in
                     begin try
                       find_global qid
                     with

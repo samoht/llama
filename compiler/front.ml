@@ -117,11 +117,11 @@ let rec translate_expr env =
   | Texp_ident(Zglobal g) ->
       (match (get_value g).val_kind with
         Val_reg ->
-          Lprim(Pget_global (path_of_value (get_value g)), [])
+          Lprim(Pget_global  (get_value g).val_id, [])
          | Val_prim p ->
              let arity = p.prim_arity in
              if arity = 0 then
-               Lprim(Pget_global (path_of_value (get_value g)), []) (* xxx *)
+               Lprim(Pget_global (get_value g).val_id, []) (* xxx *)
              else
                let rec make_fct args n =
                  if n >= arity

@@ -25,3 +25,5 @@ val ps_find_all_constrs : Module.pers_struct -> string -> constructor list
 val current_unit : unit -> string
 val current_module : module_id ref
 val start_compiling : module_id -> t
+
+val make_global_id : string -> global_id

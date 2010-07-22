@@ -11,10 +11,13 @@ let print_module = function
   | Module m -> print_string m
   | Module_toplevel -> print_string "toplevel"
 
-let print_type_constr tcs =
-  print_module tcs.type_module;
+let print_global_id gl =
+  print_module gl.gl_module;
   print_string ".";
-  print_string tcs.type_name
+  print_string gl.gl_name
+
+let print_type_constr tcs =
+  print_global_id tcs.type_id
 
 let int_to_alpha i =
   if i < 26

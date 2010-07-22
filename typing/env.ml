@@ -103,6 +103,10 @@ let current_unit () =
     | Module_builtin | Module_toplevel -> failwith "current_unit"
   end
 
+let make_global_id name =
+  { gl_module = !current_module;
+    gl_name = name }
+
 let start_compiling m =
   current_module := m;
   let s = if !Clflags.nopervasives then "none" else "cautious" in

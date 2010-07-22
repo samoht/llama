@@ -25,8 +25,7 @@ open Asttypes
 (* Type constructors *)
 
 type type_constructor =
-  { type_module : module_id;
-    type_name : string;
+  { type_id : global_id;
     type_params : core_type list;
     type_arity: int;                      (* Its arity *)
     mutable type_manifest : core_type option;
@@ -82,8 +81,7 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 (* Global variables *)
 
 type value =
-  { val_module: module_id;
-    val_name: string;
+  { val_id : global_id;
     val_type: core_type;                (* Type of the value *)
     val_kind: value_kind }
 
@@ -103,4 +101,8 @@ and rec_status =
   | Rec_first
   | Rec_next
 
-let path_of_value v = {gl_module=v.val_module; gl_name=v.val_name}
+let constr_global_id cs = { gl_module = cs.cs_parent.type_id.gl_module;
+                            gl_name = cs.cs_name }
+
+let label_global_id lbl = { gl_module = lbl.lbl_parent.type_id.gl_module;
+                            gl_name = lbl.lbl_name }
