@@ -3,12 +3,9 @@
 open Asttypes
 open Format
 open Longident
-open Path
 open Types
 
 (* Print a long identifier *)
-
-let qualid ppf id = pp_print_string ppf (Path.name id)
 
 let module_name ppf = function
 (*    Module_builtin -> fprintf ppf "builtin"*)

@@ -6,15 +6,13 @@ open Btype;;
 open Module;;
 open Format;;
 
-  let print_path p =
-    print_string (Path.name p)
+let print_module = function
+    Module m -> print_string m
 
-let print_global gl = print_path (fst gl)
-
-let output_type_constr = print_global
-and output_value = print_global
-and output_constr = print_global
-and output_label = print_global
+let print_type_constr tcs =
+  print_module tcs.type_module;
+  print_string ".";
+  print_string tcs.type_name
 
 let int_to_alpha i =
   if i < 26
@@ -75,7 +73,7 @@ let rec print_typ priority ty =
           close_box();
           print_space()
       end;
-      print_path (path_of_type (get_type_constr cstr));
+      print_type_constr (get_type_constr cstr);
       close_box()
 
 and print_typ_list priority sep = function

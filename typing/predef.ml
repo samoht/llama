@@ -192,9 +192,8 @@ let constr_match_failure =
 (* Construction of the "builtin" module *)
 
 let env_builtin = ref Env.empty
-let horrible p = Id.create(little_id p)
 let add_type_predef (p,gl) =
-  Hashtbl.add ps_builtin.mod_types (horrible p) gl;
+  Hashtbl.add ps_builtin.mod_types (little_id p) gl;
   List.iter
     (fun gl ->
        Hashtbl.add ps_builtin.mod_constrs gl.cs_name gl
@@ -202,7 +201,7 @@ let add_type_predef (p,gl) =
     (constructors_of_type gl);
   env_builtin := Env.add_type (little_id p) gl !env_builtin
 let add_exc_predef (p,gl) =
-  Hashtbl.add ps_builtin.mod_constrs (horrible p) gl;
+  Hashtbl.add ps_builtin.mod_constrs (little_id p) gl;
   env_builtin := Env.add_exception (little_id p) gl !env_builtin
 
 let _ = List.iter
