@@ -1,8 +1,17 @@
 (* Internally, a global is represented by its fully qualified name,
    plus associated information. *)
 
-open Path
+module Path = struct
+  type t =
+    | Pident of Id.t
+    | Pdot of t * string
 
+  let rec name = function
+      Pident id -> Id.name id
+    | Pdot(p, s) -> name p ^ "." ^ s
+end
+
+open Path
 let little_id = function
   | Pdot(_,s) -> s
   | Pident id -> Id.name id
