@@ -27,27 +27,6 @@ let initial = ref empty
 
 let current_unit = ref ""
 
-(* Lookup by identifier *)
-
-
-let find proj1 proj2 path env =
-  match path with
-    Pident id ->
-      let (p, data) = Id.find_same id (proj1 env)
-      in data
-  | Pdot(p, s) ->
-      let ps = Module.find_module p env in
-      Hashtbl.find (proj2 ps) s
-
-let find_value =
-  find (fun env -> env.values) (fun sc -> sc.mod_values)
-and find_type =
-  find (fun env -> env.types) (fun sc -> sc.mod_types)
-and find_constructor =
-  find (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
-and find_label =
-  find (fun env -> env.labels) (fun sc -> sc.mod_labels)
-
 (* Lookup by name *)
 
 let lookup_module lid env =
