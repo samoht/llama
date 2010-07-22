@@ -233,3 +233,13 @@ let ps_find_all_constrs ps s =
 let write_pers_struct oc mn working =
   output_value oc mn;
   output_value oc working
+
+let current_unit = ref (Id.create_persistent "")
+let current_module = ref Module_builtin
+
+let start_compiling name =
+  current_unit := Id.create_persistent name;
+  current_module := Module name;
+  let s = if !Clflags.nopervasives then "none" else "cautious" in
+  let l = List.assoc s Config.default_used_interfaces in
+  List.fold_left (fun env m -> open_pers_signature m env) !initial l

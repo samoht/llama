@@ -13,7 +13,7 @@ open Path
 
 (* let defined_global id desc = Pident id, desc *)
 
-let defined_global id desc = Pdot (Pident !current_unit, Id.name id), desc
+let defined_global id desc = Pdot (Pident !Env.current_unit, Id.name id), desc
 
 let make_new_variant loc (ty_constr, ty_res, constrs) =
   let constrs =
@@ -88,7 +88,7 @@ let type_typedecl env loc decl =
              duplicate_param_in_type_decl_err loc
          in
          let ty_desc =
-             { type_module = !current_module;
+             { type_module = !Env.current_module;
                type_name = ty_name;
                type_arity = List.length ty_params;
                type_manifest = None;
@@ -132,7 +132,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
-  let constr_tag = ConstrExtensible(Pdot(Pident !current_unit, constr_name),
+  let constr_tag = ConstrExtensible(Pdot(Pident !Env.current_unit, constr_name),
                                     new_exc_stamp()) in
   let cd =
     constr_name,
@@ -158,7 +158,7 @@ let type_valuedecl env loc id typexp prim =
   pop_type_level();
   generalize_type ty;
   let vd = defined_global id { 
-    val_module = !current_module;
+    val_module = !Env.current_module;
     val_name = Id.name id;
     val_type = ty;
     val_kind = prim }
@@ -177,7 +177,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
     let vds =List.map
       (fun (name,(ty,mut_flag)) ->
          let vd = (defined_global name
-                     {val_module = !current_module;
+                     {val_module = !Env.current_module;
                       val_name = name;
                        val_type=ty;
                       val_kind=Val_reg}) in

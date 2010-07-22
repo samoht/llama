@@ -70,12 +70,12 @@ let _ = fwd_load_object := load_object;;
 (* To preserve the current toplevel module while compiling another module. *)
 
 let protect_current_module fct =
-  let saved_current_unit = !current_unit in
+  let saved_current_unit = !Env.current_unit in
   try
     fct();
-    current_unit := saved_current_unit;
+    Env.current_unit := saved_current_unit;
   with x ->
-    current_unit := saved_current_unit;
+    Env.current_unit := saved_current_unit;
     raise x
 ;;
 
@@ -128,7 +128,7 @@ let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
   let modname = Filename.basename simplename in
   protect_current_module (fun () ->
-    start_compiling modname;
+                         Env.start_compiling modname;
     loadfile env filename)
 ;;
 

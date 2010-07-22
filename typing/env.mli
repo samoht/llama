@@ -38,3 +38,7 @@ val write_pers_struct : out_channel -> string -> generated_item list -> unit
 type pers_struct
 val find_pers_struct : string -> pers_struct
 val ps_find_all_constrs : pers_struct -> string -> constructor list
+
+val current_unit : Id.t ref
+val current_module : module_t ref
+val start_compiling : string -> t

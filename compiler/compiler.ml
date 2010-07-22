@@ -71,7 +71,7 @@ let compile_interface modname filename =
   let ic = open_in_bin source_name (* See compile_impl *)
   and oc = open_out_bin intf_name in
     try
-      let env = start_compiling modname in
+      let env = Env.start_compiling modname in
       let lexbuf = Lexing.from_channel ic in
       input_name := source_name;
       input_chan := ic;
@@ -79,7 +79,7 @@ let compile_interface modname filename =
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
       let _l, sg, env = Typemod.type_signature env l in
       close_in ic;
-      Env.write_pers_struct oc !current_unit sg;
+      Env.write_pers_struct oc !Env.current_unit sg;
       close_out oc;
     with x ->
       close_in ic;
@@ -146,7 +146,7 @@ let compile_implementation modname filename suffix =
             modname filename;
           raise Toplevel in
       let intf_sg = Env.read_signature modname in
-      let env = start_compiling modname in
+      let env = Env.start_compiling modname in
       let impl_sg, env = compile_impl env modname filename suffix in
       ignore (Includemod.signatures Subst.identity impl_sg intf_sg)
     with Sys_error _ as x -> (* xxx *)
@@ -156,9 +156,9 @@ let compile_implementation modname filename suffix =
     let intf_name = filename ^ ".zi" in
     let oc = open_out_bin intf_name in
     try
-      let env = start_compiling modname in
+      let env = Env.start_compiling modname in
       let sg, env = compile_impl env modname filename suffix in
-      Env.write_pers_struct oc !current_unit sg;
+      Env.write_pers_struct oc !Env.current_unit sg;
       close_out oc
     with x ->
       close_out oc;
