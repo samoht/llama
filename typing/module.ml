@@ -109,7 +109,7 @@ let new_find_module m =
     | Module m ->
         assert (m = String.lowercase m);
         find_pers_struct m
-(*    | Module_toplevel -> find_pers_struct "top"*)
+    | Module_toplevel -> failwith "new_find_module"
 
 let get proj r =
   begin match r.ref_contents with
@@ -131,21 +131,14 @@ let same_constr r1 r2 = get_constr r1 == get_constr r2
 let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
 
-let makeref stor m n c =
-  let ret ={ ref_id = {gl_module=m; gl_name=n};
-             ref_contents = Some c }
-  in
-  stor := ret :: !stor;
-  ret
+let makeref m n c =
+  { ref_id = {gl_module=m; gl_name=n};
+    ref_contents = Some c }
 
-let stor_label = ref []
-let ref_label lbl = makeref stor_label lbl.lbl_parent.type_module lbl.lbl_name lbl
-let stor_constr = ref []
-let ref_constr cs = makeref stor_constr cs.cs_parent.type_module cs.cs_name cs
-let stor_value = ref []
-let ref_value v = makeref stor_value v.val_module v.val_name v
-let stor_type_constr = ref []
-let ref_type_constr t = makeref stor_type_constr t.type_module t.type_name t
+let ref_label lbl = makeref  lbl.lbl_parent.type_module lbl.lbl_name lbl
+let ref_constr cs = makeref  cs.cs_parent.type_module cs.cs_name cs
+let ref_value v = makeref  v.val_module v.val_name v
+let ref_type_constr t = makeref  t.type_module t.type_name t
 
 let rec erase_type m t = match t.typ_desc with
     Tvar {contents=Tlinkto x} -> erase_type m x
