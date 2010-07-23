@@ -7,7 +7,7 @@ type error =
     Missing_field of string
   | Value_descriptions of value * value
   | Type_declarations of type_constructor * type_constructor
-  | Exception_declarations of exception_declaration * exception_declaration
+  | Exception_declarations of constructor * constructor
 
 exception Error of error list
 

@@ -7,7 +7,7 @@ val initial : t
 
 val add_value: string -> value -> t -> t
 val add_type: string -> type_constructor -> t -> t
-val add_exception: string -> exception_declaration -> t -> t
+val add_exception: string -> constructor -> t -> t
 
 val lookup_type : Longident.t -> t -> type_constructor
 val lookup_constructor : Longident.t -> t -> constructor
