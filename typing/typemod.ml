@@ -25,11 +25,9 @@ let type_structure_item env pstr =
         let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
         phr, List.map gen_value sg, env
     | Pstr_primitive(id,te,(arity,n)) ->
-        let te = Resolve.type_expression false env te in
-        let pr = { prim_arity = arity; prim_name = n } in
-        let phr = mk (Tstr_primitive(id, te, pr)) in
-        let vd, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
-        phr, [Gen_value vd], env
+        let v, typexp, env = Resolve.value_declaration env id te (Some(arity,n)) in
+        type_valuedecl_new v typexp;
+        mk (Tstr_primitive (v, typexp)), [Gen_value v], env
     | Pstr_type decl ->
         let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
         let phr = mk (Tstr_type(decl)) in
@@ -49,12 +47,10 @@ let type_signature_item env psig =
   Resolve.reset_type_expression_vars();
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
-    | Psig_value (s,te,pr) ->
-        let te = Resolve.type_expression false env te in
-        let pr = Resolve.primitive pr in
-        let phr = mk (Tsig_value (s, te, pr)) in
-        let vd, env = type_valuedecl env phr.sig_loc s te pr in 
-        phr, [Gen_value vd], env
+    | Psig_value (s, te, pr) ->
+        let v, typexp, env = Resolve.value_declaration env s te pr in
+        type_valuedecl_new v typexp;
+        mk (Tsig_value (v, typexp)), [Gen_value v], env
     | Psig_type decl ->
         let decl, sg, env = type_typedecl env psig.psig_loc decl in
         let phr = mk (Tsig_type(decl)) in

@@ -152,6 +152,13 @@ let type_excdecl env loc decl =
   let env = Env.add_exception constr_name cd env in
   cd, env
 
+let type_valuedecl_new v typexp =
+  push_type_level();
+  let ty = type_of_type_expression false typexp in
+  pop_type_level();
+  generalize_type ty;
+  v.val_type <- ty
+
 let type_valuedecl env loc id typexp prim =
   push_type_level();
   Resolve.reset_type_expression_vars ();

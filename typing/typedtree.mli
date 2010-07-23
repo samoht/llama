@@ -85,7 +85,7 @@ type signature_item =
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of string * type_expression * value_kind
+    Tsig_value of value * type_expression
   | Tsig_type of (type_constructor * type_variable list * type_body) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
@@ -97,7 +97,7 @@ type structure_item =
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
-  | Tstr_primitive of string * type_expression * Primitive.description
+  | Tstr_primitive of value * type_expression
   | Tstr_type of (type_constructor * type_variable list * type_body) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name

@@ -259,3 +259,13 @@ let tcs_kind env tk =
         Ttype_record (List.map (fun (s,te,m) ->
                                   (s, type_expression true env te, m)) l)
   end
+
+let value_declaration env name typexp primstuff =
+  let v =
+    { val_id = Env.make_global_id name;
+      val_type = no_type;
+      val_kind = primitive primstuff;
+      val_global = true }
+  in
+  let typexp = type_expression false env typexp in
+  v, typexp, Env.add_value name v env

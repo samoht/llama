@@ -58,9 +58,9 @@ let do_structure_item env phr =
           print_value (get_global_data (get_slot_for_variable vd.val_id)) vd.val_type;
           print_newline())
         (List.rev sg)
-  | Tstr_primitive (name,te,pr) ->
+  | Tstr_primitive (v, te) ->
       reset_rollback ();
-      Printf.printf "Primitive %s defined.\n" name
+      Printf.printf "Primitive %s defined.\n" (val_name v)
   | Tstr_type decl ->
       reset_rollback ();
       List.iter
