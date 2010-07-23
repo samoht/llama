@@ -105,7 +105,7 @@ let divide_constant_matching (Matching(casel, pathl)) =
 ;;
 
 let wildcard_pat =
-  {pat_desc = Tpat_any; pat_loc = no_location; pat_type = no_type};;
+  {pat_desc = Tpat_any; pat_loc = no_location; pat_env=Env.empty; pat_type = no_type};;
 
 let divide_tuple_matching arity (Matching(casel, pathl)) =
   let rec divide_rec casel =

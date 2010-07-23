@@ -16,7 +16,7 @@ let type_structure_item env pstr =
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval expr ->
-        let expr = Resolve.expr env [] expr in
+        let expr = Resolve.expr env expr in
         let phr = mk (Tstr_eval expr) in
         let _ty = type_expression pstr.pstr_loc expr in
         phr, [], env
@@ -26,7 +26,7 @@ let type_structure_item env pstr =
         phr, List.map gen_value sg, env
     | Pstr_primitive(s,te,(arity,n)) ->
         let id = Id.create s in
-        let te = Resolve.type_expression env [] te in
+        let te = Resolve.type_expression env te in
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(id, te, pr)) in
         let vd, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
@@ -36,7 +36,7 @@ let type_structure_item env pstr =
         let phr = mk (Tstr_type(decl)) in
         phr, (List.map gen_type sg), env
     | Pstr_exception decl ->
-        let decl = Resolve.constr_decl env [] decl in
+        let decl = Resolve.constr_decl env decl in
         let phr = mk (Tstr_exception decl) in
         let sg, env = type_excdecl env pstr.pstr_loc decl in
         phr, [gen_exception sg], env
@@ -51,7 +51,7 @@ let type_signature_item env psig =
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
     | Psig_value (s,te,pr) ->
-        let te = Resolve.type_expression env [] te in
+        let te = Resolve.type_expression env te in
         let pr = Resolve.primitive pr in
         let phr = mk (Tsig_value (s, te, pr)) in
         let vd, env = type_valuedecl env phr.sig_loc s te pr in 
@@ -61,7 +61,7 @@ let type_signature_item env psig =
         let phr = mk (Tsig_type(decl)) in
         phr, List.map gen_type sg, env
     | Psig_exception decl ->
-        let decl = Resolve.constr_decl env [] decl in
+        let decl = Resolve.constr_decl env decl in
         let phr = mk (Tsig_exception decl) in
         let sg, env = type_excdecl env psig.psig_loc decl in
         phr, [gen_exception sg], env

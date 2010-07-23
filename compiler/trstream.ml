@@ -103,7 +103,7 @@ let translate_parser translate_expr loc init_env case_list stream_type =
                  [[pat], add_lets(transl_inner new_env (rest,act))])
     | Texp_streampat id :: rest ->
         Llet([access_stream env],
-             transl_inner (Tenv([var_root id stream_type], env)) (rest,act)) in
+             transl_inner (Tenv([var_root (val_name id) stream_type], env)) (rest,act)) in
 
   let rec transl_top env parsing =
     match parsing with
@@ -148,7 +148,7 @@ let translate_parser translate_expr loc init_env case_list stream_type =
             transl_top (Treserved env) rest)
     | (Texp_streampat id :: spatl, act) :: _ ->
         Llet([access_stream env],
-             transl_inner (Tenv([var_root id stream_type], env)) (spatl, act))
+             transl_inner (Tenv([var_root (val_name id) stream_type], env)) (spatl, act))
   in
     Lfunction(transl_top (Tenv([var_root "%stream" stream_type], init_env))
                          case_list)

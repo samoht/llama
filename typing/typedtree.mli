@@ -6,7 +6,7 @@ open Types
 type type_expression =
   { te_desc: type_expression_desc;
     te_loc: Location.t;
-(*    te_env : Env.t *) }
+    te_env : Env.t  }
 
 and type_expression_desc =
     Ttyp_var of Id.t
@@ -17,13 +17,13 @@ and type_expression_desc =
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
-(*    pat_env : Env.t; *)
+    pat_env : Env.t;
     mutable pat_type: core_type }
 
 and pattern_desc =
     Tpat_any
-  | Tpat_var of Id.t
-  | Tpat_alias of pattern * Id.t
+  | Tpat_var of value
+  | Tpat_alias of pattern * value
   | Tpat_constant of atomic_constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor reference * pattern list
@@ -34,13 +34,11 @@ and pattern_desc =
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
-(*     exp_env : Env.t; *)
+    exp_env : Env.t;
     mutable exp_type: core_type }
 
-and value_reference = Zlocal of Id.t | Zglobal of value reference
-
 and expression_desc =
-    Texp_ident of value_reference
+    Texp_ident of value reference
   | Texp_constant of atomic_constant
   | Texp_tuple of expression list
   | Texp_construct of constructor reference * expression list
@@ -51,7 +49,7 @@ and expression_desc =
   | Texp_sequence of expression * expression
   | Texp_ifthenelse of expression * expression * expression
   | Texp_while of expression * expression
-  | Texp_for of Id.t * expression * expression * bool * expression
+  | Texp_for of value * expression * expression * bool * expression
   | Texp_constraint of expression * type_expression
   | Texp_array of expression list
   | Texp_record of (label reference * expression) list
@@ -68,7 +66,7 @@ and stream_component =
 and stream_pattern =
     Ztermpat of pattern
   | Znontermpat of expression * pattern
-  | Texp_streampat of Id.t
+  | Texp_streampat of value
 
 type type_rhs =
     Ttype_abstract

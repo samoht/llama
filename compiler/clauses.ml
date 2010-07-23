@@ -10,7 +10,7 @@ open Btype;;
 open Module
 
 let make_pat desc ty =
-  {pat_desc = desc; pat_loc = no_location; pat_type = ty};;
+  {pat_desc = desc; pat_loc = no_location; pat_env=Env.empty; pat_type = ty};;
 
 let omega = make_pat Tpat_any no_type;;
 

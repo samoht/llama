@@ -24,9 +24,10 @@ let rec find_var name = function
       if var.var_name = name then var else find_var name remainder
 ;;
 
+exception Translate_access
 let rec translate_access s env =
   let rec transl i = function
-    Tnullenv      -> fatal_error "translate_env"
+    Tnullenv      -> raise Translate_access
   | Treserved env -> transl (i+1) env
   | Tenv(l, env)  ->
       try
@@ -63,9 +64,9 @@ let translate_update s env newval =
 let rec paths_of_pat path pat =
   match pat.pat_desc with
     Tpat_var s ->
-      [{var_name = s; var_path = path; var_typ = pat.pat_type}]
+      [{var_name = val_name s; var_path = path; var_typ = pat.pat_type}]
   | Tpat_alias(pat,s) ->
-      {var_name = s; var_path = path; var_typ = pat.pat_type} ::
+      {var_name = val_name s; var_path = path; var_typ = pat.pat_type} ::
       paths_of_pat path pat
   | Tpat_tuple(patlist) | Tpat_construct(_, patlist) ->
       let rec paths_of_patlist i = function
@@ -89,12 +90,12 @@ let rec mutable_vars_of_pat mut pat =
   match pat.pat_desc with
     Tpat_var v ->
       if mut
-      then [{var_name = v; var_typ = pat.pat_type; var_path = Path_root}]
+      then [{var_name = val_name v; var_typ = pat.pat_type; var_path = Path_root}]
       else []
   | Tpat_alias(pat,v) ->
       let l = mutable_vars_of_pat mut pat in
       if mut
-      then {var_name = v; var_typ = pat.pat_type; var_path = Path_root} :: l
+      then {var_name = val_name v; var_typ = pat.pat_type; var_path = Path_root} :: l
       else l
   | Tpat_constraint(pat, _) -> mutable_vars_of_pat mut pat
   | Tpat_tuple patl -> List.flatten (List.map (mutable_vars_of_pat mut) patl)
@@ -170,7 +171,7 @@ let add_let_rec_to_env env pat_expr_list =
   let rec add env (pat, expr) =
     match pat.pat_desc with
       Tpat_var v ->
-        Tenv([{var_name = v; var_path = Path_root; var_typ = pat.pat_type}], env)
+        Tenv([{var_name = val_name v; var_path = Path_root; var_typ = pat.pat_type}], env)
     | Tpat_constraint(p, ty) ->
         add env (p, expr)
     | _ ->

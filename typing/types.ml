@@ -82,8 +82,9 @@ let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 
 type value =
   { val_id : global_id;
-    val_type: core_type;                (* Type of the value *)
-    val_kind: value_kind }
+    mutable val_type: core_type;                (* Type of the value *)
+    val_kind: value_kind;
+    mutable val_global: bool }
 
 and value_kind =
     Val_reg                             (* Regular value *)
@@ -122,3 +123,4 @@ let ref_type_constr t =
   { ref_id = t.type_id;
     ref_contents = Some t }
 
+let val_name v = v.val_id.gl_name

@@ -112,23 +112,25 @@ let alloc_superfluous_constr cstr n =
 let rec translate_expr env =
   let rec transl expr =
   match expr.exp_desc with
-    Texp_ident(Zlocal s) ->
-      translate_access (Id.name s) env (* xxx *)
-  | Texp_ident(Zglobal g) ->
-      (match (get_value g).val_kind with
-        Val_reg ->
-          Lprim(Pget_global  (get_value g).val_id, [])
-         | Val_prim p ->
-             let arity = p.prim_arity in
-             if arity = 0 then
-               Lprim(Pget_global (get_value g).val_id, []) (* xxx *)
-             else
-               let rec make_fct args n =
-                 if n >= arity
-                 then Lprim(Primdecl.find_primitive arity p.prim_name, args)
-                 else Lfunction(make_fct (Lvar n :: args) (n+1))
-               in
-               make_fct [] 0)
+    Texp_ident v ->
+      let v = get_value v in
+      if v.val_global then
+        (match v.val_kind with
+             Val_reg ->
+               Lprim(Pget_global  v.val_id, [])
+           | Val_prim p ->
+               let arity = p.prim_arity in
+               if arity = 0 then
+                 Lprim(Pget_global v.val_id, []) (* xxx *)
+               else
+                 let rec make_fct args n =
+                   if n >= arity
+                   then Lprim(Primdecl.find_primitive arity p.prim_name, args)
+                   else Lfunction(make_fct (Lvar n :: args) (n+1))
+                 in
+                 make_fct [] 0)
+      else
+        translate_access (val_name v) env
   | Texp_constant cst ->
       Lconst (SCatom cst)
   | Texp_tuple(args) ->
@@ -165,8 +167,9 @@ let rec translate_expr env =
              translate_match expr.exp_loc env case_list)
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_apply({exp_desc = Texp_ident(Zglobal g)} as fct, args) ->
-      begin match (get_value g).val_kind with
+  | Texp_apply({exp_desc = Texp_ident v} as fct, args) when (get_value v).val_global ->
+      let v = get_value v in
+      begin match v.val_kind with
         Val_reg ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
       | Val_prim {prim_arity=arity;prim_name=name} ->
@@ -232,7 +235,7 @@ let rec translate_expr env =
   | Texp_while(econd, ebody) ->
       Lwhile(transl econd, Event.before env ebody (transl ebody))
   | Texp_for(id, estart, estop, up_flag, ebody) ->
-      let new_env = add_for_parameter_to_env env id in
+      let new_env = add_for_parameter_to_env env (val_name id) in
       Lfor(transl estart,
            translate_expr (Treserved env) estop,
            up_flag,
@@ -313,7 +316,7 @@ let rec make_sequence f = function
 ;;
 
 let translate_letdef loc pat_expr_list =
-  let mkpath i = {gl_module= !Env.current_module; gl_name=i} in
+  let mkpath i = i.val_id in
   match pat_expr_list with
     [{pat_desc = Tpat_var i}, expr] ->      (* Simple case: let id = expr *)
       Lprim(Pset_global (mkpath i), [translate_expression expr])
@@ -326,7 +329,7 @@ let translate_letdef loc pat_expr_list =
       env_for_toplevel_let pat_list in
     let store_global var =
       Lprim(Pset_global (mkpath var),
-            [translate_access var env]) in
+            [translate_access (val_name var) env]) in
     Llet(translate_bind Tnullenv pat_expr_list,
          translate_matching_check_failure
            loc [pat_list, make_sequence store_global vars])
@@ -349,7 +352,7 @@ let translate_letdef_rec loc pat_expr_list =
   (* First check that all patterns are variables *)
   let var_expr_list =
     List.map (fun (pat, expr) -> (extract_variable pat, expr)) pat_expr_list in
-  let mkpath i = {gl_module= !Env.current_module; gl_name=i} in
+  let mkpath i = i.val_id in
   try                                   (* Simple case: let rec id = fun *)
     make_sequence
       (function (i, e) ->

@@ -96,7 +96,7 @@ let type_typedecl env loc decl =
   let decl =
     List.map
       (fun (name, params, tk) ->
-         (name, params, Resolve.type_kind temp_env [] tk))
+         (name, params, Resolve.type_kind temp_env tk))
       decl 
   in
   List.iter2
@@ -151,7 +151,8 @@ let type_valuedecl env loc id typexp prim =
   let vd = { 
     val_id = Env.make_global_id id;
     val_type = ty;
-    val_kind = prim }
+    val_kind = prim;
+    val_global = true }
   in
   let env = Env.add_value id vd env in
   vd, env
@@ -160,25 +161,16 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   push_type_level();
   let untyped_pat_list = List.map fst untyped_pat_expr_list in
   let pat_list = List.map (Resolve.pattern env) untyped_pat_list in
+  let vals = List.flatten (List.map Resolve.values_of_tpat pat_list) in
+  List.iter (fun v -> v.val_global <- true) vals;
   let ty_list = List.map (fun _ -> new_type_var ()) pat_list in
-  let c = type_pattern_list pat_list ty_list in
-  let enter_val c env =
-    let env = ref env in
-    let vds =List.map
-      (fun (name,(ty,mut_flag)) ->
-         let vd =  {val_id = Env.make_global_id name;
-                       val_type=ty;
-                      val_kind=Val_reg} in
-         env := Env.add_value name vd !env;
-         vd) c
-    in
-    !env, vds
-  in
-  let vds = [] in
-  let env, vds = if rec_flag then enter_val c env else env, vds in
-  let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env []) (List.map snd untyped_pat_expr_list)) in
+  type_pattern_list pat_list ty_list;
+  let enter_vals env =
+    List.fold_left (fun env v -> Env.add_value v.val_id.gl_name v env) env vals in
+  let env = if rec_flag then enter_vals env else env in
+  let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env) (List.map snd untyped_pat_expr_list)) in
   List.iter2
-    (fun (pat, exp) ty -> type_expect [] exp ty)
+    (fun (pat, exp) ty -> type_expect exp ty)
     pat_expr_list ty_list;
   pop_type_level();
   let gen_type =
@@ -186,13 +178,13 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
          pat_expr_list ty_list in
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
-  let env, vds = if rec_flag then env, vds else enter_val c env in
-  pat_expr_list, List.combine (List.map (fun x -> x.val_id.gl_name) vds) vds, env
+  let env = if rec_flag then env else enter_vals env in
+  pat_expr_list, List.combine (List.map (fun x -> x.val_id.gl_name) vals) vals, env
   
 let type_expression loc expr =
   push_type_level();
   let ty =
-    type_expr [] expr in
+    type_expr expr in
   pop_type_level();
   if is_nonexpansive expr then generalize_type ty;
   ty

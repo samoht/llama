@@ -50,29 +50,28 @@ let rec count_args tm =
 
 let rec term_of_expr c expr =
   begin match expr.exp_desc with
-    | Texp_ident id ->
-        begin match id with
-          | Zglobal vdg ->
-              begin match (get_value vdg).val_kind with
-                | Val_reg ->
-                    let qid =  (get_value vdg).val_id in
-                    begin try
-                      find_global qid
-                    with
-                      | Not_found -> Global qid
-                    end
-                | Val_prim prim ->
-                    Prim (find_primitive prim.prim_arity prim.prim_name)
-              end
-          | Zlocal s ->
-              let rec aux i c =
-                begin match c with
-                  | [] -> assert false
-                  | (hd :: tl) -> if hd = Id.name s then i else aux (i+1) tl (* xxx *)
+    | Texp_ident v ->
+        let v = get_value v in
+        if v.val_global then
+          begin match v.val_kind with
+            | Val_reg ->
+                let qid = v.val_id in
+                begin try
+                  find_global qid
+                with
+                  | Not_found -> Global qid
                 end
-              in
-              rel.(aux 0 c)
-        end
+            | Val_prim prim ->
+                Prim (find_primitive prim.prim_arity prim.prim_name)
+          end
+        else
+          let rec aux i c =
+            begin match c with
+              | [] -> assert false
+              | (hd :: tl) -> if hd = val_name v then i else aux (i+1) tl
+            end
+          in
+          rel.(aux 0 c)
     | Texp_constant c ->
         Const c
     | Texp_tuple l ->
@@ -82,7 +81,7 @@ let rec term_of_expr c expr =
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function [([{pat_desc=Tpat_var s}],e)] ->
-        Lambda (term_of_expr (s::c) e)
+        Lambda (term_of_expr (val_name s::c) e)
     | Texp_ifthenelse (i, t, e) ->
         app3 (Match tcs_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
@@ -134,4 +133,8 @@ let rec eval env tm =
         tm
   end
 
-let make_expr desc = {exp_desc = desc; exp_loc = Location.no_location; exp_type = no_type}
+let make_expr desc =
+  {exp_desc = desc;
+   exp_loc = Location.no_location;
+   exp_env = Env.empty;
+   exp_type = no_type}

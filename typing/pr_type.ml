@@ -7,7 +7,9 @@ open Module;;
 open Predef
 
 let output_module_id oc = function
-    Module m -> output_string oc m
+    Module_builtin -> output_string oc "builtin"
+  | Module m -> output_string oc m
+  | Module_toplevel -> output_string oc "toplevel"
 
 let output_global_id oc gl =
   output_module_id oc gl.gl_module;
