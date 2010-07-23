@@ -151,7 +151,7 @@ let rec expr env ex =
   { exp_desc =
       begin match ex.pexp_desc with
         | Pexp_ident li ->
-            Texp_ident (ref_value (Env.lookup_value li env))
+            Texp_ident (lookup_value env li ex.pexp_loc)
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
         | Pexp_construct (li,sarg) ->

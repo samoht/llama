@@ -24,7 +24,7 @@ let rec output_longident oc = function
     Longident.Lident s ->
       output_string oc s
   | Longident.Ldot (mn, s) ->
-      output_longident oc mn; output_string oc "__"; output_string oc s
+      output_longident oc mn; output_string oc "."; output_string oc s
 ;;
 
 (* Summary of output functions:
