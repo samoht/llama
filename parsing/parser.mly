@@ -172,7 +172,6 @@ let pat_constr_or_var p =
 %token LET            /* "let" */
 %token MATCH          /* "match" */
 %token MUTABLE        /* "mutable" */
-%token NOT            /* "not" */
 %token OF             /* "of" */
 %token OPEN           /* "open" */
 %token OR             /* "or" */
@@ -203,7 +202,6 @@ let pat_constr_or_var p =
 %left  COMMA
 %left  OR BARBAR
 %left  AMPERSAND AMPERAMPER
-%left  NOT
 %left  INFIX0 EQUAL EQUALEQUAL          /* comparisons */
 %right INFIX1                           /* concatenations */
 %right COLONCOLON                       /* cons */
@@ -293,8 +291,6 @@ Expr :
           { make_expr(Pexp_tuple(List.rev $1)) }
       | SUBTRACTIVE Expr  %prec prec_uminus
           { make_unary_minus $1 $2 }
-      | NOT Expr
-          { make_unop "not" $2 }
       | Expr INFIX4 Expr
           { make_binop $2 $1 $3 }
       | Expr INFIX3 Expr
@@ -661,7 +657,7 @@ Infx :
       | INFIX3          { $1 }    | INFIX4        { $1 }
       | STAR            { "*" }   | COLONCOLON    { "::" }
       | COLONEQUAL      { ":=" }  | EQUAL         { "=" }
-      | EQUALEQUAL      { "==" }  | NOT           { "not" }
+      | EQUALEQUAL      { "==" }
       | SUBTRACTIVE     { $1 }    | PREFIX        { $1 }
       | AMPERSAND       { "&" }   | AMPERAMPER    { "&&" }
       | OR              { "or" }  | BARBAR        { "||" }

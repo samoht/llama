@@ -2,7 +2,7 @@ external (&)  : bool -> bool -> bool = "sequand";;
 external (&&) : bool -> bool -> bool = "sequand";;
 external (or) : bool -> bool -> bool = "sequor";;
 external (||) : bool -> bool -> bool = "sequor";;
-external (not) : bool -> bool = "not"
+external not : bool -> bool = "not"
 
 open Exc
 

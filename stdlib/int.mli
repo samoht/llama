@@ -24,7 +24,7 @@ external mult_int : int -> int -> int = "*int"
         (* Multiplication. *)
 external ( / ) : int -> int -> int = "div"
 external div_int : int -> int -> int = "div"
-external ( quo ) : int -> int -> int = "div"
+external quo : int -> int -> int = "div"
         (* Integer division. Raise [Division_by_zero] if the second argument
            is 0. Give unpredictable results if either argument is negative. *)
 external ( mod ) : int -> int -> int = "mod"

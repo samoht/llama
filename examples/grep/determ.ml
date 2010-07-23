@@ -67,7 +67,7 @@ let déterminise état_initial =
       let (liste, nouvel_état) = Stack.pop à_remplir in
       let dépl = déplacements liste in
       for i = 0 to 255 do
-        if not est_vide dépl.(i) then
+        if not (est_vide dépl.(i)) then
           nouvel_état.dtransitions.(i) <-
             Vers(traduire (fermeture_ens dépl.(i)))
       done

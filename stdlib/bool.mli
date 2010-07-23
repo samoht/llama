@@ -12,7 +12,7 @@ external (||) : bool -> bool -> bool = "sequor";;
            and
            [e1 or e2] is equivalent to  [if e1 then true else e2].
 *)
-external (not) : bool -> bool = "not"
+external not : bool -> bool = "not"
         (* The boolean negation. *)
 ;;
 

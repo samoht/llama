@@ -74,7 +74,7 @@ let généralisation ty =
   let rec trouve_paramètres ty =
     match valeur_de ty with
     | Variable var ->
-        if var.niveau > !niveau_de_liaison & not memq var !paramètres
+        if var.niveau > !niveau_de_liaison & not (memq var !paramètres)
         then paramètres := var :: !paramètres
     | Terme(constr, arguments) ->
         do_vect trouve_paramètres arguments in

@@ -24,7 +24,7 @@ let rec évalue_dans liaisons = function
 let rec vérifie_lignes proposition liaisons variables =
   match variables with
   | [] ->
-     if not évalue_dans liaisons proposition
+     if not (évalue_dans liaisons proposition)
      then raise (Réfutation liaisons)
   | var :: autres ->
      vérifie_lignes proposition ((var, true) :: liaisons) autres;
