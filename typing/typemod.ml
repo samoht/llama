@@ -32,11 +32,10 @@ let type_structure_item env pstr =
         let decl, env = Resolve.type_declaration env decl pstr.pstr_loc in
         type_typedecl_new decl pstr.pstr_loc;
         mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
-    | Pstr_exception decl ->
-        let decl = Resolve.constr_decl env decl in
-        let phr = mk (Tstr_exception decl) in
-        let sg, env = type_excdecl env pstr.pstr_loc decl in
-        phr, [gen_exception sg], env
+    | Pstr_exception (name, args) ->
+        let cs, args, env = Resolve.exception_declaration env name args in
+        type_excdecl cs args;
+        mk (Tstr_exception (cs, args)), [Gen_exception cs], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open mn) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in
@@ -55,11 +54,10 @@ let type_signature_item env psig =
         let decl, env = Resolve.type_declaration env decl psig.psig_loc in
         type_typedecl_new decl psig.psig_loc;
         mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
-    | Psig_exception decl ->
-        let decl = Resolve.constr_decl env decl in
-        let phr = mk (Tsig_exception decl) in
-        let sg, env = type_excdecl env psig.psig_loc decl in
-        phr, [gen_exception sg], env
+    | Psig_exception (name, args) ->
+        let cs, args, env = Resolve.exception_declaration env name args in
+        type_excdecl cs args;
+        mk (Tsig_exception (cs, args)), [Gen_exception cs], env
     | Psig_open mn ->
         let phr = mk (Tsig_open mn) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in

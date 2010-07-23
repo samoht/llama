@@ -375,3 +375,17 @@ let letdef env rec_flag pat_exp_list =
   let env = if rec_flag then env else enter_vals env in
   pat_exp_list, vals, env
 
+let exception_declaration env name args =
+  let args = List.map (type_expression true env) args in
+  let nargs = List.length args in
+  let tag = ConstrExtensible(Env.make_global_id name, new_exc_stamp ()) in
+  let cs =
+    { cs_parent = Predef.tcs_exn;
+      cs_name = name;
+      cs_res = no_type;
+      cs_args = replicate_list no_type nargs;
+      cs_arity = nargs;
+      cs_tag = tag }
+  in
+  let env = Env.add_exception name cs env in
+  cs, args, env

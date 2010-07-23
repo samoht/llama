@@ -71,25 +71,13 @@ let type_typedecl_new decl loc =
     end
     decl
 
-let type_excdecl env loc decl =
+let type_excdecl cs args  =
   push_type_level();
-  Resolve.reset_type_expression_vars ();
-  let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
-  let constr_tag = ConstrExtensible({id_module= !Env.current_module;id_name=constr_name},
-                                    new_exc_stamp()) in
-  let cd =
-    { cs_parent = tcs_exn;
-      cs_name = constr_name;
-      cs_res = type_exn;
-      cs_args = ty_args;
-      cs_arity = List.length ty_args;
-      cs_tag = constr_tag }
-  in
+  cs.cs_res <- type_exn;
+  cs.cs_args <- ty_args;
   pop_type_level ();
-  List.iter generalize_type ty_args;
-  let env = Env.add_exception constr_name cd env in
-  cd, env
+  List.iter generalize_type ty_args
 
 let type_valuedecl_new v typexp =
   push_type_level();

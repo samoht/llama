@@ -66,9 +66,9 @@ let do_structure_item env phr =
       List.iter
         (fun (tcs, _, _) -> Printf.printf "Type %s defined.\n" tcs.tcs_id.id_name)
         decl
-  | Tstr_exception decl ->
+  | Tstr_exception (cs, _) ->
       reset_rollback ();
-      Printf.printf "Exception %s defined.\n" (fst decl)
+      Printf.printf "Exception %s defined.\n" cs.cs_name
   | Tstr_open mn ->
       ()
   end;
