@@ -416,7 +416,22 @@ let structure_item env pstr =
         phr, [], env
   end
 
+let signature_item env psig =
+  reset_type_expression_vars();
+  let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
+  begin match psig.psig_desc with
+    | Psig_value (s, te, pr) ->
+        let v, typexp, env = value_declaration env s te pr in
+        mk (Tsig_value (v, typexp)), [Gen_value v], env
+    | Psig_type decl ->
+        let decl, env = type_declaration env decl psig.psig_loc in
+        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
+    | Psig_exception (name, args) ->
+        let cs, args, env = exception_declaration env name args in
+        mk (Tsig_exception (cs, args)), [Gen_exception cs], env
+    | Psig_open mn ->
+        let phr = mk (Tsig_open mn) in
+        let env = Env.open_pers_signature (String.uncapitalize mn) env in
+        phr, [], env
+  end
 
-        
-        
-  

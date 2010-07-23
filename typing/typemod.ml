@@ -27,26 +27,16 @@ let type_structure_item str =
         ()
   end
 
-let type_signature_item env psig =
-  Resolve.reset_type_expression_vars();
-  let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
-  begin match psig.psig_desc with
-    | Psig_value (s, te, pr) ->
-        let v, typexp, env = Resolve.value_declaration env s te pr in
+let type_signature_item tsig =
+  begin match tsig.sig_desc with
+    | Tsig_value (v, typexp) ->
         type_valuedecl_new v typexp;
-        mk (Tsig_value (v, typexp)), [Gen_value v], env
-    | Psig_type decl ->
-        let decl, env = Resolve.type_declaration env decl psig.psig_loc in
-        type_typedecl_new decl psig.psig_loc;
-        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
-    | Psig_exception (name, args) ->
-        let cs, args, env = Resolve.exception_declaration env name args in
+    | Tsig_type decl ->
+        type_typedecl_new decl tsig.sig_loc;
+    | Tsig_exception (cs, args) ->
         type_excdecl cs args;
-        mk (Tsig_exception (cs, args)), [Gen_exception cs], env
-    | Psig_open mn ->
-        let phr = mk (Tsig_open mn) in
-        let env = Env.open_pers_signature (String.uncapitalize mn) env in
-        phr, [], env
+    | Tsig_open _ ->
+        ()
   end
 
 let rec type_structure_raw env l =
@@ -84,6 +74,7 @@ let rec type_signature env l =
       [] ->
         [], [], env
     | hd :: tl ->
-        let hd, hd_gens, env = type_signature_item env hd in
+        let hd, hd_gens, env = Resolve.signature_item env hd in
+        type_signature_item hd;
         let tl, tl_gens, env = type_signature env tl in
         hd :: tl, hd_gens @ tl_gens, env
