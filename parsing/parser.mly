@@ -769,9 +769,9 @@ Type1_def :
 ;
 
 Constr1_decl :
-        Ide OF core_type_list
+        UIDENT OF core_type_list
           { ($1, List.rev $3) }
-      | Ide
+      | UIDENT
           { ($1, []) }
 ;
 core_type_list:

@@ -48,7 +48,7 @@ type parse_tables =
     check : string }
 ;;
 
-exception yyexit of obj;;
+exception Yyexit of obj;;
 
 val yyparse : parse_tables -> int -> (lexbuf -> 'a) -> lexbuf -> 'b
 val peek_val : int -> 'a

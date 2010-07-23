@@ -47,7 +47,7 @@ and parser_output =
 (* ---------------------------------------------------------------------- *)
 
 exception Parse_error;;
-exception yyexit of obj;;
+exception Yyexit of obj;;
 
 type parse_tables =
   { actions : (unit -> obj) vect;
@@ -141,7 +141,7 @@ let yyparse tables start lexer lexbuf =
     env.state <- init_state;
     env.curr_char <- init_curr_char;
     match exn with
-      yyexit v ->
+      Yyexit v ->
         magic_obj v
     | _ ->
         current_lookahead_fun :=
