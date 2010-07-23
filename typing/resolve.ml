@@ -239,8 +239,32 @@ let rec expr env ex =
 
 
 let constr_decl env (s,tys) =
-  let cs = ref [] in
   (s, List.map (type_expression true env) tys)
+   
+let constructor env tcs n i (name, typexps) =
+  let arity = List.length typexps in
+  let constr_tag = ConstrRegular (i, n) in
+  let cs =
+    { cs_parent = tcs;
+      cs_name = name;
+      cs_res = no_type;
+      cs_args = replicate_list no_type arity;
+      cs_arity = arity;
+      cs_tag = constr_tag }
+  in
+  (cs, List.map (type_expression true env) typexps)
+
+let label env tcs pos (name, typexp, mut) =
+  let lbl =
+    { lbl_parent = tcs;
+      lbl_name = name;
+      lbl_res = no_type;
+      lbl_arg = no_type;
+      lbl_mut = mut;
+      lbl_pos = pos
+    }
+  in
+  (lbl, type_expression true env typexp, mut)
 
 let primitive o =
   begin match o with
@@ -248,16 +272,19 @@ let primitive o =
     | Some (arity,s) -> Val_prim {prim_arity=arity;prim_name=s}
   end
 
-let tcs_kind env tk =
-  begin match tk with
+let mapi f =
+  let rec aux i = function
+      [] -> []
+    | (hd :: tl) -> f i hd :: aux (i+1) tl
+  in
+  aux 0
+
+let type_constructor_body env tcs body =
+  begin match body with
     | Ptype_abstract -> Ttype_abstract
     | Ptype_abbrev te -> Ttype_abbrev (type_expression true env te)
-    | Ptype_variant cdl ->
-        Ttype_variant (List.map (constr_decl env) cdl)
-    | Ptype_record l ->
-        let lbls = ref [] in
-        Ttype_record (List.map (fun (s,te,m) ->
-                                  (s, type_expression true env te, m)) l)
+    | Ptype_variant l -> Ttype_variant (mapi (constructor env tcs (List.length l)) l)
+    | Ptype_record l -> Ttype_record (mapi (label env tcs) l)
   end
 
 let value_declaration env name typexp primstuff =
@@ -269,3 +296,66 @@ let value_declaration env name typexp primstuff =
   in
   let typexp = type_expression false env typexp in
   v, typexp, Env.add_value name v env
+
+let type_declaration env decl loc =
+  let params_list =
+    List.map
+      begin fun (name, sparams, body) ->
+        bind_type_expression_vars sparams loc
+      end
+      decl
+  in
+  let decl =
+    List.map2
+      (fun params (name, _, body) -> (name, params, body))
+      params_list decl
+  in
+  let tcs_list =
+    List.map
+      begin fun (name, params, body) ->
+        let nparams = List.length params in
+        { tcs_id = Env.make_global_id name;
+          tcs_arity = nparams;
+          tcs_params = replicate_list no_type nparams;
+          tcs_manifest = None;
+          tcs_kind = Type_abstract }
+      end
+      decl
+  in
+  let decl =
+    List.map2
+      (fun tcs (_, params, body) -> (tcs, params, body))
+      tcs_list decl
+  in
+  let temp_env =
+    List.fold_left
+      (fun env tcs -> Env.add_type tcs.tcs_id.id_name tcs env)
+      env tcs_list
+  in
+  let decl =
+    List.map
+      (fun (tcs, params, body) ->
+         (tcs, params, type_constructor_body temp_env tcs body))
+      decl
+  in
+  List.iter
+    begin fun (tcs, params, body) ->
+      tcs.tcs_kind <-
+        begin match body with
+          | Ttype_abstract | Ttype_abbrev _ -> Type_abstract
+          | Ttype_variant l -> Type_variant (List.map fst l)
+          | Ttype_record l -> Type_record (List.map (fun (lbl, _, _) -> lbl) l)
+        end;
+      tcs.tcs_manifest <-
+        begin match body with
+          | Ttype_abbrev ty -> Some no_type
+          | _ -> None
+        end
+    end
+    decl;
+  let final_env =
+    List.fold_left
+      (fun env tcs -> Env.add_type tcs.tcs_id.id_name tcs env)
+      env tcs_list
+  in
+  decl, final_env

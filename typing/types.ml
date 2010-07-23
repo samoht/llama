@@ -38,7 +38,7 @@ and typ_link =
 
 and type_constructor =
   { tcs_id : global_id;
-    tcs_params : core_type list;
+    mutable tcs_params : core_type list;
     tcs_arity: int;                      (* Its arity *)
     mutable tcs_manifest : core_type option;
     mutable tcs_kind: tcs_kind }  (* Its description *)
@@ -51,8 +51,8 @@ and tcs_kind =
 and constructor =
   { cs_parent: type_constructor;
     cs_name: string;
-    cs_res: core_type;                       (* Result type *)
-    cs_args: core_type list;                 (* Argument types *)
+    mutable cs_res: core_type;                       (* Result type *)
+    mutable cs_args: core_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
     cs_tag: constr_tag }               (* Its run-time tag *)
 
@@ -63,8 +63,8 @@ and constr_tag =
 and label =
   { lbl_parent: type_constructor;
     lbl_name: string;
-    lbl_res: core_type;                      (* Result type *)
-    lbl_arg: core_type;                      (* Argument type *)
+    mutable lbl_res: core_type;                      (* Result type *)
+    mutable lbl_arg: core_type;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
 

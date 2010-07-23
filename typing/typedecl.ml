@@ -9,128 +9,69 @@ open Btype
 open Error
 open Typecore
 
-let make_new_variant loc (ty_constr, ty_res, constrs) =
-  let constrs =
-    List.map
-      (fun (constr_name, args) ->
-         let ty_args = List.map (type_of_type_expression true) args in
-         (constr_name, ty_args))
-      constrs
-  in
-  let constructors = Datarepr.constructor_descrs ty_constr ty_res constrs in
-  pop_type_level();
-  generalize_type ty_res;
-  List.iter
-    (fun cstr -> List.iter generalize_type cstr.cs_args)
-    constructors;
-  Type_variant constructors
-
-let make_new_record loc (ty_constr, ty_res, labels) =
-  let labels =
-    List.map
-      (fun (name, typexp, mut_flag) ->
-         let ty_arg = type_of_type_expression true typexp in
-         (name, mut_flag, ty_arg))
-      labels
-  in
-  let labels = Datarepr.label_descrs  ty_constr ty_res labels in
-  pop_type_level();
-  generalize_type ty_res;
-  List.iter
-    (function lbl -> generalize_type lbl.lbl_arg)
-    labels;
-  Type_record labels
-    
-let make_new_abbrev (ty_constr, ty_params, body) =
-  let ty_body = type_of_type_expression true body in
-    pop_type_level();
-    generalize_type ty_body;
-    List.iter generalize_type ty_params;
-    Type_abstract, Some ty_body
-
-let define_new_type loc (ty_desc, ty_params, def) =
+let define_new_type tcs params body =
   push_type_level();
   let ty_res =
-    { typ_desc = Tconstr(ref_type_constr ty_desc, ty_params);
-      typ_level = notgeneric} in
-  let type_comp,manifest =
-    match def with
-      Ttype_abstract ->
-        pop_type_level(); Type_abstract,None
-    | Ttype_variant constrs ->
-        make_new_variant loc (ty_desc, ty_res, constrs),None
-    | Ttype_record labels ->
-        make_new_record loc (ty_desc, ty_res, labels),None
-    | Ttype_abbrev body ->
-        make_new_abbrev (ty_desc, ty_params, body) in
-  ty_desc.tcs_kind <- type_comp;
-  ty_desc.tcs_manifest <- manifest;
-  (ty_res, type_comp)
-
-let type_typedecl env loc decl =
-  (* Enter types. *)
-  let temp_env = ref env in
-  let decl =
-    List.map
-      (fun (name, params, tk) ->
-         name, Resolve.bind_type_expression_vars params loc, tk)
-      decl
+    { typ_desc = Tconstr (ref_type_constr tcs, params);
+      typ_level = notgeneric }
   in
+  begin match body with
+      Ttype_abstract ->
+        pop_type_level ()
+    | Ttype_variant l ->
+        List.iter
+          begin fun (cs, args) ->
+            let ty_args = List.map (type_of_type_expression true) args in
+            cs.cs_res <- ty_res;
+            cs.cs_args <- ty_args
+          end l;
+        pop_type_level ();
+        generalize_type ty_res;
+        List.iter (fun (cs, _) -> List.iter generalize_type cs.cs_args) l
+    | Ttype_record l ->
+        List.iter
+          begin fun (lbl, arg, _) ->
+            let ty_arg = type_of_type_expression true arg in
+            lbl.lbl_res <- ty_res;
+            lbl.lbl_arg <- ty_arg
+          end l;
+        pop_type_level ();
+        generalize_type ty_res;
+        List.iter (fun (lbl, _, _) -> generalize_type lbl.lbl_arg) l
+    | Ttype_abbrev arg ->
+        let ty_arg = type_of_type_expression true arg in
+        tcs.tcs_manifest <- Some ty_arg;
+        pop_type_level ();
+        generalize_type ty_res;
+        generalize_type ty_arg
+    | _ ->
+        assert false
+  end
+
+let type_typedecl_new decl loc =
   List.iter
-    begin fun (name, params, def) ->
-      List.iter
-        begin fun v ->
-          v.tvar_type <- new_global_type_var ()
-        end
-        params
+    begin fun (tcs, params, body) ->
+      let params =
+        List.map
+          begin fun v ->
+            let ty = new_global_type_var () in
+            v.tvar_type <- ty;
+            ty
+          end
+          params
+      in
+      tcs.tcs_params <- params;
+      define_new_type tcs params body
     end
     decl;
-  let newdecl =
-    List.map
-      (fun (ty_name, params, def) ->
-         let params = List.map (fun v -> v.tvar_type) params in
-         let ty_desc =
-             { tcs_id = Env.make_global_id ty_name;
-               tcs_arity = List.length params;
-               tcs_manifest = None;
-               tcs_params = params;
-               tcs_kind  = Type_abstract } in
-         temp_env := Env.add_type ty_name ty_desc !temp_env;
-         ty_desc)
-      decl
-  in
-  let temp_env = !temp_env in
-  (* Translate each declaration. *)
-  let decl =
-    List.map
-      (fun (name, params, tk) ->
-         (name, params, Resolve.tcs_kind temp_env tk))
-      decl 
-  in
-  List.iter2
-    begin fun (_, _, tk) desc ->
-      ignore (define_new_type loc (desc, desc.tcs_params, tk));
-    end
-    decl newdecl;
-  let final_env =
-    List.fold_left
-      (fun env ty_desc ->
-         Env.add_type ty_desc.tcs_id.id_name ty_desc env) env newdecl
-  in
-  (* Check for ill-formed abbrevs *)
   List.iter
-    begin fun desc ->
+    begin fun (tcs, _, _) ->
       try
-        check_recursive_abbrev desc
+        check_recursive_abbrev tcs
       with Recursive_abbrev ->
-        recursive_abbrev_err loc desc
+        recursive_abbrev_err loc tcs
     end
-    newdecl;
-  let decl =
-    List.map2 
-      (fun (name, params, def) tcs -> (tcs, params, def)) decl newdecl
-  in
-  decl, newdecl, final_env
+    decl
 
 let type_excdecl env loc decl =
   push_type_level();

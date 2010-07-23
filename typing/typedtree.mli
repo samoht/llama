@@ -75,10 +75,10 @@ and stream_pattern =
 type type_body =
     Ttype_abstract
   | Ttype_variant of constr_decl list
-  | Ttype_record of (string * type_expression * mutable_flag) list
+  | Ttype_record of (label * type_expression * mutable_flag) list
   | Ttype_abbrev of type_expression
 
-and constr_decl = string * type_expression list
+and constr_decl = constructor * type_expression list
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -87,7 +87,7 @@ type signature_item =
 and signature_item_desc =
     Tsig_value of value * type_expression
   | Tsig_type of (type_constructor * type_variable list * type_body) list
-  | Tsig_exception of constr_decl
+  | Tsig_exception of (string * type_expression list)
   | Tsig_open of module_name
 
 type structure_item =
@@ -99,7 +99,7 @@ and structure_item_desc =
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of value * type_expression
   | Tstr_type of (type_constructor * type_variable list * type_body) list
-  | Tstr_exception of constr_decl
+  | Tstr_exception of (string * type_expression list)
   | Tstr_open of module_name
 
 type module_coercion =

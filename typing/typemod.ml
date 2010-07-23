@@ -29,9 +29,9 @@ let type_structure_item env pstr =
         type_valuedecl_new v typexp;
         mk (Tstr_primitive (v, typexp)), [Gen_value v], env
     | Pstr_type decl ->
-        let decl, sg, env = type_typedecl env pstr.pstr_loc decl in
-        let phr = mk (Tstr_type(decl)) in
-        phr, (List.map gen_type sg), env
+        let decl, env = Resolve.type_declaration env decl pstr.pstr_loc in
+        type_typedecl_new decl pstr.pstr_loc;
+        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
     | Pstr_exception decl ->
         let decl = Resolve.constr_decl env decl in
         let phr = mk (Tstr_exception decl) in
@@ -52,9 +52,9 @@ let type_signature_item env psig =
         type_valuedecl_new v typexp;
         mk (Tsig_value (v, typexp)), [Gen_value v], env
     | Psig_type decl ->
-        let decl, sg, env = type_typedecl env psig.psig_loc decl in
-        let phr = mk (Tsig_type(decl)) in
-        phr, List.map gen_type sg, env
+        let decl, env = Resolve.type_declaration env decl psig.psig_loc in
+        type_typedecl_new decl psig.psig_loc;
+        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
     | Psig_exception decl ->
         let decl = Resolve.constr_decl env decl in
         let phr = mk (Tsig_exception decl) in
