@@ -5,10 +5,9 @@ open Asttypes
 
 type error =
     Missing_field of string
-  | Value_descriptions of Id.t * value * value
-  | Type_declarations of Id.t * type_constructor * type_constructor
-  | Exception_declarations of
-      Id.t * exception_declaration * exception_declaration
+  | Value_descriptions of value * value
+  | Type_declarations of type_constructor * type_constructor
+  | Exception_declarations of exception_declaration * exception_declaration
 
 exception Error of error list
 
@@ -18,26 +17,26 @@ exception Error of error list
 
 (* Inclusion between value descriptions *)
 
-let values s id vd1 vd2 =
+let values s vd1 vd2 =
   try
     Includecore.values s vd1 vd2
   with Includecore.Dont_match ->
-    Error.type_mismatch_err (Id.name id) vd2 vd1
+    Error.type_mismatch_err (val_name vd1) vd2 vd1
 (*    raise(Error[Value_descriptions(id, vd1, vd2)])*)
 
 (* Inclusion between type declarations *)
 
-let type_constructors s id decl1 decl2 =
-  if Includecore.type_constructors s id decl1 decl2
+let type_constructors s decl1 decl2 =
+  if Includecore.type_constructors s decl1 decl2
   then ()
-  else raise(Error[Type_declarations(id, decl1, decl2)])
+  else raise(Error[Type_declarations(decl1, decl2)])
 
 (* Inclusion between exception declarations *)
 
-let exception_declarations s id decl1 decl2 =
+let exception_declarations s decl1 decl2 =
   if Includecore.exception_declarations s decl1 decl2
   then ()
-  else raise(Error[Exception_declarations(id, decl1, decl2)])
+  else raise(Error[Exception_declarations(decl1, decl2)])
 
 (* Extract name, kind and ident from a signature item *)
 
@@ -47,9 +46,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Gen_value (s,gl) -> (s, Field_value (Id.name s))
-  | Gen_type(s,gl) -> (s, Field_type (Id.name s))
-  | Gen_exception(s,gl) -> (s, Field_exception (Id.name s))
+    Gen_value (s,gl) -> (s, Field_value s)
+  | Gen_type(s,gl) -> (s, Field_type s)
+  | Gen_exception(s,gl) -> (s, Field_exception s)
 
 (* Simplify a structure coercion *)
 
@@ -104,7 +103,7 @@ let rec signatures subst sig1 sig2 =
           in
           pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
-          failwith ("ERROR: unpaired: "^Id.name id2)
+          failwith ("ERROR: unpaired: "^id2)
 (*           pair_components paired unpaired rem *)
         end in
   (* Do the pairing and checking, and return the final coercion *)
@@ -113,17 +112,17 @@ let rec signatures subst sig1 sig2 =
 and signature_components subst = function
     [] -> []
   | (Gen_value(id1,valdecl1), Gen_value(id2,valdecl2), pos) :: rem ->
-      let cc = values subst id1 valdecl1 valdecl2 in
+      let cc = values subst valdecl1 valdecl2 in
       begin match valdecl2.val_kind with
         Val_prim _ -> signature_components subst rem
       | _ -> (pos, cc) :: signature_components subst rem
       end
   | (Gen_type(id1,tydecl1), Gen_type(id2,tydecl2), pos) :: rem ->
-      type_constructors subst id1 tydecl1 tydecl2;
+      type_constructors subst tydecl1 tydecl2;
       signature_components subst rem
   | (Gen_exception(id1,excdecl1), Gen_exception(id2,excdecl2), pos)
     :: rem ->
-      exception_declarations subst id1 excdecl1 excdecl2;
+      exception_declarations subst excdecl1 excdecl2;
       (pos, Tcoerce_none) :: signature_components subst rem
   | _ ->
       assert false

@@ -9,7 +9,7 @@ type type_expression =
     te_env : Env.t  }
 
 and type_expression_desc =
-    Ttyp_var of Id.t
+    Ttyp_var of string (* resolve earlier? *)
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
   | Ttyp_constr of type_constructor reference * type_expression list
@@ -80,9 +80,10 @@ type signature_item =
   { sig_desc: signature_item_desc;
     sig_loc: Location.t }
 
+(* resolve strings earlier? *)
 and signature_item_desc =
-    Tsig_value of Id.t * type_expression * value_kind
-  | Tsig_type of (Id.t * Id.t list * type_rhs) list
+    Tsig_value of string * type_expression * value_kind
+  | Tsig_type of (string * string list * type_rhs) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
 
@@ -90,11 +91,12 @@ type structure_item =
   { str_desc: structure_item_desc;
     str_loc: Location.t }
 
+(* resolve strings earlier? *)
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
-  | Tstr_primitive of Id.t * type_expression * Primitive.description
-  | Tstr_type of (Id.t * Id.t list * type_rhs) list
+  | Tstr_primitive of string * type_expression * Primitive.description
+  | Tstr_type of (string * string list * type_rhs) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
 

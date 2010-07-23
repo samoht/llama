@@ -15,7 +15,7 @@ open Asttypes;;
 (* To convert type expressions to types *)
 
 let type_expr_vars =
-  ref ([] : (Id.t * core_type) list);;
+  ref ([] : (string * core_type) list);;
 
 let reset_type_expression_vars () =
   type_expr_vars := []
@@ -42,7 +42,7 @@ let type_of_type_expression strict_flag typexp =
         List.assoc v !type_expr_vars
       with Not_found ->
         if strict_flag then
-          unbound_type_var_err (Id.name v) typexp
+          unbound_type_var_err v typexp
         else begin
           let t = new_global_type_var() in
           type_expr_vars := (v,t) :: !type_expr_vars; t
@@ -91,12 +91,12 @@ let rec tpat (pat, ty, mut_flag) =
       v.val_type <- ty
 (*
       if List.mem_assoc v new_env then
-        non_linear_pattern_err pat (Id.name v);
+        non_linear_pattern_err pat v;
 *)
   | Tpat_alias(pat, v) ->
 (*
       if List.mem_assoc v new_env then
-        non_linear_pattern_err pat (Id.name v)
+        non_linear_pattern_err pat v;
 *)
       v.val_type <- ty;
       tpat (pat, ty, mut_flag)

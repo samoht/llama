@@ -93,9 +93,9 @@ and value_kind =
 type exception_declaration = constructor (* typ list *)
 
 type generated_item =
-    Gen_value of Id.t * value
-  | Gen_type of Id.t * type_constructor (*  * rec_status *)
-  | Gen_exception of Id.t * constructor
+    Gen_value of string * value
+  | Gen_type of string * type_constructor (*  * rec_status *)
+  | Gen_exception of string * constructor
 
 and rec_status =
     Rec_not

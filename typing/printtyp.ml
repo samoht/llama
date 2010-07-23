@@ -23,11 +23,11 @@ let rec longident ppf = function
 
 (* Print an identifier *)
 
-let ident ppf id = fprintf ppf "%s" (Id.name id)
+let ident ppf id = fprintf ppf "%s" id
 
 (* Print a path *)
 
-let ident_pervasive = Id.create_persistent "Pervasives"
+let ident_pervasive = "Pervasives"
 
 (* Print a type expression *)
 

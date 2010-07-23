@@ -60,13 +60,13 @@ let add_type id info env =
     constrs =
       List.fold_right
         (fun cs constrs ->
-           Tbl.add (Id.create cs.cs_name) cs constrs)
+           Tbl.add cs.cs_name cs constrs)
         (constructors_of_type info)
         env.constrs;
     labels =
       List.fold_right
         (fun lbl labels ->
-           Tbl.add (Id.create lbl.lbl_name) lbl labels)
+           Tbl.add lbl.lbl_name lbl labels)
         (labels_of_type info)
         env.labels;
     types = Tbl.add id info env.types }

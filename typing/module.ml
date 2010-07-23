@@ -40,11 +40,11 @@ let index w =
     begin fun item ->
       begin match item with
         | Gen_value (s,gl) ->
-            Hashtbl.add ps.mod_values (Id.name s) gl
+            Hashtbl.add ps.mod_values s gl
         | Gen_exception (s,gl) ->
-            Hashtbl.add ps.mod_constrs (Id.name s) gl
+            Hashtbl.add ps.mod_constrs s gl
         | Gen_type (s,gl) ->
-            Hashtbl.add ps.mod_types (Id.name s) gl;
+            Hashtbl.add ps.mod_types s gl;
             List.iter
               (fun gl -> Hashtbl.add ps.mod_constrs gl.cs_name gl)
               (constructors_of_type gl);

@@ -33,7 +33,7 @@ let labels s params1 params2 lbl1 lbl2 =
   lbl1.lbl_name = lbl2.lbl_name &&
   Ctype.equal true (lbl1.lbl_res::params1) (Subst.core_type s lbl2.lbl_res::params2)
 
-let type_constructors s id decl1 decl2 =
+let type_constructors s decl1 decl2 =
   let params1 = decl1.type_params in
   let params2 = decl2.type_params in
   decl1.type_arity = decl2.type_arity &&

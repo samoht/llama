@@ -68,13 +68,11 @@ let define_new_type loc (ty_desc, ty_params, def) =
   (ty_res, type_comp)
 
 let type_typedecl env loc decl =
-  (* Create identifiers. *)
-  let id_list = List.map (fun (name, _, _) -> Id.create name) decl in
   (* Enter types. *)
   let temp_env = ref env in
   let newdecl =
-    List.map2
-      (fun id (ty_name, sparams, def) ->
+    List.map
+      (fun (ty_name, sparams, def) ->
          let ty_params =
            try
              bind_type_expression_vars sparams
@@ -87,9 +85,9 @@ let type_typedecl env loc decl =
                type_manifest = None;
                type_params = ty_params;
                type_kind  = Type_abstract } in
-         temp_env := Env.add_type id ty_desc !temp_env;
+         temp_env := Env.add_type ty_name ty_desc !temp_env;
          ty_desc)
-      id_list decl
+      decl
   in
   let temp_env = !temp_env in
   (* Translate each declaration. *)
@@ -104,11 +102,11 @@ let type_typedecl env loc decl =
       ignore (define_new_type loc (desc, desc.type_params, tk));
     end
     decl newdecl;
-  let final_env = ref env in
-  List.iter2
-    (fun id ty_desc ->
-       final_env := Env.add_type id ty_desc !final_env)
-    id_list newdecl;
+  let final_env =
+    List.fold_left
+      (fun env ty_desc ->
+         Env.add_type ty_desc.type_id.gl_name ty_desc env) env newdecl
+  in
   (* Check for ill-formed abbrevs *)
   List.iter
     begin fun desc ->
@@ -118,7 +116,7 @@ let type_typedecl env loc decl =
         recursive_abbrev_err loc desc
     end
     newdecl;
-  decl, List.combine id_list newdecl, !final_env
+  decl, newdecl, final_env
 
 let type_excdecl env loc decl =
   push_type_level();
@@ -128,7 +126,6 @@ let type_excdecl env loc decl =
   let constr_tag = ConstrExtensible({gl_module= !Env.current_module;gl_name=constr_name},
                                     new_exc_stamp()) in
   let cd =
-    constr_name,
     { cs_parent = tcs_exn;
       cs_name = constr_name;
       cs_res = type_exn;
@@ -138,9 +135,8 @@ let type_excdecl env loc decl =
   in
   pop_type_level ();
   List.iter generalize_type ty_args;
-  let id = Id.create (fst cd) in
-  let env = Env.add_exception id (snd cd) env in
-  (id, snd cd), env
+  let env = Env.add_exception constr_name cd env in
+  (constr_name, cd), env
 
 let type_valuedecl env loc id typexp prim =
   push_type_level();

@@ -11,11 +11,9 @@ exception Multiply_bound_variable of string
 exception Duplicate_constructor of string
 exception Duplicate_label of string
 
-let id_create_nodup lref s cb =
-  if List.mem s !lref then cb () else lref := s :: !lref; Id.create s
+let nodup lref s cb =
+  if List.mem s !lref then cb () else lref := s :: !lref; s
 
-let type_variables = ref (Tbl.empty : (string, Id.t) Tbl.t)
-let reset_type_variables () = type_variables := Tbl.empty
 
 let rec free_vars_of_pat pat =
   match pat.ppat_desc with
@@ -63,13 +61,7 @@ let lookup_value env li loc =
 let rec type_expression env te =
   { te_desc =
       begin match te.ptyp_desc with
-        | Ptyp_var name ->
-            Ttyp_var
-              begin try Tbl.find name !type_variables with Not_found -> 
-                let v = Id.create name in
-                type_variables := Tbl.add name v !type_variables;
-                v
-              end
+        | Ptyp_var name -> Ttyp_var name (* should we catch duplicates here? *)
         | Ptyp_arrow (x, y) -> Ttyp_arrow (type_expression env x, type_expression env y)
         | Ptyp_tuple l -> Ttyp_tuple (List.map (type_expression env) l)
         | Ptyp_constr (li, l) ->
