@@ -20,7 +20,7 @@ let height = function
    l and r must be balanced and | height l - height r | <= 2.
    Inline expansion of height for better speed. *)
 
-let new l x r =
+let create l x r =
   let sl = match l with Empty -> 0 | Node(_,_,_,s) -> s in
   let sr = match r with Empty -> 0 | Node(_,_,_,s) -> s in
   Node(l, x, r, (if sl >= sr then succ sl else succ sr));;
@@ -38,24 +38,24 @@ let bal l x r =
       Empty -> invalid_arg "Baltree.bal"
     | Node(ll, lv, lr, _) ->
         if height ll >= height lr then
-          new ll lv (new lr x r)
+          create ll lv (create lr x r)
         else begin
           match lr with
             Empty -> invalid_arg "Baltree.bal"
           | Node(lrl, lrv, lrr, _)->
-              new (new ll lv lrl) lrv (new lrr x r)
+              create (create ll lv lrl) lrv (create lrr x r)
         end
   end else if sr > sl + 2 then begin
     match r with
       Empty -> invalid_arg "Baltree.bal"
     | Node(rl, rv, rr, _) ->
         if height rr >= height rl then
-          new (new l x rl) rv rr
+          create (create l x rl) rv rr
         else begin
           match rl with
             Empty -> invalid_arg "Baltree.bal"
           | Node(rll, rlv, rlr, _) ->
-              new (new l x rll) rlv (new rlr rv rr)
+              create (create l x rll) rlv (create rlr rv rr)
         end
   end else
     Node(l, x, r, (if sl >= sr then succ sl else succ sr));;

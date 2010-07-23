@@ -50,7 +50,7 @@ let déplacements liste_états =
   t;;
 let déterminise état_initial =
   let états_connus = Hashtbl.create 51
-  and à_remplir = Stack.new () in
+  and à_remplir = Stack.create () in
   let traduire ens =
     try Hashtbl.find états_connus ens.contenu
     with Not_found ->

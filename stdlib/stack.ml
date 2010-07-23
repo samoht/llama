@@ -5,7 +5,7 @@ open Exc
 
 type 'a t = { mutable c : 'a list };;
 
-let new () = { c = [] };;
+let create () = { c = [] };;
 
 let clear s = s.c <- [];;
 

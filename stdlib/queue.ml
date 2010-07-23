@@ -13,7 +13,7 @@ type 'a t =
     mutable tail: 'a queue_cell }
 ;;
 
-let new () =
+let create () =
   { head = Nil; tail = Nil }
 ;;
 
