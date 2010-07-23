@@ -16,7 +16,6 @@ TYPING=typing/primitive.cmx \
  typing/types.cmx \
  typing/predef.cmx \
  typing/module.cmx \
- typing/datarepr.cmx \
  typing/env.cmx typing/btype.cmx \
  typing/subst.cmx \
  typing/pr_type.cmx typing/pr_decl.cmx \
@@ -111,12 +110,12 @@ linker/prim_c.ml : runtime/primitives
 linker/more_predef.ml : runtime/globals.h runtime/fail.h
 	(echo 'open Types;;'; \
          echo 'let predef_variables = ['; \
-	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{gl_module=Module \1; gl_name=\2};|p' \
+	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{id_module=Module \1; id_name=\2};|p' \
                 $< \
            | sed -e '$$s|;$$||'; \
          echo '];;'; \
          echo 'let predef_exn = ['; \
-         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|({gl_module=Module \1; gl_name=\2}, \3);|p' \
+         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|({id_module=Module \1; id_name=\2}, \3);|p' \
                 runtime/fail.h \
            | sed -e '$$s|;$$||'; \
          echo '];;') > $@

@@ -86,21 +86,6 @@ let type_valuedecl_new v typexp =
   generalize_type ty;
   v.val_type <- ty
 
-let type_valuedecl env loc id typexp prim =
-  push_type_level();
-  Resolve.reset_type_expression_vars ();
-  let ty = type_of_type_expression false typexp in
-  pop_type_level();
-  generalize_type ty;
-  let vd = { 
-    val_id = Env.make_global_id id;
-    val_type = ty;
-    val_kind = prim;
-    val_global = true }
-  in
-  let env = Env.add_value id vd env in
-  vd, env
-
 let type_letdef pat_exp_list =
   push_type_level();
   let ty_list = List.map (fun _ -> new_type_var ()) pat_exp_list in
