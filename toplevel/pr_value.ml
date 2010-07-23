@@ -38,7 +38,7 @@ let find_exception tag =
           if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  select_exn(Env.ps_find_all_constrs (Module.new_find_module qualid.gl_module) qualid.gl_name)
+  select_exn(Env.ps_find_all_constrs (Module.new_find_module qualid.id_module) qualid.id_name)
 ;;
 
 let printers = ref [
@@ -104,13 +104,13 @@ let rec print_val prio depth obj ty =
         print_concrete_type prio depth obj cstr ty ty_list
 
 and print_concrete_type prio depth obj cstr ty ty_list =
-  match (get_type_constr cstr).type_kind with
+  match (get_type_constr cstr).tcs_kind with
     Type_abstract ->
-      begin match (get_type_constr cstr).type_manifest with
+      begin match (get_type_constr cstr).tcs_manifest with
         | None ->
             print_string "<abstr>"
         | Some body ->
-            print_val prio depth obj (expand_abbrev (get_type_constr cstr).type_params body ty_list)
+            print_val prio depth obj (expand_abbrev (get_type_constr cstr).tcs_params body ty_list)
       end
   | Type_variant constr_list ->
       let tag = Llama_obj.tag obj in

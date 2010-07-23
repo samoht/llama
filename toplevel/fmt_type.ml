@@ -12,12 +12,12 @@ let print_module = function
   | Module_toplevel -> print_string "toplevel"
 
 let print_global_id gl =
-  print_module gl.gl_module;
+  print_module gl.id_module;
   print_string ".";
-  print_string gl.gl_name
+  print_string gl.id_name
 
 let print_type_constr tcs =
-  print_global_id tcs.type_id
+  print_global_id tcs.tcs_id
 
 let int_to_alpha i =
   if i < 26

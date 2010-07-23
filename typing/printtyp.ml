@@ -13,7 +13,7 @@ let module_id ppf = function
   | Module_toplevel -> fprintf ppf "toplevel"
 
 let global_id ppf gl =
-  fprintf ppf "%a.%s" module_id gl.gl_module gl.gl_name
+  fprintf ppf "%a.%s" module_id gl.id_module gl.id_name
 
 let reference ppf r = global_id ppf r.ref_id
 

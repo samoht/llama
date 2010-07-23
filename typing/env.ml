@@ -106,8 +106,8 @@ let current_unit () =
   end
 
 let make_global_id name =
-  { gl_module = !current_module;
-    gl_name = name }
+  { id_module = !current_module;
+    id_name = name }
 
 let start_compiling m =
   current_module := m;

@@ -22,10 +22,10 @@ let constructor_descrs ty_desc ty_res cstrs =
   describe_constructors 0 cstrs
 (*
 let constructors_of_type ty_path decl =
-  match decl.type_kind with
+  match decl.tcs_kind with
     Type_variant cstrs ->
       constructor_descrs
-        (newgenty (Tconstr(ty_path, decl.type_params)))
+        (newgenty (Tconstr(ty_path, decl.tcs_params)))
         cstrs
   | Type_record _ | Type_abstract -> []
 *)
@@ -53,10 +53,10 @@ let label_descrs ty_desc ty_res lbls =
 
 (*
 let labels_of_type ty_path decl =
-  match decl.type_kind with
+  match decl.tcs_kind with
     Type_record(labels, rep) ->
       label_descrs
-        (newgenty (Tconstr(ty_path, decl.type_params)))
+        (newgenty (Tconstr(ty_path, decl.tcs_params)))
         labels rep
   | Type_variant _ | Type_abstract -> []
 *)

@@ -21,7 +21,7 @@ let values s vd1 vd2 =
   end else
     raise Dont_match
 
-let type_manifest s params1 params2 ty1 ty2 =
+let tcs_manifest s params1 params2 ty1 ty2 =
   Ctype.equal true (ty1 :: params1) (Subst.core_type s ty2 :: params2)
 
 let constructors s params1 params2 cs1 cs2 =
@@ -34,20 +34,20 @@ let labels s params1 params2 lbl1 lbl2 =
   Ctype.equal true (lbl1.lbl_res::params1) (Subst.core_type s lbl2.lbl_res::params2)
 
 let type_constructors s decl1 decl2 =
-  let params1 = decl1.type_params in
-  let params2 = decl2.type_params in
-  decl1.type_arity = decl2.type_arity &&
-  begin match (decl1.type_kind, decl2.type_kind) with
+  let params1 = decl1.tcs_params in
+  let params2 = decl2.tcs_params in
+  decl1.tcs_arity = decl2.tcs_arity &&
+  begin match (decl1.tcs_kind, decl2.tcs_kind) with
       (_, Type_abstract) -> true
     | (Type_variant cstrs1, Type_variant cstrs2) -> Misc.for_all2 (constructors s params1 params2) cstrs1 cstrs2
     | (Type_record(labels1), Type_record(labels2)) -> Misc.for_all2 (labels s params1 params2) labels1 labels2
     | (_, _) -> false
   end &&
-  begin match (decl1.type_manifest, decl2.type_manifest) with
+  begin match (decl1.tcs_manifest, decl2.tcs_manifest) with
       (_, None) ->
         Ctype.equal true params1 params2
     | (Some ty1, Some ty2) ->
-	type_manifest s params1 params2 ty1 ty2
+	tcs_manifest s params1 params2 ty1 ty2
 (*
     | (None, Some ty2) ->
         let ty1 = {typ_desc=Tconstr(id, params2); typ_level=generic} in

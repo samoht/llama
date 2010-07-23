@@ -8,7 +8,7 @@ open Btype
 open Types
 
 let gen_value x = Gen_value (fst x, snd x)
-let gen_type x = Gen_type (x.type_id.gl_name, x)
+let gen_type x = Gen_type (x.tcs_id.id_name, x)
 let gen_exception x = Gen_exception (fst x, snd x)
 
 let type_structure_item env pstr =

@@ -49,12 +49,12 @@ let translate_stream translate_expr env stream_comp_list =
 
 let module_stream = Module "stream"
 let stream_oper name =
-  Lprim(Pget_global ({gl_module=module_stream; gl_name=name}), [])
+  Lprim(Pget_global ({id_module=module_stream; id_name=name}), [])
 ;;
 
 let stream_raise name tag =
   Lprim(Praise,
-        [Lconst(SCblock(ConstrExtensible({gl_module=module_stream; gl_name=name}, tag), []))])
+        [Lconst(SCblock(ConstrExtensible({id_module=module_stream; id_name=name}, tag), []))])
 ;;
 
 let raise_parse_failure = stream_raise "Parse_failure" 1

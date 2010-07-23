@@ -63,8 +63,8 @@ let define_new_type loc (ty_desc, ty_params, def) =
         make_new_record loc (ty_desc, ty_res, labels),None
     | Ttype_abbrev body ->
         make_new_abbrev (ty_desc, ty_params, body) in
-  ty_desc.type_kind <- type_comp;
-  ty_desc.type_manifest <- manifest;
+  ty_desc.tcs_kind <- type_comp;
+  ty_desc.tcs_manifest <- manifest;
   (ty_res, type_comp)
 
 let type_typedecl env loc decl =
@@ -80,11 +80,11 @@ let type_typedecl env loc decl =
              duplicate_param_in_type_decl_err loc
          in
          let ty_desc =
-             { type_id = Env.make_global_id ty_name;
-               type_arity = List.length ty_params;
-               type_manifest = None;
-               type_params = ty_params;
-               type_kind  = Type_abstract } in
+             { tcs_id = Env.make_global_id ty_name;
+               tcs_arity = List.length ty_params;
+               tcs_manifest = None;
+               tcs_params = ty_params;
+               tcs_kind  = Type_abstract } in
          temp_env := Env.add_type ty_name ty_desc !temp_env;
          ty_desc)
       decl
@@ -94,18 +94,18 @@ let type_typedecl env loc decl =
   let decl =
     List.map
       (fun (name, params, tk) ->
-         (name, params, Resolve.type_kind temp_env tk))
+         (name, params, Resolve.tcs_kind temp_env tk))
       decl 
   in
   List.iter2
     begin fun (_, _, tk) desc ->
-      ignore (define_new_type loc (desc, desc.type_params, tk));
+      ignore (define_new_type loc (desc, desc.tcs_params, tk));
     end
     decl newdecl;
   let final_env =
     List.fold_left
       (fun env ty_desc ->
-         Env.add_type ty_desc.type_id.gl_name ty_desc env) env newdecl
+         Env.add_type ty_desc.tcs_id.id_name ty_desc env) env newdecl
   in
   (* Check for ill-formed abbrevs *)
   List.iter
@@ -123,7 +123,7 @@ let type_excdecl env loc decl =
   reset_type_expression_vars ();
   let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
-  let constr_tag = ConstrExtensible({gl_module= !Env.current_module;gl_name=constr_name},
+  let constr_tag = ConstrExtensible({id_module= !Env.current_module;id_name=constr_name},
                                     new_exc_stamp()) in
   let cd =
     { cs_parent = tcs_exn;
@@ -162,7 +162,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   let ty_list = List.map (fun _ -> new_type_var ()) pat_list in
   type_pattern_list pat_list ty_list;
   let enter_vals env =
-    List.fold_left (fun env v -> Env.add_value v.val_id.gl_name v env) env vals in
+    List.fold_left (fun env v -> Env.add_value v.val_id.id_name v env) env vals in
   let env = if rec_flag then enter_vals env else env in
   let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env) (List.map snd untyped_pat_expr_list)) in
   List.iter2
@@ -175,7 +175,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   let env = if rec_flag then env else enter_vals env in
-  pat_expr_list, List.combine (List.map (fun x -> x.val_id.gl_name) vals) vals, env
+  pat_expr_list, List.combine (List.map (fun x -> x.val_id.id_name) vals) vals, env
   
 let type_expression loc expr =
   push_type_level();

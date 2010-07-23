@@ -12,12 +12,12 @@ let output_module_id oc = function
   | Module_toplevel -> output_string oc "toplevel"
 
 let output_global_id oc gl =
-  output_module_id oc gl.gl_module;
+  output_module_id oc gl.id_module;
   output_string oc ".";
-  output_string oc gl.gl_name
+  output_string oc gl.id_name
 
 let output_type_constr oc tcs =
-  output_global_id oc tcs.type_id
+  output_global_id oc tcs.tcs_id
 
 let output_constr oc cs =
   output_global_id oc (constr_global_id cs)

@@ -6,7 +6,7 @@ open Module
 (* Extract the list of labels of a record type. *)
 
 let labels_of_type ty =
-  begin match ty.type_kind with
+  begin match ty.tcs_kind with
     | Type_record l -> l
     | _ -> assert false
   end
@@ -38,10 +38,10 @@ let occur_check level0 v =
 
 (* Unification *)
 
-let has_abbrev r = (get_type_constr r).type_manifest <> None
+let has_abbrev r = (get_type_constr r).tcs_manifest <> None
 let get_abbrev r =
   let c = get_type_constr r in
-  c.type_params, (match c.type_manifest with None -> assert false | Some x -> x)
+  c.tcs_params, (match c.tcs_manifest with None -> assert false | Some x -> x)
 
 let rec unify (ty1, ty2) =
   if ty1 == ty2 then () else begin

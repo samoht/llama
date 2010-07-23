@@ -17,11 +17,11 @@ let option_tyvar = newgenvar()
 (* ---------------------------------------------------------------------- *)
 
 let mkty name params =
-  { type_id = { gl_module = Module_builtin; gl_name = name };
-    type_params = params;
-    type_arity = List.length params;
-    type_manifest = None;
-    type_kind = Type_abstract }
+  { tcs_id = { id_module = Module_builtin; id_name = name };
+    tcs_params = params;
+    tcs_arity = List.length params;
+    tcs_manifest = None;
+    tcs_kind = Type_abstract }
 
 let tcs_unit = mkty "unit" []
 let tcs_exn = mkty "exn" []
@@ -34,7 +34,7 @@ let tcs_list = mkty "list" [list_tyvar]
 let tcs_vect = mkty "vect" [vect_tyvar]
 let tcs_option =  mkty "option" [option_tyvar]
 
-let fwdref m s = { ref_id = {gl_module=Module m;gl_name = s};  ref_contents = None }
+let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
 let ref_format = fwdref "printf" "format"
 
 (* ---------------------------------------------------------------------- *)
@@ -129,7 +129,7 @@ and constr_true =
     cs_tag = ConstrRegular(1,2); }
 
 let _ =
-  List.iter (fun (tcs, tk) -> tcs.type_kind <- tk)
+  List.iter (fun (tcs, tk) -> tcs.tcs_kind <- tk)
     [ tcs_unit, Type_variant [ constr_void ];
       tcs_exn, Type_variant [];
       tcs_bool, Type_variant [ constr_false; constr_true ];
@@ -141,7 +141,7 @@ let _ =
 (* ---------------------------------------------------------------------- *)
 
 let match_failure_tag =
-  ConstrExtensible ({gl_module=Module_builtin; gl_name="Match_failure"}, 1)
+  ConstrExtensible ({id_module=Module_builtin; id_name="Match_failure"}, 1)
 
 let constr_match_failure =
   { cs_parent = tcs_exn;
@@ -171,13 +171,13 @@ let builtin_sig =
 let _ =
   List.iter
     begin fun tcs ->
-      Hashtbl.add ps_builtin.mod_types tcs.type_id.gl_name tcs;
+      Hashtbl.add ps_builtin.mod_types tcs.tcs_id.id_name tcs;
       List.iter
         (fun cs ->
            Hashtbl.add ps_builtin.mod_constrs cs.cs_name cs
         )
         (constructors_of_type tcs);
-(*       env_builtin := Env.add_type tcs.type_id.gl_name tcs !env_builtin *)
+(*       env_builtin := Env.add_type tcs.tcs_id.id_name tcs !env_builtin *)
     end
     [ tcs_unit; tcs_exn; tcs_bool; tcs_int; tcs_float; tcs_string;
       tcs_char; tcs_list; tcs_vect; tcs_option ]

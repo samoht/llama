@@ -53,8 +53,8 @@ let type_of_type_expression strict_flag typexp =
   | Ttyp_tuple argl ->
       type_product(List.map type_of argl)
   | Ttyp_constr(cstr, args) ->
-      if List.length args != (get_type_constr cstr).type_arity then
-        type_arity_err (get_type_constr cstr) args typexp.te_loc
+      if List.length args != (get_type_constr cstr).tcs_arity then
+        tcs_arity_err (get_type_constr cstr) args typexp.te_loc
       else
         { typ_desc = Tconstr(cstr, List.map type_of args);
           typ_level = notgeneric }

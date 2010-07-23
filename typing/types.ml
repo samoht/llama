@@ -7,8 +7,8 @@ type module_id =
   | Module_toplevel
 
 type global_id = {
-  gl_module : module_id;
-  gl_name : string }
+  id_module : module_id;
+  id_name : string }
 
 type 'a reference = {
   ref_id : global_id;
@@ -25,11 +25,11 @@ open Asttypes
 (* Type constructors *)
 
 type type_constructor =
-  { type_id : global_id;
-    type_params : core_type list;
-    type_arity: int;                      (* Its arity *)
-    mutable type_manifest : core_type option;
-    mutable type_kind: type_kind }  (* Its description *)
+  { tcs_id : global_id;
+    tcs_params : core_type list;
+    tcs_arity: int;                      (* Its arity *)
+    mutable tcs_manifest : core_type option;
+    mutable tcs_kind: tcs_kind }  (* Its description *)
 
 (* Type expressions *)
 
@@ -47,7 +47,7 @@ and typ_link =
 
 (* Type constructor descriptions *)
 
-and type_kind =
+and tcs_kind =
     Type_abstract
   | Type_variant of constructor list (* Sum type -> list of constr. *)
   | Type_record of label list (* Record type -> list of labels *)
@@ -102,25 +102,25 @@ and rec_status =
   | Rec_first
   | Rec_next
 
-let constr_global_id cs = { gl_module = cs.cs_parent.type_id.gl_module;
-                            gl_name = cs.cs_name }
+let constr_global_id cs = { id_module = cs.cs_parent.tcs_id.id_module;
+                            id_name = cs.cs_name }
 
-let label_global_id lbl = { gl_module = lbl.lbl_parent.type_id.gl_module;
-                            gl_name = lbl.lbl_name }
+let label_global_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
+                            id_name = lbl.lbl_name }
 
 let ref_label lbl =
-  { ref_id = { gl_module = lbl.lbl_parent.type_id.gl_module;
-               gl_name = lbl.lbl_name };
+  { ref_id = { id_module = lbl.lbl_parent.tcs_id.id_module;
+               id_name = lbl.lbl_name };
     ref_contents = Some lbl }
 let ref_constr cs =
-  { ref_id = { gl_module = cs.cs_parent.type_id.gl_module;
-               gl_name = cs.cs_name };
+  { ref_id = { id_module = cs.cs_parent.tcs_id.id_module;
+               id_name = cs.cs_name };
     ref_contents = Some cs }
 let ref_value v =
   { ref_id = v.val_id;
     ref_contents = Some v }
 let ref_type_constr t =
-  { ref_id = t.type_id;
+  { ref_id = t.tcs_id;
     ref_contents = Some t }
 
-let val_name v = v.val_id.gl_name
+let val_name v = v.val_id.id_name

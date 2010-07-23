@@ -220,7 +220,7 @@ let primitive o =
     | Some (arity,s) -> Val_prim {prim_arity=arity;prim_name=s}
   end
 
-let type_kind env tk =
+let tcs_kind env tk =
   begin match tk with
     | Ptype_abstract -> Ttype_abstract
     | Ptype_abbrev te -> Ttype_abbrev (type_expression env te)

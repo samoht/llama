@@ -88,7 +88,7 @@ let number_of_globals () = (!global_table).num_cnt;;
 
 let exn_tag_table = ref(new_numtable 1 : (global_id * int) numtable)
 and tag_exn_table = ref( [| |] : (global_id * int) array )
-and unknown_exn_name = ({gl_module=Module "?"; gl_name="?"}, 0)
+and unknown_exn_name = ({id_module=Module "?"; id_name="?"}, 0)
 ;;
 
 let get_num_of_exn (name, stamp) =

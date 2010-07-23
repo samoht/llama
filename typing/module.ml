@@ -20,12 +20,12 @@ let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let constructors_of_type decl =
-  match decl.type_kind with
+  match decl.tcs_kind with
     Type_variant cstrs -> cstrs
   | Type_record _ | Type_abstract -> []
 
 let labels_of_type decl =
-  match decl.type_kind with
+  match decl.tcs_kind with
     Type_record(labels) ->labels
   | Type_variant _ | Type_abstract -> []
 
@@ -114,7 +114,7 @@ let get proj r =
   begin match r.ref_contents with
     | Some x -> x
     | None ->
-        let x = Hashtbl.find (proj (new_find_module r.ref_id.gl_module)) r.ref_id.gl_name in
+        let x = Hashtbl.find (proj (new_find_module r.ref_id.id_module)) r.ref_id.id_name in
         r.ref_contents <- Some x;
         x
   end
@@ -136,7 +136,7 @@ let rec erase_type m t = match t.typ_desc with
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Tproduct l -> List.iter (erase_type m) l
   | Tconstr (r, l) ->
-      if r.ref_id.gl_module <> m then r.ref_contents <- None;
+      if r.ref_id.id_module <> m then r.ref_contents <- None;
       List.iter (erase_type m) l
 let erase_constr m cs =
   erase_type m cs.cs_res;
@@ -145,16 +145,16 @@ let erase_label m lbl =
   erase_type m lbl.lbl_res;
   erase_type m lbl.lbl_arg
 let erase_value m v = erase_type m v.val_type
-let erase_type_kind m = function
+let erase_tcs_kind m = function
     Type_abstract -> ()
   | Type_variant l -> List.iter (erase_constr m) l
   | Type_record l -> List.iter (erase_label m) l
 let erase_type_constr m t =
-  begin match t.type_manifest with
+  begin match t.tcs_manifest with
     | Some x -> erase_type m x
     | None -> ()
   end;
-  erase_type_kind m t.type_kind
+  erase_tcs_kind m t.tcs_kind
 let erase_item m = function
     Gen_value (_,v) -> erase_value m v
   | Gen_type (_,t) -> erase_type_constr m t

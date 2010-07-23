@@ -39,7 +39,7 @@ let print_label_decl lbl =
 let print_one_typedecl (newthing, (ty_res, ty_comp)) =
   let (x,_,_) = newthing in
   let x=x in
-  let manifest=x.type_manifest in
+  let manifest=x.tcs_manifest in
 
   output_one_type stdout ty_res;
   begin match ty_comp with
