@@ -11,18 +11,11 @@ and input_lexbuf = ref (Obj.magic 0 : lexbuf)
                                         (* The lexer buffer on the input. *)
 ;;
 
-type t =
-    Loc of int     (* Position of the first character *)
-         * int     (* Position of the next character following the last one *)
-;;
+type t = { loc_start: int; loc_end: int; }
 
-let no_location =
-  Loc(0,0)
-;;
+let no_location = { loc_start = 0; loc_end = 0 }
 
-let get_current_location () =
-  Loc(symbol_start(), symbol_end())
-;;
+let get_current_location () = { loc_start = symbol_start(); loc_end = symbol_end() }
 
 let output_lines oc char1 char2 charline1 line1 line2 =
   begin
@@ -36,7 +29,7 @@ let output_lines oc char1 char2 charline1 line1 line2 =
   end
 ;;
 
-let output_loc oc input seek line_flag (Loc(pos1, pos2)) =
+let output_loc oc input seek line_flag {loc_start=pos1; loc_end=pos2} =
   let pr_chars n c =
     for i = 1 to n do output_char oc c done in
   let skip_line () =

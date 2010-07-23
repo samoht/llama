@@ -26,19 +26,32 @@ let make_apply = function
       make_expr(Pexp_apply(e1,el))
 ;;
 
-let make_unop op ({pexp_loc=Loc(l1,m1)} as e1) =
-  let (Loc(l, m) as loc) = get_current_location() in
+let mkloc(l,m) = {loc_start=l;loc_end=m}
+let make_unop op ({pexp_loc=loc1} as e1) =
+  let l1 = loc1.loc_start in
+  let m1 = loc1.loc_end in
+  let loc = get_current_location() in
+  let l = loc.loc_start in
+  let m = loc.loc_end in
     {pexp_desc = Pexp_apply({pexp_desc = Pexp_ident(Lident op);
-                      pexp_loc = Loc(l, l1);
+                      pexp_loc = mkloc(l, l1);
                       }, [e1]);
      pexp_loc = loc}
-and make_binop op ({pexp_loc=Loc(l1,m1)} as e1) ({pexp_loc=Loc(l2,m2)} as e2) =
-  make_expr(Pexp_apply({pexp_desc = Pexp_ident(Lident op);
-                    pexp_loc = Loc(m1, l2)},
+and make_binop op ({pexp_loc=loc1} as e1) ({pexp_loc=loc2} as e2) =
+  let l1 = loc1.loc_start in
+  let m1 = loc1.loc_end in
+  let l2 = loc2.loc_start in
+  let m2 = loc2.loc_end in
+    make_expr(Pexp_apply({pexp_desc = Pexp_ident(Lident op);
+                    pexp_loc = mkloc(m1, l2)},
                    [e1;e2]))
-and make_ternop op ({pexp_loc=Loc(l1,m1)} as e1) ({pexp_loc=Loc(l2,m2)} as e2) e3 =
+and make_ternop op ({pexp_loc=loc1} as e1) ({pexp_loc=loc2} as e2) e3 =
+  let l1 = loc1.loc_start in
+  let m1 = loc1.loc_end in
+  let l2 = loc2.loc_start in
+  let m2 = loc2.loc_end in
   make_expr(Pexp_apply({pexp_desc = Pexp_ident(Lident op);
-                    pexp_loc = Loc(m1, l2)},
+                    pexp_loc = mkloc(m1, l2)},
                    [e1;e2;e3]))
 ;;
 

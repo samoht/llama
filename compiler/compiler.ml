@@ -38,11 +38,12 @@ let wrap parsing_fun lexing_fun lexbuf =
   with Parsing.Parse_error ->
          let pos1 = Lexing.lexeme_start lexbuf in
          let pos2 = Lexing.lexeme_end lexbuf in
+         let loc = {loc_start=pos1; loc_end=pos2} in
          skip_maybe();
-         eprintf "%aSyntax error.\n" output_location (Loc(pos1, pos2));
+         eprintf "%aSyntax error.\n" output_location loc;
          raise Toplevel
      | Lexer.Lexical_error(errcode, pos1, pos2) ->
-         let l = Loc(pos1, pos2) in
+         let l = {loc_start=pos1; loc_end=pos2} in
          begin match errcode with
            Lexer.Illegal_character ->
              eprintf "%aIllegal character.\n" output_location l

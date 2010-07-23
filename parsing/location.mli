@@ -1,7 +1,7 @@
-type t =
-    Loc of int     (* Position of the first character *)
-         * int     (* Position of the next character following the last one *)
-;;
+type t = {
+  loc_start: int;
+  loc_end: int;
+}
 
 val get_current_location : unit -> t
   val no_location : t

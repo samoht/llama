@@ -286,7 +286,9 @@ let make_initial_matching = function
         Matching(casel, make_path(List.length patl))
 ;;
 
-let partial_fun (Loc(start, stop)) =
+let partial_fun loc =
+  let start = loc.loc_start in
+  let stop = loc.loc_end in
   Lprim(Praise,
     [Lconst(SCblock(match_failure_tag,
       [SCatom(ACstring !input_name);SCatom(ACint start);SCatom(ACint stop)]))])
