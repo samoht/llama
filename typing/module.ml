@@ -131,8 +131,8 @@ let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
 
 let rec erase_type m t = match t.typ_desc with
-    Tvar {contents=Tlinkto x} -> erase_type m x
-  | Tvar {contents=Tnolink} -> ()
+    Tvar -> ()
+  | Tlink x -> erase_type m x
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Tproduct l -> List.iter (erase_type m) l
   | Tconstr (r, l) ->

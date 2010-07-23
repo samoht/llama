@@ -10,14 +10,8 @@ open Module
 
 let rec type_repr ty =
   match ty.typ_desc with
-    Tvar {contents=Tnolink} ->
-      ty
-  | Tvar({contents=Tlinkto t1} as r) ->
-      let t2 = type_repr t1 in
-        r := Tlinkto t2; t2
-  | _ ->
-      ty
-;;
+      Tlink t -> type_repr t
+    | _ -> ty
 
 (* The current nesting level of lets *)
 
@@ -34,13 +28,12 @@ and pop_type_level () =
 (* To get fresh type variables *)
 
 let new_type_var () =
-  {typ_desc = Tvar (ref(Tnolink)); typ_level = !current_level}
-;;
+  {typ_desc = Tvar; typ_level = !current_level}
 
 let rec type_var_list n level =
   if n <= 0
   then []
-  else {typ_desc=Tvar (ref(Tnolink)); typ_level=level} :: type_var_list (pred n) level
+  else {typ_desc=Tvar; typ_level=level} :: type_var_list (pred n) level
 ;;
 
 let new_type_var_list n =
@@ -48,7 +41,7 @@ let new_type_var_list n =
 ;;
 
 let new_global_type_var () =
-  {typ_desc = Tvar (ref(Tnolink)); typ_level = 1}
+  {typ_desc = Tvar; typ_level = 1}
 ;;
 
 (* To compute the free type variables in a type *)
@@ -123,12 +116,12 @@ let rec nongen_type ty =
    set to Tnolink), we reuse that field to store a pointer to the
    fresh variable which is the instance of the generic variable. *)
 
-let rec copy_type = function
-    {typ_desc = Tvar({contents=Tnolink} as link); typ_level = level} as ty ->
+let rec copy_type typ = match typ with
+    {typ_desc = Tvar; typ_level = level} as ty ->
       if level == generic
-      then begin let v = new_type_var() in link := Tlinkto v; v end
+      then begin let v = new_type_var() in typ.typ_desc <- Tlink v; v end
       else ty
-  | {typ_desc = Tvar({contents=Tlinkto ty}); typ_level = level} ->
+  | {typ_desc = Tlink ty; typ_level = level} ->
       if level == generic
       then ty
       else copy_type ty
@@ -152,12 +145,12 @@ let rec copy_type = function
 (* When copying is over, we restore the "link" field of generic variables
    to Tnolink. *)
 
-let rec cleanup_type = function
-    {typ_desc = Tvar({contents=Tnolink}); typ_level = level} as ty ->
+let rec cleanup_type typ = match typ with
+    {typ_desc = Tvar; typ_level = level} as ty ->
       ()
-  | {typ_desc = Tvar({contents=Tlinkto ty} as link); typ_level = level} ->
+  | {typ_desc = Tlink ty; typ_level = level} ->
       if level == generic
-      then begin link := Tnolink end
+      then begin typ.typ_desc <- Tvar end
       else cleanup_type ty
   | {typ_desc = Tarrow(t1,t2); typ_level = level} as ty ->
       if level == generic
@@ -199,7 +192,7 @@ let instance_constructor cstr =
 
 let bind_variable ty1 ty2 =
   match ty1.typ_desc with
-    Tvar({contents=Tnolink} as link) -> link := Tlinkto ty2
+    Tvar -> ty1.typ_desc <- Tlink ty2
   | _ -> fatal_error "bind_variable";;
 
 let expand_abbrev params body args =

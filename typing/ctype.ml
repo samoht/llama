@@ -49,17 +49,17 @@ let rec unify (ty1, ty2) =
     and ty2 = type_repr ty2 in
       if ty1 == ty2 then () else begin
         match (ty1.typ_desc, ty2.typ_desc) with
-          Tvar link1, Tvar link2 ->
+          Tvar, Tvar ->
             if ty1.typ_level < ty2.typ_level
             then begin
-              ty2.typ_level <- ty1.typ_level; link2 := Tlinkto ty1
+              ty2.typ_level <- ty1.typ_level; ty2.typ_desc <- Tlink ty1
             end else begin
-              ty1.typ_level <- ty2.typ_level; link1 := Tlinkto ty2
+              ty1.typ_level <- ty2.typ_level; ty1.typ_desc <- Tlink ty2
             end
-        | Tvar link1, _ when not (occur_check ty1.typ_level ty1 ty2) ->
-            link1 := Tlinkto ty2
-        | _, Tvar link2 when not (occur_check ty2.typ_level ty2 ty1) ->
-            link2 := Tlinkto ty1
+        | Tvar, _ when not (occur_check ty1.typ_level ty1 ty2) ->
+            ty1.typ_desc <- Tlink ty2
+        | _, Tvar when not (occur_check ty2.typ_level ty2 ty1) ->
+            ty2.typ_desc <- Tlink ty1
         | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
             unify (t1arg, t2arg);
             unify (t1res, t2res)
@@ -89,12 +89,13 @@ and unify_list = function
 (* Two special cases of unification *)
 
 let rec filter_arrow ty =
+  let ty = type_repr ty in
   match type_repr ty with
-    {typ_desc = Tvar link; typ_level = level} ->
-      let ty1 = {typ_desc = Tvar {contents=Tnolink}; typ_level = level}
-      and ty2 = {typ_desc = Tvar {contents=Tnolink}; typ_level = level} in
-        link := Tlinkto {typ_desc = Tarrow(ty1, ty2); typ_level = notgeneric};
-        (ty1, ty2)
+    {typ_desc = Tvar; typ_level = level} ->
+      let ty1 = {typ_desc = Tvar; typ_level = level}
+      and ty2 = {typ_desc = Tvar; typ_level = level} in
+      ty.typ_desc <- Tlink {typ_desc = Tarrow(ty1, ty2); typ_level = notgeneric};
+      (ty1, ty2)
   | {typ_desc = Tarrow(ty1, ty2)} ->
       (ty1, ty2)
   | {typ_desc = Tconstr(c, args)} when has_abbrev c ->
@@ -105,10 +106,11 @@ let rec filter_arrow ty =
 ;;
 
 let rec filter_product arity ty =
+  let ty = type_repr ty in
   match type_repr ty with
-    {typ_desc = Tvar link; typ_level = level} ->
+    {typ_desc = Tvar; typ_level = level} ->
       let tyl = type_var_list arity level in
-      link := Tlinkto {typ_desc = Tproduct tyl; typ_level = notgeneric};
+      ty.typ_desc <- Tlink {typ_desc = Tproduct tyl; typ_level = notgeneric};
       tyl
   | {typ_desc = Tproduct tyl} ->
       if List.length tyl == arity then tyl else raise OldUnify
@@ -129,11 +131,11 @@ let rec filter (ty1, ty2) =
     and ty2 = type_repr ty2 in
       if ty1 == ty2 then () else begin
         match (ty1.typ_desc, ty2.typ_desc) with
-          Tvar link1, Tvar link2 when ty1.typ_level != generic ->
-            link1 := Tlinkto ty2
-        | Tvar link1, _ when ty1.typ_level != generic
+          Tvar, Tvar when ty1.typ_level != generic ->
+            ty1.typ_desc <- Tlink ty2
+        | Tvar, _ when ty1.typ_level != generic
                            && not(occur_check ty1.typ_level ty1 ty2) ->
-            link1 := Tlinkto ty2
+            ty1.typ_desc <- Tlink ty2
         | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
             filter (t1arg, t2arg);
             filter (t1res, t2res)
@@ -188,7 +190,7 @@ let rec expand ty =
 
 let normalize_subst subst =
   if List.exists
-      (function {typ_desc=Tvar({contents=Tlinkto _})}, _ | _, {typ_desc=Tvar({contents=Tlinkto _})} -> true | _ -> false)
+      (function {typ_desc=Tlink _}, _ | _, {typ_desc=Tlink _ } -> true | _ -> false)
       !subst
   then subst := List.map (fun (t1,t2) -> repr t1, repr t2) !subst
 

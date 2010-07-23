@@ -22,14 +22,15 @@ type 'a reference = {
 (* ---------------------------------------------------------------------- *)
 
 type core_type =
-  { typ_desc: typ_desc;                 (* What kind of type expression? *)
+  { mutable typ_desc: typ_desc;                 (* What kind of type expression? *)
     mutable typ_level: int }            (* Binding level *)
 
 and typ_desc =
-    Tvar of typ_link ref                (* A type variable *)
-  | Tarrow of core_type * core_type                 (* A function type *)
-  | Tproduct of core_type list                (* A tuple type *)
-  | Tconstr of type_constructor reference * core_type list  (* A constructed type *)
+    Tvar
+  | Tarrow of core_type * core_type
+  | Tproduct of core_type list
+  | Tconstr of type_constructor reference * core_type list
+  | Tlink of core_type
 
 and typ_link =
     Tnolink                             (* Free variable *)

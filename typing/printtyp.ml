@@ -54,7 +54,7 @@ let name_of_type t =
 let non_gen_mark sch ty =
   if sch &&
     begin match ty.typ_desc with
-      | Tvar r when !r = Tnolink && ty.typ_level <> generic -> true
+      | Tvar when ty.typ_level <> generic -> true
       | _ -> false
     end
   then "_" else ""

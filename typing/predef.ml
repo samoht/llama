@@ -7,7 +7,7 @@ open Types
 (* Type constructor parameters.                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let newgenvar() = {typ_desc=Tvar(ref Tnolink); typ_level=generic}
+let newgenvar() = {typ_desc=Tvar; typ_level=generic}
 let list_tyvar = newgenvar()
 let vect_tyvar = newgenvar()
 let option_tyvar = newgenvar()
