@@ -13,7 +13,7 @@ and input_lexbuf = ref (Obj.magic 0 : lexbuf)
 
 type t = { loc_start: int; loc_end: int; }
 
-let no_location = { loc_start = 0; loc_end = 0 }
+let none = { loc_start = 0; loc_end = 0 }
 
 let get_current_location () = { loc_start = symbol_start(); loc_end = symbol_end() }
 
