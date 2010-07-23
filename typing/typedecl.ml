@@ -44,8 +44,6 @@ let define_new_type tcs params body =
         pop_type_level ();
         generalize_type ty_res;
         generalize_type ty_arg
-    | _ ->
-        assert false
   end
 
 let type_typedecl_new decl loc =
@@ -115,29 +113,19 @@ let type_valuedecl env loc id typexp prim =
   let env = Env.add_value id vd env in
   vd, env
 
-let type_letdef env loc rec_flag untyped_pat_expr_list =
+let type_letdef pat_exp_list =
   push_type_level();
-  let untyped_pat_list = List.map fst untyped_pat_expr_list in
-  let pat_list = List.map (Resolve.pattern env) untyped_pat_list in
-  let vals = List.flatten (List.map Resolve.values_of_tpat pat_list) in
-  List.iter (fun v -> v.val_global <- true) vals;
-  let ty_list = List.map (fun _ -> new_type_var ()) pat_list in
-  type_pattern_list pat_list ty_list;
-  let enter_vals env =
-    List.fold_left (fun env v -> Env.add_value v.val_id.id_name v env) env vals in
-  let env = if rec_flag then enter_vals env else env in
-  let pat_expr_list = List.combine pat_list (List.map (Resolve.expr env) (List.map snd untyped_pat_expr_list)) in
-  List.iter2
-    (fun (pat, exp) ty -> type_expect exp ty)
-    pat_expr_list ty_list;
+  let ty_list = List.map (fun _ -> new_type_var ()) pat_exp_list in
+  List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty, Notmutable)) pat_exp_list ty_list;
+  List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
   pop_type_level();
   let gen_type =
-    List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
-         pat_expr_list ty_list in
+    List.map2
+      (fun (pat, exp) ty -> (is_nonexpansive exp, ty))
+      pat_exp_list ty_list
+  in
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
-  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
-  let env = if rec_flag then env else enter_vals env in
-  pat_expr_list, vals, env
+  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type
   
 let type_expression loc expr =
   push_type_level();

@@ -20,10 +20,10 @@ let type_structure_item env pstr =
         let phr = mk (Tstr_eval expr) in
         let _ty = type_expression pstr.pstr_loc expr in
         phr, [], env
-    | Pstr_value(rec_flag, pat_expr_list) ->
-        let pat_expr_list, sg, env = type_letdef env pstr.pstr_loc rec_flag pat_expr_list in
-        let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
-        phr, List.map gen_value sg, env
+    | Pstr_value(rec_flag, pat_exp_list) ->
+        let pat_exp_list, vals, env = Resolve.letdef env rec_flag pat_exp_list in
+        type_letdef pat_exp_list;
+        mk (Tstr_value(rec_flag, pat_exp_list)), List.map gen_value vals, env
     | Pstr_primitive(id,te,(arity,n)) ->
         let v, typexp, env = Resolve.value_declaration env id te (Some(arity,n)) in
         type_valuedecl_new v typexp;

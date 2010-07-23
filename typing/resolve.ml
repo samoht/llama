@@ -359,3 +359,19 @@ let type_declaration env decl loc =
       env tcs_list
   in
   decl, final_env
+
+let letdef env rec_flag pat_exp_list =
+  let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
+  let vals = List.flatten (List.map values_of_tpat pat_list) in
+  List.iter (fun v -> v.val_global <- true) vals;
+  let enter_vals env =
+    List.fold_left (fun env v -> Env.add_value v.val_id.id_name v env) env vals in
+  let env = if rec_flag then enter_vals env else env in
+  let pat_exp_list =
+    List.map2 (fun pat (_, exp) -> pat, expr env exp)
+      pat_list
+      pat_exp_list
+  in
+  let env = if rec_flag then env else enter_vals env in
+  pat_exp_list, vals, env
+
