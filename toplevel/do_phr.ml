@@ -25,8 +25,8 @@ let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 
 let do_structure_item env phr =
   reset_type_var();
-  Resolve.reset_type_expression_vars ();
-  let phr, sg, env = Typemod.type_structure_item env phr in
+  let phr, sg, env = Resolve.structure_item env phr in
+  Typemod.type_structure_item phr;
   begin match phr.str_desc with
     Tstr_eval expr ->
       let res =

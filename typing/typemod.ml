@@ -11,35 +11,20 @@ let gen_value x = Gen_value x
 let gen_type x = Gen_type x
 let gen_exception x = Gen_exception x
 
-let type_structure_item env pstr =
-  Resolve.reset_type_expression_vars();
-  let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
-  begin match pstr.pstr_desc with
-    | Pstr_eval expr ->
-        let expr = Resolve.expr env expr in
-        let phr = mk (Tstr_eval expr) in
-        let _ty = type_expression pstr.pstr_loc expr in
-        phr, [], env
-    | Pstr_value(rec_flag, pat_exp_list) ->
-        let pat_exp_list, vals, env = Resolve.letdef env rec_flag pat_exp_list in
+let type_structure_item str =
+  begin match str.str_desc with
+    | Tstr_eval exp ->
+        ignore (type_expression str.str_loc exp)
+    | Tstr_value (_, pat_exp_list) ->
         type_letdef pat_exp_list;
-        mk (Tstr_value(rec_flag, pat_exp_list)), List.map gen_value vals, env
-    | Pstr_primitive(id,te,(arity,n)) ->
-        let v, typexp, env = Resolve.value_declaration env id te (Some(arity,n)) in
+    | Tstr_primitive (v, typexp) ->
         type_valuedecl_new v typexp;
-        mk (Tstr_primitive (v, typexp)), [Gen_value v], env
-    | Pstr_type decl ->
-        let decl, env = Resolve.type_declaration env decl pstr.pstr_loc in
-        type_typedecl_new decl pstr.pstr_loc;
-        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
-    | Pstr_exception (name, args) ->
-        let cs, args, env = Resolve.exception_declaration env name args in
+    | Tstr_type decl ->
+        type_typedecl_new decl str.str_loc;
+    | Tstr_exception (cs, args) ->
         type_excdecl cs args;
-        mk (Tstr_exception (cs, args)), [Gen_exception cs], env
-    | Pstr_open mn ->
-        let phr = mk (Tstr_open mn) in
-        let env = Env.open_pers_signature (String.uncapitalize mn) env in
-        phr, [], env
+    | Tstr_open _ ->
+        ()
   end
 
 let type_signature_item env psig =
@@ -69,7 +54,8 @@ let rec type_structure_raw env l =
       [] ->
         ([], [], env)
     | hd :: tl ->
-        let hd, hd_gens, env = type_structure_item env hd in
+        let hd, hd_gens, env = Resolve.structure_item env hd in
+        type_structure_item hd;
         let tl, tl_gens, env = type_structure_raw env tl in
         hd :: tl, hd_gens @ tl_gens, env
 (*

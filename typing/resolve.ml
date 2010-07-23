@@ -389,3 +389,34 @@ let exception_declaration env name args =
   in
   let env = Env.add_exception name cs env in
   cs, args, env
+
+let structure_item env pstr =
+  reset_type_expression_vars();
+  let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
+  begin match pstr.pstr_desc with
+    | Pstr_eval exp ->
+        let exp = expr env exp in
+        mk (Tstr_eval exp), [], env
+    | Pstr_value(rec_flag, pat_exp_list) ->
+        let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in
+        mk (Tstr_value(rec_flag, pat_exp_list)),
+        List.map (fun v -> Gen_value v) vals, env
+    | Pstr_primitive(id,te,(arity,n)) ->
+        let v, typexp, env = value_declaration env id te (Some(arity,n)) in
+        mk (Tstr_primitive (v, typexp)), [Gen_value v], env
+    | Pstr_type decl ->
+        let decl, env =type_declaration env decl pstr.pstr_loc in
+        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
+    | Pstr_exception (name, args) ->
+        let cs, args, env = exception_declaration env name args in
+        mk (Tstr_exception (cs, args)), [Gen_exception cs], env
+    | Pstr_open mn ->
+        let phr = mk (Tstr_open mn) in
+        let env = Env.open_pers_signature (String.uncapitalize mn) env in
+        phr, [], env
+  end
+
+
+        
+        
+  
