@@ -39,42 +39,29 @@ let type_signature_item tsig =
         ()
   end
 
-let rec type_structure_raw env l =
-  match l with
-      [] ->
-        ([], [], env)
-    | hd :: tl ->
-        let hd, hd_gens, env = Resolve.structure_item env hd in
-        type_structure_item hd;
-        let tl, tl_gens, env = type_structure_raw env tl in
-        hd :: tl, hd_gens @ tl_gens, env
-(*
-let rec type_structure_raw env l =
-  match l with
-      [] ->
-        [], env
-    | hd :: tl ->
-        let hd, env = type_structure_item env hd in
-        let tl, env = type_structure_raw env tl in
-        hd :: tl, env
-*)
-let check_nongen_values sg =
-  Module.iter_values sg begin fun s val_impl ->
-    if free_type_vars notgeneric val_impl.val_type != [] then
-      Error.cannot_generalize_err s val_impl
-  end
+let check_nongen_values l =
+  List.iter
+    begin fun str ->
+      begin match str.str_desc with
+        Tstr_value (_, pat_exp_list) ->
+          List.iter
+            begin fun (pat, _) ->
+              let vals = Resolve.values_of_tpat pat in
+              List.iter
+                begin fun v ->
+                  if free_type_vars notgeneric v.val_type != [] then
+                    Error.cannot_generalize_err (val_name v) v
+                end
+                vals
+            end
+            pat_exp_list
+        | _ -> ()
+      end
+    end l
 
-let type_structure env l =
-  let l, sg, env = type_structure_raw env l in
-  check_nongen_values sg;
-  l, sg, env
+let type_structure l =
+  List.iter type_structure_item l;
+  check_nongen_values l
 
-let rec type_signature env l =
-  match l with
-      [] ->
-        [], [], env
-    | hd :: tl ->
-        let hd, hd_gens, env = Resolve.signature_item env hd in
-        type_signature_item hd;
-        let tl, tl_gens, env = type_signature env tl in
-        hd :: tl, hd_gens @ tl_gens, env
+let type_signature l =
+  List.iter type_signature_item l

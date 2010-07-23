@@ -78,7 +78,8 @@ let compile_interface modname filename =
       input_chan := ic;
       input_lexbuf := lexbuf;
       let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
-      let _l, sg, env = Typemod.type_signature env l in
+      let l, sg, env = Resolve.signature env l in
+      Typemod.type_signature l;
       close_in ic;
       Env.write_pers_struct oc (Env.current_unit()) sg;
       close_out oc;
@@ -122,7 +123,8 @@ let compile_impl env modname filename suffix =
     start_emit_phrase oc;
     try
       let l = wrap Parser.implementation Lexer.main lexbuf in
-      let l, sg, env = Typemod.type_structure env l in
+      let l, sg, env = Resolve.structure env l in
+      Typemod.type_structure l;
       List.iter (compile_impl_phrase oc) l;
       end_emit_phrase oc;
       close_in ic;

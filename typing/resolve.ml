@@ -435,3 +435,20 @@ let signature_item env psig =
         phr, [], env
   end
 
+let rec structure env l =
+  match l with
+      [] ->
+        ([], [], env)
+    | hd :: tl ->
+        let hd, hd_gens, env = structure_item env hd in
+        let tl, tl_gens, env = structure env tl in
+        hd :: tl, hd_gens @ tl_gens, env
+
+let rec signature env l =
+  match l with
+      [] ->
+        ([], [], env)
+    | hd :: tl ->
+        let hd, hd_gens, env = signature_item env hd in
+        let tl, tl_gens, env = signature env tl in
+        hd :: tl, hd_gens @ tl_gens, env
