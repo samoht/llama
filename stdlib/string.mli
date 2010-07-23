@@ -1,6 +1,6 @@
 (* String operations *)
 
-external length : string -> int = 1 "string_length"
+external length : string -> int = "string_length"
         (* Return the length (number of characters) of the given string. *)
 ;;
 val nth_char : string -> int -> char
@@ -60,15 +60,15 @@ val replace_string : string -> string -> int -> unit
            Raise [Invalid_argument "replace_string"] if copying would overflow
            string [dest]. *)
 ;;
-external eq_string : string -> string -> bool = 2 "=string"
-external neq_string : string -> string -> bool = 2 "<>string"
-external le_string : string -> string -> bool = 2 "<=string"
-external lt_string : string -> string -> bool = 2 "<string"
-external ge_string : string -> string -> bool = 2 ">=string"
-external gt_string : string -> string -> bool = 2 ">string"
+external eq_string : string -> string -> bool = "=string"
+external neq_string : string -> string -> bool = "<>string"
+external le_string : string -> string -> bool = "<=string"
+external lt_string : string -> string -> bool = "<string"
+external ge_string : string -> string -> bool = ">=string"
+external gt_string : string -> string -> bool = ">string"
         (* Comparison functions (lexicographic ordering) between strings. *)
 ;;
-external compare_strings : string -> string -> int = 2 "compare_strings"
+external compare_strings : string -> string -> int = "compare_strings"
         (* General comparison between strings.
 	   [compare_strings s1 s2] returns 0 if [s1] and [s2] are equal,
 	   or else -2 if [s1] is a prefix of [s2],

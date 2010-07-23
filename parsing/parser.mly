@@ -753,8 +753,7 @@ Value_decl :
 ;
 
 Prim_decl :
-        INT STRING
-          { ($1,$2) }
+      | STRING { $1 }
 ;
 
 Type1_decl :

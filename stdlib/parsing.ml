@@ -66,7 +66,7 @@ type parse_tables =
 (* was also in Iparsing *)
 external parse_engine :
     parse_tables -> parser_env -> parser_input -> obj -> parser_output
-    = 4 "parse_engine"
+    = "parse_engine"
 ;;
 
 let env =

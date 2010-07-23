@@ -16,7 +16,7 @@ type lexbuf =
     mutable lex_last_pos : int;
     mutable lex_last_action : lexbuf -> obj }
 
-external get_next_char : lexbuf -> char = 1 "get_next_char"
+external get_next_char : lexbuf -> char = "get_next_char"
 
 let lex_aux_buffer =
   create_string 1024

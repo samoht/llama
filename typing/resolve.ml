@@ -267,10 +267,16 @@ let label env tcs pos (name, typexp, mut) =
   in
   (lbl, type_expression true env typexp)
 
-let primitive o =
+let rec crude_arity ptyp =
+  begin match ptyp.ptyp_desc with
+    | Ptyp_arrow (_, ty) -> succ (crude_arity ty)
+    | _ -> 0
+  end
+
+let primitive o typexp =
   begin match o with
     | None ->Val_reg
-    | Some (arity,s) -> Val_prim {prim_arity=arity;prim_name=s}
+    | Some s -> Val_prim {prim_arity=crude_arity typexp; prim_name=s}
   end
 
 let mapi f =
@@ -292,7 +298,7 @@ let value_declaration env name typexp primstuff =
   let v =
     { val_id = Env.qualified_id name;
       val_type = no_type;
-      val_kind = primitive primstuff;
+      val_kind = primitive primstuff typexp;
       val_global = true }
   in
   let typexp = type_expression false env typexp in
@@ -397,8 +403,8 @@ let structure_item env pstr =
         let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in
         mk (Tstr_value(rec_flag, pat_exp_list)),
         List.map (fun v -> Sig_value v) vals, env
-    | Pstr_primitive(id,te,(arity,n)) ->
-        let v, typexp, env = value_declaration env id te (Some(arity,n)) in
+    | Pstr_primitive(id,te,pr) ->
+        let v, typexp, env = value_declaration env id te (Some pr) in
         mk (Tstr_primitive (v, typexp)), [Sig_value v], env
     | Pstr_type decl ->
         let decl, env =type_declaration env decl pstr.pstr_loc in

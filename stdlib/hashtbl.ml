@@ -1,4 +1,4 @@
-external hash_param : int -> int -> 'a -> int = 3 "hash_univ_param"
+external hash_param : int -> int -> 'a -> int = "hash_univ_param"
 
 (* Hash tables *)
 

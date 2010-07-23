@@ -1,5 +1,5 @@
-external fst : 'a * 'b -> 'a = 1 "field0"
-external snd : 'a * 'b -> 'b = 1 "field1"
+external fst : 'a * 'b -> 'a = "field0"
+external snd : 'a * 'b -> 'b = "field1"
 
 open Exc
 

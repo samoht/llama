@@ -1,8 +1,8 @@
 (* Operations on pairs *)
 
-external fst : 'a * 'b -> 'a = 1 "field0"
+external fst : 'a * 'b -> 'a = "field0"
         (* Return the first component of a pair. *)
-external snd : 'a * 'b -> 'b = 1 "field1"
+external snd : 'a * 'b -> 'b = "field1"
         (* Return the second component of a pair. *)
 val split : ('a * 'b) list -> 'a list * 'b list
         (* Transform a list of pairs into a pair of lists:

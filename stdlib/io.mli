@@ -100,17 +100,17 @@ val open_out_gen : Sys.open_flag list -> int -> string -> out_channel
            argument [rights] specifies the file permissions, in case the
            file must be created (see [Sys.open]).
            [open_out] and [open_out_bin] are special cases of this function. *)
-external open_descriptor_out : int -> out_channel = 1 "open_descriptor"
+external open_descriptor_out : int -> out_channel = "open_descriptor"
         (* [open_descriptor_out fd] returns a buffered output channel
            writing to the file descriptor [fd]. The file descriptor [fd]
            must have been previously opened for writing, else the behavior is
 	   undefined. *)
-external flush : out_channel -> unit = 1 "flush"
+external flush : out_channel -> unit = "flush"
         (* Flush the buffer associated with the given output channel, 
            performing all pending writes on that channel.
            Interactive programs must be careful about flushing [std_out]
            and [std_err] at the right time. *)
-external output_char : out_channel -> char -> unit = 2 "output_char"
+external output_char : out_channel -> char -> unit = "output_char"
         (* Write the character on the given output channel. *)
 val output_string : out_channel -> string -> unit
         (* Write the string on the given output channel. *)
@@ -119,37 +119,37 @@ val output : out_channel -> string -> int -> int -> unit
            [buff], starting at offset [ofs], to the output channel [chan].
            Raise [Invalid_argument "output"] if [ofs] and [len] do not
            designate a valid substring of [buff]. *)          
-external output_byte : out_channel -> int -> unit = 2 "output_char"
+external output_byte : out_channel -> int -> unit = "output_char"
         (* Write one 8-bit integer (as the single character with that code)
            on the given output channel. The given integer is taken modulo
            256. *)
-external output_binary_int : out_channel -> int -> unit = 2 "output_int"
+external output_binary_int : out_channel -> int -> unit = "output_int"
         (* Write one integer in binary format on the given output channel.
            The only reliable way to read it back is through the
            [input_binary_int] function. The format is compatible across
 	   all machines for a given version of Caml Light. *)
-external output_value : out_channel -> 'a -> unit = 2 "extern_val"
+external output_value : out_channel -> 'a -> unit = "extern_val"
         (* Write the representation of a structured value of any type
            to a channel. Circularities and sharing inside the value
            are detected and preserved. The object can be read back,
            by the function [input_value]. The format is compatible across
 	   all machines for a given version of Caml Light. *)
-external output_compact_value : out_channel -> 'a -> unit = 2 "extern_compact_val"
+external output_compact_value : out_channel -> 'a -> unit = "extern_compact_val"
         (* Same as [output_value], but uses a different format, which
            occupies less space on the file, but takes more time to generate
            and read back. *)
-external seek_out : out_channel -> int -> unit = 2 "seek_out"
+external seek_out : out_channel -> int -> unit = "seek_out"
         (* [seek_out chan pos] sets the current writing position to [pos]
            for channel [chan]. This works only for regular files. On
            files of other kinds (such as terminals, pipes and sockets),
 	   the behavior is unspecified. *)
-external pos_out : out_channel -> int = 1 "pos_out"
+external pos_out : out_channel -> int = "pos_out"
         (* Return the current writing position for the given channel. *)
-external out_channel_length : out_channel -> int = 1 "channel_size"
+external out_channel_length : out_channel -> int = "channel_size"
         (* Return the total length (number of characters) of the
            given channel.  This works only for regular files. On files of
            other kinds, the result is meaningless. *)
-external close_out : out_channel -> unit = 1 "close_out"
+external close_out : out_channel -> unit = "close_out"
         (* Close the given channel, flushing all buffered write operations.
 	   The behavior is unspecified if any of the functions above is
 	   called on a closed channel. *)
@@ -172,12 +172,12 @@ val open_in_gen : Sys.open_flag list -> int -> string -> in_channel
            [mode] and [rights] specify the opening mode and file permissions
            (see [Sys.open]). [open_in] and [open_in_bin] are special cases
            of this function. *)
-external open_descriptor_in : int -> in_channel = 1 "open_descriptor"
+external open_descriptor_in : int -> in_channel = "open_descriptor"
         (* [open_descriptor_in fd] returns a buffered input channel
            reading from the file descriptor [fd]. The file descriptor [fd]
            must have been previously opened for reading, else the behavior is
 	   undefined. *)
-external input_char : in_channel -> char = 1 "input_char"
+external input_char : in_channel -> char = "input_char"
         (* Read one character from the given input channel.
            Raise [End_of_file] if there are no more characters to read. *)
 val input_line : in_channel -> string
@@ -204,16 +204,16 @@ val really_input : in_channel -> string -> int -> int -> unit
            the end of file is reached before [len] characters have been read.
            Raise [Invalid_argument "really_input"] if
            [ofs] and [len] do not designate a valid substring of [buff]. *)
-external input_byte : in_channel -> int = 1 "input_char"
+external input_byte : in_channel -> int = "input_char"
         (* Same as [input_char], but return the 8-bit integer representing
            the character.
            Raise [End_of_file] if an end of file was reached. *)
-external input_binary_int : in_channel -> int = 1 "input_int"
+external input_binary_int : in_channel -> int = "input_int"
         (* Read an integer encoded in binary format from the given input
            channel. See [output_binary_int].
            Raise [End_of_file] if an end of file was reached while reading the
 	   integer. *)
-external input_value : in_channel -> 'a = 1 "intern_val"
+external input_value : in_channel -> 'a = "intern_val"
         (* Read the representation of a structured value, as produced
            by [output_value] or [output_compact_value], and return
            the corresponding value.
@@ -225,25 +225,25 @@ external input_value : in_channel -> 'a = 1 "intern_val"
                      [(input_value chan : type)].
 	   The behavior is unspecified if the object in the file does not
 	   belong to the given type. *)
-external seek_in : in_channel -> int -> unit = 2 "seek_in"
+external seek_in : in_channel -> int -> unit = "seek_in"
         (* [seek_in chan pos] sets the current reading position to [pos]
            for channel [chan]. This works only for regular files. On
            files of other kinds, the behavior is unspecified. *)
-external pos_in : in_channel -> int = 1 "pos_in"
+external pos_in : in_channel -> int = "pos_in"
         (* Return the current reading position for the given channel. *)
-external in_channel_length : in_channel -> int = 1 "channel_size"
+external in_channel_length : in_channel -> int = "channel_size"
         (* Return the total length (number of characters) of the
            given channel. This works only for regular files. On files of
            other kinds, the result is meaningless. *)
-external close_in : in_channel -> unit = 1 "close_in"
+external close_in : in_channel -> unit = "close_in"
         (* Close the given channel. Anything can happen if any of the
            functions above is called on a closed channel. *)
 ;;
 
 (*--*)
 
-external fast_input : in_channel -> string -> int -> int -> int = 4 "input"
+external fast_input : in_channel -> string -> int -> int -> int = "input"
 val fast_really_input : in_channel -> string -> int -> int -> unit
-external fast_output : out_channel -> string -> int -> int -> unit = 4 "output"
-external input_scan_line: in_channel -> int = 1 "input_scan_line"
+external fast_output : out_channel -> string -> int -> int -> unit = "output"
+external input_scan_line: in_channel -> int = "input_scan_line"
 ;;

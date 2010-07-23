@@ -1,5 +1,5 @@
-external int_of_char : char -> int = 1 "identity"
-external is_printable : char -> bool = 1 "is_printable";;
+external int_of_char : char -> int = "identity"
+external is_printable : char -> bool = "is_printable";;
 
 (* Character operations, with sanity checks *)
 

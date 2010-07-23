@@ -10,8 +10,8 @@
 
 (*--*)
 
-external int_of_char : char -> int = 1 "identity"
-external char_of_int : int -> char = 1 "identity"
+external int_of_char : char -> int = "identity"
+external char_of_int : int -> char = "identity"
 val char_for_read : char -> string
-external is_printable : char -> bool = 1 "is_printable"
+external is_printable : char -> bool = "is_printable"
 ;;

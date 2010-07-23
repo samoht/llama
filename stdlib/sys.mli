@@ -48,36 +48,36 @@ type open_flag =
 ;;
         (* The commands for [open]. *)
 
-external exit : int -> 'a = 1 "sys_exit"
+external exit : int -> 'a = "sys_exit"
         (* Terminate the program and return the given status code to
 	   the operating system.
            In contrast with the function [exit] from module [io], this
            [exit] function does not flush the standard
            output and standard error channels. *)
-external open_gen : string -> open_flag list -> file_perm -> int = 3 "sys_open"
+external open_gen : string -> open_flag list -> file_perm -> int = "sys_open"
         (* Open a file. The second argument is the opening mode.
            The third argument is the permissions to use if the file
            must be created. The result is a file descriptor opened on the
            file. *)
-external close : int -> unit = 1 "sys_close"
+external close : int -> unit = "sys_close"
         (* Close a file descriptor. *)
-external remove : string -> unit = 1 "sys_remove"
+external remove : string -> unit = "sys_remove"
         (* Remove the given file name from the file system. *)
-external rename : string -> string -> unit = 2 "sys_rename"
+external rename : string -> string -> unit = "sys_rename"
         (* Rename a file. The first argument is the old name and the
            second is the new name. *)
-external getenv : string -> string = 1 "sys_getenv"
+external getenv : string -> string = "sys_getenv"
         (* Return the value associated to a variable in the process
            environment. Raise [Not_found] if the variable is unbound. *)
-external chdir : string -> unit = 1 "sys_chdir"
+external chdir : string -> unit = "sys_chdir"
         (* Change the current working directory of the process.
 	   Note that there is no easy way of getting the current
 	   working directory from the operating system. *)
-external system_command : string -> int = 1 "sys_system_command"
+external system_command : string -> int = "sys_system_command"
         (* Execute the given shell command and return its exit code. *)
 ;;
 
-external time : unit -> float = 1 "sys_time"
+external time : unit -> float = "sys_time"
         (* Return the processor time, in seconds, used by the program
            since the beginning of execution. *)
 ;;
@@ -86,7 +86,7 @@ exception Break
         (* Exception [Break] is raised on user interrupt if [catch_break]
            is on. *)
 ;;
-external catch_break : bool -> unit = 1 "sys_catch_break"
+external catch_break : bool -> unit = "sys_catch_break"
         (* [catch_break] governs whether user interrupt terminates the program
            or raises the [Break] exception. Call [catch_break true] to enable
 	   raising [Break], and [catch_break false] to let the system
@@ -104,4 +104,4 @@ val word_size : int
         (* Size of a machine word (in bits). *)
 ;;
 
-external file_exists : string -> bool = 1 "llama_sys_file_exists"
+external file_exists : string -> bool = "llama_sys_file_exists"

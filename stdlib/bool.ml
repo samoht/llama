@@ -1,8 +1,8 @@
-external (&)  : bool -> bool -> bool = 2 "sequand";;
-external (&&) : bool -> bool -> bool = 2 "sequand";;
-external (or) : bool -> bool -> bool = 2 "sequor";;
-external (||) : bool -> bool -> bool = 2 "sequor";;
-external (not) : bool -> bool = 1 "not"
+external (&)  : bool -> bool -> bool = "sequand";;
+external (&&) : bool -> bool -> bool = "sequand";;
+external (or) : bool -> bool -> bool = "sequor";;
+external (||) : bool -> bool -> bool = "sequor";;
+external (not) : bool -> bool = "not"
 
 open Exc
 

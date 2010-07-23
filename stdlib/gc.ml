@@ -24,12 +24,12 @@ type control = {
 };;
 
 
-external stat : unit -> stat = 1 "gc_stat";;
-external get : unit -> control = 1 "gc_get";;
-external set : control -> unit = 1 "gc_set";;
-external minor : unit -> unit = 1 "gc_minor";;
-external major : unit -> unit = 1 "gc_major";;
-external full_major : unit -> unit = 1 "gc_full_major";;
+external stat : unit -> stat = "gc_stat";;
+external get : unit -> control = "gc_get";;
+external set : control -> unit = "gc_set";;
+external minor : unit -> unit = "gc_minor";;
+external major : unit -> unit = "gc_major";;
+external full_major : unit -> unit = "gc_full_major";;
 
 let print_stat c =
   let st = stat () in

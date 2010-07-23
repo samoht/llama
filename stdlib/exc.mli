@@ -1,6 +1,6 @@
 (* Exceptions *)
 
-external raise : exn -> 'a = 1 "raise";;
+external raise : exn -> 'a = "raise";;
         (* Raise the given exception value. *)
 
 (*** A few general-purpose predefined exceptions. *)
