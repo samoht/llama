@@ -38,10 +38,17 @@ let occur_check level0 v =
 
 (* Unification *)
 
-let has_abbrev r = (get_type_constr r).tcs_manifest <> None
+let has_abbrev r =
+  begin match (get_type_constr r).tcs_kind with
+    | Type_abbrev _ -> true
+    | _ -> false
+  end
 let get_abbrev r =
-  let c = get_type_constr r in
-  c.tcs_params, (match c.tcs_manifest with None -> assert false | Some x -> x)
+  let r = get_type_constr r in
+  begin match r.tcs_kind with
+    | Type_abbrev body -> r.tcs_params, body
+    | _ -> assert false
+  end
 
 let rec unify (ty1, ty2) =
   if ty1 == ty2 then () else begin

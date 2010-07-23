@@ -40,7 +40,7 @@ let define_new_type tcs params body =
         List.iter (fun (lbl, _, _) -> generalize_type lbl.lbl_arg) l
     | Ttype_abbrev arg ->
         let ty_arg = type_of_type_expression true arg in
-        tcs.tcs_manifest <- Some ty_arg;
+        tcs.tcs_kind <- Type_abbrev ty_arg;
         pop_type_level ();
         generalize_type ty_res;
         generalize_type ty_arg

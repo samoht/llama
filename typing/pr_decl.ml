@@ -39,7 +39,6 @@ let print_label_decl lbl =
 let print_one_typedecl (newthing, (ty_res, ty_comp)) =
   let (x,_,_) = newthing in
   let x=x in
-  let manifest=x.tcs_manifest in
 
   output_one_type stdout ty_res;
   begin match ty_comp with
@@ -51,12 +50,9 @@ let print_one_typedecl (newthing, (ty_res, ty_comp)) =
       List.iter (fun lbl -> print_string "  ; "; print_label_decl lbl) lbll;
       print_string "  }\n"
   | Type_abstract ->
-      begin match manifest with
-        | None ->
-            print_string "\n"
-        | Some ty_body ->
-            printf " == %a\n" output_type ty_body
-      end
+      print_string "\n"
+  | Type_abbrev body ->
+      printf " == %a\n" output_type body
   | _ ->
       fatal_error "print_typedecl"
   end

@@ -21,9 +21,6 @@ let values s vd1 vd2 =
   end else
     raise Dont_match
 
-let tcs_manifest s params1 params2 ty1 ty2 =
-  Ctype.equal true (ty1 :: params1) (Subst.core_type s ty2 :: params2)
-
 let constructors s params1 params2 cs1 cs2 =
   cs1.cs_name = cs2.cs_name &&
   List.for_all2 (fun ty1 ty2 -> Ctype.equal true (ty1::params1) (Subst.core_type s ty2::params2))
@@ -38,22 +35,22 @@ let type_constructors s decl1 decl2 =
   let params2 = decl2.tcs_params in
   decl1.tcs_arity = decl2.tcs_arity &&
   begin match (decl1.tcs_kind, decl2.tcs_kind) with
-      (_, Type_abstract) -> true
-    | (Type_variant cstrs1, Type_variant cstrs2) -> Misc.for_all2 (constructors s params1 params2) cstrs1 cstrs2
-    | (Type_record(labels1), Type_record(labels2)) -> Misc.for_all2 (labels s params1 params2) labels1 labels2
-    | (_, _) -> false
-  end &&
-  begin match (decl1.tcs_manifest, decl2.tcs_manifest) with
-      (_, None) ->
+      _, Type_abstract ->
         Ctype.equal true params1 params2
-    | (Some ty1, Some ty2) ->
-	tcs_manifest s params1 params2 ty1 ty2
+    | Type_variant cstrs1, Type_variant cstrs2 ->
+        Misc.for_all2 (constructors s params1 params2) cstrs1 cstrs2
+    | Type_record labels1, Type_record labels2 ->
+        Misc.for_all2 (labels s params1 params2) labels1 labels2
+    | Type_abbrev ty1, Type_abbrev ty2 ->
+        Ctype.equal true (ty1 :: params1) (Subst.core_type s ty2 :: params2)
 (*
-    | (None, Some ty2) ->
+    | tk, Type_abbrev ty2 ->
         let ty1 = {typ_desc=Tconstr(id, params2); typ_level=generic} in
         Ctype.equal true params1 params2 &&
         Ctype.equal false [ty1] [ty2]
 *)
+    | _, _ ->
+        false
   end
 
 let exception_declarations s ed1 ed2 =

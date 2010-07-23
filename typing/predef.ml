@@ -20,7 +20,6 @@ let mkty name params =
   { tcs_id = { id_module = Module_builtin; id_name = name };
     tcs_params = params;
     tcs_arity = List.length params;
-    tcs_manifest = None;
     tcs_kind = Type_abstract }
 
 let tcs_unit = mkty "unit" []

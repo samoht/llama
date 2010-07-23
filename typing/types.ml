@@ -40,13 +40,13 @@ and type_constructor =
   { tcs_id : global_id;
     mutable tcs_params : core_type list;
     tcs_arity: int;                      (* Its arity *)
-    mutable tcs_manifest : core_type option;
     mutable tcs_kind: tcs_kind }  (* Its description *)
 
 and tcs_kind =
     Type_abstract
   | Type_variant of constructor list (* Sum type -> list of constr. *)
   | Type_record of label list (* Record type -> list of labels *)
+  | Type_abbrev of core_type
 
 and constructor =
   { cs_parent: type_constructor;

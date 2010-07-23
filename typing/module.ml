@@ -21,13 +21,13 @@ let persistent_structures =
 
 let constructors_of_type decl =
   match decl.tcs_kind with
-    Type_variant cstrs -> cstrs
-  | Type_record _ | Type_abstract -> []
+      Type_variant cstrs -> cstrs
+    | _ -> []
 
 let labels_of_type decl =
   match decl.tcs_kind with
-    Type_record(labels) ->labels
-  | Type_variant _ | Type_abstract -> []
+      Type_record lbls -> lbls
+    | _ -> []
 
 let index w =
   let ps = { mod_values = Hashtbl.create 10;
@@ -140,11 +140,8 @@ let erase_tcs_kind m = function
     Type_abstract -> ()
   | Type_variant l -> List.iter (erase_constr m) l
   | Type_record l -> List.iter (erase_label m) l
+  | Type_abbrev t -> erase_type m t
 let erase_type_constr m t =
-  begin match t.tcs_manifest with
-    | Some x -> erase_type m x
-    | None -> ()
-  end;
   erase_tcs_kind m t.tcs_kind
 let erase_item m = function
     Gen_value v -> erase_value m v

@@ -208,23 +208,25 @@ let expand_abbrev params body args =
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  match cstr.tcs_manifest with
-    None -> ()
-  | Some body ->
-      let rec check_abbrev seen ty =
-        match (type_repr ty).typ_desc with
-          Tvar _ -> ()
-        | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
-        | Tproduct tlist -> List.iter (check_abbrev seen) tlist
-        | Tconstr(c, tlist) ->
-            let c = get_type_constr c in
-            if List.memq c seen then
-              raise Recursive_abbrev
-            else begin
-              List.iter (check_abbrev seen) tlist;
-              begin match c.tcs_manifest with
-                None -> ()
-              | Some( body) -> check_abbrev ( c :: seen) body
-              end
-            end
-      in check_abbrev [cstr] body
+  begin match cstr.tcs_kind with
+      Type_abbrev body ->
+        let rec check_abbrev seen ty =
+          match (type_repr ty).typ_desc with
+              Tvar _ -> ()
+            | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
+            | Tproduct tlist -> List.iter (check_abbrev seen) tlist
+            | Tconstr(c, tlist) ->
+                let c = get_type_constr c in
+                if List.memq c seen then
+                  raise Recursive_abbrev
+                else begin
+                  List.iter (check_abbrev seen) tlist;
+                  begin match c.tcs_kind with
+                      Type_abbrev body -> check_abbrev (c :: seen) body
+                    | _ -> ()
+                  end
+                end
+        in check_abbrev [cstr] body
+    | _ -> ()
+  end
+      

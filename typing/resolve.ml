@@ -317,7 +317,6 @@ let type_declaration env decl loc =
         { tcs_id = Env.make_global_id name;
           tcs_arity = nparams;
           tcs_params = replicate_list no_type nparams;
-          tcs_manifest = None;
           tcs_kind = Type_abstract }
       end
       decl
@@ -342,14 +341,10 @@ let type_declaration env decl loc =
     begin fun (tcs, params, body) ->
       tcs.tcs_kind <-
         begin match body with
-          | Ttype_abstract | Ttype_abbrev _ -> Type_abstract
+          | Ttype_abstract -> Type_abstract
           | Ttype_variant l -> Type_variant (List.map fst l)
           | Ttype_record l -> Type_record (List.map (fun (lbl, _, _) -> lbl) l)
-        end;
-      tcs.tcs_manifest <-
-        begin match body with
-          | Ttype_abbrev ty -> Some no_type
-          | _ -> None
+          | Ttype_abbrev ty -> Type_abbrev no_type
         end
     end
     decl;

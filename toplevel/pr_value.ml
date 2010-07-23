@@ -105,72 +105,70 @@ let rec print_val prio depth obj ty =
 
 and print_concrete_type prio depth obj cstr ty ty_list =
   match (get_type_constr cstr).tcs_kind with
-    Type_abstract ->
-      begin match (get_type_constr cstr).tcs_manifest with
-        | None ->
-            print_string "<abstr>"
-        | Some body ->
-            print_val prio depth obj (expand_abbrev (get_type_constr cstr).tcs_params body ty_list)
-      end
-  | Type_variant constr_list ->
-      let tag = Llama_obj.tag obj in
-      begin try
-        let constr = 
-          if get_type_constr cstr == tcs_exn
-          then find_exception tag
-          else
-            find_constr tag constr_list
-        in
-        let (ty_args, ty_res) =
-          instance_constructor constr in
-        filter (ty_res, ty);
-        match constr.cs_arity with
-          0 ->
-            print_string constr.cs_name
-        | 1 ->
-            if prio > 1 then begin open_box 2; print_string "(" end
-             else open_box 1;
-            print_string constr.cs_name;
-            print_space();
-            cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
-            if prio > 1 then print_string ")";
-            close_box()
-        | n ->
-            if prio > 1 then begin open_box 2; print_string "(" end
-            else open_box 1;
-            print_string constr.cs_name;
-            print_space();
-            open_box 1;
-            print_string "(";
-            print_val_list 1 depth obj ty_args;
-            print_string ")";
-            close_box();
-            if prio > 1 then print_string ")";
-            close_box()
-      with
-        Constr_not_found ->
-          print_string "<unknown constructor>"
-      | Exception_not_found ->
-          print_string "<local exception>"
-      | OldUnify ->
-          fatal_error "print_val: types should match"
-      end
-  | Type_record label_list ->
-      let print_field depth lbl =
-        open_box 1;
-        print_string lbl.lbl_name;
-        print_string " ="; print_space();
-        let (ty_res, ty_arg) =
-          type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
+      Type_abstract ->
+        print_string "<abstr>"
+    | Type_abbrev body ->
+        print_val prio depth obj
+          (expand_abbrev (get_type_constr cstr).tcs_params body ty_list)
+    | Type_variant constr_list ->
+        let tag = Llama_obj.tag obj in
         begin try
-          filter (ty_res, ty)
-        with OldUnify ->
-          fatal_error "print_val: types should match"
-        end;
-        cautious (print_val 0 (depth - 1)
-                 (Llama_obj.field obj lbl.lbl_pos)) ty_arg;
-        close_box() in
-      let print_fields depth label_list =
+          let constr = 
+            if get_type_constr cstr == tcs_exn
+          then find_exception tag
+            else
+              find_constr tag constr_list
+          in
+          let (ty_args, ty_res) =
+            instance_constructor constr in
+          filter (ty_res, ty);
+          match constr.cs_arity with
+              0 ->
+                print_string constr.cs_name
+            | 1 ->
+                if prio > 1 then begin open_box 2; print_string "(" end
+                else open_box 1;
+                print_string constr.cs_name;
+                print_space();
+                cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
+                if prio > 1 then print_string ")";
+                close_box()
+            | n ->
+                if prio > 1 then begin open_box 2; print_string "(" end
+                else open_box 1;
+                print_string constr.cs_name;
+                print_space();
+                open_box 1;
+                print_string "(";
+                print_val_list 1 depth obj ty_args;
+                print_string ")";
+                close_box();
+                if prio > 1 then print_string ")";
+                close_box()
+        with
+            Constr_not_found ->
+              print_string "<unknown constructor>"
+          | Exception_not_found ->
+              print_string "<local exception>"
+          | OldUnify ->
+              fatal_error "print_val: types should match"
+        end
+    | Type_record label_list ->
+        let print_field depth lbl =
+          open_box 1;
+          print_string lbl.lbl_name;
+          print_string " ="; print_space();
+          let (ty_res, ty_arg) =
+            type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
+          begin try
+            filter (ty_res, ty)
+          with OldUnify ->
+            fatal_error "print_val: types should match"
+          end;
+          cautious (print_val 0 (depth - 1)
+                      (Llama_obj.field obj lbl.lbl_pos)) ty_arg;
+          close_box() in
+        let print_fields depth label_list =
           let rec loop depth b = function
               [] -> ()
             | lbl :: rest ->
@@ -178,12 +176,12 @@ and print_concrete_type prio depth obj cstr ty ty_list =
                 print_field depth lbl;
                 loop (depth - 1) true rest in
           loop depth false label_list
-      in
-      open_box 1;
-      print_string "{";
-      cautious (print_fields depth) label_list;
-      print_string "}";
-      close_box()
+        in
+        open_box 1;
+        print_string "{";
+        cautious (print_fields depth) label_list;
+        print_string "}";
+        close_box()
 
 and print_val_list prio depth obj ty_list =
   let print_list depth i =
