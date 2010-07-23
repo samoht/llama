@@ -34,7 +34,7 @@ let type_constructors s decl1 decl2 =
   let params1 = decl1.tcs_params in
   let params2 = decl2.tcs_params in
   decl1.tcs_arity = decl2.tcs_arity &&
-  begin match (decl1.tcs_kind, decl2.tcs_kind) with
+  begin match (decl1.tcs_body, decl2.tcs_body) with
       _, Type_abstract ->
         Ctype.equal true params1 params2
     | Type_variant cstrs1, Type_variant cstrs2 ->

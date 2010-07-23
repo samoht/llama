@@ -208,7 +208,7 @@ let expand_abbrev params body args =
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  begin match cstr.tcs_kind with
+  begin match cstr.tcs_body with
       Type_abbrev body ->
         let rec check_abbrev seen ty =
           match (type_repr ty).typ_desc with
@@ -221,7 +221,7 @@ let check_recursive_abbrev cstr =
                   raise Recursive_abbrev
                 else begin
                   List.iter (check_abbrev seen) tlist;
-                  begin match c.tcs_kind with
+                  begin match c.tcs_body with
                       Type_abbrev body -> check_abbrev (c :: seen) body
                     | _ -> ()
                   end

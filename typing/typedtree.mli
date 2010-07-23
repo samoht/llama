@@ -10,7 +10,8 @@ type type_variable =
 type type_expression =
   { te_desc: type_expression_desc;
     te_loc: Location.t;
-    te_env : Env.t }
+    te_env : Env.t;
+    mutable te_type : core_type }
 
 and type_expression_desc =
     Ttyp_var of type_variable
@@ -70,15 +71,13 @@ and stream_component =
 and stream_pattern =
     Ztermpat of pattern
   | Znontermpat of expression * pattern
-  | Texp_streampat of value
+  | Zstreampat of value
 
 type type_body =
     Ttype_abstract
-  | Ttype_variant of constr_decl list
-  | Ttype_record of (label * type_expression * mutable_flag) list
+  | Ttype_variant of (constructor * type_expression list) list
+  | Ttype_record of (label * type_expression) list
   | Ttype_abbrev of type_expression
-
-and constr_decl = constructor * type_expression list
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -88,7 +87,7 @@ and signature_item_desc =
     Tsig_value of value * type_expression
   | Tsig_type of (type_constructor * type_variable list * type_body) list
   | Tsig_exception of constructor * type_expression list
-  | Tsig_open of module_name
+  | Tsig_open of module_id
 
 type structure_item =
   { str_desc: structure_item_desc;
@@ -100,7 +99,7 @@ and structure_item_desc =
   | Tstr_primitive of value * type_expression
   | Tstr_type of (type_constructor * type_variable list * type_body) list
   | Tstr_exception of constructor * type_expression list
-  | Tstr_open of module_name
+  | Tstr_open of module_id
 
 type module_coercion =
     Tcoerce_none

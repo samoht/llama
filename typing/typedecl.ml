@@ -30,17 +30,16 @@ let define_new_type tcs params body =
         List.iter (fun (cs, _) -> List.iter generalize_type cs.cs_args) l
     | Ttype_record l ->
         List.iter
-          begin fun (lbl, arg, _) ->
-            let ty_arg = type_of_type_expression true arg in
+          begin fun (lbl, arg) ->
             lbl.lbl_res <- ty_res;
-            lbl.lbl_arg <- ty_arg
+            lbl.lbl_arg <- type_of_type_expression true arg
           end l;
         pop_type_level ();
         generalize_type ty_res;
-        List.iter (fun (lbl, _, _) -> generalize_type lbl.lbl_arg) l
+        List.iter (fun (lbl, _) -> generalize_type lbl.lbl_arg) l
     | Ttype_abbrev arg ->
         let ty_arg = type_of_type_expression true arg in
-        tcs.tcs_kind <- Type_abbrev ty_arg;
+        tcs.tcs_body <- Type_abbrev ty_arg;
         pop_type_level ();
         generalize_type ty_res;
         generalize_type ty_arg

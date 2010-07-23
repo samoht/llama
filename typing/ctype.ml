@@ -6,7 +6,7 @@ open Module
 (* Extract the list of labels of a record type. *)
 
 let labels_of_type ty =
-  begin match ty.tcs_kind with
+  begin match ty.tcs_body with
     | Type_record l -> l
     | _ -> assert false
   end
@@ -39,13 +39,13 @@ let occur_check level0 v =
 (* Unification *)
 
 let has_abbrev r =
-  begin match (get_type_constr r).tcs_kind with
+  begin match (get_type_constr r).tcs_body with
     | Type_abbrev _ -> true
     | _ -> false
   end
 let get_abbrev r =
   let r = get_type_constr r in
-  begin match r.tcs_kind with
+  begin match r.tcs_body with
     | Type_abbrev body -> r.tcs_params, body
     | _ -> assert false
   end

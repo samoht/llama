@@ -20,10 +20,10 @@ let output_type_constr oc tcs =
   output_global_id oc tcs.tcs_id
 
 let output_constr oc cs =
-  output_global_id oc (constr_global_id cs)
+  output_global_id oc (constr_id cs)
 
 let output_label oc lbl =
-  output_global_id oc (label_global_id lbl)
+  output_global_id oc (label_id lbl)
 
 let int_to_alpha i =
   if i < 26

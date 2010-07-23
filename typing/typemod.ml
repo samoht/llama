@@ -7,9 +7,9 @@ open Module
 open Btype
 open Types
 
-let gen_value x = Gen_value x
-let gen_type x = Gen_type x
-let gen_exception x = Gen_exception x
+let gen_value x = Sig_value x
+let gen_type x = Sig_type x
+let gen_exception x = Sig_exception x
 
 let type_structure_item str =
   begin match str.str_desc with

@@ -5,8 +5,8 @@ open Types;;
 
 type primitive =
     Pidentity
-  | Pget_global of global_id
-  | Pset_global of global_id
+  | Pget_global of qualified_id
+  | Pset_global of qualified_id
   | Pdummy of int
   | Pupdate
   | Ptest of bool_test

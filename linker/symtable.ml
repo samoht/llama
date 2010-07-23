@@ -38,7 +38,7 @@ let reserve_in_numtable nt key =
 (* Global variables *)
 
 let global_table =
-  ref (new_numtable 1 : global_id numtable)
+  ref (new_numtable 1 : qualified_id numtable)
 and literal_table =
   ref ([] : (int * Lambda.struct_constant) list)
 ;;
@@ -86,8 +86,8 @@ let number_of_globals () = (!global_table).num_cnt;;
 
 (* The exception tags *)
 
-let exn_tag_table = ref(new_numtable 1 : (global_id * int) numtable)
-and tag_exn_table = ref( [| |] : (global_id * int) array )
+let exn_tag_table = ref(new_numtable 1 : (qualified_id * int) numtable)
+and tag_exn_table = ref( [| |] : (qualified_id * int) array )
 and unknown_exn_name = ({id_module=Module "?"; id_name="?"}, 0)
 ;;
 

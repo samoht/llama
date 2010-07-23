@@ -18,7 +18,7 @@ type term =
   | Tuple of int
   | Array of int
   | Match of type_constructor 
-  | Global of global_id
+  | Global of qualified_id
 
 let global_terms = ref (Hashtbl.create 10)
 let find_global qualid = Hashtbl.find !global_terms qualid

@@ -74,20 +74,21 @@ let add_type id info env =
 let open_signature sg env =
   List.fold_left
     (fun env -> function
-       | Gen_value v ->
+       | Sig_value v ->
            add_value (val_name v) v env
-       | Gen_exception cs ->
+       | Sig_exception cs ->
            add_exception cs.cs_name cs env
-       | Gen_type tcs ->
+       | Sig_type tcs ->
            add_type tcs.tcs_id.id_name tcs env)
     env sg
 
-let initial = open_signature ps_builtin.working empty
+let initial = open_signature ps_builtin.mod_sig empty
 
 let open_pers_signature name env =
-  open_signature (find_pers_struct name).working env
+  open_signature (find_pers_struct name).mod_sig env
 
-let read_signature modname = (find_pers_struct modname).working
+let read_signature modname =
+  (find_pers_struct modname).mod_sig
 
 let ps_find_all_constrs ps s =
   Hashtbl.find_all ps.mod_constrs s
@@ -105,7 +106,7 @@ let current_unit () =
     | Module_builtin | Module_toplevel -> failwith "current_unit"
   end
 
-let make_global_id name =
+let qualified_id name =
   { id_module = !current_module;
     id_name = name }
 

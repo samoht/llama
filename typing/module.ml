@@ -9,23 +9,22 @@ type error =
 exception Error of error
 
 type pers_struct =
-  { mod_values: (string, value) Hashtbl.t;
+  { mod_sig : signature_item list;
+    mod_values: (string, value) Hashtbl.t;
     mod_constrs: (string, constructor) Hashtbl.t;
     mod_labels: (string, label) Hashtbl.t;
-    mod_types: (string, type_constructor) Hashtbl.t;
-    working : generated_item list;
- }
+    mod_types: (string, type_constructor) Hashtbl.t }
 
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let constructors_of_type decl =
-  match decl.tcs_kind with
+  match decl.tcs_body with
       Type_variant cstrs -> cstrs
     | _ -> []
 
 let labels_of_type decl =
-  match decl.tcs_kind with
+  match decl.tcs_body with
       Type_record lbls -> lbls
     | _ -> []
 
@@ -34,16 +33,16 @@ let index w =
              mod_constrs = Hashtbl.create 10;
              mod_labels = Hashtbl.create 10;
              mod_types = Hashtbl.create 10;
-             working = w }
+             mod_sig = w }
   in
   List.iter
     begin fun item ->
       begin match item with
-        | Gen_value v ->
+        | Sig_value v ->
             Hashtbl.add ps.mod_values (val_name v) v
-        | Gen_exception cs ->
+        | Sig_exception cs ->
             Hashtbl.add ps.mod_constrs cs.cs_name cs
-        | Gen_type tcs ->
+        | Sig_type tcs ->
             Hashtbl.add ps.mod_types tcs.tcs_id.id_name tcs;
             List.iter
               (fun cs -> Hashtbl.add ps.mod_constrs cs.cs_name cs)
@@ -62,11 +61,11 @@ let read_pers_struct modname filename =
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
-    let working = (input_value ic : generated_item list) in
+    let mod_sig = (input_value ic : signature_item list) in
     close_in ic;
     if mn <> String.uncapitalize(*xxx*) modname then
       raise(Error(Illegal_renaming(mn, modname)));
-    let ps = index working in
+    let ps = index mod_sig in
     Hashtbl.add persistent_structures modname ps;    
     ps
   with End_of_file | Failure _ ->
@@ -136,15 +135,15 @@ let erase_label m lbl =
   erase_type m lbl.lbl_res;
   erase_type m lbl.lbl_arg
 let erase_value m v = erase_type m v.val_type
-let erase_tcs_kind m = function
+let erase_tcs_body m = function
     Type_abstract -> ()
   | Type_variant l -> List.iter (erase_constr m) l
   | Type_record l -> List.iter (erase_label m) l
   | Type_abbrev t -> erase_type m t
 let erase_type_constr m t =
-  erase_tcs_kind m t.tcs_kind
+  erase_tcs_body m t.tcs_body
 let erase_item m = function
-    Gen_value v -> erase_value m v
-  | Gen_type tcs -> erase_type_constr m tcs
-  | Gen_exception cs -> erase_constr m cs
+    Sig_value v -> erase_value m v
+  | Sig_type tcs -> erase_type_constr m tcs
+  | Sig_exception cs -> erase_constr m cs
 let erase_sig m l = List.iter (erase_item m) l

@@ -37,7 +37,7 @@ let type_of_type_expression strict_flag typexp =
           typ_level = notgeneric }
   in
   let ty = type_of typexp in
-(*  typexp.te_type <- ty;*)
+  typexp.te_type <- ty;
   ty
 
 (* Typecore of constants *)
@@ -367,7 +367,7 @@ let rec type_expr expr =
                       (type_arrow(ty_stream, ty_parser_result));
           tpat (p, ty_parser_result, Notmutable);
           type_stream_pat (rest,act)
-      | (Texp_streampat s :: rest, act) ->
+      | (Zstreampat s :: rest, act) ->
           s.val_type <- ty_stream;
           type_stream_pat  (rest,act)
       in

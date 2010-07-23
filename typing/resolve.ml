@@ -97,14 +97,15 @@ let rec type_expression strict_flag env te =
                          List.map (type_expression strict_flag env) l)
       end;
     te_loc = te.ptyp_loc;
-    te_env = env }
+    te_env = env;
+    te_type = no_type }
 
 (* pattern environment, xxx make local *)
 let pattern_variables = ref ([] : string list)
 let reset_pattern_variables () = pattern_variables := []
 let mkpatvar s =
   { val_kind = Val_reg;
-    val_id = Env.make_global_id s;
+    val_id = Env.qualified_id s;
     val_type = no_type;
     val_global = false }
 (*  (fun () -> raise (Multiply_bound_variable s)) *)
@@ -224,7 +225,7 @@ let rec expr env ex =
                           Znontermpat (expr env e, p), extend_env env p
                       | Pexp_streampat s ->
                           let s = mkpatvar s in
-                          Texp_streampat s, ext env s
+                          Zstreampat s, ext env s
                     end
                     in
                     let rest,e = aux env rest e in
@@ -264,7 +265,7 @@ let label env tcs pos (name, typexp, mut) =
       lbl_pos = pos
     }
   in
-  (lbl, type_expression true env typexp, mut)
+  (lbl, type_expression true env typexp)
 
 let primitive o =
   begin match o with
@@ -289,7 +290,7 @@ let type_constructor_body env tcs body =
 
 let value_declaration env name typexp primstuff =
   let v =
-    { val_id = Env.make_global_id name;
+    { val_id = Env.qualified_id name;
       val_type = no_type;
       val_kind = primitive primstuff;
       val_global = true }
@@ -314,10 +315,10 @@ let type_declaration env decl loc =
     List.map
       begin fun (name, params, body) ->
         let nparams = List.length params in
-        { tcs_id = Env.make_global_id name;
+        { tcs_id = Env.qualified_id name;
           tcs_arity = nparams;
           tcs_params = replicate_list no_type nparams;
-          tcs_kind = Type_abstract }
+          tcs_body = Type_abstract }
       end
       decl
   in
@@ -339,11 +340,11 @@ let type_declaration env decl loc =
   in
   List.iter
     begin fun (tcs, params, body) ->
-      tcs.tcs_kind <-
+      tcs.tcs_body <-
         begin match body with
           | Ttype_abstract -> Type_abstract
           | Ttype_variant l -> Type_variant (List.map fst l)
-          | Ttype_record l -> Type_record (List.map (fun (lbl, _, _) -> lbl) l)
+          | Ttype_record l -> Type_record (List.map fst l)
           | Ttype_abbrev ty -> Type_abbrev no_type
         end
     end
@@ -373,7 +374,7 @@ let letdef env rec_flag pat_exp_list =
 let exception_declaration env name args =
   let args = List.map (type_expression true env) args in
   let nargs = List.length args in
-  let tag = ConstrExtensible(Env.make_global_id name, new_exc_stamp ()) in
+  let tag = ConstrExtensible(Env.qualified_id name, new_exc_stamp ()) in
   let cs =
     { cs_parent = Predef.tcs_exn;
       cs_name = name;
@@ -395,18 +396,18 @@ let structure_item env pstr =
     | Pstr_value(rec_flag, pat_exp_list) ->
         let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in
         mk (Tstr_value(rec_flag, pat_exp_list)),
-        List.map (fun v -> Gen_value v) vals, env
+        List.map (fun v -> Sig_value v) vals, env
     | Pstr_primitive(id,te,(arity,n)) ->
         let v, typexp, env = value_declaration env id te (Some(arity,n)) in
-        mk (Tstr_primitive (v, typexp)), [Gen_value v], env
+        mk (Tstr_primitive (v, typexp)), [Sig_value v], env
     | Pstr_type decl ->
         let decl, env =type_declaration env decl pstr.pstr_loc in
-        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
+        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Sig_type tcs) decl, env
     | Pstr_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
-        mk (Tstr_exception (cs, args)), [Gen_exception cs], env
+        mk (Tstr_exception (cs, args)), [Sig_exception cs], env
     | Pstr_open mn ->
-        let phr = mk (Tstr_open mn) in
+        let phr = mk (Tstr_open (Module mn)) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in
         phr, [], env
   end
@@ -417,15 +418,15 @@ let signature_item env psig =
   begin match psig.psig_desc with
     | Psig_value (s, te, pr) ->
         let v, typexp, env = value_declaration env s te pr in
-        mk (Tsig_value (v, typexp)), [Gen_value v], env
+        mk (Tsig_value (v, typexp)), [Sig_value v], env
     | Psig_type decl ->
         let decl, env = type_declaration env decl psig.psig_loc in
-        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Gen_type tcs) decl, env
+        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Sig_type tcs) decl, env
     | Psig_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
-        mk (Tsig_exception (cs, args)), [Gen_exception cs], env
+        mk (Tsig_exception (cs, args)), [Sig_exception cs], env
     | Psig_open mn ->
-        let phr = mk (Tsig_open mn) in
+        let phr = mk (Tsig_open (Module mn)) in
         let env = Env.open_pers_signature (String.uncapitalize mn) env in
         phr, [], env
   end

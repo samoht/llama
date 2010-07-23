@@ -51,7 +51,7 @@ let do_structure_item env phr =
       flush stderr;
       reset_rollback ();
       List.iter
-        (fun (Gen_value vd) ->
+        (fun (Sig_value vd) ->
           open_box 1;
           print_string (val_name vd); print_string " :"; print_space();
           print_one_type vd.val_type; print_string " ="; print_space();

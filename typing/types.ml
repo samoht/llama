@@ -9,12 +9,12 @@ type module_id =
   | Module of string
   | Module_toplevel
 
-type global_id = {
+type qualified_id = {
   id_module : module_id;
   id_name : string }
 
 type 'a reference = {
-  ref_id : global_id;
+  ref_id : qualified_id;
   mutable ref_contents : 'a option }
 
 (* ---------------------------------------------------------------------- *)
@@ -32,17 +32,13 @@ and typ_desc =
   | Tconstr of type_constructor reference * core_type list
   | Tlink of core_type
 
-and typ_link =
-    Tnolink                             (* Free variable *)
-  | Tlinkto of core_type                      (* Instantiated variable *)
-
 and type_constructor =
-  { tcs_id : global_id;
+  { tcs_id : qualified_id;
     mutable tcs_params : core_type list;
-    tcs_arity: int;                      (* Its arity *)
-    mutable tcs_kind: tcs_kind }  (* Its description *)
+    tcs_arity: int;
+    mutable tcs_body: type_constructor_body }
 
-and tcs_kind =
+and type_constructor_body =
     Type_abstract
   | Type_variant of constructor list (* Sum type -> list of constr. *)
   | Type_record of label list (* Record type -> list of labels *)
@@ -57,7 +53,7 @@ and constructor =
     cs_tag: constr_tag }               (* Its run-time tag *)
 
 and constr_tag =
-    ConstrExtensible of global_id * int (* name of constructor & stamp *)
+    ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 and label =
@@ -73,7 +69,7 @@ and label =
 (* ---------------------------------------------------------------------- *)
 
 type value =
-  { val_id : global_id;
+  { val_id : qualified_id;
     mutable val_type: core_type;                (* Type of the value *)
     val_kind: value_kind;
     mutable val_global: bool }
@@ -86,10 +82,10 @@ and value_kind =
 (* Core signature items.                                                  *)
 (* ---------------------------------------------------------------------- *)
 
-type generated_item =
-    Gen_value of value
-  | Gen_type of type_constructor (*  * rec_status *)
-  | Gen_exception of constructor
+type signature_item =
+    Sig_value of value
+  | Sig_type of type_constructor (*  * rec_status *)
+  | Sig_exception of constructor
 
 and rec_status =
     Rec_not
@@ -100,10 +96,10 @@ and rec_status =
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let constr_global_id cs = { id_module = cs.cs_parent.tcs_id.id_module;
+let constr_id cs = { id_module = cs.cs_parent.tcs_id.id_module;
                             id_name = cs.cs_name }
 
-let label_global_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
+let label_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
                             id_name = lbl.lbl_name }
 
 let ref_label lbl =

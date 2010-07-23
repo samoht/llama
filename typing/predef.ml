@@ -20,7 +20,7 @@ let mkty name params =
   { tcs_id = { id_module = Module_builtin; id_name = name };
     tcs_params = params;
     tcs_arity = List.length params;
-    tcs_kind = Type_abstract }
+    tcs_body = Type_abstract }
 
 let tcs_unit = mkty "unit" []
 let tcs_exn = mkty "exn" []
@@ -128,7 +128,7 @@ and constr_true =
     cs_tag = ConstrRegular(1,2); }
 
 let _ =
-  List.iter (fun (tcs, tk) -> tcs.tcs_kind <- tk)
+  List.iter (fun (tcs, tk) -> tcs.tcs_body <- tk)
     [ tcs_unit, Type_variant [ constr_void ];
       tcs_exn, Type_variant [];
       tcs_bool, Type_variant [ constr_false; constr_true ];
@@ -152,15 +152,15 @@ let constr_match_failure =
 (* ---------------------------------------------------------------------- *)
 
 let builtin_sig =
-  [ Gen_type tcs_unit;
-    Gen_type tcs_exn;
-    Gen_type tcs_bool;
-    Gen_type tcs_int;
-    Gen_type tcs_float;
-    Gen_type tcs_string;
-    Gen_type tcs_char;
-    Gen_type tcs_list;
-    Gen_type tcs_vect;
-    Gen_type tcs_option;
-    Gen_exception constr_match_failure
+  [ Sig_type tcs_unit;
+    Sig_type tcs_exn;
+    Sig_type tcs_bool;
+    Sig_type tcs_int;
+    Sig_type tcs_float;
+    Sig_type tcs_string;
+    Sig_type tcs_char;
+    Sig_type tcs_list;
+    Sig_type tcs_vect;
+    Sig_type tcs_option;
+    Sig_exception constr_match_failure
   ]
