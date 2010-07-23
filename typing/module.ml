@@ -39,18 +39,18 @@ let index w =
   List.iter
     begin fun item ->
       begin match item with
-        | Gen_value (s,gl) ->
-            Hashtbl.add ps.mod_values s gl
-        | Gen_exception (s,gl) ->
-            Hashtbl.add ps.mod_constrs s gl
-        | Gen_type (s,gl) ->
-            Hashtbl.add ps.mod_types s gl;
+        | Gen_value v ->
+            Hashtbl.add ps.mod_values (val_name v) v
+        | Gen_exception cs ->
+            Hashtbl.add ps.mod_constrs cs.cs_name cs
+        | Gen_type tcs ->
+            Hashtbl.add ps.mod_types tcs.tcs_id.id_name tcs;
             List.iter
-              (fun gl -> Hashtbl.add ps.mod_constrs gl.cs_name gl)
-              (constructors_of_type gl);
+              (fun cs -> Hashtbl.add ps.mod_constrs cs.cs_name cs)
+              (constructors_of_type tcs);
             List.iter
-              (fun gl -> Hashtbl.add ps.mod_labels gl.lbl_name gl)
-              (labels_of_type gl)
+              (fun lbl -> Hashtbl.add ps.mod_labels lbl.lbl_name lbl)
+              (labels_of_type tcs)
       end
     end
     w;
@@ -95,7 +95,7 @@ let new_exc_stamp () =
 let iter_values m cb =
   List.iter
     begin function 
-      | Gen_value (id, vd) -> cb id vd
+      | Gen_value v -> cb (val_name v) v
       | _ -> ()
     end
     m
@@ -156,7 +156,7 @@ let erase_type_constr m t =
   end;
   erase_tcs_kind m t.tcs_kind
 let erase_item m = function
-    Gen_value (_,v) -> erase_value m v
-  | Gen_type (_,t) -> erase_type_constr m t
-  | Gen_exception (_,c) -> erase_constr m c
+    Gen_value v -> erase_value m v
+  | Gen_type tcs -> erase_type_constr m tcs
+  | Gen_exception cs -> erase_constr m cs
 let erase_sig m l = List.iter (erase_item m) l

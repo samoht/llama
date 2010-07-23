@@ -51,11 +51,11 @@ let do_structure_item env phr =
       flush stderr;
       reset_rollback ();
       List.iter
-        (fun (Gen_value (s,vd)) ->
+        (fun (Gen_value vd) ->
           open_box 1;
-          print_string s; print_string " :"; print_space();
+          print_string (val_name vd); print_string " :"; print_space();
           print_one_type vd.val_type; print_string " ="; print_space();
-          print_value (get_global_data (get_slot_for_variable {id_module= !Env.current_module; id_name= s})) vd.val_type;
+          print_value (get_global_data (get_slot_for_variable vd.val_id)) vd.val_type;
           print_newline())
         (List.rev sg)
   | Tstr_primitive (name,te,pr) ->

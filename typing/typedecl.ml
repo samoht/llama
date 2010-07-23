@@ -136,7 +136,7 @@ let type_excdecl env loc decl =
   pop_type_level ();
   List.iter generalize_type ty_args;
   let env = Env.add_exception constr_name cd env in
-  (constr_name, cd), env
+  cd, env
 
 let type_valuedecl env loc id typexp prim =
   push_type_level();
@@ -175,7 +175,7 @@ let type_letdef env loc rec_flag untyped_pat_expr_list =
   List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
   List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type;
   let env = if rec_flag then env else enter_vals env in
-  pat_expr_list, List.combine (List.map (fun x -> x.val_id.id_name) vals) vals, env
+  pat_expr_list, vals, env
   
 let type_expression loc expr =
   push_type_level();
@@ -184,4 +184,3 @@ let type_expression loc expr =
   pop_type_level();
   if is_nonexpansive expr then generalize_type ty;
   ty
-;;

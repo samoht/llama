@@ -46,9 +46,9 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Gen_value (s,gl) -> (s, Field_value s)
-  | Gen_type(s,gl) -> (s, Field_type s)
-  | Gen_exception(s,gl) -> (s, Field_exception s)
+    Gen_value v -> let s = val_name v in s, Field_value s
+  | Gen_type tcs -> let s = tcs.tcs_id.id_name in s, Field_type s
+  | Gen_exception cs -> let s = cs.cs_name in s, Field_exception s
 
 (* Simplify a structure coercion *)
 
@@ -71,7 +71,7 @@ let rec signatures subst sig1 sig2 =
         let (id, name) = item_ident_name item in
         let nextpos =
           match item with
-            Gen_value(_,{val_kind = Val_prim _})
+            Gen_value({val_kind = Val_prim _})
           | Gen_type _ -> pos
           | Gen_value _
           | Gen_exception _ -> pos+1 in
@@ -96,7 +96,7 @@ let rec signatures subst sig1 sig2 =
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
           let new_subst =
             match item2, item1 with
-                Gen_type (_, td2), Gen_type (_, td1) ->
+                Gen_type td2, Gen_type td1 ->
                   Subst.add_type_constructor td2 td1 subst
               | _ ->
                   subst
@@ -111,16 +111,16 @@ let rec signatures subst sig1 sig2 =
 
 and signature_components subst = function
     [] -> []
-  | (Gen_value(id1,valdecl1), Gen_value(id2,valdecl2), pos) :: rem ->
+  | (Gen_value valdecl1, Gen_value valdecl2, pos) :: rem ->
       let cc = values subst valdecl1 valdecl2 in
       begin match valdecl2.val_kind with
         Val_prim _ -> signature_components subst rem
       | _ -> (pos, cc) :: signature_components subst rem
       end
-  | (Gen_type(id1,tydecl1), Gen_type(id2,tydecl2), pos) :: rem ->
+  | (Gen_type(tydecl1), Gen_type(tydecl2), pos) :: rem ->
       type_constructors subst tydecl1 tydecl2;
       signature_components subst rem
-  | (Gen_exception(id1,excdecl1), Gen_exception(id2,excdecl2), pos)
+  | (Gen_exception(excdecl1), Gen_exception(excdecl2), pos)
     :: rem ->
       exception_declarations subst excdecl1 excdecl2;
       (pos, Tcoerce_none) :: signature_components subst rem

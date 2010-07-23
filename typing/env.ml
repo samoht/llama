@@ -74,12 +74,12 @@ let add_type id info env =
 let open_signature sg env =
   List.fold_left
     (fun env -> function
-       | Gen_value (id, vd) ->
-           add_value id vd env
-       | Gen_exception (id, ed) ->
-           add_exception id ed env
-       | Gen_type (id, td) ->
-           add_type id td env)
+       | Gen_value v ->
+           add_value (val_name v) v env
+       | Gen_exception cs ->
+           add_exception cs.cs_name cs env
+       | Gen_type tcs ->
+           add_type tcs.tcs_id.id_name tcs env)
     env sg
 
 let initial = open_signature ps_builtin.working empty

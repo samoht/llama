@@ -153,42 +153,15 @@ let constr_match_failure =
 (* ---------------------------------------------------------------------- *)
 
 let builtin_sig =
-  [ Gen_type ("unit",tcs_unit);
-    Gen_type ("exn",tcs_exn);
-    Gen_type ("bool",tcs_bool);
-    Gen_type ("int",tcs_int);
-    Gen_type ("float",tcs_float);
-    Gen_type ("string",tcs_string);
-    Gen_type ("char",tcs_char);
-    Gen_type ("list",tcs_list);
-    Gen_type ("vect",tcs_vect);
-    Gen_type ("option",tcs_option);
-    Gen_exception ("Match_failure",constr_match_failure)
+  [ Gen_type tcs_unit;
+    Gen_type tcs_exn;
+    Gen_type tcs_bool;
+    Gen_type tcs_int;
+    Gen_type tcs_float;
+    Gen_type tcs_string;
+    Gen_type tcs_char;
+    Gen_type tcs_list;
+    Gen_type tcs_vect;
+    Gen_type tcs_option;
+    Gen_exception constr_match_failure
   ]
-(*
-(* let env_builtin = ref Env.empty *)
-
-let _ =
-  List.iter
-    begin fun tcs ->
-      Hashtbl.add ps_builtin.mod_types tcs.tcs_id.id_name tcs;
-      List.iter
-        (fun cs ->
-           Hashtbl.add ps_builtin.mod_constrs cs.cs_name cs
-        )
-        (constructors_of_type tcs);
-(*       env_builtin := Env.add_type tcs.tcs_id.id_name tcs !env_builtin *)
-    end
-    [ tcs_unit; tcs_exn; tcs_bool; tcs_int; tcs_float; tcs_string;
-      tcs_char; tcs_list; tcs_vect; tcs_option ]
-
-let _ =
-  List.iter
-    begin fun cs ->
-       Hashtbl.add ps_builtin.mod_constrs cs.cs_name cs;
-(*        env_builtin := Env.add_exception cs.cs_name cs !env_builtin *)
-    end
-    [ constr_match_failure ]
-
-(* let _ = Env.initial := !env_builtin *)
-*)
