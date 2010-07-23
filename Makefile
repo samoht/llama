@@ -18,8 +18,7 @@ TYPING=typing/primitive.cmx \
  typing/module.cmx \
  typing/env.cmx typing/btype.cmx \
  typing/subst.cmx \
- typing/print.cmx \
- typing/pr_type.cmx typing/pr_decl.cmx \
+ typing/print.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \
  typing/error.cmx \
  typing/includecore.cmx typing/includemod.cmx \
@@ -56,7 +55,7 @@ LINKER=linker/caml_light_extern.o \
   linker/readword.cmx
 
 TOPLEVEL=\
-  toplevel/eval.cmx toplevel/fmt_type.cmx toplevel/pr_value.cmx \
+  toplevel/eval.cmx toplevel/pr_value.cmx \
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
   toplevel/main.cmx runtime/libcaml.a toplevel/llama.o
 

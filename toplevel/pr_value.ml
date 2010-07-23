@@ -7,7 +7,6 @@ open Predef;;
 open Module;;
 open Btype;;
 open Format;;
-open Fmt_type;;
 open Symtable;;
 open Ctype;;
 open Btype

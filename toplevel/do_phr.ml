@@ -10,7 +10,6 @@ open Typecore;;
 open Typedecl;;
 open Front;;
 open Back;;
-open Fmt_type;;
 open Pr_value;;
 open Format;;
 open Symtable;;
@@ -34,7 +33,7 @@ let do_structure_item env phr =
       flush stderr;
       open_box 1;
       print_string "- :"; print_space();
-      print_one_type expr.exp_type;
+      Print.one_type std_formatter expr.exp_type;
       print_string " ="; print_space();
       print_value res expr.exp_type;
       print_newline()
@@ -54,7 +53,7 @@ let do_structure_item env phr =
         (fun (Sig_value vd) ->
           open_box 1;
           print_string (val_name vd); print_string " :"; print_space();
-          print_one_type vd.val_type; print_string " ="; print_space();
+          Print.one_type std_formatter vd.val_type; print_string " ="; print_space();
           print_value (get_global_data (get_slot_for_variable vd.val_id)) vd.val_type;
           print_newline())
         (List.rev sg)
