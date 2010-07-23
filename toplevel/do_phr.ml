@@ -77,21 +77,17 @@ let do_structure_item env phr =
 open Parsetree
 let do_toplevel_phrase env topphr =
   begin match topphr with
-    | Parsetree.Ptop_dir dir ->
-      begin match dir with
-        | Pdir ("load", filename) ->
+    | Parsetree.Ptop_dir (dir, Pdir_string arg) ->
+      begin match dir, arg with
+        | ("load", filename) ->
             !fwd_load_object env filename
-        | Pdir ("use", filename) ->
+        | ("use", filename) ->
             !fwd_load_file env filename
-        | Pdir ("disasm", s) ->
+        |  ("disasm", s) ->
             Meta.set_trace_flag (s<>"")
-        | Pdir("infix", name) ->
-            Lexer.add_infix name
-        | Pdir("uninfix", name) ->
-            Lexer.remove_infix name
-        | Pdir("directory", dirname) ->
+        | ("directory", dirname) ->
             load_path := dirname :: !load_path
-        | Pdir(d, name) ->
+        | (d, name) ->
             (* xxx:location? *)
             eprintf 
               "Warning: unknown directive \"#%s\", ignored.\n" d;

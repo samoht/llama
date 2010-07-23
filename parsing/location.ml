@@ -1,163 +1,211 @@
-(* Printing a location in the source program *)
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  en Automatique.  All rights reserved.  This file is distributed    *)
+(*  under the terms of the Q Public License version 1.0.               *)
+(*                                                                     *)
+(***********************************************************************)
 
-(**) open Config;;
-(**) open Lexing;;
-(**) open Parsing;;
-(**) open Printf;;
+(* $Id: location.ml,v 1.50 2008/01/11 16:13:16 doligez Exp $ *)
 
-let input_name = ref ""                 (* Input file name. *)
-and input_chan = ref stdin              (* The channel opened on the input. *)
-and input_lexbuf = ref (Obj.magic 0 : lexbuf)
-                                        (* The lexer buffer on the input. *)
+open Lexing
+
+type t = { loc_start: position; loc_end: position; loc_ghost: bool };;
+
+let none = { loc_start = dummy_pos; loc_end = dummy_pos; loc_ghost = true };;
+
+let in_file name =
+  let loc = {
+    pos_fname = name;
+    pos_lnum = 1;
+    pos_bol = 0;
+    pos_cnum = -1;
+  } in
+  { loc_start = loc; loc_end = loc; loc_ghost = true }
 ;;
 
-type t = { loc_start: int; loc_end: int; }
+let curr lexbuf = {
+  loc_start = lexbuf.lex_start_p;
+  loc_end = lexbuf.lex_curr_p;
+  loc_ghost = false
+};;
 
-let none = { loc_start = 0; loc_end = 0 }
-
-let get_current_location () = { loc_start = symbol_start(); loc_end = symbol_end() }
-
-let output_lines oc char1 char2 charline1 line1 line2 =
-  begin
-	let n1 = char1 - charline1
-	and n2 = char2 - charline1 in
-	if line2 > line1 then
-	  fprintf oc ", line %d-%d, characters %d-%d:\n" line1 line2 n1 n2
-	else
-	  fprintf oc ", line %d, characters %d-%d:\n" line1 n1 n2;
-	()
-  end
+let init lexbuf fname =
+  lexbuf.lex_curr_p <- {
+    pos_fname = fname;
+    pos_lnum = 1;
+    pos_bol = 0;
+    pos_cnum = 0;
+  }
 ;;
 
-let output_loc oc input seek line_flag {loc_start=pos1; loc_end=pos2} =
-  let pr_chars n c =
-    for i = 1 to n do output_char oc c done in
-  let skip_line () =
-    try
-      while input() != '\n' do () done
-    with End_of_file -> () in
-  let copy_line () =
-    let c = ref ' ' in
-      begin try
-        while c := input(); !c != '\n' do output_char oc !c done
-      with End_of_file ->
-        output_string oc "<EOF>"
-      end;
-      output_char oc '\n' in
-  let pr_line first len ch =
-    let c = ref ' '
-    and f = ref first
-    and l = ref len in
-      try
-        while c := input (); !c != '\n' do
-	  if !f > 0 then begin
-            f := !f - 1;
-            output_char oc (if !c == '\t' then !c else ' ')
-          end
-          else if !l > 0 then begin
-            l := !l - 1;
-            output_char oc (if !c == '\t' then !c else ch)
-          end
-          else ()
-        done
-      with End_of_file ->
-        if !f = 0 && !l > 0 then pr_chars 5 ch in
-  let pos = ref 0
-  and line1 = ref 1
-  and line1_pos = ref 0
-  and line2 = ref 1
-  and line2_pos = ref 0 in
-  seek 0;
-  begin try
-    while !pos < pos1 do
-      incr pos;
-      if input() == '\n' then begin incr line1; line1_pos := !pos; () end
-    done
-  with End_of_file -> ()
-  end;
-  line2 := !line1;
-  line2_pos := !line1_pos;
-  begin try
-    while !pos < pos2 do
-      incr pos;
-      if input() == '\n' then
-        begin incr line2; line2_pos := !pos; () end
-    done
-  with End_of_file -> ()
-  end;
-  if line_flag then output_lines oc pos1 pos2 !line1_pos !line1 !line2;
-  if !line1 == !line2 then begin
-    seek !line1_pos;
-    output_string oc error_prompt;
-    copy_line ();
-    seek !line1_pos;
-    output_string oc error_prompt;
-    pr_line (pos1 - !line1_pos) (pos2 - pos1) '^';
-    output_char oc '\n'
-  end else begin
-    seek !line1_pos;
-    output_string oc error_prompt;
-    pr_line 0 (pos1 - !line1_pos) '.';
-    seek pos1;
-    copy_line();
-    if !line2 - !line1 <= 8 then
-      for i = !line1 + 1 to !line2 - 1 do
-        output_string oc error_prompt;
-        copy_line()
-      done
-    else
-      begin
-        for i = !line1 + 1 to !line1 + 3 do
-          output_string oc error_prompt;
-          copy_line()
+let symbol_rloc () = {
+  loc_start = Parsing.symbol_start_pos ();
+  loc_end = Parsing.symbol_end_pos ();
+  loc_ghost = false;
+};;
+
+let symbol_gloc () = {
+  loc_start = Parsing.symbol_start_pos ();
+  loc_end = Parsing.symbol_end_pos ();
+  loc_ghost = true;
+};;
+
+let rhs_loc n = {
+  loc_start = Parsing.rhs_start_pos n;
+  loc_end = Parsing.rhs_end_pos n;
+  loc_ghost = false;
+};;
+
+let input_name = ref "_none_"
+let input_lexbuf = ref (None : lexbuf option)
+
+(* Terminal info *)
+
+let num_loc_lines = ref 0 (* number of lines already printed after input *)
+
+(* Highlight the location by printing it again. *)
+
+let highlight_dumb ppf lb loc =
+  (* Char 0 is at offset -lb.lex_abs_pos in lb.lex_buffer. *)
+  let pos0 = -lb.lex_abs_pos in
+  (* Do nothing if the buffer does not contain the whole phrase. *)
+  if pos0 < 0 then raise Exit;
+  let end_pos = lb.lex_buffer_len - pos0 - 1 in
+  (* Determine line numbers for the start and end points *)
+  let line_start = ref 0 and line_end = ref 0 in
+  for pos = 0 to end_pos do
+    if lb.lex_buffer.[pos + pos0] = '\n' then begin
+      if loc.loc_start.pos_cnum > pos then incr line_start;
+      if loc.loc_end.pos_cnum   > pos then incr line_end;
+    end
+  done;
+  (* Print character location (useful for Emacs) *)
+  Format.fprintf ppf "Characters %i-%i:@."
+                 loc.loc_start.pos_cnum loc.loc_end.pos_cnum;
+  (* Print the input, underlining the location *)
+  Format.pp_print_string ppf "  ";
+  let line = ref 0 in
+  let pos_at_bol = ref 0 in
+  for pos = 0 to end_pos do
+    let c = lb.lex_buffer.[pos + pos0] in
+    if c <> '\n' then begin
+      if !line = !line_start && !line = !line_end then
+        (* loc is on one line: print whole line *)
+        Format.pp_print_char ppf c
+      else if !line = !line_start then
+        (* first line of multiline loc: print ... before loc_start *)
+        if pos < loc.loc_start.pos_cnum
+        then Format.pp_print_char ppf '.'
+        else Format.pp_print_char ppf c
+      else if !line = !line_end then
+        (* last line of multiline loc: print ... after loc_end *)
+        if pos < loc.loc_end.pos_cnum
+        then Format.pp_print_char ppf c
+        else Format.pp_print_char ppf '.'
+      else if !line > !line_start && !line < !line_end then
+        (* intermediate line of multiline loc: print whole line *)
+        Format.pp_print_char ppf c
+    end else begin
+      if !line = !line_start && !line = !line_end then begin
+        (* loc is on one line: underline location *)
+        Format.fprintf ppf "@.  ";
+        for i = !pos_at_bol to loc.loc_start.pos_cnum - 1 do
+          Format.pp_print_char ppf ' '
         done;
-        output_string oc error_prompt; output_string oc "..........\n";
-        for i = !line1 + 4 to !line2 - 4 do skip_line() done;
-        for i = !line2 - 3 to !line2 - 1 do
-          output_string oc error_prompt;
-          copy_line()
+        for i = loc.loc_start.pos_cnum to loc.loc_end.pos_cnum - 1 do
+          Format.pp_print_char ppf '^'
         done
       end;
-    begin try
-      output_string oc error_prompt;
-      for i = !line2_pos to pos2 - 1 do
-        output_char oc (input())
-      done;
-      pr_line 0 100 '.'
-    with End_of_file -> output_string oc "<EOF>"
-    end;
-    output_char oc '\n'
+      if !line >= !line_start && !line <= !line_end then begin
+        Format.fprintf ppf "@.";
+        if pos < loc.loc_end.pos_cnum then Format.pp_print_string ppf "  "
+      end;
+      incr line;
+      pos_at_bol := pos + 1;
+    end
+  done
+
+(* Highlight the location using one of the supported modes. *)
+
+let rec highlight_locations ppf loc1 loc2 =
+  begin match !input_lexbuf with
+      None -> false
+    | Some lb ->
+        let norepeat =
+          try Sys.getenv "TERM" = "norepeat" with Not_found -> false in
+        if norepeat then false else
+          try highlight_dumb ppf lb loc1; true
+          with Exit -> false
   end
+
+(* Print the location in some way or another *)
+
+open Format
+
+let (msg_file, msg_line, msg_chars, msg_to, msg_colon, msg_head) =
+  ("File \"", "\", line ", ", characters ", "-", ":", "")
+
+(* return file, line, char from the given position *)
+let get_pos_info pos =
+  let (filename, linenum, linebeg) =
+    if pos.pos_fname = "" && !input_name = "" then
+      ("", -1, 0)
+(*
+    else if pos.pos_fname = "" then
+      Linenum.for_position !input_name pos.pos_cnum
+*)
+    else
+      (pos.pos_fname, pos.pos_lnum, pos.pos_bol)
+  in
+  (filename, linenum, pos.pos_cnum - linebeg)
 ;;
 
-let output_location oc loc =
-  if String.length !input_name > 0 then begin
-    let p = pos_in !input_chan in
-    fprintf oc "File \"%s\"" !input_name;
-    output_loc
-      oc (fun () -> input_char !input_chan) (seek_in !input_chan) true
-      loc;
-    seek_in !input_chan p
+let print ppf loc =
+  let (file, line, startchar) = get_pos_info loc.loc_start in
+  let endchar = loc.loc_end.pos_cnum - loc.loc_start.pos_cnum + startchar in
+  let (startchar, endchar) =
+    if startchar < 0 then (0, 1) else (startchar, endchar)
+  in
+  if file = "" then begin
+    if highlight_locations ppf loc none then () else
+      fprintf ppf "Characters %i-%i:@."
+              loc.loc_start.pos_cnum loc.loc_end.pos_cnum
   end else begin
-    fprintf oc "Toplevel input:\n";
-    let curr_pos = ref 0 in
-    let input () =
-      let c =
-        if !curr_pos >= 2048 then
-          raise End_of_file
-        else if !curr_pos >= 0 then
-          !input_lexbuf.lex_buffer.[!curr_pos]
-        else
-          '.'
-      in
-        incr curr_pos; c
-    and seek pos =
-      curr_pos := pos - !input_lexbuf.lex_abs_pos
-    in
-      output_loc oc input seek false loc
+    fprintf ppf "%s%s%s%i" msg_file file msg_line line;
+    fprintf ppf "%s%i" msg_chars startchar;
+    fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head;
   end
 ;;
 
-let output_input_name oc =
-  fprintf oc "File \"%s\", line 1:\n" !input_name
+let print_error ppf loc =
+  print ppf loc;
+  fprintf ppf "Error: ";
 ;;
+
+let print_error_cur_file ppf = print_error ppf (in_file !input_name);;
+
+let print_warning loc ppf w =
+  if Warnings.is_active w then begin
+    let printw ppf w =
+      ignore (Warnings.print ppf w)
+    in
+    fprintf ppf "%a" print loc;
+    fprintf ppf "Warning %a@." printw w;
+    pp_print_flush ppf ();
+  end
+;;
+
+let prerr_warning loc w = print_warning loc err_formatter w;;
+
+let echo_eof () =
+  print_newline ()
+
+(* legacy *)
+let output_location oc loc =
+  print_error Format.std_formatter loc
+let output_input_name oc = ()

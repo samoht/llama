@@ -10,7 +10,7 @@ val interactive: bool;;
         (* True if we're running under the toplevel system. False if
            we're running as a standalone program. *)
 
-type file_perm == int;;
+type file_perm = int;;
 
 val s_irusr : file_perm
 val s_iwusr : file_perm

@@ -8,6 +8,7 @@ exception Division_by_zero;;
 
 external minus : int -> int = "~int"
 external minus_int : int -> int = "~int"
+external ( ~- ) : int -> int = "~int"
         (* Unary negation. You can write [-e] instead of [minus e]. *)
 external succ : int -> int = "succ"
         (* [succ x] is [x+1]. *)

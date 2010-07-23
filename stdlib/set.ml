@@ -25,19 +25,19 @@ let remove x s =
   { tree = Baltree.remove (s.order x) s.tree; order = s.order };;
 
 let union s1 s2 =
-  let rec union = fun
-    Empty t2 -> t2
-  | t1 Empty -> t1
-  | (Node(l1, v1, r1, _)) t2 ->
+  let rec union x1 x2 = match x1, x2 with
+    Empty, t2 -> t2
+  | t1, Empty -> t1
+  | (Node(l1, v1, r1, _)), t2 ->
       let (l2, _, r2) = Baltree.split (s1.order v1) t2 in
       Baltree.join (union l1 l2) v1 (union r1 r2) in
   { tree = union s1.tree s2.tree; order = s1.order };;
 
 let inter s1 s2 =
-  let rec inter = fun
-    Empty t2 -> Empty
-  | t1 Empty -> Empty
-  | (Node(l1, v1, r1, _)) t2 ->
+  let rec inter x1 x2 = match x1, x2 with
+    Empty, t2 -> Empty
+  | t1, Empty -> Empty
+  | (Node(l1, v1, r1, _)), t2 ->
       match Baltree.split (s1.order v1) t2 with
         (l2, Nothing, r2) ->
           Baltree.concat (inter l1 l2) (inter r1 r2)
@@ -46,10 +46,10 @@ let inter s1 s2 =
   { tree = inter s1.tree s2.tree; order = s1.order };;
 
 let diff s1 s2 =
-  let rec diff = fun
-    Empty t2 -> Empty
-  | t1 Empty -> t1
-  | (Node(l1, v1, r1, _)) t2 ->
+  let rec diff x1 x2 = match x1, x2 with
+    Empty, t2 -> Empty
+  | t1, Empty -> t1
+  | (Node(l1, v1, r1, _)), t2 ->
       match Baltree.split (s1.order v1) t2 with
         (l2, Nothing, r2) ->
           Baltree.join (diff l1 l2) v1 (diff r1 r2)

@@ -61,3 +61,9 @@ let rec for_all2 pred l1 l2 =
 let rec replicate_list elem n =
   if n <= 0 then [] else elem :: replicate_list elem (n-1)
 
+
+let create_hashtable size init =
+  let tbl = Hashtbl.create size in
+  List.iter (fun (key, data) -> Hashtbl.add tbl key data) init;
+  tbl
+

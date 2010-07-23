@@ -24,10 +24,11 @@ fun() ->
   c
 ;;
 
-let except_nth = except_l_n
-  where rec except_l_n = fun
-    [] _ -> []
-  | (elem::l) n -> if n = 0 then l else elem::except_l_n l (n-1)
+let except_nth =
+ let rec except_l_n x1 x2 = match x1, x2 with
+    [], _ -> []
+  | (elem::l), n -> if n = 0 then l else elem::except_l_n l (n-1)
+ in  except_l_n
 ;;
 
 let replace_decl (Decl(s, _)) sm sigma =

@@ -1,4 +1,4 @@
-type registre == int;;
+type registre = int;;
 
 type operande =
      Reg of registre

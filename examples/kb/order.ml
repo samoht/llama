@@ -9,9 +9,10 @@ and gt_ord order pair = match order pair with Greater -> true | _ -> false
 and eq_ord order pair = match order pair with Equal -> true | _ -> false
 ;;
 
-let rem_eq equiv = remrec where rec remrec x = function
+let rem_eq equiv = let rec remrec x = function
   | []  -> failwith "rem_eq"
   | y :: l -> if equiv (x,y) then l else y :: remrec x l
+in remrec
 ;;
 
 let diff_eq equiv (x,y) =
@@ -57,8 +58,8 @@ let lex_ext order = function
 ;;
 
 (* recursive path ordering *)
-let rpo op_order ext = rporec
-  where rec rporec (m, n) =
+let rpo op_order ext =
+let rec rporec (m, n) =
     if m = n then Equal else 
       match m with
       | Var m -> NotGE
@@ -76,4 +77,5 @@ let rpo op_order ext = rporec
               | NotGE ->
                   if exists (fun m' -> ge_ord rporec (m', n)) sons1
                   then Greater else NotGE
+in rporec
 ;;

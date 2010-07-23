@@ -15,15 +15,17 @@ let rec combine = function
 ;;
 
 let map_combine f =
-  map where rec map = function
+  let rec map = function
     [], [] -> []
   | h1::t1, h2::t2 -> f (h1,h2) :: map (t1,t2)
   | _ -> invalid_arg "map_combine"
+  in map
 ;;
 
 let do_list_combine f =
-  dol where rec dol = function
+  let rec dol = function
     [], [] -> ()
   | h1::t1, h2::t2 -> f (h1,h2); dol (t1,t2)
   | _ -> invalid_arg "do_list_combine"
+  in dol
 ;;

@@ -81,16 +81,16 @@ let protect_current_module fct =
 
 let protect_current_input fct =
   let saved_input_name = !input_name
-  and saved_input_chan = !input_chan
+(*  and saved_input_chan = !input_chan*)
   and saved_input_lexbuf = !input_lexbuf in
   try
     fct();
     input_lexbuf := saved_input_lexbuf;
-    input_chan := saved_input_chan;
+(*    input_chan := saved_input_chan;*)
     input_name := saved_input_name
   with x ->
     input_lexbuf := saved_input_lexbuf;
-    input_chan := saved_input_chan;
+(*    input_chan := saved_input_chan;*)
     input_name := saved_input_name;
     raise x
 ;;
@@ -109,10 +109,10 @@ let loadfile env filename =
   try
     protect_current_input (fun () ->
       input_name := truename;
-      input_chan := ic;
-      input_lexbuf := lexbuf;
+(*      input_chan := ic;*)
+      input_lexbuf := Some lexbuf;
       while true do
-        do_toplevel_phrase env (Parser.toplevel_phrase Lexer.main lexbuf)
+        do_toplevel_phrase env (Parser.toplevel_phrase Lexer.token lexbuf)
       done)
   with End_of_file -> close_in ic
      | x -> close_in ic; raise x

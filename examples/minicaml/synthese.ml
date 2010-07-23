@@ -1,7 +1,7 @@
 open Syntaxe
 open Types
 
-type environnement == (string * schéma_de_types) list;;
+type environnement = (string * schéma_de_types) list;;
 
 exception Erreur of string;;
 

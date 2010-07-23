@@ -103,7 +103,7 @@ type directiveu =
 
 type toplevel_phrase =
     Ptop_def of structure_item
-  | Ptop_dir of directiveu (* string * directive_argument *)
+  | Ptop_dir of string * directive_argument
 
 and directive_argument =
     Pdir_none
@@ -111,3 +111,6 @@ and directive_argument =
   | Pdir_int of int
   | Pdir_ident of Longident.t
   | Pdir_bool of bool
+
+type structure = structure_item list
+type signature = signature_item list

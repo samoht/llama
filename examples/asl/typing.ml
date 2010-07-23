@@ -40,13 +40,14 @@ let rec shorten t =
    | t' -> t';;
 exception TypeClash of asl_type * asl_type;;
 
-let occurs {index=n;value=_} = occrec
-  where rec occrec =
+let occurs {index=n;value=_} =
+  let rec occrec =
   function TypeVar{index=m;value=Unknown} -> (n=m)
          | TypeVar{index=m;value=t} -> (n=m) or (occrec t)
          | Number -> false
          | Arrow(t1,t2) -> (occrec t1) or (occrec t2)
          | Unknown -> raise (TypingBug "occurs")
+  in occrec
 ;;
 
 let rec unify (tau1,tau2) =
@@ -75,14 +76,15 @@ let init_typing_env =
          init_env ;;
 
 let global_typing_env = ref init_typing_env;;
-let vars_of_type tau = vars [] tau
- where rec vars vs =
+let vars_of_type tau =
+let rec vars vs =
   function Number -> vs
          | TypeVar {index=n; value=Unknown}
                  -> if mem n vs then vs else n::vs
          | TypeVar {index=_; value= t} -> vars vs t
          | Arrow(t1,t2) -> vars (vars vs t1) t2
-         | Unknown -> raise (TypingBug "vars_of_type");;
+         | Unknown -> raise (TypingBug "vars_of_type")
+in  vars [] tau;;
 
 let unknowns_of_type (bv,t) =
     subtract (vars_of_type t) bv;;
@@ -108,8 +110,8 @@ let gen_instance (Forall(gv,tau)) =
   let unknowns =
       map (function n -> n, TypeVar(new_vartype()))
           gv
-  in ginstance tau
-  where rec ginstance = function
+  in
+ let rec ginstance = function
       | (TypeVar {index=n; value=Unknown} as t) ->
                     (try assoc n unknowns
                      with Not_found -> t)
@@ -117,9 +119,10 @@ let gen_instance (Forall(gv,tau)) =
       | Number -> Number
       | Arrow(t1,t2) -> Arrow(ginstance t1, ginstance t2)
       | Unknown -> raise (TypingBug "gen_instance")
+ in  ginstance tau
 ;;
-let rec asl_typing_expr gamma = type_rec
-where rec type_rec = function
+let rec asl_typing_expr gamma = 
+let rec type_rec = function
     Const _ -> Number
   | Var n ->
       let sigma =
@@ -141,7 +144,7 @@ where rec type_rec = function
       let u = TypeVar(new_vartype()) in
       let s = Forall([],u)
       in Arrow(u,asl_typing_expr (s::gamma) e)
-;;
+in type_rec;;
 
 let tvar_name n =
  (* Computes a name "'a", ... for type variables, *)
@@ -158,11 +161,14 @@ let tvar_name n =
 let print_type_scheme (Forall(gv,t)) =
  (* Prints a type scheme.               *)
  (* Fails when it encounters an unknown *)
- let names = (names_of (1,gv)
-      where rec names_of = function
+ let names =
+   let rec names_of = function
            | (n,[]) -> []
            | (n,(v1::lv)) -> (tvar_name n)
-                           ::(names_of (n+1, lv))) in
+                           ::(names_of (n+1, lv))
+   in
+   (names_of (1,gv))
+ in
  let tvar_names = combine (rev gv,names) in
  let rec print_rec = function
     | TypeVar{index=n; value=Unknown} ->

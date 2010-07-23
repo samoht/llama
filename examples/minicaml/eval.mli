@@ -12,7 +12,7 @@ and fermeture =
   { définition: (motif * expression) list;
     mutable environnement: environnement }
 
-and environnement == (string * valeur) list;;
+and environnement = (string * valeur) list;;
 
 val évalue: environnement -> expression -> valeur
 val évalue_définition: environnement -> définition -> environnement

@@ -24,14 +24,14 @@ let interactive_loop env =
   Meta.set_global_data 16 repr_true; (* 16: cf ../runtime/globals.h *)
   (* start parsing stdin *)
   let lexbuf = Lexing.from_channel stdin in
-  input_lexbuf := lexbuf;
+  input_lexbuf := Some lexbuf;
   let envref = ref env in
   while true do
     try
       Format.print_string toplevel_input_prompt;
       Format.print_flush ();
       reset_rollback();
-      let phr = Parser.toplevel_phrase Lexer.main lexbuf in
+      let phr = Parser.toplevel_phrase Lexer.token lexbuf in
       envref := do_toplevel_phrase !envref phr
     with
       | End_of_file ->

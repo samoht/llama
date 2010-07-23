@@ -11,7 +11,7 @@ let before env {exp_loc = loc} l =
   if !record_events then
     Levent({ev_kind = Lbefore;
             ev_file = Env.current_unit();
-            ev_char = loc.loc_start;
+            ev_char = loc.loc_start.Lexing.pos_cnum;
             ev_env = env;
             ev_pos = 0}, l)
   else l
@@ -21,7 +21,7 @@ let after_pat env {pat_loc = loc} l =
   if !record_events then
     Levent({ev_kind = Lbefore;
             ev_file = Env.current_unit();
-            ev_char = loc.loc_end;
+            ev_char = loc.loc_end.Lexing.pos_cnum;
             ev_env = env;
             ev_pos = 0}, l)
   else l
@@ -31,7 +31,7 @@ let after env {exp_loc = loc; exp_type = ty} l =
   if !record_events then
     Levent({ev_kind = Lafter ty;
             ev_file = Env.current_unit();
-            ev_char = loc.loc_end;
+            ev_char = loc.loc_end.Lexing.pos_cnum;
             ev_env = env;
             ev_pos = 0}, l)
   else l

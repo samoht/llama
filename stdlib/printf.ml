@@ -9,7 +9,7 @@ open Io
 open List
 open Obj
 
-type ('a, 'b, 'c) format == string;;
+type ('a, 'b, 'c) format = string;;
 
 let fprintf outchan format =
   let rec doprn i =

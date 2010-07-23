@@ -287,8 +287,8 @@ let make_initial_matching = function
 ;;
 
 let partial_fun loc =
-  let start = loc.loc_start in
-  let stop = loc.loc_end in
+  let start = loc.loc_start.Lexing.pos_cnum in
+  let stop = loc.loc_end.Lexing.pos_cnum in
   Lprim(Praise,
     [Lconst(SCblock(match_failure_tag,
       [SCatom(ACstring !input_name);SCatom(ACint start);SCatom(ACint stop)]))])

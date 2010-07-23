@@ -31,147 +31,171 @@ let tl = function
   | a::l -> l
 ;;
 
-let rec rev_append = fun
-      []   l' -> l'
-  | (a::l) l' -> rev_append l (a::l')
+let rec rev_append l1 l' = match l1 with
+      []  -> l'
+  | (a::l) -> rev_append l (a::l')
 ;;
 
 let rev l = rev_append l []
 ;;
 
-let do_list f = do_list_f
- where rec do_list_f = function
+let do_list f =
+  let rec do_list_f = function
      [] -> () | [x] -> f x | x::l -> f x; do_list_f l
+  in
+ do_list_f
 ;;
 
 let do_list2 f =
-  dol where rec dol = fun
-    [] [] -> ()
-  | (h1::t1) (h2::t2) -> f h1 h2; dol t1 t2
-  | _ _ -> invalid_arg "do_list2"
+  let rec dol l1 l2 = match l1, l2 with
+    [], [] -> ()
+  | (h1::t1), (h2::t2) -> f h1 h2; dol t1 t2
+  | _ -> invalid_arg "do_list2"
+  in dol
 ;;
 
 let map f = function
     [] -> []
   | [a] -> [f a]
   | [a1; a2] -> [f a1; f a2]
-  | l -> map_f l
-      where rec map_f = function
+  | l -> 
+      let rec map_f = function
           [] -> [] | a::l -> f a::map_f l
+      in map_f l
 ;;
 
-let map2 f =
-  map where rec map = fun
-    [] [] -> []
-  | (h1::t1) (h2::t2) -> f h1 h2 :: map t1 t2
-  | _ _ -> invalid_arg "map2"
+let rec map2 f =
+  let rec map l1 l2 =
+    match l1, l2 with
+        [], [] -> []
+      | (h1::t1), (h2::t2) -> f h1 h2 :: map t1 t2
+      | _ -> invalid_arg "map2"
+  in map
 ;;
 
-let it_list f = it_list_f
- where rec it_list_f a = function
+let it_list f =
+ let rec it_list_f a = function
      [] -> a | b::l -> it_list_f (f a b) l
+ in it_list_f
 ;;
 
 let it_list2 f =
-  itl where rec itl a = fun
-    [] [] -> a
-  | (h1::t1) (h2::t2) -> itl (f a h1 h2) t1 t2
-  | _ _ -> invalid_arg "it_list2"
+  let rec itl a l1 l2 = match l1, l2 with
+    [], [] -> a
+  | (h1::t1), (h2::t2) -> itl (f a h1 h2) t1 t2
+  | _ -> invalid_arg "it_list2"
+  in itl
 ;;
 
-let list_it f l b = list_it_f l
- where rec list_it_f = function
+let list_it f l b =
+ let rec list_it_f = function
      [] -> b | a::l -> f a (list_it_f l)
+ in list_it_f l
 ;;
 
 let list_it2 f l1 l2 a =
-  lit l1 l2
-  where rec lit = fun
-    [] [] -> a
-  | (h1::t1) (h2::t2) -> f h1 h2 (lit t1 t2)
-  | _ _ -> invalid_arg "list_it2"
+  let rec lit l1 l2 = match l1, l2 with
+    [], [] -> a
+  | (h1::t1), (h2::t2) -> f h1 h2 (lit t1 t2)
+  | _ -> invalid_arg "list_it2"
+  in lit l1 l2
 ;;
 
 let rec flatten = function
     [] -> []
   | l::r -> l @ flatten r
 
-let flat_map f = flat_map_f
- where rec flat_map_f = function
+let flat_map f = 
+ let rec flat_map_f = function
      [] -> [] | x::l -> f x @ flat_map_f l
+ in flat_map_f
 ;;
 
-let for_all p = for_all_p
- where rec for_all_p = function
+let for_all p =
+ let rec for_all_p = function
      [] -> true | a::l -> p a && for_all_p l
+ in for_all_p
 ;;
 
-let exists p = exists_p
- where rec exists_p = function
+let exists p =
+ let rec exists_p = function
      [] -> false | a::l -> p a || exists_p l
+ in exists_p
 ;;
 
-let mem x = mem_x
- where rec mem_x = function
+let mem x =
+  let rec mem_x = function
      [] -> false | y::l -> x = y || mem_x l
+  in mem_x
 ;;
 
-let memq x = memq_x
- where rec memq_x = function
+let memq x =
+  let rec memq_x = function
      [] -> false | y::l -> x == y || memq_x l
+  in memq_x
 ;;
 
-let except e = except_e
- where rec except_e = function
+let except e =
+  let rec except_e = function
      [] -> []
    | elem::l -> if e = elem then l else elem::except_e l
+  in except_e
 ;;
 
-let exceptq e = exceptq_e
- where rec exceptq_e = function
+let exceptq e =
+  let rec exceptq_e = function
      [] -> []
    | elem::l -> if e == elem then l else elem::exceptq_e l
+  in
+  exceptq_e
 ;;
 
-let subtract = fun
-    f [] -> f
-  | f e  -> subtract_e f
-     where rec subtract_e = function
+let subtract f = function
+    [] -> f
+  | e  ->
+      let rec subtract_e = function
          [] -> []
        | elem::l -> if mem elem e then subtract_e l else elem :: subtract_e l
+      in subtract_e f
 ;;
 
 let union l1 l2 =
-  union_rec l1 where rec union_rec = function
+  let rec union_rec = function
     [] -> l2
   | a::l -> if mem a l2 then union_rec l else a :: union_rec l
+  in union_rec l1
 ;;
 
 let intersect l1 l2 =
-  inter_rec l1 where rec inter_rec = function
+  let rec inter_rec = function
     [] -> []
   | a::l -> if mem a l2 then a :: inter_rec l else inter_rec l
+  in inter_rec l1
 ;;
 
 let index a =
-  index_rec 0 where rec index_rec i = function
+  let rec index_rec i = function
      []  -> raise Not_found
   | b::l -> if a = b then i else index_rec (succ i) l
+  in index_rec 0
 ;;
 
-let assoc name = assoc_rec where rec assoc_rec =
+let assoc name = let rec assoc_rec =
   function [] -> raise Not_found
          | (x,y)::l -> if name = x then y else assoc_rec l
+in assoc_rec
 ;;
 
-let assq name = assoc_rec where rec assoc_rec =
+let assq name = let rec assoc_rec =
   function [] -> raise Not_found
          | (x,y)::l -> if name == x then y else assoc_rec l
+in assoc_rec
 ;;
 
-let mem_assoc name = assoc_rec where rec assoc_rec =
+let mem_assoc name = let rec assoc_rec =
   function [] -> false
          | (x,y)::l -> name = x || assoc_rec l
+in assoc_rec
 ;;
 
 let rec find p = function

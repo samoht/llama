@@ -13,7 +13,7 @@ and fermeture =
   { définition: (motif * expression) list;
     mutable environnement: environnement }
 
-and environnement == (string * valeur) list;;
+and environnement = (string * valeur) list;;
 
 exception Erreur of string;;
 exception Échec_filtrage;;

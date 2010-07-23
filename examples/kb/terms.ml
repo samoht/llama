@@ -11,37 +11,41 @@ and vars_of_list = function
   | t :: r -> union (vars t) (vars_of_list r)
 ;;
 
-let substitute subst = subst_rec where rec subst_rec = function
+let substitute subst = let rec subst_rec = function
   | Term (oper, sons) -> Term (oper, map subst_rec sons)
   | Var (n) as t      -> try assoc n subst with Not_found -> t
+in subst_rec
 ;;
 
-let change f = change_rec where rec change_rec =
-  fun (h :: t) n -> if n = 1 then f h :: t else h :: change_rec t (n - 1)
-   |    _      _ -> failwith "change"
+let change f =
+  let rec change_rec x y = match x, y with
+   (h :: t), n -> if n = 1 then f h :: t else h :: change_rec t (n - 1)
+   |    _       -> failwith "change"
+in change_rec
 ;;
 
 (* Term replacement replace m u n => m[u<-n] *)
-let replace m u n = reprec (m, u)
-  where rec reprec = function
+let replace m u n =
+  let rec reprec = function
   | _, [] -> n
   | Term (oper, sons), (n :: u) ->
              Term (oper, change (fun p -> reprec (p, u)) sons n)
   | _ -> failwith "replace"
+in reprec (m, u)
 ;;
 
 (* matching = - : (term -> term -> subst) *)
 let matching term1 term2 =
-  let rec match_rec subst = fun
-    | (Var v) m ->
+  let rec match_rec subst x y= match x, y with
+    | (Var v) ,m ->
         if mem_assoc v subst then
           if m = assoc v subst then subst else failwith "matching"
         else
           (v,m) :: subst
-    | (Term (op1, sons1)) (Term (op2, sons2)) ->
+    | (Term (op1, sons1)), (Term (op2, sons2)) ->
 	if op1 = op2 then it_list2 match_rec subst sons1 sons2
                      else failwith "matching"
-    | _ _ ->
+    | _  ->
         failwith "matching" in
   match_rec [] term1 term2
 ;;
@@ -52,9 +56,10 @@ let compsubst subst1 subst2 =
   (map (fun (v, t) -> (v, substitute subst1 t)) subst2) @ subst1
 ;;
 
-let occurs n = occur_rec where rec occur_rec = function
+let occurs n = let rec occur_rec = function
   | Var m -> m=n
   | Term (_, sons) -> exists occur_rec sons
+in occur_rec
 ;;
 
 let rec unify = function

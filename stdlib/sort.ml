@@ -2,11 +2,12 @@
 (* Merging and sorting *)
 
 let merge order =
-  merge_rec where rec merge_rec = fun
-    [] l2 -> l2
-  | l1 [] -> l1
-  | (h1::t1 as l1) (h2::t2 as l2) ->
+  let rec merge_rec m1 m2 = match m1, m2 with
+    [], l2 -> l2
+  | l1, [] -> l1
+  | (h1::t1 as l1), (h2::t2 as l2) ->
       if order h1 h2 then h1 :: merge_rec t1 l2 else h2 :: merge_rec l1 t2
+  in merge_rec
 ;;
 
 let sort order l =

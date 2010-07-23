@@ -3,7 +3,7 @@
 open Prelude
 open Terms
 
-type rule == int * (int * (term * term));;
+type rule = int * (int * (term * term));;
 
 (* standardizes an equation so its variables are 1,2,... *)
 
@@ -38,14 +38,15 @@ let reduce l m =
 ;;
 
 (* A more efficient version of can (rewrite1 (l,r)) for r arbitrary *)
-let reducible l = redrec
-  where rec redrec m =
+let reducible l = 
+  let rec redrec m =
     try
       let _ = matching l m in true
     with Failure _ ->
       match m with
       | Term(_,sons) -> exists redrec sons
       |        _     -> false
+  in redrec
 ;;
 
 (* mreduce : rules -> term -> term *)
@@ -56,8 +57,8 @@ let mreduce rules m =
 (* One step of rewriting in leftmost-outermost strategy, with multiple rules *)
 (* fails if no redex is found *)
 (* mrewrite1 : rules -> term -> term *)
-let mrewrite1 rules = rewrec
-  where rec rewrec m =
+let mrewrite1 rules =
+  let rec rewrec m =
     try
       mreduce rules m
     with Failure _ ->
@@ -71,16 +72,18 @@ let mrewrite1 rules = rewrec
       match m with
       | Term (f, sons) -> Term (f, tryrec sons)
       | _ -> failwith "mrewrite1"
+  in rewrec
 ;;
 
 (* Iterating rewrite1. Returns a normal form. May loop forever *)
 (* mrewrite_all : rules -> term -> term *)
-let mrewrite_all rules m = rew_loop m
-  where rec rew_loop m =
+let mrewrite_all rules m =
+  let rec rew_loop m =
     try
       rew_loop(mrewrite1 rules m)
     with Failure _ ->
       m
+  in rew_loop m
 ;;
 
 (*

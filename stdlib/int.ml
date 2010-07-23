@@ -1,5 +1,6 @@
 external minus : int -> int = "~int"
 external minus_int : int -> int = "~int"
+external ( ~- ) : int -> int = "~int"
 external succ : int -> int = "succ"
 external pred : int -> int = "pred"
 external ( + ) : int -> int -> int = "+int"

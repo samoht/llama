@@ -108,18 +108,18 @@ let clear_queue q = q.insert <- Nil; q.body <- Nil;;
 let add_queue x q =
  let c = Cons {head = x; tail = Nil} in
  match q with
- | {insert = Cons cell; _ } -> q.insert <- c; cell.tail <- c
+ | {insert = Cons cell } -> q.insert <- c; cell.tail <- c
  (* Invariant: when insert is Nil body should be Nil *)
  | _ -> q.insert <- c; q.body <- c;;
 
 exception Empty_queue;;
 
 let peek_queue = function
- | {body = Cons {head = x; _}; _} -> x
+ | {body = Cons {head = x}} -> x
  | _ -> raise Empty_queue;;
 
 let take_queue = function
- | {body = Cons {head = x; tail = tl}; _} as q ->
+ | {body = Cons {head = x; tail = tl}} as q ->
     q.body <- tl;
     if tl = Nil then q.insert <- Nil; (* Maintain the invariant *)
     x
@@ -139,7 +139,7 @@ let pp_clear_queue state =
     clear_queue state.pp_queue;;
 
 (* Enter a token in the pretty-printer queue *)
-let pp_enqueue state ({length = len;_} as token) =
+let pp_enqueue state ({length = len} as token) =
     state.pp_right_total <- state.pp_right_total + len;
     add_queue token state.pp_queue;;
 
@@ -184,7 +184,7 @@ let pp_force_break_line state =
 let pp_skip_token state =
     (* When calling pp_skip_token the queue cannot be empty *)
     match take_queue state.pp_queue with
-    {elem_size = size; length = len; _} ->
+    {elem_size = size; length = len} ->
        state.pp_left_total <- state.pp_left_total - len;
        state.pp_space_left <- state.pp_space_left + size;;
 
@@ -333,7 +333,7 @@ let clear_scan_stack state = state.pp_scan_stack <- scan_stack_bottom;;
 let set_size state ty =
     match state.pp_scan_stack with
     | Scan_elem (left_tot,
-                 ({elem_size = size; token = tok; _} as queue_elem)) :: t ->
+                 ({elem_size = size; token = tok} as queue_elem)) :: t ->
        (* test if scan stack contains any data that is not obsolete *)
        if left_tot < state.pp_left_total then clear_scan_stack state else
         begin match tok with

@@ -27,7 +27,7 @@ let wrap parsing_fun lexing_fun lexbuf =
         EOF -> ()
       | SEMISEMI -> ()
       | _ -> skip()
-    with Lexer.Lexical_error(_,_,_) ->
+    with Lexer.Error _ ->
       skip() in
   let skip_maybe () =
     if Parsing.is_current_lookahead EOF
@@ -36,22 +36,26 @@ let wrap parsing_fun lexing_fun lexbuf =
   try
     parsing_fun lexing_fun lexbuf
   with Parsing.Parse_error ->
-         let pos1 = Lexing.lexeme_start lexbuf in
-         let pos2 = Lexing.lexeme_end lexbuf in
-         let loc = {loc_start=pos1; loc_end=pos2} in
+         let pos1 = Lexing.lexeme_start_p lexbuf in
+         let pos2 = Lexing.lexeme_end_p lexbuf in
+         let loc = {loc_start=pos1; loc_end=pos2; loc_ghost = false} in
          skip_maybe();
          eprintf "%aSyntax error.\n" output_location loc;
          raise Toplevel
-     | Lexer.Lexical_error(errcode, pos1, pos2) ->
-         let l = {loc_start=pos1; loc_end=pos2} in
+    | Syntaxerr.Error(err) ->
+        Syntaxerr.report_error Format.err_formatter err;
+        raise Toplevel
+     | Lexer.Error(errcode, l) ->
          begin match errcode with
-           Lexer.Illegal_character ->
+           Lexer.Illegal_character _ ->
              eprintf "%aIllegal character.\n" output_location l
          | Lexer.Unterminated_comment ->
              eprintf "%aComment not terminated.\n" output_location l
+(*
          | Lexer.Bad_char_constant ->
              eprintf "%aIll-formed character literal.\n"
                              output_location l
+*)
          | Lexer.Unterminated_string ->
              eprintf "%aString literal not terminated.\n"
                              output_location l
@@ -74,11 +78,11 @@ let compile_interface modname filename =
   and oc = open_out_bin intf_name in
     try
       let env = Env.start_compiling (Module modname) in
+      Location.input_name := source_name;
       let lexbuf = Lexing.from_channel ic in
-      input_name := source_name;
-      input_chan := ic;
-      input_lexbuf := lexbuf;
-      let l = List.rev (wrap Parser.interface Lexer.main lexbuf) in
+      Location.init lexbuf source_name;
+(*      input_lexbuf := Some lexbuf; *)
+      let l = wrap Parser.interface Lexer.token lexbuf in
       let l, sg, env = Resolve.signature env l in
       Typemod.type_signature l;
       close_in ic;
@@ -117,13 +121,12 @@ let compile_impl env modname filename suffix =
      seeks in print_location work. The lexer ignores both \n and \r,
      so this is OK on the Mac and on the PC. *)
   and oc = open_out_bin obj_name in
+  Location.input_name := source_name;
   let lexbuf = Lexing.from_channel ic in
-    input_name := source_name;
-    input_chan := ic;
-    input_lexbuf := lexbuf;
+  Location.init lexbuf source_name;
     start_emit_phrase oc;
     try
-      let l = wrap Parser.implementation Lexer.main lexbuf in
+      let l = wrap Parser.implementation Lexer.token lexbuf in
       let l, sg, env = Resolve.structure env l in
       Typemod.type_structure l;
       List.iter (compile_impl_phrase oc) l;

@@ -74,19 +74,19 @@ let rec join l x r =
    All elements of l must precede the elements of r.
    Assumes | height l - height r | <= 2. *)
 
-let rec merge = fun
-    Empty t -> t
-  | t Empty -> t
-  | (Node(l1, v1, r1, h1)) (Node(l2, v2, r2, h2)) ->
+let rec merge l r = match l, r with
+    Empty, t -> t
+  | t, Empty -> t
+  | (Node(l1, v1, r1, h1)), (Node(l2, v2, r2, h2)) ->
       bal l1 v1 (bal (merge r1 l2) v2 r2)
 ;;
 
 (* Same as merge, but does not assume anything about l and r. *)
 
-let rec concat = fun
-    Empty t -> t
-  | t Empty -> t
-  | (Node(l1, v1, r1, h1)) (Node(l2, v2, r2, h2)) ->
+let rec concat l r = match l, r with
+    Empty, t -> t
+  | t, Empty -> t
+  | (Node(l1, v1, r1, h1)), (Node(l2, v2, r2, h2)) ->
       join l1 v1 (join (concat r1 l2) v2 r2)
 ;;
 
@@ -180,18 +180,18 @@ let split searchpred =
 (* Comparison (by lexicographic ordering of the fringes of the two trees). *)
 
 let compare cmp s1 s2 =
-  let rec compare_aux = fun
-    [] [] -> 0
-  | [] _  -> -1
-  | _  [] -> 1
-  | (Empty::t1) (Empty::t2) ->
+  let rec compare_aux z1 z2 = match z1, z2 with
+    [], [] -> 0
+  | [], _  -> -1
+  | _ , [] -> 1
+  | (Empty::t1), (Empty::t2) ->
       compare_aux t1 t2
-  | (Node(Empty, v1, r1, _) :: t1) (Node(Empty, v2, r2, _) :: t2) ->
+  | (Node(Empty, v1, r1, _) :: t1), (Node(Empty, v2, r2, _) :: t2) ->
       let c = cmp v1 v2 in
       if c != 0 then c else compare_aux (r1::t1) (r2::t2)
-  | (Node(l1, v1, r1, _) :: t1) t2 ->
+  | (Node(l1, v1, r1, _) :: t1), t2 ->
       compare_aux (l1 :: Node(Empty, v1, r1, 0) :: t1) t2
-  | t1 (Node(l2, v2, r2, _) :: t2) ->
+  | t1, (Node(l2, v2, r2, _) :: t2) ->
       compare_aux t1 (l2 :: Node(Empty, v2, r2, 0) :: t2)
   in
     compare_aux [s1] [s2];;
