@@ -377,10 +377,6 @@ toplevel_phrase:
   | toplevel_directive SEMISEMI          { $1 }
   | EOF                                  { raise End_of_file }
 ;
-top_structure:
-    structure_item                       { [$1] }
-  | structure_item top_structure         { $1 :: $2 }
-;
 use_file:
     use_file_tail                        { $1 }
   | seq_expr use_file_tail               { Ptop_def(ghstrexp $1) :: $2 }
@@ -452,29 +448,6 @@ seq_expr:
 ;
 labeled_simple_pattern:
   | simple_pattern { $1 }
-;
-pattern_var:
-    LIDENT            { mkpat(Ppat_var $1) }
-  | UNDERSCORE        { mkpat Ppat_any }
-;
-opt_default:
-    /* empty */                         { None }
-  | EQUAL seq_expr                      { Some $2 }
-;
-label_let_pattern:
-    label_var
-      { $1 }
-  | label_var COLON core_type
-      { let (lab, pat) = $1 in (lab, mkpat(Ppat_constraint(pat, $3))) }
-;
-label_var:
-    LIDENT    { ($1, mkpat(Ppat_var $1)) }
-;
-let_pattern:
-    pattern
-      { $1 }
-  | pattern COLON core_type
-      { mkpat(Ppat_constraint($1, $3)) }
 ;
 expr:
     simple_expr %prec below_SHARP
@@ -633,19 +606,6 @@ simple_labeled_expr_list:
 labeled_simple_expr:
     simple_expr %prec below_SHARP
       { ($1) }
-;
-label_expr:
-    LABEL simple_expr %prec below_SHARP
-      { ($1, $2) }
-  | TILDE label_ident
-      { $2 }
-  | QUESTION label_ident
-      { ("?" ^ fst $2, snd $2) }
-  | OPTLABEL simple_expr %prec below_SHARP
-      { ("?" ^ $1, $2) }
-;
-label_ident:
-    LIDENT   { ($1, mkexp(Pexp_ident(Lident $1))) }
 ;
 let_bindings:
     let_binding                                 { [$1] }
@@ -816,11 +776,6 @@ type_parameters:
 type_parameter:
     QUOTE ident                   { $2 }
 ;
-type_variance:
-    /* empty */                                 { false, false }
-  | PLUS                                        { true, false }
-  | MINUS                                       { false, true }
-;
 type_parameter_list:
     type_parameter                              { [$1] }
   | type_parameter_list COMMA type_parameter    { $3 :: $1 }
@@ -846,10 +801,6 @@ label_declaration:
 
 /* Polymorphic types */
 
-typevar_list:
-        QUOTE ident                             { [$2] }
-      | typevar_list QUOTE ident                { $3 :: $1 }
-;
 poly_type:
         core_type
           { $1 }
@@ -883,22 +834,6 @@ simple_core_type2:
       { mktyp(Ptyp_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
       { mktyp(Ptyp_constr($4, List.rev $2)) }
-;
-opt_ampersand:
-    AMPERSAND                                   { true }
-  | /* empty */                                 { false }
-;
-amper_type_list:
-    core_type                                   { [$1] }
-  | amper_type_list AMPERSAND core_type         { $3 :: $1 }
-;
-opt_present:
-    LBRACKETGREATER name_tag_list RBRACKET      { List.rev $2 }
-  | /* empty */                                 { [] }
-;
-name_tag_list:
-    name_tag                                    { [$1] }
-  | name_tag_list name_tag                      { $2 :: $1 }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }
@@ -997,18 +932,6 @@ mod_ext_longident:
     UIDENT                                      { Lident $1 }
   | mod_ext_longident DOT UIDENT                { Ldot($1, $3) }
 ;
-mty_longident:
-    ident                                       { Lident $1 }
-  | mod_ext_longident DOT ident                 { Ldot($1, $3) }
-;
-clty_longident:
-    LIDENT                                      { Lident $1 }
-  | mod_ext_longident DOT LIDENT                { Ldot($1, $3) }
-;
-class_longident:
-    LIDENT                                      { Lident $1 }
-  | mod_longident DOT LIDENT                    { Ldot($1, $3) }
-;
 
 /* Toplevel directives */
 
@@ -1023,9 +946,6 @@ toplevel_directive:
 
 /* Miscellaneous */
 
-name_tag:
-    BACKQUOTE ident                             { $2 }
-;
 rec_flag:
     /* empty */                                 { false }
   | REC                                         { true }
