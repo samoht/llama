@@ -129,9 +129,9 @@ let type_excdecl env loc decl =
                                     new_exc_stamp()) in
   let cd =
     constr_name,
-    { cs_parent = snd tref_exn;
+    { cs_parent = tcs_exn;
       cs_name = constr_name;
-      cs_res = type_exn();
+      cs_res = type_exn;
       cs_args = ty_args;
       cs_arity = List.length ty_args;
       cs_tag = constr_tag }

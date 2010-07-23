@@ -286,7 +286,7 @@ let rec type_expr (env : (Id.t * (core_type * mutable_flag)) list) expr =
       let ty = type_expr env body in
       List.iter
         (fun (pat, expr) ->
-          type_expect (type_pattern (pat, type_exn(), Notmutable) @ env) expr ty)
+          type_expect (type_pattern (pat, type_exn, Notmutable) @ env) expr ty)
         matching;
       ty
   | Texp_sequence (e1, e2) ->

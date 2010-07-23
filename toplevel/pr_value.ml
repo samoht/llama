@@ -96,9 +96,9 @@ let rec print_val prio depth obj ty =
     | Tconstr(c, ty_list) when has_abbrev c ->
         let params, body = get_abbrev c in
         print_val prio depth obj (expand_abbrev params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == snd tref_list ->
+    | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == tcs_list ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == snd tref_vect ->
+    | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == tcs_vect ->
         print_vect depth obj ty_arg
     | Tconstr(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
@@ -116,7 +116,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
       let tag = Llama_obj.tag obj in
       begin try
         let constr = 
-          if get_type_constr cstr == snd tref_exn 
+          if get_type_constr cstr == tcs_exn
           then find_exception tag
           else
             find_constr tag constr_list
