@@ -47,17 +47,23 @@ let get_slot_for_variable qualid =
   try
     find_in_numtable !global_table qualid
   with Not_found ->
+    let mn =
+      match qualid.id_module with
+        | Module m -> m
+        | Module_builtin -> "(builtin)"
+        | Module_toplevel -> "(toplevel)"
+    in
     if String.length !object_name > 0 then
       Printf.eprintf
         "The global value %s.%s is referenced (from %s) \
          before being defined.\n\
          Please link %s.zo before %s.\n"
-        "qualid.qual" "qualid.id" !object_name "qualid.qual" !object_name
+        mn qualid.id_name !object_name (String.uncapitalize mn) !object_name
     else
       Printf.eprintf
         "The global value %s.%s is referenced before being defined.\n\
          Please load an implementation of module %s first.\n"
-        "qualid.qual" "qualid.id" "qualid.qual";
+        mn qualid.id_name mn;
     raise Toplevel
 ;;
 

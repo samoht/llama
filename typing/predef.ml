@@ -34,7 +34,7 @@ let tcs_vect = mkty "vect" [vect_tyvar]
 let tcs_option =  mkty "option" [option_tyvar]
 
 let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
-let ref_format = fwdref "printf" "format"
+let ref_format = fwdref "Printf" "format"
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -61,9 +61,9 @@ and type_char =
 and type_vect t =
   {typ_desc=Tconstr(ref_type_constr tcs_vect, [t]); typ_level=notgeneric}
 and type_stream t =
-  {typ_desc=Tconstr(fwdref "stream" "stream", [t]); typ_level=notgeneric}
+  {typ_desc=Tconstr(fwdref "Stream" "stream", [t]); typ_level=notgeneric}
 and type_num = (* windows *)
-  {typ_desc=Tconstr(fwdref "num" "num", []); typ_level=notgeneric}
+  {typ_desc=Tconstr(fwdref "Num" "num", []); typ_level=notgeneric}
 let type_format t1 t2 t3 =
   {typ_desc=Tconstr(ref_format, [t1;t2;t3]); typ_level=notgeneric}
 

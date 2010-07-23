@@ -142,7 +142,7 @@ let compile_implementation modname filename suffix =
     try
       let intfname =
         try
-          find_in_path (modname ^ ".zi")
+          find_in_path (String.lowercase modname ^ ".zi")
         with Cannot_find_file _ ->
           eprintf
             "Cannot find file %s.zi. Please compile %s.mli first.\n"

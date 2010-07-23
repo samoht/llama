@@ -63,7 +63,7 @@ let read_pers_struct modname filename =
     let mn = (input_value ic : string) in
     let mod_sig = (input_value ic : signature_item list) in
     close_in ic;
-    if mn <> String.uncapitalize(*xxx*) modname then
+    if mn <> modname then
       raise(Error(Illegal_renaming(mn, modname)));
     let ps = index mod_sig in
     Hashtbl.add persistent_structures modname ps;    
@@ -76,14 +76,10 @@ let read_pers_struct modname filename =
     raise Toplevel
 
 let find_pers_struct name =
-  let name = String.uncapitalize name(*xxx*) in
   try
     Hashtbl.find persistent_structures name
   with Not_found ->
-    read_pers_struct name (find_in_path (name ^ ".zi"))
-
-
-
+    read_pers_struct name (find_in_path (String.uncapitalize name ^ ".zi"))
 
 let next_exc_stamp = ref 1
 
@@ -95,9 +91,7 @@ let new_exc_stamp () =
 let new_find_module m =
   match m with
     | Module_builtin -> ps_builtin
-    | Module m ->
-        assert (m = String.lowercase m);
-        find_pers_struct m
+    | Module m -> find_pers_struct m
     | Module_toplevel -> failwith "new_find_module"
 
 let get proj r =

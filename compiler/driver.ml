@@ -7,12 +7,12 @@ end
 let process_file ppf name =
   if Filename.check_suffix name ".ml" then begin
     let modname = Filename.chop_suffix name ".ml" in
-    Compiler.compile_implementation (Filename.basename modname) modname ".ml";
+    Compiler.compile_implementation (String.capitalize (Filename.basename modname)) modname ".ml";
     objfiles := (modname ^ ".zo") :: !objfiles
   end
   else if Filename.check_suffix name ".mli" then begin
     let modname = Filename.chop_suffix name ".mli" in
-    Compiler.compile_interface (Filename.basename modname) modname
+    Compiler.compile_interface (String.capitalize (Filename.basename modname)) modname
   end
   else if Filename.check_suffix name ".zo"
        || Filename.check_suffix name ".za" then

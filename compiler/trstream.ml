@@ -47,7 +47,7 @@ let translate_stream translate_expr env stream_comp_list =
 
 (* Translation of stream parsers *)
 
-let module_stream = Module "stream"
+let module_stream = Module "Stream"
 let stream_oper name =
   Lprim(Pget_global ({id_module=module_stream; id_name=name}), [])
 ;;

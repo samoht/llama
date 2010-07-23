@@ -8,9 +8,9 @@ open Types
 (* Print a long identifier *)
 
 let module_id ppf = function
-    Module_builtin -> fprintf ppf "builtin"
+    Module_builtin -> fprintf ppf "(builtin)"
   | Module m -> fprintf ppf "%s" m
-  | Module_toplevel -> fprintf ppf "toplevel"
+  | Module_toplevel -> fprintf ppf "(toplevel)"
 
 let global_id ppf gl =
   fprintf ppf "%a.%s" module_id gl.id_module gl.id_name

@@ -126,7 +126,7 @@ let include_file env name =
 
 let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
-  let modname = Filename.basename simplename in
+  let modname = String.capitalize(Filename.basename simplename) in
   protect_current_module (fun () ->
                          Env.start_compiling (Module modname);
     loadfile env filename)
