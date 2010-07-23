@@ -84,10 +84,8 @@ typing/predef.cmo: typing/types.cmx parsing/asttypes.cmi
 typing/predef.cmx: typing/types.cmx parsing/asttypes.cmi 
 typing/primitive.cmo: 
 typing/primitive.cmx: 
-typing/printtyp.cmo: typing/types.cmx parsing/longident.cmi \
-    parsing/asttypes.cmi 
-typing/printtyp.cmx: typing/types.cmx parsing/longident.cmx \
-    parsing/asttypes.cmi 
+typing/print.cmo: typing/types.cmx typing/module.cmx typing/btype.cmx 
+typing/print.cmx: typing/types.cmx typing/module.cmx typing/btype.cmx 
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi \
     typing/primitive.cmx typing/predef.cmx parsing/parsetree.cmi \
     parsing/parser.cmi typing/module.cmx utils/misc.cmx typing/error.cmx \

@@ -18,10 +18,10 @@ TYPING=typing/primitive.cmx \
  typing/module.cmx \
  typing/env.cmx typing/btype.cmx \
  typing/subst.cmx \
+ typing/print.cmx \
  typing/pr_type.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \
  typing/error.cmx \
- typing/printtyp.cmx \
  typing/includecore.cmx typing/includemod.cmx \
  typing/resolve.cmx \
  typing/typecore.cmx \
