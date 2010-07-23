@@ -1,5 +1,4 @@
 open Types
-open Typedtree
 
 type t
 

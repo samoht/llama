@@ -5,7 +5,8 @@ open Types
 
 type type_expression =
   { te_desc: type_expression_desc;
-    te_loc: Location.t }
+    te_loc: Location.t;
+(*    te_env : Env.t *) }
 
 and type_expression_desc =
     Ttyp_var of Id.t
@@ -16,6 +17,7 @@ and type_expression_desc =
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
+(*    pat_env : Env.t; *)
     mutable pat_type: core_type }
 
 and pattern_desc =
@@ -29,17 +31,16 @@ and pattern_desc =
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label reference * pattern) list
 
-type value_identifier =
-    Zglobal of value reference
-  | Zlocal of Id.t
-
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
+(*     exp_env : Env.t; *)
     mutable exp_type: core_type }
 
+and value_reference = Zlocal of Id.t | Zglobal of value reference
+
 and expression_desc =
-    Texp_ident of value_identifier
+    Texp_ident of value_reference
   | Texp_constant of atomic_constant
   | Texp_tuple of expression list
   | Texp_construct of constructor reference * expression list
