@@ -12,7 +12,7 @@ let gen_type x = Gen_type x
 let gen_exception x = Gen_exception x
 
 let type_structure_item env pstr =
-  reset_type_expression_vars();
+  Resolve.reset_type_expression_vars();
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval expr ->
@@ -25,7 +25,7 @@ let type_structure_item env pstr =
         let phr = mk (Tstr_value(rec_flag, pat_expr_list)) in
         phr, List.map gen_value sg, env
     | Pstr_primitive(id,te,(arity,n)) ->
-        let te = Resolve.type_expression env te in
+        let te = Resolve.type_expression false env te in
         let pr = { prim_arity = arity; prim_name = n } in
         let phr = mk (Tstr_primitive(id, te, pr)) in
         let vd, env = type_valuedecl env pstr.pstr_loc id te (Types.Val_prim pr) in
@@ -46,11 +46,11 @@ let type_structure_item env pstr =
   end
 
 let type_signature_item env psig =
-  reset_type_expression_vars();
+  Resolve.reset_type_expression_vars();
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
     | Psig_value (s,te,pr) ->
-        let te = Resolve.type_expression env te in
+        let te = Resolve.type_expression false env te in
         let pr = Resolve.primitive pr in
         let phr = mk (Tsig_value (s, te, pr)) in
         let vd, env = type_valuedecl env phr.sig_loc s te pr in 

@@ -70,20 +70,30 @@ let define_new_type loc (ty_desc, ty_params, def) =
 let type_typedecl env loc decl =
   (* Enter types. *)
   let temp_env = ref env in
+  let decl =
+    List.map
+      (fun (name, params, tk) ->
+         name, Resolve.bind_type_expression_vars params loc, tk)
+      decl
+  in
+  List.iter
+    begin fun (name, params, def) ->
+      List.iter
+        begin fun v ->
+          v.tvar_type <- new_global_type_var ()
+        end
+        params
+    end
+    decl;
   let newdecl =
     List.map
-      (fun (ty_name, sparams, def) ->
-         let ty_params =
-           try
-             bind_type_expression_vars sparams
-           with Failure "bind_type_expression_vars" ->
-             duplicate_param_in_type_decl_err loc
-         in
+      (fun (ty_name, params, def) ->
+         let params = List.map (fun v -> v.tvar_type) params in
          let ty_desc =
              { tcs_id = Env.make_global_id ty_name;
-               tcs_arity = List.length ty_params;
+               tcs_arity = List.length params;
                tcs_manifest = None;
-               tcs_params = ty_params;
+               tcs_params = params;
                tcs_kind  = Type_abstract } in
          temp_env := Env.add_type ty_name ty_desc !temp_env;
          ty_desc)
@@ -116,11 +126,15 @@ let type_typedecl env loc decl =
         recursive_abbrev_err loc desc
     end
     newdecl;
+  let decl =
+    List.map2 
+      (fun (name, params, def) tcs -> (tcs, params, def)) decl newdecl
+  in
   decl, newdecl, final_env
 
 let type_excdecl env loc decl =
   push_type_level();
-  reset_type_expression_vars ();
+  Resolve.reset_type_expression_vars ();
   let (constr_name, args) = decl in
   let ty_args = List.map (type_of_type_expression true) args in
   let constr_tag = ConstrExtensible({id_module= !Env.current_module;id_name=constr_name},
@@ -140,7 +154,7 @@ let type_excdecl env loc decl =
 
 let type_valuedecl env loc id typexp prim =
   push_type_level();
-  reset_type_expression_vars ();
+  Resolve.reset_type_expression_vars ();
   let ty = type_of_type_expression false typexp in
   pop_type_level();
   generalize_type ty;

@@ -3,13 +3,17 @@
 open Asttypes
 open Types
 
+type type_variable =
+  { tvar_name : string;
+    mutable tvar_type : core_type }
+
 type type_expression =
   { te_desc: type_expression_desc;
     te_loc: Location.t;
-    te_env : Env.t  }
+    te_env : Env.t }
 
 and type_expression_desc =
-    Ttyp_var of string (* resolve earlier? *)
+    Ttyp_var of type_variable
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
   | Ttyp_constr of type_constructor reference * type_expression list
@@ -68,7 +72,7 @@ and stream_pattern =
   | Znontermpat of expression * pattern
   | Texp_streampat of value
 
-type type_rhs =
+type type_body =
     Ttype_abstract
   | Ttype_variant of constr_decl list
   | Ttype_record of (string * type_expression * mutable_flag) list
@@ -80,10 +84,9 @@ type signature_item =
   { sig_desc: signature_item_desc;
     sig_loc: Location.t }
 
-(* resolve strings earlier? *)
 and signature_item_desc =
     Tsig_value of string * type_expression * value_kind
-  | Tsig_type of (string * string list * type_rhs) list
+  | Tsig_type of (type_constructor * type_variable list * type_body) list
   | Tsig_exception of constr_decl
   | Tsig_open of module_name
 
@@ -91,12 +94,11 @@ type structure_item =
   { str_desc: structure_item_desc;
     str_loc: Location.t }
 
-(* resolve strings earlier? *)
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of string * type_expression * Primitive.description
-  | Tstr_type of (string * string list * type_rhs) list
+  | Tstr_type of (type_constructor * type_variable list * type_body) list
   | Tstr_exception of constr_decl
   | Tstr_open of module_name
 

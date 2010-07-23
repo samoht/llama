@@ -55,9 +55,9 @@ and unbound_type_constr_err name loc =
   eprintf "%aThe type constructor %a is unbound.\n"
     output_location loc output_longident name;
   raise Toplevel
-and unbound_type_var_err v ty =
+and unbound_type_var_err v loc =
   eprintf "%aThe type variable %s is unbound.\n"
-    output_location ty.te_loc v;
+    output_location loc v;
   raise Toplevel
 ;;
 

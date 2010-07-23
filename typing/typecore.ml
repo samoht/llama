@@ -14,39 +14,16 @@ open Asttypes;;
 
 (* To convert type expressions to types *)
 
-let type_expr_vars =
-  ref ([] : (string * core_type) list);;
-
-let reset_type_expression_vars () =
-  type_expr_vars := []
-;;
-
-let bind_type_expression_vars var_list =
-  type_expr_vars := [];
-  List.map
-    (fun v ->
-      if List.mem_assoc v !type_expr_vars then
-        failwith "bind_type_expression_vars"
-      else begin
-        let t = new_global_type_var() in
-        type_expr_vars := (v, t) :: !type_expr_vars; t
-      end)
-    var_list
-;;
-
 let type_of_type_expression strict_flag typexp =
   let rec type_of typexp =
     match typexp.te_desc with
     Ttyp_var v ->
-      begin try
-        List.assoc v !type_expr_vars
-      with Not_found ->
-        if strict_flag then
-          unbound_type_var_err v typexp
-        else begin
-          let t = new_global_type_var() in
-          type_expr_vars := (v,t) :: !type_expr_vars; t
-        end
+      if v.tvar_type.typ_desc = Tvar then
+        v.tvar_type
+      else begin
+        let ty = new_global_type_var () in
+        v.tvar_type <- ty;
+        ty
       end
   | Ttyp_arrow(arg1, arg2) ->
       type_arrow(type_of arg1, type_of arg2)
@@ -58,8 +35,10 @@ let type_of_type_expression strict_flag typexp =
       else
         { typ_desc = Tconstr(cstr, List.map type_of args);
           typ_level = notgeneric }
-  in type_of typexp
-;;
+  in
+  let ty = type_of typexp in
+(*  typexp.te_type <- ty;*)
+  ty
 
 (* Typecore of constants *)
 

@@ -25,7 +25,7 @@ let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 
 let do_structure_item env phr =
   reset_type_var();
-  reset_type_expression_vars ();
+  Resolve.reset_type_expression_vars ();
   let phr, sg, env = Typemod.type_structure_item env phr in
   begin match phr.str_desc with
     Tstr_eval expr ->
@@ -64,7 +64,7 @@ let do_structure_item env phr =
   | Tstr_type decl ->
       reset_rollback ();
       List.iter
-        (fun (name, _, _) -> Printf.printf "Type %s defined.\n" name)
+        (fun (tcs, _, _) -> Printf.printf "Type %s defined.\n" tcs.tcs_id.id_name)
         decl
   | Tstr_exception decl ->
       reset_rollback ();

@@ -127,8 +127,9 @@ let val_name v = v.val_id.id_name
 (* Detritus.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let generic = (-1)
-and notgeneric = 0;;
+let generic = -1
+let notgeneric = 0
+let level_global = 1
 
 let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 

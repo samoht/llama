@@ -14,6 +14,20 @@ exception Duplicate_label of string
 let nodup lref s cb =
   if List.mem s !lref then cb () else lref := s :: !lref; s
 
+let type_expr_vars = ref ([] : (string * type_variable) list);;
+let reset_type_expression_vars () = type_expr_vars := []
+
+let bind_type_expression_vars var_list loc =
+  type_expr_vars := [];
+  List.map
+    (fun v ->
+      if List.mem_assoc v !type_expr_vars then
+        Error.duplicate_param_in_type_decl_err loc
+      else begin
+        let t = {tvar_name=v; tvar_type=no_type} in
+        type_expr_vars := (v, t) :: !type_expr_vars; t
+      end)
+    var_list
 
 let rec free_vars_of_pat pat =
   match pat.ppat_desc with
@@ -58,15 +72,29 @@ let lookup_value env li loc =
   try ref_value(Env.lookup_value li env)
   with Not_found -> Error.unbound_value_err li loc
 
-let rec type_expression env te =
+let rec type_expression strict_flag env te =
   { te_desc =
       begin match te.ptyp_desc with
-        | Ptyp_var name -> Ttyp_var name (* should we catch duplicates here? *)
-        | Ptyp_arrow (x, y) -> Ttyp_arrow (type_expression env x, type_expression env y)
-        | Ptyp_tuple l -> Ttyp_tuple (List.map (type_expression env) l)
+        | Ptyp_var v ->
+            Ttyp_var
+              begin try
+                List.assoc v !type_expr_vars
+              with Not_found ->
+                if strict_flag then
+                  Error.unbound_type_var_err v te.ptyp_loc
+                else begin
+                  let t = {tvar_name=v; tvar_type=no_type} in
+                  type_expr_vars := (v,t) :: !type_expr_vars; t
+                end
+              end
+        | Ptyp_arrow (x, y) ->
+            Ttyp_arrow (type_expression strict_flag env x,
+                        type_expression strict_flag env y)
+        | Ptyp_tuple l ->
+            Ttyp_tuple (List.map (type_expression strict_flag env) l)
         | Ptyp_constr (li, l) ->
             Ttyp_constr (lookup_type env li te.ptyp_loc,
-                         List.map (type_expression env) l)
+                         List.map (type_expression strict_flag env) l)
       end;
     te_loc = te.ptyp_loc;
     te_env = env }
@@ -102,7 +130,7 @@ let rec pattern env p =
             in
             Tpat_construct (cs, List.map (pattern env) sargs)
         | Ppat_or (p1, p2) -> Tpat_or (pattern env p1, pattern env p2)
-        | Ppat_constraint (p, te) -> Tpat_constraint (pattern env p, type_expression env te)
+        | Ppat_constraint (p, te) -> Tpat_constraint (pattern env p, type_expression false env te)
         | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, pattern env p)) l)
       end;
     pat_loc = p.ppat_loc;
@@ -169,7 +197,7 @@ let rec expr env ex =
             let v = mkpatvar s in
             let big_env = ext env v in
             Texp_for(v,expr env e1,expr env e2,b,expr big_env e3)
-        | Pexp_constraint(e,te) -> Texp_constraint(expr env e,type_expression env te)
+        | Pexp_constraint(e,te) -> Texp_constraint(expr env e,type_expression false env te)
         | Pexp_array l -> Texp_array(List.map (expr env) l)
         | Pexp_record l -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env e) l)
         | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env li ex.pexp_loc)
@@ -212,7 +240,7 @@ let rec expr env ex =
 
 let constr_decl env (s,tys) =
   let cs = ref [] in
-  (s, List.map (type_expression env) tys)
+  (s, List.map (type_expression true env) tys)
 
 let primitive o =
   begin match o with
@@ -223,11 +251,11 @@ let primitive o =
 let tcs_kind env tk =
   begin match tk with
     | Ptype_abstract -> Ttype_abstract
-    | Ptype_abbrev te -> Ttype_abbrev (type_expression env te)
+    | Ptype_abbrev te -> Ttype_abbrev (type_expression true env te)
     | Ptype_variant cdl ->
         Ttype_variant (List.map (constr_decl env) cdl)
     | Ptype_record l ->
         let lbls = ref [] in
         Ttype_record (List.map (fun (s,te,m) ->
-                                  (s, type_expression env te, m)) l)
+                                  (s, type_expression true env te, m)) l)
   end
