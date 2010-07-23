@@ -19,13 +19,6 @@ type pers_struct =
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
-let ps_builtin =
-  { mod_values = Hashtbl.create 10;
-    mod_constrs = Hashtbl.create 10;
-    mod_labels = Hashtbl.create 10;
-    mod_types = Hashtbl.create 10;
-    working = [] }
-
 let constructors_of_type decl =
   match decl.type_kind with
     Type_variant cstrs -> cstrs
@@ -36,6 +29,35 @@ let labels_of_type decl =
     Type_record(labels) ->labels
   | Type_variant _ | Type_abstract -> []
 
+let index w =
+  let ps = { mod_values = Hashtbl.create 10;
+             mod_constrs = Hashtbl.create 10;
+             mod_labels = Hashtbl.create 10;
+             mod_types = Hashtbl.create 10;
+             working = w }
+  in
+  List.iter
+    begin fun item ->
+      begin match item with
+        | Gen_value (s,gl) ->
+            Hashtbl.add ps.mod_values (Id.name s) gl
+        | Gen_exception (s,gl) ->
+            Hashtbl.add ps.mod_constrs (Id.name s) gl
+        | Gen_type (s,gl) ->
+            Hashtbl.add ps.mod_types (Id.name s) gl;
+            List.iter
+              (fun gl -> Hashtbl.add ps.mod_constrs gl.cs_name gl)
+              (constructors_of_type gl);
+            List.iter
+              (fun gl -> Hashtbl.add ps.mod_labels gl.lbl_name gl)
+              (labels_of_type gl)
+      end
+    end
+    w;
+  ps
+
+let ps_builtin = index Predef.builtin_sig
+
 let read_pers_struct modname filename =
   let ic = open_in_bin filename in
   try
@@ -44,30 +66,7 @@ let read_pers_struct modname filename =
     close_in ic;
     if mn <> String.uncapitalize(*xxx*) modname then
       raise(Error(Illegal_renaming(mn, modname)));
-    let ps = { mod_values = Hashtbl.create 10;
-               mod_constrs = Hashtbl.create 10;
-               mod_labels = Hashtbl.create 10;
-               mod_types = Hashtbl.create 10;
-               working = working }
-    in
-    List.iter
-      begin fun item ->
-        begin match item with
-          | Gen_value (s,gl) ->
-              Hashtbl.add ps.mod_values (Id.name s) gl
-          | Gen_exception (s,gl) ->
-              Hashtbl.add ps.mod_constrs (Id.name s) gl
-          | Gen_type (s,gl) ->
-              Hashtbl.add ps.mod_types (Id.name s) gl;
-              List.iter
-                (fun gl -> Hashtbl.add ps.mod_constrs gl.cs_name gl)
-                (constructors_of_type gl);
-              List.iter
-                (fun gl -> Hashtbl.add ps.mod_labels gl.lbl_name gl)
-                (labels_of_type gl)
-        end
-      end
-      working;
+    let ps = index working in
     Hashtbl.add persistent_structures modname ps;    
     ps
   with End_of_file | Failure _ ->
@@ -130,21 +129,6 @@ let same_type_constr r1 r2 =
 let same_constr r1 r2 = get_constr r1 == get_constr r2
 let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
-
-let ref_label lbl =
-  { ref_id = { gl_module = lbl.lbl_parent.type_id.gl_module;
-               gl_name = lbl.lbl_name };
-    ref_contents = Some lbl }
-let ref_constr cs =
-  { ref_id = { gl_module = cs.cs_parent.type_id.gl_module;
-               gl_name = cs.cs_name };
-    ref_contents = Some cs }
-let ref_value v =
-  { ref_id = v.val_id;
-    ref_contents = Some v }
-let ref_type_constr t =
-  { ref_id = t.type_id;
-    ref_contents = Some t }
 
 let rec erase_type m t = match t.typ_desc with
     Tvar {contents=Tlinkto x} -> erase_type m x

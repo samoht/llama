@@ -3,7 +3,7 @@ open Types
 type t
 
 val empty : t
-val initial : t ref
+val initial : t
 
 val add_value: string -> value -> t -> t
 val add_type: string -> type_constructor -> t -> t

@@ -56,7 +56,7 @@ let initialize () =
   Symtable.reset_linker_tables();
   set_c_primitives (Meta.available_primitives ()); (* currently a no-op *)
   (* load things *)
-  List.iter (Toplevel.load_object !Env.initial) (List.rev !preload_objects);
+  List.iter (Toplevel.load_object Env.initial) (List.rev !preload_objects);
   (* open things *)
   Env.start_compiling Module_toplevel
 

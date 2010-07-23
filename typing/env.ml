@@ -19,8 +19,6 @@ let empty = { values = Tbl.empty;
               labels = Tbl.empty;
               types = Tbl.empty }
 
-let initial = ref empty
-
 
 (* Lookup by name *)
 
@@ -73,8 +71,7 @@ let add_type id info env =
         env.labels;
     types = Tbl.add id info env.types }
 
-let open_pers_signature name env =
-  let ps = find_pers_struct name in
+let open_signature sg env =
   List.fold_left
     (fun env -> function
        | Gen_value (id, vd) ->
@@ -83,7 +80,12 @@ let open_pers_signature name env =
            add_exception id ed env
        | Gen_type (id, td) ->
            add_type id td env)
-    env ps.working
+    env sg
+
+let initial = open_signature ps_builtin.working empty
+
+let open_pers_signature name env =
+  open_signature (find_pers_struct name).working env
 
 let read_signature modname = (find_pers_struct modname).working
 
@@ -111,4 +113,4 @@ let start_compiling m =
   current_module := m;
   let s = if !Clflags.nopervasives then "none" else "cautious" in
   let l = List.assoc s Config.default_used_interfaces in
-  List.fold_left (fun env m -> open_pers_signature m env) !initial l
+  List.fold_left (fun env m -> open_pers_signature m env) initial l

@@ -106,3 +106,19 @@ let constr_global_id cs = { gl_module = cs.cs_parent.type_id.gl_module;
 
 let label_global_id lbl = { gl_module = lbl.lbl_parent.type_id.gl_module;
                             gl_name = lbl.lbl_name }
+
+let ref_label lbl =
+  { ref_id = { gl_module = lbl.lbl_parent.type_id.gl_module;
+               gl_name = lbl.lbl_name };
+    ref_contents = Some lbl }
+let ref_constr cs =
+  { ref_id = { gl_module = cs.cs_parent.type_id.gl_module;
+               gl_name = cs.cs_name };
+    ref_contents = Some cs }
+let ref_value v =
+  { ref_id = v.val_id;
+    ref_contents = Some v }
+let ref_type_constr t =
+  { ref_id = t.type_id;
+    ref_contents = Some t }
+

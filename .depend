@@ -75,10 +75,10 @@ typing/includemod.cmo: typing/types.cmx typing/typedtree.cmi utils/tbl.cmi \
 typing/includemod.cmx: typing/types.cmx typing/typedtree.cmi utils/tbl.cmx \
     typing/subst.cmx typing/includecore.cmx typing/id.cmx typing/error.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
-typing/module.cmo: typing/types.cmx utils/misc.cmx parsing/longident.cmi \
-    typing/id.cmi parsing/asttypes.cmi 
-typing/module.cmx: typing/types.cmx utils/misc.cmx parsing/longident.cmx \
-    typing/id.cmx parsing/asttypes.cmi 
+typing/module.cmo: typing/types.cmx typing/predef.cmx utils/misc.cmx \
+    parsing/longident.cmi typing/id.cmi parsing/asttypes.cmi 
+typing/module.cmx: typing/types.cmx typing/predef.cmx utils/misc.cmx \
+    parsing/longident.cmx typing/id.cmx parsing/asttypes.cmi 
 typing/newresolve.cmo: typing/types.cmx typing/typedtree.cmi utils/tbl.cmi \
     typing/primitive.cmx parsing/parsetree.cmi parsing/parser.cmi \
     typing/module.cmx utils/misc.cmx typing/id.cmi typing/error.cmx \
@@ -95,10 +95,8 @@ typing/pr_type.cmo: typing/types.cmx typing/predef.cmx typing/module.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
 typing/pr_type.cmx: typing/types.cmx typing/predef.cmx typing/module.cmx \
     typing/btype.cmx parsing/asttypes.cmi 
-typing/predef.cmo: typing/types.cmx typing/module.cmx typing/id.cmi \
-    typing/env.cmi parsing/asttypes.cmi 
-typing/predef.cmx: typing/types.cmx typing/module.cmx typing/id.cmx \
-    typing/env.cmx parsing/asttypes.cmi 
+typing/predef.cmo: typing/types.cmx parsing/asttypes.cmi 
+typing/predef.cmx: typing/types.cmx parsing/asttypes.cmi 
 typing/primitive.cmo: 
 typing/primitive.cmx: 
 typing/printtyp.cmo: typing/types.cmx parsing/longident.cmi typing/id.cmi \
