@@ -147,6 +147,7 @@ external snd : 'a * 'b -> 'b = "field1"
 
 external int_of_float : float -> int = "int_of_float"
 external float_of_int : int -> float = "float_of_int";;
+external ( ~-. ) : float -> float = "~float"
 external minus_float : float -> float = "~float"
 external ( +. ) : float -> float -> float = "+float"
 external add_float : float -> float -> float = "+float"

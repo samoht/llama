@@ -31,8 +31,8 @@ let mksig d =
 let mkstr d =
   { pstr_desc = d; pstr_loc = symbol_rloc() }
 
-let reloc_pat x = { x with ppat_loc = symbol_rloc () };;
-let reloc_exp x = { x with pexp_loc = symbol_rloc () };;
+let reloc_pat x = { ppat_desc = x.ppat_desc; ppat_loc = symbol_rloc () };;
+let reloc_exp x = { pexp_desc = x.pexp_desc; pexp_loc = symbol_rloc () };;
 
 let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
@@ -107,7 +107,12 @@ let rec mktailpat = function
       {ppat_desc = Ppat_construct(Lident "::", Some arg); ppat_loc = l}
 
 let ghstrexp e =
-  { pstr_desc = Pstr_eval e; pstr_loc = {e.pexp_loc with loc_ghost = true} }
+  { pstr_desc = Pstr_eval e;
+    pstr_loc =
+      let loc = e.pexp_loc in
+      { loc_start = loc.loc_start;
+        loc_end = loc.loc_end;
+        loc_ghost = true } }
 
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))

@@ -7,11 +7,14 @@ external ge_string : string -> string -> bool = ">=string"
 external gt_string : string -> string -> bool = ">string"
 external compare_strings : string -> string -> int = "compare_strings"
 
+external unsafe_get : string -> int -> char = "get_nth_char"
+external unsafe_set : string -> int -> char -> unit = "set_nth_char"
+
 (* Operation on strings, with sanity checks *)
 
 open Pervasives
 
-let create_string n =
+let create n =
   if n < 0 || n > Sys.max_string_length
   then invalid_arg "create_string"
   else Fstring.create_string n
@@ -41,7 +44,7 @@ let fill_string s start len c =
   else Fstring.fill_string s start len c
 ;;
 
-let blit_string src start_src dst start_dst len =
+let blit src start_src dst start_dst len =
   if start_src < 0 || start_src + len > length src
   || start_dst < 0 || start_dst + len > length dst
   || len < 0

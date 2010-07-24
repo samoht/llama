@@ -20,7 +20,7 @@ let keywords =
   t
 ;;
 
-let buff = create_string 2000;;
+let buff = String.create 2000;;
 
 (***
 let rec ident len = function

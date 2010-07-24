@@ -11,5 +11,6 @@ let is_string_upper s =
 
 let is_upper x =
   begin match x with
-    | Lident s | Ldot (_, s) -> is_string_upper s
+    | Lident s -> is_string_upper s
+    | Ldot (_, s) -> is_string_upper s
   end

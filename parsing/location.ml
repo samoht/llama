@@ -85,7 +85,7 @@ let highlight_dumb ppf lb loc =
     end
   done;
   (* Print character location (useful for Emacs) *)
-  Format.fprintf ppf "Characters %i-%i:@."
+  Format.fprintf ppf "Characters %d-%d:@."
                  loc.loc_start.pos_cnum loc.loc_end.pos_cnum;
   (* Print the input, underlining the location *)
   Format.pp_print_string ppf "  ";
@@ -173,12 +173,12 @@ let print ppf loc =
   in
   if file = "" then begin
     if highlight_locations ppf loc none then () else
-      fprintf ppf "Characters %i-%i:@."
+      fprintf ppf "Characters %d-%d:@."
               loc.loc_start.pos_cnum loc.loc_end.pos_cnum
   end else begin
-    fprintf ppf "%s%s%s%i" msg_file file msg_line line;
-    fprintf ppf "%s%i" msg_chars startchar;
-    fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head;
+    fprintf ppf "%s%s%s%d" msg_file file msg_line line;
+    fprintf ppf "%s%d" msg_chars startchar;
+    fprintf ppf "%s%d%s@.%s" msg_to endchar msg_colon msg_head;
   end
 ;;
 

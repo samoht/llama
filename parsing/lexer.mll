@@ -163,10 +163,11 @@ let update_loc lexbuf file line absolute chars =
                  | None -> pos.pos_fname
                  | Some s -> s
   in
-  lexbuf.lex_curr_p <- { pos with
+  lexbuf.lex_curr_p <- {
     pos_fname = new_file;
     pos_lnum = if absolute then line else pos.pos_lnum + line;
     pos_bol = pos.pos_cnum - chars;
+    pos_cnum = pos.pos_cnum;
   }
 ;;
 
@@ -278,7 +279,12 @@ rule token = parse
         Location.prerr_warning loc Warnings.Comment_not_end;
         lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_curr_pos - 1;
         let curpos = lexbuf.lex_curr_p in
-        lexbuf.lex_curr_p <- { curpos with pos_cnum = curpos.pos_cnum - 1 };
+        lexbuf.lex_curr_p <- {
+          pos_fname = curpos.pos_fname;
+          pos_lnum = curpos.pos_lnum;
+          pos_bol = curpos.pos_bol;
+          pos_cnum = curpos.pos_cnum - 1;
+        };
         STAR
       }
   | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']*

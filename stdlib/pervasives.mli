@@ -227,7 +227,7 @@ external int_of_float : float -> int = "int_of_float"
            range of representable integers. *)
 external float_of_int : int -> float = "float_of_int";;
         (* Convert an integer to floating-point. *)
-
+external ( ~-. ) : float -> float = "~float"
 external minus_float : float -> float = "~float"
         (* Unary negation. *)
 external ( +. ) : float -> float -> float = "+float"

@@ -14,7 +14,7 @@ let char_of_int i =
   else unsafe_char_of_int i
 ;;
 
-let char_for_read = function
+let escaped = function
     '\'' -> "\\'"
   | '\\' -> "\\\\"
   | '\n' -> "\\n"
@@ -48,3 +48,5 @@ let uppercase c =
   else c
 
 let string_of_char c = make_string 1 c;;
+
+let chr = char_of_int

@@ -8,7 +8,7 @@ val char_of_int : int -> char
            outside the range 0--255. *)
 val string_of_char : char -> string
         (* Return a string representing the given character. *)
-val char_for_read : char -> string
+val escaped : char -> string
         (* Return a string representing the given character,
            with special characters escaped following the lexical conventions
            of Caml Light. *)
@@ -25,3 +25,4 @@ val uppercase : char -> char
 
 external is_printable : char -> bool = "is_printable";;
 
+val chr : int -> char

@@ -35,7 +35,7 @@ let minuscule_de car =
     else car;; 
 let minuscules chaîne =
     let chaîne_en_minuscules =
-      create_string (String.length chaîne) in
+      String.create (String.length chaîne) in
     for i = 0 to String.length chaîne - 1 do
       set_nth_char chaîne_en_minuscules i
                    (minuscule_de (nth_char chaîne i))
@@ -48,7 +48,7 @@ let simplifications =
    ("a'","a"); ("e'","e"); ("e'", "e"); ("e^","e"); ("u'","u");
    ("qu'", ""); ("l'", ""); ("d'", "")];;
 let simplifie_mot mot =
-    let nouveau_mot = create_string (String.length mot) in
+    let nouveau_mot = String.create (String.length mot) in
     let i = ref 0 and j = ref 0 in
     let rec cherche_traduction = function
     | [] -> raise Pas_trouvé
@@ -62,7 +62,7 @@ let simplifie_mot mot =
       try
         let (longueur, traduction) =
           cherche_traduction simplifications in
-        blit_string traduction 0 nouveau_mot !j
+        String.blit traduction 0 nouveau_mot !j
                     (String.length traduction);
         i := !i + longueur;
         j := !j + String.length traduction

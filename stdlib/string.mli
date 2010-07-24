@@ -31,8 +31,8 @@ val sub : string -> int -> int -> string
            designate a valid substring of [s]; that is, if [start < 0],
            or [len < 0], or [start + len > string_length s]. *)
 ;;
-val create_string : int -> string
-        (* [create_string n] returns a fresh string of length [n].
+val create : int -> string
+        (* [create n] returns a fresh string of length [n].
            The string initially contains arbitrary characters. *)
 val make : int -> char -> string
         (* [String.make n c] returns a fresh string of length [n],
@@ -44,7 +44,7 @@ val fill_string : string -> int -> int -> char -> unit
            by [c].
            Raise [Invalid_argument "fill_string"] if [start] and [len] do not
            designate a valid substring of [s]. *)
-val blit_string : string -> int -> string -> int -> int -> unit
+val blit : string -> int -> string -> int -> int -> unit
         (* [blit_string s1 o1 s2 o2 len] copies [len] characters
            from string [s1], starting at character number [o1], to string [s2],
            starting at character number [o2]. It works correctly even if
@@ -97,3 +97,6 @@ val rindex_char_from: string -> int -> char -> int;;
            [index_char s c] is equivalent to [index_char_from s 0 c], and
            [rindex_char s c] to
            [rindex_char_from s (string_length s - 1) c]. *)
+
+external unsafe_get : string -> int -> char = "get_nth_char"
+external unsafe_set : string -> int -> char -> unit = "set_nth_char"
