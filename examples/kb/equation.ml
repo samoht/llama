@@ -26,7 +26,7 @@ let pretty_rule (k,(_,(m,n)): rule) =
   print_newline()
 ;;
 
-let pretty_rules = do_list pretty_rule
+let pretty_rules = iter pretty_rule
 ;; 
 
 (****************** Rewriting **************************)

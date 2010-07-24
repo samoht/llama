@@ -65,5 +65,5 @@ let résoudre_étiquette (adresse, nom_étiq) =
     asm.code.(décode_adresse adresse) <- nouvelle_instruction;;
 
 let extraire_code () =
-    do_list résoudre_étiquette asm.à_résoudre;
+    iter résoudre_étiquette asm.à_résoudre;
     sub_vect asm.code 0 (décode_adresse asm.pc);;

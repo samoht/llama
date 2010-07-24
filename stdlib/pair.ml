@@ -22,10 +22,10 @@ let map_combine f =
   in map
 ;;
 
-let do_list_combine f =
+let iter_combine f =
   let rec dol = function
     [], [] -> ()
   | h1::t1, h2::t2 -> f (h1,h2); dol (t1,t2)
-  | _ -> invalid_arg "do_list_combine"
+  | _ -> invalid_arg "iter_combine"
   in dol
 ;;

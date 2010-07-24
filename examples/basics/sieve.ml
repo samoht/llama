@@ -45,7 +45,7 @@ if vect_length Sys.command_line <> 2 then begin
 end else begin
   try
     let n = int_of_string Sys.command_line.(1) in
-    do_list (fun n -> print_int n; print_string " ") (sieve n);
+    iter (fun n -> print_int n; print_string " ") (sieve n);
     print_newline()
   with Failure "int_of_string" ->
     print_string "Bad integer constant";

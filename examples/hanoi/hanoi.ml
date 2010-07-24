@@ -28,7 +28,7 @@ let imprime_jeu nombre_de_disques départ milieu arrivée =
         recolle (tige nombre_de_disques départ)
                 (tige nombre_de_disques milieu)
                 (tige nombre_de_disques arrivée) in
-    do_list imprime dessin;
+    iter imprime dessin;
     let b = base_de_tige nombre_de_disques in imprime (b ^ b ^ b);;
 let ajoute_disque disque (décalage, disques as tige) =
     (décalage - 1, disque::disques);;

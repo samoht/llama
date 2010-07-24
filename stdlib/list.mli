@@ -16,8 +16,8 @@ val map : ('a -> 'b) -> 'a list -> 'b list
         (* [map f [a1; ...; an]] applies function [f] to [a1, ..., an],
            and builds the list [[f a1; ...; f an]]
            with the results returned by [f]. *)
-val do_list : ('a -> unit) -> 'a list -> unit
-        (* [do_list f [a1; ...; an]] applies function [f] in turn to
+val iter : ('a -> unit) -> 'a list -> unit
+        (* [iter f [a1; ...; an]] applies function [f] in turn to
            [a1; ...; an], discarding all the results. It is equivalent to
 	   [begin f a1; f a2; ...; f an; () end]. *)
 val it_list : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
@@ -28,10 +28,10 @@ val map2 : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
         (* [map2 f [a1; ...; an] [b1; ...; bn]] is [[f a1 b1; ...; f an bn]].
 	   Raise [Invalid_argument "map2"] if the two lists have
            different lengths. *)
-val do_list2 : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
-        (* [do_list2 f [a1; ...; an] [b1; ...; bn]] calls in turn
+val iter2 : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
+        (* [iter2 f [a1; ...; an] [b1; ...; bn]] calls in turn
            [f a1 b1; ...; f an bn], discarding the results.
-	   Raise [Invalid_argument "do_list2"] if the two lists have
+	   Raise [Invalid_argument "iter2"] if the two lists have
 	   different lengths. *)
 val it_list2 : ('a -> 'b -> 'c -> 'a) -> 'a -> 'b list -> 'c list -> 'a
         (* [it_list2 f a [b1; ...; bn] [c1; ...; cn]] is

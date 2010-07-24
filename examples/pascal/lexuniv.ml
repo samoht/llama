@@ -78,7 +78,7 @@ let rec analyseur table flux =
       | [< >] -> raise Parse_failure);;
 let construire_analyseur mots_clés =
     let table_des_mots_clés = Hashtbl.create 17 in
-    do_list
+    iter
       (function mot -> Hashtbl.add table_des_mots_clés mot (MC mot))
       mots_clés;
     analyseur table_des_mots_clés;;

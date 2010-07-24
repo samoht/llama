@@ -107,7 +107,7 @@ let print_entry ic phr =
   if phr.cph_pure then print_endline ", pure" else print_endline ", impure";
   seek_in ic phr.cph_pos;
   print_code ic phr.cph_len;
-  do_list print_reloc phr.cph_reloc
+  iter print_reloc phr.cph_reloc
 ;;
 
 let dump filename =
@@ -116,7 +116,7 @@ let dump filename =
   let n = input_binary_int ic in
   seek_in ic n;
   let index = (input_value ic : compiled_phrase list) in
-  do_list (print_entry ic) (rev index);
+  iter (print_entry ic) (rev index);
   close_in ic
 ;;
 

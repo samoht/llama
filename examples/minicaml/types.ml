@@ -139,7 +139,7 @@ let imprime_schéma schéma =
   compteur_de_variables := 0;
   if schéma.paramètres <> [] then begin
     print_string "pour tout ";
-    do_list (fun var -> imprime_var var; print_string " ")
+    iter (fun var -> imprime_var var; print_string " ")
             schéma.paramètres;
     print_string ", "
   end;

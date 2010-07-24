@@ -7,11 +7,11 @@ let encode entrée sortie codage =
   try
     while true do
       let c = input_char entrée in
-      do_list (Esbit.écrire_bit sortie)
+      iter (Esbit.écrire_bit sortie)
               codage.caractère.(int_of_char c)
     done
   with End_of_file ->           (* fin du fichier d'entrée *)
-    do_list (Esbit.écrire_bit sortie) codage.fin;
+    iter (Esbit.écrire_bit sortie) codage.fin;
     Esbit.finir sortie;;
 type arbre_de_huffman =
   | Lettre of char

@@ -39,18 +39,18 @@ let rec rev_append l1 l' = match l1 with
 let rev l = rev_append l []
 ;;
 
-let do_list f =
-  let rec do_list_f = function
-     [] -> () | [x] -> f x | x::l -> f x; do_list_f l
+let iter f =
+  let rec iter_f = function
+     [] -> () | [x] -> f x | x::l -> f x; iter_f l
   in
- do_list_f
+ iter_f
 ;;
 
-let do_list2 f =
+let iter2 f =
   let rec dol l1 l2 = match l1, l2 with
     [], [] -> ()
   | (h1::t1), (h2::t2) -> f h1 h2; dol t1 t2
-  | _ -> invalid_arg "do_list2"
+  | _ -> invalid_arg "iter2"
   in dol
 ;;
 

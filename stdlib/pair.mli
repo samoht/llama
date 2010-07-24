@@ -19,9 +19,9 @@ val map_combine : ('a * 'b -> 'c) -> 'a list * 'b list -> 'c list
            [[f (a1, b1); ...; f (an, bn)]].
 	   Raise [invalid_argument "map_combine"]
 	   if the two lists have different lengths. *)
-val do_list_combine : ('a * 'b -> unit) -> 'a list * 'b list -> unit
-        (* [do_list_combine f ([a1; ...; an], [b1; ...; bn])] calls in turn
+val iter_combine : ('a * 'b -> unit) -> 'a list * 'b list -> unit
+        (* [iter_combine f ([a1; ...; an], [b1; ...; bn])] calls in turn
            [f (a1, b1); ...; f (an, bn)], discarding the results.
-	   Raise [Invalid_argument "do_list_combine"] if the two lists have
+	   Raise [Invalid_argument "iter_combine"] if the two lists have
 	   different lengths. *)
 ;;

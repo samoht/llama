@@ -37,7 +37,7 @@ let rec type_exp env = function
         unifie type_motif type_argument;
         let type_expr = type_exp env_étendu expr in
         unifie type_expr type_résultat in
-      do_list type_cas liste_de_cas;
+      iter type_cas liste_de_cas;
       type_flèche type_argument type_résultat
   | Application(fonction, argument) ->
       let type_fonction = type_exp env fonction in

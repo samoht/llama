@@ -57,7 +57,7 @@ and type_application env nom paramètres arguments =
   let type_paramètre (nom_param, type_param) argument =
     vérifie_type ("le paramètre " ^ nom_param ^ " de " ^ nom)
                  type_param (type_expr env argument) in
-  do_list2 type_paramètre paramètres arguments
+  iter2 type_paramètre paramètres arguments
 
 and type_op_unaire = function
   | "-" -> (Integer, Integer)
@@ -101,7 +101,7 @@ let rec type_instr env = function
       vérifie_type "l'argument de READ"
                    Integer (cherche_variable nom_var env)
   | Bloc liste ->
-      do_list (type_instr env) liste;;
+      iter (type_instr env) liste;;
 let ajoute_var (nom, typ) env = ajoute_variable nom typ env;;
 
 let type_procédure env_global (nom, décl) =
@@ -127,8 +127,8 @@ let type_programme prog =
             (environnement_initial prog.prog_procédures
                                    prog.prog_fonctions) in
   try
-    do_list (type_procédure env_global) prog.prog_procédures;
-    do_list (type_fonction env_global) prog.prog_fonctions;
+    iter (type_procédure env_global) prog.prog_procédures;
+    iter (type_fonction env_global) prog.prog_fonctions;
     type_instr env_global prog.prog_corps
   with Pas_trouvé nom ->
     raise(Erreur_typage(Indéfini nom));;

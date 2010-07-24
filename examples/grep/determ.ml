@@ -40,9 +40,9 @@ let fermeture état = ajoute_fermeture état vide;;
 let fermeture_ens ens = list_it ajoute_fermeture ens.éléments vide;;
 let déplacements liste_états =
   let t = make_vect 256 vide in
-  do_list
+  iter
     (function état ->
-      do_list
+      iter
         (function (car, dest) ->
           let i = int_of_char car in t.(i) <- ajoute dest t.(i))
       état.transitions)

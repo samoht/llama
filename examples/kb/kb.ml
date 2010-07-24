@@ -97,7 +97,7 @@ let kb_completion greater =
                       (match failures with
                          | [] -> rules (* successful completion *)
                          | _  -> message "Non-orientable equations :";
-                             do_list non_orientable failures;
+                             iter non_orientable failures;
                              failwith "kb_completion")
               | (m,n)::eqs ->
                   let m' = normal_form m
@@ -107,7 +107,7 @@ let kb_completion greater =
                     pretty_rule new_rule;
                     let left_reducible (_,(_,(l,_))) = reducible left l in
                     let redl,irredl = partition left_reducible rules in
-                    do_list deletion_message redl;
+                    iter deletion_message redl;
                     let irreds =
                       begin
                         let right_reduce (m,(_,(l,r))) = 

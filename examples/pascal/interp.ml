@@ -100,7 +100,7 @@ and exécute_instr env = function
       let emplacement = cherche_variable nom env in
       emplacement := lire_valeur ()
   | Bloc instructions ->
-      do_list (exécute_instr env) instructions
+      iter (exécute_instr env) instructions
 
 and appelle_proc proc arguments =
   let env =

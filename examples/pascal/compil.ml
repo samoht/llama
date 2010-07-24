@@ -107,7 +107,7 @@ let rec compile_expr env expr reg =
       let nbr_args = list_length arguments in
       réserve_pile nbr_args;
       let position = ref 0 in
-      do_list (function arg ->
+      iter (function arg ->
                 compile_expr env arg 1;
                 printf "store sp, %d, r 1\n" !position;
                 position := !position + taille_du_mot)
@@ -217,7 +217,7 @@ let rec compile_instr env = function
       let nbr_args = list_length arguments in
       réserve_pile nbr_args;
       let position = ref 0 in
-      do_list (function arg ->
+      iter (function arg ->
                 compile_expr env arg 1;
                 printf "store sp, %d, r 1\n" !position;
                 position := !position + taille_du_mot)
@@ -263,7 +263,7 @@ let rec compile_instr env = function
       printf "read\n";
       affecte_var env nom_var 1
   | Bloc liste_instr ->
-      do_list (compile_instr env) liste_instr
+      iter (compile_instr env) liste_instr
 
 and affecte_var env nom reg =
   let var = cherche_variable nom env in
@@ -287,7 +287,7 @@ let alloue_variable_locale (nom, typ) env =
 let alloue_paramètres liste_des_paramètres environnement =
   let prof = ref 0 in
   let env = ref environnement in
-  do_list
+  iter
    (function (nom,typ) ->
       env := ajoute_variable nom
               {typ=typ;
@@ -345,5 +345,5 @@ let compile_programme prog =
                                    prog.prog_fonctions) in
   compile_instr env_global prog.prog_corps;
   printf "stop\n";
-  do_list (compile_procédure env_global) prog.prog_procédures;
-  do_list (compile_fonction env_global) prog.prog_fonctions;;
+  iter (compile_procédure env_global) prog.prog_procédures;
+  iter (compile_fonction env_global) prog.prog_fonctions;;

@@ -13,14 +13,14 @@ let examine chaîne =
           print_string ("Théorème: pour toute proposition "^var^", ")
       | _ ->
           print_string "Théorème: pour toutes propositions ";
-          do_list (function var -> print_string (var^", ")) variables
+          iter (function var -> print_string (var^", ")) variables
       end;
       print_string chaîne;
       print_newline()
     with Réfutation liaisons ->
       print_string (chaîne ^ " n'est pas un théorème,\n");
       print_string "car la proposition est fausse quand\n";
-      do_list
+      iter
        (function (var, b) ->
          print_string (var ^ " est ");
          print_string (if b then "vraie" else "fausse");

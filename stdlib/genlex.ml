@@ -49,7 +49,7 @@ let get_string () =
 let make_lexer keywords =
 
   let kwd_table = Hashtbl.create 17 in
-  do_list (fun s -> Hashtbl.add kwd_table s (Kwd s)) keywords;
+  iter (fun s -> Hashtbl.add kwd_table s (Kwd s)) keywords;
 
   let ident_or_keyword id =
     try Hashtbl.find kwd_table id with Not_found -> Ident id

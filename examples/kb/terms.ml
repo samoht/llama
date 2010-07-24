@@ -99,7 +99,7 @@ let rec pretty_term = function
 	  |  []   -> ()
           | t::lt -> print_string "(";
                      pretty_term t;
-                     do_list (fun t -> print_string ","; pretty_term t) lt;
+                     iter (fun t -> print_string ","; pretty_term t) lt;
                      print_string ")")
 and pretty_close = function
   | Term (oper, _) as m ->

@@ -19,4 +19,4 @@ let pop s =
 
 let length s = list_length s.c;;
 
-let iter f s = do_list f s.c;;
+let iter f s = iter f s.c;;
