@@ -72,7 +72,7 @@ struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
 #define Short(tbl,n) (((short *)(tbl))[n])
 #endif
 
-int caml_parser_trace = 0;
+int llama_parser_trace = 0;
 
 /* Input codes */
 /* Mirrors parser_input in ../stdlib/parsing.ml */
@@ -146,7 +146,7 @@ value mytest(foo)  /* ML */
     printf("mytest %d\n", Long_val(foo));
 }
 
-value caml_parse_engine(tables, env, cmd, arg)  /* ML */
+value llama_parse_engine(tables, env, cmd, arg)  /* ML */
      struct parser_tables *tables;
      struct parser_env *env;
      value cmd, arg;
@@ -180,7 +180,7 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
       env->curr_char = Field(tables->transl_const, Int_val(arg));
       modify(&env->lval, Val_long(0));
     }
-    if (caml_parser_trace) print_token(tables, state, arg);
+    if (llama_parser_trace) print_token(tables, state, arg);
 
   testshift:
     n1 = Short(tables->sindex, state);
@@ -209,15 +209,15 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
         n2 = n1 + ERRCODE;
         if (n1 != 0 && n2 >= 0 && n2 <= Int_val(tables->tablesize) &&
             Short(tables->check, n2) == ERRCODE) {
-          if (caml_parser_trace)
+          if (llama_parser_trace)
             fprintf(stderr, "Recovering in state %d\n", state1);
           goto shift_recover;
         } else {
-          if (caml_parser_trace){
+          if (llama_parser_trace){
             fprintf(stderr, "Discarding state %d\n", state1);
           }
           if (sp <= Int_val(env->stackbase)) {
-            if (caml_parser_trace){
+            if (llama_parser_trace){
               fprintf(stderr, "No more states to discard\n");
             }
             return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
@@ -228,7 +228,7 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
     } else {
       if (Int_val(env->curr_char) == 0)
         return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
-      if (caml_parser_trace) fprintf(stderr, "Discarding last token read\n");
+      if (llama_parser_trace) fprintf(stderr, "Discarding last token read\n");
       env->curr_char = Val_int(-1);
       goto loop;
     }
@@ -237,7 +237,7 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
     env->curr_char = Val_int(-1);
     if (errflag > 0) errflag--;
   shift_recover:
-    if (caml_parser_trace)
+    if (llama_parser_trace)
       fprintf(stderr, "State %d: shift to state %d\n",
               state, Short(tables->table, n2));
     state = Short(tables->table, n2);
@@ -256,7 +256,7 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
     goto loop;
 
   reduce:
-    if (caml_parser_trace)
+    if (llama_parser_trace)
       fprintf(stderr, "State %d: reduce by rule %d\n", state, n);
     m = Short(tables->len, n);
     env->asp = Val_int(sp);
@@ -305,10 +305,10 @@ value caml_parse_engine(tables, env, cmd, arg)  /* ML */
 
 /* Control printing of debugging info */
 
-value caml_set_parser_trace(flag)   /* ML */
+value llama_set_parser_trace(flag)   /* ML */
      value flag;
 {
-  value oldflag = Val_bool(caml_parser_trace);
-  caml_parser_trace = Bool_val(flag);
+  value oldflag = Val_bool(llama_parser_trace);
+  llama_parser_trace = Bool_val(flag);
   return oldflag;
 }

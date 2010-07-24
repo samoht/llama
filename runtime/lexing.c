@@ -57,7 +57,7 @@ struct lexing_table {
 #define Short(tbl,n) (((short *)(tbl))[(n)])
 #endif
 
-value caml_lex_engine(tbl, start_state, lexbuf)  /* ML */
+value llama_lex_engine(tbl, start_state, lexbuf)  /* ML */
     struct lexing_table *tbl;
     value start_state;
     struct lexer_buffer *lexbuf;
@@ -157,7 +157,7 @@ static void run_tag(char *pc, value mem) {
   }
 }
 
-value caml_new_lex_engine(tbl, start_state, lexbuf)  /* ML */
+value llama_new_lex_engine(tbl, start_state, lexbuf)  /* ML */
      struct lexing_table *tbl;
      value start_state;
      struct lexer_buffer *lexbuf;
