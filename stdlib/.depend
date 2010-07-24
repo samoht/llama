@@ -37,12 +37,12 @@ array.zo: sys.zi pervasives.zi farray.zi array.zi
 array.zx: sys.zi pervasives.zx farray.zx array.zi 
 baltree.zo: pervasives.zi baltree.zi 
 baltree.zx: pervasives.zx baltree.zi 
-char.zo: pervasives.zi fstring.zi fchar.zi char.zi 
-char.zx: pervasives.zx fstring.zx fchar.zx char.zi 
+char.zo: pervasives.zi fstring.zi char.zi 
+char.zx: pervasives.zx fstring.zx char.zi 
 farray.zo: pervasives.zi list.zi farray.zi 
 farray.zx: pervasives.zx list.zx farray.zi 
-fchar.zo: pervasives.zi fstring.zi fchar.zi 
-fchar.zx: pervasives.zx fstring.zx fchar.zi 
+fchar.zo: pervasives.zi fchar.zi 
+fchar.zx: pervasives.zx fchar.zi 
 filename.zo: pervasives.zi fstring.zi filename.zi 
 filename.zx: pervasives.zx fstring.zx filename.zi 
 float.zo: pervasives.zi fstring.zi float.zi 

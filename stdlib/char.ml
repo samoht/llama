@@ -1,6 +1,7 @@
 
 external code : char -> int = "identity"
-external is_printable : char -> bool = "is_printable";;
+external is_printable : char -> bool = "is_printable"
+external unsafe_char_of_int : int -> char = "identity"
 
 (* Character operations, with sanity checks *)
 
@@ -10,12 +11,27 @@ open Fstring
 let char_of_int i =
   if i < 0 || i > 255
   then invalid_arg "char_of_int"
-  else Fchar.char_of_int i
+  else unsafe_char_of_int i
 ;;
 
-let char_for_read = Fchar.char_for_read;;
+let char_for_read = function
+    '\'' -> "\\'"
+  | '\\' -> "\\\\"
+  | '\n' -> "\\n"
+  | '\t' -> "\\t"
+  | c ->  if is_printable c then
+            make_string 1 c
+          else begin
+            let n = int_of_char c in
+            let s = create_string 4 in
+            set_nth_char s 0 '\\';
+            set_nth_char s 1 (unsafe_char_of_int (48 + n / 100));
+            set_nth_char s 2 (unsafe_char_of_int (48 + (n / 10) mod 10));
+            set_nth_char s 3 (unsafe_char_of_int (48 + n mod 10));
+            s
+          end
 
-let unsafe_chr = Fchar.char_of_int
+let unsafe_chr = unsafe_char_of_int
 
 let lowercase c =
   if (c >= 'A' && c <= 'Z')

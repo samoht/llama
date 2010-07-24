@@ -221,5 +221,10 @@ external format_int : string -> int -> string = "format_int"
 
 val ( ^ ) : string -> string -> string
 
+(* ---------------------------------------------------------------------- *)
+(* Character operations.                                                  *)
+(* ---------------------------------------------------------------------- *)
 
+external int_of_char : char -> int = "identity"
 
+val char_of_int : int -> char

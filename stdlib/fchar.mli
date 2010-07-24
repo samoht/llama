@@ -12,6 +12,5 @@
 
 external int_of_char : char -> int = "identity"
 external char_of_int : int -> char = "identity"
-val char_for_read : char -> string
 external is_printable : char -> bool = "is_printable"
 ;;
