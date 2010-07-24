@@ -1,9 +1,7 @@
 open Pervasives
-open Pervasives
 open Int
 open Fstring
 open Eq
-open Bool
 open Io
 
 (* Tokens are one of the following : *)

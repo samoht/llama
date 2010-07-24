@@ -1,7 +1,5 @@
 open Pervasives
-open Pervasives
 open Eq
-open Bool
 open Float
 open Int
 open Fstring

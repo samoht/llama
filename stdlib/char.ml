@@ -6,7 +6,6 @@ external is_printable : char -> bool = "is_printable";;
 (* Character operations, with sanity checks *)
 
 open Pervasives
-open Bool
 open Eq
 open Fstring
 

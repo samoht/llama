@@ -2,7 +2,6 @@ exception Bad of string
 
 (* arg.ml *)
 
-open Bool
 open Pervasives
 open Eq
 open Int

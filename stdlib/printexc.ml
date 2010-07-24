@@ -1,7 +1,6 @@
 
 (* A catch-all exception handler *)
 
-open Bool
 open Pervasives
 open Eq
 open Int

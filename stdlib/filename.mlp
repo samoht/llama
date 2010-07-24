@@ -2,7 +2,6 @@ external is_relative : string -> bool = "llama_filename_is_relative"
 
 (* filename.mlp *)
 
-open Bool
 open Int
 open Eq
 open Fstring

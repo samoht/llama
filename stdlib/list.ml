@@ -1,7 +1,6 @@
 (* Operations on lists *)
 
 open Pervasives;;
-open Bool;;
 open Int;;
 open Eq;;
 

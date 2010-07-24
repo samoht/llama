@@ -1,7 +1,6 @@
 arg.zi: 
 array.zi: 
 baltree.zi: 
-bool.zi: 
 char.zi: 
 eq.zi: 
 farray.zi: 
@@ -32,82 +31,80 @@ stack.zi:
 stream.zi: io.zi 
 string.zi: 
 sys.zi: 
-arg.zo: sys.zi list.zi io.zi int.zi fstring.zi float.zi farray.zi \
-    eq.zi bool.zi array.zi arg.zi 
-arg.zx: sys.zi list.zx io.zx int.zx fstring.zx float.zx farray.zx \
-    eq.zx bool.zx array.zx arg.zi 
-array.zo: sys.zi int.zi farray.zi eq.zi bool.zi array.zi 
-array.zx: sys.zi int.zx farray.zx eq.zx bool.zx array.zi 
-baltree.zo: int.zi eq.zi bool.zi baltree.zi 
-baltree.zx: int.zx eq.zx bool.zx baltree.zi 
-bool.zo: pervasives.zi bool.zi 
-bool.zx: pervasives.zx bool.zi 
-char.zo: int.zi fstring.zi fchar.zi eq.zi bool.zi char.zi 
-char.zx: int.zx fstring.zx fchar.zx eq.zx bool.zx char.zi 
+arg.zo: sys.zi pervasives.zi list.zi io.zi int.zi fstring.zi float.zi \
+    farray.zi eq.zi array.zi arg.zi 
+arg.zx: sys.zi pervasives.zx list.zx io.zx int.zx fstring.zx float.zx \
+    farray.zx eq.zx array.zx arg.zi 
+array.zo: sys.zi pervasives.zi int.zi farray.zi eq.zi array.zi 
+array.zx: sys.zi pervasives.zx int.zx farray.zx eq.zx array.zi 
+baltree.zo: pervasives.zi int.zi eq.zi baltree.zi 
+baltree.zx: pervasives.zx int.zx eq.zx baltree.zi 
+char.zo: pervasives.zi int.zi fstring.zi fchar.zi eq.zi char.zi 
+char.zx: pervasives.zx int.zx fstring.zx fchar.zx eq.zx char.zi 
 eq.zo: eq.zi 
 eq.zx: eq.zi 
 farray.zo: list.zi int.zi eq.zi array.zi farray.zi 
 farray.zx: list.zx int.zx eq.zx array.zx farray.zi 
 fchar.zo: int.zi fstring.zi fchar.zi 
 fchar.zx: int.zx fstring.zx fchar.zi 
-filename.zo: int.zi fstring.zi eq.zi bool.zi filename.zi 
-filename.zx: int.zx fstring.zx eq.zx bool.zx filename.zi 
-float.zo: int.zi fstring.zi float.zi 
-float.zx: int.zx fstring.zx float.zi 
+filename.zo: pervasives.zi int.zi fstring.zi eq.zi filename.zi 
+filename.zx: pervasives.zx int.zx fstring.zx eq.zx filename.zi 
+float.zo: pervasives.zi int.zi fstring.zi float.zi 
+float.zx: pervasives.zx int.zx fstring.zx float.zi 
 format.zo: string.zi pervasives.zi obj.zi io.zi int.zi fstring.zi \
-    float.zi eq.zi bool.zi format.zi 
+    float.zi eq.zi format.zi 
 format.zx: string.zx pervasives.zx obj.zi io.zx int.zx fstring.zx \
-    float.zx eq.zx bool.zx format.zi 
+    float.zx eq.zx format.zi 
 fstring.zo: string.zi pervasives.zi list.zi int.zi fchar.zi eq.zi \
     fstring.zi 
 fstring.zx: string.zx pervasives.zx list.zx int.zx fchar.zx eq.zx \
     fstring.zi 
 gc.zo: printf.zi gc.zi 
 gc.zx: printf.zx gc.zi 
-hashtbl.zo: int.zi farray.zi eq.zi array.zi hashtbl.zi 
-hashtbl.zx: int.zx farray.zx eq.zx array.zx hashtbl.zi 
+hashtbl.zo: pervasives.zi int.zi farray.zi eq.zi array.zi hashtbl.zi 
+hashtbl.zx: pervasives.zx int.zx farray.zx eq.zx array.zx hashtbl.zi 
 int.zo: eq.zi int.zi 
 int.zx: eq.zx int.zi 
-io.zo: sys.zi int.zi fstring.zi float.zi eq.zi bool.zi io.zi 
-io.zx: sys.zi int.zx fstring.zx float.zx eq.zx bool.zx io.zi 
-lexing.zo: obj.zi io.zi int.zi fstring.zi eq.zi lexing.zi 
-lexing.zx: obj.zi io.zx int.zx fstring.zx eq.zx lexing.zi 
-list.zo: int.zi eq.zi bool.zi list.zi 
-list.zx: int.zx eq.zx bool.zx list.zi 
+io.zo: sys.zi pervasives.zi int.zi fstring.zi float.zi eq.zi io.zi 
+io.zx: sys.zi pervasives.zx int.zx fstring.zx float.zx eq.zx io.zi 
+lexing.zo: pervasives.zi obj.zi io.zi int.zi fstring.zi eq.zi \
+    lexing.zi 
+lexing.zx: pervasives.zx obj.zi io.zx int.zx fstring.zx eq.zx \
+    lexing.zi 
+list.zo: pervasives.zi int.zi eq.zi list.zi 
+list.zx: pervasives.zx int.zx eq.zx list.zi 
 map.zo: baltree.zi map.zi 
 map.zx: baltree.zx map.zi 
-pair.zo: pair.zi 
-pair.zx: pair.zi 
+pair.zo: pervasives.zi pair.zi 
+pair.zx: pervasives.zx pair.zi 
 parsing.zo: pervasives.zi obj.zi lexing.zi int.zi farray.zi eq.zi \
     array.zi parsing.zi 
 parsing.zx: pervasives.zx obj.zi lexing.zx int.zx farray.zx eq.zx \
     array.zx parsing.zi 
-pervasives.zo: pervasives.zi 
-pervasives.zx: pervasives.zi 
-printexc.zo: sys.zi obj.zi io.zi int.zi farray.zi eq.zi bool.zi \
+pervasives.zo: pervasives.zi pervasives.zi 
+pervasives.zx: pervasives.zx pervasives.zi 
+printexc.zo: sys.zi pervasives.zi obj.zi io.zi int.zi farray.zi eq.zi \
     array.zi printexc.zi 
-printexc.zx: sys.zi obj.zi io.zx int.zx farray.zx eq.zx bool.zx \
+printexc.zx: sys.zi pervasives.zx obj.zi io.zx int.zx farray.zx eq.zx \
     array.zx printexc.zi 
 printf.zo: pervasives.zi obj.zi list.zi io.zi int.zi fstring.zi \
-    float.zi eq.zi bool.zi printf.zi 
+    float.zi eq.zi printf.zi 
 printf.zx: pervasives.zx obj.zi list.zx io.zx int.zx fstring.zx \
-    float.zx eq.zx bool.zx printf.zi 
+    float.zx eq.zx printf.zi 
 queue.zo: pervasives.zi int.zi queue.zi 
 queue.zx: pervasives.zx int.zx queue.zi 
 random.zo: pervasives.zi int.zi float.zi farray.zi eq.zi array.zi \
     random.zi 
 random.zx: pervasives.zx int.zx float.zx farray.zx eq.zx array.zx \
     random.zi 
-set.zo: eq.zi baltree.zi set.zi 
-set.zx: eq.zx baltree.zx set.zi 
+set.zo: pervasives.zi eq.zi baltree.zi set.zi 
+set.zx: pervasives.zx eq.zx baltree.zx set.zi 
 sort.zo: sort.zi 
 sort.zx: sort.zi 
-stack.zo: list.zi stack.zi 
-stack.zx: list.zx stack.zi 
+stack.zo: pervasives.zi list.zi stack.zi 
+stack.zx: pervasives.zx list.zx stack.zi 
 stream.zo: pervasives.zi obj.zi io.zi fstring.zi eq.zi stream.zi 
 stream.zx: pervasives.zx obj.zi io.zx fstring.zx eq.zx stream.zi 
-string.zo: sys.zi int.zi fstring.zi eq.zi bool.zi string.zi 
-string.zx: sys.zi int.zx fstring.zx eq.zx bool.zx string.zi 
-
-genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi int.zi stream.zi hashtbl.zi \
-    float.zi eq.zi list.zi 
+string.zo: sys.zi pervasives.zi int.zi fstring.zi eq.zi string.zi 
+string.zx: sys.zi pervasives.zx int.zx fstring.zx eq.zx string.zi 
+genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi int.zi stream.zi hashtbl.zi float.zi eq.zi list.zi

@@ -2,7 +2,6 @@
    These are binary trees such that the heights of the children
    differ by at most 2. *)
 
-open Bool
 open Int
 open Eq
 open Pervasives

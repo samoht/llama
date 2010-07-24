@@ -27,7 +27,6 @@ exception End_of_file
 
 (* Input-output *)
 
-open Bool
 open Eq
 open Pervasives
 open Int

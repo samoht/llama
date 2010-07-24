@@ -10,7 +10,6 @@ external compare_strings : string -> string -> int = "compare_strings"
 (* Operation on strings, with sanity checks *)
 
 open Pervasives
-open Bool
 open Eq
 open Int
 
