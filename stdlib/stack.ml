@@ -1,6 +1,5 @@
 exception Empty;;
 
-open List
 open Pervasives
 
 type 'a t = { mutable c : 'a list };;
@@ -17,6 +16,6 @@ let pop s =
   | []     -> raise Empty
 ;;
 
-let length s = list_length s.c;;
+let length s = List.length s.c;;
 
-let iter f s = iter f s.c;;
+let iter f s = List.iter f s.c;;

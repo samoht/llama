@@ -7,7 +7,7 @@ let rec length_aux n = function
   | _::l -> length_aux (succ n) l
 ;;
 
-let list_length l =
+let length l =
   length_aux 0 l
 ;;
 

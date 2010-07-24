@@ -51,8 +51,8 @@ let rec type_expr env = function
       type_éléments
 
 and type_application env nom paramètres arguments =
-  let nbr_paramètres = list_length paramètres
-  and nbr_arguments = list_length arguments in
+  let nbr_paramètres = List.length paramètres
+  and nbr_arguments = List.length arguments in
   if nbr_paramètres <> nbr_arguments then
     raise(Erreur_typage(Arité(nom, nbr_paramètres, nbr_arguments)));
   let type_paramètre (nom_param, type_param) argument =

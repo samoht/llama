@@ -105,7 +105,7 @@ let rec compile_expr env expr reg =
                  (!profondeur_pile - n) reg nom
       end
   | Application(fonc, arguments) ->
-      let nbr_args = list_length arguments in
+      let nbr_args = List.length arguments in
       réserve_pile nbr_args;
       let position = ref 0 in
       iter (function arg ->
@@ -215,7 +215,7 @@ let rec compile_instr env = function
          printf "store r %d, r %d, r %d\n" reg1 reg2 1
       | _ -> failwith "Erreur dans le contrôleur de types" end
   | Appel(proc, arguments) ->
-      let nbr_args = list_length arguments in
+      let nbr_args = List.length arguments in
       réserve_pile nbr_args;
       let position = ref 0 in
       iter (function arg ->

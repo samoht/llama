@@ -1,6 +1,6 @@
 (* Operations on lists *)
 
-val list_length : 'a list -> int
+val length : 'a list -> int
         (* Return the length (number of elements) of the given list. *)
 val ( @ ) : 'a list -> 'a list -> 'a list
         (* List concatenation. *)

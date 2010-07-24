@@ -22,7 +22,7 @@ let diff_eq equiv (x,y) =
     | (h :: t, y) -> try diffrec (t, rem_eq equiv h y)
                      with Failure _ ->
                        let (x', y') = diffrec (t, y) in (h :: x', y') in
-  if list_length x > list_length y then
+  if List.length x > List.length y then
     let (y', x') = diffrec (y, x) in (x', y')
   else
     diffrec (x, y)

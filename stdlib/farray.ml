@@ -76,7 +76,7 @@ let list_of_vect v =
 let vect_of_list = function
     [] -> [| |]
   | a::rest as l ->
-      let v = make_vect (List.list_length l) a in
+      let v = make_vect (List.length l) a in
       let rec fill_vect i = function
          []  -> ()
       | a::l -> vect_assign v i a; fill_vect (succ i) l
