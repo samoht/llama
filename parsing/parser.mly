@@ -133,48 +133,8 @@ let unclosed opening_name opening_num closing_name closing_num =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
-let bigarray_function str name =
-  Ldot(Ldot(Lident "Bigarray", str), name)
-
-let bigarray_untuplify = function
-    { pexp_desc = Pexp_tuple explist} -> explist
-  | exp -> [exp]
-
-let bigarray_get arr arg =
-  let get = if !Clflags.fast then "unsafe_get" else "get" in
-  match bigarray_untuplify arg with
-    [c1] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array1" get)),
-                       [arr; c1]))
-  | [c1;c2] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array2" get)),
-                       [arr; c1; c2]))
-  | [c1;c2;c3] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array3" get)),
-                       [arr; c1; c2; c3]))
-  | coords ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Genarray" "get")),
-                       [arr; ghexp(Pexp_array coords)]))
-
-let bigarray_set arr arg newval =
-  let set = if !Clflags.fast then "unsafe_set" else "set" in 
-  match bigarray_untuplify arg with
-    [c1] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array1" set)),
-                       [arr; c1; newval]))
-  | [c1;c2] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array2" set)),
-                       [arr; c1; c2; newval]))
-  | [c1;c2;c3] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array3" set)),
-                       [arr; c1; c2; c3; newval]))
-  | coords ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Genarray" "set")),
-                       [arr;
-                        ghexp(Pexp_array coords);
-                        newval]))
-
 let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
+
 %}
 
 /* Tokens */
@@ -190,13 +150,10 @@ let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
 %token BARRBRACKET
 %token BEGIN
 %token <char> CHAR
-%token CLASS
 %token COLON
 %token COLONCOLON
 %token COLONEQUAL
-%token COLONGREATER
 %token COMMA
-%token CONSTRAINT
 %token DO
 %token DONE
 %token DOT
@@ -213,9 +170,7 @@ let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
 %token FOR
 %token FUN
 %token FUNCTION
-%token FUNCTOR
 %token GREATER
-%token GREATERRBRACE
 %token GREATERRBRACKET
 %token IF
 %token IN
@@ -225,44 +180,29 @@ let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
 %token <string> INFIXOP2
 %token <string> INFIXOP3
 %token <string> INFIXOP4
-%token INHERIT
-%token INITIALIZER
 %token <int> INT
-%token <int32> INT32
-%token <int64> INT64
 %token <string> LABEL
 %token LAZY
 %token LBRACE
-%token LBRACELESS
 %token LBRACKET
 %token LBRACKETBAR
 %token LBRACKETLESS
-%token LBRACKETGREATER
 %token LESS
 %token LESSMINUS
 %token LET
 %token <string> LIDENT
 %token LPAREN
 %token MATCH
-%token METHOD
 %token MINUS
 %token MINUSDOT
 %token MINUSGREATER
-%token MODULE
 %token MUTABLE
-%token <nativeint> NATIVEINT
-%token NEW
-%token OBJECT
 %token OF
 %token OPEN
-%token <string> OPTLABEL
 %token OR
 /* %token PARSER */
 %token PLUS
 %token <string> PREFIXOP
-%token PRIVATE
-%token QUESTION
-%token QUESTIONQUESTION
 %token QUOTE
 %token RBRACE
 %token RBRACKET
@@ -271,12 +211,9 @@ let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
 %token SEMI
 %token SEMISEMI
 %token SHARP
-%token SIG
 %token STAR
 %token <string> STRING
-%token STRUCT
 %token THEN
-%token TILDE
 %token TO
 %token TRUE
 %token TRY
@@ -284,7 +221,6 @@ let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
 %token <string> UIDENT
 %token UNDERSCORE
 %token VAL
-%token VIRTUAL
 %token WHEN
 %token WHILE
 %token WITH
@@ -363,7 +299,9 @@ The precedences must be listed from low to high.
 
 %%
 
-/* Entry points */
+/* ---------------------------------------------------------------------- */
+/* Entry points.                                                          */
+/* ---------------------------------------------------------------------- */
 
 implementation:
     structure EOF                        { $1 }
@@ -391,7 +329,9 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 
-/* Module expressions */
+/* ---------------------------------------------------------------------- */
+/* Structures.                                                            */
+/* ---------------------------------------------------------------------- */
 
 structure:
     structure_tail                              { $1 }
@@ -419,7 +359,9 @@ structure_item:
       { mkstr(Pstr_open $2) }
 ;
 
-/* Module types */
+/* ---------------------------------------------------------------------- */
+/* Signatures.                                                            */
+/* ---------------------------------------------------------------------- */
 
 signature:
     /* empty */                                 { [] }
@@ -439,7 +381,9 @@ signature_item:
       { mksig(Psig_open $2) }
 ;
 
-/* Core expressions */
+/* ---------------------------------------------------------------------- */
+/* Core expressions.                                                      */
+/* ---------------------------------------------------------------------- */
 
 seq_expr:
   | expr        %prec below_SEMI  { $1 }
@@ -528,8 +472,6 @@ expr:
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "set_nth_char")),
                          [$1; $4; $7])) }
-  | simple_expr DOT LBRACE expr RBRACE LESSMINUS expr
-      { bigarray_set $1 $4 $7 }
 /*
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
@@ -571,8 +513,6 @@ simple_expr:
                          [$1; $4])) }
   | simple_expr DOT LBRACKET seq_expr error
       { unclosed "[" 3 "]" 5 }
-  | simple_expr DOT LBRACE expr RBRACE
-      { bigarray_get $1 $4 }
   | simple_expr DOT LBRACE expr_comma_list error
       { unclosed "{" 3 "}" 5 }
   | LBRACE record_expr RBRACE
@@ -671,7 +611,9 @@ type_constraint:
   | COLON error                                 { syntax_error() }
 ;
 
-/* Patterns */
+/* ---------------------------------------------------------------------- */
+/* Patterns.                                                              */
+/* ---------------------------------------------------------------------- */
 
 pattern:
     simple_pattern
@@ -739,13 +681,17 @@ lbl_pattern_list:
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
 ;
 
-/* Primitive declarations */
+/* ---------------------------------------------------------------------- */
+/* Primitive declarations.                                                */
+/* ---------------------------------------------------------------------- */
 
 primitive_declaration:
     STRING                                      { $1 }
 ;
 
-/* Type declarations */
+/* ---------------------------------------------------------------------- */
+/* Type declarations.                                                     */
+/* ---------------------------------------------------------------------- */
 
 type_declarations:
     type_declaration                            { [$1] }
@@ -796,17 +742,12 @@ label_declarations:
   | label_declarations SEMI label_declaration   { $3 :: $1 }
 ;
 label_declaration:
-    mutable_flag label COLON poly_type          { ($2, $4, $1) }
+    mutable_flag label COLON core_type          { ($2, $4, $1) }
 ;
 
-/* Polymorphic types */
-
-poly_type:
-        core_type
-          { $1 }
-;
-
-/* Core types */
+/* ---------------------------------------------------------------------- */
+/* Core types.                                                            */
+/* ---------------------------------------------------------------------- */
 
 core_type:
     core_type2
@@ -852,7 +793,9 @@ label:
     LIDENT                                      { $1 }
 ;
 
-/* Constants */
+/* ---------------------------------------------------------------------- */
+/* Constants.                                                             */
+/* ---------------------------------------------------------------------- */
 
 constant:
     INT                                         { ACint $1 }
@@ -865,7 +808,10 @@ signed_constant:
   | MINUS INT                                   { ACint(- $2) }
   | MINUS FLOAT                                 { ACfloat(-. $2) }
 ;
-/* Identifiers and long identifiers */
+
+/* ---------------------------------------------------------------------- */
+/* Identifiers and long identifiers.                                      */
+/* ---------------------------------------------------------------------- */
 
 ident:
     UIDENT                                      { $1 }
@@ -933,7 +879,9 @@ mod_ext_longident:
   | mod_ext_longident DOT UIDENT                { Ldot($1, $3) }
 ;
 
-/* Toplevel directives */
+/* ---------------------------------------------------------------------- */
+/* Toplevel directives.                                                   */
+/* ---------------------------------------------------------------------- */
 
 toplevel_directive:
     SHARP ident                 { Ptop_dir($2, Pdir_none) }
@@ -944,7 +892,9 @@ toplevel_directive:
   | SHARP ident TRUE            { Ptop_dir($2, Pdir_bool true) }
 ;
 
-/* Miscellaneous */
+/* ---------------------------------------------------------------------- */
+/* Miscellaneous.                                                         */
+/* ---------------------------------------------------------------------- */
 
 rec_flag:
     /* empty */                                 { false }
@@ -971,12 +921,9 @@ subtractive:
   | MINUSDOT                                    { "-." }
 ;
 
-
-
-
-
-
-/* Streams */
+/* ---------------------------------------------------------------------- */
+/* Streams and parsers (kept from Caml Light, may disappear).             */
+/* ---------------------------------------------------------------------- */
 
 Stream_expr :
         Stream_expr SEMI Stream_expr_component

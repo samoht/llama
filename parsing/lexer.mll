@@ -25,7 +25,6 @@ type error =
   | Unterminated_comment
   | Unterminated_string
   | Unterminated_string_in_comment
-  | Keyword_as_label of string
   | Literal_overflow of string
 ;;
 
@@ -39,8 +38,6 @@ let keyword_table =
     "as", AS;
     "assert", ASSERT;
     "begin", BEGIN;
-    "class", CLASS;
-    "constraint", CONSTRAINT;
     "do", DO;
     "done", DONE;
     "downto", DOWNTO;
@@ -52,35 +49,24 @@ let keyword_table =
     "for", FOR;
     "fun", FUN;
     "function", FUNCTION;
-    "functor", FUNCTOR;
     "if", IF;
     "in", IN;
     "include", INCLUDE;
-    "inherit", INHERIT;
-    "initializer", INITIALIZER;
     "lazy", LAZY;
     "let", LET;
     "match", MATCH;
-    "method", METHOD;
-    "module", MODULE;
     "mutable", MUTABLE;
-    "new", NEW;
-    "object", OBJECT;
     "of", OF;
     "open", OPEN;
     "or", OR;
 (*  "parser", PARSER; *)
-    "private", PRIVATE;
     "rec", REC;
-    "sig", SIG;
-    "struct", STRUCT;
     "then", THEN;
     "to", TO;
     "true", TRUE;
     "try", TRY;
     "type", TYPE;
     "val", VAL;
-    "virtual", VIRTUAL;
     "when", WHEN;
     "while", WHILE;
     "with", WITH;
@@ -199,8 +185,6 @@ let report_error ppf = function
       fprintf ppf "String literal not terminated"
   | Unterminated_string_in_comment ->
       fprintf ppf "This comment contains an unterminated string literal"
-  | Keyword_as_label kwd ->
-      fprintf ppf "`%s' is a keyword, it cannot be used as label name" kwd
   | Literal_overflow ty ->
       fprintf ppf "Integer literal exceeds the range of representable integers of type %s" ty
 ;;
@@ -239,21 +223,6 @@ rule token = parse
       { token lexbuf }
   | "_"
       { UNDERSCORE }
-  | "~"  { TILDE }
-  | "~" lowercase identchar * ':'
-      { let s = Lexing.lexeme lexbuf in
-        let name = String.sub s 1 (String.length s - 2) in
-        if Hashtbl.mem keyword_table name then
-          raise (Error(Keyword_as_label name, Location.curr lexbuf));
-        LABEL name }
-  | "?"  { QUESTION }
-  | "??" { QUESTIONQUESTION }
-  | "?" lowercase identchar * ':'
-      { let s = Lexing.lexeme lexbuf in
-        let name = String.sub s 1 (String.length s - 2) in
-        if Hashtbl.mem keyword_table name then
-          raise (Error(Keyword_as_label name, Location.curr lexbuf));
-        OPTLABEL name }
   | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in
           try
@@ -270,25 +239,6 @@ rule token = parse
       }
   | float_literal
       { FLOAT (float_of_string(remove_underscores(Lexing.lexeme lexbuf))) }
-  | int_literal "l"
-      { let s = Lexing.lexeme lexbuf in
-        try
-          INT32 (Int32.of_string(String.sub s 0 (String.length s - 1)))
-        with Failure _ ->
-          raise (Error(Literal_overflow "int32", Location.curr lexbuf)) }
-  | int_literal "L"
-      { let s = Lexing.lexeme lexbuf in
-        try
-          INT64 (Int64.of_string(String.sub s 0 (String.length s - 1)))
-        with Failure _ ->
-          raise (Error(Literal_overflow "int64", Location.curr lexbuf)) }
-  | int_literal "n"
-      { let s = Lexing.lexeme lexbuf in
-        try
-          NATIVEINT
-            (Nativeint.of_string(String.sub s 0 (String.length s - 1)))
-        with Failure _ ->
-          raise (Error(Literal_overflow "nativeint", Location.curr lexbuf)) }
   | "\""
       { reset_string_buffer();
         let string_start = lexbuf.lex_start_p in
@@ -352,7 +302,6 @@ rule token = parse
   | ":"  { COLON }
   | "::" { COLONCOLON }
   | ":=" { COLONEQUAL }
-  | ":>" { COLONGREATER }
   | ";"  { SEMI }
   | ";;" { SEMISEMI }
   | "<"  { LESS }
@@ -361,17 +310,14 @@ rule token = parse
   | "["  { LBRACKET }
   | "[|" { LBRACKETBAR }
   | "[<" { LBRACKETLESS }
-  | "[>" { LBRACKETGREATER }
   | "]"  { RBRACKET }
   | "{"  { LBRACE }
-  | "{<" { LBRACELESS }
   | "|"  { BAR }
   | "||" { BARBAR }
   | "|]" { BARRBRACKET }
   | ">"  { GREATER }
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }
-  | ">}" { GREATERRBRACE }
 
   | "!=" { INFIXOP0 "!=" }
   | "+"  { PLUS }
