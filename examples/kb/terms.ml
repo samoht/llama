@@ -1,3 +1,5 @@
+open List
+
 (****************** Term manipulations *****************)
 
 type term = Var of int

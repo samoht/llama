@@ -1,3 +1,4 @@
+open List
 open Expr
 
 type état =

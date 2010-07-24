@@ -1,5 +1,6 @@
 (*********************** Recursive Path Ordering ****************************)
 
+open List
 open Terms
 
 type ordering = Greater | Equal | NotGE;;

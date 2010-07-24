@@ -1,3 +1,4 @@
+open List
 open Prop
 open Asynt
 

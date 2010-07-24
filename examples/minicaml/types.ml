@@ -1,3 +1,5 @@
+open List
+
 type type_simple =
     Variable of variable_de_type
   | Terme of string * type_simple vect

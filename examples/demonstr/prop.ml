@@ -1,3 +1,5 @@
+open List
+
 type proposition =
      Vrai
    | Faux

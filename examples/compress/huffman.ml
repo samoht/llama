@@ -1,3 +1,5 @@
+open List
+
 type table_de_codage =
   { caractère: int list vect;
     mutable fin: int list };;

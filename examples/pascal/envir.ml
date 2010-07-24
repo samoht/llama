@@ -1,3 +1,4 @@
+open List
 open Syntaxe
 
 type 'a env =

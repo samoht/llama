@@ -1,3 +1,4 @@
+open List
 open Syntaxe
 open Valeur
 open Envir

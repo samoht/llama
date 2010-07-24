@@ -1,3 +1,4 @@
+open List
 open Prelude
 open Terms
 open Equation

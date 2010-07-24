@@ -1,5 +1,6 @@
 (* $Id: semant.ml,v 1.6 1998-03-12 18:44:02 weis Exp $ *)
 
+open List
 open Parser
 
 type semval = Numval of int

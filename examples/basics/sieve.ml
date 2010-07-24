@@ -1,3 +1,5 @@
+open List
+
 (* Eratosthene's sieve *)
 
 (* interval min max = [min; min+1; ...; max-1; max] *)

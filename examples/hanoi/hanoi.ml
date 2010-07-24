@@ -1,3 +1,5 @@
+open List
+
 let blancs n = String.make n ' ';;
 let disque taille =
     let moitié_droite = String.make taille '>'

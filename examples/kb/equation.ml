@@ -1,5 +1,6 @@
 (****************** Equation manipulations *************)
 
+open List
 open Prelude
 open Terms
 
