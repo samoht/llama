@@ -4,7 +4,6 @@ baltree.zi:
 buffer.zi:
 char.zi:
 farray.zi:
-fchar.zi:
 filename.zi:
 format.zi: printf.zi
 fstring.zi:
@@ -40,14 +39,12 @@ char.zo: char.zi
 char.zx: char.zi
 farray.zo: list.zi farray.zi
 farray.zx: list.zx farray.zi
-fchar.zo: fchar.zi
-fchar.zx: fchar.zi
 filename.zo: string.zi filename.zi
 filename.zx: string.zx filename.zi
 format.zo: string.zi obj.zi fstring.zi format.zi
 format.zx: string.zx obj.zi fstring.zx format.zi
-fstring.zo: list.zi fchar.zi fstring.zi
-fstring.zx: list.zx fchar.zx fstring.zi
+fstring.zo: list.zi fstring.zi
+fstring.zx: list.zx fstring.zi
 gc.zo: printf.zi gc.zi
 gc.zx: printf.zx gc.zi
 hashtbl.zo: farray.zi array.zi hashtbl.zi
@@ -82,4 +79,4 @@ stream.zo: string.zi obj.zi fstring.zi stream.zi
 stream.zx: string.zx obj.zi fstring.zx stream.zi
 string.zo: sys.zi fstring.zi char.zi string.zi
 string.zx: sys.zi fstring.zx char.zx string.zi
-genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi stream.zi hashtbl.zi list.zi
+genlex.zo: genlex.zi pervasives.zi fstring.zi stream.zi hashtbl.zi list.zi

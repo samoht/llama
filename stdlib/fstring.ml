@@ -11,10 +11,9 @@ external lt_string : string -> string -> bool = "<string"
 external ge_string : string -> string -> bool = ">=string"
 external gt_string : string -> string -> bool = ">string"
 external compare_strings : string -> string -> int = "compare_strings"
+external is_printable : char -> bool = "is_printable"
 
 (* Operations on strings, without sanity checks *)
-
-open Fchar
 
 let make_string len init =
   let s = create_string len in

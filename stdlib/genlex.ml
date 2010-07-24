@@ -1,7 +1,6 @@
 (* A generic lexer *)
 
 open List
-open Fchar
 open Fstring
 open Stream
 
