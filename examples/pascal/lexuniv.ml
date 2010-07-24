@@ -1,3 +1,4 @@
+open String
 open Stream
 
 type lexème =

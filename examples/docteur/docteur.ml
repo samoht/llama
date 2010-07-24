@@ -1,3 +1,5 @@
+open String
+
 exception Trouvé;;
 let caractère_dans_chaîne chaîne car =
     try

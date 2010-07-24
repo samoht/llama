@@ -1,3 +1,5 @@
+open String
+
 exception Échec;;
 
 type état =

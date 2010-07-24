@@ -1,3 +1,5 @@
+open String
+
 (* $Id: token.ml,v 1.5 1998-03-12 18:44:02 weis Exp $ *)
 
 type token_type =

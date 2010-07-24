@@ -42,3 +42,20 @@ let bool_of_string = function
   | "false" -> false
   | "true" -> true
   | _ -> raise (Invalid_argument "bool_of_string");;
+
+(* ---------------------------------------------------------------------- *)
+(* String operations.                                                     *)
+(* ---------------------------------------------------------------------- *)
+
+external ( + ) : int -> int -> int = "+int"
+external string_length : string -> int = "string_length"
+external string_create: int -> string = "create_string"
+external string_blit : string -> int -> string -> int -> int -> unit = "blit_string"
+
+let (^) s1 s2 =
+  let l1 = string_length s1 and l2 = string_length s2 in
+  let s = string_create (l1 + l2) in
+  string_blit s1 0 s 0 l1;
+  string_blit s2 0 s l1 l2;
+  s
+

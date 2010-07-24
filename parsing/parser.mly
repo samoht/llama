@@ -112,7 +112,7 @@ let ghstrexp e =
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
 
-let array_function s = Lident s (* xxx *)
+let array_function mn s = Ldot(Lident mn, s) (* xxx *)
 
 let rec deep_mkrangepat c1 c2 =
   if c1 = c2 then ghpat(Ppat_constant(ACchar c1)) else
@@ -462,10 +462,10 @@ expr:
   | simple_expr DOT label_longident LESSMINUS expr
       { mkexp(Pexp_setfield($1, $3, $5)) }
   | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "vect_assign")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "vect_assign")),
                          [$1; $4; $7])) }
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "set_nth_char")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "set_nth_char")),
                          [$1; $4; $7])) }
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
@@ -497,12 +497,12 @@ simple_expr:
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
   | simple_expr DOT LPAREN seq_expr RPAREN
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "vect_item")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "vect_item")),
                          [$1; $4])) }
   | simple_expr DOT LPAREN seq_expr error
       { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LBRACKET seq_expr RBRACKET
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "nth_char")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "nth_char")),
                          [$1; $4])) }
   | simple_expr DOT LBRACKET seq_expr error
       { unclosed "[" 3 "]" 5 }

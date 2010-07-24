@@ -76,3 +76,12 @@ val bool_of_string : string -> bool
            Raise [Invalid_argument "bool_of_string"] if the given
            string is not ["true"] or ["false"]. *)
 ;;
+
+(* ---------------------------------------------------------------------- *)
+(* String operations.                                                     *)
+(* ---------------------------------------------------------------------- *)
+
+val ( ^ ) : string -> string -> string
+
+
+
