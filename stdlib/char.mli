@@ -13,8 +13,15 @@ val char_for_read : char -> string
            with special characters escaped following the lexical conventions
            of Caml Light. *)
 
+val lowercase : char -> char
+(** Convert the given character to its equivalent lowercase character. *)
+
+val uppercase : char -> char
+(** Convert the given character to its equivalent uppercase character. *)
+
 ;;
 
 (*--*)
 
 external is_printable : char -> bool = "is_printable";;
+

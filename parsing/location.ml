@@ -191,11 +191,8 @@ let print_error_cur_file ppf = print_error ppf (in_file !input_name);;
 
 let print_warning loc ppf w =
   if Warnings.is_active w then begin
-    let printw ppf w =
-      ignore (Warnings.print ppf w)
-    in
     fprintf ppf "%a" print loc;
-    fprintf ppf "Warning %a@." printw w;
+    fprintf ppf "Warning %a@." Warnings.print w;
     pp_print_flush ppf ();
   end
 ;;
