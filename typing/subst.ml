@@ -9,11 +9,15 @@ type t = {
 
 let identity m = { subst_module = m; types = []; values = [] }
 
-let add_type_constructor c1 c2 s = { s with types = (c1, c2) :: s.types }
+let add_type_constructor c1 c2 s =
+  { subst_module = s.subst_module;
+    types = (c1, c2) :: s.types;
+    values = s.values; }
 
 let type_constructor s r =
   if r.ref_id.id_module = s.subst_module then
-    { r with ref_contents = Some (List.assq (get_type_constr r) s.types) }
+    { ref_id = r.ref_id;
+      ref_contents = Some (List.assq (get_type_constr r) s.types) }
   else
     r
 

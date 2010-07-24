@@ -141,12 +141,10 @@ let convert f oc x =
   f str_formatter x;
   output_string oc (flush_str_formatter ())
 
-module Pr_type = struct
-  let output_type = convert core_type
-  let output_one_type = convert one_type
-  let output_schema = convert schema
-  let output_type_constr = convert type_constructor
-  let output_constr = convert constructor
-  let output_label = convert label
-  let reset_type_var_name = reset_type_var_names
-end    
+let output_type = convert core_type
+let output_one_type = convert one_type
+let output_schema = convert schema
+let output_type_constr = convert type_constructor
+let output_constr = convert constructor
+let output_label = convert label
+let reset_type_var_name = reset_type_var_names

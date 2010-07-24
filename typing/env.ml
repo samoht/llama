@@ -48,15 +48,19 @@ and lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.mod_types)
 
 let add_value id decl env =
-  { env with
+  { types = env.types;
+    labels = env.labels;
+    constrs = env.constrs;
       values = Tbl.add id decl env.values }
 
 let add_exception id decl env =
-  { env with
+  { values = env.values;
+    labels = env.labels;
+    types = env.types;
     constrs = Tbl.add id decl env.constrs }
 
 let add_type id info env =
-  { env with
+  { values = env.values;
     constrs =
       List.fold_right
         (fun cs constrs ->
