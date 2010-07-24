@@ -14,7 +14,7 @@ let reconnaît automate chaîne =
   let état_courant = ref automate in 
   try
     for i = 0 to String.length chaîne - 1 do
-    match !état_courant.dtransitions.(Char.code(nth_char chaîne i)) with
+    match !état_courant.dtransitions.(Char.code(String.get chaîne i)) with
     | Rejet  -> raise Échec
     | Vers e -> état_courant := e
     done;

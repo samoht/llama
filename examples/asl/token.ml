@@ -26,7 +26,7 @@ let buff = String.create 2000;;
 let rec ident len = function
   [<
     '('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '\'') as c;
-    (set_nth_char buff len c; ident(succ len)) i
+    (String.set buff len c; ident(succ len)) i
   >] -> i
 | [< >] ->
     let str = String.sub buff 0 len in
@@ -36,7 +36,7 @@ let rec ident len = function
 
 let rec ident len = function
 | [< `('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '\'') as c; s >] ->
-    set_nth_char buff len c; ident (succ len) s
+    String.set buff len c; ident (succ len) s
 | [< >] ->
     let str = String.sub buff 0 len in
     (try Hashtbl.find keywords str with _ -> IDENT str)
@@ -50,7 +50,7 @@ let rec number n = function
 
 let rec next_token = function
 | [< `('a'..'z' | 'A' .. 'Z') as c; s >] ->
-    set_nth_char buff 0 c; ident 1 s
+    String.set buff 0 c; ident 1 s
 | [< `'0' .. '9' as d; s >] ->
     INT(number (Char.code d-Char.code '0') s)
 | [< `' ' | '\n' | '\t'; s >] -> next_token s

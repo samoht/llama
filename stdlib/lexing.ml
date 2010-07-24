@@ -218,7 +218,7 @@ let sub_lexeme_char_opt lexbuf i =
 
 
 let lexeme_char lexbuf i =
-  String.nth_char lexbuf.lex_buffer (lexbuf.lex_start_pos + i)
+  String.get lexbuf.lex_buffer (lexbuf.lex_start_pos + i)
 
 let lexeme_start lexbuf = lexbuf.lex_start_p.pos_cnum;;
 let lexeme_end lexbuf = lexbuf.lex_curr_p.pos_cnum;;

@@ -27,15 +27,15 @@ let make n c =
   else Fstring.make_string n c
 ;;
 
-let nth_char s n =
+let get s n =
   if n < 0 || n >= length s
-  then invalid_arg "nth_char"
+  then invalid_arg "String.get"
   else unsafe_get s n
 ;;
 
-let set_nth_char s n c =
+let set s n c =
   if n < 0 || n >= length s
-  then invalid_arg "set_nth_char"
+  then invalid_arg "String.set"
   else unsafe_set s n c
 ;;
 

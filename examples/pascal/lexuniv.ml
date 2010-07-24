@@ -23,7 +23,7 @@ let rec lire_mot position flux =
          'É'|'À'|'È'|'Ù'|'Â'|'Ê'|'Î'|'Ô'|'Û'|'À'|'Ï'|'Ü'|'Ç'
          as c) >] ->
       if position < String.length tampon then
-        set_nth_char tampon position c;
+        String.set tampon position c;
       lire_mot (position+1) flux
   | [< >] ->
       String.sub tampon 0 (min position (String.length tampon));;
@@ -32,7 +32,7 @@ let rec lire_symbole position flux =
   | [< `('!'|'$'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|':'|
          ';'|'<'|'='|'>'|'?'|'@'|'^'|'|'|'~' as c) >] ->
       if position < String.length tampon then
-        set_nth_char tampon position c;
+        String.set tampon position c;
       lire_symbole (position + 1) flux
   | [< >] ->
       String.sub tampon 0 (min position (String.length tampon));;
@@ -57,11 +57,11 @@ let rec lire_lexème table flux =
          'é'|'à'|'è'|'ù'|'â'|'ê'|'î'|'ô'|'û'|'ë'|'ï'|'ü'|'ç'|
          'É'|'À'|'È'|'Ù'|'Â'|'Ê'|'Î'|'Ô'|'Û'|'Ë'|'Ï'|'Ü'|'Ç'
          as c) >] ->
-      set_nth_char tampon 0 c;
+      String.set tampon 0 c;
       mc_ou_ident table (lire_mot 1 flux)
   | [< `('!'|'$'|'%'|'&'|'*'|'+'|'.'|'/'|':'|';'|
          '<'|'='|'>'|'?'|'@'|'^'|'|'|'~' as c) >] ->
-      set_nth_char tampon 0 c;
+      String.set tampon 0 c;
       mc_ou_ident table (lire_symbole 1 flux)
   | [< `('0'..'9' as c) >] ->
       Entier(lire_entier (Char.code c - 48) flux)
@@ -70,7 +70,7 @@ let rec lire_lexème table flux =
       | [< `('0'..'9' as c) >] ->
           Entier(- (lire_entier  (Char.code c - 48) flux))
       | [< >] ->
-          set_nth_char tampon 0 '-';
+          String.set tampon 0 '-';
           mc_ou_ident table (lire_symbole 1 flux)
       end
   | [< `c >] ->

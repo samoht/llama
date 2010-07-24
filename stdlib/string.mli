@@ -3,19 +3,19 @@
 external length : string -> int = "string_length"
         (* Return the length (number of characters) of the given string. *)
 ;;
-val nth_char : string -> int -> char
-        (* [nth_char s n] returns character number [n] in string [s].
+val get : string -> int -> char
+        (* [get s n] returns character number [n] in string [s].
            The first character is character number 0.
            The last character is character number [string_length s - 1].
-           Raise [Invalid_argument "nth_char"] if [n] is ouside the range
+           Raise [Invalid_argument "get"] if [n] is ouside the range
            0 to [(string_length s - 1)].
-           You can also write [s.[n]] instead of [nth_char s n]. *)
-val set_nth_char : string -> int -> char -> unit
-        (* [set_nth_char s n c] modifies string [s] in place,
+           You can also write [s.[n]] instead of [get s n]. *)
+val set : string -> int -> char -> unit
+        (* [set s n c] modifies string [s] in place,
            replacing the character number [n] by [c].
-           Raise [Invalid_argument "set_nth_char"] if [n] is ouside the range
+           Raise [Invalid_argument "set"] if [n] is ouside the range
            0 to [(string_length s - 1)].
-           You can also write [s.[n] <- c] instead of [set_nth_char s n c]. *)
+           You can also write [s.[n] <- c] instead of [set s n c]. *)
 ;;
 val (^) : string -> string -> string
         (* [s1 ^ s2] returns a fresh string containing the concatenation of

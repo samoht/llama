@@ -1,6 +1,6 @@
 external string_length : string -> int = "string_length"
-external nth_char : string -> int -> char = "get_nth_char"
-external set_nth_char : string -> int -> char -> unit = "set_nth_char"
+external get : string -> int -> char = "get_nth_char"
+external set : string -> int -> char -> unit = "set_nth_char"
 external create_string : int -> string = "create_string"
 external fill_string : string -> int -> int -> char -> unit = "fill_string"
 external blit_string : string -> int -> string -> int -> int -> unit = "blit_string"
@@ -62,7 +62,7 @@ let string_for_read s =
   let n = ref 0 in
     for i = 0 to string_length s - 1 do
       n := !n +
-        (match nth_char s i with
+        (match get s i with
            '"' | '\\' | '\n' | '\t' -> 2
           | c -> if is_printable c then 1 else 4)
     done;
@@ -71,23 +71,23 @@ let string_for_read s =
         n := 0;
         for i = 0 to string_length s - 1 do
           begin
-            match nth_char s i with
-              '"' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n '"'
-            | '\\' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n '\\'
-            | '\n' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n 'n'
-            | '\t' -> set_nth_char s' !n '\\'; incr n; set_nth_char s' !n 't'
+            match get s i with
+              '"' -> set s' !n '\\'; incr n; set s' !n '"'
+            | '\\' -> set s' !n '\\'; incr n; set s' !n '\\'
+            | '\n' -> set s' !n '\\'; incr n; set s' !n 'n'
+            | '\t' -> set s' !n '\\'; incr n; set s' !n 't'
             | c ->
                 if is_printable c then
-                  set_nth_char s' !n c
+                  set s' !n c
                 else begin
                   let a = int_of_char c in
-                  set_nth_char s' !n '\\';
+                  set s' !n '\\';
                   incr n;
-                  set_nth_char s' !n (char_of_int (48 + a / 100));
+                  set s' !n (char_of_int (48 + a / 100));
                   incr n;
-                  set_nth_char s' !n (char_of_int (48 + (a / 10) mod 10));
+                  set s' !n (char_of_int (48 + (a / 10) mod 10));
                   incr n;
-                  set_nth_char s' !n (char_of_int (48 + a mod 10))
+                  set s' !n (char_of_int (48 + a mod 10))
                 end
           end;
           incr n
@@ -98,7 +98,7 @@ let string_for_read s =
 
 let rec index_char_from s i c =
   if i >= string_length s then raise Not_found
-  else if nth_char s i = c then i
+  else if get s i = c then i
   else index_char_from s (i+1) c
 ;;
 
@@ -107,7 +107,7 @@ let index_char s c = index_char_from s 0 c
 
 let rec rindex_char_from s i c =
   if i < 0 then raise Not_found
-  else if nth_char s i = c then i
+  else if get s i = c then i
   else rindex_char_from s (i-1) c
 ;;
 

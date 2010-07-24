@@ -470,7 +470,7 @@ expr:
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "vect_assign")),
                          [$1; $4; $7])) }
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "set_nth_char")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "set")),
                          [$1; $4; $7])) }
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
@@ -507,7 +507,7 @@ simple_expr:
   | simple_expr DOT LPAREN seq_expr error
       { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LBRACKET seq_expr RBRACKET
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "nth_char")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "get")),
                          [$1; $4])) }
   | simple_expr DOT LBRACKET seq_expr error
       { unclosed "[" 3 "]" 5 }

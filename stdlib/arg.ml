@@ -41,7 +41,7 @@ let stop error =
 let parse speclist anonfun =
   let rec p = function
       [] -> ()
-    | s::t -> if String.length s >= 1 && nth_char s 0 = '-'
+    | s::t -> if String.length s >= 1 && String.get s 0 = '-'
               then do_key s t
               else begin try (anonfun s); p t
                    with Bad m -> stop (Message m)

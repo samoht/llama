@@ -40,7 +40,7 @@ let current_dir_name = ".";;
 
 let concat dirname filename =
   let l = String.length dirname - 1 in
-  if l < 0 || String.nth_char dirname l == '/'
+  if l < 0 || String.get dirname l == '/'
   then dirname ^ filename
   else dirname ^ "/" ^ filename
 ;;
@@ -54,7 +54,7 @@ let is_absolute n =
 let slash_pos s =
   let rec pos i =
     if i < 0 then raise Not_found
-    else if String.nth_char s i == '/' then i
+    else if String.get s i == '/' then i
     else pos (i - 1)
   in pos (String.length s - 1)
 ;;
@@ -83,7 +83,7 @@ let current_dir_name = ":";;
 let is_absolute n =
   try
     for i = 0 to String.length n - 1 do
-      if String.nth_char n i == ':' then raise Exit
+      if String.get n i == ':' then raise Exit
     done;
     false
   with Exit ->
@@ -98,11 +98,11 @@ let concat dirname filename =
   let l =
     String.length dirname1 - 1 in
   let dirname2 =
-    if l < 0 || String.nth_char dirname1 l == ':'
+    if l < 0 || String.get dirname1 l == ':'
     then dirname1
     else dirname1 ^ ":" in
   let filename2 =
-    if String.length filename > 0 && String.nth_char filename 0 == ':'
+    if String.length filename > 0 && String.get filename 0 == ':'
     then String.sub filename 1 (String.length filename - 1)
     else filename in
   dirname2 ^ filename2
@@ -111,7 +111,7 @@ let concat dirname filename =
 let colon_pos s =
   let rec pos i =
     if i < 0 then raise Not_found else
-    if String.nth_char s i == ':' then i else pos (i - 1)
+    if String.get s i == ':' then i else pos (i - 1)
   in pos (String.length s - 1)
 ;;
 
@@ -137,13 +137,13 @@ let current_dir_name = ".";;
 
 let concat dirname filename =
   let l = String.length dirname - 1 in
-  if l < 0 || String.nth_char dirname l == '\\' || String.nth_char dirname l == ':'
+  if l < 0 || String.get dirname l == '\\' || String.get dirname l == ':'
   then dirname ^ filename
   else dirname ^ "\\" ^ filename
 ;;
 
 let is_absolute n =
-     (String.length n >= 2 && String.nth_char n 1 == ':')
+     (String.length n >= 2 && String.get n 1 == ':')
   || (String.length n >= 1 && String.sub n 0 1 = "\\")
   || (String.length n >= 2 && String.sub n 0 2 = ".\\")
   || (String.length n >= 3 && String.sub n 0 3 = "..\\")
@@ -152,7 +152,7 @@ let is_absolute n =
 let sep_pos s =
   let rec pos i =
     if i < 0 then raise Not_found else
-      match String.nth_char s i with
+      match String.get s i with
         '/' | '\\' | ':' -> i
       | _ -> pos (i - 1)
   in pos (String.length s - 1)
@@ -167,7 +167,7 @@ let basename name =
 ;;
 
 let rec dirname name =
-  if String.length name >= 2 && String.nth_char name 1 == ':' then
+  if String.length name >= 2 && String.get name 1 == ':' then
     String.sub name 0 2 ^ dirname (String.sub name 2 (String.length name - 2))
   else if name = "/" || name = "\\" then
     name

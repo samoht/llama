@@ -4,7 +4,7 @@ exception Trouvé;;
 let caractère_dans_chaîne chaîne car =
     try
       for i = 0 to String.length chaîne - 1 do
-        if nth_char chaîne i = car then raise Trouvé
+        if String.get chaîne i = car then raise Trouvé
       done;
       false
     with Trouvé -> true;;
@@ -37,8 +37,8 @@ let minuscules chaîne =
     let chaîne_en_minuscules =
       String.create (String.length chaîne) in
     for i = 0 to String.length chaîne - 1 do
-      set_nth_char chaîne_en_minuscules i
-                   (minuscule_de (nth_char chaîne i))
+      String.set chaîne_en_minuscules i
+                   (minuscule_de (String.get chaîne i))
     done;
     chaîne_en_minuscules;;
 let sous_chaîne s départ fin =
@@ -67,7 +67,7 @@ let simplifie_mot mot =
         i := !i + longueur;
         j := !j + String.length traduction
       with Pas_trouvé ->
-        set_nth_char nouveau_mot !j (nth_char mot !i);
+        String.set nouveau_mot !j (String.get mot !i);
         i := !i + 1;
         j := !j + 1
     done;
@@ -79,7 +79,7 @@ let divise_en_mots chaîne =
         if i <= j then
         mots := simplifie_mot (sous_chaîne chaîne i j) :: !mots in
     for i =  String.length chaîne - 1 downto 0 do
-      match nth_char chaîne i with
+      match String.get chaîne i with
       | (' ' | '\n' | '.' | ',' | ';' | '-' | '!' | '?') ->
          ajoute_mot (i+1) !j; j := i-1
       | _ -> ()
