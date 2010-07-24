@@ -3,7 +3,6 @@ exception Bad of string
 (* arg.ml *)
 
 open Pervasives
-open Int
 open Farray
 open Fstring
 open Io

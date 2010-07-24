@@ -1,6 +1,5 @@
 open Pervasives
 open Float
-open Int
 open Fstring
 open Io
 open List
@@ -22,7 +21,7 @@ let fprintf outchan format =
               doprn (succ j)
           | 's' ->
               magic(fun s ->
-                if j <= i+1 then
+                if j <= ((+):int->int->int) i 1 then
                   output_string outchan s
                 else begin
                   let p =

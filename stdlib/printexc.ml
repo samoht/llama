@@ -2,7 +2,6 @@
 (* A catch-all exception handler *)
 
 open Pervasives
-open Int
 open Farray
 open Io
 open Obj

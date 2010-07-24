@@ -28,7 +28,6 @@ exception End_of_file
 (* Input-output *)
 
 open Pervasives
-open Int
 open Sys
 open Fstring;;
 
@@ -98,7 +97,7 @@ let rec input_line chan =
 
 let read_line () = flush std_out; input_line std_in
 ;;
-let read_int () = Int.int_of_string (read_line())
+let read_int () = int_of_string (read_line())
 ;;
 let read_float () = Float.float_of_string (read_line())
 ;;
@@ -131,7 +130,7 @@ let print_string =
   output_string std_out
 ;;
 let print_int i =
-  print_string (Int.string_of_int i)
+  print_string (string_of_int i)
 ;;
 let print_float f =
   print_string (Float.string_of_float f)
@@ -153,7 +152,7 @@ let prerr_string =
   output_string std_err
 ;;
 let prerr_int i =
-  prerr_string (Int.string_of_int i)
+  prerr_string (string_of_int i)
 ;;
 let prerr_float f =
   prerr_string (Float.string_of_float f)

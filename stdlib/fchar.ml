@@ -1,10 +1,11 @@
+open Pervasives
+
 external int_of_char : char -> int = "identity"
 external char_of_int : int -> char = "identity"
 external is_printable : char -> bool = "is_printable"
 
 (* Character operations, without sanity checks *)
 
-open Int
 open Fstring
 
 let char_for_read = function

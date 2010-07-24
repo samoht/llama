@@ -1,17 +1,12 @@
 external int_of_float : float -> int = "int_of_float"
 external float_of_int : int -> float = "float_of_int";;
-external minus : float -> float = "~float"
 external minus_float : float -> float = "~float"
-external ( + ) : float -> float -> float = "+float"
 external ( +. ) : float -> float -> float = "+float"
 external add_float : float -> float -> float = "+float"
-external ( - ) : float -> float -> float = "-float"
 external ( -. ) : float -> float -> float = "-float"
 external sub_float : float -> float -> float = "-float"
-external ( * ) : float -> float -> float = "*float"
 external ( *. ) : float -> float -> float = "*float"
 external mult_float : float -> float -> float = "*float"
-external ( / ) : float -> float -> float = "/"
 external ( /. ) : float -> float -> float = "/"
 external div_float : float -> float -> float = "/"
 external ( ** ) : float -> float -> float = "power_float"
@@ -57,7 +52,6 @@ external format_float : string -> float -> string = "format_float"
 
 open Pervasives
 open Fstring
-open Int
 
 let string_of_float f =
   let s = format_float "%.12g" f in

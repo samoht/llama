@@ -7,7 +7,6 @@ external make_vect : int -> 'a -> 'a vect = "make_vect"
 
 (* Operations on vectors, without sanity checks *)
 
-open Int;;
 
 let make_matrix dimx dimy init =
   let res = make_vect dimx [||] in

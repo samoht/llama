@@ -1,4 +1,3 @@
-open Int
 
 external code : char -> int = "identity"
 external is_printable : char -> bool = "is_printable";;

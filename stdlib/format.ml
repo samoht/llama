@@ -1,5 +1,4 @@
 open Pervasives
-open Int
 open Fstring
 open Io
 
@@ -636,7 +635,6 @@ and get_formatter_output_functions =
 
 open Obj
 open Float
-open Int
 
 let fprintf ppf format =
   let format = (magic format : string) in

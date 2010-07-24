@@ -3,7 +3,6 @@ external hash_param : int -> int -> 'a -> int = "hash_univ_param"
 (* Hash tables *)
 
 open Pervasives
-open Int
 open Farray
 
 (* We do dynamic hashing, and resize the table and rehash the elements

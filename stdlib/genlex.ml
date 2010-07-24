@@ -2,7 +2,6 @@
 
 open Pervasives
 open Float
-open Int
 open Pervasives
 open List
 open Fchar

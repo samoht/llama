@@ -1,7 +1,6 @@
 exception Empty;;
 
 open Pervasives
-open Int
 open Pervasives
 type 'a queue_cell =
     Nil

@@ -7,22 +7,17 @@ external int_of_float : float -> int = "int_of_float"
 external float_of_int : int -> float = "float_of_int";;
         (* Convert an integer to floating-point. *)
 
-external minus : float -> float = "~float"
 external minus_float : float -> float = "~float"
         (* Unary negation. *)
-external ( + ) : float -> float -> float = "+float"
 external ( +. ) : float -> float -> float = "+float"
 external add_float : float -> float -> float = "+float"
         (* Addition. *)
-external ( - ) : float -> float -> float = "-float"
 external ( -. ) : float -> float -> float = "-float"
 external sub_float : float -> float -> float = "-float"
         (* Subtraction. *)
-external ( * ) : float -> float -> float = "*float"
 external ( *. ) : float -> float -> float = "*float"
 external mult_float : float -> float -> float = "*float"
         (* Product. *)
-external ( / ) : float -> float -> float = "/"
 external ( /. ) : float -> float -> float = "/"
 external div_float : float -> float -> float = "/"
         (* Division. *)

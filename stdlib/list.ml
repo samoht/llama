@@ -1,7 +1,6 @@
 (* Operations on lists *)
 
 open Pervasives;;
-open Int;;
 
 let rec length_aux n = function
      []  -> n

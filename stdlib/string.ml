@@ -10,7 +10,6 @@ external compare_strings : string -> string -> int = "compare_strings"
 (* Operation on strings, with sanity checks *)
 
 open Pervasives
-open Int
 
 let create_string n =
   if n < 0 || n > Sys.max_string_length

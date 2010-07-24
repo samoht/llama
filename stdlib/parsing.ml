@@ -2,7 +2,6 @@
 
 open Pervasives
 open Pervasives
-open Int
 open Farray
 open Obj
 open Lexing
