@@ -1,6 +1,5 @@
 (* Formatting printing functions *)
 
-open Pervasives
 
 type ('a, 'b, 'c) format;;
         (* The type of format strings. ['a] is the type of the parameters

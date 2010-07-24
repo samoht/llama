@@ -1,4 +1,3 @@
-open Pervasives
 open List
 open Obj
 

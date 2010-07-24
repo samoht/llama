@@ -7,7 +7,6 @@ external string_unsafe_set : string -> int -> char -> unit = "set_nth_char"
 
 (* Character operations, with sanity checks *)
 
-open Pervasives
 
 let char_of_int i =
   if i < 0 || i > 255

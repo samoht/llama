@@ -2,7 +2,6 @@
    These are binary trees such that the heights of the children
    differ by at most 2. *)
 
-open Pervasives
 
 type 'a t = Empty | Node of 'a t * 'a * 'a t * int;;
 type 'a contents = Nothing | Something of 'a;;

@@ -1,4 +1,3 @@
-open Pervasives
 
 (* Memory management control and statistics. *)
 

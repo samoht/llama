@@ -1,4 +1,3 @@
-open Pervasives
 
 external vect_length : 'a vect -> int = "vect_length"
 external vect_item : 'a vect -> int -> 'a = "get_vect_item"

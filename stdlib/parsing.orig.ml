@@ -1,7 +1,5 @@
 (* The parsing engine *)
 
-open Pervasives
-open Pervasives
 open Farray
 open Obj
 open Lexing

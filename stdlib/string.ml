@@ -13,7 +13,6 @@ external unsafe_blit : string -> int -> string -> int -> int -> unit = "blit_str
 
 (* Operation on strings, with sanity checks *)
 
-open Pervasives
 
 let create n =
   if n < 0 || n > Sys.max_string_length

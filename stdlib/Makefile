@@ -2,7 +2,7 @@
 
 include ../config/Makefile
 
-LLAMAC=../llamac -nopervasives -I .
+LLAMAC=../llamac -nostdlib -I .
 LLAMADEP=ocamldep.opt
 CPP=/usr/bin/cpp -P -Dunix
 COMPFLAGS=-g
@@ -17,7 +17,8 @@ STD_INTF= arg.zi char.zi string.zi array.zi \
 
 # The list of all implementations. In dependency order.
 
-STD_IMPL= pervasives.zo list.zo fstring.zo string.zo fchar.zo \
+STD_IMPL=pervasives.zo $(OTHERS)
+OTHERS=list.zo fstring.zo string.zo fchar.zo \
     char.zo farray.zo array.zo arg.zo \
     filename.zo hashtbl.zo lexing.zo parsing.zo printexc.zo sort.zo \
     printf.zo stream.zo stack.zo queue.zo format.zo random.zo \
@@ -39,12 +40,16 @@ install:
 	cp -f stdlib.zo *.zi *.zix *.mli *.ml $(LIBDIR)
 #	rm $(LIBDIR)/iparsing.mli
 
+pervasives.zi: pervasives.mli
+	$(LLAMAC) -nopervasives -c $(COMPFLAGS) $<
+pervasives.zo: pervasives.ml
+	$(LLAMAC) -nopervasives -c $(COMPFLAGS) $<
+$(OTHERS:.zo=.zi): pervasives.zi
+
 %.zi: %.mli
 	$(LLAMAC) -c $(COMPFLAGS) $<
-
 %.zo: %.ml
 	$(LLAMAC) -c $(COMPFLAGS) $<
-
 %.ml: %.mlp
 	@rm -f $@
 	$(CPP) $< > $@

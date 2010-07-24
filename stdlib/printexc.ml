@@ -1,7 +1,6 @@
 
 (* A catch-all exception handler *)
 
-open Pervasives
 open Farray
 open Obj
 open Sys

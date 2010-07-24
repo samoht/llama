@@ -2,7 +2,6 @@ exception Bad of string
 
 (* arg.ml *)
 
-open Pervasives
 open Farray
 open String
 open List

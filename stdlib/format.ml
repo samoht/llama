@@ -1,4 +1,3 @@
-open Pervasives
 open Fstring
 
 (* Tokens are one of the following : *)

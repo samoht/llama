@@ -1,7 +1,5 @@
 (* A generic lexer *)
 
-open Pervasives
-open Pervasives
 open List
 open Fchar
 open Fstring
