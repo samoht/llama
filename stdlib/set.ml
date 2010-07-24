@@ -1,6 +1,5 @@
 (* Sets over ordered types *)
 
-open Eq
 open Pervasives
 open Baltree
 

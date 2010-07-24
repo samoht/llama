@@ -1,3 +1,5 @@
+open Pervasives
+
 external minus : int -> int = "~int"
 external minus_int : int -> int = "~int"
 external ( ~- ) : int -> int = "~int"
@@ -33,7 +35,6 @@ exception Division_by_zero;;
 
 (* Operations on integers *)
 
-open Eq
 
 let abs n =
   if n < 0 then -n else n

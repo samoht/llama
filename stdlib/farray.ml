@@ -1,3 +1,5 @@
+open Pervasives
+
 external vect_length : 'a vect -> int = "vect_length"
 external vect_item : 'a vect -> int -> 'a = "get_vect_item"
 external vect_assign : 'a vect -> int -> 'a -> unit = "set_vect_item"
@@ -5,7 +7,6 @@ external make_vect : int -> 'a -> 'a vect = "make_vect"
 
 (* Operations on vectors, without sanity checks *)
 
-open Eq;;
 open Int;;
 
 let make_matrix dimx dimy init =

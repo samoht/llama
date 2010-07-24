@@ -3,7 +3,6 @@ external is_relative : string -> bool = "llama_filename_is_relative"
 (* filename.mlp *)
 
 open Int
-open Eq
 open Fstring
 open Pervasives
 

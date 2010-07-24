@@ -16,7 +16,6 @@ external compare_strings : string -> string -> int = "compare_strings"
 
 open Pervasives
 open Int
-open Eq
 open Fchar
 
 let make_string len init =

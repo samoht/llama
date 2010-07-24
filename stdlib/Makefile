@@ -9,7 +9,7 @@ COMPFLAGS=-g
 
 # The list of all interfaces. Order irrelevant.
 
-STD_INTF= arg.zi char.zi string.zi array.zi eq.zi \
+STD_INTF= arg.zi char.zi string.zi array.zi \
     fchar.zi filename.zi float.zi fstring.zi farray.zi hashtbl.zi \
     int.zi io.zi lexing.zi list.zi obj.zi pair.zi parsing.zi printexc.zi \
     sort.zi sys.zi printf.zi stream.zi stack.zi queue.zi random.zi \
@@ -17,7 +17,7 @@ STD_INTF= arg.zi char.zi string.zi array.zi eq.zi \
 
 # The list of all implementations. In dependency order.
 
-STD_IMPL= pervasives.zo eq.zo int.zo list.zo fstring.zo string.zo fchar.zo \
+STD_IMPL= pervasives.zo int.zo list.zo fstring.zo string.zo fchar.zo \
     char.zo float.zo farray.zo array.zo io.zo pair.zo arg.zo \
     filename.zo hashtbl.zo lexing.zo parsing.zo printexc.zo sort.zo \
     printf.zo stream.zo stack.zo queue.zo format.zo random.zo \
@@ -57,7 +57,7 @@ depend: filename.ml
 	$(LLAMADEP) *.mli *.ml > .depend
 	mv genlex.ml.bak genlex.ml
 	sed -i '' -e 's/cm/z/g' .depend
-	echo "genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi int.zi stream.zi hashtbl.zi float.zi eq.zi list.zi" >> .depend
+	echo "genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi int.zi stream.zi hashtbl.zi float.zi list.zi" >> .depend
 
 .PHONY: depend
 

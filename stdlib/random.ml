@@ -12,7 +12,6 @@
 open Pervasives
 open Float
 open Int
-open Eq
 open Farray
 
 (* This is the state you get with [init 27182818] on a 32-bit machine. *)

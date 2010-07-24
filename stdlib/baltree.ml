@@ -3,7 +3,6 @@
    differ by at most 2. *)
 
 open Int
-open Eq
 open Pervasives
 
 type 'a t = Empty | Node of 'a t * 'a * 'a t * int;;

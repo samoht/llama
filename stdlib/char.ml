@@ -6,7 +6,6 @@ external is_printable : char -> bool = "is_printable";;
 (* Character operations, with sanity checks *)
 
 open Pervasives
-open Eq
 open Fstring
 
 let char_of_int i =

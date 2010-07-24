@@ -1,7 +1,6 @@
 (* The parsing engine *)
 
 open Pervasives
-open Eq
 open Pervasives
 open Int
 open Farray

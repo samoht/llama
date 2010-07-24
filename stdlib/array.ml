@@ -2,7 +2,6 @@ external length : 'a vect -> int = "vect_length"
 
 (* Operations on vectors, with sanity checks *)
 
-open Eq;;
 open Int;;
 open Pervasives;;
 

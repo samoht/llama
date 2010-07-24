@@ -2,7 +2,6 @@
 
 open Pervasives;;
 open Int;;
-open Eq;;
 
 let rec length_aux n = function
      []  -> n
