@@ -1,3 +1,4 @@
+open Stream
 open Expr
 open Auto
 open Determ

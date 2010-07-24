@@ -1,3 +1,4 @@
+open Stream
 open Syntaxe
 
 let compile_fichier nom =

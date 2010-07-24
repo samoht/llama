@@ -1,3 +1,4 @@
+open Stream
 open Syntaxe
 
 let interprète_fichier nom =

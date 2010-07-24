@@ -1,3 +1,4 @@
+open Stream
 open Prop
 open Lexuniv
 

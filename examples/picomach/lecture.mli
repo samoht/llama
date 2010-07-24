@@ -1,2 +1,2 @@
 open Code
-val programme: char stream -> instruction vect;;
+val programme: char Stream.stream -> instruction vect;;

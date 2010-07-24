@@ -1,3 +1,4 @@
+open Stream
 open Lexuniv
 
 type constante =

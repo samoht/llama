@@ -1,3 +1,5 @@
+open Stream
+
 type lexème =
      MC of string
    | Ident of string

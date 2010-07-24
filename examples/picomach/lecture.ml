@@ -1,3 +1,4 @@
+open Stream
 open Code
 open Stockage
 open Lexuniv

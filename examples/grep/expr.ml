@@ -1,3 +1,5 @@
+open Stream
+
 type expr =
     Epsilon
   | Caractères of char list

@@ -25,4 +25,4 @@ type phrase =
     Expression of expression
   | Définition of définition;;
 
-val lire_phrase: char stream -> phrase;;
+val lire_phrase: char Stream.stream -> phrase;;

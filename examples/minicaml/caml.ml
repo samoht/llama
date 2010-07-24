@@ -1,3 +1,4 @@
+open Stream
 open Syntaxe
 open Eval
 open Types
