@@ -21,7 +21,7 @@ and minint_short = (-32768)
 (* The standard interfaces used by default. In opening order. *)
 
 let default_used_interfaces =
-  ["cautious", [(*"builtin";*) "Pervasives"; "Array";
+  ["cautious", [(*"builtin";*) "Pervasives";
                 "List"; "Pair"; "Float"; "Io"];
 (*   "fast",     [(*"builtin";*) "pervasives"; "stream"; "exc"; "bool"; "fstring"; "fchar";
                 "fvect"; "list"; "pair"; "float"; "int"; "eq"; "io"]; *)

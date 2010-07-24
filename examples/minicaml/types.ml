@@ -34,14 +34,14 @@ let test_d'occurrence var ty =
     | Variable var' ->
         if var == var' then raise(Circularité(Variable var, ty))
     | Terme(constructeur, arguments) ->
-        do_vect test arguments
+        Array.do_vect test arguments
   in test ty;;
 let rec rectifie_niveaux niveau_max ty =
   match valeur_de ty with
   | Variable var ->
       if var.niveau > niveau_max then var.niveau <- niveau_max
   | Terme(constructeur, arguments) ->
-      do_vect (rectifie_niveaux niveau_max) arguments;;
+      Array.do_vect (rectifie_niveaux niveau_max) arguments;;
 let rec unifie ty1 ty2 =
   let valeur1 = valeur_de ty1
   and valeur2 = valeur_de ty2 in
@@ -77,7 +77,7 @@ let généralisation ty =
         if var.niveau > !niveau_de_liaison & not (memq var !paramètres)
         then paramètres := var :: !paramètres
     | Terme(constr, arguments) ->
-        do_vect trouve_paramètres arguments in
+        Array.do_vect trouve_paramètres arguments in
   trouve_paramètres ty;
   {paramètres = !paramètres; corps = ty};;
 
@@ -97,7 +97,7 @@ let spécialisation schéma =
               ty
             end
         | Terme(constr, arguments) ->
-            Terme(constr, map_vect copie arguments) in
+            Terme(constr, Array.map_vect copie arguments) in
       copie schéma.corps;;
 let noms_des_variables = ref ([] : (variable_de_type * string) list)
 and compteur_de_variables = ref 0;;

@@ -23,7 +23,7 @@ let décode_adresse adr = adr / taille_du_mot;;
 let assemble instruction =
     if asm.pc >= Array.length asm.code then begin
       let nouveau_code = Array.create (2 * Array.length asm.code) Stop in
-      blit_vect asm.code 0 nouveau_code 0 (Array.length asm.code);
+      Array.blit_vect asm.code 0 nouveau_code 0 (Array.length asm.code);
       asm.code <- nouveau_code
     end;
     asm.code.(décode_adresse asm.pc) <- instruction;
@@ -66,4 +66,4 @@ let résoudre_étiquette (adresse, nom_étiq) =
 
 let extraire_code () =
     iter résoudre_étiquette asm.à_résoudre;
-    sub_vect asm.code 0 (décode_adresse asm.pc);;
+    Array.sub_vect asm.code 0 (décode_adresse asm.pc);;
