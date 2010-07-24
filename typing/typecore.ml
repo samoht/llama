@@ -343,6 +343,11 @@ let rec type_expr expr =
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       type_unit
+  | Texp_assert e ->
+      type_expect e type_bool;
+      type_unit
+  | Texp_assertfalse ->
+      new_type_var ()
   | Texp_stream complist ->
       let ty_comp = new_type_var() in
       let ty_res = type_stream ty_comp in

@@ -203,6 +203,8 @@ let rec expr env ex =
         | Pexp_record l -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env e) l)
         | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env li ex.pexp_loc)
         | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env li ex.pexp_loc, expr env e2)
+        | Pexp_assert e -> Texp_assert (expr env e)
+        | Pexp_assertfalse -> Texp_assertfalse
         | Pexp_stream l ->
             Texp_stream (List.map
                        (fun cmp ->

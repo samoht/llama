@@ -58,14 +58,12 @@ let ghexp d = { pexp_desc = d; pexp_loc = symbol_gloc () };;
 let ghpat d = { ppat_desc = d; ppat_loc = symbol_gloc () };;
 let ghtyp d = { ptyp_desc = d; ptyp_loc = symbol_gloc () };;
 
-(*
 let mkassert e =
   match e with
   | {pexp_desc = Pexp_construct (Lident "false", None) } ->
          mkexp (Pexp_assertfalse)
   | _ -> mkexp (Pexp_assert (e))
 ;;
-*)
 
 let mkinfix arg1 name arg2 =
   mkexp(Pexp_apply(mkoperator name 2, [arg1; arg2]))
@@ -472,10 +470,8 @@ expr:
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "set_nth_char")),
                          [$1; $4; $7])) }
-/*
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
-*/
   | FUNCTION opt_bar Parser_match
       { mkexp(Pexp_parser $3) }
   | MATCH seq_expr WITH opt_bar Parser_match

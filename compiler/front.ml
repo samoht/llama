@@ -107,6 +107,24 @@ let alloc_superfluous_constr cstr n =
   Lprim(Pmakeblock (get_constr cstr).cs_tag, extract_fields 0)
 ;;
 
+(* Assertions *)
+
+let assert_failed loc =
+  (* [Location.get_pos_info] is too expensive *)
+  let fname = match loc.Location.loc_start.Lexing.pos_fname with
+              | "" -> !Location.input_name
+              | x -> x
+  in
+  let pos = loc.Location.loc_start in
+  let line = pos.Lexing.pos_lnum in
+  let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
+  Lprim(Praise,
+          [Lconst(SCblock(assert_failure_tag,
+              [SCatom(ACstring fname);
+               SCatom(ACint line);
+               SCatom(ACint char)]))])
+;;
+
 (* Translation of expressions *)
 
 let rec translate_expr env =
@@ -265,6 +283,12 @@ let rec translate_expr env =
       Lprim(Pfield (get_label lbl).lbl_pos, [transl e])
   | Texp_setfield (e1, lbl, e2) ->
       Lprim(Psetfield (get_label lbl).lbl_pos, [transl e1; transl e2])
+  | Texp_assert cond ->
+      if !Clflags.noassert then
+        lambda_unit
+      else
+        Lifthenelse (transl cond, lambda_unit, assert_failed expr.exp_loc)
+  | Texp_assertfalse -> assert_failed expr.exp_loc
   | Texp_stream stream_comp_list ->
       translate_stream translate_expr env stream_comp_list
   | Texp_parser case_list ->

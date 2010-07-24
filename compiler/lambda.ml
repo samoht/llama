@@ -97,4 +97,5 @@ let rec has_guard = function
 
 let guard_expression l1 l2 npops =  Lifthenelse(l1, l2, Lstaticfail npops);;
 
+let lambda_unit = Lconst const_unit
 

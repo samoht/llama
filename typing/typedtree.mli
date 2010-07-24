@@ -60,9 +60,12 @@ and expression_desc =
   | Texp_record of (label reference * expression) list
   | Texp_field of expression * label reference
   | Texp_setfield of expression * label reference * expression
+  | Texp_when of expression * expression
+  | Texp_assert of expression
+  | Texp_assertfalse
+(* doomed *)
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
-  | Texp_when of expression * expression
 
 and stream_component =
     Zterm of expression

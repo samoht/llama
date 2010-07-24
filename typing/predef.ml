@@ -149,6 +149,16 @@ let constr_match_failure =
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = match_failure_tag; }
 
+let assert_failure_tag =
+  ConstrExtensible ({id_module=Module_builtin; id_name="Assert_failure"}, 1)
+
+let cs_assert_failure =
+  { cs_parent = tcs_exn;
+    cs_name = "Assert_failure";
+    cs_res = {typ_desc=Tconstr(ref_type_constr tcs_exn,[]); typ_level=notgeneric};
+    cs_args = [type_string; type_int; type_int]; cs_arity = 3;
+    cs_tag = assert_failure_tag; }
+
 (* ---------------------------------------------------------------------- *)
 
 let builtin_sig =
@@ -162,5 +172,6 @@ let builtin_sig =
     Sig_type tcs_list;
     Sig_type tcs_vect;
     Sig_type tcs_option;
-    Sig_exception constr_match_failure
+    Sig_exception constr_match_failure;
+    Sig_exception cs_assert_failure;
   ]

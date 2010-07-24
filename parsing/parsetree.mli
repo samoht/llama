@@ -53,6 +53,8 @@ and expression_desc =
   | Pexp_for of string * expression * expression * bool * expression
   | Pexp_constraint of expression * type_expression
   | Pexp_when of expression * expression
+  | Pexp_assert of expression
+  | Pexp_assertfalse
 (* the rest are doomed *)
   | Pexp_stream of stream_component list
   | Pexp_parser of (stream_pattern list * expression) list

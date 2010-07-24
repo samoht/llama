@@ -8,4 +8,4 @@ val make_archive : bool ref
 val debug : bool ref
 val fast : bool ref
 val nopervasives : bool ref
-
+val noassert : bool ref
