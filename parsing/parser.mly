@@ -261,7 +261,7 @@ The precedences must be listed from low to high.
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
-%right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
+%right    MINUSGREATER                  /* core_type (t -> t -> t) */
 %right    OR BARBAR                     /* expr (e || e || e) */
 %right    AMPERSAND AMPERAMPER          /* expr (e && e && e) */
 %nonassoc below_EQUAL
@@ -388,19 +388,16 @@ seq_expr:
   | expr SEMI                     { reloc_exp $1 }
   | expr SEMI seq_expr            { mkexp(Pexp_sequence($1, $3)) }
 ;
-labeled_simple_pattern:
-  | simple_pattern { $1 }
-;
 expr:
     simple_expr %prec below_SHARP
       { $1 }
-  | simple_expr simple_labeled_expr_list
+  | simple_expr simple_expr_list
       { mkexp(Pexp_apply($1, List.rev $2)) }
   | LET rec_flag let_bindings IN seq_expr
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
   | FUNCTION opt_bar match_cases
       { mkexp(Pexp_function(compat(List.rev $3))) }
-  | FUN labeled_simple_pattern fun_def
+  | FUN simple_pattern fun_def
       { mkexp(Pexp_function([[$2], $3])) }
   | MATCH seq_expr WITH opt_bar match_cases
       { mkexp(Pexp_apply(ghexp(Pexp_function(compat(List.rev $5))), [$2])) }
@@ -527,21 +524,15 @@ simple_expr:
       { unclosed "[" 1 "]" 4 }
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
-  | LBRACELESS field_expr_list opt_semi error
-      { unclosed "{<" 1 ">}" 4 }
   | LBRACKETLESS Stream_expr GREATERRBRACKET
       { mkexp(Pexp_stream (List.rev $2)) }
 
 ;
-simple_labeled_expr_list:
-    labeled_simple_expr
+simple_expr_list:
+    simple_expr
       { [$1] }
-  | simple_labeled_expr_list labeled_simple_expr
+  | simple_expr_list simple_expr
       { $2 :: $1 }
-;
-labeled_simple_expr:
-    simple_expr %prec below_SHARP
-      { ($1) }
 ;
 let_bindings:
     let_binding                                 { [$1] }
@@ -562,7 +553,7 @@ fun_binding:
 strict_binding:
     EQUAL seq_expr
       { $2 }
-  | labeled_simple_pattern fun_binding
+  | simple_pattern fun_binding
       { ghexp(Pexp_function([[$1], $2])) }
 ;
 match_cases:
@@ -571,7 +562,7 @@ match_cases:
 ;
 fun_def:
     match_action                                { $1 }
-  | labeled_simple_pattern fun_def
+  | simple_pattern fun_def
       { ghexp(Pexp_function([[$1], $2])) }
 ;
 match_action:
@@ -590,12 +581,6 @@ lbl_expr_list:
     label_longident EQUAL expr
       { [$1,$3] }
   | lbl_expr_list SEMI label_longident EQUAL expr
-      { ($3, $5) :: $1 }
-;
-field_expr_list:
-    label EQUAL expr
-      { [$1,$3] }
-  | field_expr_list SEMI label EQUAL expr
       { ($3, $5) :: $1 }
 ;
 expr_semi_list:
@@ -746,13 +731,9 @@ label_declaration:
 /* ---------------------------------------------------------------------- */
 
 core_type:
-    core_type2
-      { $1 }
-;
-core_type2:
     simple_core_type_or_tuple
       { $1 }
-  | core_type2 MINUSGREATER core_type2
+  | core_type MINUSGREATER core_type
       { mktyp(Ptyp_arrow($1, $3)) }
 ;
 
@@ -864,15 +845,11 @@ label_longident:
 ;
 type_longident:
     LIDENT                                      { Lident $1 }
-  | mod_ext_longident DOT LIDENT                { Ldot($1, $3) }
+  | mod_longident DOT LIDENT                { Ldot($1, $3) }
 ;
 mod_longident:
     UIDENT                                      { Lident $1 }
   | mod_longident DOT UIDENT                    { Ldot($1, $3) }
-;
-mod_ext_longident:
-    UIDENT                                      { Lident $1 }
-  | mod_ext_longident DOT UIDENT                { Ldot($1, $3) }
 ;
 
 /* ---------------------------------------------------------------------- */
