@@ -4,7 +4,7 @@ exception Bad of string
 
 open Pervasives
 open Farray
-open Fstring
+open String
 open List
 
 type spec =
@@ -41,7 +41,7 @@ let stop error =
 let parse speclist anonfun =
   let rec p = function
       [] -> ()
-    | s::t -> if string_length s >= 1 && nth_char s 0 = '-'
+    | s::t -> if String.length s >= 1 && nth_char s 0 = '-'
               then do_key s t
               else begin try (anonfun s); p t
                    with Bad m -> stop (Message m)
