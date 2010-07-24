@@ -5,7 +5,7 @@ external length : 'a vect -> int = "vect_length"
 open Bool;;
 open Eq;;
 open Int;;
-open Exc;;
+open Pervasives;;
 
 let create n init =
   if n < 0 || n > Sys.max_vect_length

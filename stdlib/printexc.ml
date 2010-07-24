@@ -2,7 +2,7 @@
 (* A catch-all exception handler *)
 
 open Bool
-open Exc
+open Pervasives
 open Eq
 open Int
 open Farray

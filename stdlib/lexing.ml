@@ -3,7 +3,7 @@
 open Eq
 open Fstring
 open Int
-open Exc
+open Pervasives
 open Io
 open Obj
 

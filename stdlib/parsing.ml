@@ -2,7 +2,7 @@
 
 open Pervasives
 open Eq
-open Exc
+open Pervasives
 open Int
 open Farray
 open Obj

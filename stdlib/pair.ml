@@ -1,7 +1,7 @@
 external fst : 'a * 'b -> 'a = "field0"
 external snd : 'a * 'b -> 'b = "field1"
 
-open Exc
+open Pervasives
 
 let rec split = function
          []    -> [],[]

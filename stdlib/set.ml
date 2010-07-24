@@ -1,7 +1,7 @@
 (* Sets over ordered types *)
 
 open Eq
-open Exc
+open Pervasives
 open Baltree
 
 (* Sets are represented by AVL trees. *)

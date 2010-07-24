@@ -5,9 +5,9 @@ external is_printable : char -> bool = "is_printable";;
 
 (* Character operations, with sanity checks *)
 
+open Pervasives
 open Bool
 open Eq
-open Exc
 open Fstring
 
 let char_of_int i =

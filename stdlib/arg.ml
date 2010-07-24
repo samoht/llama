@@ -3,7 +3,7 @@ exception Bad of string
 (* arg.ml *)
 
 open Bool
-open Exc
+open Pervasives
 open Eq
 open Int
 open Farray

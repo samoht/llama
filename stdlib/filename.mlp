@@ -6,7 +6,7 @@ open Bool
 open Int
 open Eq
 open Fstring
-open Exc
+open Pervasives
 
 #ifdef msdos
 open Fchar

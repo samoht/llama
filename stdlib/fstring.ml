@@ -18,7 +18,6 @@ open Pervasives
 open Int
 open Eq
 open Fchar
-open Exc
 
 let make_string len init =
   let s = create_string len in

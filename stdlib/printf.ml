@@ -1,5 +1,5 @@
 open Pervasives
-open Exc
+open Pervasives
 open Eq
 open Bool
 open Float

@@ -55,7 +55,7 @@ external format_float : string -> float -> string = "format_float"
 
 (* Operations on floating-point numbers *) 
 
-open Exc
+open Pervasives
 open Fstring
 open Int
 

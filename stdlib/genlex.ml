@@ -4,7 +4,7 @@ open Pervasives
 open Eq
 open Float
 open Int
-open Exc
+open Pervasives
 open List
 open Fchar
 open Fstring

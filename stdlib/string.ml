@@ -9,10 +9,10 @@ external compare_strings : string -> string -> int = "compare_strings"
 
 (* Operation on strings, with sanity checks *)
 
+open Pervasives
 open Bool
 open Eq
 open Int
-open Exc
 
 let create_string n =
   if n < 0 || n > Sys.max_string_length

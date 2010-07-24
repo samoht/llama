@@ -4,7 +4,7 @@ exception Parse_error;;
 open Pervasives
 open Eq
 open Io
-open Exc
+open Pervasives
 open Obj
 open Fstring
 

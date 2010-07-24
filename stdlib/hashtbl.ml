@@ -2,7 +2,7 @@ external hash_param : int -> int -> 'a -> int = "hash_univ_param"
 
 (* Hash tables *)
 
-open Exc
+open Pervasives
 open Int
 open Eq
 open Farray

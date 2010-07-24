@@ -29,7 +29,7 @@ exception End_of_file
 
 open Bool
 open Eq
-open Exc
+open Pervasives
 open Int
 open Sys
 open Fstring;;

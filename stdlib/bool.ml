@@ -4,7 +4,7 @@ external (or) : bool -> bool -> bool = "sequor";;
 external (||) : bool -> bool -> bool = "sequor";;
 external not : bool -> bool = "not"
 
-open Exc
+open Pervasives
 
 let string_of_bool = function | false -> "false" | _ -> "true";;
 let bool_of_string = function

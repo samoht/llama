@@ -5,7 +5,7 @@
 open Bool
 open Int
 open Eq
-open Exc
+open Pervasives
 
 type 'a t = Empty | Node of 'a t * 'a * 'a t * int;;
 type 'a contents = Nothing | Something of 'a;;

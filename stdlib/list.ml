@@ -1,8 +1,8 @@
 (* Operations on lists *)
 
+open Pervasives;;
 open Bool;;
 open Int;;
-open Exc;;
 open Eq;;
 
 let rec length_aux n = function

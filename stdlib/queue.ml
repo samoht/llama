@@ -2,7 +2,7 @@ exception Empty;;
 
 open Pervasives
 open Int
-open Exc
+open Pervasives
 type 'a queue_cell =
     Nil
   | Cons of 'a * 'a queue_cell ref

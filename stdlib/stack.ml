@@ -1,7 +1,7 @@
 exception Empty;;
 
 open List
-open Exc
+open Pervasives
 
 type 'a t = { mutable c : 'a list };;
 
