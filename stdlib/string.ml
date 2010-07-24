@@ -9,6 +9,7 @@ external compare_strings : string -> string -> int = "compare_strings"
 
 external unsafe_get : string -> int -> char = "get_nth_char"
 external unsafe_set : string -> int -> char -> unit = "set_nth_char"
+external unsafe_blit : string -> int -> string -> int -> int -> unit = "blit_string"
 
 (* Operation on strings, with sanity checks *)
 
@@ -90,3 +91,21 @@ let rindex_char_from s i c =
 
 let rindex_char = Fstring.rindex_char
 ;;
+
+
+let copy s =
+  let len = length s in
+  let r = create len in
+  unsafe_blit s 0 r 0 len;
+  r
+
+let apply1 f s =
+  if length s = 0 then s else begin
+    let r = copy s in
+    unsafe_set r 0 (f(unsafe_get s 0));
+    r
+  end
+
+let capitalize s = apply1 Char.uppercase s
+let uncapitalize s = apply1 Char.lowercase s
+

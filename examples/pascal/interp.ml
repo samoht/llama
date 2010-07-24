@@ -17,7 +17,7 @@ let rec valeur_initiale = function
 let alloue_variable (nom_var, type_var) env =
   ajoute_variable nom_var (ref (valeur_initiale type_var)) env;;
 let alloue_variables décl_var env =
-  list_it alloue_variable décl_var env;;
+  fold_right alloue_variable décl_var env;;
 let rec ajoute_arguments paramètres arguments env =
   match (paramètres, arguments) with
   | [], [] -> env

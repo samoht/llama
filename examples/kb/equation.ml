@@ -11,13 +11,13 @@ type rule = int * (int * (term * term));;
 let mk_rule m n =
   let all_vars = union (vars m) (vars n) in
   let (k,subst) =
-    it_list (fun (i,sigma) v -> (i+1,(v,Var(i))::sigma)) (1,[]) all_vars in
+    fold_left (fun (i,sigma) v -> (i+1,(v,Var(i))::sigma)) (1,[]) all_vars in
   (k-1, (substitute subst m, substitute subst n))
 ;;
 
 (* checks that rules are numbered in sequence and returns their number *)
 let (check_rules: rule list -> int) =
-  it_list (fun n (k,_) -> if k=n+1 then k
+  fold_left (fun n (k,_) -> if k=n+1 then k
                           else failwith "Rule numbers not in sequence") 0
 ;;
 

@@ -45,7 +45,7 @@ let matching term1 term2 =
         else
           (v,m) :: subst
     | (Term (op1, sons1)), (Term (op2, sons2)) ->
-	if op1 = op2 then it_list2 match_rec subst sons1 sons2
+	if op1 = op2 then fold_left2 match_rec subst sons1 sons2
                      else failwith "matching"
     | _  ->
         failwith "matching" in
@@ -74,7 +74,7 @@ let rec unify = function
       else [n2,term1]
   | Term (op1, sons1), Term (op2, sons2) ->
       if op1 = op2 then 
-	it_list2 (fun s t1 t2 -> compsubst (unify (substitute s t1,
+	fold_left2 (fun s t1 t2 -> compsubst (unify (substitute s t1,
                                                    substitute s t2)) s)
                  [] sons1 sons2
       else failwith "unify3"

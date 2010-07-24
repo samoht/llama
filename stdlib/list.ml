@@ -70,31 +70,31 @@ let rec map2 f =
   in map
 ;;
 
-let it_list f =
- let rec it_list_f a = function
-     [] -> a | b::l -> it_list_f (f a b) l
- in it_list_f
+let fold_left f =
+ let rec fold_left_f a = function
+     [] -> a | b::l -> fold_left_f (f a b) l
+ in fold_left_f
 ;;
 
-let it_list2 f =
+let fold_left2 f =
   let rec itl a l1 l2 = match l1, l2 with
     [], [] -> a
   | (h1::t1), (h2::t2) -> itl (f a h1 h2) t1 t2
-  | _ -> invalid_arg "it_list2"
+  | _ -> invalid_arg "fold_left2"
   in itl
 ;;
 
-let list_it f l b =
- let rec list_it_f = function
-     [] -> b | a::l -> f a (list_it_f l)
- in list_it_f l
+let fold_right f l b =
+ let rec fold_right_f = function
+     [] -> b | a::l -> f a (fold_right_f l)
+ in fold_right_f l
 ;;
 
-let list_it2 f l1 l2 a =
+let fold_right2 f l1 l2 a =
   let rec lit l1 l2 = match l1, l2 with
     [], [] -> a
   | (h1::t1), (h2::t2) -> f h1 h2 (lit t1 t2)
-  | _ -> invalid_arg "list_it2"
+  | _ -> invalid_arg "fold_right2"
   in lit l1 l2
 ;;
 

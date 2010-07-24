@@ -303,7 +303,7 @@ let compile_procédure env (nom, décl) =
     alloue_paramètres décl.proc_paramètres env in
   profondeur_pile := taille_du_mot;
   let env2 =
-    list_it alloue_variable_locale décl.proc_variables env1 in
+    fold_right alloue_variable_locale décl.proc_variables env1 in
   printf "P%s:\n" nom;
   printf "sub sp, %d, sp\n" !profondeur_pile;
   printf "store sp, %d, ra\n" (!profondeur_pile - taille_du_mot);
@@ -317,7 +317,7 @@ let compile_fonction env (nom, décl) =
     alloue_paramètres décl.fonc_paramètres env in
   profondeur_pile := taille_du_mot;
   let env2 =
-    list_it alloue_variable_locale décl.fonc_variables env1 in
+    fold_right alloue_variable_locale décl.fonc_variables env1 in
   let env3 =
     alloue_variable_locale (nom, décl.fonc_type_résultat) env2 in
   printf "F%s:\n" nom;
@@ -341,7 +341,7 @@ let alloue_variable_globale (nom, typ) env =
 let compile_programme prog =
   adresse_donnée := 0;
   let env_global =
-    list_it alloue_variable_globale prog.prog_variables
+    fold_right alloue_variable_globale prog.prog_variables
             (environnement_initial prog.prog_procédures
                                    prog.prog_fonctions) in
   compile_instr env_global prog.prog_corps;

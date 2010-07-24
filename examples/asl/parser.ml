@@ -36,7 +36,7 @@ let rec expr = function
 | [< `BSLASH ; `IDENT s ; `DOT ; expr e >] ->
     (function rho -> Abs(s, e(s::rho)))
 | [< expr0 e ; (list expr0) l >] ->
-    it_list (fun e1 e2 rho -> App(e1 rho, e2 rho)) e l
+    fold_left (fun e1 e2 rho -> App(e1 rho, e2 rho)) e l
 
 and expr0 = function
 | [< `INT n >] -> (function _ -> Const n)

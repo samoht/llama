@@ -35,12 +35,12 @@ let ajoute état ens =
     éléments = état :: ens.éléments };;
 let rec ajoute_fermeture état ferm =
   if appartient état ferm then ferm else
-    list_it ajoute_fermeture
+    fold_right ajoute_fermeture
             état.epsilon_transitions (ajoute état ferm);;
 
 let fermeture état = ajoute_fermeture état vide;;
 
-let fermeture_ens ens = list_it ajoute_fermeture ens.éléments vide;;
+let fermeture_ens ens = fold_right ajoute_fermeture ens.éléments vide;;
 let déplacements liste_états =
   let t = Array.create 256 vide in
   iter

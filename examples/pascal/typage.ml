@@ -107,7 +107,7 @@ let ajoute_var (nom, typ) env = ajoute_variable nom typ env;;
 
 let type_procédure env_global (nom, décl) =
   let env =
-    list_it ajoute_var
+    fold_right ajoute_var
             (décl.proc_variables @ décl.proc_paramètres)
             env_global in
   type_instr env décl.proc_corps;;
@@ -117,14 +117,14 @@ let type_fonction env_global (nom, décl) =
     ("passage comme résultat de la fonction " ^ nom)
     décl.fonc_type_résultat;
   let env =
-    list_it ajoute_var
+    fold_right ajoute_var
             ((nom, décl.fonc_type_résultat) ::
               décl.fonc_variables @ décl.fonc_paramètres)
             env_global in
   type_instr env décl.fonc_corps;;
 let type_programme prog =
   let env_global =
-    list_it ajoute_var prog.prog_variables
+    fold_right ajoute_var prog.prog_variables
             (environnement_initial prog.prog_procédures
                                    prog.prog_fonctions) in
   try

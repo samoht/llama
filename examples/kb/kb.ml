@@ -12,7 +12,7 @@ let super m = let rec suprec = function
   | Term(_,sons) as n ->
       let collate (pairs,n) son =
        (pairs @ map (fun (u,sg) -> (n::u,sg)) (suprec son), n+1) in
-      let insides = fst (it_list collate ([],1) sons) in
+      let insides = fst (fold_left collate ([],1) sons) in
         begin try
           ([], unify(m,n)) :: insides
         with Failure _ ->
@@ -35,7 +35,7 @@ let super_strict m = function
     | Term(_,sons) ->
         let collate (pairs,n) son =
           (pairs @ map (fun (u,sg) -> (n::u,sg)) (super m son), n+1) in
-        fst (it_list collate ([],1) sons)
+        fst (fold_left collate ([],1) sons)
     | _ -> []
 ;;
 

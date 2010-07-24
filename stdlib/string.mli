@@ -100,3 +100,9 @@ val rindex_char_from: string -> int -> char -> int;;
 
 external unsafe_get : string -> int -> char = "get_nth_char"
 external unsafe_set : string -> int -> char -> unit = "set_nth_char"
+
+val capitalize : string -> string
+(** Return a copy of the argument, with the first character set to uppercase. *)
+
+val uncapitalize : string -> string
+(** Return a copy of the argument, with the first character set to lowercase. *)

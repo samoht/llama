@@ -20,10 +20,10 @@ val iter : ('a -> unit) -> 'a list -> unit
         (* [iter f [a1; ...; an]] applies function [f] in turn to
            [a1; ...; an], discarding all the results. It is equivalent to
 	   [begin f a1; f a2; ...; f an; () end]. *)
-val it_list : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-        (* [it_list f a [b1; ...; bn]] is [f (... (f (f a b1) b2) ...) bn]. *)
-val list_it : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
-        (* [list_it f [a1; ...; an] b] is [f a1 (f a2 (... (f an b) ...))]. *)
+val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+        (* [fold_left f a [b1; ...; bn]] is [f (... (f (f a b1) b2) ...) bn]. *)
+val fold_right : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
+        (* [fold_right f [a1; ...; an] b] is [f a1 (f a2 (... (f an b) ...))]. *)
 val map2 : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
         (* [map2 f [a1; ...; an] [b1; ...; bn]] is [[f a1 b1; ...; f an bn]].
 	   Raise [Invalid_argument "map2"] if the two lists have
@@ -33,15 +33,15 @@ val iter2 : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
            [f a1 b1; ...; f an bn], discarding the results.
 	   Raise [Invalid_argument "iter2"] if the two lists have
 	   different lengths. *)
-val it_list2 : ('a -> 'b -> 'c -> 'a) -> 'a -> 'b list -> 'c list -> 'a
-        (* [it_list2 f a [b1; ...; bn] [c1; ...; cn]] is
+val fold_left2 : ('a -> 'b -> 'c -> 'a) -> 'a -> 'b list -> 'c list -> 'a
+        (* [fold_left2 f a [b1; ...; bn] [c1; ...; cn]] is
                [f (... (f (f a b1 c1) b2 c2) ...) bn cn].
-	   Raise [Invalid_argument "it_list2"] if the two lists have
+	   Raise [Invalid_argument "fold_left2"] if the two lists have
 	   different lengths. *)
-val list_it2 : ('a -> 'b -> 'c -> 'c) -> 'a list -> 'b list -> 'c -> 'c
-        (* [list_it2 f [a1; ...; an] [b1; ...; bn] c] is
+val fold_right2 : ('a -> 'b -> 'c -> 'c) -> 'a list -> 'b list -> 'c -> 'c
+        (* [fold_right2 f [a1; ...; an] [b1; ...; bn] c] is
                [f a1 b1 (f a2 b2 (... (f an bn c) ...))].
-	   Raise [Invalid_argument "list_it2"] if the two lists have
+	   Raise [Invalid_argument "fold_right2"] if the two lists have
 	   different lengths. *)
 val flat_map : ('a -> 'b list) -> 'a list -> 'b list
         (* [flat_map f [l1; ...; ln]] is [(f l1) @ (f l2) @ ... @ (f ln)]. *)
