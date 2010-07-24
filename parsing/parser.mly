@@ -112,7 +112,7 @@ let ghstrexp e =
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
 
-let array_function mn s = Ldot(Lident mn, s) (* xxx *)
+let array_function mn s = Lident s (* xxx *)
 
 let rec deep_mkrangepat c1 c2 =
   if c1 = c2 then ghpat(Ppat_constant(ACchar c1)) else
