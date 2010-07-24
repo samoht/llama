@@ -20,7 +20,7 @@ val set_nth_char : string -> int -> char -> unit
 val (^) : string -> string -> string
         (* [s1 ^ s2] returns a fresh string containing the concatenation of
            the strings [s1] and [s2]. *)
-val concat : string list -> string
+val concat : string -> string list -> string
         (* Return a fresh string containing the concatenation of
            all the strings in the argument list. *)
 val sub : string -> int -> int -> string

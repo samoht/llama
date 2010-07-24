@@ -140,7 +140,8 @@ let message = function
   | Comment_start -> "this is the start of a comment."
   | Comment_not_end -> "this is not the end of a comment."
   | Deprecated -> "this syntax is deprecated."
-  | Unused_var v | Unused_var_strict v -> "unused variable " ^ v ^ "."
+  | Unused_var v -> "unused variable " ^ v ^ "."
+  | Unused_var_strict v -> "unused variable " ^ v ^ "." (* xxx: split with prev due to llama limitation *)
   | Illegal_backslash -> "illegal backslash escape in string."
   | Implicit_public_methods l ->
       "the following private methods were made public implicitly:\n "

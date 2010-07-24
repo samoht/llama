@@ -16,7 +16,7 @@ external nth_char : string -> int -> char = "get_nth_char"
 external set_nth_char : string -> int -> char -> unit = "set_nth_char"
 ;;
 val ( ^ ) : string -> string -> string
-val concat : string list -> string
+val concat : string -> string list -> string
 val sub_string : string -> int -> int -> string
 ;;
 external create_string : int -> string = "create_string"

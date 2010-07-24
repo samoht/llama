@@ -110,7 +110,7 @@ let sprintf format =
   let rec doprn start i =
     if i >= string_length format then begin
       if i > start then res := sub_string format start (i-start) :: !res;
-      magic(concat(rev !res))
+      magic(concat "" (rev !res))
     end else
       if nth_char format i != '%' then
         doprn start (i+1)

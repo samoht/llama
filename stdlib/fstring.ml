@@ -34,19 +34,23 @@ let ( ^ ) s1 s2 =
     s
 ;;
 
-let concat sl =
-  let rec concat_len l = function
-    [] -> l
-  | s :: r -> concat_len (l + string_length s) r in
-  let res = create_string (concat_len 0 sl) in
-  let rec fill_res pos = function
-    [] -> ()
-  | s :: r ->
-      let l = string_length s in
-      blit_string s 0 res pos l;
-      fill_res (pos+l) r in
-  fill_res 0 sl;
-  res;;
+let concat sep l =
+  match l with
+    [] -> ""
+  | hd :: tl ->
+      let num = ref 0 and len = ref 0 in
+      List.iter (fun s -> incr num; len := !len + string_length s) l;
+      let r = create_string (!len + string_length sep * (!num - 1)) in
+      blit_string hd 0 r 0 (string_length hd);
+      let pos = ref(string_length hd) in
+      List.iter
+        (fun s ->
+          blit_string sep 0 r !pos (string_length sep);
+          pos := !pos + string_length sep;
+          blit_string s 0 r !pos (string_length s);
+          pos := !pos + string_length s)
+        tl;
+      r
 
 let sub_string s start len =
   let res = create_string len in
