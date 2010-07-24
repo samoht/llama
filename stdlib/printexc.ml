@@ -5,7 +5,7 @@ open Bool
 open Exc
 open Eq
 open Int
-open Fvect
+open Farray
 open Io
 open Obj
 open Sys

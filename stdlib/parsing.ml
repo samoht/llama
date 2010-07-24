@@ -4,7 +4,7 @@ open Pervasives
 open Eq
 open Exc
 open Int
-open Fvect
+open Farray
 open Obj
 open Lexing
 

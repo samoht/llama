@@ -6,7 +6,7 @@ open Bool
 open Exc
 open Eq
 open Int
-open Fvect
+open Farray
 open Fstring
 open Io
 open List

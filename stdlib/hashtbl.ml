@@ -5,7 +5,7 @@ external hash_param : int -> int -> 'a -> int = "hash_univ_param"
 open Exc
 open Int
 open Eq
-open Fvect
+open Farray
 
 (* We do dynamic hashing, and resize the table and rehash the elements
    when buckets become too long. *)
