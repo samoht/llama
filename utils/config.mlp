@@ -22,7 +22,7 @@ and minint_short = (-32768)
 
 let default_used_interfaces =
   ["cautious", [(*"builtin";*) "Pervasives";
-                  "Io"];
+                 ];
 (*   "fast",     [(*"builtin";*) "pervasives"; "stream"; "exc"; "bool"; "fstring"; "fchar";
                 "fvect"; "list"; "pair"; "float"; "int"; "eq"; "io"]; *)
    "none",     [(*"builtin"*)]]

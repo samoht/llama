@@ -1,6 +1,6 @@
 (* Operations on streams *)
 
-open Io
+open Pervasives
 
 type 'a stream;;
   (* The type of streams containing values of type ['a]. *)

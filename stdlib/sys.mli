@@ -48,19 +48,6 @@ type open_flag =
 ;;
         (* The commands for [open]. *)
 
-external exit : int -> 'a = "sys_exit"
-        (* Terminate the program and return the given status code to
-	   the operating system.
-           In contrast with the function [exit] from module [io], this
-           [exit] function does not flush the standard
-           output and standard error channels. *)
-external open_gen : string -> open_flag list -> file_perm -> int = "sys_open"
-        (* Open a file. The second argument is the opening mode.
-           The third argument is the permissions to use if the file
-           must be created. The result is a file descriptor opened on the
-           file. *)
-external close : int -> unit = "sys_close"
-        (* Close a file descriptor. *)
 external remove : string -> unit = "sys_remove"
         (* Remove the given file name from the file system. *)
 external rename : string -> string -> unit = "sys_rename"

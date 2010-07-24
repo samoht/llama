@@ -5,7 +5,6 @@ exception Bad of string
 open Pervasives
 open Farray
 open Fstring
-open Io
 open List
 
 type spec =

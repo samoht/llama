@@ -1,3 +1,5 @@
+open Pervasives
+
 (* Memory management control and statistics. *)
 
 type stat = {
@@ -73,7 +75,7 @@ type control = {
 external stat : unit -> stat = "gc_stat";;
   (* Return the current values of the memory management counters in a
      [stat] record. *)
-val print_stat : Io.out_channel -> unit;;
+val print_stat : out_channel -> unit;;
   (* Print the current values of the memory management counters (in
      human-readable form) into the channel argument. *)
 external get : unit -> control = "gc_get";;

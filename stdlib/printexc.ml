@@ -3,7 +3,6 @@
 
 open Pervasives
 open Farray
-open Io
 open Obj
 open Sys
 
@@ -67,5 +66,5 @@ let f fct arg =
         end
     end;
     prerr_char '\n';
-    Io.exit 2
+    exit 2
 ;;

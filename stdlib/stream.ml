@@ -2,7 +2,6 @@ exception Parse_failure;;
 exception Parse_error;;
 
 open Pervasives
-open Io
 open Pervasives
 open Obj
 open Fstring

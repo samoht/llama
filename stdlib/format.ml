@@ -1,6 +1,5 @@
 open Pervasives
 open Fstring
-open Io
 
 (* Tokens are one of the following : *)
 

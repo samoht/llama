@@ -1,3 +1,5 @@
+open Pervasives
+
 (* Pretty printing *)
 
 (* This module implements a pretty-printing facility to format text
@@ -33,7 +35,6 @@
    after each phrase. Each phrase is therefore executed in the initial
    state of the pretty-printer. *)
 
-open Io
 
 (*** Boxes *)
 val open_box : int -> unit;;

@@ -2,7 +2,6 @@
 
 open Fstring
 open Pervasives
-open Io
 open Obj
 
 type lexbuf =

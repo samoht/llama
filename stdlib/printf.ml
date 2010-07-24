@@ -1,6 +1,5 @@
 open Pervasives
 open Fstring
-open Io
 open List
 open Obj
 
