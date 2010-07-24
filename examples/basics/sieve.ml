@@ -39,7 +39,7 @@ let usage() =
 ;;
 
 if Sys.interactive then () else
-if vect_length Sys.command_line <> 2 then begin
+if Array.length Sys.command_line <> 2 then begin
   print_string "Usage: sieve <n>";
   print_newline()
 end else begin

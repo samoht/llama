@@ -46,10 +46,10 @@ let count name =
 
 if Sys.interactive then () else
 try
-  if vect_length Sys.command_line <= 1 then
+  if Array.length Sys.command_line <= 1 then
     count_channel std_in                (* No command-line arguments *)
   else
-    for i = 1 to vect_length Sys.command_line - 1 do
+    for i = 1 to Array.length Sys.command_line - 1 do
       count_file  Sys.command_line.(i)
     done;
   print_result ();

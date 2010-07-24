@@ -59,7 +59,7 @@ let rec unifie ty1 ty2 =
         if constr1 <> constr2 then
           raise (Conflit(valeur1, valeur2))
         else
-          for i = 0 to vect_length arguments1 - 1 do
+          for i = 0 to Array.length arguments1 - 1 do
             unifie arguments1.(i) arguments2.(i)
           done;;
 let niveau_de_liaison = ref 0;;
@@ -109,7 +109,7 @@ let imprime_var var =
   with Not_found ->
     let nom =
       String.make 1
-        (char_of_int(int_of_char 'a' + !compteur_de_variables)) in
+        (char_of_int(Char.code 'a' + !compteur_de_variables)) in
     incr compteur_de_variables;
     noms_des_variables := (var, nom) :: !noms_des_variables;
     print_string nom;;
@@ -119,7 +119,7 @@ let rec imprime ty =
   | Variable var ->
       imprime_var var
   | Terme(constructeur, arguments) ->
-      match vect_length arguments with
+      match Array.length arguments with
       | 0 -> print_string constructeur
       | 1 -> imprime arguments.(0);
              print_string " "; print_string constructeur

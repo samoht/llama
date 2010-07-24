@@ -11,7 +11,7 @@ let reconnaît automate chaîne =
   let état_courant = ref automate in 
   try
     for i = 0 to String.length chaîne - 1 do
-    match !état_courant.dtransitions.(int_of_char(nth_char chaîne i)) with
+    match !état_courant.dtransitions.(Char.code(nth_char chaîne i)) with
     | Rejet  -> raise Échec
     | Vers e -> état_courant := e
     done;
@@ -39,12 +39,12 @@ let fermeture état = ajoute_fermeture état vide;;
 
 let fermeture_ens ens = list_it ajoute_fermeture ens.éléments vide;;
 let déplacements liste_états =
-  let t = make_vect 256 vide in
+  let t = Array.create 256 vide in
   iter
     (function état ->
       iter
         (function (car, dest) ->
-          let i = int_of_char car in t.(i) <- ajoute dest t.(i))
+          let i = Char.code car in t.(i) <- ajoute dest t.(i))
       état.transitions)
     liste_états;
   t;;
@@ -56,7 +56,7 @@ let déterminise état_initial =
     with Not_found ->
       let nouvel_état =
         { dterminal = exists (function n -> n.terminal) ens.éléments;
-          dtransitions = make_vect 256 Rejet } in
+          dtransitions = Array.create 256 Rejet } in
       Hashtbl.add états_connus ens.contenu nouvel_état;
       Stack.push (ens.éléments, nouvel_état) à_remplir;
       nouvel_état in

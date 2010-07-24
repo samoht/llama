@@ -35,7 +35,7 @@ let grep expr fichier =
   grep_sur_fichier (construire_auto expr) fichier;;
 
 if Sys.interactive then () else
-  if vect_length Sys.command_line < 2 then begin
+  if Array.length Sys.command_line < 2 then begin
     prerr_endline "Utilisation: grep <motif> <fichiers>";
     exit 2
   end else begin
@@ -44,8 +44,8 @@ if Sys.interactive then () else
       with Parse_error | Parse_failure ->
         prerr_endline "Erreur de syntaxe dans l'expression";
         exit 2 in
-    if vect_length Sys.command_line >= 3 then
-      for i = 2 to vect_length Sys.command_line - 1 do
+    if Array.length Sys.command_line >= 3 then
+      for i = 2 to Array.length Sys.command_line - 1 do
         grep_sur_fichier auto Sys.command_line.(i)
       done
     else

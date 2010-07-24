@@ -42,7 +42,7 @@ let rec ident len = function
 
 let rec number n = function
 | [< `'0' .. '9' as d; s >] ->
-    number(10*n+int_of_char d-int_of_char '0') s
+    number(10*n+Char.code d-Char.code '0') s
 | [< >] -> n
 ;;
 
@@ -50,7 +50,7 @@ let rec next_token = function
 | [< `('a'..'z' | 'A' .. 'Z') as c; s >] ->
     set_nth_char buff 0 c; ident 1 s
 | [< `'0' .. '9' as d; s >] ->
-    INT(number (int_of_char d-int_of_char '0') s)
+    INT(number (Char.code d-Char.code '0') s)
 | [< `' ' | '\n' | '\t'; s >] -> next_token s
 | [< `'+' | '-' | '*' | '/' as c >] -> OP (String.make 1 c)
 | [< `'.' >] -> DOT

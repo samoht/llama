@@ -7,7 +7,7 @@ exception Erreur_exécution of string;;
 let rec valeur_initiale = function
   | Integer | Boolean -> Inconnue
   | Array(inf, sup, ty) ->
-      let v = make_vect (sup - inf + 1) Inconnue in
+      let v = Array.create (sup - inf + 1) Inconnue in
       for i = inf to sup do
         v.(i - inf) <- valeur_initiale ty
       done;
@@ -68,7 +68,7 @@ let rec évalue_expr env = function
   | Accès_tableau(argument1, argument2) ->
       let (inf, tbl) = tableau_val(évalue_expr env argument1) in
       let indice = ent_val(évalue_expr env argument2) in
-      if indice >= inf & indice < inf + vect_length tbl
+      if indice >= inf & indice < inf + Array.length tbl
       then tbl.(indice - inf)
       else raise(Erreur_exécution "accès hors bornes")
 
@@ -80,7 +80,7 @@ and exécute_instr env = function
       let nouvelle_valeur = évalue_expr env expr3 in
       let (inf, tbl) = tableau_val(évalue_expr env expr1) in
       let indice = ent_val(évalue_expr env expr2) in
-      if indice >= inf & indice < inf + vect_length tbl
+      if indice >= inf & indice < inf + Array.length tbl
       then tbl.(indice - inf) <- nouvelle_valeur
       else raise(Erreur_exécution "accès hors bornes")
   | Appel(nom_proc, arguments) ->

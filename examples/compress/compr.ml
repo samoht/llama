@@ -41,13 +41,13 @@ let décompresse_fichier nom_fichier =
 if Sys.interactive then () else
   begin
     let erreur = ref false in
-    if vect_length command_line >= 2 & command_line.(1) = "-d" then
-      for i = 2 to vect_length command_line - 1 do
+    if Array.length command_line >= 2 & command_line.(1) = "-d" then
+      for i = 2 to Array.length command_line - 1 do
         try décompresse_fichier command_line.(i)
         with Erreur -> erreur := true
       done
     else
-      for i = 1 to vect_length command_line - 1 do
+      for i = 1 to Array.length command_line - 1 do
         try compresse_fichier command_line.(i)
         with Erreur -> erreur := true
       done;

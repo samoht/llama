@@ -15,9 +15,9 @@ exception Mauvais_arguments;;
 
 if Sys.interactive then () else
 try
-  if vect_length Sys.command_line < 2 then raise Mauvais_arguments;
+  if Array.length Sys.command_line < 2 then raise Mauvais_arguments;
   let taille_mémoire =
-    if vect_length Sys.command_line < 3
+    if Array.length Sys.command_line < 3
     then 1024
     else try int_of_string Sys.command_line.(2)
          with Failure _ -> raise Mauvais_arguments in

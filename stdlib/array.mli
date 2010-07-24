@@ -1,6 +1,6 @@
 (* Operations on vectors *)
 
-external vect_length : 'a vect -> int = "vect_length"
+external length : 'a vect -> int = "vect_length"
         (* Return the length (number of elements) of the given vector. *)
 ;;
 val vect_item : 'a vect -> int -> 'a
@@ -17,7 +17,7 @@ val vect_assign : 'a vect -> int -> 'a -> unit
            0 to [vect_length v - 1].
            You can also write [v.(n) <- x] instead of [vect_assign v n x]. *)
 ;;
-val make_vect : int -> 'a -> 'a vect
+val create : int -> 'a -> 'a vect
         (* [make_vect n x] returns a fresh vector of length [n],
            initialized with [x].
 	   All the elements of this new vector are initially
@@ -50,7 +50,7 @@ val copy_vect : 'a vect -> 'a vect
         (* [copy_vect v] returns a copy of [v], that is, a fresh vector
            containing the same elements as [v]. *)
 ;;
-val fill_vect : 'a vect -> int -> int -> 'a -> unit
+val fill : 'a vect -> int -> int -> 'a -> unit
         (* [fill_vect v ofs len x] modifies the vector [v] in place,
            storing [x] in elements number [ofs] to [ofs + len - 1].
            Raise [Invalid_argument "fill_vect"] if [ofs] and [len] do not

@@ -28,7 +28,7 @@ exception Mauvais_arguments;;
 
 if Sys.interactive then () else
 try
-  if vect_length Sys.command_line <> 3 then raise Mauvais_arguments;
+  if Array.length Sys.command_line <> 3 then raise Mauvais_arguments;
   exit (assemble_fichier Sys.command_line.(1) Sys.command_line.(2))
 with Mauvais_arguments ->
        prerr_endline

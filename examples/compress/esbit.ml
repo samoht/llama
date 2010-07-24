@@ -15,7 +15,7 @@ let finir sortie =
     output_char sortie (char_of_int tampon.v);;
 let lire_bit entrée =
   if tampon.nbits <= 0 then begin
-    tampon.v <- int_of_char(input_char entrée);
+    tampon.v <- Char.code(input_char entrée);
     tampon.nbits <- 8
   end;
   let res = tampon.v land 1 in

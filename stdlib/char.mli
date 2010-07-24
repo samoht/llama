@@ -1,6 +1,6 @@
 (* Character operations *)
 
-external int_of_char : char -> int = "identity"
+external code : char -> int = "identity"
         (* Return the ASCII code of the argument. *)
 val char_of_int : int -> char
         (* Return the character with the given ASCII code.

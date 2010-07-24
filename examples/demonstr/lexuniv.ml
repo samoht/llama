@@ -6,7 +6,7 @@ type lexème =
 let rec lire_entier accumulateur flux =
   match flux with
   | [< `('0'..'9' as c) >] ->
-      lire_entier (10 * accumulateur + int_of_char c - 48) flux
+      lire_entier (10 * accumulateur + Char.code c - 48) flux
   | [< >] ->
       accumulateur;;
 
@@ -60,11 +60,11 @@ let rec lire_lexème table flux =
       set_nth_char tampon 0 c;
       mc_ou_ident table (lire_symbole 1 flux)
   | [< `('0'..'9' as c) >] ->
-      Entier(lire_entier (int_of_char c - 48) flux)
+      Entier(lire_entier (Char.code c - 48) flux)
   | [< `'-' >] ->
       begin match flux with
       | [< `('0'..'9' as c) >] ->
-          Entier(- (lire_entier  (int_of_char c - 48) flux))
+          Entier(- (lire_entier  (Char.code c - 48) flux))
       | [< >] ->
           set_nth_char tampon 0 '-';
           mc_ou_ident table (lire_symbole 1 flux)

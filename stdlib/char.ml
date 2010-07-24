@@ -1,4 +1,4 @@
-external int_of_char : char -> int = "identity"
+external code : char -> int = "identity"
 external is_printable : char -> bool = "is_printable";;
 
 (* Character operations, with sanity checks *)

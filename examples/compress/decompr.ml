@@ -8,7 +8,7 @@ let enlève_suffixe_cpr chaîne =
 open Sys
 exception Erreur;;
 let erreur = ref false;;
-for i = 1 to vect_length command_line - 1 do
+for i = 1 to Array.length command_line - 1 do
   let (nom_entrée, nom_sortie) =
     try
       (command_line.(i), enlève_suffixe_cpr command_line.(i))

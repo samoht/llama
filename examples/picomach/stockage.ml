@@ -14,16 +14,16 @@ let asm =
 
 let initialise () =
     asm.pc <- 0;
-    asm.code <- make_vect 100 Stop;
+    asm.code <- Array.create 100 Stop;
     asm.table_étiq <- Hashtbl.create 17;
     asm.à_résoudre <- [];;
 
 let décode_adresse adr = adr / taille_du_mot;;
 
 let assemble instruction =
-    if asm.pc >= vect_length asm.code then begin
-      let nouveau_code = make_vect (2 * vect_length asm.code) Stop in
-      blit_vect asm.code 0 nouveau_code 0 (vect_length asm.code);
+    if asm.pc >= Array.length asm.code then begin
+      let nouveau_code = Array.create (2 * Array.length asm.code) Stop in
+      blit_vect asm.code 0 nouveau_code 0 (Array.length asm.code);
       asm.code <- nouveau_code
     end;
     asm.code.(décode_adresse asm.pc) <- instruction;

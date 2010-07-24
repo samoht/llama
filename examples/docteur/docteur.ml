@@ -28,8 +28,8 @@ let rec associé_d'un_élément_de liste_de_clés liste_d'association =
        with Pas_trouvé ->
          associé_d'un_élément_de reste liste_d'association;;
 let minuscule_de car =
-    if int_of_char car >= 65 & int_of_char car <= 90
-    then char_of_int (int_of_char car + 32)
+    if Char.code car >= 65 & Char.code car <= 90
+    then char_of_int (Char.code car + 32)
     else car;; 
 let minuscules chaîne =
     let chaîne_en_minuscules =
@@ -487,7 +487,7 @@ let réponses_aux_mots_intéressants =
     "Ne m'en veuillez pas si je vous interroge. Continuez";
     "Vous ne le pensez pas vraiment?"|])
 ];;
-let au_choix_dans v = v.(Random.int (vect_length v));;
+let au_choix_dans v = v.(Random.int (Array.length v));;
 let message s = print_string s; print_newline();;
 let prix_à_payer = ref 0;;
 let bonjour () =

@@ -8,7 +8,7 @@ let encode entrée sortie codage =
     while true do
       let c = input_char entrée in
       iter (Esbit.écrire_bit sortie)
-              codage.caractère.(int_of_char c)
+              codage.caractère.(Char.code c)
     done
   with End_of_file ->           (* fin du fichier d'entrée *)
     iter (Esbit.écrire_bit sortie) codage.fin;
@@ -30,10 +30,10 @@ let décode entrée sortie arbre =
       else parcours droite in
   parcours arbre;;
 let fréquences entrée =
-  let fr = make_vect 256 0 in
+  let fr = Array.create 256 0 in
   begin try
     while true do
-      let c = int_of_char(input_char entrée) in fr.(c) <- fr.(c) + 1
+      let c = Char.code(input_char entrée) in fr.(c) <- fr.(c) + 1
     done
   with End_of_file -> ()
   end;
@@ -57,10 +57,10 @@ let construire_arbre fréquences =
   let (_, arbre, _) = Fileprio.extraire !prio in
   arbre;;
 let arbre_vers_codage arbre =
-  let codage = { caractère = make_vect 256 []; fin = [] } in
+  let codage = { caractère = Array.create 256 []; fin = [] } in
   let rec remplir_codage préfixe = function
   | Lettre c ->
-      codage.caractère.(int_of_char c) <- rev préfixe
+      codage.caractère.(Char.code c) <- rev préfixe
   | Fin ->
       codage.fin <- rev préfixe
   | Noeud(arbre1, arbre2) ->

@@ -9,7 +9,7 @@ type état_du_processeur =
 exception Erreur of string * int;;
 
 let pico =
-  { registres = make_vect nombre_de_registres 0;
+  { registres = Array.create nombre_de_registres 0;
     pc = 0;
     code = [| |];
     mémoire = [| |] };;
@@ -25,7 +25,7 @@ let écrire_registre reg valeur =
 
 let lire_instruction adresse =
     let adr = adresse/taille_du_mot in
-    if adr < 0 or adr >= vect_length pico.code then
+    if adr < 0 or adr >= Array.length pico.code then
       raise (Erreur ("sortie de la zone code", adr));
     if adresse mod taille_du_mot <> 0 then
       raise (Erreur ("pc non aligné", adresse));
@@ -33,7 +33,7 @@ let lire_instruction adresse =
 
 let lire_mémoire adresse =
     let adr = adresse/taille_du_mot in
-    if adr < 0 or adr >= vect_length pico.mémoire then
+    if adr < 0 or adr >= Array.length pico.mémoire then
       raise (Erreur ("lecture en dehors de la mémoire", adresse));
     if adresse mod taille_du_mot <> 0 then
       raise (Erreur ("lecture non alignée", adresse));
@@ -41,7 +41,7 @@ let lire_mémoire adresse =
 
 let écrire_mémoire adresse valeur =
     let adr = adresse/taille_du_mot in
-    if adr < 0 or adr >= vect_length pico.mémoire then
+    if adr < 0 or adr >= Array.length pico.mémoire then
       raise (Erreur ("écriture en dehors de la mémoire", adresse));
     if adresse mod taille_du_mot <> 0 then
       raise (Erreur ("écriture non alignée", adresse));
@@ -51,10 +51,10 @@ let valeur_opérande = function
   | Reg r -> lire_registre r
   | Imm n -> n;;
 let tableau_des_appels_système =
-  make_vect 10 ((function x -> x) : int -> int);;
+  Array.create 10 ((function x -> x) : int -> int);;
 
 let exécute_appel_système appel argument =
-    if appel < 0 or appel >= vect_length tableau_des_appels_système
+    if appel < 0 or appel >= Array.length tableau_des_appels_système
      then raise(Erreur("mauvais appel système", appel))
      else tableau_des_appels_système.(appel) argument;;
 exception Arrêt;;
@@ -99,7 +99,7 @@ let cycle_d'horloge () =
 let exécute programme taille_mémoire_en_octets =
     let taille_mémoire_en_mots = (taille_mémoire_en_octets + 3) / 4 in
     pico.code <- programme;
-    pico.mémoire <- make_vect taille_mémoire_en_mots 0;
+    pico.mémoire <- Array.create taille_mémoire_en_mots 0;
     pico.registres.(0) <- 0;
     pico.registres.(sp) <- taille_mémoire_en_mots * taille_du_mot;
     pico.pc <- 0;

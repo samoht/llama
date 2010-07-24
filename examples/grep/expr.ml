@@ -9,7 +9,7 @@ type expr =
 let intervalle c1 c2 =
   let rec interv n1 n2 =
     if n1 > n2 then [] else char_of_int n1 :: interv (n1 + 1) n2 in
-  interv (int_of_char c1) (int_of_char c2);;
+  interv (Char.code c1) (Char.code c2);;
 
 let tous_car = intervalle '\000' '\255';;
 let rec lire_expr = function
