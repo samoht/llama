@@ -81,7 +81,7 @@ let stream_of_string s =
   stream_from
     (fun () ->
       incr i;
-      if !i >= string_length s then raise Parse_failure else nth_char s !i)
+      if !i >= string_length s then raise Parse_failure else String.unsafe_get s !i)
 ;;
 
 let stream_of_channel ic =

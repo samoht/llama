@@ -6,8 +6,6 @@ val char_of_int : int -> char
         (* Return the character with the given ASCII code.
            Raise [Invalid_argument "char_of_int"] if the argument is
            outside the range 0--255. *)
-val string_of_char : char -> string
-        (* Return a string representing the given character. *)
 val escaped : char -> string
         (* Return a string representing the given character,
            with special characters escaped following the lexical conventions

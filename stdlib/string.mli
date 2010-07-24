@@ -100,6 +100,7 @@ val rindex_char_from: string -> int -> char -> int;;
 
 external unsafe_get : string -> int -> char = "get_nth_char"
 external unsafe_set : string -> int -> char -> unit = "set_nth_char"
+external unsafe_blit : string -> int -> string -> int -> int -> unit = "blit_string"
 
 val uppercase : string -> string
 (** Return a copy of the argument, with all lowercase letters

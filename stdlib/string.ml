@@ -30,13 +30,13 @@ let make n c =
 let nth_char s n =
   if n < 0 || n >= length s
   then invalid_arg "nth_char"
-  else Fstring.nth_char s n
+  else unsafe_get s n
 ;;
 
 let set_nth_char s n c =
   if n < 0 || n >= length s
   then invalid_arg "set_nth_char"
-  else Fstring.set_nth_char s n c
+  else unsafe_set s n c
 ;;
 
 let fill_string s start len c =

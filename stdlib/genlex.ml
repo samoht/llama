@@ -33,7 +33,7 @@ let store c =
     blit_string !buffer 0 newbuffer 0 !bufpos;
     buffer := newbuffer
   end;
-  set_nth_char !buffer !bufpos c;
+  String.unsafe_set !buffer !bufpos c;
   incr bufpos
 ;;
 

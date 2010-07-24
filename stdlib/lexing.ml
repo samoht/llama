@@ -189,20 +189,20 @@ let from_string s =
 let lexeme lexbuf =
   let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
   let s = String.create len in
-  Fstring.blit_string lexbuf.lex_buffer lexbuf.lex_start_pos s 0 len;
+  String.unsafe_blit lexbuf.lex_buffer lexbuf.lex_start_pos s 0 len;
   s
 
 let sub_lexeme lexbuf i1 i2 =
   let len = i2-i1 in
   let s = String.create len in
-  Fstring.blit_string lexbuf.lex_buffer i1 s 0 len;
+  String.unsafe_blit lexbuf.lex_buffer i1 s 0 len;
   s
 
 let sub_lexeme_opt lexbuf i1 i2 =
   if i1 >= 0 then begin
     let len = i2-i1 in
     let s = String.create len in
-    Fstring.blit_string lexbuf.lex_buffer i1 s 0 len;
+    String.unsafe_blit lexbuf.lex_buffer i1 s 0 len;
     Some s
   end else begin
     None
