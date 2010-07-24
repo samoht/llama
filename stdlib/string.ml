@@ -99,6 +99,17 @@ let copy s =
   unsafe_blit s 0 r 0 len;
   r
 
+let map f s =
+  let l = length s in
+  if l = 0 then s else begin
+    let r = create l in
+    for i = 0 to l - 1 do unsafe_set r i (f(unsafe_get s i)) done;
+    r
+  end
+
+let uppercase s = map Char.uppercase s
+let lowercase s = map Char.lowercase s
+
 let apply1 f s =
   if length s = 0 then s else begin
     let r = copy s in
@@ -108,4 +119,3 @@ let apply1 f s =
 
 let capitalize s = apply1 Char.uppercase s
 let uncapitalize s = apply1 Char.lowercase s
-
