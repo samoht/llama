@@ -1,5 +1,4 @@
 open Pervasives
-open Float
 open Fstring
 open Io
 open List

@@ -1,7 +1,6 @@
 (* A generic lexer *)
 
 open Pervasives
-open Float
 open Pervasives
 open List
 open Fchar

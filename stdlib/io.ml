@@ -99,7 +99,7 @@ let read_line () = flush std_out; input_line std_in
 ;;
 let read_int () = int_of_string (read_line())
 ;;
-let read_float () = Float.float_of_string (read_line())
+let read_float () = float_of_string (read_line())
 ;;
 
 let open_out_gen mode rights filename =
@@ -133,7 +133,7 @@ let print_int i =
   print_string (string_of_int i)
 ;;
 let print_float f =
-  print_string (Float.string_of_float f)
+  print_string (string_of_float f)
 ;;
 let print_endline s =
   print_string s;
@@ -155,7 +155,7 @@ let prerr_int i =
   prerr_string (string_of_int i)
 ;;
 let prerr_float f =
-  prerr_string (Float.string_of_float f)
+  prerr_string (string_of_float f)
 ;;
 let prerr_endline s =
   prerr_string s;

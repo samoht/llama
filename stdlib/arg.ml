@@ -61,7 +61,7 @@ let parse speclist anonfun =
                      -> stop (Wrong (s, arg, "an integer"))
                 end;
                 p t
-           | (Float f, arg::t) -> f (Float.float_of_string arg); p t
+           | (Float f, arg::t) -> f (float_of_string arg); p t
            | (_, []) -> stop (Missing s)
     with Bad m -> stop (Message m)
   in

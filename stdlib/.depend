@@ -5,7 +5,6 @@ char.zi:
 farray.zi: 
 fchar.zi: 
 filename.zi: 
-float.zi: 
 format.zi: printf.zi io.zi 
 fstring.zi: 
 gc.zi: io.zi 
@@ -28,10 +27,10 @@ stack.zi:
 stream.zi: io.zi 
 string.zi: 
 sys.zi: 
-arg.zo: sys.zi pervasives.zi list.zi io.zi fstring.zi float.zi \
-    farray.zi array.zi arg.zi 
-arg.zx: sys.zi pervasives.zx list.zx io.zx fstring.zx float.zx \
-    farray.zx array.zx arg.zi 
+arg.zo: sys.zi pervasives.zi list.zi io.zi fstring.zi farray.zi \
+    array.zi arg.zi 
+arg.zx: sys.zi pervasives.zx list.zx io.zx fstring.zx farray.zx \
+    array.zx arg.zi 
 array.zo: sys.zi pervasives.zi farray.zi array.zi 
 array.zx: sys.zi pervasives.zx farray.zx array.zi 
 baltree.zo: pervasives.zi baltree.zi 
@@ -44,20 +43,16 @@ fchar.zo: pervasives.zi fchar.zi
 fchar.zx: pervasives.zx fchar.zi 
 filename.zo: pervasives.zi fstring.zi filename.zi 
 filename.zx: pervasives.zx fstring.zx filename.zi 
-float.zo: pervasives.zi fstring.zi float.zi 
-float.zx: pervasives.zx fstring.zx float.zi 
-format.zo: string.zi pervasives.zi obj.zi io.zi fstring.zi float.zi \
-    format.zi 
-format.zx: string.zx pervasives.zx obj.zi io.zx fstring.zx float.zx \
-    format.zi 
+format.zo: string.zi pervasives.zi obj.zi io.zi fstring.zi format.zi 
+format.zx: string.zx pervasives.zx obj.zi io.zx fstring.zx format.zi 
 fstring.zo: pervasives.zi list.zi fchar.zi fstring.zi 
 fstring.zx: pervasives.zx list.zx fchar.zx fstring.zi 
 gc.zo: printf.zi gc.zi 
 gc.zx: printf.zx gc.zi 
 hashtbl.zo: pervasives.zi farray.zi array.zi hashtbl.zi 
 hashtbl.zx: pervasives.zx farray.zx array.zx hashtbl.zi 
-io.zo: sys.zi pervasives.zi fstring.zi float.zi io.zi 
-io.zx: sys.zi pervasives.zx fstring.zx float.zx io.zi 
+io.zo: sys.zi pervasives.zi fstring.zi io.zi 
+io.zx: sys.zi pervasives.zx fstring.zx io.zi 
 lexing.zo: pervasives.zi obj.zi io.zi fstring.zi lexing.zi 
 lexing.zx: pervasives.zx obj.zi io.zx fstring.zx lexing.zi 
 list.zo: pervasives.zi list.zi 
@@ -74,14 +69,12 @@ printexc.zo: sys.zi pervasives.zi obj.zi io.zi farray.zi array.zi \
     printexc.zi 
 printexc.zx: sys.zi pervasives.zx obj.zi io.zx farray.zx array.zx \
     printexc.zi 
-printf.zo: pervasives.zi obj.zi list.zi io.zi fstring.zi float.zi \
-    printf.zi 
-printf.zx: pervasives.zx obj.zi list.zx io.zx fstring.zx float.zx \
-    printf.zi 
+printf.zo: pervasives.zi obj.zi list.zi io.zi fstring.zi printf.zi 
+printf.zx: pervasives.zx obj.zi list.zx io.zx fstring.zx printf.zi 
 queue.zo: pervasives.zi queue.zi 
 queue.zx: pervasives.zx queue.zi 
-random.zo: pervasives.zi float.zi farray.zi array.zi random.zi 
-random.zx: pervasives.zx float.zx farray.zx array.zx random.zi 
+random.zo: pervasives.zi farray.zi array.zi random.zi 
+random.zx: pervasives.zx farray.zx array.zx random.zi 
 set.zo: pervasives.zi baltree.zi set.zi 
 set.zx: pervasives.zx baltree.zx set.zi 
 sort.zo: sort.zi 
@@ -92,4 +85,4 @@ stream.zo: pervasives.zi obj.zi io.zi fstring.zi stream.zi
 stream.zx: pervasives.zx obj.zi io.zx fstring.zx stream.zi 
 string.zo: sys.zi pervasives.zi fstring.zi string.zi 
 string.zx: sys.zi pervasives.zx fstring.zx string.zi 
-genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi stream.zi hashtbl.zi float.zi list.zi
+genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi stream.zi hashtbl.zi list.zi
