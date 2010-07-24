@@ -18,16 +18,6 @@ and maxint_short = 32767
 and minint_short = (-32768)
 ;;
 
-(* The standard interfaces used by default. In opening order. *)
-
-let default_used_interfaces =
-  ["cautious", [(*"builtin";*) "Pervasives";
-                 ];
-(*   "fast",     [(*"builtin";*) "pervasives"; "stream"; "exc"; "bool"; "fstring"; "fchar";
-                "fvect"; "list"; "pair"; "float"; "int"; "eq"; "io"]; *)
-   "none",     [(*"builtin"*)]]
-;;
-
 (* Prompts.
  * toplevel_input_prompt: Printed before user input.
  * error_prompt: Printed before compiler error and warning messages.

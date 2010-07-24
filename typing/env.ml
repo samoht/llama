@@ -112,6 +112,7 @@ let qualified_id name =
 
 let start_compiling m =
   current_module := m;
-  let s = if !Clflags.nopervasives then "none" else "cautious" in
-  let l = List.assoc s Config.default_used_interfaces in
-  List.fold_left (fun env m -> open_pers_signature m env) initial l
+  if not !Clflags.nopervasives then
+    open_pers_signature "Pervasives" initial
+  else
+    initial
