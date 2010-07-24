@@ -11,14 +11,14 @@ COMPFLAGS=-g
 
 STD_INTF= arg.zi char.zi string.zi array.zi \
     fchar.zi filename.zi float.zi fstring.zi farray.zi hashtbl.zi \
-    io.zi lexing.zi list.zi obj.zi pair.zi parsing.zi printexc.zi \
+    io.zi lexing.zi list.zi obj.zi parsing.zi printexc.zi \
     sort.zi sys.zi printf.zi stream.zi stack.zi queue.zi random.zi \
     genlex.zi baltree.zi set.zi map.zi gc.zi format.zi pervasives.zi 
 
 # The list of all implementations. In dependency order.
 
 STD_IMPL= pervasives.zo list.zo fstring.zo string.zo fchar.zo \
-    char.zo float.zo farray.zo array.zo io.zo pair.zo arg.zo \
+    char.zo float.zo farray.zo array.zo io.zo arg.zo \
     filename.zo hashtbl.zo lexing.zo parsing.zo printexc.zo sort.zo \
     printf.zo stream.zo stack.zo queue.zo format.zo random.zo \
     genlex.zo baltree.zo set.zo map.zo gc.zo

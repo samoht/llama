@@ -134,3 +134,10 @@ external int_of_char : char -> int = "identity"
 external unsafe_char_of_int : int -> char = "identity"
 let char_of_int n =
   if n < 0 || n > 255 then invalid_arg "char_of_int" else unsafe_char_of_int n
+
+(* ---------------------------------------------------------------------- *)
+(* Pair operations.                                                       *)
+(* ---------------------------------------------------------------------- *)
+
+external fst : 'a * 'b -> 'a = "field0"
+external snd : 'a * 'b -> 'b = "field1"

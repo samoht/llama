@@ -228,3 +228,12 @@ val ( ^ ) : string -> string -> string
 external int_of_char : char -> int = "identity"
 
 val char_of_int : int -> char
+
+(* ---------------------------------------------------------------------- *)
+(* Pair operations.                                                       *)
+(* ---------------------------------------------------------------------- *)
+
+external fst : 'a * 'b -> 'a = "field0"
+        (* Return the first component of a pair. *)
+external snd : 'a * 'b -> 'b = "field1"
+        (* Return the second component of a pair. *)

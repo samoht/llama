@@ -211,3 +211,30 @@ let rec partition p l =
   | x :: l -> if p x then part (x :: yes) no l else part yes (x :: no) l in
   part [] [] l;;
 
+
+let rec split = function
+         []    -> [],[]
+  | (x1,x2)::l -> let (l1,l2) = split l in (x1::l1,x2::l2)
+;;
+
+let rec combine = function
+        [],[]     -> []
+  | h1::t1,h2::t2 -> (h1,h2)::combine (t1,t2)
+  |       _        -> invalid_arg "combine"
+;;
+
+let map_combine f =
+  let rec map = function
+    [], [] -> []
+  | h1::t1, h2::t2 -> f (h1,h2) :: map (t1,t2)
+  | _ -> invalid_arg "map_combine"
+  in map
+;;
+
+let iter_combine f =
+  let rec dol = function
+    [], [] -> ()
+  | h1::t1, h2::t2 -> f (h1,h2); dol (t1,t2)
+  | _ -> invalid_arg "iter_combine"
+  in dol
+;;

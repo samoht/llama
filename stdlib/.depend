@@ -16,7 +16,6 @@ lexing.zi: obj.zi io.zi
 list.zi: 
 map.zi: 
 obj.zi: 
-pair.zi: 
 parsing.zi: obj.zi lexing.zi 
 pervasives.zi: 
 printexc.zi: 
@@ -65,8 +64,6 @@ list.zo: pervasives.zi list.zi
 list.zx: pervasives.zx list.zi 
 map.zo: baltree.zi map.zi 
 map.zx: baltree.zx map.zi 
-pair.zo: pervasives.zi pair.zi 
-pair.zx: pervasives.zx pair.zi 
 parsing.zo: pervasives.zi obj.zi lexing.zi farray.zi array.zi \
     parsing.zi 
 parsing.zx: pervasives.zx obj.zi lexing.zx farray.zx array.zx \

@@ -115,3 +115,28 @@ val mem_assoc : 'a -> ('a * 'b) list -> bool
         (* Same as [assoc], but simply return true if a binding exists,
            and false if no bindings exist for the given key. *)
 ;;
+
+
+(* Operations on pairs *)
+
+val split : ('a * 'b) list -> 'a list * 'b list
+        (* Transform a list of pairs into a pair of lists:
+           [split [(a1,b1); ...; (an,bn)]] is [([a1; ...; an], [b1; ...; bn])]
+        *)
+val combine : 'a list * 'b list -> ('a * 'b) list
+        (* Transform a pair of lists into a list of pairs:
+           [combine ([a1; ...; an], [b1; ...; bn])] is
+              [[(a1,b1); ...; (an,bn)]].
+           Raise [Invalid_argument "combine"] if the two lists
+           have different lengths. *)
+val map_combine : ('a * 'b -> 'c) -> 'a list * 'b list -> 'c list
+        (* [map_combine f ([a1; ...; an], [b1; ...; bn])] is
+           [[f (a1, b1); ...; f (an, bn)]].
+	   Raise [invalid_argument "map_combine"]
+	   if the two lists have different lengths. *)
+val iter_combine : ('a * 'b -> unit) -> 'a list * 'b list -> unit
+        (* [iter_combine f ([a1; ...; an], [b1; ...; bn])] calls in turn
+           [f (a1, b1); ...; f (an, bn)], discarding the results.
+	   Raise [Invalid_argument "iter_combine"] if the two lists have
+	   different lengths. *)
+;;
