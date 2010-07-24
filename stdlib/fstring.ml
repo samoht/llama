@@ -100,7 +100,7 @@ let string_for_read s =
 
 let rec index_char_from s i c =
   if i >= string_length s then raise Not_found
-  else if s.[i] = c then i
+  else if nth_char s i = c then i
   else index_char_from s (i+1) c
 ;;
 
@@ -109,7 +109,7 @@ let index_char s c = index_char_from s 0 c
 
 let rec rindex_char_from s i c =
   if i < 0 then raise Not_found
-  else if s.[i] = c then i
+  else if nth_char s i = c then i
   else rindex_char_from s (i-1) c
 ;;
 
