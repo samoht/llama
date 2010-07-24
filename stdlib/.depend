@@ -1,16 +1,17 @@
 arg.zi:
 array.zi:
 baltree.zi:
+buffer.zi:
 char.zi:
 farray.zi:
 fchar.zi:
 filename.zi:
-format.zi: printf.zi pervasives.zi
+format.zi: printf.zi
 fstring.zi:
-gc.zi: pervasives.zi
+gc.zi:
 genlex.zi: stream.zi
 hashtbl.zi:
-lexing.zi: pervasives.zi
+lexing.zi:
 list.zi:
 map.zi:
 obj.zi:
@@ -18,71 +19,67 @@ parsing.zi: obj.zi lexing.zi
 parsing.orig.zi: obj.zi lexing.zi
 pervasives.zi:
 printexc.zi:
-printf.zi: pervasives.zi
+printf.zi:
 queue.zi:
 random.zi:
 set.zi:
 sort.zi:
 stack.zi:
-stream.zi: pervasives.zi
+stream.zi:
 string.zi:
 sys.zi:
-arg.zo: sys.zi string.zi pervasives.zi list.zi farray.zi array.zi \
-    arg.zi
-arg.zx: sys.zi string.zx pervasives.zx list.zx farray.zx array.zx \
-    arg.zi
-array.zo: sys.zi pervasives.zi farray.zi array.zi
-array.zx: sys.zi pervasives.zx farray.zx array.zi
-baltree.zo: pervasives.zi baltree.zi
-baltree.zx: pervasives.zx baltree.zi
-char.zo: pervasives.zi char.zi
-char.zx: pervasives.zx char.zi
-farray.zo: pervasives.zi list.zi farray.zi
-farray.zx: pervasives.zx list.zx farray.zi
-fchar.zo: pervasives.zi fchar.zi
-fchar.zx: pervasives.zx fchar.zi
-filename.zo: string.zi pervasives.zi filename.zi
-filename.zx: string.zx pervasives.zx filename.zi
-format.zo: string.zi pervasives.zi obj.zi fstring.zi format.zi
-format.zx: string.zx pervasives.zx obj.zi fstring.zx format.zi
-fstring.zo: pervasives.zi list.zi fchar.zi fstring.zi
-fstring.zx: pervasives.zx list.zx fchar.zx fstring.zi
+arg.zo: sys.zi string.zi list.zi farray.zi array.zi arg.zi
+arg.zx: sys.zi string.zx list.zx farray.zx array.zx arg.zi
+array.zo: sys.zi farray.zi array.zi
+array.zx: sys.zi farray.zx array.zi
+baltree.zo: baltree.zi
+baltree.zx: baltree.zi
+buffer.zo: sys.zi string.zi buffer.zi
+buffer.zx: sys.zi string.zx buffer.zi
+char.zo: char.zi
+char.zx: char.zi
+farray.zo: list.zi farray.zi
+farray.zx: list.zx farray.zi
+fchar.zo: fchar.zi
+fchar.zx: fchar.zi
+filename.zo: string.zi filename.zi
+filename.zx: string.zx filename.zi
+format.zo: string.zi obj.zi fstring.zi format.zi
+format.zx: string.zx obj.zi fstring.zx format.zi
+fstring.zo: list.zi fchar.zi fstring.zi
+fstring.zx: list.zx fchar.zx fstring.zi
 gc.zo: printf.zi gc.zi
 gc.zx: printf.zx gc.zi
-hashtbl.zo: pervasives.zi farray.zi array.zi hashtbl.zi
-hashtbl.zx: pervasives.zx farray.zx array.zx hashtbl.zi
-lexing.zo: sys.zi string.zi pervasives.zi array.zi lexing.zi
-lexing.zx: sys.zi string.zx pervasives.zx array.zx lexing.zi
-list.zo: pervasives.zi list.zi
-list.zx: pervasives.zx list.zi
+hashtbl.zo: farray.zi array.zi hashtbl.zi
+hashtbl.zx: farray.zx array.zx hashtbl.zi
+lexing.zo: sys.zi string.zi array.zi lexing.zi
+lexing.zx: sys.zi string.zx array.zx lexing.zi
+list.zo: list.zi
+list.zx: list.zi
 map.zo: baltree.zi map.zi
 map.zx: baltree.zx map.zi
-parsing.zo: pervasives.zi obj.zi lexing.zi array.zi parsing.zi
-parsing.zx: pervasives.zx obj.zi lexing.zx array.zx parsing.zi
-parsing.orig.zo: pervasives.zi obj.zi lexing.zi farray.zi array.zi \
-    parsing.orig.zi
-parsing.orig.zx: pervasives.zx obj.zi lexing.zx farray.zx array.zx \
-    parsing.orig.zi
+parsing.zo: obj.zi lexing.zi array.zi parsing.zi
+parsing.zx: obj.zi lexing.zx array.zx parsing.zi
+parsing.orig.zo: obj.zi lexing.zi farray.zi array.zi parsing.orig.zi
+parsing.orig.zx: obj.zi lexing.zx farray.zx array.zx parsing.orig.zi
 pervasives.zo: pervasives.zi
 pervasives.zx: pervasives.zi
-printexc.zo: sys.zi pervasives.zi obj.zi farray.zi array.zi \
-    printexc.zi
-printexc.zx: sys.zi pervasives.zx obj.zi farray.zx array.zx \
-    printexc.zi
-printf.zo: string.zi pervasives.zi obj.zi list.zi printf.zi
-printf.zx: string.zx pervasives.zx obj.zi list.zx printf.zi
-queue.zo: pervasives.zi queue.zi
-queue.zx: pervasives.zx queue.zi
-random.zo: pervasives.zi farray.zi array.zi random.zi
-random.zx: pervasives.zx farray.zx array.zx random.zi
-set.zo: pervasives.zi baltree.zi set.zi
-set.zx: pervasives.zx baltree.zx set.zi
+printexc.zo: sys.zi obj.zi farray.zi array.zi printexc.zi
+printexc.zx: sys.zi obj.zi farray.zx array.zx printexc.zi
+printf.zo: string.zi obj.zi list.zi printf.zi
+printf.zx: string.zx obj.zi list.zx printf.zi
+queue.zo: queue.zi
+queue.zx: queue.zi
+random.zo: farray.zi array.zi random.zi
+random.zx: farray.zx array.zx random.zi
+set.zo: baltree.zi set.zi
+set.zx: baltree.zx set.zi
 sort.zo: sort.zi
 sort.zx: sort.zi
-stack.zo: pervasives.zi list.zi stack.zi
-stack.zx: pervasives.zx list.zx stack.zi
-stream.zo: string.zi pervasives.zi obj.zi fstring.zi stream.zi
-stream.zx: string.zx pervasives.zx obj.zi fstring.zx stream.zi
-string.zo: sys.zi pervasives.zi fstring.zi char.zi string.zi
-string.zx: sys.zi pervasives.zx fstring.zx char.zx string.zi
+stack.zo: list.zi stack.zi
+stack.zx: list.zx stack.zi
+stream.zo: string.zi obj.zi fstring.zi stream.zi
+stream.zx: string.zx obj.zi fstring.zx stream.zi
+string.zo: sys.zi fstring.zi char.zi string.zi
+string.zx: sys.zi fstring.zx char.zx string.zi
 genlex.zo: genlex.zi fchar.zi pervasives.zi fstring.zi stream.zi hashtbl.zi list.zi
