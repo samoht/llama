@@ -174,11 +174,11 @@ let rec expr env ex =
         | Pexp_function l ->
             let l =
               List.map
-                begin fun (lp, e) ->
-                  let pat_list = List.map (pattern env) lp in
-                  let big_env = List.fold_left extend_env env pat_list in
+                begin fun (p, e) ->
+                  let pat = pattern env p in
+                  let big_env = extend_env env pat in
                   let exp = expr big_env e in
-                  pat_list, exp
+                  pat, exp
                 end
                 l
             in

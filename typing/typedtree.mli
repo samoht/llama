@@ -36,6 +36,10 @@ and pattern_desc =
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label reference * pattern) list
 
+(* used by the ocaml bytecompiler, perhaps to know whether it needs to
+add code for the failure case. For the moment, we always set it to
+partial *)
+
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
@@ -49,7 +53,7 @@ and expression_desc =
   | Texp_construct of constructor reference * expression list
   | Texp_apply of expression * expression list
   | Texp_let of bool * (pattern * expression) list * expression
-  | Texp_function of (pattern list * expression) list
+  | Texp_function of (pattern * expression) list
   | Texp_try of expression * (pattern * expression) list
   | Texp_sequence of expression * expression
   | Texp_ifthenelse of expression * expression * expression

@@ -16,6 +16,8 @@ open Trstream;;
 open Error;;
 open Primitive;;
 
+let compat = List.map (fun (p, e) -> [p], e)
+
 (* Propagation of constants *)
 
 exception Not_constant;;
@@ -179,10 +181,10 @@ let rec translate_expr env =
                 Lprim(Pmakeblock (get_constr c).cs_tag, tr_argl)
               end
       end
-  | Texp_apply({exp_desc = Texp_function ((patl,_)::_ as case_list)} as funct, args) ->
-      if List.length patl == List.length args then
+  | Texp_apply({exp_desc = Texp_function ((pat,_)::_ as case_list)} as funct, args) ->
+      if 1 == List.length args then
         Llet(translate_let env args,
-             translate_match expr.exp_loc env case_list)
+             translate_match expr.exp_loc env (compat case_list))
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
   | Texp_apply({exp_desc = Texp_ident v} as fct, args) when (get_value v).val_global ->
@@ -225,10 +227,10 @@ let rec translate_expr env =
               Event.before new_env body (translate_expr new_env body))
   | Texp_function [] ->
       fatal_error "translate_expr: empty fun"
-  | Texp_function((patl1,act1)::_ as case_list) ->
+  | Texp_function((pat1,act1)::_ as case_list) ->
       let rec transl_fun debug_env = function
           [] ->
-            translate_match expr.exp_loc env case_list
+            translate_match expr.exp_loc env (compat case_list)
         | pat::patl ->
             let new_debug_env =
               if pat_irrefutable pat
@@ -236,7 +238,7 @@ let rec translate_expr env =
               else Treserved debug_env in
             Lfunction(Event.after_pat new_debug_env pat
                         (transl_fun new_debug_env patl)) in
-      transl_fun env patl1
+      transl_fun env [pat1]
   | Texp_try(body, pat_expr_list) ->
       Lhandle(transl body,
               translate_simple_match env partial_try pat_expr_list)
@@ -309,7 +311,7 @@ and transl_action env (patlist, expr) =
         translate_expr new_env expr in
   (patlist, add_lets(Event.before new_env expr action))
 
-and translate_match loc env casel =
+and translate_match loc env (casel:(pattern list * expression) list) =
   translate_matching_check_failure loc (List.map (transl_action env) casel)
 
 and translate_simple_match env failure_code pat_expr_list =

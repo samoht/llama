@@ -136,8 +136,6 @@ let unclosed opening_name opening_num closing_name closing_num =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
-let compat lpe = List.map (fun (p, e) -> ([p], e)) lpe
-
 %}
 
 /* Tokens */
@@ -401,11 +399,11 @@ expr:
   | LET rec_flag let_bindings IN seq_expr
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
   | FUNCTION opt_bar match_cases
-      { mkexp(Pexp_function(compat(List.rev $3))) }
+      { mkexp(Pexp_function(List.rev $3)) }
   | FUN simple_pattern fun_def
-      { mkexp(Pexp_function([[$2], $3])) }
+      { mkexp(Pexp_function([$2, $3])) }
   | MATCH seq_expr WITH opt_bar match_cases
-      { mkexp(Pexp_apply(ghexp(Pexp_function(compat(List.rev $5))), [$2])) }
+      { mkexp(Pexp_apply(ghexp(Pexp_function(List.rev $5)), [$2])) }
   | TRY seq_expr WITH opt_bar match_cases
       { mkexp(Pexp_try($2, List.rev $5)) }
   | TRY seq_expr WITH error
@@ -559,7 +557,7 @@ strict_binding:
     EQUAL seq_expr
       { $2 }
   | simple_pattern fun_binding
-      { ghexp(Pexp_function([[$1], $2])) }
+      { ghexp(Pexp_function([$1, $2])) }
 ;
 match_cases:
     pattern match_action                        { [$1, $2] }
@@ -568,7 +566,7 @@ match_cases:
 fun_def:
     match_action                                { $1 }
   | simple_pattern fun_def
-      { ghexp(Pexp_function([[$1], $2])) }
+      { ghexp(Pexp_function([$1, $2])) }
 ;
 match_action:
     MINUSGREATER seq_expr                       { $2 }

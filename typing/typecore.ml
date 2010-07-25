@@ -300,7 +300,7 @@ let type_format loc fmt =
             | 'o' | 'O' -> conversion_r j ty_e (Pref.type_option ty_e)
             | _ -> conversion_r (j - 1) ty_e ty_e end *)
         | 't' -> conversion j (ty_arrow ty_input ty_aresult)
-        | 'l' | 'n' | 'L' as c ->
+        | 'l' | 'n' | 'L' (* as c *) ->
           let j = j + 1 in
           if j >= len then conversion (j - 1) Predef.type_int else begin
             match fmt.[j] with
@@ -386,16 +386,13 @@ let rec type_expr expr =
   | Texp_function [] ->
       fatal_error "type_expr: empty matching"
   | Texp_function ((patl1,expr1)::_ as matching) ->
-      let ty_args = List.map (fun pat -> new_type_var()) patl1 in
+      let ty_arg = new_type_var() in
       let ty_res = new_type_var() in
-      let tcase (patl, action) =
-        if List.length patl != List.length ty_args then
-          ill_shaped_match_err expr;
-        type_pattern_list patl ty_args;
+      let tcase (pat, action) =
+        type_pattern (pat, ty_arg, Notmutable);
         type_expect action ty_res in
       List.iter tcase matching;
-      List.fold_right (fun ty_arg ty_res -> type_arrow(ty_arg, ty_res))
-              ty_args ty_res
+      type_arrow(ty_arg, ty_res)
   | Texp_try (body, matching) ->
       let ty = type_expr body in
       List.iter
