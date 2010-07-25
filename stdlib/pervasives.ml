@@ -392,3 +392,5 @@ let prerr_endline s =
   flush std_err
 ;;
 
+
+let ignore x = ()

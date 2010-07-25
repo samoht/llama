@@ -604,3 +604,5 @@ val fast_really_input : in_channel -> string -> int -> int -> unit
 external fast_output : out_channel -> string -> int -> int -> unit = "output"
 external input_scan_line: in_channel -> int = "input_scan_line"
 ;;
+
+val ignore : 'a -> unit
