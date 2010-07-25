@@ -67,7 +67,7 @@ let unify_pat pat expected_ty actual_ty =
     pat_wrong_type_err pat actual_ty expected_ty
 ;;
 
-let rec tpat (pat, ty, mut_flag) =
+let rec tpat (pat, ty) =
   pat.pat_type <- ty;
   match pat.pat_desc with
     Tpat_any ->
@@ -84,7 +84,7 @@ let rec tpat (pat, ty, mut_flag) =
         non_linear_pattern_err pat v;
 *)
       v.val_type <- ty;
-      tpat (pat, ty, mut_flag)
+      tpat (pat, ty)
   | Tpat_constant cst ->
       unify_pat pat ty (type_of_constant cst)
   | Tpat_tuple(patl) ->
@@ -101,18 +101,18 @@ let rec tpat (pat, ty, mut_flag) =
       unify_pat pat ty ty_res;
       List.iter2
         (fun arg ty_arg ->
-           tpat (arg, ty_arg, Asttypes.Notmutable))
+           tpat (arg, ty_arg))
         args ty_args
   | Tpat_or(pat1, pat2) ->
       begin match free_vars_of_pat pat with
         [] ->
-          tpat (pat1, ty, mut_flag);
-          tpat (pat2, ty, mut_flag)
+          tpat (pat1, ty);
+          tpat (pat2, ty);
       | _  -> orpat_should_be_closed_err pat
       end
   | Tpat_constraint(pat, ty_expr) ->
       let ty' = type_of_type_expression false ty_expr in
-       tpat  (pat, ty', mut_flag);
+       tpat  (pat, ty');
         unify_pat pat ty ty'
   | Tpat_record lbl_pat_list ->
       let rec tpat_lbl = function
@@ -121,7 +121,7 @@ let rec tpat (pat, ty, mut_flag) =
           let (ty_res, ty_arg) =
             type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
           unify_pat pat ty ty_res;
-          tpat (p, ty_arg, (get_label lbl).lbl_mut);
+          tpat (p, ty_arg);
           tpat_lbl rest
       in
         tpat_lbl lbl_pat_list
@@ -130,7 +130,7 @@ and tpat_list pats tys = match pats, tys with
     [], [] ->
       ()
   | (pat::patl), (ty::tyl) ->
-      tpat (pat, ty, Notmutable);
+      tpat (pat, ty);
       tpat_list patl tyl
   | _, _ ->
       fatal_error "type_pattern: arity error"
@@ -389,7 +389,7 @@ let rec type_expr expr =
       let ty_arg = new_type_var() in
       let ty_res = new_type_var() in
       let tcase (pat, action) =
-        type_pattern (pat, ty_arg, Notmutable);
+        type_pattern (pat, ty_arg);
         type_expect action ty_res in
       List.iter tcase matching;
       type_arrow(ty_arg, ty_res)
@@ -397,7 +397,7 @@ let rec type_expr expr =
       let ty = type_expr body in
       List.iter
         (fun (pat, expr) ->
-           type_pattern (pat, type_exn, Notmutable);
+           type_pattern (pat, type_exn);
           type_expect expr ty)
         matching;
       ty
@@ -496,13 +496,13 @@ let rec type_expr expr =
         ([], act) ->
           type_expect  act ty_res
       | (Ztermpat p :: rest, act) ->
-          tpat (p, ty_comp, Notmutable);
+          tpat (p, ty_comp);
           type_stream_pat  (rest,act)
       | (Znontermpat(parsexpr, p) :: rest, act) ->
           let ty_parser_result = new_type_var() in
           type_expect parsexpr
                       (type_arrow(ty_stream, ty_parser_result));
-          tpat (p, ty_parser_result, Notmutable);
+          tpat (p, ty_parser_result);
           type_stream_pat (rest,act)
       | (Zstreampat s :: rest, act) ->
           s.val_type <- ty_stream;

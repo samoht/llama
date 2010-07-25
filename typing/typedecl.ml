@@ -88,7 +88,7 @@ let type_valuedecl_new v typexp =
 let type_letdef pat_exp_list =
   push_type_level();
   let ty_list = List.map (fun _ -> new_type_var ()) pat_exp_list in
-  List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty, Notmutable)) pat_exp_list ty_list;
+  List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
   List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
   pop_type_level();
   let gen_type =
