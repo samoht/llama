@@ -9,32 +9,39 @@ type module_id =
   | Module of string
   | Module_toplevel
 
-type qualified_id = {
-  id_module : module_id;
-  id_name : string }
+type qualified_id =
+  { id_module : module_id;
+    id_name : string }
 
-type 'a reference = {
-  ref_id : qualified_id;
-  mutable ref_contents : 'a option }
+type 'a reference =
+  { ref_id : qualified_id;
+    mutable ref_contents : 'a option }
 
 (* ---------------------------------------------------------------------- *)
 (* Core types and type constructors.                                      *)
 (* ---------------------------------------------------------------------- *)
 
-type core_type =
-  { mutable desc: core_type_desc;
-    mutable level: int }
+(* Defs: a _generic_ type has no Nongeneric type variables. A
+_genericized_ type further has no Forwards, e.g. because it was tested
+as generic and a fresh copy made. *)
 
-and core_type_desc =
-    Tvar
-  | Tarrow of core_type * core_type
-  | Tproduct of core_type list
-  | Tconstr of type_constructor reference * core_type list
-  | Tlink of core_type
+type llama_type =
+    Tvar of type_variable
+  | Tarrow of llama_type * llama_type
+  | Tproduct of llama_type list
+  | Tconstr of type_constructor reference * llama_type list
+
+and type_variable = {
+  mutable info : type_variable_kind }
+
+and type_variable_kind =
+  | Generic
+  | Nongeneric of int
+  | Forward of llama_type
 
 and type_constructor =
   { tcs_id : qualified_id;
-    mutable tcs_params : core_type list;
+    mutable tcs_params : type_variable list;  (* genericized *)
     tcs_arity: int;
     mutable tcs_body: type_constructor_body }
 
@@ -42,13 +49,13 @@ and type_constructor_body =
     Type_abstract
   | Type_variant of constructor list (* Sum type -> list of constr. *)
   | Type_record of label list (* Record type -> list of labels *)
-  | Type_abbrev of core_type
+  | Type_abbrev of llama_type
 
 and constructor =
   { cs_parent: type_constructor;
     cs_name: string;
-    mutable cs_res: core_type;                       (* Result type *)
-    mutable cs_args: core_type list;                 (* Argument types *)
+    mutable cs_res: llama_type;                       (* Result type *)
+    mutable cs_args: llama_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
     cs_tag: constr_tag;        (* caml light tag *)
     cstr_tag: constructor_tag; (* ocaml tag *)
@@ -66,8 +73,8 @@ and constructor_tag =
 and label =
   { lbl_parent: type_constructor;
     lbl_name: string;
-    mutable lbl_res: core_type;                      (* Result type *)
-    mutable lbl_arg: core_type;                      (* Argument type *)
+    mutable lbl_res: llama_type;                      (* Result type *)
+    mutable lbl_arg: llama_type;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
 
@@ -77,7 +84,7 @@ and label =
 
 type value =
   { val_id : qualified_id;
-    mutable val_type: core_type;                (* Type of the value *)
+    mutable val_type: llama_type;                (* Type of the value *)
     val_kind: value_kind;
     mutable val_global: bool }
 
@@ -102,6 +109,20 @@ and rec_status =
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
+
+let tvar tv = Tvar tv
+let new_generic () = { info=Generic }
+let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
+let new_nongeneric_gen lev = { info=Nongeneric lev }
+let module_level = 0
+let phrase_level = 1
+
+let rec new_nongenerics_gen n lev =
+  if n > 0 then new_nongeneric_gen lev :: new_nongenerics_gen (n-1) lev
+  else []
+
+let new_phrase_nongeneric () = new_nongeneric_gen phrase_level
+
 
 let constr_id cs = { id_module = cs.cs_parent.tcs_id.id_module;
                             id_name = cs.cs_name }
@@ -133,13 +154,14 @@ let val_name v = v.val_id.id_name
 type exception_declaration = constructor
 type constructor_description = constructor
 type label_description = label
-type type_expr = core_type
+type core_type = llama_type
+type type_expr = llama_type
 
 let generic = -1
 let notgeneric = 0
 let level_global = 1
 
-let type_none = { desc = Tproduct []; level = 0 };;
+let type_none = Tproduct []
 
 type record_representation =
     Record_regular

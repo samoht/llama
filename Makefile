@@ -1,5 +1,6 @@
 include config/Makefile
 
+OCAMLC=ocamlc.opt
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
@@ -77,8 +78,13 @@ llama: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
 llamac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
+llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(COMPILER:.cmx=.cmo) $(LINKER:.cmx=.cmo) compiler/librarian.cmo compiler/driver.cmo
+	$(OCAMLC) -custom $(FLAGS) -o $@ $^
+
 %.cmx: %.ml
 	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
+%.cmo: %.ml
+	$(OCAMLC) -c $(FLAGS) -o $@ $<
 
 %.cmi: %.mli
 	$(OCAMLOPT) -c $(FLAGS) -o $@ $<

@@ -59,10 +59,7 @@ let find_printer ty =
   let rec find = function
     [] -> raise Not_found
   | (name, sch, printer) :: remainder ->
-      try
-        filter (type_instance sch, ty); printer
-      with OldUnify ->
-        find remainder
+      if moregeneral sch ty then printer else find remainder
   in find !printers
 ;;
 
@@ -81,7 +78,7 @@ let rec print_val prio depth obj ty =
   try
     find_printer ty obj; ()
   with Not_found ->
-    match (repr ty).desc with
+    match repr ty with
       Tvar _ ->
         print_string "<poly>"
     | Tarrow(ty1, ty2) ->
@@ -118,9 +115,8 @@ and print_concrete_type prio depth obj cstr ty ty_list =
             else
               find_constr tag constr_list
           in
-          let (ty_args, ty_res) =
-            instance_constructor constr in
-          filter (ty_res, ty);
+          let subst = filter constr.cs_res ty in
+          let ty_args = List.map (substitute_type subst) constr.cs_args in
           match constr.cs_arity with
               0 ->
                 print_string constr.cs_name
@@ -157,13 +153,8 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           open_box 1;
           print_string lbl.lbl_name;
           print_string " ="; print_space();
-          let (ty_res, ty_arg) =
-            type_pair_instance (lbl.lbl_res, lbl.lbl_arg) in
-          begin try
-            filter (ty_res, ty)
-          with OldUnify ->
-            fatal_error "print_val: types should match"
-          end;
+          let subst = filter lbl.lbl_res ty in
+          let ty_arg = substitute_type subst lbl.lbl_arg in
           cautious (print_val 0 (depth - 1)
                       (Llama_obj.field obj lbl.lbl_pos)) ty_arg;
           close_box() in

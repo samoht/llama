@@ -6,7 +6,7 @@ open Asttypes
 (* Type expressions for the core language *)
 
 type type_expression =
-  { pdesc: type_expression_desc;
+  { ptyp_desc: type_expression_desc;
     ptyp_loc: Location.t }
 
 and type_expression_desc =

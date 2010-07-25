@@ -29,7 +29,7 @@ let int_to_alpha i =
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
 
-let type_var_names = ref ([] : (core_type * string) list)
+let type_var_names = ref ([] : (type_variable * string) list)
 let type_var_name_counter = ref 0
 
 let reset_type_var_names () =
@@ -40,10 +40,10 @@ let new_type_var_name () =
   incr type_var_name_counter;
   name
 
-let name_of_type t =
-  try List.assq t !type_var_names with Not_found ->
+let name_of_type tv =
+  try List.assq tv !type_var_names with Not_found ->
     let name = new_type_var_name () in
-    type_var_names := (t, name) :: !type_var_names;
+    type_var_names := (tv, name) :: !type_var_names;
     name
 
 (* ---------------------------------------------------------------------- *)
@@ -57,26 +57,30 @@ type out_type =
   | Otyp_var of bool * string
 
 let rec tree_of_typexp sch ty =
-  let ty = Btype.repr ty in
-  begin match ty.desc with
-    | Tvar ->
-        Otyp_var (is_non_gen sch ty, name_of_type ty)
+  begin match ty with
+    | Tvar tv ->
+        begin match tv.info with
+          | Generic ->
+              Otyp_var (false, name_of_type tv)
+          | Nongeneric _ ->
+              Otyp_var (true, name_of_type tv)
+          | Forward ty ->
+              tree_of_typexp sch ty
+        end
     | Tarrow (ty1, ty2) ->
         Otyp_arrow (tree_of_typexp sch ty1, tree_of_typexp sch ty2)
     | Tproduct tyl ->
         Otyp_tuple (tree_of_typlist sch tyl)
     | Tconstr (tcsr, tyl) ->
         Otyp_constr ((get_type_constr tcsr).tcs_id, tree_of_typlist sch tyl)
-    | Tlink _ ->
-        assert false
   end
 
 and tree_of_typlist sch tyl =
   List.map (tree_of_typexp sch) tyl
-
+(*
 and is_non_gen sch ty =
   sch && ty.desc = Tvar && ty.level <> generic
-
+*)
 (* ---------------------------------------------------------------------- *)
 (* Printing of output trees.                                              *)
 (* ---------------------------------------------------------------------- *)

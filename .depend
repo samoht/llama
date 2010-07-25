@@ -66,11 +66,9 @@ typing/error.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     parsing/longident.cmx parsing/location.cmx typing/ctype.cmx \
     typing/btype.cmx parsing/asttypes.cmi
 typing/includecore.cmo: typing/types.cmx typing/typedtree.cmi \
-    typing/subst.cmx utils/misc.cmx typing/ctype.cmx typing/btype.cmx \
-    parsing/asttypes.cmi
+    typing/subst.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/includecore.cmx: typing/types.cmx typing/typedtree.cmi \
-    typing/subst.cmx utils/misc.cmx typing/ctype.cmx typing/btype.cmx \
-    parsing/asttypes.cmi
+    typing/subst.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/includemod.cmo: typing/types.cmx typing/typedtree.cmi utils/tbl.cmi \
     typing/subst.cmx typing/includecore.cmx typing/error.cmx typing/btype.cmx \
     parsing/asttypes.cmi
@@ -82,11 +80,11 @@ typing/module.cmo: typing/types.cmx typing/predef.cmx utils/misc.cmx \
 typing/module.cmx: typing/types.cmx typing/predef.cmx utils/misc.cmx \
     parsing/longident.cmx parsing/asttypes.cmi
 typing/parmatch.cmo: utils/warnings.cmi typing/types.cmx typing/typedtree.cmi \
-    typing/subst.cmx typing/predef.cmx utils/misc.cmx parsing/location.cmi \
+    typing/predef.cmx typing/module.cmx utils/misc.cmx parsing/location.cmi \
     typing/env.cmi typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi \
     typing/parmatch.cmi
 typing/parmatch.cmx: utils/warnings.cmx typing/types.cmx typing/typedtree.cmi \
-    typing/subst.cmx typing/predef.cmx utils/misc.cmx parsing/location.cmx \
+    typing/predef.cmx typing/module.cmx utils/misc.cmx parsing/location.cmx \
     typing/env.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi \
     typing/parmatch.cmi
 typing/pr_decl.cmo: typing/types.cmx typing/print.cmx typing/predef.cmx \
@@ -97,8 +95,8 @@ typing/predef.cmo: typing/types.cmx parsing/asttypes.cmi
 typing/predef.cmx: typing/types.cmx parsing/asttypes.cmi
 typing/primitive.cmo:
 typing/primitive.cmx:
-typing/print.cmo: typing/types.cmx typing/module.cmx typing/btype.cmx
-typing/print.cmx: typing/types.cmx typing/module.cmx typing/btype.cmx
+typing/print.cmo: typing/types.cmx typing/module.cmx
+typing/print.cmx: typing/types.cmx typing/module.cmx
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi \
     typing/primitive.cmx typing/predef.cmx parsing/parsetree.cmi \
     parsing/parser.cmi typing/module.cmx utils/misc.cmx typing/error.cmx \
@@ -128,11 +126,11 @@ typing/typedtree_aux.cmo: typing/types.cmx typing/typedtree.cmi \
 typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
     typing/module.cmx parsing/location.cmx parsing/asttypes.cmi
 typing/typemod.cmo: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
-    typing/typecore.cmx typing/resolve.cmx typing/primitive.cmx \
-    parsing/parsetree.cmi typing/module.cmx typing/error.cmx typing/btype.cmx
+    typing/typecore.cmx typing/primitive.cmx parsing/parsetree.cmi \
+    typing/module.cmx typing/error.cmx typing/btype.cmx
 typing/typemod.cmx: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
-    typing/typecore.cmx typing/resolve.cmx typing/primitive.cmx \
-    parsing/parsetree.cmi typing/module.cmx typing/error.cmx typing/btype.cmx
+    typing/typecore.cmx typing/primitive.cmx parsing/parsetree.cmi \
+    typing/module.cmx typing/error.cmx typing/btype.cmx
 typing/types.cmo: typing/primitive.cmx parsing/asttypes.cmi
 typing/types.cmx: typing/primitive.cmx parsing/asttypes.cmi
 compiler/back.cmo: typing/types.cmx compiler/prim.cmx utils/misc.cmx \

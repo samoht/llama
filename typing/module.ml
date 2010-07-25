@@ -114,9 +114,12 @@ let same_constr r1 r2 = get_constr r1 == get_constr r2
 let same_value r1 r2 = get_value r1 == get_value r2
 let same_label r1 r2 = get_label r1 == get_label r2
 
-let rec erase_type m t = match t.desc with
-    Tvar -> ()
-  | Tlink x -> erase_type m x
+let rec erase_type m t = match t with
+    Tvar v ->
+      begin match v.info with
+        | Forward ty -> erase_type m ty
+        | _ -> ()
+      end
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Tproduct l -> List.iter (erase_type m) l
   | Tconstr (r, l) ->

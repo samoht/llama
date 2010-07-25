@@ -23,24 +23,22 @@ exception Error of Location.t * error
 let type_of_type_expression strict_flag typexp =
   let rec type_of typexp =
     match typexp.te_desc with
-    Ttyp_var v ->
-      if v.tvar_type.desc = Tvar then
-        v.tvar_type
-      else begin
-        let ty = new_global_type_var () in
-        v.tvar_type <- ty;
-        ty
-      end
-  | Ttyp_arrow(arg1, arg2) ->
-      type_arrow(type_of arg1, type_of arg2)
-  | Ttyp_tuple argl ->
-      type_product(List.map type_of argl)
-  | Ttyp_constr(cstr, args) ->
-      if List.length args != (get_type_constr cstr).tcs_arity then
-        tcs_arity_err (get_type_constr cstr) args typexp.te_loc
-      else
-        { desc = Tconstr(cstr, List.map type_of args);
-          level = notgeneric }
+        Ttyp_var v ->
+          if v.tvar_type == type_none then
+            let ty = Tvar(new_phrase_nongeneric()) in
+            v.tvar_type <- ty;
+            ty
+          else
+            v.tvar_type
+      | Ttyp_arrow(arg1, arg2) ->
+          type_arrow(type_of arg1, type_of arg2)
+      | Ttyp_tuple argl ->
+          type_product(List.map type_of argl)
+      | Ttyp_constr(cstr, args) ->
+          if List.length args != (get_type_constr cstr).tcs_arity then
+            tcs_arity_err (get_type_constr cstr) args typexp.te_loc
+          else
+            Tconstr (cstr, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -92,12 +90,12 @@ let rec tpat (pat, ty) =
         tpat_list patl (filter_product (List.length patl) ty)
       with OldUnify ->
         pat_wrong_type_err pat ty
-          (type_product(new_type_var_list (List.length patl)))
+          (type_product(List.map tvar(new_nongenerics (List.length patl))))
       end
   | Tpat_construct(constr, args) ->
       if List.length args <> (get_constr constr).cs_arity then
         arity_err (get_constr constr) args pat.pat_loc;
-      let (ty_args, ty_res) = instance_constructor (get_constr constr) in
+      let (ty_args, ty_res) = instantiate_constructor (get_constr constr) in
       unify_pat pat ty ty_res;
       List.iter2
         (fun arg ty_arg ->
@@ -118,8 +116,7 @@ let rec tpat (pat, ty) =
       let rec tpat_lbl = function
         [] -> ()
       | (lbl,p) :: rest ->
-          let (ty_res, ty_arg) =
-            type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
+          let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
           unify_pat pat ty ty_res;
           tpat (p, ty_arg);
           tpat_lbl rest
@@ -175,7 +172,7 @@ let rec is_nonexpansive expr =
 
 let type_format loc fmt =
 
-  let ty_arrow gty ty = type_arrow(type_instance gty (* why? *), ty) in
+  let ty_arrow gty ty = type_arrow(instantiate_one_type gty (* why? *), ty) in
 
   let bad_conversion fmt i c =
     raise (Error (loc, Bad_conversion (fmt, i, c))) in
@@ -335,11 +332,9 @@ let type_format loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    {desc=
-      (Tconstr
-         (ref_type_constr tcs_format6,
-          [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result]));
-     level=notgeneric}
+    Tconstr
+      (ref_type_constr tcs_format6,
+       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
   type_in_format fmt
 
@@ -356,7 +351,7 @@ let rec type_expr expr =
   let inferred_ty =
   match expr.exp_desc with
     Texp_ident v ->
-      type_instance (get_value v).val_type
+      instantiate_one_type (get_value v).val_type
   | Texp_constant cst ->
       type_of_constant cst
   | Texp_tuple(args) ->
@@ -364,7 +359,7 @@ let rec type_expr expr =
   | Texp_construct(constr, args) ->
       if List.length args <> (get_constr constr).cs_arity then
         arity_err (get_constr constr) args expr.exp_loc;
-      let (ty_args, ty_res) = instance_constructor (get_constr constr) in
+      let (ty_args, ty_res) = instantiate_constructor (get_constr constr) in
       List.iter2 type_expect args ty_args;
       ty_res
   | Texp_apply(fct, args) ->
@@ -440,8 +435,7 @@ let rec type_expr expr =
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
-          let (ty_res, ty_arg) =
-            type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
+          let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
           begin try unify (ty, ty_res)
           with OldUnify -> label_not_belong_err expr (get_label lbl) ty
           end;
@@ -464,13 +458,11 @@ let rec type_expr expr =
       done;
       ty
   | Texp_field (e, lbl) ->
-      let (ty_res, ty_arg) =
-        type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
+      let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
       type_expect e ty_res;
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
-      let (ty_res, ty_arg) =
-        type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
+      let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
       if (get_label lbl).lbl_mut == Immutable then label_not_mutable_err expr (get_label lbl);
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
@@ -521,7 +513,7 @@ and type_expect exp expected_ty =
   match exp.exp_desc with
     Texp_constant(Const_string s) ->
       let actual_ty =
-        match (expand_head expected_ty).desc with
+        match expand_head expected_ty with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
             if get_type_constr cstr == tcs_format6
@@ -572,8 +564,8 @@ and type_let_decl rec_flag pat_expr_list =
 
 and type_statement expr =
   let ty = type_expr expr in
-  match (repr ty).desc with
+  match repr ty with
   | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
   | Tvar _ -> ()
   | _ ->
-      if not (Ctype.equal false [ty] [type_unit]) then not_unit_type_warning expr ty
+      if not (Ctype.equal ty type_unit) then not_unit_type_warning expr ty

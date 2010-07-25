@@ -76,7 +76,7 @@ let lookup_value env li loc =
 
 let rec type_expression strict_flag env te =
   { te_desc =
-      begin match te.pdesc with
+      begin match te.ptyp_desc with
         | Ptyp_var v ->
             Ttyp_var
               begin try
@@ -278,7 +278,7 @@ let label env tcs pos (name, typexp, mut) =
   (lbl, type_expression true env typexp)
 
 let rec crude_arity ptyp =
-  begin match ptyp.pdesc with
+  begin match ptyp.ptyp_desc with
     | Ptyp_arrow (_, ty) -> succ (crude_arity ty)
     | _ -> 0
   end
@@ -343,7 +343,7 @@ let type_declaration env decl loc =
         let nparams = List.length params in
         { tcs_id = Env.qualified_id name;
           tcs_arity = nparams;
-          tcs_params = replicate_list type_none nparams;
+          tcs_params = new_generics nparams; (* xxx *)
           tcs_body = Type_abstract }
       end
       decl

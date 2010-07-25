@@ -34,7 +34,7 @@ let type_constructors s decl1 decl2 =
 (* Inclusion between exception declarations *)
 
 let exception_declarations s decl1 decl2 =
-  if Includecore.exception_declarations s decl1 decl2
+  if Includecore.exceptions s decl1 decl2
   then ()
   else raise(Error[Exception_declarations(decl1, decl2)])
 

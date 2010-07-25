@@ -881,7 +881,7 @@ direction_flag:
   | DOWNTO                                      { Downto }
 ;
 mutable_flag:
-    /* empty */                                 { Notmutable }
+    /* empty */                                 { Immutable }
   | MUTABLE                                     { Mutable }
 ;
 opt_bar:

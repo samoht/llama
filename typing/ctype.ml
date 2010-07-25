@@ -32,12 +32,7 @@ let get_abbrev tcs =
   end
 
 let expand_abbrev_aux params body args =
-  let params' = List.map copy_type params
-  and body' = copy_type body in
-  List.iter cleanup_type params;
-  cleanup_type body;
-  List.iter2 bind_variable params' args;
-  body';;
+  substitute_type (List.combine params args) body
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations: high-level.                                *)
@@ -56,7 +51,7 @@ exception Cannot_expand
 *)
 (* Exactly once, else exception. No repr. *)
 let expand_abbrev ty =
-  match ty.desc with
+  match ty with
       Tconstr (tcs, args) ->
         let tcs = Module.get_type_constr tcs in
         begin match tcs.tcs_body with
@@ -68,7 +63,7 @@ let expand_abbrev ty =
 (* Exactly once, else exception. *)
 let try_expand_once ty =
   let ty = repr ty in
-  match ty.desc with
+  match ty with
       Tconstr _ -> repr (expand_abbrev ty)
     | _ -> raise Cannot_expand
 
@@ -92,7 +87,7 @@ let expand_head ty =
 (* My version. *)
 let rec expand_head ty =
   let ty = repr ty in
-  begin match ty.desc with
+  begin match ty with
     | Tconstr (tcs, args) ->
         let tcs = Module.get_type_constr tcs in
         begin match tcs.tcs_body with
@@ -112,81 +107,94 @@ let rec expand_head ty =
 exception OldUnify
 exception Unify of (core_type * core_type) list
 
-let occur_check level0 v =
-  let rec occurs_rec ty =
-    match repr ty with
-      {desc = Tvar _; level = level} as ty' ->
-        if level > level0 then ty'.level <- level0;
-        ty' == v
-    | {desc = Tarrow(t1,t2)} ->
-        occurs_rec t1 || occurs_rec t2
-    | {desc = Tproduct(ty_list)} ->
-        List.exists occurs_rec ty_list
-    | {desc = Tconstr(_, ty_list)} ->
-        List.exists occurs_rec ty_list
-  in
-  occurs_rec
-;;
+let rec occur_check v = function
+    Tvar tv ->
+      begin match tv.info with
+        | Generic -> assert false
+        | Nongeneric _ -> tv == v
+        | Forward ty -> occur_check v ty
+      end
+  | Tarrow (ty1, ty2) ->
+      occur_check v ty1 || occur_check v ty2
+  | Tproduct tyl ->
+      List.exists (occur_check v) tyl
+  | Tconstr (tcs, tyl) ->
+      List.exists (occur_check v) tyl
 
 (* Unification *)
 
 let rec unify (ty1, ty2) =
-  if ty1 == ty2 then () else begin
-    let ty1 = repr ty1
-    and ty2 = repr ty2 in
-      if ty1 == ty2 then () else begin
-        match (ty1.desc, ty2.desc) with
-          Tvar, Tvar ->
-            if ty1.level < ty2.level
-            then begin
-              ty2.level <- ty1.level; ty2.desc <- Tlink ty1
-            end else begin
-              ty1.level <- ty2.level; ty1.desc <- Tlink ty2
-            end
-        | Tvar, _ when not (occur_check ty1.level ty1 ty2) ->
-            ty1.desc <- Tlink ty2
-        | _, Tvar when not (occur_check ty2.level ty2 ty1) ->
-            ty2.desc <- Tlink ty1
-        | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-            unify (t1arg, t2arg);
-            unify (t1res, t2res)
-        | Tproduct tyl1, Tproduct tyl2 ->
-            unify_list (tyl1, tyl2)
-        | Tconstr(cstr1, []), Tconstr(cstr2, []) when same_type_constr cstr1 cstr2 ->
-            ()
-        | Tconstr(c, args), _ when has_abbrev c ->
-            let params, body = get_abbrev c in
-            unify (expand_abbrev_aux params body args, ty2)
-        | _, Tconstr(c, args) when has_abbrev c ->
-            let params, body = get_abbrev c in
-            unify (ty1, expand_abbrev_aux params body args)
-        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
-            unify_list (tyl1, tyl2)
-        | _, _ ->
-            raise OldUnify
-      end
+  (* xxx: ok, i should optimize this a little *)
+  let ty1 = expand_head ty1 in
+  let ty2 = expand_head ty2 in
+  assert
+    (List.for_all
+       (fun ty ->
+          begin match ty with
+            | Tvar tv ->
+                begin match tv.info with
+                  | Nongeneric _ -> true
+                  | Generic | Forward _ -> false
+                end
+            | _ -> true
+          end) [ty1; ty2]);
+  let level tv =
+    begin match tv.info with
+      | Nongeneric level -> level
+      | Generic | Forward _ -> assert false
+    end
+  in
+  begin match ty1, ty2 with
+      Tvar tv1, Tvar tv2 ->
+        if tv1 == tv2 then () else
+          if level tv1 < level tv2 then begin
+            tv2.info <- Forward ty1
+          end else begin
+            tv1.info <- Forward ty2
+          end
+    | Tvar tv1, _ when not (occur_check tv1 ty2) ->
+        rectify_type (level tv1) ty2;
+        tv1.info <- Forward ty2
+    | _, Tvar tv2 when not (occur_check tv2 ty1) ->
+        rectify_type (level tv2) ty1;
+        tv2.info <- Forward ty1
+    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+        unify (t1arg, t2arg);
+        unify (t1res, t2res)
+    | Tproduct tyl1, Tproduct tyl2 ->
+        unify_list (tyl1, tyl2)
+    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+        unify_list (tyl1, tyl2)
+    | _ ->
+        raise OldUnify
   end
 
 and unify_list = function
     [], [] -> ()
   | ty1::rest1, ty2::rest2 -> unify(ty1,ty2); unify_list(rest1,rest2)
   | _ -> raise OldUnify
-;;
 
 (* Two special cases of unification *)
 
+let nongeneric_level tv =
+  begin match tv.info with
+    | Generic | Forward _ -> assert false
+    | Nongeneric level -> level
+  end
+
 let rec filter_arrow ty =
   let ty = repr ty in
-  match repr ty with
-    {desc = Tvar; level = level} ->
-      let ty1 = {desc = Tvar; level = level}
-      and ty2 = {desc = Tvar; level = level} in
-      ty.desc <- Tlink {desc = Tarrow(ty1, ty2); level = notgeneric};
+  match ty with
+    Tvar tv ->
+      let level = nongeneric_level tv in
+      let ty1 = Tvar(new_nongeneric_gen level) in
+      let ty2 = Tvar(new_nongeneric_gen level) in
+      tv.info <- Forward(Tarrow(ty1, ty2));
       (ty1, ty2)
-  | {desc = Tarrow(ty1, ty2)} ->
+  | Tarrow(ty1, ty2) ->
       (ty1, ty2)
-  | {desc = Tconstr(c, args)} when has_abbrev c ->
-      let params, body = get_abbrev c in
+  | Tconstr(tcs, args) when has_abbrev tcs ->
+      let params, body = get_abbrev tcs in
       filter_arrow (expand_abbrev_aux params body args)
   | _ ->
       raise OldUnify
@@ -194,132 +202,80 @@ let rec filter_arrow ty =
 
 let rec filter_product arity ty =
   let ty = repr ty in
-  match repr ty with
-    {desc = Tvar; level = level} ->
-      let tyl = type_var_list arity level in
-      ty.desc <- Tlink {desc = Tproduct tyl; level = notgeneric};
+  match ty with
+    Tvar tv ->
+      let level = nongeneric_level tv in
+      let tyl = List.map (fun tv -> Tvar tv) (new_nongenerics_gen arity level) in
+      tv.info <- Forward(Tproduct tyl);
       tyl
-  | {desc = Tproduct tyl} ->
+  | Tproduct tyl ->
       if List.length tyl == arity then tyl else raise OldUnify
-  | {desc = Tconstr(c, args)} when has_abbrev c ->
-      let params, body = get_abbrev c in
+  | Tconstr(tcs,args) when has_abbrev tcs ->
+      let params, body = get_abbrev tcs in
       filter_product arity (expand_abbrev_aux params body args)
   | _ ->
       raise OldUnify
 ;;
 
-(* Type matching. Instantiates ty1 so that it is equal to ty2, or raises
-   Unify if not possible. Type ty2 is unmodified. Since the levels in ty1
-   are not properly updated, ty1 must not be generalized afterwards. *)
+(* Whether two types are identical, modulo expansion of abbreviations,
+and per the provided correspondence function for the variables. *)
 
-let rec filter (ty1, ty2) =
-  if ty1 == ty2 then () else begin
-    let ty1 = repr ty1
-    and ty2 = repr ty2 in
-      if ty1 == ty2 then () else begin
-        match (ty1.desc, ty2.desc) with
-          Tvar, Tvar when ty1.level != generic ->
-            ty1.desc <- Tlink ty2
-        | Tvar, _ when ty1.level != generic
-                           && not(occur_check ty1.level ty1 ty2) ->
-            ty1.desc <- Tlink ty2
-        | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-            filter (t1arg, t2arg);
-            filter (t1res, t2res)
-        | Tproduct(t1args), Tproduct(t2args) ->
-            filter_list (t1args, t2args)
-        | Tconstr(cstr1, []), Tconstr(cstr2, []) when same_type_constr cstr1 cstr2 ->
-            ()
-        | Tconstr(c, args), _ when has_abbrev c ->
-            let params, body = get_abbrev c in
-            filter (expand_abbrev_aux params body args, ty2)
-        | _, Tconstr(c, args) when has_abbrev c ->
-            let params, body = get_abbrev c in
-            filter (ty1, expand_abbrev_aux params body args)
-        | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
-            filter_list (tyl1, tyl2)
-        | _, _ ->
-            raise OldUnify
-      end
-  end
-
-and filter_list = function
-    [], [] -> ()
-  | ty1::rest1, ty2::rest2 ->
-      filter(ty1,ty2); filter_list(rest1,rest2)
-  | _ ->
-      raise OldUnify
-;;
-
-(* ---------------------------------------------------------------------- *)
-(* Equality testing.                                                      *)
-(* ---------------------------------------------------------------------- *)
-
-let normalize_subst subst =
-  if List.exists
-      (function {desc=Tlink _}, _ | _, {desc=Tlink _ } -> true | _ -> false)
-      !subst
-  then subst := List.map (fun (t1,t2) -> repr t1, repr t2) !subst
-
-(* rename: whether type variable names may be renamed *)
-let rec eqtype rename subst t1 t2 =
-  if t1 == t2 then () else
-  let t1 = repr t1 in
-  let t2 = repr t2 in
-  if t1 == t2 then () else
-
-  try
-    match (t1.desc, t2.desc) with
-      (Tvar _, Tvar _) when rename ->
-        begin try
-          normalize_subst subst;
-          if List.assq t1 !subst != t2 then raise (Unify [])
-        with Not_found ->
-          subst := (t1, t2) :: !subst
-        end
-    | (Tconstr (p1, []), Tconstr (p2, []))  when same_type_constr p1 p2 ->
-        ()
+let rec equiv_gen corresp ty1 ty2 =
+  let ty1 = repr ty1 in
+  let ty2 = repr ty2 in
+  match ty1, ty2 with
+    | Tvar tv1, Tvar tv2 ->
+        corresp tv1 == tv2
+    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+        equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
+    | Tproduct(t1args), Tproduct(t2args) ->
+        List.for_all2 (equiv_gen corresp) t1args t2args
+    | Tconstr (tcs, args), _ when has_abbrev tcs ->
+        let params, body = get_abbrev tcs in
+        equiv_gen corresp (expand_abbrev_aux params body args) ty2
+    | _, Tconstr (tcs, args) when has_abbrev tcs ->
+        let params, body = get_abbrev tcs in
+        equiv_gen corresp ty1 (expand_abbrev_aux params body args)
+    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+        List.for_all2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
-        let t1' = expand_head t1 in
-        let t2' = expand_head t2 in
-        (* Expansion may have changed the representative of the types... *)
-        (* jbem: how so? *)
-        (* let t1' = repr t1' and t2' = repr t2' in *)
-        if t1' == t2' then () else
-        begin try
-(*          TypePairs.find (t1', t2') *)
-          raise Not_found
-        with Not_found ->
-(*           TypePairs.add (t1', t2') ();*)
-          match (t1'.desc, t2'.desc) with
-            (Tvar _, Tvar _) when rename ->
-              begin try
-                normalize_subst subst;
-                if List.assq t1' !subst != t2' then raise (Unify [])
-              with Not_found ->
-                subst := (t1', t2') :: !subst
+        false
+
+let equal = equiv_gen (fun id -> id)
+let equiv alist = equiv_gen (fun id -> List.assq id alist)
+
+(* Whether a genericized type is more general than an arbitrary type. *)
+
+let rec moregeneral subst ty1 ty2 =
+  match ty1, ty2 with
+    | Tvar tv, _ ->
+        begin match tv.info with
+            Generic ->
+              if List.mem_assq tv !subst then begin
+                equal (List.assq tv !subst) ty2
+              end else begin
+                subst := (tv, ty2) :: !subst; true
               end
-          | (Tarrow (t1, u1), Tarrow (t2, u2)) ->
-              eqtype rename subst t1 t2;
-              eqtype rename subst u1 u2;
-          | (Tproduct tl1, Tproduct tl2) ->
-              eqtype_list rename subst tl1 tl2
-          | (Tconstr (p1, tl1), Tconstr (p2, tl2)) when same_type_constr p1 p2 ->
-              eqtype_list rename subst tl1 tl2
-          | (_, _) ->
-              raise (Unify [])
+          | Nongeneric _ | Forward _ ->
+              assert false
         end
-  with Unify trace ->
-    raise (Unify ((t1, t2)::trace))
+    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+        moregeneral subst t1arg t2arg && moregeneral subst t1res t2res
+    | Tproduct(t1args), Tproduct(t2args) ->
+        List.for_all2 (moregeneral subst) t1args t2args
+    | Tconstr (tcs, args), _ when has_abbrev tcs ->
+        let params, body = get_abbrev tcs in
+        moregeneral subst (expand_abbrev_aux params body args) ty2
+    | _, Tconstr (tcs, args) when has_abbrev tcs ->
+        let params, body = get_abbrev tcs in
+        moregeneral subst ty1 (expand_abbrev_aux params body args)
+    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+        List.for_all2 (moregeneral subst) tyl1 tyl2
+    | _ ->
+        false
 
-and eqtype_list rename subst tl1 tl2 =
-  if List.length tl1 <> List.length tl2 then
-    raise (Unify []);
-  List.iter2 (eqtype rename subst) tl1 tl2
-
-(* Two modes: with or without renaming of variables *)
-let equal rename tyl1 tyl2 =
-  try
-    eqtype_list rename (ref []) tyl1 tyl2; true
-  with
-    Unify _ -> false
+let filter ty1 ty2 =
+  let subst = ref [] in
+  if not (moregeneral subst ty1 ty2) then raise OldUnify;
+  !subst
+let moregeneral = moregeneral (ref [])

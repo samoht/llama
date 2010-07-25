@@ -17,7 +17,7 @@ let check_recursive_abbrev cstr =
   begin match cstr.tcs_body with
       Type_abbrev body ->
         let rec check_abbrev seen ty =
-          match (Btype.repr ty).desc with
+          match (Btype.repr ty) with
               Tvar _ -> ()
             | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
             | Tproduct tlist -> List.iter (check_abbrev seen) tlist
@@ -38,10 +38,7 @@ let check_recursive_abbrev cstr =
       
 let define_new_type tcs params body =
   push_type_level();
-  let ty_res =
-    { desc = Tconstr (ref_type_constr tcs, params);
-      level = notgeneric }
-  in
+  let ty_res = Tconstr (ref_type_constr tcs, List.map tvar params) in
   begin match body with
       Ttype_abstract ->
         pop_type_level ()
@@ -78,9 +75,9 @@ let type_typedecl_new decl loc =
       let params =
         List.map
           begin fun v ->
-            let ty = new_global_type_var () in
-            v.tvar_type <- ty;
-            ty
+            let tv = new_phrase_nongeneric () in
+            v.tvar_type <- Tvar tv;
+            tv
           end
           params
       in
@@ -128,8 +125,7 @@ let type_letdef pat_exp_list =
   
 let type_expression loc expr =
   push_type_level();
-  let ty =
-    type_expr expr in
+  let ty = type_expr expr in
   pop_type_level();
   if is_nonexpansive expr then generalize_type ty;
   ty

@@ -85,6 +85,7 @@ let compile_interface modname filename =
       let l = wrap Parser.interface Lexer.token lexbuf in
       let l, sg, env = Resolve.signature env l in
       Typemod.type_signature l;
+      Typemod.genericize_core_signature sg;
       close_in ic;
       Env.write_pers_struct oc (Env.current_unit()) sg;
       close_out oc;
@@ -129,6 +130,7 @@ let compile_impl env modname filename suffix =
       let l = wrap Parser.implementation Lexer.token lexbuf in
       let l, sg, env = Resolve.structure env l in
       Typemod.type_structure l;
+      Typemod.genericize_core_signature sg;
       List.iter (compile_impl_phrase oc) l;
       end_emit_phrase oc;
       close_in ic;

@@ -4,6 +4,7 @@
 *.zix
 *.zo
 *.cmi
+*.cmo
 *.cmx
 *.cmxa
 config/m.h

@@ -23,7 +23,6 @@ let fwd_load_file = ref(fun env s -> failwith "fwd_load_file")
 (* Executing phrases *)
 
 let do_structure_item env phr =
-  reset_type_var();
   let phr, sg, env = Resolve.structure_item env phr in
   Typemod.type_structure_item phr;
   begin match phr.str_desc with

@@ -146,7 +146,7 @@ let install_printer name =
       push_type_level();
       let ty_arg = new_type_var() in
       let ty_printer = type_arrow(ty_arg, type_unit) in
-      unify (type_instance val_desc.val_type, ty_printer);
+      unify (instantiate_one_type val_desc.val_type, ty_printer);
       pop_type_level();
       generalize_type ty_arg;
 (*

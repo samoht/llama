@@ -11,7 +11,9 @@ let gen_value x = Sig_value x
 let gen_type x = Sig_type x
 let gen_exception x = Sig_exception x
 
+let _ = Sys.catch_break true
 let type_structure_item str =
+  try
   begin match str.str_desc with
     | Tstr_eval exp ->
         ignore (type_expression str.str_loc exp)
@@ -26,6 +28,9 @@ let type_structure_item str =
     | Tstr_open _ ->
         ()
   end
+  with Sys.Break ->
+    Printexc.print_backtrace stdout;
+    exit 100
 
 let type_signature_item tsig =
   begin match tsig.sig_desc with
@@ -38,7 +43,7 @@ let type_signature_item tsig =
     | Tsig_open _ ->
         ()
   end
-
+(*
 let check_nongen_values l =
   List.iter
     begin fun str ->
@@ -58,10 +63,23 @@ let check_nongen_values l =
         | _ -> ()
       end
     end l
+*)
 
 let type_structure l =
-  List.iter type_structure_item l;
-  check_nongen_values l
+  List.iter type_structure_item l
 
 let type_signature l =
   List.iter type_signature_item l
+
+let genericize_core_signature l =
+  List.iter
+    begin function
+        Sig_value v ->
+          begin try
+            v.val_type <- genericize_type v.val_type
+          with Genericize ->
+            Error.cannot_generalize_err (val_name v) v
+          end
+      | _ -> ()
+    end
+    l

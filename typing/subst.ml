@@ -21,15 +21,13 @@ let type_constructor s r =
   else
     r
 
-let mkgenty desc = { desc = desc; level = generic }
-
 let rec core_type s ty =
   let ty = Btype.repr ty in
-  begin match ty.desc with
+  begin match ty with
     | Tvar _ -> ty
-    | Tarrow (tyl, tyr) -> mkgenty(Tarrow (core_type s tyl, core_type s tyr))
-    | Tproduct l -> mkgenty(Tproduct (List.map (core_type s) l))
-    | Tconstr (c, l) -> mkgenty(Tconstr (type_constructor s c, List.map (core_type s)l ))
+    | Tarrow (tyl, tyr) -> Tarrow (core_type s tyl, core_type s tyr)
+    | Tproduct l -> Tproduct (List.map (core_type s) l)
+    | Tconstr (c, l) -> Tconstr (type_constructor s c, List.map (core_type s)l)
   end
 
 let type_list s tyl = List.map (core_type s) tyl

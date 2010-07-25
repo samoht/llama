@@ -7,12 +7,10 @@ open Types
 (* Type constructor parameters.                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let newgenvar() = {desc=Tvar; level=generic}
-let list_tyvar = newgenvar()
-let vect_tyvar = newgenvar()
-let option_tyvar = newgenvar()
-let format6_tyvars = [newgenvar();newgenvar();newgenvar();
-                      newgenvar();newgenvar();newgenvar()]
+let list_generic = new_generic ()
+let vect_generic = new_generic ()
+let option_generic = new_generic ()
+let format6_generics = new_generics 6
 
 (* ---------------------------------------------------------------------- *)
 (* Type constructors.                                                     *)
@@ -31,10 +29,10 @@ let tcs_int = mkty "int" []
 let tcs_float = mkty "float" []
 let tcs_string = mkty "string" []
 let tcs_char = mkty "char" []
-let tcs_list = mkty "list" [list_tyvar]
-let tcs_vect = mkty "vect" [vect_tyvar]
-let tcs_option =  mkty "option" [option_tyvar]
-let tcs_format6 = mkty "format6" format6_tyvars
+let tcs_list = mkty "list" [list_generic]
+let tcs_vect = mkty "vect" [vect_generic]
+let tcs_option =  mkty "option" [option_generic]
+let tcs_format6 = mkty "format6" format6_generics
 
 let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
 
@@ -42,30 +40,18 @@ let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = No
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let type_arrow (t1,t2) =
-  {desc=Tarrow(t1, t2); level=notgeneric}
-and type_product tlist =
-  {desc=Tproduct(tlist); level=notgeneric}
-and type_unit =
-  {desc=Tconstr(ref_type_constr tcs_unit, []); level=notgeneric}
-and type_exn =
-  {desc=Tconstr(ref_type_constr tcs_exn, []); level=notgeneric}
-and type_bool =
-  {desc=Tconstr(ref_type_constr tcs_bool, []); level=notgeneric}
-and type_int =
-  {desc=Tconstr(ref_type_constr tcs_int, []); level=notgeneric}
-and type_float =
-  {desc=Tconstr(ref_type_constr tcs_float, []); level=notgeneric}
-and type_string =
-  {desc=Tconstr(ref_type_constr tcs_string, []); level=notgeneric}
-and type_char =
-  {desc=Tconstr(ref_type_constr tcs_char, []); level=notgeneric}
-and type_vect t =
-  {desc=Tconstr(ref_type_constr tcs_vect, [t]); level=notgeneric}
-and type_stream t =
-  {desc=Tconstr(fwdref "Stream" "stream", [t]); level=notgeneric}
-and type_num = (* windows *)
-  {desc=Tconstr(fwdref "Num" "num", []); level=notgeneric}
+let type_arrow (t1,t2) = Tarrow(t1,t2)
+let type_product tlist = Tproduct tlist
+let type_unit = Tconstr(ref_type_constr tcs_unit, [])
+let type_exn = Tconstr(ref_type_constr tcs_exn, [])
+let type_bool = Tconstr(ref_type_constr tcs_bool, [])
+let type_int = Tconstr(ref_type_constr tcs_int, [])
+let type_float = Tconstr(ref_type_constr tcs_float, [])
+let type_string = Tconstr(ref_type_constr tcs_string, [])
+let type_char = Tconstr(ref_type_constr tcs_char, [])
+let type_vect t = Tconstr(ref_type_constr tcs_vect, [t])
+let type_stream t = Tconstr(fwdref "Stream" "stream", [t])
+let type_num = Tconstr(fwdref "Num" "num", []) (* windows *)
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -74,23 +60,23 @@ and type_num = (* windows *)
 let constr_void =
   { cs_parent = tcs_unit;
     cs_name = "()";
-    cs_res = {desc=Tconstr(ref_type_constr tcs_unit,[]); level=notgeneric};
+    cs_res = Tconstr(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(0,1);
     cstr_tag = Cstr_constant 0 }
 
 let constr_nil =
-  let arg = list_tyvar in
+  let arg = Tvar list_generic in
   { cs_parent = tcs_list;
     cs_name = "[]";
-    cs_res = {desc=Tconstr(ref_type_constr tcs_list, [arg]); level=generic};
+    cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
 
-and constr_cons =
-  let arg1 = list_tyvar in
-  let arg2 = {desc=Tconstr(ref_type_constr tcs_list, [arg1]); level=generic} in
+let constr_cons =
+  let arg1 = Tvar list_generic in
+  let arg2 = Tconstr(ref_type_constr tcs_list, [arg1]) in
   { cs_parent = tcs_list;
     cs_name = "::";
     cs_res = arg2;
@@ -99,21 +85,19 @@ and constr_cons =
     cstr_tag = Cstr_constant 1 }
 
 let constr_none =
-  let arg = option_tyvar in
+  let arg = Tvar option_generic in
   { cs_parent = tcs_option;
     cs_name = "None";
-    cs_res =
-      {desc=Tconstr(ref_type_constr tcs_option, [arg]); level=generic};
+    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
 
-and constr_some =
-  let arg = option_tyvar in
+let constr_some =
+  let arg = Tvar option_generic in
   { cs_parent = tcs_option;
     cs_name = "Some";
-    cs_res =
-      {desc=Tconstr(ref_type_constr tcs_option, [arg]); level=generic};
+    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
     cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_constant 1 }
@@ -121,15 +105,15 @@ and constr_some =
 let constr_false =
   { cs_parent = tcs_bool;
     cs_name = "false";
-    cs_res = {desc=Tconstr(ref_type_constr tcs_bool,[]); level=notgeneric};
+    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
 
-and constr_true =
+let constr_true =
   { cs_parent = tcs_bool;
     cs_name = "true";
-    cs_res = {desc=Tconstr(ref_type_constr tcs_bool,[]); level=notgeneric};
+    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_constant 1}
@@ -153,7 +137,7 @@ let tag_match_failure, cs_match_failure =
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
-    cs_res = {desc=Tconstr(ref_type_constr tcs_exn,[]); level=notgeneric};
+    cs_res = Tconstr(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
     cstr_tag = Cstr_exception qualid }
@@ -165,7 +149,7 @@ let tag_assert_failure, cs_assert_failure =
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
-    cs_res = {desc=Tconstr(ref_type_constr tcs_exn,[]); level=notgeneric};
+    cs_res = Tconstr(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
     cstr_tag = Cstr_exception qualid;
