@@ -170,7 +170,7 @@ let print_type_scheme (Forall(gv,t)) =
    in
    (names_of (1,gv))
  in
- let tvar_names = combine (rev gv,names) in
+ let tvar_names = combine (rev gv) names in
  let rec print_rec = function
     | TypeVar{index=n; value=Unknown} ->
          let name =
