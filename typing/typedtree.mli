@@ -36,10 +36,6 @@ and pattern_desc =
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label reference * pattern) list
 
-(* used by the ocaml bytecompiler, perhaps to know whether it needs to
-add code for the failure case. For the moment, we always set it to
-partial *)
-
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
@@ -112,3 +108,7 @@ type module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
+
+(* used by the ocaml bytecompiler *)
+type partial = Partial | Total
+type optional = Required | Optional

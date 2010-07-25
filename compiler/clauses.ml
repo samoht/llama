@@ -172,7 +172,7 @@ let get_span_of_constr cstr =
 let full_match env = match env with
   ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
     List.length env ==  get_span_of_constr c
-| ({pat_desc = Tpat_constant(ACchar(_))},_) :: _ ->
+| ({pat_desc = Tpat_constant(Const_char(_))},_) :: _ ->
     List.length env == 256
 | ({pat_desc = Tpat_constant(_)},_) :: _ -> false
 | ({pat_desc = Tpat_tuple(_)},_) :: _ -> true

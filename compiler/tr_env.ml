@@ -107,7 +107,7 @@ let rec mutable_vars_of_pat mut pat =
           let mut' =
             match (get_label lbl).lbl_mut with
               Mutable -> true
-            | Notmutable -> mut in
+            | Immutable -> mut in
           mutable_vars_of_pat mut' pat)
         lbl_pat_list)
   | _ -> []                             (* Tpat_any or Zconstpat or Tpat_or *)

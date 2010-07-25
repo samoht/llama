@@ -15,8 +15,8 @@ let const_unit =
 ;;
 
 let int_of_atom = function
-    ACint i -> i
-  | ACchar c -> int_of_char c
+    Const_int i -> i
+  | Const_char c -> int_of_char c
   | _ -> Misc.fatal_error "int_of_atom"
 ;;
 

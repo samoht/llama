@@ -75,10 +75,10 @@ let neg_float_string f =
 
 let mkuminus name arg =
   match name, arg.pexp_desc with
-  | "-", Pexp_constant(ACint n) ->
-      mkexp(Pexp_constant(ACint(-n)))
-  | _, Pexp_constant(ACfloat f) ->
-      mkexp(Pexp_constant(ACfloat(-.f))) (* neg_float_string f *)
+  | "-", Pexp_constant(Const_int n) ->
+      mkexp(Pexp_constant(Const_int(-n)))
+  | _, Pexp_constant(Const_float f) ->
+      mkexp(Pexp_constant(Const_float(neg_float_string f)))
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
 
@@ -120,13 +120,13 @@ let array_function str name =
 let array_function mn s = Ldot (Lident mn, s) (* xxx *)
 
 let rec deep_mkrangepat c1 c2 =
-  if c1 = c2 then ghpat(Ppat_constant(ACchar c1)) else
-  ghpat(Ppat_or(ghpat(Ppat_constant(ACchar c1)),
+  if c1 = c2 then ghpat(Ppat_constant(Const_char c1)) else
+  ghpat(Ppat_or(ghpat(Ppat_constant(Const_char c1)),
                 deep_mkrangepat (Char.chr(Char.code c1 + 1)) c2))
 
 let rec mkrangepat c1 c2 =
   if c1 > c2 then mkrangepat c2 c1 else
-  if c1 = c2 then mkpat(Ppat_constant(ACchar c1)) else
+  if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
   reloc_pat (deep_mkrangepat c1 c2)
 
 let syntax_error () =
@@ -167,7 +167,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token EXCEPTION
 %token EXTERNAL
 %token FALSE
-%token <float> FLOAT
+%token <string> FLOAT
 %token FOR
 %token FUN
 %token FUNCTION
@@ -778,15 +778,15 @@ label:
 /* ---------------------------------------------------------------------- */
 
 constant:
-    INT                                         { ACint $1 }
-  | CHAR                                        { ACchar $1 }
-  | STRING                                      { ACstring $1 }
-  | FLOAT                                       { ACfloat $1 }
+    INT                                         { Const_int $1 }
+  | CHAR                                        { Const_char $1 }
+  | STRING                                      { Const_string $1 }
+  | FLOAT                                       { Const_float $1 }
 ;
 signed_constant:
     constant                                    { $1 }
-  | MINUS INT                                   { ACint(- $2) }
-  | MINUS FLOAT                                 { ACfloat(-. $2) }
+  | MINUS INT                                   { Const_int(- $2) }
+  | MINUS FLOAT                                 { Const_float(neg_float_string $2) }
 ;
 
 /* ---------------------------------------------------------------------- */

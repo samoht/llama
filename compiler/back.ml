@@ -169,10 +169,10 @@ let invert_bool_test =
 (* Production of an immediate test *)
 
 let test_for_atom = function
-    ACint x -> Pint_test(PTnoteqimm x)
-  | ACchar x -> Pint_test(PTnoteqimm (int_of_char x))
-  | ACfloat x -> Pfloat_test(PTnoteqimm x)
-  | ACstring x -> Pstring_test(PTnoteqimm x)
+    Const_int x -> Pint_test(PTnoteqimm x)
+  | Const_char x -> Pint_test(PTnoteqimm (int_of_char x))
+  | Const_float x -> Pfloat_test(PTnoteqimm (float_of_string x))
+  | Const_string x -> Pstring_test(PTnoteqimm x)
 ;;
 
 (* To keep track of function bodies that remain to be compiled. *)
@@ -340,8 +340,8 @@ let rec compile_expr staticfail =
   | Lcond(arg, casel) ->
         let code1 =
           if match casel with
-            (ACint _, _) :: _ :: _ -> true
-          | (ACchar _, _) :: _ :: _ -> true
+            (Const_int _, _) :: _ :: _ -> true
+          | (Const_char _, _) :: _ :: _ -> true
           | _ -> false
           then
             comp_decision (compile_nbranch int_of_atom casel) code

@@ -291,7 +291,7 @@ let partial_fun loc =
   let stop = loc.loc_end.Lexing.pos_cnum in
   Lprim(Praise,
     [Lconst(SCblock(match_failure_tag,
-      [SCatom(ACstring !input_name);SCatom(ACint start);SCatom(ACint stop)]))])
+      [SCatom(Const_string !input_name);SCatom(Const_int start);SCatom(Const_int stop)]))])
 ;;
 
 (* The entry points *)

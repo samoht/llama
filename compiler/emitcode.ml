@@ -28,7 +28,7 @@ let out_int_const i =
   end else if i <= (maxint_short-1)/2 && i >= (minint_short-1)/2 then begin
     out opCONSTSHORT; out_short (i+i+1)
   end else begin
-    out opGETGLOBAL; Reloc.slot_for_literal(SCatom(ACint i))
+    out opGETGLOBAL; Reloc.slot_for_literal(SCatom(Const_int i))
   end
 ;;
 
@@ -48,10 +48,10 @@ let out_header (n, tag) =
 
 let rec emit = function
       [] -> ()
-    | Kquote(SCatom(ACint i)) :: code ->
+    | Kquote(SCatom(Const_int i)) :: code ->
         out_int_const i;
         emit code
-    | Kquote(SCatom(ACchar c)) :: code ->
+    | Kquote(SCatom(Const_char c)) :: code ->
         out_int_const (int_of_char c);
         emit code
     | Kquote(SCblock(tag,[])) :: code ->
@@ -132,13 +132,13 @@ let rec emit = function
               out_bool_test opBRANCHIFEQ x; out_label lbl
           | Pfloat_test(PTnoteqimm f) ->
               out opPUSH; out opPUSH; out opGETGLOBAL;
-              Reloc.slot_for_literal (SCatom(ACfloat f));
+              Reloc.slot_for_literal (SCatom(Const_float (string_of_float f)));
               out opEQFLOAT; out opPOPBRANCHIFNOT; out_label lbl
           | Pfloat_test x ->
               out_bool_test opEQFLOAT x; out opBRANCHIF; out_label lbl
           | Pstring_test(PTnoteqimm s) ->
               out opPUSH; out opPUSH; out opGETGLOBAL;
-              Reloc.slot_for_literal (SCatom(ACstring s));
+              Reloc.slot_for_literal (SCatom(Const_string s));
               out opEQSTRING; out opPOPBRANCHIFNOT; out_label lbl
           | Pstring_test x ->
               out_bool_test opEQSTRING x; out opBRANCHIF; out_label lbl

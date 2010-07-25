@@ -49,10 +49,10 @@ let type_of_type_expression strict_flag typexp =
 (* Typecore of constants *)
 
 let type_of_constant = function
-    ACint _ -> type_int
-  | ACfloat _ -> type_float
-  | ACstring _ -> type_string
-  | ACchar _ -> type_char
+    Const_int _ -> type_int
+  | Const_float _ -> type_float
+  | Const_string _ -> type_string
+  | Const_char _ -> type_char
 ;;
 
 (* Enables warnings *)
@@ -163,7 +163,7 @@ let rec is_nonexpansive expr =
   | Texp_array [] -> true
   | Texp_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
-                  (get_label lbl).lbl_mut == Notmutable && is_nonexpansive expr)
+                  (get_label lbl).lbl_mut == Immutable && is_nonexpansive expr)
               lbl_expr_list
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_parser pat_expr_list -> true
@@ -471,7 +471,7 @@ let rec type_expr expr =
   | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) =
         type_pair_instance ((get_label lbl).lbl_res, (get_label lbl).lbl_arg) in
-      if (get_label lbl).lbl_mut == Notmutable then label_not_mutable_err expr (get_label lbl);
+      if (get_label lbl).lbl_mut == Immutable then label_not_mutable_err expr (get_label lbl);
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       type_unit
@@ -519,7 +519,7 @@ let rec type_expr expr =
 
 and type_expect exp expected_ty =
   match exp.exp_desc with
-    Texp_constant(ACstring s) ->
+    Texp_constant(Const_string s) ->
       let actual_ty =
         match (expand expected_ty).typ_desc with
           (* Hack for format strings *)

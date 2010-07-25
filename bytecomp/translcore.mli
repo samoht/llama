@@ -19,6 +19,7 @@ open Asttypes
 open Types
 open Typedtree
 open Lambda
+open Compat
 
 val name_pattern: string -> (pattern * 'a) list -> Ident.t
 
@@ -43,9 +44,3 @@ exception Error of Location.t * error
 open Format
 
 val report_error: formatter -> error -> unit
-
-(* Forward declaration -- to be filled in by Translmod.transl_module *)
-val transl_module :
-      (module_coercion -> Path.t option -> module_expr -> lambda) ref
-val transl_object :
-      (Ident.t -> string list -> class_expr -> lambda) ref

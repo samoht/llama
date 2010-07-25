@@ -13,10 +13,10 @@ open Format;;
 
 open Asttypes;;
 let rec transl_structured_const = function
-    SCatom(ACint i) -> Llama_obj.of_int i
-  | SCatom(ACfloat f) -> Llama_obj.of_float f
-  | SCatom(ACstring s) -> Llama_obj.of_string s
-  | SCatom(ACchar c) -> Llama_obj.of_char c
+    SCatom(Const_int i) -> Llama_obj.of_int i
+  | SCatom(Const_float f) -> Llama_obj.of_float (float_of_string f)
+  | SCatom(Const_string s) -> Llama_obj.of_string s
+  | SCatom(Const_char c) -> Llama_obj.of_char c
   | SCblock(tag, comps) ->
       let res = Llama_obj.new_block (get_num_of_tag tag) (List.length comps) in
       fill_structured_const 0 res comps;

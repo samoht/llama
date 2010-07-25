@@ -123,7 +123,7 @@ let rec eval env tm =
               eval (x :: env) y
           | App (Prim Paddint, x), y ->
               begin match x, y with
-                | Const (ACint a), Const (ACint b) -> Const (ACint (a+b))
+                | Const (Const_int a), Const (Const_int b) -> Const (Const_int (a+b))
                 | _ -> assert false
               end
           | _ ->

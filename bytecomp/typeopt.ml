@@ -22,24 +22,26 @@ open Types
 open Typedtree
 open Lambda
 
+(* llama xxx: these fns don't need an env *)
+
 let scrape env ty =
-  (Ctype.repr (Ctype.expand_head_opt env (Ctype.correct_levels ty))).desc
+  (Ctype.expand (Btype.type_instance ty)).typ_desc
 
 let has_base_type exp base_ty_path =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, _, _) -> Path.same p base_ty_path
+  | Tconstr(p, _) -> Module.get_type_constr p == base_ty_path
   | _ -> false
 
 let maybe_pointer exp =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, args, abbrev) ->
-      not (Path.same p Predef.path_int) &&
-      not (Path.same p Predef.path_char) &&
+  | Tconstr(p, args) ->
+      not (Module.get_type_constr p == Predef.tcs_int) &&
+      not (Module.get_type_constr p == Predef.tcs_char) &&
       begin try
-        match Env.find_type p exp.exp_env with
-          {type_kind = Type_variant []} -> true (* type exn *)
-        | {type_kind = Type_variant cstrs} ->
-            List.exists (fun (name, args) -> args <> []) cstrs
+        match Module.get_type_constr p with
+          {tcs_body = Type_variant []} -> true (* type exn *)
+        | {tcs_body = Type_variant cstrs} ->
+            List.exists (fun cs -> cs.cs_args <> []) cstrs
         | _ -> true
       with Not_found -> true
         (* This can happen due to e.g. missing -I options,
@@ -50,28 +52,31 @@ let maybe_pointer exp =
 
 let array_element_kind env ty =
   match scrape env ty with
-  | Tvar | Tunivar ->
+  | Tvar ->
       Pgenarray
-  | Tconstr(p, args, abbrev) ->
-      if Path.same p Predef.path_int || Path.same p Predef.path_char then
+  | Tconstr(p, args) ->
+      let tcs = Module.get_type_constr p in
+      if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
-      else if Path.same p Predef.path_float then
+      else if tcs == Predef.tcs_float then
         Pfloatarray
-      else if Path.same p Predef.path_string
-           || Path.same p Predef.path_array
+      else if tcs == Predef.tcs_string
+           || tcs == Predef.tcs_vect then
+(*
            || Path.same p Predef.path_nativeint
            || Path.same p Predef.path_int32
            || Path.same p Predef.path_int64 then
+*)
         Paddrarray
       else begin
         try
-          match Env.find_type p env with
-            {type_kind = Type_abstract} ->
+          match tcs with
+            {tcs_body = (Type_abstract | Type_abbrev _)} ->
               Pgenarray
-          | {type_kind = Type_variant cstrs}
-            when List.for_all (fun (name, args) -> args = []) cstrs ->
+          | {tcs_body = Type_variant cstrs}
+            when List.for_all (fun cs -> cs.cs_args = []) cstrs ->
               Pintarray
-          | {type_kind = _} ->
+          | {tcs_body = _} ->
               Paddrarray
         with Not_found ->
           (* This can happen due to e.g. missing -I options,
@@ -84,8 +89,8 @@ let array_element_kind env ty =
 
 let array_kind_gen ty env =
   match scrape env ty with
-  | Tconstr(p, [elt_ty], _) | Tpoly({desc = Tconstr(p, [elt_ty], _)}, _)
-    when Path.same p Predef.path_array ->
+  | Tconstr(p, [elt_ty])
+    when Module.get_type_constr p == Predef.tcs_vect ->
       array_element_kind env elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)
@@ -97,9 +102,9 @@ let array_pattern_kind pat = array_kind_gen pat.pat_type pat.pat_env
 
 let bigarray_decode_type env ty tbl dfl =
   match scrape env ty with
-  | Tconstr(Pdot(Pident mod_id, type_name, _), [], _)
-    when Ident.name mod_id = "Bigarray" ->
-      begin try List.assoc type_name tbl with Not_found -> dfl end
+  | Tconstr({ ref_id = id }, [])
+    when id.id_module = Module "Bigarray" ->
+      begin try List.assoc id.id_name tbl with Not_found -> dfl end
   | _ ->
       dfl
 
@@ -123,7 +128,7 @@ let layout_table =
 
 let bigarray_kind_and_layout exp =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, [caml_type; elt_type; layout_type], abbrev) ->
+  | Tconstr(p, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type exp.exp_env elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type exp.exp_env layout_type layout_table Pbigarray_unknown_layout)
   | _ ->

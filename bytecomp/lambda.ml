@@ -154,12 +154,11 @@ and lambda_switch =
 and lambda_event =
   { lev_loc: Location.t;
     lev_kind: lambda_event_kind;
-    lev_repr: int ref option;
-    lev_env: Env.summary }
+    lev_repr: int ref option }
 
 and lambda_event_kind =
     Lev_before
-  | Lev_after of Types.type_expr
+  | Lev_after of Types.core_type
   | Lev_function
 
 let const_unit = Const_pointer 0

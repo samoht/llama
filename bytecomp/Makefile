@@ -4,15 +4,15 @@ OCAMLDEP=ocamldep.opt
 INCLUDES=-I ../utils -I ../parsing -I ../typing
 FLAGS=-g $(INCLUDES)
 
-SRC=lambda.cmo printlambda.cmo \
-  typeopt.cmo switch.cmo matching.cmo \
-  translobj.cmo translcore.cmo \
-  translclass.cmo translmod.cmo \
-  simplif.cmo runtimedef.cmo \
-  meta.cmo instruct.cmo bytegen.cmo \
-  printinstr.cmo opcodes.cmo emitcode.cmo \
-  bytesections.cmo dll.cmo symtable.cmo \
-  bytelink.cmo bytelibrarian.cmo bytepackager.cmo
+SRC=lambda.cmx printlambda.cmx \
+  typeopt.cmx switch.cmx matching.cmx \
+  translobj.cmx translcore.cmx \
+  translclass.cmx translmod.cmx \
+  simplif.cmx runtimedef.cmx \
+  meta.cmx instruct.cmx bytegen.cmx \
+  printinstr.cmx opcodes.cmx emitcode.cmx \
+  bytesections.cmx dll.cmx symtable.cmx \
+  bytelink.cmx bytelibrarian.cmx bytepackager.cmx
 
 all: $(SRC)
 

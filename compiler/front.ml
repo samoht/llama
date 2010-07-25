@@ -122,9 +122,9 @@ let assert_failed loc =
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise,
           [Lconst(SCblock(assert_failure_tag,
-              [SCatom(ACstring fname);
-               SCatom(ACint line);
-               SCatom(ACint char)]))])
+              [SCatom(Const_string fname);
+               SCatom(Const_int line);
+               SCatom(Const_int char)]))])
 ;;
 
 (* Translation of expressions *)
@@ -273,7 +273,7 @@ let rec translate_expr env =
           lbl_expr_list;
         begin try
           if List.for_all
-               (fun (lbl, e) -> (get_label lbl).lbl_mut == Notmutable)
+               (fun (lbl, e) -> (get_label lbl).lbl_mut == Immutable)
                lbl_expr_list
           then Lconst(SCblock(ConstrRegular(0,0),
                               Array.to_list (Array.map extract_constant v)))
@@ -336,7 +336,7 @@ let translate_expression = translate_expr Tnullenv
 (* Translation of toplevel let expressions *)
 
 let rec make_sequence f = function
-    [] -> Lconst(SCatom(ACint 0))
+    [] -> Lconst(SCatom(Const_int 0))
   | [x] -> f x
   | x::rest -> Lsequence(f x, make_sequence f rest)
 ;;

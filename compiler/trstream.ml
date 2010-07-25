@@ -64,7 +64,7 @@ and raise_parse_error = stream_raise "Parse_error" 2
 let catch_parse_failure l =
   Lhandle(l, Lifthenelse(Lprim(Ptest Peq_test,
                                [Lprim(Ptag_of, [Lvar 0]);
-                                Lconst(SCatom(ACint parse_failure_tag))]),
+                                Lconst(SCatom(Const_int parse_failure_tag))]),
                          Lstaticfail 0,
                          Lprim(Praise, [Lvar 0])))
 ;;

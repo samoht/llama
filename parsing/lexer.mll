@@ -239,7 +239,7 @@ rule token = parse
           raise (Error(Literal_overflow "int", Location.curr lexbuf))
       }
   | float_literal
-      { FLOAT (float_of_string(remove_underscores(Lexing.lexeme lexbuf))) }
+      { FLOAT (remove_underscores(Lexing.lexeme lexbuf)) }
   | "\""
       { reset_string_buffer();
         let string_start = lexbuf.lex_start_p in

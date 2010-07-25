@@ -4,19 +4,26 @@
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
 (*  en Automatique.  All rights reserved.  This file is distributed    *)
 (*  under the terms of the Q Public License version 1.0.               *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: typeopt.mli 2873 2000-02-28 15:45:50Z xleroy $ *)
+(* $Id: path.mli 5640 2003-07-01 13:05:43Z xleroy $ *)
 
-(* Auxiliaries for type-based optimizations, e.g. array kinds *)
+(* Access paths *)
 
-val has_base_type : Typedtree.expression -> Types.type_constructor -> bool
-val maybe_pointer : Typedtree.expression -> bool
-val array_kind : Typedtree.expression -> Lambda.array_kind
-val array_pattern_kind : Typedtree.pattern -> Lambda.array_kind
-val bigarray_kind_and_layout :
-      Typedtree.expression -> Lambda.bigarray_kind * Lambda.bigarray_layout
+type t =
+    Pident of Ident.t
+  | Pdot of t * string * int
+  | Papply of t * t
+
+val same: t -> t -> bool
+val isfree: Ident.t -> t -> bool
+val binding_time: t -> int
+
+val nopos: int
+
+val name: t -> string
+val head: t -> Ident.t
