@@ -11,6 +11,8 @@ let newgenvar() = {typ_desc=Tvar; typ_level=generic}
 let list_tyvar = newgenvar()
 let vect_tyvar = newgenvar()
 let option_tyvar = newgenvar()
+let format6_tyvars = [newgenvar();newgenvar();newgenvar();
+                      newgenvar();newgenvar();newgenvar()]
 
 (* ---------------------------------------------------------------------- *)
 (* Type constructors.                                                     *)
@@ -32,9 +34,9 @@ let tcs_char = mkty "char" []
 let tcs_list = mkty "list" [list_tyvar]
 let tcs_vect = mkty "vect" [vect_tyvar]
 let tcs_option =  mkty "option" [option_tyvar]
+let tcs_format6 = mkty "format6" format6_tyvars
 
 let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
-let ref_format = fwdref "Printf" "format"
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -64,8 +66,6 @@ and type_stream t =
   {typ_desc=Tconstr(fwdref "Stream" "stream", [t]); typ_level=notgeneric}
 and type_num = (* windows *)
   {typ_desc=Tconstr(fwdref "Num" "num", []); typ_level=notgeneric}
-let type_format t1 t2 t3 =
-  {typ_desc=Tconstr(ref_format, [t1;t2;t3]); typ_level=notgeneric}
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -172,6 +172,7 @@ let builtin_sig =
     Sig_type tcs_list;
     Sig_type tcs_vect;
     Sig_type tcs_option;
+    Sig_type tcs_format6;
     Sig_exception constr_match_failure;
     Sig_exception cs_assert_failure;
   ]

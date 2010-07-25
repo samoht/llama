@@ -1,12 +1,6 @@
 (* Formatting printing functions *)
 
 
-type ('a, 'b, 'c) format;;
-        (* The type of format strings. ['a] is the type of the parameters
-           of the string, ['c] is the result type for the [printf]-style
-           function, and ['b] is the type of the first argument given to
-           [%a] and [%t] printing functions. *)
-
 val fprintf: out_channel -> ('a, out_channel, unit) format -> 'a
         (* [fprintf outchan format arg1 ... argN] formats the arguments
            [arg1] to [argN] according to the format string [format],

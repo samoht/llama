@@ -606,3 +606,6 @@ external input_scan_line: in_channel -> int = "input_scan_line"
 ;;
 
 val ignore : 'a -> unit
+
+type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
+type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4

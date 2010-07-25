@@ -1,9 +1,10 @@
 open List
 open Obj
 
-type ('a, 'b, 'c) format = string;;
+external unsafe_format_to_string : ('a, 'b, 'c) format -> string = "identity"
 
 let fprintf outchan format =
+  let format = unsafe_format_to_string format in
   let rec doprn i =
     if i >= String.length format then
       magic ()

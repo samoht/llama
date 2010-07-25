@@ -12,6 +12,12 @@ open Ctype;;
 open Error;;
 open Asttypes;;
 
+type error =
+  | Incomplete_format of string
+  | Bad_conversion of string * int * char
+
+exception Error of Location.t * error
+
 (* To convert type expressions to types *)
 
 let type_of_type_expression strict_flag typexp =
@@ -168,45 +174,174 @@ let rec is_nonexpansive expr =
 (* Typecore of printf formats *)
 
 let type_format loc fmt =
-  let len = String.length fmt in
-  let ty_input = new_type_var()
-  and ty_result = new_type_var() in
-  let rec skip_args j =
-    if j >= len then j else
+
+  let ty_arrow gty ty = type_arrow(type_instance gty (* why? *), ty) in
+
+  let bad_conversion fmt i c =
+    raise (Error (loc, Bad_conversion (fmt, i, c))) in
+  let incomplete_format fmt =
+    raise (Error (loc, Incomplete_format fmt)) in
+
+  let range_closing_index fmt i =
+
+    let len = String.length fmt in
+    let find_closing j =
+      if j >= len then incomplete_format fmt else
+      try String.index_from fmt j ']' with
+      | Not_found -> incomplete_format fmt in
+    let skip_pos j =
+      if j >= len then incomplete_format fmt else
       match fmt.[j] with
-        '0' .. '9' | ' ' | '.' | '-' -> skip_args (succ j)
-      | _ -> j in
-  let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
-      '%' ->
-        let j = skip_args(succ i) in
-        begin match fmt.[j] with
-          '%' ->
-            scan_format (succ j)
-        | 's' ->
-            type_arrow (type_string, scan_format (succ j))
-        | 'c' ->
-            type_arrow (type_char, scan_format (succ j))
-        | 'd' | 'o' | 'x' | 'X' | 'u' ->
-            type_arrow (type_int, scan_format (succ j))
-        | 'f' | 'e' | 'E' | 'g' | 'G' ->
-            type_arrow (type_float, scan_format (succ j))
-        | 'b' ->
-            type_arrow (type_bool, scan_format (succ j))
-        | 'a' ->
-            let ty_arg = new_type_var() in
-            type_arrow (type_arrow (ty_input, type_arrow (ty_arg, ty_result)),
-                        type_arrow (ty_arg, scan_format (succ j)))
-        | 't' ->
-            type_arrow (type_arrow (ty_input, ty_result), scan_format (succ j))
-        | c ->
-            bad_format_letter loc c
-        end
-    | _ -> scan_format (succ i) in
-  {typ_desc=Tconstr(ref_format, [scan_format 0; ty_input; ty_result]);
-   typ_level=notgeneric}
-;;
+      | ']' -> find_closing (j + 1)
+      | c -> find_closing j in
+    let rec skip_neg j =
+      if j >= len then incomplete_format fmt else
+      match fmt.[j] with
+      | '^' -> skip_pos (j + 1)
+      | c -> skip_pos j in
+    find_closing (skip_neg (i + 1)) in
+
+  let rec type_in_format fmt =
+
+    let len = String.length fmt in
+
+    let ty_input = new_type_var ()
+    and ty_result = new_type_var ()
+    and ty_aresult = new_type_var ()
+    and ty_uresult = new_type_var () in
+
+    let meta = ref 0 in
+
+    let rec scan_format i =
+      if i >= len then
+        if !meta = 0
+        then ty_uresult, ty_result
+        else incomplete_format fmt else
+      match fmt.[i] with
+      | '%' -> scan_opts i (i + 1)
+      | _ -> scan_format (i + 1)
+    and scan_opts i j =
+      if j >= len then incomplete_format fmt else
+      match fmt.[j] with
+      | '_' -> scan_rest true i (j + 1)
+      | _ -> scan_rest false i j
+    and scan_rest skip i j =
+      let rec scan_flags i j =
+        if j >= len then incomplete_format fmt else
+        match fmt.[j] with
+        | '#' | '0' | '-' | ' ' | '+' -> scan_flags i (j + 1)
+        | _ -> scan_width i j
+      and scan_width i j = scan_width_or_prec_value scan_precision i j
+      and scan_decimal_string scan i j =
+        if j >= len then incomplete_format fmt else
+        match fmt.[j] with
+        | '0' .. '9' -> scan_decimal_string scan i (j + 1)
+        | _ -> scan i j
+      and scan_width_or_prec_value scan i j =
+        if j >= len then incomplete_format fmt else
+        match fmt.[j] with
+        | '*' ->
+          let ty_uresult, ty_result = scan i (j + 1) in
+          ty_uresult, ty_arrow Predef.type_int ty_result
+        | '-' | '+' -> scan_decimal_string scan i (j + 1)
+        | _ -> scan_decimal_string scan i j
+      and scan_precision i j =
+        if j >= len then incomplete_format fmt else
+        match fmt.[j] with
+        | '.' -> scan_width_or_prec_value scan_conversion i (j + 1)
+        | _ -> scan_conversion i j
+
+      and conversion j ty_arg =
+        let ty_uresult, ty_result = scan_format (j + 1) in
+        ty_uresult,
+        if skip then ty_result else ty_arrow ty_arg ty_result
+
+      and conversion_a j ty_e ty_arg =
+        let ty_uresult, ty_result = conversion j ty_arg in
+        let ty_a = ty_arrow ty_input (ty_arrow ty_e ty_aresult) in
+        ty_uresult, ty_arrow ty_a ty_result
+
+      and conversion_r j ty_e ty_arg =
+        let ty_uresult, ty_result = conversion j ty_arg in
+        let ty_r = ty_arrow ty_input ty_e in
+        ty_arrow ty_r ty_uresult, ty_result
+
+      and scan_conversion i j =
+        if j >= len then incomplete_format fmt else
+        match fmt.[j] with
+        | '%' | '!' | ',' -> scan_format (j + 1)
+        | 's' | 'S' -> conversion j Predef.type_string
+        | '[' ->
+          let j = range_closing_index fmt j in
+          conversion j Predef.type_string
+        | 'c' | 'C' -> conversion j Predef.type_char
+        | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
+          conversion j Predef.type_int
+        | 'f' | 'e' | 'E' | 'g' | 'G' | 'F' -> conversion j Predef.type_float
+        | 'B' | 'b' -> conversion j Predef.type_bool
+        | 'a' | 'r' as conv ->
+          let conversion =
+            if conv = 'a' then conversion_a else conversion_r in
+          let ty_e = new_type_var () in
+          let j = j + 1 in
+          if j >= len then conversion (j - 1) ty_e ty_e else begin
+            match fmt.[j] with
+(*            | 'a' | 'A' -> conversion j ty_e (Predef.type_array ty_e)
+            | 'l' | 'L' -> conversion j ty_e (Predef.type_list ty_e)
+            | 'o' | 'O' -> conversion j ty_e (Predef.type_option ty_e)*)
+            | _ -> conversion (j - 1) ty_e ty_e end
+(*        | 'r' ->
+          let ty_e = newvar () in
+          let j = j + 1 in
+          if j >= len then conversion_r (j - 1) ty_e ty_e else begin
+            match fmt.[j] with
+            | 'a' | 'A' -> conversion_r j ty_e (Pref.type_array ty_e)
+            | 'l' | 'L' -> conversion_r j ty_e (Pref.type_list ty_e)
+            | 'o' | 'O' -> conversion_r j ty_e (Pref.type_option ty_e)
+            | _ -> conversion_r (j - 1) ty_e ty_e end *)
+        | 't' -> conversion j (ty_arrow ty_input ty_aresult)
+        | 'l' | 'n' | 'L' as c ->
+          let j = j + 1 in
+          if j >= len then conversion (j - 1) Predef.type_int else begin
+            match fmt.[j] with
+(*
+            | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' ->
+              let ty_arg =
+                match c with
+                | 'l' -> Predef.type_int32
+                | 'n' -> Predef.type_nativeint
+                | _ -> Predef.type_int64 in
+              conversion j ty_arg
+*)
+            | c -> conversion (j - 1) Predef.type_int
+          end
+(*
+        | '{' | '(' as c ->
+          let j = j + 1 in
+          if j >= len then incomplete_format fmt else
+          let sj =
+            Printf.CamlinternalPr.Tformat.sub_format
+              (fun fmt -> incomplete_format (format_to_string fmt))
+              (fun fmt -> bad_conversion (format_to_string fmt))
+              c (string_to_format fmt) j in
+          let sfmt = String.sub fmt j (sj - 2 - j) in
+          let ty_sfmt = type_in_format sfmt in
+          begin match c with
+          | '{' -> conversion (sj - 1) ty_sfmt
+          | _ -> incr meta; conversion (j - 1) ty_sfmt end
+        | ')' when !meta > 0 -> decr meta; scan_format (j + 1)
+*)
+        | c -> bad_conversion fmt i c in
+      scan_flags i j in
+
+    let ty_ureader, ty_args = scan_format 0 in
+    {typ_desc=
+      (Tconstr
+         (ref_type_constr tcs_format6,
+          [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result]));
+     typ_level=notgeneric}
+  in
+  type_in_format fmt
 
 (* Typecore of expressions *)
 
@@ -389,10 +524,10 @@ and type_expect exp expected_ty =
   match exp.exp_desc with
     Texp_constant(ACstring s) ->
       let actual_ty =
-        match (type_repr expected_ty).typ_desc with
+        match (expand expected_ty).typ_desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if same_type_constr cstr ref_format
+            if get_type_constr cstr == tcs_format6
             then type_format exp.exp_loc s
             else type_string
         | _ ->
