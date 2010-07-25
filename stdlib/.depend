@@ -5,7 +5,7 @@ buffer.zi:
 char.zi:
 farray.zi:
 filename.zi:
-format.zi: printf.zi
+format.zi: pervasives.zi buffer.zi
 fstring.zi:
 gc.zi:
 genlex.zi: stream.zi
@@ -41,8 +41,10 @@ farray.zo: list.zi farray.zi
 farray.zx: list.zx farray.zi
 filename.zo: string.zi filename.zi
 filename.zx: string.zx filename.zi
-format.zo: string.zi obj.zi fstring.zi format.zi
-format.zx: string.zx obj.zi fstring.zx format.zi
+format.zo: string.zi printf_tformat.zo printf_sformat.zo pervasives.zi \
+    obj.zi list.zi buffer.zi format.zi
+format.zx: string.zx printf_tformat.zx printf_sformat.zx pervasives.zx \
+    obj.zi list.zx buffer.zx format.zi
 fstring.zo: list.zi fstring.zi
 fstring.zx: list.zx fstring.zi
 gc.zo: printf.zi gc.zi
@@ -65,6 +67,12 @@ printexc.zo: sys.zi obj.zi farray.zi array.zi printexc.zi
 printexc.zx: sys.zi obj.zi farray.zx array.zx printexc.zi
 printf.zo: string.zi obj.zi list.zi printf.zi
 printf.zx: string.zx obj.zi list.zx printf.zi
+printf_sformat.zo: string.zi
+printf_sformat.zx: string.zx
+printf_tformat.zo: string.zi printf_sformat.zo pervasives.zi obj.zi \
+    list.zi char.zi buffer.zi array.zi
+printf_tformat.zx: string.zx printf_sformat.zx pervasives.zx obj.zi \
+    list.zx char.zx buffer.zx array.zx
 queue.zo: queue.zi
 queue.zx: queue.zi
 random.zo: farray.zi array.zi random.zi

@@ -118,3 +118,4 @@ val capitalize : string -> string
 val uncapitalize : string -> string
 (** Return a copy of the argument, with the first character set to lowercase. *)
 
+val escaped : string -> string

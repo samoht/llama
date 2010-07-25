@@ -118,3 +118,5 @@ let apply1 f s =
 
 let capitalize s = apply1 Char.uppercase s
 let uncapitalize s = apply1 Char.lowercase s
+
+let escaped = string_for_read

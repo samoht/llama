@@ -13,7 +13,7 @@ STD_INTF= arg.zi char.zi string.zi array.zi \
     filename.zi fstring.zi farray.zi hashtbl.zi \
     lexing.zi list.zi obj.zi parsing.zi printexc.zi \
     sort.zi sys.zi printf.zi stream.zi stack.zi queue.zi random.zi \
-    genlex.zi baltree.zi set.zi map.zi gc.zi format.zi pervasives.zi  buffer.zi
+    genlex.zi baltree.zi set.zi map.zi gc.zi pervasives.zi  buffer.zi format.zi
 
 # The list of all implementations. In dependency order.
 
@@ -21,8 +21,9 @@ STD_IMPL=pervasives.zo $(OTHERS)
 OTHERS=list.zo fstring.zo \
     char.zo string.zo farray.zo array.zo arg.zo \
     filename.zo hashtbl.zo lexing.zo parsing.zo printexc.zo sort.zo \
-    printf.zo stream.zo stack.zo queue.zo format.zo random.zo \
-    genlex.zo baltree.zo set.zo map.zo gc.zo buffer.zo
+    printf.zo stream.zo stack.zo queue.zo random.zo \
+    genlex.zo baltree.zo set.zo map.zo gc.zo buffer.zo \
+   printf_sformat.zo printf_tformat.zo format.zo
 
 all: $(STD_INTF) stdlib.zo header
 
