@@ -137,7 +137,7 @@ let filter_matrix matcher pss =
               | NoMatch -> rem
               | OrPat   ->
                 match p.pat_desc with
-                | Tpat_or (p1,p2,_) -> filter_rec [(p1::ps) ;(p2::ps)]@rem
+                | Tpat_or (p1,p2) -> filter_rec [(p1::ps) ;(p2::ps)]@rem
                 | _ -> assert false
             end
         end
@@ -174,25 +174,13 @@ let ctx_matcher p =
           p,rem
       | Tpat_any -> p,rem
       | _ -> raise NoMatch)
-  | Tpat_variant (lab,Some omega,_) ->
-      (fun q rem -> match q.pat_desc with
-      | Tpat_variant (lab',Some arg,_) when lab=lab' ->
-          p,arg::rem
-      | Tpat_any -> p,omega::rem
-      | _ -> raise NoMatch)
-  | Tpat_variant (lab,None,_) ->
-      (fun q rem -> match q.pat_desc with
-      | Tpat_variant (lab',None,_) when lab=lab' ->
-          p,rem
-      | Tpat_any -> p,rem
-      | _ -> raise NoMatch)
-  | Tpat_array omegas ->
+(*| Tpat_array omegas ->
       let len = List.length omegas in
       (fun q rem -> match q.pat_desc with
       | Tpat_array args when List.length args=len ->
           p,args @ rem
       | Tpat_any -> p, omegas @ rem
-      | _ -> raise NoMatch)
+      | _ -> raise NoMatch) *)
   | Tpat_tuple omegas ->
       (fun q rem -> match q.pat_desc with
       | Tpat_tuple args -> p,args @ rem
@@ -203,10 +191,10 @@ let ctx_matcher p =
           let l' = all_record_args l' in
           p, List.fold_right (fun (_,p) r -> p::r) l' rem
       | _ -> p,List.fold_right (fun (_,p) r -> p::r) l rem)
-  | Tpat_lazy omega ->
+(*| Tpat_lazy omega ->
       (fun q rem -> match q.pat_desc with
       | Tpat_lazy arg -> p, (arg::rem)
-      | _          -> p, (omega::rem))
+      | _          -> p, (omega::rem)) *)
  | _ -> fatal_error "Matching.ctx_matcher"
 
 

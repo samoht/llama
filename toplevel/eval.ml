@@ -137,4 +137,4 @@ let make_expr desc =
   {exp_desc = desc;
    exp_loc = Location.none;
    exp_env = Env.empty;
-   exp_type = no_type}
+   exp_type = type_none}

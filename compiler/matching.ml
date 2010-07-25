@@ -105,7 +105,7 @@ let divide_constant_matching (Matching(casel, pathl)) =
 ;;
 
 let wildcard_pat =
-  {pat_desc = Tpat_any; pat_loc = Location.none; pat_env=Env.empty; pat_type = no_type};;
+  {pat_desc = Tpat_any; pat_loc = Location.none; pat_env=Env.empty; pat_type = type_none};;
 
 let divide_tuple_matching arity (Matching(casel, pathl)) =
   let rec divide_rec casel =
@@ -290,7 +290,7 @@ let partial_fun loc =
   let start = loc.loc_start.Lexing.pos_cnum in
   let stop = loc.loc_end.Lexing.pos_cnum in
   Lprim(Praise,
-    [Lconst(SCblock(match_failure_tag,
+    [Lconst(SCblock(tag_match_failure,
       [SCatom(Const_string !input_name);SCatom(Const_int start);SCatom(Const_int stop)]))])
 ;;
 

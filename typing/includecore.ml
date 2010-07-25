@@ -45,7 +45,7 @@ let type_constructors s decl1 decl2 =
         Ctype.equal true (ty1 :: params1) (Subst.core_type s ty2 :: params2)
 (*
     | tk, Type_abbrev ty2 ->
-        let ty1 = {typ_desc=Tconstr(id, params2); typ_level=generic} in
+        let ty1 = {desc=Tconstr(id, params2); level=generic} in
         Ctype.equal true params1 params2 &&
         Ctype.equal false [ty1] [ty2]
 *)

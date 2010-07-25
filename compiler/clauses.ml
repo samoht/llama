@@ -12,7 +12,7 @@ open Module
 let make_pat desc ty =
   {pat_desc = desc; pat_loc = Location.none; pat_env=Env.empty; pat_type = ty};;
 
-let omega = make_pat Tpat_any no_type;;
+let omega = make_pat Tpat_any type_none;;
 
 let rec omegas i =
   if i <= 0 then [] else omega::omegas (i-1)

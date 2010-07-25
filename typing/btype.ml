@@ -8,10 +8,11 @@ open Module
 (* To take the canonical representative of a type.
    We do path compression there. *)
 
-let rec type_repr ty =
-  match ty.typ_desc with
-      Tlink t -> type_repr t
+let rec repr ty =
+  match ty.desc with
+      Tlink t -> repr t
     | _ -> ty
+let generic_level = generic
 
 (* The current nesting level of lets *)
 
@@ -28,12 +29,12 @@ and pop_type_level () =
 (* To get fresh type variables *)
 
 let new_type_var () =
-  {typ_desc = Tvar; typ_level = !current_level}
+  {desc = Tvar; level = !current_level}
 
 let rec type_var_list n level =
   if n <= 0
   then []
-  else {typ_desc=Tvar; typ_level=level} :: type_var_list (pred n) level
+  else {desc=Tvar; level=level} :: type_var_list (pred n) level
 ;;
 
 let new_type_var_list n =
@@ -41,7 +42,7 @@ let new_type_var_list n =
 ;;
 
 let new_global_type_var () =
-  {typ_desc = Tvar; typ_level = 1}
+  {desc = Tvar; level = 1}
 ;;
 
 (* To compute the free type variables in a type *)
@@ -49,10 +50,10 @@ let new_global_type_var () =
 let free_type_vars level ty =
   let fv = ref [] in
   let rec free_vars ty =
-    let ty = type_repr ty in
-    match ty.typ_desc with
+    let ty = repr ty in
+    match ty.desc with
       Tvar _ ->
-        if ty.typ_level >= level then fv := ty :: !fv
+        if ty.level >= level then fv := ty :: !fv
   | Tarrow(t1,t2) ->
       free_vars t1; free_vars t2
   | Tproduct(ty_list) ->
@@ -66,20 +67,20 @@ let free_type_vars level ty =
 (* To generalize a type *)
 
 let rec gen_type ty =
-  let ty = type_repr ty in
-  begin match ty.typ_desc with
+  let ty = repr ty in
+  begin match ty.desc with
     Tvar _ ->
-      if ty.typ_level > !current_level then ty.typ_level <- generic
+      if ty.level > !current_level then ty.level <- generic
   | Tarrow(t1,t2) ->
       let lvl1 = gen_type t1 in
       let lvl2 = gen_type t2 in
-      ty.typ_level <- if lvl1 <= lvl2 then lvl1 else lvl2
+      ty.level <- if lvl1 <= lvl2 then lvl1 else lvl2
   | Tproduct(ty_list) ->
-      ty.typ_level <- gen_type_list ty_list
+      ty.level <- gen_type_list ty_list
   | Tconstr(c, ty_list) ->
-      ty.typ_level <- gen_type_list ty_list
+      ty.level <- gen_type_list ty_list
   end;
-  ty.typ_level
+  ty.level
 
 and gen_type_list = function
     [] ->
@@ -98,10 +99,10 @@ let generalize_type ty =
    making them non-generalisable. *)
    
 let rec nongen_type ty =
-  let ty = type_repr ty in
-  match ty.typ_desc with
+  let ty = repr ty in
+  match ty.desc with
     Tvar _ ->
-      if ty.typ_level > !current_level then ty.typ_level <- !current_level
+      if ty.level > !current_level then ty.level <- !current_level
   | Tarrow(t1, t2) ->
       nongen_type t1; nongen_type t2
   | Tproduct ty_list ->
@@ -117,28 +118,28 @@ let rec nongen_type ty =
    fresh variable which is the instance of the generic variable. *)
 
 let rec copy_type typ = match typ with
-    {typ_desc = Tvar; typ_level = level} as ty ->
+    {desc = Tvar; level = level} as ty ->
       if level == generic
-      then begin let v = new_type_var() in typ.typ_desc <- Tlink v; v end
+      then begin let v = new_type_var() in typ.desc <- Tlink v; v end
       else ty
-  | {typ_desc = Tlink ty; typ_level = level} ->
+  | {desc = Tlink ty; level = level} ->
       if level == generic
       then ty
       else copy_type ty
-  | {typ_desc = Tarrow(t1,t2); typ_level = level} as ty ->
+  | {desc = Tarrow(t1,t2); level = level} as ty ->
       if level == generic
-      then {typ_desc = Tarrow(copy_type t1, copy_type t2);
-            typ_level = notgeneric}
+      then {desc = Tarrow(copy_type t1, copy_type t2);
+            level = notgeneric}
       else ty
-  | {typ_desc = Tproduct tlist; typ_level = level} as ty ->
+  | {desc = Tproduct tlist; level = level} as ty ->
       if level == generic
-      then {typ_desc = Tproduct(List.map copy_type tlist);
-            typ_level = notgeneric}
+      then {desc = Tproduct(List.map copy_type tlist);
+            level = notgeneric}
       else ty
-  | {typ_desc = Tconstr(cstr, ty_list); typ_level = level} as ty ->
+  | {desc = Tconstr(cstr, ty_list); level = level} as ty ->
       if level == generic
-      then {typ_desc = Tconstr(cstr, List.map copy_type ty_list);
-            typ_level = notgeneric}
+      then {desc = Tconstr(cstr, List.map copy_type ty_list);
+            level = notgeneric}
       else ty
 ;;
 
@@ -146,21 +147,21 @@ let rec copy_type typ = match typ with
    to Tnolink. *)
 
 let rec cleanup_type typ = match typ with
-    {typ_desc = Tvar; typ_level = level} as ty ->
+    {desc = Tvar; level = level} as ty ->
       ()
-  | {typ_desc = Tlink ty; typ_level = level} ->
+  | {desc = Tlink ty; level = level} ->
       if level == generic
-      then begin typ.typ_desc <- Tvar end
+      then begin typ.desc <- Tvar end
       else cleanup_type ty
-  | {typ_desc = Tarrow(t1,t2); typ_level = level} as ty ->
+  | {desc = Tarrow(t1,t2); level = level} as ty ->
       if level == generic
       then (cleanup_type t1; cleanup_type t2)
       else ()
-  | {typ_desc = Tproduct(tlist); typ_level = level} as ty ->
+  | {desc = Tproduct(tlist); level = level} as ty ->
       if level == generic
       then List.iter cleanup_type tlist
       else ()
-  | {typ_desc = Tconstr(cstr, ty_list); typ_level = level} as ty ->
+  | {desc = Tconstr(cstr, ty_list); level = level} as ty ->
       if level == generic
       then List.iter cleanup_type ty_list
       else ()
@@ -191,42 +192,7 @@ let instance_constructor cstr =
 (* Expansion of an abbreviation *)
 
 let bind_variable ty1 ty2 =
-  match ty1.typ_desc with
-    Tvar -> ty1.typ_desc <- Tlink ty2
+  match ty1.desc with
+    Tvar -> ty1.desc <- Tlink ty2
   | _ -> fatal_error "bind_variable";;
 
-let expand_abbrev params body args =
-  let params' = List.map copy_type params
-  and body' = copy_type body in
-  List.iter cleanup_type params;
-  cleanup_type body;
-  List.iter2 bind_variable params' args;
-  body';;
-
-(* Check whether a type constructor is a recursive abbrev *)
-
-exception Recursive_abbrev;;
-
-let check_recursive_abbrev cstr =
-  begin match cstr.tcs_body with
-      Type_abbrev body ->
-        let rec check_abbrev seen ty =
-          match (type_repr ty).typ_desc with
-              Tvar _ -> ()
-            | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
-            | Tproduct tlist -> List.iter (check_abbrev seen) tlist
-            | Tconstr(c, tlist) ->
-                let c = get_type_constr c in
-                if List.memq c seen then
-                  raise Recursive_abbrev
-                else begin
-                  List.iter (check_abbrev seen) tlist;
-                  begin match c.tcs_body with
-                      Type_abbrev body -> check_abbrev (c :: seen) body
-                    | _ -> ()
-                  end
-                end
-        in check_abbrev [cstr] body
-    | _ -> ()
-  end
-      

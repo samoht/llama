@@ -24,7 +24,7 @@ let type_of_type_expression strict_flag typexp =
   let rec type_of typexp =
     match typexp.te_desc with
     Ttyp_var v ->
-      if v.tvar_type.typ_desc = Tvar then
+      if v.tvar_type.desc = Tvar then
         v.tvar_type
       else begin
         let ty = new_global_type_var () in
@@ -39,8 +39,8 @@ let type_of_type_expression strict_flag typexp =
       if List.length args != (get_type_constr cstr).tcs_arity then
         tcs_arity_err (get_type_constr cstr) args typexp.te_loc
       else
-        { typ_desc = Tconstr(cstr, List.map type_of args);
-          typ_level = notgeneric }
+        { desc = Tconstr(cstr, List.map type_of args);
+          level = notgeneric }
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -335,11 +335,11 @@ let type_format loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    {typ_desc=
+    {desc=
       (Tconstr
          (ref_type_constr tcs_format6,
           [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result]));
-     typ_level=notgeneric}
+     level=notgeneric}
   in
   type_in_format fmt
 
@@ -521,7 +521,7 @@ and type_expect exp expected_ty =
   match exp.exp_desc with
     Texp_constant(Const_string s) ->
       let actual_ty =
-        match (expand expected_ty).typ_desc with
+        match (expand_head expected_ty).desc with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
             if get_type_constr cstr == tcs_format6
@@ -572,7 +572,7 @@ and type_let_decl rec_flag pat_expr_list =
 
 and type_statement expr =
   let ty = type_expr expr in
-  match (type_repr ty).typ_desc with
+  match (repr ty).desc with
   | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
   | Tvar _ -> ()
   | _ ->

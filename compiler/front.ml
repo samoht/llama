@@ -121,7 +121,7 @@ let assert_failed loc =
   let line = pos.Lexing.pos_lnum in
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise,
-          [Lconst(SCblock(assert_failure_tag,
+          [Lconst(SCblock(tag_assert_failure,
               [SCatom(Const_string fname);
                SCatom(Const_int line);
                SCatom(Const_int char)]))])

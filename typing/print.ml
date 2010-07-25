@@ -57,8 +57,8 @@ type out_type =
   | Otyp_var of bool * string
 
 let rec tree_of_typexp sch ty =
-  let ty = Btype.type_repr ty in
-  begin match ty.typ_desc with
+  let ty = Btype.repr ty in
+  begin match ty.desc with
     | Tvar ->
         Otyp_var (is_non_gen sch ty, name_of_type ty)
     | Tarrow (ty1, ty2) ->
@@ -75,7 +75,7 @@ and tree_of_typlist sch tyl =
   List.map (tree_of_typexp sch) tyl
 
 and is_non_gen sch ty =
-  sch && ty.typ_desc = Tvar && ty.typ_level <> generic
+  sch && ty.desc = Tvar && ty.level <> generic
 
 (* ---------------------------------------------------------------------- *)
 (* Printing of output trees.                                              *)

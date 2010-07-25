@@ -25,7 +25,7 @@ open Lambda
 (* llama xxx: these fns don't need an env *)
 
 let scrape env ty =
-  (Ctype.expand (Btype.type_instance ty)).typ_desc
+  (Ctype.expand_head (Btype.copy_type ty)).desc
 
 let has_base_type exp base_ty_path =
   match scrape exp.exp_env exp.exp_type with

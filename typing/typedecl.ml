@@ -9,11 +9,38 @@ open Btype
 open Error
 open Typecore
 
+(* Check whether a type constructor is a recursive abbrev *)
+
+exception Recursive_abbrev;;
+
+let check_recursive_abbrev cstr =
+  begin match cstr.tcs_body with
+      Type_abbrev body ->
+        let rec check_abbrev seen ty =
+          match (Btype.repr ty).desc with
+              Tvar _ -> ()
+            | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
+            | Tproduct tlist -> List.iter (check_abbrev seen) tlist
+            | Tconstr(c, tlist) ->
+                let c = get_type_constr c in
+                if List.memq c seen then
+                  raise Recursive_abbrev
+                else begin
+                  List.iter (check_abbrev seen) tlist;
+                  begin match c.tcs_body with
+                      Type_abbrev body -> check_abbrev (c :: seen) body
+                    | _ -> ()
+                  end
+                end
+        in check_abbrev [cstr] body
+    | _ -> ()
+  end
+      
 let define_new_type tcs params body =
   push_type_level();
   let ty_res =
-    { typ_desc = Tconstr (ref_type_constr tcs, params);
-      typ_level = notgeneric }
+    { desc = Tconstr (ref_type_constr tcs, params);
+      level = notgeneric }
   in
   begin match body with
       Ttype_abstract ->

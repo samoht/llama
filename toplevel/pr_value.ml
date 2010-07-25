@@ -81,7 +81,7 @@ let rec print_val prio depth obj ty =
   try
     find_printer ty obj; ()
   with Not_found ->
-    match (type_repr ty).typ_desc with
+    match (repr ty).desc with
       Tvar _ ->
         print_string "<poly>"
     | Tarrow(ty1, ty2) ->
@@ -94,7 +94,7 @@ let rec print_val prio depth obj ty =
         close_box()
     | Tconstr(c, ty_list) when has_abbrev c ->
         let params, body = get_abbrev c in
-        print_val prio depth obj (expand_abbrev params body ty_list)
+        print_val prio depth obj (expand_abbrev_aux params body ty_list)
     | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == tcs_list ->
         print_list depth obj ty_arg
     | Tconstr(cstr, [ty_arg]) when get_type_constr cstr == tcs_vect ->
@@ -108,7 +108,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         print_string "<abstr>"
     | Type_abbrev body ->
         print_val prio depth obj
-          (expand_abbrev (get_type_constr cstr).tcs_params body ty_list)
+          (expand_abbrev_aux (get_type_constr cstr).tcs_params body ty_list)
     | Type_variant constr_list ->
         let tag = Llama_obj.tag obj in
         begin try

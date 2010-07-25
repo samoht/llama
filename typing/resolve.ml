@@ -24,7 +24,7 @@ let bind_type_expression_vars var_list loc =
       if List.mem_assoc v !type_expr_vars then
         Error.duplicate_param_in_type_decl_err loc
       else begin
-        let t = {tvar_name=v; tvar_type=no_type} in
+        let t = {tvar_name=v; tvar_type=type_none} in
         type_expr_vars := (v, t) :: !type_expr_vars; t
       end)
     var_list
@@ -72,9 +72,11 @@ let lookup_value env li loc =
   try ref_value(Env.lookup_value li env)
   with Not_found -> Error.unbound_value_err li loc
 
+(* ---------------------------------------------------------------------- *)
+
 let rec type_expression strict_flag env te =
   { te_desc =
-      begin match te.ptyp_desc with
+      begin match te.pdesc with
         | Ptyp_var v ->
             Ttyp_var
               begin try
@@ -83,7 +85,7 @@ let rec type_expression strict_flag env te =
                 if strict_flag then
                   Error.unbound_type_var_err v te.ptyp_loc
                 else begin
-                  let t = {tvar_name=v; tvar_type=no_type} in
+                  let t = {tvar_name=v; tvar_type=type_none} in
                   type_expr_vars := (v,t) :: !type_expr_vars; t
                 end
               end
@@ -98,7 +100,7 @@ let rec type_expression strict_flag env te =
       end;
     te_loc = te.ptyp_loc;
     te_env = env;
-    te_type = no_type }
+    te_type = type_none }
 
 (* pattern environment, xxx make local *)
 let pattern_variables = ref ([] : string list)
@@ -106,7 +108,7 @@ let reset_pattern_variables () = pattern_variables := []
 let mkpatvar s =
   { val_kind = Val_reg;
     val_id = Env.qualified_id s;
-    val_type = no_type;
+    val_type = type_none;
     val_global = false }
 (*  (fun () -> raise (Multiply_bound_variable s)) *)
 
@@ -136,7 +138,7 @@ let rec pattern env p =
       end;
     pat_loc = p.ppat_loc;
     pat_env = env;
-    pat_type = no_type }
+    pat_type = type_none }
 
 let pattern env p =
   pattern_variables := [];
@@ -238,22 +240,28 @@ let rec expr env ex =
       end;
     exp_loc = ex.pexp_loc;
     exp_env = env;
-    exp_type = no_type }
+    exp_type = type_none }
 
 
 let constr_decl env (s,tys) =
   (s, List.map (type_expression true env) tys)
    
-let constructor env tcs n i (name, typexps) =
+let constructor env tcs n idx_const idx_block idx (name, typexps) =
+  let postincr idx = let n = !idx in incr idx; n in
   let arity = List.length typexps in
-  let constr_tag = ConstrRegular (i, n) in
   let cs =
     { cs_parent = tcs;
       cs_name = name;
-      cs_res = no_type;
-      cs_args = replicate_list no_type arity;
+      cs_res = type_none;
+      cs_args = replicate_list type_none arity;
       cs_arity = arity;
-      cs_tag = constr_tag }
+      cs_tag = ConstrRegular(idx, n);
+      cstr_tag =
+        if arity=0 then
+          Cstr_constant (postincr idx_const)
+        else
+          Cstr_block (postincr idx_block)
+    }
   in
   (cs, List.map (type_expression true env) typexps)
 
@@ -261,8 +269,8 @@ let label env tcs pos (name, typexp, mut) =
   let lbl =
     { lbl_parent = tcs;
       lbl_name = name;
-      lbl_res = no_type;
-      lbl_arg = no_type;
+      lbl_res = type_none;
+      lbl_arg = type_none;
       lbl_mut = mut;
       lbl_pos = pos
     }
@@ -270,7 +278,7 @@ let label env tcs pos (name, typexp, mut) =
   (lbl, type_expression true env typexp)
 
 let rec crude_arity ptyp =
-  begin match ptyp.ptyp_desc with
+  begin match ptyp.pdesc with
     | Ptyp_arrow (_, ty) -> succ (crude_arity ty)
     | _ -> 0
   end
@@ -288,18 +296,28 @@ let mapi f =
   in
   aux 0
 
+let mapi_careful f =
+  let rec aux i = function
+      [] -> []
+    | (hd :: tl) -> let hd' = f i hd in hd' :: aux (i+1) tl
+  in
+  aux 0
+
 let type_constructor_body env tcs body =
   begin match body with
     | Ptype_abstract -> Ttype_abstract
     | Ptype_abbrev te -> Ttype_abbrev (type_expression true env te)
-    | Ptype_variant l -> Ttype_variant (mapi (constructor env tcs (List.length l)) l)
+    | Ptype_variant l ->
+        let idx_const = ref 0 in
+        let idx_block = ref 0 in
+        Ttype_variant (mapi_careful (constructor env tcs (List.length l) idx_const idx_block) l)
     | Ptype_record l -> Ttype_record (mapi (label env tcs) l)
   end
 
 let value_declaration env name typexp primstuff =
   let v =
     { val_id = Env.qualified_id name;
-      val_type = no_type;
+      val_type = type_none;
       val_kind = primitive primstuff typexp;
       val_global = true }
   in
@@ -325,7 +343,7 @@ let type_declaration env decl loc =
         let nparams = List.length params in
         { tcs_id = Env.qualified_id name;
           tcs_arity = nparams;
-          tcs_params = replicate_list no_type nparams;
+          tcs_params = replicate_list type_none nparams;
           tcs_body = Type_abstract }
       end
       decl
@@ -353,7 +371,7 @@ let type_declaration env decl loc =
           | Ttype_abstract -> Type_abstract
           | Ttype_variant l -> Type_variant (List.map fst l)
           | Ttype_record l -> Type_record (List.map fst l)
-          | Ttype_abbrev ty -> Type_abbrev no_type
+          | Ttype_abbrev ty -> Type_abbrev type_none
         end
     end
     decl;
@@ -382,14 +400,17 @@ let letdef env rec_flag pat_exp_list =
 let exception_declaration env name args =
   let args = List.map (type_expression true env) args in
   let nargs = List.length args in
-  let tag = ConstrExtensible(Env.qualified_id name, new_exc_stamp ()) in
+  let qualid = Env.qualified_id name in
+  let tag = ConstrExtensible(qualid, new_exc_stamp ()) in
   let cs =
     { cs_parent = Predef.tcs_exn;
       cs_name = name;
-      cs_res = no_type;
-      cs_args = replicate_list no_type nargs;
+      cs_res = type_none;
+      cs_args = replicate_list type_none nargs;
       cs_arity = nargs;
-      cs_tag = tag }
+      cs_tag = tag;
+      cstr_tag = Cstr_exception qualid
+    }
   in
   let env = Env.add_exception name cs env in
   cs, args, env

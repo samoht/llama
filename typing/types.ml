@@ -22,10 +22,10 @@ type 'a reference = {
 (* ---------------------------------------------------------------------- *)
 
 type core_type =
-  { mutable typ_desc: typ_desc;                 (* What kind of type expression? *)
-    mutable typ_level: int }            (* Binding level *)
+  { mutable desc: core_type_desc;
+    mutable level: int }
 
-and typ_desc =
+and core_type_desc =
     Tvar
   | Tarrow of core_type * core_type
   | Tproduct of core_type list
@@ -50,11 +50,18 @@ and constructor =
     mutable cs_res: core_type;                       (* Result type *)
     mutable cs_args: core_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
-    cs_tag: constr_tag }               (* Its run-time tag *)
+    cs_tag: constr_tag;        (* caml light tag *)
+    cstr_tag: constructor_tag; (* ocaml tag *)
+  }
 
 and constr_tag =
     ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
+
+and constructor_tag =
+    Cstr_constant of int                (* Constant constructor (an int) *)
+  | Cstr_block of int                   (* Regular constructor (a block) *)
+  | Cstr_exception of qualified_id      (* Exception constructor *)
 
 and label =
   { lbl_parent: type_constructor;
@@ -123,12 +130,47 @@ let val_name v = v.val_id.id_name
 (* Detritus.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
+type exception_declaration = constructor
+type constructor_description = constructor
+type label_description = label
+type type_expr = core_type
+
 let generic = -1
 let notgeneric = 0
 let level_global = 1
 
-let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
+let type_none = { desc = Tproduct []; level = 0 };;
 
 type record_representation =
     Record_regular
   | Record_float
+
+let dummy_value name =
+  { val_id = { id_module = Module "dummy"; id_name = name };
+    val_type = type_none;
+    val_kind = Val_reg;
+    val_global = false }
+
+exception Constr_not_found
+
+let rec find_constr tag num_const num_nonconst = function
+    [] ->
+      raise Constr_not_found
+  | cs :: rem ->
+      if cs.cs_args = [] then
+        if tag = Cstr_constant num_const
+        then cs
+        else find_constr tag (num_const + 1) num_nonconst rem
+      else
+        if tag = Cstr_block num_nonconst
+        then cs
+        else find_constr tag num_const (num_nonconst + 1) rem
+
+let find_constr_by_tag tag cstrlist =
+  find_constr tag 0 0 cstrlist
+
+let qualid_name qualid =
+  begin match qualid.id_module with
+    | Module_builtin | Module_toplevel -> qualid.id_name 
+    | Module m -> m ^ "." ^ qualid.id_name
+  end
