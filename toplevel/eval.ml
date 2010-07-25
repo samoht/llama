@@ -12,7 +12,7 @@ type term =
   | Lambda of term
   | Rel of int
   | App of term * term
-  | Const of atomic_constant
+  | Const of constant
   | Prim of primitive
   | Ctor of constructor 
   | Tuple of int

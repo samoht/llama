@@ -23,7 +23,7 @@ and pattern_desc =
     Ppat_any
   | Ppat_var of string
   | Ppat_alias of pattern * string
-  | Ppat_constant of atomic_constant
+  | Ppat_constant of constant
   | Ppat_tuple of pattern list
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
@@ -36,7 +36,7 @@ type expression =
 
 and expression_desc =
     Pexp_ident of Longident.t
-  | Pexp_constant of atomic_constant
+  | Pexp_constant of constant
   | Pexp_let of bool * (pattern * expression) list * expression
   | Pexp_function of (pattern list * expression) list
   | Pexp_apply of expression * expression list
@@ -50,7 +50,7 @@ and expression_desc =
   | Pexp_ifthenelse of expression * expression * expression
   | Pexp_sequence of expression * expression
   | Pexp_while of expression * expression
-  | Pexp_for of string * expression * expression * bool * expression
+  | Pexp_for of string * expression * expression * direction_flag * expression
   | Pexp_constraint of expression * type_expression
   | Pexp_when of expression * expression
   | Pexp_assert of expression

@@ -29,7 +29,7 @@ and pattern_desc =
     Tpat_any
   | Tpat_var of value
   | Tpat_alias of pattern * value
-  | Tpat_constant of atomic_constant
+  | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor reference * pattern list
   | Tpat_or of pattern * pattern
@@ -44,7 +44,7 @@ type expression =
 
 and expression_desc =
     Texp_ident of value reference
-  | Texp_constant of atomic_constant
+  | Texp_constant of constant
   | Texp_tuple of expression list
   | Texp_construct of constructor reference * expression list
   | Texp_apply of expression * expression list
@@ -54,7 +54,7 @@ and expression_desc =
   | Texp_sequence of expression * expression
   | Texp_ifthenelse of expression * expression * expression
   | Texp_while of expression * expression
-  | Texp_for of value * expression * expression * bool * expression
+  | Texp_for of value * expression * expression * direction_flag * expression
   | Texp_constraint of expression * type_expression
   | Texp_array of expression list
   | Texp_record of (label reference * expression) list

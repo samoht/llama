@@ -129,3 +129,6 @@ let level_global = 1
 
 let no_type = { typ_desc = Tproduct []; typ_level = 0 };;
 
+type record_representation =
+    Record_regular
+  | Record_float

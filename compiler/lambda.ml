@@ -6,7 +6,7 @@ open Prim;;
 open Types;;
 
 type struct_constant =
-    SCatom of atomic_constant
+    SCatom of constant
   | SCblock of constr_tag * struct_constant list
 ;;
 
@@ -70,7 +70,7 @@ type lambda =
   | Llet of lambda list * lambda
   | Lletrec of (lambda * int) list * lambda
   | Lprim of primitive * lambda list
-  | Lcond of lambda * (atomic_constant * lambda) list
+  | Lcond of lambda * (constant * lambda) list
   | Lswitch of int * lambda * (constr_tag * lambda) list
   | Lstaticfail of int
   | Lstatichandle of lambda * lambda

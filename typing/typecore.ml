@@ -48,7 +48,7 @@ let type_of_type_expression strict_flag typexp =
 
 (* Typecore of constants *)
 
-let type_of_atomic_constant = function
+let type_of_constant = function
     ACint _ -> type_int
   | ACfloat _ -> type_float
   | ACstring _ -> type_string
@@ -86,7 +86,7 @@ let rec tpat (pat, ty, mut_flag) =
       v.val_type <- ty;
       tpat (pat, ty, mut_flag)
   | Tpat_constant cst ->
-      unify_pat pat ty (type_of_atomic_constant cst)
+      unify_pat pat ty (type_of_constant cst)
   | Tpat_tuple(patl) ->
       begin try
         tpat_list patl (filter_product (List.length patl) ty)
@@ -358,7 +358,7 @@ let rec type_expr expr =
     Texp_ident v ->
       type_instance (get_value v).val_type
   | Texp_constant cst ->
-      type_of_atomic_constant cst
+      type_of_constant cst
   | Texp_tuple(args) ->
       type_product(List.map type_expr args)
   | Texp_construct(constr, args) ->

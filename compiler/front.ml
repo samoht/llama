@@ -256,7 +256,7 @@ let rec translate_expr env =
       let new_env = add_for_parameter_to_env env (val_name id) in
       Lfor(transl estart,
            translate_expr (Treserved env) estop,
-           up_flag,
+           (up_flag = Upto),
            Event.before new_env ebody (translate_expr new_env ebody))
   | Texp_constraint(e, _) ->
       transl e

@@ -879,8 +879,8 @@ rec_flag:
   | REC                                         { true }
 ;
 direction_flag:
-    TO                                          { true }
-  | DOWNTO                                      { false }
+    TO                                          { Upto }
+  | DOWNTO                                      { Downto }
 ;
 mutable_flag:
     /* empty */                                 { Notmutable }
