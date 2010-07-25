@@ -73,7 +73,7 @@ let replace_string dest src pos =
 let string_for_read = Fstring.string_for_read
 ;;
 
-let index_char_from s i c =
+let index_from s i c =
   if i < 0 || i >= length s
   then invalid_arg "index_char_from"
   else Fstring.index_char_from s i c

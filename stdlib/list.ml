@@ -216,9 +216,9 @@ let rec split = function
   | (x1,x2)::l -> let (l1,l2) = split l in (x1::l1,x2::l2)
 ;;
 
-let rec combine = function
+let rec combine l1 l2 = match l1, l2 with
         [],[]     -> []
-  | h1::t1,h2::t2 -> (h1,h2)::combine (t1,t2)
+  | h1::t1,h2::t2 -> (h1,h2)::combine t1 t2
   |       _        -> invalid_arg "combine"
 ;;
 
@@ -237,3 +237,9 @@ let iter_combine f =
   | _ -> invalid_arg "iter_combine"
   in dol
 ;;
+
+let rec for_all2 p l1 l2 =
+  match (l1, l2) with
+    ([], []) -> true
+  | (a1::l1, a2::l2) -> p a1 a2 && for_all2 p l1 l2
+  | (_, _) -> invalid_arg "List.for_all2"

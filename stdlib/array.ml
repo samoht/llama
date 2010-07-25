@@ -8,6 +8,7 @@ let create n init =
   then invalid_arg "Array.create"
   else Farray.make_vect n init
 ;;
+let make = create
 let make_matrix dimx dimy init =
   if dimx < 0 || dimx > Sys.max_vect_length
   || dimy < 0 || dimy > Sys.max_vect_length
@@ -48,7 +49,7 @@ let sub_vect v start len =
 let copy_vect = Farray.copy_vect
 ;;
 let list_of_vect = Farray.list_of_vect
-and vect_of_list = Farray.vect_of_list
+and of_list = Farray.vect_of_list
 ;;
 let do_vect = Farray.do_vect
 and map_vect = Farray.map_vect

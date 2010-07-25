@@ -17,6 +17,7 @@ val vect_assign : 'a vect -> int -> 'a -> unit
            0 to [vect_length v - 1].
            You can also write [v.(n) <- x] instead of [vect_assign v n x]. *)
 ;;
+val make : int -> 'a -> 'a vect
 val create : int -> 'a -> 'a vect
         (* [make_vect n x] returns a fresh vector of length [n],
            initialized with [x].
@@ -68,7 +69,7 @@ val blit_vect : 'a vect -> int -> 'a vect -> int -> int -> unit
 val list_of_vect : 'a vect -> 'a list
         (* [list_of_vect v] returns the list of all the elements of [v], that is:
            [[v.(0); v.(1); ...; v.(vect_length v - 1)]]. *)
-val vect_of_list : 'a list -> 'a vect
+val of_list : 'a list -> 'a vect
         (* [vect_of_list l] returns a fresh vector containing the elements
            of [l]. *)
 ;;

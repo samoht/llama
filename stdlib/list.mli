@@ -123,7 +123,7 @@ val split : ('a * 'b) list -> 'a list * 'b list
         (* Transform a list of pairs into a pair of lists:
            [split [(a1,b1); ...; (an,bn)]] is [([a1; ...; an], [b1; ...; bn])]
         *)
-val combine : 'a list * 'b list -> ('a * 'b) list
+val combine : 'a list -> 'b list -> ('a * 'b) list
         (* Transform a pair of lists into a list of pairs:
            [combine ([a1; ...; an], [b1; ...; bn])] is
               [[(a1,b1); ...; (an,bn)]].
@@ -140,3 +140,4 @@ val iter_combine : ('a * 'b -> unit) -> 'a list * 'b list -> unit
 	   Raise [Invalid_argument "iter_combine"] if the two lists have
 	   different lengths. *)
 ;;
+val for_all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool

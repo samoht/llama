@@ -90,7 +90,7 @@ val rindex_char: string -> char -> int;;
         (* [rindex_char s c] returns the position of the rightmost
            occurrence of character [c] in string [s].  Raise
            [Not_found] if [c] does not occur in [s]. *)
-val index_char_from: string -> int -> char -> int;;
+val index_from: string -> int -> char -> int;;
 val rindex_char_from: string -> int -> char -> int;;
         (* Same as [index_char] and [rindex_char], but start searching
            at the character position given as second argument.

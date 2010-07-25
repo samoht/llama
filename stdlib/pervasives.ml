@@ -397,3 +397,9 @@ let ignore x = ()
 
 type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
 type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4
+
+let rec (@) l1 l2 =
+  match l1 with
+    [] -> l2
+  | hd :: tl -> hd :: (tl @ l2)
+
