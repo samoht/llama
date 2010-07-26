@@ -22,7 +22,7 @@ let check_recursive_abbrev cstr =
             | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
             | Tproduct tlist -> List.iter (check_abbrev seen) tlist
             | Tconstr(c, tlist) ->
-                let c = get_type_constr c in
+                let c = Get.type_constructor c in
                 if List.memq c seen then
                   raise Recursive_abbrev
                 else begin

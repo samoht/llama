@@ -35,8 +35,8 @@ let type_of_type_expression strict_flag typexp =
       | Ttyp_tuple argl ->
           type_product(List.map type_of argl)
       | Ttyp_constr(cstr, args) ->
-          if List.length args != (get_type_constr cstr).tcs_arity then
-            tcs_arity_err (get_type_constr cstr) args typexp.te_loc
+          if List.length args != (Get.type_constructor cstr).tcs_arity then
+            tcs_arity_err (Get.type_constructor cstr) args typexp.te_loc
           else
             Tconstr (cstr, List.map type_of args)
   in
@@ -93,9 +93,9 @@ let rec tpat (pat, ty) =
           (type_product(List.map tvar(new_nongenerics (List.length patl))))
       end
   | Tpat_construct(constr, args) ->
-      if List.length args <> (get_constr constr).cs_arity then
-        arity_err (get_constr constr) args pat.pat_loc;
-      let (ty_args, ty_res) = instantiate_constructor (get_constr constr) in
+      if List.length args <> (Get.constructor constr).cs_arity then
+        arity_err (Get.constructor constr) args pat.pat_loc;
+      let (ty_args, ty_res) = instantiate_constructor (Get.constructor constr) in
       unify_pat pat ty ty_res;
       List.iter2
         (fun arg ty_arg ->
@@ -116,7 +116,7 @@ let rec tpat (pat, ty) =
       let rec tpat_lbl = function
         [] -> ()
       | (lbl,p) :: rest ->
-          let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
+          let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
           unify_pat pat ty ty_res;
           tpat (p, ty_arg);
           tpat_lbl rest
@@ -160,7 +160,7 @@ let rec is_nonexpansive expr =
   | Texp_array [] -> true
   | Texp_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
-                  (get_label lbl).lbl_mut == Immutable && is_nonexpansive expr)
+                  (Get.label lbl).lbl_mut == Immutable && is_nonexpansive expr)
               lbl_expr_list
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_parser pat_expr_list -> true
@@ -351,15 +351,15 @@ let rec type_expr expr =
   let inferred_ty =
   match expr.exp_desc with
     Texp_ident v ->
-      instantiate_one_type (get_value v).val_type
+      instantiate_one_type (Get.value v).val_type
   | Texp_constant cst ->
       type_of_constant cst
   | Texp_tuple(args) ->
       type_product(List.map type_expr args)
   | Texp_construct(constr, args) ->
-      if List.length args <> (get_constr constr).cs_arity then
-        arity_err (get_constr constr) args expr.exp_loc;
-      let (ty_args, ty_res) = instantiate_constructor (get_constr constr) in
+      if List.length args <> (Get.constructor constr).cs_arity then
+        arity_err (Get.constructor constr) args expr.exp_loc;
+      let (ty_args, ty_res) = instantiate_constructor (Get.constructor constr) in
       List.iter2 type_expect args ty_args;
       ty_res
   | Texp_apply(fct, args) ->
@@ -401,7 +401,7 @@ let rec type_expr expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect cond type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) when (get_constr cstr == constr_void) -> true | _ -> false
+         with Texp_construct (cstr,[]) when (Get.constructor cstr == constr_void) -> true | _ -> false
       then begin
         type_expect ifso type_unit;
         type_unit
@@ -435,22 +435,22 @@ let rec type_expr expr =
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
-          let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
+          let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
           begin try unify (ty, ty_res)
-          with OldUnify -> label_not_belong_err expr (get_label lbl) ty
+          with OldUnify -> label_not_belong_err expr (Get.label lbl) ty
           end;
           type_expect exp ty_arg)
         lbl_expr_list;
       let label =
         match lbl_expr_list with
-          | ((lbl1,_)::_) -> Array.of_list (labels_of_type (get_label lbl1).lbl_parent)
+          | ((lbl1,_)::_) -> Array.of_list (labels_of_type (Get.label lbl1).lbl_parent)
           | [] -> assert false
       in
       let defined = Array.make (Array.length label) false in
       List.iter (fun (lbl, exp) ->
-        let p = (get_label lbl).lbl_pos in
+        let p = (Get.label lbl).lbl_pos in
           if defined.(p)
-          then label_multiply_defined_err expr (get_label lbl)
+          then label_multiply_defined_err expr (Get.label lbl)
           else defined.(p) <- true)
         lbl_expr_list;
       for i = 0 to Array.length label - 1 do
@@ -458,12 +458,12 @@ let rec type_expr expr =
       done;
       ty
   | Texp_field (e, lbl) ->
-      let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
+      let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
       type_expect e ty_res;
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
-      let (ty_res, ty_arg) = instantiate_label (get_label lbl) in
-      if (get_label lbl).lbl_mut == Immutable then label_not_mutable_err expr (get_label lbl);
+      let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
+      if (Get.label lbl).lbl_mut == Immutable then label_not_mutable_err expr (Get.label lbl);
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       type_unit
@@ -516,7 +516,7 @@ and type_expect exp expected_ty =
         match expand_head expected_ty with
           (* Hack for format strings *)
           Tconstr(cstr, _) ->
-            if get_type_constr cstr == tcs_format6
+            if Get.type_constructor cstr == tcs_format6
             then type_format exp.exp_loc s
             else type_string
         | _ ->

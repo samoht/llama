@@ -72,7 +72,7 @@ let rec tree_of_typexp sch ty =
     | Tproduct tyl ->
         Otyp_tuple (tree_of_typlist sch tyl)
     | Tconstr (tcsr, tyl) ->
-        Otyp_constr ((get_type_constr tcsr).tcs_id, tree_of_typlist sch tyl)
+        Otyp_constr ((Get.type_constructor tcsr).tcs_id, tree_of_typlist sch tyl)
   end
 
 and tree_of_typlist sch tyl =

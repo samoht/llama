@@ -17,7 +17,7 @@ let add_type_constructor c1 c2 s =
 let type_constructor s r =
   if r.ref_id.id_module = s.subst_module then
     { ref_id = r.ref_id;
-      ref_contents = Some (List.assq (get_type_constr r) s.types) }
+      ref_contents = Some (List.assq (Get.type_constructor r) s.types) }
   else
     r
 

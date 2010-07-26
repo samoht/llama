@@ -48,7 +48,7 @@ let zero = make_pat (Tpat_constant (Const_int 0)) Ctype.none Env.empty
 let is_absent_pat p = false
 
 let dereference_labels args =
-  List.map (fun (lbl, e) -> (Module.get_label lbl, e)) args
+  List.map (fun (lbl, e) -> (Get.label lbl, e)) args
 
 let sort_fields args =
   Sort.list
@@ -84,7 +84,7 @@ let rec compat p q =
   | Tpat_tuple ps, Tpat_tuple qs -> compats ps qs
 (*| Tpat_lazy p, Tpat_lazy q -> compat p q *)
   | Tpat_construct (c1,ps1), Tpat_construct (c2,ps2) ->
-      Module.same_constr c1 c2 && compats ps1 ps2
+      Get.constructor c1 == Get.constructor c2 && compats ps1 ps2
   | Tpat_record l1,Tpat_record l2 ->
       let ps,qs = records_args (dereference_labels l1) (dereference_labels l2) in
       compats ps qs
@@ -119,16 +119,16 @@ let get_type_path ty =
 
 let rec get_type_descr ty =
   match (Ctype.repr ty).desc with
-  | Tconstr (path,_) -> Module.get_type_constr path
+  | Tconstr (path,_) -> Get.type_constr path
   | _ -> fatal_error "Parmatch.get_type_descr"
 
-let rec get_constr tag ty =
+let rec Get.constructor tag ty =
   match get_type_descr ty with
   | {tcs_kind=Type_variant constr_list} ->
       Types.find_constr_by_tag tag constr_list
   | {tcs_kind=Type_abbrev _} ->
-      get_constr tag (Ctype.expand_head_once (clean_copy ty))
-  | _ -> fatal_error "Parmatch.get_constr"
+      Get.constructor tag (Ctype.expand_head_once (clean_copy ty))
+  | _ -> fatal_error "Parmatch.Get.constructor"
 
 let find_label lbl lbls =
   try
@@ -150,11 +150,11 @@ let rec get_record_labels ty =
 open Format
 ;;
 
-let get_constr_name tag ty  = match tag with
+let Get.constructor_name tag ty  = match tag with
 | Cstr_exception path -> qualid_name path
 | _ ->
   try
-    (get_constr tag ty).cs_name
+    (Get.constructor tag ty).cs_name
   with
   | Types.Constr_not_found -> "*Unknown constructor*"
 
@@ -174,7 +174,7 @@ let rec pretty_val ppf v = match v.pat_desc with
   | Tpat_tuple vs ->
       fprintf ppf "@[(%a)@]" (pretty_vals ",") vs
   | Tpat_construct (cs, args) ->
-      let name = (Module.get_constr cs).cs_name in
+      let name = (Get.constr cs).cs_name in
       begin match args with
         | [] ->
             fprintf ppf "%s" name
@@ -205,12 +205,12 @@ let rec pretty_val ppf v = match v.pat_desc with
       fprintf ppf "@[(%a|@,%a)@]" pretty_or v pretty_or w
 
 and pretty_car ppf v = match v.pat_desc with
-| Tpat_construct (cs, [_ ; _]) when is_cons (Module.get_constr cs) ->
+| Tpat_construct (cs, [_ ; _]) when is_cons (Get.constr cs) ->
       fprintf ppf "(%a)" pretty_val v
 | _ -> pretty_val ppf v
 
 and pretty_cdr ppf v = match v.pat_desc with
-| Tpat_construct (cs, [v1 ; v2]) when is_cons (Module.get_constr cs) ->
+| Tpat_construct (cs, [v1 ; v2]) when is_cons (Get.constr cs) ->
       fprintf ppf "%a::@,%a" pretty_car v1 pretty_cdr v2
 | _ -> pretty_val ppf v
 
@@ -232,10 +232,10 @@ and pretty_vals sep ppf = function
 and pretty_lvals lbls ppf = function
   | [] -> ()
   | [lbl,v] ->
-      let name = find_label (Module.get_label lbl) lbls in
+      let name = find_label (Get.label lbl) lbls in
       fprintf ppf "%s=%a" name pretty_val v
   | (lbl,v)::rest ->
-      let name = find_label (Module.get_label lbl) lbls in
+      let name = find_label (Get.label lbl) lbls in
       fprintf ppf "%s=%a;@ %a" name pretty_val v (pretty_lvals lbls) rest
 
 let top_pretty ppf v =
@@ -255,7 +255,7 @@ let prerr_pat v =
 let simple_match p1 p2 =
   match p1.pat_desc, p2.pat_desc with
   | Tpat_construct(c1, _), Tpat_construct(c2, _) ->
-      Module.same_constr c1 c2
+      Get.constructor c1 == Get.constructor c2
   | Tpat_constant(Const_float s1), Tpat_constant(Const_float s2) ->
       float_of_string s1 = float_of_string s2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
@@ -698,7 +698,7 @@ let complete_constrs p all_tags = match p.pat_desc with
       let not_tags = complete_tags  c.cstr_consts c.cstr_nonconsts all_tags in
       List.map
         (fun tag ->
-          let _,targs = get_constr tag p.pat_type p.pat_env in
+          let _,targs = Get.constructor tag p.pat_type p.pat_env in
           {c with
       cstr_tag = tag ;
       cstr_args = targs ;

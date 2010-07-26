@@ -51,7 +51,7 @@ let rec count_args tm =
 let rec term_of_expr c expr =
   begin match expr.exp_desc with
     | Texp_ident v ->
-        let v = get_value v in
+        let v = Get.value v in
         if v.val_global then
           begin match v.val_kind with
             | Val_reg ->
@@ -77,7 +77,7 @@ let rec term_of_expr c expr =
     | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
     | Texp_construct (ct, l) ->
-        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor (get_constr ct)) l
+        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor (Get.constructor ct)) l
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function [({pat_desc=Tpat_var s},e)] ->

@@ -29,16 +29,16 @@ let scrape env ty =
 
 let has_base_type exp base_ty_path =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, _) -> Module.get_type_constr p == base_ty_path
+  | Tconstr(p, _) -> Get.type_constr p == base_ty_path
   | _ -> false
 
 let maybe_pointer exp =
   match scrape exp.exp_env exp.exp_type with
   | Tconstr(p, args) ->
-      not (Module.get_type_constr p == Predef.tcs_int) &&
-      not (Module.get_type_constr p == Predef.tcs_char) &&
+      not (Get.type_constr p == Predef.tcs_int) &&
+      not (Get.type_constr p == Predef.tcs_char) &&
       begin try
-        match Module.get_type_constr p with
+        match Get.type_constr p with
           {tcs_kind = Type_variant []} -> true (* type exn *)
         | {tcs_kind = Type_variant cstrs} ->
             List.exists (fun cs -> cs.cs_args <> []) cstrs
@@ -55,7 +55,7 @@ let array_element_kind env ty =
   | Tvar ->
       Pgenarray
   | Tconstr(p, args) ->
-      let tcs = Module.get_type_constr p in
+      let tcs = Get.type_constr p in
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
       else if tcs == Predef.tcs_float then
@@ -90,7 +90,7 @@ let array_element_kind env ty =
 let array_kind_gen ty env =
   match scrape env ty with
   | Tconstr(p, [elt_ty])
-    when Module.get_type_constr p == Predef.tcs_vect ->
+    when Get.type_constr p == Predef.tcs_vect ->
       array_element_kind env elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)

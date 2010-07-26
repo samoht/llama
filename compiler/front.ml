@@ -105,7 +105,7 @@ let alloc_superfluous_constr cstr n =
   let rec extract_fields i =
     if i >= n then [] else
       Lprim(Pfield i, [Lvar 0]) :: extract_fields (succ i) in
-  Lprim(Pmakeblock (get_constr cstr).cs_tag, extract_fields 0)
+  Lprim(Pmakeblock (Get.constructor cstr).cs_tag, extract_fields 0)
 ;;
 
 (* Assertions *)
@@ -132,7 +132,7 @@ let rec translate_expr env =
   let rec transl expr =
   match expr.exp_desc with
     Texp_ident v ->
-      let v = get_value v in
+      let v = Get.value v in
       if v.val_global then
         (match v.val_kind with
              Val_reg ->
@@ -161,23 +161,23 @@ let rec translate_expr env =
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
   | Texp_construct(c,argl) ->
-      begin match (get_constr c).cs_arity with
+      begin match (Get.constructor c).cs_arity with
       | 0 ->
-          Lconst(SCblock((get_constr c).cs_tag, []))
+          Lconst(SCblock((Get.constructor c).cs_tag, []))
       | 1 ->
           let arg = List.hd argl in
           let tr_arg = transl arg in
           begin try
-            Lconst(SCblock((get_constr c).cs_tag, [extract_constant tr_arg]))
+            Lconst(SCblock((Get.constructor c).cs_tag, [extract_constant tr_arg]))
           with Not_constant ->
-            Lprim(Pmakeblock (get_constr c).cs_tag, [tr_arg])
+            Lprim(Pmakeblock (Get.constructor c).cs_tag, [tr_arg])
           end
       | n ->
               let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
-                Lconst(SCblock((get_constr c).cs_tag, List.map extract_constant tr_argl))
+                Lconst(SCblock((Get.constructor c).cs_tag, List.map extract_constant tr_argl))
               with Not_constant ->
-                Lprim(Pmakeblock (get_constr c).cs_tag, tr_argl)
+                Lprim(Pmakeblock (Get.constructor c).cs_tag, tr_argl)
               end
       end
   | Texp_apply({exp_desc = Texp_function ((pat,_)::_ as case_list)} as funct, args) ->
@@ -186,8 +186,8 @@ let rec translate_expr env =
              translate_match expr.exp_loc env (compat case_list))
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_apply({exp_desc = Texp_ident v} as fct, args) when (get_value v).val_global ->
-      let v = get_value v in
+  | Texp_apply({exp_desc = Texp_ident v} as fct, args) when (Get.value v).val_global ->
+      let v = Get.value v in
       begin match v.val_kind with
         Val_reg ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
@@ -247,7 +247,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> get_constr cstr == constr_void
+                       Texp_construct(cstr,[]) -> Get.constructor cstr == constr_void
                     | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))
@@ -268,11 +268,11 @@ let rec translate_expr env =
   | Texp_record lbl_expr_list ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter
-          (fun (lbl, e) -> v.((get_label lbl).lbl_pos) <- transl e)
+          (fun (lbl, e) -> v.((Get.label lbl).lbl_pos) <- transl e)
           lbl_expr_list;
         begin try
           if List.for_all
-               (fun (lbl, e) -> (get_label lbl).lbl_mut == Immutable)
+               (fun (lbl, e) -> (Get.label lbl).lbl_mut == Immutable)
                lbl_expr_list
           then Lconst(SCblock(ConstrRegular(0,0),
                               Array.to_list (Array.map extract_constant v)))
@@ -281,9 +281,9 @@ let rec translate_expr env =
           Lprim(Pmakeblock(ConstrRegular(0,0)), Array.to_list v)
         end
   | Texp_field (e, lbl) ->
-      Lprim(Pfield (get_label lbl).lbl_pos, [transl e])
+      Lprim(Pfield (Get.label lbl).lbl_pos, [transl e])
   | Texp_setfield (e1, lbl, e2) ->
-      Lprim(Psetfield (get_label lbl).lbl_pos, [transl e1; transl e2])
+      Lprim(Psetfield (Get.label lbl).lbl_pos, [transl e1; transl e2])
   | Texp_assert cond ->
       if !Clflags.noassert then
         lambda_unit

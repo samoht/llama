@@ -9,16 +9,6 @@ let new_exc_stamp () =
   let n = !next_exc_stamp in
   incr next_exc_stamp; n
 
-let get_type_constr = Get.type_constructor
-let get_constr = Get.constructor
-let get_value = Get.value
-let get_label = Get.label
-
-let same_type_constr r1 r2 = get_type_constr r1 == get_type_constr r2
-let same_constr r1 r2 = get_constr r1 == get_constr r2
-let same_value r1 r2 = get_value r1 == get_value r2
-let same_label r1 r2 = get_label r1 == get_label r2
-
 let rec erase_type m t = match t with
     Tvar v ->
       begin match v.tv_kind with

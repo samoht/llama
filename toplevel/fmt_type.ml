@@ -78,7 +78,7 @@ let rec print_typ priority ty =
           close_box();
           print_space()
       end;
-      print_type_constr (get_type_constr cstr);
+      print_type_constr (Get.type_constructor cstr);
       close_box()
 
 and print_typ_list priority sep = function
