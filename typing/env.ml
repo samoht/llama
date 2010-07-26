@@ -94,7 +94,7 @@ let open_signature sg env =
 
 let initial = open_signature Predef.signature empty
 
-let open_module name env = open_signature (Get.signature (Module name)) env
+let open_module name env = open_signature (Get.signature name) env
 (*
 let read_signature modname =
   (find_pers_struct modname).mod_sig

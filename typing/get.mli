@@ -4,7 +4,7 @@ open Types
    interface data from disk as appropriate. The results may be
    compared using physical equality. *)
 
-val signature : module_id -> signature
+val signature : string -> signature
 
 val type_constructor : type_constructor reference -> type_constructor
 val constructor : constructor reference -> constructor
