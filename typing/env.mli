@@ -25,9 +25,5 @@ val lookup_value : Longident.t -> t -> value
 
 val set_current_module : module_id -> t  (* incl. Pervasives unless --nopervasives *)
 val current_module : unit -> module_id
-
-(* utilities *)
-
-val write_pers_struct : out_channel -> string -> signature -> unit
 val current_unit : unit -> string
 val qualified_id : string -> qualified_id

@@ -95,17 +95,6 @@ let open_signature sg env =
 let initial = open_signature Predef.signature empty
 
 let open_module name env = open_signature (Get.signature name) env
-(*
-let read_signature modname =
-  (find_pers_struct modname).mod_sig
-
-let ps_find_all_constrs ps s =
-  Hashtbl.find_all ps.mod_constrs s
-*)
-let write_pers_struct oc mn working =
-  Module.erase_sig (Module mn) working;
-  output_value oc mn;
-  output_value oc working
 
 let the_current_module = ref (Module_builtin)
 

@@ -122,7 +122,7 @@ let rec get_type_descr ty =
   | Tconstruct (path,_) -> Get.type_constr path
   | _ -> fatal_error "Parmatch.get_type_descr"
 
-let rec Get.constructor tag ty =
+let rec get_constructor tag ty =
   match get_type_descr ty with
   | {tcs_kind=Type_variant constr_list} ->
       Types.find_constr_by_tag tag constr_list
@@ -150,11 +150,11 @@ let rec get_record_labels ty =
 open Format
 ;;
 
-let Get.constructor_name tag ty  = match tag with
+let get_constructor_name tag ty  = match tag with
 | Cstr_exception path -> qualid_name path
 | _ ->
   try
-    (Get.constructor tag ty).cs_name
+    (get_constructor tag ty).cs_name
   with
   | Types.Constr_not_found -> "*Unknown constructor*"
 
@@ -174,7 +174,7 @@ let rec pretty_val ppf v = match v.pat_desc with
   | Tpat_tuple vs ->
       fprintf ppf "@[(%a)@]" (pretty_vals ",") vs
   | Tpat_construct (cs, args) ->
-      let name = (Get.constr cs).cs_name in
+      let name = (get_constr cs).cs_name in
       begin match args with
         | [] ->
             fprintf ppf "%s" name
@@ -205,12 +205,12 @@ let rec pretty_val ppf v = match v.pat_desc with
       fprintf ppf "@[(%a|@,%a)@]" pretty_or v pretty_or w
 
 and pretty_car ppf v = match v.pat_desc with
-| Tpat_construct (cs, [_ ; _]) when is_cons (Get.constr cs) ->
+| Tpat_construct (cs, [_ ; _]) when is_cons (get_constr cs) ->
       fprintf ppf "(%a)" pretty_val v
 | _ -> pretty_val ppf v
 
 and pretty_cdr ppf v = match v.pat_desc with
-| Tpat_construct (cs, [v1 ; v2]) when is_cons (Get.constr cs) ->
+| Tpat_construct (cs, [v1 ; v2]) when is_cons (get_constr cs) ->
       fprintf ppf "%a::@,%a" pretty_car v1 pretty_cdr v2
 | _ -> pretty_val ppf v
 
@@ -232,10 +232,10 @@ and pretty_vals sep ppf = function
 and pretty_lvals lbls ppf = function
   | [] -> ()
   | [lbl,v] ->
-      let name = find_label (Get.label lbl) lbls in
+      let name = find_label (get_label lbl) lbls in
       fprintf ppf "%s=%a" name pretty_val v
   | (lbl,v)::rest ->
-      let name = find_label (Get.label lbl) lbls in
+      let name = find_label (get_label lbl) lbls in
       fprintf ppf "%s=%a;@ %a" name pretty_val v (pretty_lvals lbls) rest
 
 let top_pretty ppf v =
@@ -255,7 +255,7 @@ let prerr_pat v =
 let simple_match p1 p2 =
   match p1.pat_desc, p2.pat_desc with
   | Tpat_construct(c1, _), Tpat_construct(c2, _) ->
-      Get.constructor c1 == Get.constructor c2
+      get_constructor c1 == get_constructor c2
   | Tpat_constant(Const_float s1), Tpat_constant(Const_float s2) ->
       float_of_string s1 = float_of_string s2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
@@ -698,7 +698,7 @@ let complete_constrs p all_tags = match p.pat_desc with
       let not_tags = complete_tags  c.cstr_consts c.cstr_nonconsts all_tags in
       List.map
         (fun tag ->
-          let _,targs = Get.constructor tag p.pat_type p.pat_env in
+          let _,targs = get_constructor tag p.pat_type p.pat_env in
           {c with
       cstr_tag = tag ;
       cstr_args = targs ;
