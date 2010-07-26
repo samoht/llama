@@ -12,7 +12,7 @@ val initial : t  (* builtins but not Pervasives *)
 val add_type_constructor : type_constructor -> t -> t
 val add_value : value -> t -> t
 val add_exception : constructor -> t -> t
-val open_module : string -> t -> t
+val add_signature : signature -> t -> t
 
 (* Using environments *)
 
@@ -25,5 +25,5 @@ val lookup_value : Longident.t -> t -> value
 
 val start_compiling : module_id -> t  (* incl. Pervasives unless --nopervasives *)
 val current_module : unit -> module_id
-val current_unit : unit -> string
+val current_module_name : unit -> string
 val qualified_id : string -> qualified_id

@@ -82,7 +82,7 @@ let add_type_constructor tcs env =
           values = env.values }
   end
 
-let open_signature sg env =
+let add_signature sg env =
   List.fold_left
     (fun env -> function
        | Sig_value v ->
@@ -93,9 +93,9 @@ let open_signature sg env =
            add_type_constructor tcs env)
     env sg
 
-let initial = open_signature Predef.signature empty
+let initial = add_signature Predef.signature empty
 
-let open_module name env = open_signature (Get.signature name) env
+let open_module name env = add_signature (Get.signature name) env
 
 let the_current_module = ref (Module_builtin)
 
@@ -112,9 +112,9 @@ let start_compiling m =
 
 let current_module () = !the_current_module
 
-let current_unit () =
+let current_module_name () =
   begin match !the_current_module with
     | Module s -> s
-    | Module_builtin | Module_toplevel -> failwith "current_unit"
+    | Module_builtin | Module_toplevel -> failwith "current_module_name"
   end
 

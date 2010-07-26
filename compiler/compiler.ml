@@ -87,7 +87,7 @@ let compile_interface modname filename =
       Typemod.type_signature l;
       Typemod.genericize_core_signature sg;
       close_in ic;
-      Module.write oc (Env.current_unit ()) sg;
+      Module.write oc (Env.current_module_name ()) sg;
       close_out oc;
     with x ->
       close_in ic;
@@ -167,7 +167,7 @@ let compile_implementation modname filename suffix =
     try
       let env = Env.start_compiling (Module modname) in 
       let sg, env = compile_impl env modname filename suffix in
-      Module.write oc (Env.current_unit ()) sg;
+      Module.write oc (Env.current_module_name ()) sg;
       close_out oc
     with x ->
       close_out oc;
