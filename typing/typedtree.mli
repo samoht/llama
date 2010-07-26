@@ -3,9 +3,9 @@
 open Asttypes
 open Types
 
-type type_variable =
-  { tvar_name : string;
-    mutable tvar_type : core_type }
+type user_type_variable =
+  { utv_name : string;
+    mutable utv_type : core_type }
 
 type type_expression =
   { te_desc: type_expression_desc;
@@ -14,7 +14,7 @@ type type_expression =
     mutable te_type : core_type }
 
 and type_expression_desc =
-    Ttyp_var of type_variable
+    Ttyp_var of user_type_variable
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
   | Ttyp_constr of type_constructor reference * type_expression list
@@ -88,7 +88,7 @@ type signature_item =
 
 and signature_item_desc =
     Tsig_value of value * type_expression
-  | Tsig_type of (type_constructor * type_variable list * type_body) list
+  | Tsig_type of (type_constructor * user_type_variable list * type_body) list
   | Tsig_exception of constructor * type_expression list
   | Tsig_open of module_id
 
@@ -100,7 +100,7 @@ and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of bool * (pattern * expression) list
   | Tstr_primitive of value * type_expression
-  | Tstr_type of (type_constructor * type_variable list * type_body) list
+  | Tstr_type of (type_constructor * user_type_variable list * type_body) list
   | Tstr_exception of constructor * type_expression list
   | Tstr_open of module_id
 

@@ -61,7 +61,7 @@ let define_new_type tcs params body =
 let type_typedecl_new decl loc =
   List.iter
     begin fun (tcs, params, body) ->
-      List.iter2 (fun utv tv -> utv.tvar_type <- Tvar tv) params tcs.tcs_params;
+      List.iter2 (fun utv tv -> utv.utv_type <- Tvar tv) params tcs.tcs_params;
       define_new_type tcs tcs.tcs_params body
     end decl;
   List.iter
@@ -73,9 +73,8 @@ let type_typedecl_new decl loc =
     end decl
 
 let type_excdecl cs args  =
-  let ty_args = List.map (type_of_type_expression Generic) args in
   cs.cs_res <- type_exn;
-  cs.cs_args <- ty_args
+  cs.cs_args <- List.map (type_of_type_expression Generic) args
 
 let type_valuedecl_new v typexp =
   v.val_type <- type_of_type_expression Generic typexp

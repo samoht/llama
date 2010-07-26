@@ -14,7 +14,7 @@ exception Duplicate_label of string
 let nodup lref s cb =
   if List.mem s !lref then cb () else lref := s :: !lref; s
 
-let type_expr_vars = ref ([] : (string * type_variable) list);;
+let type_expr_vars = ref ([] : (string * user_type_variable) list);;
 let reset_type_expression_vars () = type_expr_vars := []
 
 let bind_type_expression_vars var_list loc =
@@ -24,7 +24,7 @@ let bind_type_expression_vars var_list loc =
       if List.mem_assoc v !type_expr_vars then
         Error.duplicate_param_in_type_decl_err loc
       else begin
-        let t = {tvar_name=v; tvar_type=type_none} in
+        let t = {utv_name=v; utv_type=type_none} in
         type_expr_vars := (v, t) :: !type_expr_vars; t
       end)
     var_list
@@ -85,7 +85,7 @@ let rec type_expression strict_flag env te =
                 if strict_flag then
                   Error.unbound_type_var_err v te.ptyp_loc
                 else begin
-                  let t = {tvar_name=v; tvar_type=type_none} in
+                  let t = {utv_name=v; utv_type=type_none} in
                   type_expr_vars := (v,t) :: !type_expr_vars; t
                 end
               end

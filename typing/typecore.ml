@@ -24,12 +24,12 @@ let type_of_type_expression varkind typexp =
   let rec type_of typexp =
     match typexp.te_desc with
         Ttyp_var utv ->
-          if utv.tvar_type == type_none then
+          if utv.utv_type == type_none then
             let ty = Tvar { tv_kind = varkind } in
-            utv.tvar_type <- ty;
+            utv.utv_type <- ty;
             ty
           else
-            utv.tvar_type
+            utv.utv_type
       | Ttyp_arrow(arg1, arg2) ->
           type_arrow(type_of arg1, type_of arg2)
       | Ttyp_tuple argl ->
