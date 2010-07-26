@@ -36,9 +36,9 @@ let rec generalize_type vr = function
       begin match tv.tv_kind with
         | Generic ->
             ()
-        | Nongeneric level ->
+        | Level level ->
             if level > !current_level then
-              tv.tv_kind <- (if vr then Nongeneric !current_level else Generic)
+              tv.tv_kind <- (if vr then Level !current_level else Generic)
         | Forward ty ->
             generalize_type vr ty
       end
@@ -67,7 +67,7 @@ let rec instantiate_type subst = function
               subst := (tv, ng) :: !subst;
               Tvar ng
             end
-        | Nongeneric _ ->
+        | Level _ ->
             Tvar tv
         | Forward ty ->
             instantiate_type subst ty
@@ -102,8 +102,8 @@ let rec rectify_type level0 x =
       begin match tv.tv_kind with
           Generic ->
             ()
-        | Nongeneric level ->
-            if level > level0 then tv.tv_kind <- Nongeneric level0
+        | Level level ->
+            if level > level0 then tv.tv_kind <- Level level0
         | Forward ty ->
             rectify_type level0 ty
       end
@@ -125,7 +125,7 @@ let rec genericize_type = function
       begin match tv.tv_kind with
         | Generic ->
             Tvar tv
-        | Nongeneric _ ->
+        | Level _ ->
             raise Genericize
         | Forward ty ->
             genericize_type ty
@@ -145,7 +145,7 @@ let rec substitute_type subst = function
       begin match tv.tv_kind with
         | Generic ->
             List.assq tv subst
-        | Nongeneric _ ->
+        | Level _ ->
             assert false
         | Forward ty ->
             assert false

@@ -111,7 +111,7 @@ let rec occur_check v = function
     Tvar tv ->
       begin match tv.tv_kind with
         | Generic -> assert false
-        | Nongeneric _ -> tv == v
+        | Level _ -> tv == v
         | Forward ty -> occur_check v ty
       end
   | Tarrow (ty1, ty2) ->
@@ -128,7 +128,7 @@ let rec unify (ty1, ty2) =
   let ty2 = repr ty2 in
   let level tv =
     begin match tv.tv_kind with
-      | Nongeneric level -> level
+      | Level level -> level
       | Generic | Forward _ -> assert false
     end
   in
@@ -174,7 +174,7 @@ and unify_list = function
 let nongeneric_level tv =
   begin match tv.tv_kind with
     | Generic | Forward _ -> assert false
-    | Nongeneric level -> level
+    | Level level -> level
   end
 
 let rec filter_arrow ty =
@@ -252,7 +252,7 @@ let rec moregeneral subst ty1 ty2 =
               end else begin
                 subst := (tv, ty2) :: !subst; true
               end
-          | Nongeneric _ | Forward _ ->
+          | Level _ | Forward _ ->
               assert false
         end
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->

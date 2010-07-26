@@ -32,7 +32,7 @@ and type_variable = {
 
 and type_variable_kind =
   | Generic
-  | Nongeneric of int
+  | Level of int
   | Forward of llama_type
 
 and type_constructor =
@@ -111,7 +111,7 @@ type signature = signature_item list
 let tvar tv = Tvar tv
 let new_generic () = { tv_kind=Generic }
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
-let new_nongeneric_gen lev = { tv_kind=Nongeneric lev }
+let new_nongeneric_gen lev = { tv_kind=Level lev }
 let module_level = 0
 let phrase_level = 1
 
