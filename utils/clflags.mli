@@ -9,3 +9,4 @@ val debug : bool ref
 val fast : bool ref
 val nopervasives : bool ref
 val noassert : bool ref
+val native_code : bool ref

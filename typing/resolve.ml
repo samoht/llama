@@ -203,7 +203,7 @@ let rec expr env ex =
             Texp_for(v,expr env e1,expr env e2,b,expr big_env e3)
         | Pexp_constraint(e,te) -> Texp_constraint(expr env e,type_expression false env te)
         | Pexp_array l -> Texp_array(List.map (expr env) l)
-        | Pexp_record l -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env e) l)
+        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env e) l, match o with None -> None | Some e -> Some (expr env e))
         | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env li ex.pexp_loc)
         | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env li ex.pexp_loc, expr env e2)
         | Pexp_assert e -> Texp_assert (expr env e)
@@ -402,7 +402,8 @@ let exception_declaration env name args =
   let args = List.map (type_expression true env) args in
   let nargs = List.length args in
   let qualid = Env.qualified_id name in
-  let tag = ConstrExtensible(qualid, Module.new_exc_stamp ()) in
+  let stamp = Module.new_exc_stamp () in
+  let tag = ConstrExtensible(qualid, stamp) in
   let cs =
     { cs_parent = Predef.tcs_exn;
       cs_name = name;
@@ -410,7 +411,7 @@ let exception_declaration env name args =
       cs_args = replicate_list type_none nargs;
       cs_arity = nargs;
       cs_tag = tag;
-      cstr_tag = Cstr_exception qualid
+      cstr_tag = Cstr_exception (qualid, stamp)
     }
   in
   let env = Env.add_exception cs env in

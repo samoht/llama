@@ -42,7 +42,7 @@ and expression_desc =
   | Pexp_try of expression * (pattern * expression) list
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
-  | Pexp_record of (Longident.t * expression) list
+  | Pexp_record of (Longident.t * expression) list * expression option (*xxx*)
   | Pexp_field of expression * Longident.t
   | Pexp_setfield of expression * Longident.t * expression
   | Pexp_array of expression list

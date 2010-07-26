@@ -133,26 +133,28 @@ let _ =
 let tag_match_failure, cs_match_failure =
   let name = "Match_failure" in
   let qualid = { id_module = Module_builtin; id_name = name } in
-  let tag = ConstrExtensible (qualid, 1) in
+  let stamp = 1 (* xxx *) in
+  let tag = ConstrExtensible (qualid, stamp) in
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
     cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
-    cstr_tag = Cstr_exception qualid }
+    cstr_tag = Cstr_exception (qualid, stamp) }
 
 let tag_assert_failure, cs_assert_failure =
   let name = "Assert_failure" in
   let qualid = { id_module = Module_builtin; id_name = name } in
-  let tag = ConstrExtensible (qualid, 1) in
+  let stamp = 1 (* xxx *) in
+  let tag = ConstrExtensible (qualid, stamp) in
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
     cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
-    cstr_tag = Cstr_exception qualid;
+    cstr_tag = Cstr_exception (qualid, stamp);
   }
 
 (* ---------------------------------------------------------------------- *)

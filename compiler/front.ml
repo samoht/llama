@@ -36,7 +36,7 @@ let rec check_letrec_expr expr =
   | Texp_function _ -> ()
   | Texp_constraint(e,_) -> check_letrec_expr e
   | Texp_array el -> List.iter check_letrec_expr el
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list, exten) (* xxx exten *) ->
       List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list
   | Texp_let(flag, pat_expr_list, body) ->
       List.iter (fun (pat,expr) -> check_letrec_expr expr) pat_expr_list;
@@ -56,7 +56,7 @@ let rec size_of_expr expr =
       size_of_expr e
   | Texp_array el ->
       List.iter check_letrec_expr el; List.length el
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list, exten) (* xxx exten *) ->
       List.iter (fun (lbl,expr) -> check_letrec_expr expr) lbl_expr_list;
       List.length lbl_expr_list
   | Texp_let(flag, pat_expr_list, body) ->
@@ -265,7 +265,7 @@ let rec translate_expr env =
       Lconst(SCblock(ConstrRegular(0,0), []))
   | Texp_array args ->
       Lprim(Pmakeblock (ConstrRegular(0,0)), List.map transl args)
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list, exten) (*xxx exten *) ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter
           (fun (lbl, e) -> v.((Get.label lbl).lbl_pos) <- transl e)

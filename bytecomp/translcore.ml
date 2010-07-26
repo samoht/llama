@@ -552,7 +552,7 @@ let assert_failed loc =
   let line = pos.Lexing.pos_lnum in
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise, [Lprim(Pmakeblock(0, Immutable),
-          [transl_predef_exn Predef.cs_assert_failure;
+          [transl_exception Predef.cs_assert_failure;
            Lconst(Const_block(0,
               [Const_base(Const_string fname);
                Const_base(Const_int line);
@@ -581,24 +581,14 @@ let rec transl_exp e =
 
 and transl_exp0 e =
   match e.exp_desc with
-    Texp_ident(path, {val_kind = Val_prim p}) ->
-      let public_send = p.prim_name = "%send" in
-      if public_send || p.prim_name = "%sendself" then
-        let kind = if public_send then Public else Self in
-        let obj = Ident.create "obj" and meth = Ident.create "meth" in
-        Lfunction(Curried, [obj; meth], Lsend(kind, Lvar meth, Lvar obj, []))
-      else if p.prim_name = "%sendcache" then
-        let obj = Ident.create "obj" and meth = Ident.create "meth" in
-        let cache = Ident.create "cache" and pos = Ident.create "pos" in
-        Lfunction(Curried, [obj; meth; cache; pos],
-                  Lsend(Cached, Lvar meth, Lvar obj, [Lvar cache; Lvar pos]))
-      else
-        transl_primitive p
-  | Texp_ident(path, {val_kind = Val_anc _}) ->
-      raise(Error(e.exp_loc, Free_super_var))
-  | Texp_ident(path, {val_kind = Val_reg | Val_self _}) ->
-      transl_path path
-  | Texp_ident _ -> fatal_error "Translcore.transl_exp: bad Texp_ident"
+    Texp_ident v ->
+      let v = Get.value v in
+      begin match v with
+        | {val_kind = Val_prim p} ->
+            transl_primitive p
+        | {val_kind = Val_reg} ->
+            transl_regular_value v
+      end
   | Texp_constant cst ->
       Lconst(Const_base cst)
   | Texp_let(rec_flag, pat_expr_list, body) ->
@@ -611,9 +601,12 @@ and transl_exp0 e =
             transl_function e.exp_loc !Clflags.native_code repr partial pl)
       in
       Lfunction(kind, params, body)
-  | Texp_apply({exp_desc = Texp_ident(path, {val_kind = Val_prim p})}, oargs)
-    when List.length oargs >= p.prim_arity
-    && List.for_all (fun (arg,_) -> arg <> None) oargs ->
+  | Texp_apply({exp_desc = Texp_ident(v)}, oargs)
+      when (match (Get.value v).val_kind with 
+              | Val_prim p -> List.length oargs >= p.prim_arity
+              | _ -> false) ->
+      let v = Get.value v in
+      let p = match v.val_kind with Val_prim p -> p | _ -> assert false in
       let args, args' = cut p.prim_arity oargs in
       let wrap f =
         if args' = []
@@ -622,7 +615,6 @@ and transl_exp0 e =
       in
       let wrap0 f =
         if args' = [] then f else wrap f in
-      let args = List.map (function Some x, _ -> x | _ -> assert false) args in
       let argl = transl_list args in
       let public_send = p.prim_name = "%send"
         || not !Clflags.native_code && p.prim_name = "%sendcache"in
@@ -657,7 +649,7 @@ and transl_exp0 e =
       Matching.for_function e.exp_loc None
         (transl_exp arg) (transl_cases pat_expr_list) partial
   | Texp_try(body, pat_expr_list) ->
-      let id = name_pattern "exn" pat_expr_list in
+      let id = Ident.create (name_pattern "exn" pat_expr_list) in
       Ltrywith(transl_exp body, id,
                Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
   | Texp_tuple el ->
@@ -668,6 +660,7 @@ and transl_exp0 e =
         Lprim(Pmakeblock(0, Immutable), ll)
       end
   | Texp_construct(cstr, args) ->
+      let cstr = Get.constructor cstr in
       let ll = transl_list args in
       begin match cstr.cstr_tag with
         Cstr_constant n ->
@@ -678,10 +671,10 @@ and transl_exp0 e =
           with Not_constant ->
             Lprim(Pmakeblock(n, Immutable), ll)
           end
-      | Cstr_exception path ->
-          Lprim(Pmakeblock(0, Immutable), transl_path path :: ll)
+      | Cstr_exception _ ->
+          Lprim(Pmakeblock(0, Immutable), transl_exception cstr :: ll)
       end
-  | Texp_variant(l, arg) ->
+(*| Texp_variant(l, arg) ->
       let tag = Btype.hash_variant l in
       begin match arg with
         None -> Lconst(Const_pointer tag)
@@ -693,22 +686,29 @@ and transl_exp0 e =
           with Not_constant ->
             Lprim(Pmakeblock(0, Immutable),
                   [Lconst(Const_base(Const_int tag)); lam])
-      end
+      end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      transl_record lbl1.lbl_all lbl1.lbl_repres lbl_expr_list opt_init_expr
+      let lbl1 = Get.label lbl1 in
+      transl_record (Ctype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
   | Texp_field(arg, lbl) ->
-      let access =
+      let lbl = Get.label lbl in
+      let access = Pfield lbl.lbl_pos in
+(*
         match lbl.lbl_repres with
           Record_regular -> Pfield lbl.lbl_pos
         | Record_float -> Pfloatfield lbl.lbl_pos in
+*)
       Lprim(access, [transl_exp arg])
   | Texp_setfield(arg, lbl, newval) ->
-      let access =
+      let lbl = Get.label lbl in
+      let access = Psetfield(lbl.lbl_pos, maybe_pointer newval) in
+(*
         match lbl.lbl_repres with
           Record_regular -> Psetfield(lbl.lbl_pos, maybe_pointer newval)
         | Record_float -> Psetfloatfield lbl.lbl_pos in
+*)
       Lprim(access, [transl_exp arg; transl_exp newval])
   | Texp_array expr_list ->
       let kind = array_kind e in
@@ -729,6 +729,7 @@ and transl_exp0 e =
       with Not_constant ->
         Lprim(Pmakearray kind, ll)
       end
+(*
   | Texp_ifthenelse(cond, ifso, Some ifnot) ->
       Lifthenelse(transl_exp cond,
                   event_before ifso (transl_exp ifso),
@@ -737,12 +738,17 @@ and transl_exp0 e =
       Lifthenelse(transl_exp cond,
                   event_before ifso (transl_exp ifso),
                   lambda_unit)
+*)
+  | Texp_ifthenelse(cond, ifso, ifnot) ->
+      Lifthenelse(transl_exp cond,
+                  event_before ifso (transl_exp ifso),
+                  event_before ifnot (transl_exp ifnot))
   | Texp_sequence(expr1, expr2) ->
       Lsequence(transl_exp expr1, event_before expr2 (transl_exp expr2))
   | Texp_while(cond, body) ->
       Lwhile(transl_exp cond, event_before body (transl_exp body))
   | Texp_for(param, low, high, dir, body) ->
-      Lfor(param, transl_exp low, transl_exp high, dir,
+      Lfor(Ident.Value param, transl_exp low, transl_exp high, dir,
            event_before body (transl_exp body))
   | Texp_when(cond, body) ->
       event_before cond
@@ -760,14 +766,12 @@ and transl_exp0 e =
             Lsend (kind, tag, obj, cache)
       in
       event_after e lam
-*)
   | Texp_new (cl, _) ->
       Lapply(Lprim(Pfield 0, [transl_path cl]), [lambda_unit], Location.none)
   | Texp_instvar(path_self, path) ->
       Lprim(Parrayrefu Paddrarray, [transl_path path_self; transl_path path])
   | Texp_setinstvar(path_self, path, expr) ->
       transl_setinstvar (transl_path path_self) path expr
-(*
   | Texp_override(path_self, modifs) ->
       let cpy = Ident.create "copy" in
       Llet(Strict, cpy,
@@ -778,16 +782,17 @@ and transl_exp0 e =
                 Lsequence(transl_setinstvar (Lvar cpy) path expr, rem))
              modifs
              (Lvar cpy))
-*)
   | Texp_letmodule(id, modl, body) ->
       Llet(Strict, id, !transl_module Tcoerce_none None modl, transl_exp body)
   | Texp_pack modl ->
       !transl_module Tcoerce_none None modl
+*)
   | Texp_assert (cond) ->
       if !Clflags.noassert
       then lambda_unit
       else Lifthenelse (transl_exp cond, lambda_unit, assert_failed e.exp_loc)
   | Texp_assertfalse -> assert_failed e.exp_loc
+(*
   | Texp_lazy e ->
       (* when e needs no computation (constants, identifiers, ...), we
          optimize the translation just as Lazy.lazy_from_val would
@@ -844,7 +849,7 @@ and transl_exp0 e =
           cl_loc = e.exp_loc;
           cl_type = Tcty_signature cty;
           cl_env = e.exp_env }
-
+*)
 and transl_list expr_list =
   List.map transl_exp expr_list
 
@@ -904,7 +909,9 @@ and transl_apply lam sargs loc =
     | [] ->
         lapply lam (List.rev_map fst args)
   in
-  build_apply lam [] (List.map (fun (x,o) -> may_map transl_exp x, o) sargs)
+(*  build_apply lam [] (List.map (fun (x,o) -> may_map transl_exp x, o) sargs)*)
+  let compat arg = (Some arg, Required) in
+  build_apply lam [] (List.map compat (List.map transl_exp sargs))
 
 and transl_function loc untuplify_fn repr partial pat_expr_list =
   match pat_expr_list with
@@ -967,22 +974,24 @@ and transl_setinstvar self var expr =
                     [self; transl_path var; transl_exp expr])
 
 and transl_record all_labels repres lbl_expr_list opt_init_expr =
-  let size = Array.length all_labels in
+  let size = List.length all_labels in
   (* Determine if there are "enough" new fields *)
   if 3 + 2 * List.length lbl_expr_list >= size
   then begin
     (* Allocate new record with given fields (and remaining fields
        taken from init_expr if any *)
-    let lv = Array.create (Array.length all_labels) staticfail in
+    let lv = Array.create (List.length all_labels) staticfail in
     let init_id = Ident.create "init" in
     begin match opt_init_expr with
       None -> ()
     | Some init_expr ->
-        for i = 0 to Array.length all_labels - 1 do
-          let access =
-            match all_labels.(i).lbl_repres with
+        for i = 0 to List.length all_labels - 1 do
+          let access = Pfield i in
+(*
+            match (List.nth all_labels i).lbl_repres with
               Record_regular -> Pfield i
             | Record_float -> Pfloatfield i in
+*)
           lv.(i) <- Lprim(access, [Lvar init_id])
         done
     end;

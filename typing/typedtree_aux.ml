@@ -27,7 +27,7 @@ let rec expr_is_pure expr =
   | Texp_function _ -> true
   | Texp_constraint(expr, ty) -> expr_is_pure expr
   | Texp_array el -> List.for_all expr_is_pure el
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list,_) (*xxx*) ->
       List.for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
   | Texp_parser _ -> true
   | _ -> false

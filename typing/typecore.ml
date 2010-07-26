@@ -158,10 +158,10 @@ let rec is_nonexpansive expr =
       is_nonexpansive ifso && is_nonexpansive ifnot
   | Texp_constraint(e, ty) -> is_nonexpansive e
   | Texp_array [] -> true
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list, exten) ->
       List.for_all (fun (lbl, expr) ->
                   (Get.label lbl).lbl_mut == Immutable && is_nonexpansive expr)
-              lbl_expr_list
+              lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_parser pat_expr_list -> true
   | Texp_when(cond, act) -> is_nonexpansive act
@@ -431,7 +431,7 @@ let rec type_expr expr =
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
       type_vect ty_arg
-  | Texp_record lbl_expr_list ->
+  | Texp_record (lbl_expr_list, exten) ->
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
@@ -456,6 +456,7 @@ let rec type_expr expr =
       for i = 0 to Array.length label - 1 do
         if not defined.(i) then label_undefined_err expr label.(i)
       done;
+      (* xxx exten *)
       ty
   | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in

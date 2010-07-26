@@ -50,11 +50,11 @@ and expression_desc =
   | Texp_let of rec_flag * (pattern * expression) list * expression
   | Texp_function of (pattern * expression) list * partial
   | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list * partial
+  | Texp_match of expression * (pattern * expression) list * partial  (* xxx *)
   | Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
   | Texp_construct of constructor reference * expression list
-  | Texp_record of (label reference * expression) list
+  | Texp_record of (label reference * expression) list * expression option(*xxx*)
   | Texp_field of expression * label reference
   | Texp_setfield of expression * label reference * expression
   | Texp_array of expression list
