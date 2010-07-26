@@ -80,7 +80,7 @@ let rec term_of_expr c expr =
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor (Get.constructor ct)) l
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
-    | Texp_function [({pat_desc=Tpat_var s},e)] ->
+    | Texp_function ([({pat_desc=Tpat_var s},e)], _) ->
         Lambda (term_of_expr (val_name s::c) e)
     | Texp_ifthenelse (i, t, e) ->
         app3 (Match tcs_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)

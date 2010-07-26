@@ -1,7 +1,6 @@
 (* Abstract syntax tree produced by parsing *)
 
 open Asttypes
-open Asttypes
 
 (* Type expressions for the core language *)
 
@@ -37,7 +36,7 @@ type expression =
 and expression_desc =
     Pexp_ident of Longident.t
   | Pexp_constant of constant
-  | Pexp_let of bool * (pattern * expression) list * expression
+  | Pexp_let of rec_flag * (pattern * expression) list * expression
   | Pexp_function of (pattern * expression) list
   | Pexp_apply of expression * expression list
   | Pexp_try of expression * (pattern * expression) list
@@ -92,7 +91,7 @@ type structure_item =
 
 and structure_item_desc =
     Pstr_eval of expression
-  | Pstr_value of bool * (pattern * expression) list
+  | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * type_expression * string
   | Pstr_type of (string * string list * tcs_kind) list
   | Pstr_exception of constr_decl

@@ -180,7 +180,7 @@ let rec translate_expr env =
                 Lprim(Pmakeblock (Get.constructor c).cs_tag, tr_argl)
               end
       end
-  | Texp_apply({exp_desc = Texp_function ((pat,_)::_ as case_list)} as funct, args) ->
+  | Texp_apply({exp_desc = Texp_function ((pat,_)::_ as case_list, _)} as funct, args) ->
       if 1 == List.length args then
         Llet(translate_let env args,
              translate_match expr.exp_loc env (compat case_list))
@@ -213,20 +213,20 @@ let rec translate_expr env =
       end
   | Texp_apply(funct, args) ->
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_let(false, pat_expr_list, body) ->
+  | Texp_let(Nonrecursive, pat_expr_list, body) ->
       let cas = List.map (fun (pat, _) -> pat) pat_expr_list in
         Llet(translate_bind env pat_expr_list,
              translate_match expr.exp_loc env [cas, body])
-  | Texp_let(true, pat_expr_list, body) ->
+  | Texp_let(Recursive, pat_expr_list, body) ->
       let new_env =
         add_let_rec_to_env env pat_expr_list in
       let translate_rec_bind (pat, expr) =
         (translate_expr new_env expr, size_of_expr expr) in
       Lletrec(List.map translate_rec_bind pat_expr_list,
               Event.before new_env body (translate_expr new_env body))
-  | Texp_function [] ->
+  | Texp_function ([], _) ->
       fatal_error "translate_expr: empty fun"
-  | Texp_function((pat1,act1)::_ as case_list) ->
+  | Texp_function((pat1,act1)::_ as case_list, _) ->
       let rec transl_fun debug_env = function
           [] ->
             translate_match expr.exp_loc env (compat case_list)

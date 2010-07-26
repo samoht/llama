@@ -107,7 +107,7 @@ let compile_impl_phrase outstream phr =
   | Tstr_value(rec_flag, pat_expr_list) ->
       emit_phrase outstream
          (letdef_is_pure pat_expr_list)
-         (if rec_flag then
+         (if rec_flag = Asttypes.Recursive then
             compile_lambda true (translate_letdef_rec phr.str_loc pat_expr_list)
           else
             compile_lambda false (translate_letdef phr.str_loc pat_expr_list));

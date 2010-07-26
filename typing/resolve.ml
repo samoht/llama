@@ -1,5 +1,6 @@
 type token = Parser.token
 
+open Asttypes
 open Misc
 open Types
 open Parsetree
@@ -170,7 +171,7 @@ let rec expr env ex =
         | Pexp_let (b, lpe, e) ->
             let pat_list = List.map (pattern env) (List.map fst lpe) in
             let big_env = List.fold_left extend_env env pat_list in
-            let cond_env = if b then big_env else env in
+            let cond_env = if b = Recursive then big_env else env in
             let exp_list = List.map (expr cond_env) (List.map snd lpe) in
             Texp_let (b, List.combine pat_list exp_list, expr big_env e)
         | Pexp_function l ->
@@ -184,7 +185,7 @@ let rec expr env ex =
                 end
                 l
             in
-            Texp_function l
+            Texp_function (l, Partial)
         | Pexp_try (exp, pat_exp_list) ->
             let pat_list = List.map (fun (pat, _) -> pattern env pat) pat_exp_list in
             let pat_exp_list =
@@ -286,7 +287,7 @@ let rec crude_arity ptyp =
 let primitive o typexp =
   begin match o with
     | None ->Val_reg
-    | Some s -> Val_prim {prim_arity=crude_arity typexp; prim_name=s}
+    | Some s -> Val_prim (Primitive.mk s (crude_arity typexp))
   end
 
 let mapi f =
@@ -388,13 +389,13 @@ let letdef env rec_flag pat_exp_list =
   List.iter (fun v -> v.val_global <- true) vals;
   let enter_vals env =
     List.fold_left (fun env v -> Env.add_value v env) env vals in
-  let env = if rec_flag then enter_vals env else env in
+  let env = if rec_flag = Recursive then enter_vals env else env in
   let pat_exp_list =
     List.map2 (fun pat (_, exp) -> pat, expr env exp)
       pat_list
       pat_exp_list
   in
-  let env = if rec_flag then env else enter_vals env in
+  let env = if rec_flag = Recursive then env else enter_vals env in
   pat_exp_list, vals, env
 
 let exception_declaration env name args =

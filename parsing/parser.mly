@@ -873,8 +873,8 @@ toplevel_directive:
 /* ---------------------------------------------------------------------- */
 
 rec_flag:
-    /* empty */                                 { false }
-  | REC                                         { true }
+    /* empty */                                 { Nonrecursive }
+  | REC                                         { Recursive }
 ;
 direction_flag:
     TO                                          { Upto }

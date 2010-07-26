@@ -285,6 +285,11 @@ let prim_obj_dup =
   { prim_name = "caml_obj_dup"; prim_arity = 1; prim_alloc = true;
     prim_native_name = ""; prim_native_float = false }
 
+let is_constant_constructor cs =
+  match cs.cstr_tag with
+      Cstr_constant _ -> true
+    | _ -> false
+
 let transl_prim prim args =
   try
     let (gencomp, intcomp, floatcomp, stringcomp,
@@ -292,31 +297,35 @@ let transl_prim prim args =
          simplify_constant_constructor) =
       Hashtbl.find comparisons_table prim.prim_name in
     begin match args with
-      [arg1; {exp_desc = Texp_construct({cstr_tag = Cstr_constant _}, _)}]
-      when simplify_constant_constructor ->
+      [arg1; {exp_desc = Texp_construct(cs, _)}]
+      when is_constant_constructor (Get.constructor cs) && simplify_constant_constructor ->
         intcomp
-    | [{exp_desc = Texp_construct({cstr_tag = Cstr_constant _}, _)}; arg2]
-      when simplify_constant_constructor ->
+    | [{exp_desc = Texp_construct(cs, _)}; arg2]
+      when is_constant_constructor (Get.constructor cs) && simplify_constant_constructor ->
         intcomp
+(*
     | [arg1; {exp_desc = Texp_variant(_, None)}]
       when simplify_constant_constructor ->
         intcomp
     | [{exp_desc = Texp_variant(_, None)}; exp2]
       when simplify_constant_constructor ->
         intcomp
-    | [arg1; arg2] when has_base_type arg1 Predef.path_int
-                     || has_base_type arg1 Predef.path_char ->
+*)
+    | [arg1; arg2] when has_base_type arg1 Predef.tcs_int
+                     || has_base_type arg1 Predef.tcs_char ->
         intcomp
-    | [arg1; arg2] when has_base_type arg1 Predef.path_float ->
+    | [arg1; arg2] when has_base_type arg1 Predef.tcs_float ->
         floatcomp
-    | [arg1; arg2] when has_base_type arg1 Predef.path_string ->
+    | [arg1; arg2] when has_base_type arg1 Predef.tcs_string ->
         stringcomp
+(*
     | [arg1; arg2] when has_base_type arg1 Predef.path_nativeint ->
         nativeintcomp
     | [arg1; arg2] when has_base_type arg1 Predef.path_int32 ->
         int32comp
     | [arg1; arg2] when has_base_type arg1 Predef.path_int64 ->
         int64comp
+*)
     | _ ->
         gencomp
     end
@@ -449,11 +458,11 @@ let extract_float = function
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
 let rec name_pattern default = function
-    [] -> Ident.create default
+    [] -> default
   | (p, e) :: rem ->
       match p.pat_desc with
-        Tpat_var id -> id
-      | Tpat_alias(p, id) -> id
+        Tpat_var id -> val_name id
+      | Tpat_alias(p, id) -> val_name id
       | _ -> name_pattern default rem
 
 (* Push the default values under the functional abstractions *)
@@ -463,9 +472,11 @@ let rec push_defaults loc bindings pat_expr_list partial =
     [pat, ({exp_desc = Texp_function(pl,partial)} as exp)] ->
       let pl = push_defaults exp.exp_loc bindings pl partial in
       [pat, {exp with exp_desc = Texp_function(pl, partial)}]
+(*
   | [pat, {exp_desc = Texp_let
              (Default, cases, ({exp_desc = Texp_function _} as e2))}] ->
       push_defaults loc (cases :: bindings) [pat, e2] partial
+*)
   | [pat, exp] ->
       let exp =
         List.fold_left
@@ -475,17 +486,19 @@ let rec push_defaults loc bindings pat_expr_list partial =
       in
       [pat, exp]
   | (pat, exp) :: _ when bindings <> [] ->
-      let param = name_pattern "param" pat_expr_list in
+      let param = Env.qualified_id(name_pattern "param" pat_expr_list) in
+      let param_val = {val_type = pat.pat_type; val_kind = Val_reg;
+                       val_id = param; val_global = false }
+      in
       let exp =
         { exp with exp_loc = loc; exp_desc =
           Texp_match
             ({exp with exp_type = pat.pat_type; exp_desc =
-              Texp_ident (Path.Pident param,
-                          {val_type = pat.pat_type; val_kind = Val_reg})},
+              Texp_ident (ref_value param_val)},
              pat_expr_list, partial) }
       in
       push_defaults loc bindings
-        [{pat with pat_desc = Tpat_var param}, exp] Total
+        [{pat with pat_desc = Tpat_var param_val}, exp] Total
   | _ ->
       pat_expr_list
 
@@ -555,6 +568,8 @@ let rec cut n l =
 (* Translation of expressions *)
 
 let rec transl_exp e =
+  transl_exp0 e
+(*
   let eval_once =
     (* Whether classes for immediate objects must be cached *)
     match e.exp_desc with
@@ -563,6 +578,7 @@ let rec transl_exp e =
   in
   if eval_once then transl_exp0 e else
   Translobj.oo_wrap e.exp_env true transl_exp0 e
+*)
 
 and transl_exp0 e =
   match e.exp_desc with
@@ -733,6 +749,7 @@ and transl_exp0 e =
       event_before cond
         (Lifthenelse(transl_exp cond, event_before body (transl_exp body),
                      staticfail))
+(*
   | Texp_send(expr, met) ->
       let obj = transl_exp expr in
       let lam =
@@ -744,12 +761,14 @@ and transl_exp0 e =
             Lsend (kind, tag, obj, cache)
       in
       event_after e lam
+*)
   | Texp_new (cl, _) ->
       Lapply(Lprim(Pfield 0, [transl_path cl]), [lambda_unit], Location.none)
   | Texp_instvar(path_self, path) ->
       Lprim(Parrayrefu Paddrarray, [transl_path path_self; transl_path path])
   | Texp_setinstvar(path_self, path, expr) ->
       transl_setinstvar (transl_path path_self) path expr
+(*
   | Texp_override(path_self, modifs) ->
       let cpy = Ident.create "copy" in
       Llet(Strict, cpy,
@@ -760,6 +779,7 @@ and transl_exp0 e =
                 Lsequence(transl_setinstvar (Lvar cpy) path expr, rem))
              modifs
              (Lvar cpy))
+*)
   | Texp_letmodule(id, modl, body) ->
       Llet(Strict, id, !transl_module Tcoerce_none None modl, transl_exp body)
   | Texp_pack modl ->

@@ -27,3 +27,6 @@ val start_compiling : module_id -> t  (* incl. Pervasives unless --nopervasives 
 val current_module : unit -> module_id
 val current_module_name : unit -> string
 val qualified_id : string -> qualified_id
+
+type summary = unit
+val summary : t -> summary

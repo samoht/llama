@@ -36,6 +36,8 @@ and pattern_desc =
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label reference * pattern) list
 
+type partial = Partial | Total
+
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
@@ -45,24 +47,25 @@ type expression =
 and expression_desc =
     Texp_ident of value reference
   | Texp_constant of constant
+  | Texp_let of rec_flag * (pattern * expression) list * expression
+  | Texp_function of (pattern * expression) list * partial
+  | Texp_apply of expression * expression list
+  | Texp_match of expression * (pattern * expression) list * partial
+  | Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
   | Texp_construct of constructor reference * expression list
-  | Texp_apply of expression * expression list
-  | Texp_let of bool * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_sequence of expression * expression
-  | Texp_ifthenelse of expression * expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of value * expression * expression * direction_flag * expression
-  | Texp_constraint of expression * type_expression
-  | Texp_array of expression list
   | Texp_record of (label reference * expression) list
   | Texp_field of expression * label reference
   | Texp_setfield of expression * label reference * expression
+  | Texp_array of expression list
+  | Texp_ifthenelse of expression * expression * expression
+  | Texp_sequence of expression * expression
+  | Texp_while of expression * expression
+  | Texp_for of value * expression * expression * direction_flag * expression
   | Texp_when of expression * expression
   | Texp_assert of expression
   | Texp_assertfalse
+  | Texp_constraint of expression * type_expression
 (* doomed *)
   | Texp_stream of stream_component list
   | Texp_parser of (stream_pattern list * expression) list
@@ -98,7 +101,7 @@ type structure_item =
 
 and structure_item_desc =
     Tstr_eval of expression
-  | Tstr_value of bool * (pattern * expression) list
+  | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of value * type_expression
   | Tstr_type of (type_constructor * user_type_variable list * type_body) list
   | Tstr_exception of constructor * type_expression list
@@ -109,6 +112,5 @@ type module_coercion =
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
 
-(* used by the ocaml bytecompiler *)
-type partial = Partial | Total
+
 type optional = Required | Optional

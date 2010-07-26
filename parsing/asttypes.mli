@@ -12,4 +12,4 @@ type constant =
 
 type direction_flag = Upto | Downto
 
-type rec_flag = Nonrecursive | Recursive | Default
+type rec_flag = Nonrecursive | Recursive

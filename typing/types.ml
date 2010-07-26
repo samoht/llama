@@ -194,3 +194,6 @@ let qualid_name qualid =
     | Module_builtin | Module_toplevel -> qualid.id_name 
     | Module m -> m ^ "." ^ qualid.id_name
   end
+
+type module_expr = unit
+type class_expr = unit

@@ -162,7 +162,8 @@ and lambda_switch =
 and lambda_event =
   { lev_loc: Location.t;
     lev_kind: lambda_event_kind;
-    lev_repr: int ref option; }
+    lev_repr: int ref option;
+    lev_env: Env.summary }
 
 and lambda_event_kind =
     Lev_before

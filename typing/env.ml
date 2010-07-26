@@ -118,3 +118,6 @@ let current_module_name () =
     | Module_builtin | Module_toplevel -> failwith "current_module_name"
   end
 
+
+type summary = unit
+let summary _ = ()

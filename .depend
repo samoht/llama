@@ -111,11 +111,11 @@ typing/print.cmx: typing/types.cmx typing/module.cmx typing/get.cmx
 typing/resolve.cmo: typing/types.cmx typing/typedtree.cmi \
     typing/primitive.cmx typing/predef.cmx parsing/parsetree.cmi \
     parsing/parser.cmi typing/module.cmx utils/misc.cmx typing/get.cmi \
-    typing/error.cmx typing/env.cmi
+    typing/error.cmx typing/env.cmi parsing/asttypes.cmi
 typing/resolve.cmx: typing/types.cmx typing/typedtree.cmi \
     typing/primitive.cmx typing/predef.cmx parsing/parsetree.cmi \
     parsing/parser.cmx typing/module.cmx utils/misc.cmx typing/get.cmx \
-    typing/error.cmx typing/env.cmx
+    typing/error.cmx typing/env.cmx parsing/asttypes.cmi
 typing/subst.cmo: typing/types.cmx typing/module.cmx typing/get.cmi \
     typing/btype.cmx
 typing/subst.cmx: typing/types.cmx typing/module.cmx typing/get.cmx \
@@ -158,14 +158,16 @@ compiler/compiler.cmo: typing/types.cmx typing/typemod.cmx \
     typing/resolve.cmx typing/pr_decl.cmx parsing/parsetree.cmi \
     parsing/parser.cmi typing/module.cmx utils/misc.cmx parsing/location.cmi \
     parsing/lexer.cmx typing/includemod.cmx typing/get.cmi compiler/front.cmx \
-    typing/error.cmx typing/env.cmi compiler/emit_phr.cmx compiler/back.cmx
+    typing/error.cmx typing/env.cmi compiler/emit_phr.cmx compiler/back.cmx \
+    parsing/asttypes.cmi
 compiler/compiler.cmx: typing/types.cmx typing/typemod.cmx \
     typing/typedtree_aux.cmx typing/typedtree.cmi typing/typedecl.cmx \
     typing/typecore.cmx parsing/syntaxerr.cmx typing/subst.cmx \
     typing/resolve.cmx typing/pr_decl.cmx parsing/parsetree.cmi \
     parsing/parser.cmx typing/module.cmx utils/misc.cmx parsing/location.cmx \
     parsing/lexer.cmx typing/includemod.cmx typing/get.cmx compiler/front.cmx \
-    typing/error.cmx typing/env.cmx compiler/emit_phr.cmx compiler/back.cmx
+    typing/error.cmx typing/env.cmx compiler/emit_phr.cmx compiler/back.cmx \
+    parsing/asttypes.cmi
 compiler/driver.cmo: linker/symtable.cmx utils/misc.cmx linker/link.cmx \
     compiler/librarian.cmx utils/config.cmi compiler/compiler.cmx \
     utils/clflags.cmi

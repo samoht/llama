@@ -38,7 +38,7 @@ let do_structure_item env phr =
       print_newline()
   | Tstr_value(rec_flag, pat_expr_list) ->
       let _res =
-        if rec_flag then
+        if rec_flag = Recursive then
           load_phrase
             (compile_lambda true
               (translate_letdef_rec phr.str_loc pat_expr_list))
