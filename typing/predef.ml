@@ -157,7 +157,7 @@ let tag_assert_failure, cs_assert_failure =
 
 (* ---------------------------------------------------------------------- *)
 
-let builtin_sig =
+let signature =
   [ Sig_type tcs_unit;
     Sig_type tcs_exn;
     Sig_type tcs_bool;

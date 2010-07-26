@@ -154,7 +154,7 @@ let compile_implementation modname filename suffix =
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
-      let intf_sg = Env.read_signature modname in
+      let intf_sg = Get.signature (Module modname) in
       let env = Env.start_compiling (Module modname) in
       let impl_sg, env = compile_impl env modname filename suffix in
       ignore (Includemod.signatures (Subst.identity (Module modname)) impl_sg intf_sg)

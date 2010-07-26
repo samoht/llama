@@ -37,7 +37,7 @@ let find_exception tag =
           if st == stamp then constr else select_exn rest
       | ConstrRegular(_,_) ->
           fatal_error "find_exception: regular" in
-  select_exn(Env.ps_find_all_constrs (Module.new_find_module qualid.id_module) qualid.id_name)
+  select_exn([Get.constructor{ref_id=qualid;ref_contents=None}])
 ;;
 
 let printers = ref [

@@ -22,30 +22,25 @@ let empty = { values = Tbl.empty;
 
 (* Lookup by name *)
 
-let lookup_module lid env =
-  match lid with
-    Lident s ->
-(*      if s = !current_unit then raise Not_found; *)
-      Module.find_pers_struct s 
-  | Ldot _ ->
-      raise Not_found
-
-let lookup proj1 proj2 lid env =
+let lookup proj1 get_fun lid env =
   match lid with
     Lident s ->
       Tbl.find s (proj1 env)
-  | Ldot(l, s) ->
-      let (desc) = lookup_module l env in
-      Hashtbl.find (proj2 desc) s
+  | Ldot(Lident mn, s) ->
+      let qualid = { id_module = Module mn; id_name = s } in
+      let myref = { ref_id = qualid; ref_contents = None } in
+      get_fun myref
+  | _ ->
+      assert false
 
 let lookup_value =
-  lookup (fun env -> env.values) (fun sc -> sc.mod_values)
+  lookup (fun env -> env.values) Get.value
 and lookup_constructor =
-  lookup (fun env -> env.constrs) (fun sc -> sc.mod_constrs)
+  lookup (fun env -> env.constrs) Get.constructor
 and lookup_label =
-  lookup (fun env -> env.labels) (fun sc -> sc.mod_labels)
+  lookup (fun env -> env.labels) Get.label
 and lookup_type =
-  lookup (fun env -> env.types) (fun sc -> sc.mod_types)
+  lookup (fun env -> env.types) Get.type_constructor
 
 let add_value id decl env =
   { types = env.types;
@@ -59,21 +54,32 @@ let add_exception id decl env =
     types = env.types;
     constrs = Tbl.add id decl env.constrs }
 
-let add_type id info env =
-  { values = env.values;
-    constrs =
-      List.fold_right
-        (fun cs constrs ->
-           Tbl.add cs.cs_name cs constrs)
-        (constructors_of_type info)
-        env.constrs;
-    labels =
-      List.fold_right
-        (fun lbl labels ->
-           Tbl.add lbl.lbl_name lbl labels)
-        (labels_of_type info)
-        env.labels;
-    types = Tbl.add id info env.types }
+let add_type id tcs env =
+  begin match tcs.tcs_kind with
+    | Type_variant cstrs ->
+        { types = Tbl.add id tcs env.types;
+          constrs =
+            List.fold_right
+              (fun cs constrs ->
+                 Tbl.add cs.cs_name cs constrs)
+              cstrs env.constrs;
+          labels = env.labels;
+          values = env.values }
+    | Type_record lbls ->
+        { types = Tbl.add id tcs env.types;
+          constrs = env.constrs;
+          labels =
+            List.fold_right
+              (fun lbl lbls ->
+                 Tbl.add lbl.lbl_name lbl lbls)
+              lbls env.labels;
+          values = env.values }
+    | Type_abstract | Type_abbrev _ ->
+        { types = Tbl.add id tcs env.types;
+          constrs = env.constrs;
+          labels = env.labels;
+          values = env.values }
+  end
 
 let open_signature sg env =
   List.fold_left
@@ -86,17 +92,16 @@ let open_signature sg env =
            add_type tcs.tcs_id.id_name tcs env)
     env sg
 
-let initial = open_signature ps_builtin.mod_sig empty
+let initial = open_signature Predef.signature empty
 
-let open_pers_signature name env =
-  open_signature (find_pers_struct name).mod_sig env
-
+let open_module name env = open_signature (Get.signature (Module name)) env
+(*
 let read_signature modname =
   (find_pers_struct modname).mod_sig
 
 let ps_find_all_constrs ps s =
   Hashtbl.find_all ps.mod_constrs s
-
+*)
 let write_pers_struct oc mn working =
   Module.erase_sig (Module mn) working;
   output_value oc mn;
@@ -117,6 +122,6 @@ let qualified_id name =
 let start_compiling m =
   current_module := m;
   if not !Clflags.nopervasives then
-    open_pers_signature "Pervasives" initial
+    open_module "Pervasives" initial
   else
     initial

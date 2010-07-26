@@ -437,7 +437,7 @@ let structure_item env pstr =
         mk (Tstr_exception (cs, args)), [Sig_exception cs], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open (Module mn)) in
-        let env = Env.open_pers_signature mn env in
+        let env = Env.open_module mn env in
         phr, [], env
   end
 
@@ -456,7 +456,7 @@ let signature_item env psig =
         mk (Tsig_exception (cs, args)), [Sig_exception cs], env
     | Psig_open mn ->
         let phr = mk (Tsig_open (Module mn)) in
-        let env = Env.open_pers_signature mn env in
+        let env = Env.open_module mn env in
         phr, [], env
   end
 

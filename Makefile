@@ -16,6 +16,7 @@ PARSING=parsing/location.cmx parsing/syntaxerr.cmx \
 TYPING=typing/primitive.cmx \
  typing/types.cmx \
  typing/predef.cmx \
+ typing/get.cmx \
  typing/module.cmx \
  typing/env.cmx typing/btype.cmx \
  typing/subst.cmx \
