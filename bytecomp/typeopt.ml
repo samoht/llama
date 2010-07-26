@@ -25,20 +25,20 @@ open Lambda
 (* llama xxx: these fns don't need an env *)
 
 let scrape env ty =
-  (Ctype.expand_head (Btype.copy_type ty)).desc
+  Ctype.expand_head ty
 
 let has_base_type exp base_ty_path =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstruct(p, _) -> Get.type_constr p == base_ty_path
+  | Tconstruct(p, _) -> Get.type_constructor p == base_ty_path
   | _ -> false
 
 let maybe_pointer exp =
   match scrape exp.exp_env exp.exp_type with
   | Tconstruct(p, args) ->
-      not (Get.type_constr p == Predef.tcs_int) &&
-      not (Get.type_constr p == Predef.tcs_char) &&
+      not (Get.type_constructor p == Predef.tcs_int) &&
+      not (Get.type_constructor p == Predef.tcs_char) &&
       begin try
-        match Get.type_constr p with
+        match Get.type_constructor p with
           {tcs_kind = Type_variant []} -> true (* type exn *)
         | {tcs_kind = Type_variant cstrs} ->
             List.exists (fun cs -> cs.cs_args <> []) cstrs
@@ -52,10 +52,10 @@ let maybe_pointer exp =
 
 let array_element_kind env ty =
   match scrape env ty with
-  | Tvar ->
+  | Tvar _ ->
       Pgenarray
   | Tconstruct(p, args) ->
-      let tcs = Get.type_constr p in
+      let tcs = Get.type_constructor p in
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
       else if tcs == Predef.tcs_float then
@@ -90,7 +90,7 @@ let array_element_kind env ty =
 let array_kind_gen ty env =
   match scrape env ty with
   | Tconstruct(p, [elt_ty])
-    when Get.type_constr p == Predef.tcs_vect ->
+    when Get.type_constructor p == Predef.tcs_vect ->
       array_element_kind env elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)

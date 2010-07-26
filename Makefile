@@ -26,7 +26,8 @@ TYPING=typing/primitive.cmx \
  typing/includecore.cmx typing/includemod.cmx \
  typing/resolve.cmx \
  typing/typecore.cmx \
- typing/typedecl.cmx typing/typemod.cmx
+ typing/typedecl.cmx typing/typemod.cmx \
+ typing/parmatch.cmx
 
 #TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 #  typing/primitive.cmo typing/types.cmo \
@@ -42,7 +43,7 @@ TYPING=typing/primitive.cmx \
 #  typing/typemod.cmo
 
 COMPILER=compiler/prim.cmx compiler/primdecl.cmx \
- compiler/lambda.cmx compiler/clauses.cmx compiler/matching.cmx \
+ compiler/lambda.cmx compiler/matching.cmx \
  compiler/event.cmx \
  compiler/tr_env.cmx compiler/trstream.cmx compiler/front.cmx \
  compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \

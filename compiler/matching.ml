@@ -9,8 +9,11 @@ open Typedtree;;
 open Location;;
 open Lambda;;
 open Prim;;
-open Clauses;;
+open Parmatch;;
 open Module
+
+let check_unused = Parmatch.check_unused ~has_guard:Lambda.has_guard
+let partial_match = Parmatch.partial_match ~has_guard:Lambda.has_guard
 
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
