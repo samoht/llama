@@ -52,7 +52,7 @@ exception Cannot_expand
 (* Exactly once, else exception. No repr. *)
 let expand_abbrev ty =
   match ty with
-      Tconstr (tcs, args) ->
+      Tconstruct (tcs, args) ->
         let tcs = Get.type_constructor tcs in
         begin match tcs.tcs_kind with
           | Type_abbrev body -> expand_abbrev_aux tcs.tcs_params body args
@@ -64,7 +64,7 @@ let expand_abbrev ty =
 let try_expand_once ty =
   let ty = repr ty in
   match ty with
-      Tconstr _ -> repr (expand_abbrev ty)
+      Tconstruct _ -> repr (expand_abbrev ty)
     | _ -> raise Cannot_expand
 
 (* At least once, else exception. *)
@@ -88,7 +88,7 @@ let expand_head ty =
 let rec expand_head ty =
   let ty = repr ty in
   begin match ty with
-    | Tconstr (tcs, args) ->
+    | Tconstruct (tcs, args) ->
         let tcs = Get.type_constructor tcs in
         begin match tcs.tcs_kind with
           | Type_abbrev body ->
@@ -118,7 +118,7 @@ let rec occur_check v = function
       occur_check v ty1 || occur_check v ty2
   | Ttuple tyl ->
       List.exists (occur_check v) tyl
-  | Tconstr (tcs, tyl) ->
+  | Tconstruct (tcs, tyl) ->
       List.exists (occur_check v) tyl
 
 (* Unification *)
@@ -151,13 +151,13 @@ let rec unify (ty1, ty2) =
         unify (t1res, t2res)
     | Ttuple tyl1, Ttuple tyl2 ->
         unify_list (tyl1, tyl2)
-    | Tconstr (tcs1, tyl1), _ when has_abbrev tcs1 ->
+    | Tconstruct (tcs1, tyl1), _ when has_abbrev tcs1 ->
         let params1, body1 = get_abbrev tcs1 in
         unify (expand_abbrev_aux params1 body1 tyl1, ty2)
-    | _, Tconstr (tcs2, tyl2) when has_abbrev tcs2 ->
+    | _, Tconstruct (tcs2, tyl2) when has_abbrev tcs2 ->
         let params2, body2 = get_abbrev tcs2 in
         unify (ty1, expand_abbrev_aux params2 body2 tyl2)
-    | Tconstr (tcs1, tyl1), Tconstr (tcs2, tyl2)
+    | Tconstruct (tcs1, tyl1), Tconstruct (tcs2, tyl2)
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
@@ -188,7 +188,7 @@ let rec filter_arrow ty =
       (ty1, ty2)
   | Tarrow(ty1, ty2) ->
       (ty1, ty2)
-  | Tconstr(tcs, args) when has_abbrev tcs ->
+  | Tconstruct(tcs, args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
       filter_arrow (expand_abbrev_aux params body args)
   | _ ->
@@ -205,7 +205,7 @@ let rec filter_product arity ty =
       tyl
   | Ttuple tyl ->
       if List.length tyl == arity then tyl else raise OldUnify
-  | Tconstr(tcs,args) when has_abbrev tcs ->
+  | Tconstruct(tcs,args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
       filter_product arity (expand_abbrev_aux params body args)
   | _ ->
@@ -225,13 +225,13 @@ let rec equiv_gen corresp ty1 ty2 =
         equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
         List.for_all2 (equiv_gen corresp) t1args t2args
-    | Tconstr (tcs, args), _ when has_abbrev tcs ->
+    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp (expand_abbrev_aux params body args) ty2
-    | _, Tconstr (tcs, args) when has_abbrev tcs ->
+    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp ty1 (expand_abbrev_aux params body args)
-    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when
+    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2) when
         Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         List.for_all2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
@@ -259,13 +259,13 @@ let rec moregeneral subst ty1 ty2 =
         moregeneral subst t1arg t2arg && moregeneral subst t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
         List.for_all2 (moregeneral subst) t1args t2args
-    | Tconstr (tcs, args), _ when has_abbrev tcs ->
+    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral subst (expand_abbrev_aux params body args) ty2
-    | _, Tconstr (tcs, args) when has_abbrev tcs ->
+    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral subst ty1 (expand_abbrev_aux params body args)
-    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2)
+    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2)
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         List.for_all2 (moregeneral subst) tyl1 tyl2
     | _ ->

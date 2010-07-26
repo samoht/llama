@@ -21,7 +21,7 @@ let check_recursive_abbrev cstr =
               Tvar _ -> ()
             | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
             | Ttuple tlist -> List.iter (check_abbrev seen) tlist
-            | Tconstr(c, tlist) ->
+            | Tconstruct(c, tlist) ->
                 let c = Get.type_constructor c in
                 if List.memq c seen then
                   raise Recursive_abbrev
@@ -38,7 +38,7 @@ let check_recursive_abbrev cstr =
       
 let define_new_type tcs params body =
   push_type_level();
-  let ty_res = Tconstr (ref_type_constr tcs, List.map tvar params) in
+  let ty_res = Tconstruct (ref_type_constr tcs, List.map tvar params) in
   begin match body with
       Ttype_abstract ->
         pop_type_level ()

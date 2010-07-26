@@ -17,7 +17,7 @@ let rec erase_type m t = match t with
       end
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Ttuple l -> List.iter (erase_type m) l
-  | Tconstr (r, l) ->
+  | Tconstruct (r, l) ->
       if r.ref_id.id_module <> m then r.ref_contents <- None;
       List.iter (erase_type m) l
 let erase_constr m cs =

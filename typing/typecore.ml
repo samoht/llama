@@ -38,7 +38,7 @@ let type_of_type_expression strict_flag typexp =
           if List.length args != (Get.type_constructor cstr).tcs_arity then
             tcs_arity_err (Get.type_constructor cstr) args typexp.te_loc
           else
-            Tconstr (cstr, List.map type_of args)
+            Tconstruct (cstr, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -332,7 +332,7 @@ let type_format loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    Tconstr
+    Tconstruct
       (ref_type_constr tcs_format6,
        [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
@@ -515,7 +515,7 @@ and type_expect exp expected_ty =
       let actual_ty =
         match expand_head expected_ty with
           (* Hack for format strings *)
-          Tconstr(cstr, _) ->
+          Tconstruct(cstr, _) ->
             if Get.type_constructor cstr == tcs_format6
             then type_format exp.exp_loc s
             else type_string

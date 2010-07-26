@@ -114,12 +114,12 @@ let clean_copy ty =
 let get_type_path ty =
   let ty = Ctype.repr (Ctype.expand_head (clean_copy ty)) in
   match ty.desc with
-  | Tconstr (path,_) -> path
+  | Tconstruct (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
 
 let rec get_type_descr ty =
   match (Ctype.repr ty).desc with
-  | Tconstr (path,_) -> Get.type_constr path
+  | Tconstruct (path,_) -> Get.type_constr path
   | _ -> fatal_error "Parmatch.get_type_descr"
 
 let rec Get.constructor tag ty =

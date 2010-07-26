@@ -29,12 +29,12 @@ let scrape env ty =
 
 let has_base_type exp base_ty_path =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, _) -> Get.type_constr p == base_ty_path
+  | Tconstruct(p, _) -> Get.type_constr p == base_ty_path
   | _ -> false
 
 let maybe_pointer exp =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, args) ->
+  | Tconstruct(p, args) ->
       not (Get.type_constr p == Predef.tcs_int) &&
       not (Get.type_constr p == Predef.tcs_char) &&
       begin try
@@ -54,7 +54,7 @@ let array_element_kind env ty =
   match scrape env ty with
   | Tvar ->
       Pgenarray
-  | Tconstr(p, args) ->
+  | Tconstruct(p, args) ->
       let tcs = Get.type_constr p in
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
@@ -89,7 +89,7 @@ let array_element_kind env ty =
 
 let array_kind_gen ty env =
   match scrape env ty with
-  | Tconstr(p, [elt_ty])
+  | Tconstruct(p, [elt_ty])
     when Get.type_constr p == Predef.tcs_vect ->
       array_element_kind env elt_ty
   | _ ->
@@ -102,7 +102,7 @@ let array_pattern_kind pat = array_kind_gen pat.pat_type pat.pat_env
 
 let bigarray_decode_type env ty tbl dfl =
   match scrape env ty with
-  | Tconstr({ ref_id = id }, [])
+  | Tconstruct({ ref_id = id }, [])
     when id.id_module = Module "Bigarray" ->
       begin try List.assoc id.id_name tbl with Not_found -> dfl end
   | _ ->
@@ -128,7 +128,7 @@ let layout_table =
 
 let bigarray_kind_and_layout exp =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstr(p, [caml_type; elt_type; layout_type]) ->
+  | Tconstruct(p, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type exp.exp_env elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type exp.exp_env layout_type layout_table Pbigarray_unknown_layout)
   | _ ->

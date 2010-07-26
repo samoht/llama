@@ -50,7 +50,7 @@ let type_constructors s tcs1 tcs2 =
     | Type_abbrev ty1, Type_abbrev ty2 ->
         Ctype.equiv params ty1 (Subst.core_type s ty2)
     | _, Type_abbrev ty2 ->
-        let ty1 = Tconstr (ref_type_constr tcs2, List.map tvar tcs2.tcs_params) in
+        let ty1 = Tconstruct (ref_type_constr tcs2, List.map tvar tcs2.tcs_params) in
         Ctype.equal ty1 ty2
     | _, _ ->
         false

@@ -64,7 +64,7 @@ let rec print_typ priority ty =
       print_typ_list 2 " *" ty_list;
       if priority >= 2 then print_string ")";
       close_box()
-  | Tconstr(cstr, args) ->
+  | Tconstruct(cstr, args) ->
       open_box 0;
       begin match args with
         []    -> ()

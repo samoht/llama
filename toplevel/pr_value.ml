@@ -89,14 +89,14 @@ let rec print_val prio depth obj ty =
         print_val_list 1 depth obj ty_list;
         if prio > 0 then print_string ")";
         close_box()
-    | Tconstr(c, ty_list) when has_abbrev c ->
+    | Tconstruct(c, ty_list) when has_abbrev c ->
         let params, body = get_abbrev c in
         print_val prio depth obj (expand_abbrev_aux params body ty_list)
-    | Tconstr(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_list ->
+    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_list ->
         print_list depth obj ty_arg
-    | Tconstr(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_vect ->
+    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_vect ->
         print_vect depth obj ty_arg
-    | Tconstr(cstr, ty_list) ->
+    | Tconstruct(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
 
 and print_concrete_type prio depth obj cstr ty ty_list =

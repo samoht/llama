@@ -71,7 +71,7 @@ let rec tree_of_typexp sch ty =
         Otyp_arrow (tree_of_typexp sch ty1, tree_of_typexp sch ty2)
     | Ttuple tyl ->
         Otyp_tuple (tree_of_typlist sch tyl)
-    | Tconstr (tcsr, tyl) ->
+    | Tconstruct (tcsr, tyl) ->
         Otyp_constr ((Get.type_constructor tcsr).tcs_id, tree_of_typlist sch tyl)
   end
 

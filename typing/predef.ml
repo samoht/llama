@@ -42,16 +42,16 @@ let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = No
 
 let type_arrow (t1,t2) = Tarrow(t1,t2)
 let type_product tlist = Ttuple tlist
-let type_unit = Tconstr(ref_type_constr tcs_unit, [])
-let type_exn = Tconstr(ref_type_constr tcs_exn, [])
-let type_bool = Tconstr(ref_type_constr tcs_bool, [])
-let type_int = Tconstr(ref_type_constr tcs_int, [])
-let type_float = Tconstr(ref_type_constr tcs_float, [])
-let type_string = Tconstr(ref_type_constr tcs_string, [])
-let type_char = Tconstr(ref_type_constr tcs_char, [])
-let type_vect t = Tconstr(ref_type_constr tcs_vect, [t])
-let type_stream t = Tconstr(fwdref "Stream" "stream", [t])
-let type_num = Tconstr(fwdref "Num" "num", []) (* windows *)
+let type_unit = Tconstruct(ref_type_constr tcs_unit, [])
+let type_exn = Tconstruct(ref_type_constr tcs_exn, [])
+let type_bool = Tconstruct(ref_type_constr tcs_bool, [])
+let type_int = Tconstruct(ref_type_constr tcs_int, [])
+let type_float = Tconstruct(ref_type_constr tcs_float, [])
+let type_string = Tconstruct(ref_type_constr tcs_string, [])
+let type_char = Tconstruct(ref_type_constr tcs_char, [])
+let type_vect t = Tconstruct(ref_type_constr tcs_vect, [t])
+let type_stream t = Tconstruct(fwdref "Stream" "stream", [t])
+let type_num = Tconstruct(fwdref "Num" "num", []) (* windows *)
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -60,7 +60,7 @@ let type_num = Tconstr(fwdref "Num" "num", []) (* windows *)
 let constr_void =
   { cs_parent = tcs_unit;
     cs_name = "()";
-    cs_res = Tconstr(ref_type_constr tcs_unit,[]);
+    cs_res = Tconstruct(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(0,1);
     cstr_tag = Cstr_constant 0 }
@@ -69,14 +69,14 @@ let constr_nil =
   let arg = Tvar list_generic in
   { cs_parent = tcs_list;
     cs_name = "[]";
-    cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
+    cs_res = Tconstruct(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
 
 let constr_cons =
   let arg1 = Tvar list_generic in
-  let arg2 = Tconstr(ref_type_constr tcs_list, [arg1]) in
+  let arg2 = Tconstruct(ref_type_constr tcs_list, [arg1]) in
   { cs_parent = tcs_list;
     cs_name = "::";
     cs_res = arg2;
@@ -88,7 +88,7 @@ let constr_none =
   let arg = Tvar option_generic in
   { cs_parent = tcs_option;
     cs_name = "None";
-    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
+    cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
@@ -97,7 +97,7 @@ let constr_some =
   let arg = Tvar option_generic in
   { cs_parent = tcs_option;
     cs_name = "Some";
-    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
+    cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
     cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_constant 1 }
@@ -105,7 +105,7 @@ let constr_some =
 let constr_false =
   { cs_parent = tcs_bool;
     cs_name = "false";
-    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
+    cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
     cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant 0 }
@@ -113,7 +113,7 @@ let constr_false =
 let constr_true =
   { cs_parent = tcs_bool;
     cs_name = "true";
-    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
+    cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
     cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_constant 1}
@@ -137,7 +137,7 @@ let tag_match_failure, cs_match_failure =
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
-    cs_res = Tconstr(ref_type_constr tcs_exn,[]);
+    cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
     cstr_tag = Cstr_exception qualid }
@@ -149,7 +149,7 @@ let tag_assert_failure, cs_assert_failure =
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
-    cs_res = Tconstr(ref_type_constr tcs_exn,[]);
+    cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
     cs_args = [type_string; type_int; type_int]; cs_arity = 3;
     cs_tag = tag;
     cstr_tag = Cstr_exception qualid;

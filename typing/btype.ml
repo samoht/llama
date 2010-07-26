@@ -47,7 +47,7 @@ let rec generalize_type vr = function
       generalize_type vr ty2
   | Ttuple tyl ->
       List.iter (generalize_type vr) tyl
-  | Tconstr (tcs, tyl) ->
+  | Tconstruct (tcs, tyl) ->
       List.iter (generalize_type vr) tyl
 
 let nongen_type = generalize_type true
@@ -76,8 +76,8 @@ let rec instantiate_type subst = function
       Tarrow (instantiate_type subst ty1, instantiate_type subst ty2)
   | Ttuple tyl ->
       Ttuple (List.map (instantiate_type subst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (instantiate_type subst) tyl)
+  | Tconstruct (tcs, tyl) ->
+      Tconstruct (tcs, List.map (instantiate_type subst) tyl)
   
 let instantiate_one_type ty =
   instantiate_type (ref []) ty
@@ -112,7 +112,7 @@ let rec rectify_type level0 x =
       rectify_type level0 ty2
   | Ttuple tyl ->
       List.iter (rectify_type level0) tyl
-  | Tconstr (tcs, tyl) ->
+  | Tconstruct (tcs, tyl) ->
       List.iter (rectify_type level0) tyl
 
 (* Ensure that there are no nongeneric variables in a type, producing
@@ -134,8 +134,8 @@ let rec genericize_type = function
       Tarrow (genericize_type ty1, genericize_type ty2)
   | Ttuple tyl ->
       Ttuple (List.map genericize_type tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map genericize_type tyl)
+  | Tconstruct (tcs, tyl) ->
+      Tconstruct (tcs, List.map genericize_type tyl)
 
 (* Replace the type variables of a genericized type with arbitrary types,
    per the provided substitution. *)
@@ -154,5 +154,5 @@ let rec substitute_type subst = function
       Tarrow (substitute_type subst ty1, substitute_type subst ty2)
   | Ttuple tyl ->
       Ttuple (List.map (substitute_type subst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (substitute_type subst) tyl)
+  | Tconstruct (tcs, tyl) ->
+      Tconstruct (tcs, List.map (substitute_type subst) tyl)
