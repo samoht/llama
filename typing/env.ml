@@ -42,22 +42,23 @@ and lookup_label =
 and lookup_type =
   lookup (fun env -> env.types) Get.type_constructor
 
-let add_value id decl env =
+let add_value v env =
   { types = env.types;
-    labels = env.labels;
     constrs = env.constrs;
-      values = Tbl.add id decl env.values }
-
-let add_exception id decl env =
-  { values = env.values;
     labels = env.labels;
-    types = env.types;
-    constrs = Tbl.add id decl env.constrs }
+    values = Tbl.add (val_name v) v env.values }
 
-let add_type id tcs env =
+let add_exception cs env =
+  { types = env.types;
+    constrs = Tbl.add cs.cs_name cs env.constrs;
+    labels = env.labels;
+    values = env.values }
+
+let add_type_constructor tcs env =
+  let name = tcs.tcs_id.id_name in
   begin match tcs.tcs_kind with
     | Type_variant cstrs ->
-        { types = Tbl.add id tcs env.types;
+        { types = Tbl.add name tcs env.types;
           constrs =
             List.fold_right
               (fun cs constrs ->
@@ -66,7 +67,7 @@ let add_type id tcs env =
           labels = env.labels;
           values = env.values }
     | Type_record lbls ->
-        { types = Tbl.add id tcs env.types;
+        { types = Tbl.add name tcs env.types;
           constrs = env.constrs;
           labels =
             List.fold_right
@@ -75,7 +76,7 @@ let add_type id tcs env =
               lbls env.labels;
           values = env.values }
     | Type_abstract | Type_abbrev _ ->
-        { types = Tbl.add id tcs env.types;
+        { types = Tbl.add name tcs env.types;
           constrs = env.constrs;
           labels = env.labels;
           values = env.values }
@@ -85,11 +86,11 @@ let open_signature sg env =
   List.fold_left
     (fun env -> function
        | Sig_value v ->
-           add_value (val_name v) v env
+           add_value v env
        | Sig_exception cs ->
-           add_exception cs.cs_name cs env
+           add_exception cs env
        | Sig_type tcs ->
-           add_type tcs.tcs_id.id_name tcs env)
+           add_type_constructor tcs env)
     env sg
 
 let initial = open_signature Predef.signature empty
@@ -102,7 +103,7 @@ let qualified_id name =
   { id_module = !the_current_module;
     id_name = name }
 
-let set_current_module m =
+let start_compiling m =
   the_current_module := m;
   if not !Clflags.nopervasives then
     open_module "Pervasives" initial

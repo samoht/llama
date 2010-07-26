@@ -144,7 +144,7 @@ let pattern env p =
   pattern_variables := [];
   pattern env p
 
-let ext env v = Env.add_value (val_name v) v env
+let ext env v = Env.add_value v env
 
 let extend_env env pat =
   List.fold_left ext env (values_of_tpat pat)
@@ -322,7 +322,7 @@ let value_declaration env name typexp primstuff =
       val_global = true }
   in
   let typexp = type_expression false env typexp in
-  v, typexp, Env.add_value name v env
+  v, typexp, Env.add_value v env
 
 let type_declaration env decl loc =
   let params_list =
@@ -355,7 +355,7 @@ let type_declaration env decl loc =
   in
   let temp_env =
     List.fold_left
-      (fun env tcs -> Env.add_type tcs.tcs_id.id_name tcs env)
+      (fun env tcs -> Env.add_type_constructor tcs env)
       env tcs_list
   in
   let decl =
@@ -377,7 +377,7 @@ let type_declaration env decl loc =
     decl;
   let final_env =
     List.fold_left
-      (fun env tcs -> Env.add_type tcs.tcs_id.id_name tcs env)
+      (fun env tcs -> Env.add_type_constructor tcs env)
       env tcs_list
   in
   decl, final_env
@@ -387,7 +387,7 @@ let letdef env rec_flag pat_exp_list =
   let vals = List.flatten (List.map values_of_tpat pat_list) in
   List.iter (fun v -> v.val_global <- true) vals;
   let enter_vals env =
-    List.fold_left (fun env v -> Env.add_value v.val_id.id_name v env) env vals in
+    List.fold_left (fun env v -> Env.add_value v env) env vals in
   let env = if rec_flag then enter_vals env else env in
   let pat_exp_list =
     List.map2 (fun pat (_, exp) -> pat, expr env exp)
@@ -412,7 +412,7 @@ let exception_declaration env name args =
       cstr_tag = Cstr_exception qualid
     }
   in
-  let env = Env.add_exception name cs env in
+  let env = Env.add_exception cs env in
   cs, args, env
 
 let structure_item env pstr =

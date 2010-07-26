@@ -58,7 +58,7 @@ let initialize () =
   (* load things *)
   List.iter (Toplevel.load_object Env.initial) (List.rev !preload_objects);
   (* open things *)
-  Env.set_current_module Module_toplevel
+  Env.start_compiling Module_toplevel
 
 let file_argument name =
   if Filename.check_suffix name ".zo" || Filename.check_suffix name ".za"

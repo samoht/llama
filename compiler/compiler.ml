@@ -77,7 +77,7 @@ let compile_interface modname filename =
   let ic = open_in_bin source_name (* See compile_impl *)
   and oc = open_out_bin intf_name in
     try
-      let env = Env.set_current_module (Module modname) in
+      let env = Env.start_compiling (Module modname) in
       Location.input_name := source_name;
       let lexbuf = Lexing.from_channel ic in
       Location.init lexbuf source_name;
@@ -155,7 +155,7 @@ let compile_implementation modname filename suffix =
             modname filename;
           raise Toplevel in
       let intf_sg = Get.signature modname in
-      let env = Env.set_current_module (Module modname) in
+      let env = Env.start_compiling (Module modname) in
       let impl_sg, env = compile_impl env modname filename suffix in
       ignore (Includemod.signatures (Subst.identity (Module modname)) impl_sg intf_sg)
     with Sys_error _ as x -> (* xxx *)
@@ -165,7 +165,7 @@ let compile_implementation modname filename suffix =
     let intf_name = filename ^ ".zi" in
     let oc = open_out_bin intf_name in
     try
-      let env = Env.set_current_module (Module modname) in 
+      let env = Env.start_compiling (Module modname) in 
       let sg, env = compile_impl env modname filename suffix in
       Module.write oc (Env.current_unit ()) sg;
       close_out oc
