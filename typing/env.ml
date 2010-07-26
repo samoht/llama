@@ -107,21 +107,24 @@ let write_pers_struct oc mn working =
   output_value oc mn;
   output_value oc working
 
-let current_module = ref (Module_builtin)
-
-let current_unit () =
-  begin match !current_module with
-    | Module s -> s
-    | Module_builtin | Module_toplevel -> failwith "current_unit"
-  end
+let the_current_module = ref (Module_builtin)
 
 let qualified_id name =
-  { id_module = !current_module;
+  { id_module = !the_current_module;
     id_name = name }
 
-let start_compiling m =
-  current_module := m;
+let set_current_module m =
+  the_current_module := m;
   if not !Clflags.nopervasives then
     open_module "Pervasives" initial
   else
     initial
+
+let current_module () = !the_current_module
+
+let current_unit () =
+  begin match !the_current_module with
+    | Module s -> s
+    | Module_builtin | Module_toplevel -> failwith "current_unit"
+  end
+

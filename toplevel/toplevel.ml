@@ -70,13 +70,7 @@ let _ = fwd_load_object := load_object;;
 (* To preserve the current toplevel module while compiling another module. *)
 
 let protect_current_module fct =
-  let saved_current_module = !Env.current_module in
-  try
-    fct();
-    Env.current_module := saved_current_module;
-  with x ->
-    Env.current_module := saved_current_module;
-    raise x
+  failwith "llama doesn't support compiling from the toplevel"
 ;;
 
 let protect_current_input fct =
@@ -128,7 +122,7 @@ let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
   let modname = String.capitalize(Filename.basename simplename) in
   protect_current_module (fun () ->
-                         Env.start_compiling (Module modname);
+                         Env.set_current_module (Module modname);
     loadfile env filename)
 ;;
 
