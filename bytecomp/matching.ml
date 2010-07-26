@@ -10,6 +10,27 @@ open Location;;
 open Lambda;;
 open Module
 
+let lstaticfail = Lambda.staticfail
+let lstatichandle (action, lambda) = Lambda.Lstaticcatch (action, (0, []), lambda)
+let has_guard = Lambda.is_guarded
+let check_unused = Parmatch.check_unused ~has_guard
+let partial_match = Parmatch.partial_match ~has_guard
+let share_lambda x = x
+let lcond (_, _) = assert false
+let lswitch (_, lambda, l) = assert false
+(*
+  let sw_numconsts = 
+  List.iter
+    begin fun (caml_light_tag, action) ->
+      begin match caml_light_tag with
+        | ConstrRegular (i, _) ->
+
+  Lswitch (lambda,
+           { sw_numconsts = 1 + 
+           List.map
+             l)*)
+
+
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
 
@@ -129,7 +150,7 @@ let divide_construct_matching (Matching(casel, pathl)) =
         let (constrs, others) =
           divide_rec rest in
         add_to_division
-          (make_construct_match c pathl) constrs (Get.constructor c).cs_tag (patl', action),
+          (make_construct_match c pathl) constrs (Get.constructor c).cstr_tag (patl', action),
         others
     | casel ->
         [], Matching(casel, pathl)
@@ -230,11 +251,11 @@ let rec conquer_matching =
         ((key, lambda1) :: list2, total1 && total2)
   in function
     Matching([], _) ->
-      (Lstaticfail 0, false)
+      (lstaticfail, false)
    | Matching(([], action) :: rest, pathl) ->
       if has_guard action then begin
         let (lambda2, total2) = conquer_matching (Matching (rest, pathl)) in
-        (Lstatichandle(action, lambda2), total2)
+        (lstatichandle(action, lambda2), total2)
       end else
         (action, true)
   | Matching(_, (path :: _)) as matching ->
@@ -245,7 +266,7 @@ let rec conquer_matching =
           and lambda2, total2 = conquer_matching rest in
             if total1
             then (lambda1, true)
-            else (Lstatichandle(lambda1, lambda2), total2)
+            else (lstatichandle(lambda1, lambda2), total2)
       | {pat_desc = Tpat_tuple patl} ->
           conquer_matching (divide_tuple_matching (List.length patl) matching)
       | {pat_desc = (Tpat_construct _)} ->
@@ -255,15 +276,15 @@ let rec conquer_matching =
           let span = get_span_of_matching matching
           and num_cstr = List.length constrs in
             if num_cstr = span && total1 then
-              (Lswitch(span, path, switchlst), true)
+              (lswitch(span, path, switchlst), true)
             else
-              (Lstatichandle(Lswitch(span, path, switchlst), lambda),
+              (lstatichandle(lswitch(span, path, switchlst), lambda),
                total2)
       | {pat_desc = Tpat_constant _} ->
           let constants, vars = divide_constant_matching matching in
             let condlist1, _ = conquer_divided_matching constants
             and lambda2, total2 = conquer_matching vars in
-              (Lstatichandle(Lcond(path, condlist1), lambda2), total2)
+              (lstatichandle(lcond(path, condlist1), lambda2), total2)
       | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
           conquer_matching (divide_record_matching (Get.label lbl).lbl_parent matching)
       | _ ->
@@ -274,37 +295,56 @@ let rec conquer_matching =
 
 (* Auxiliaries to build the initial matching *)
 
-let make_initial_matching = function
+let make_initial_matching ~param = function
     [] ->
       fatal_error "make_initial_matching: empty"
   | (patl, _) :: _ as casel ->
-      let rec make_path n =
-        if n <= 0 then [] else Lvar(n-1) :: make_path(n-1)
+(*
+      let rec make_path patl =
+        begin match patl with
+          | [] -> []
+          | (pat :: pattl) -> Lvar pat :: make_path pattl
+        end
       in
-        Matching(casel, make_path(List.length patl))
+*)
+        Matching(casel, [param]) (* make_path(patl) *)
 ;;
 
 let partial_fun loc =
   let start = loc.loc_start.Lexing.pos_cnum in
   let stop = loc.loc_end.Lexing.pos_cnum in
   Lprim(Praise,
-    [Lconst(SCblock(tag_match_failure,
-      [SCatom(Const_string !input_name);SCatom(Const_int start);SCatom(Const_int stop)]))])
+    [Lconst(Const_block(0 (* ? *),
+      [Const_immstring !input_name;Const_base(Const_int start);Const_base(Const_int stop)]))])
 ;;
 
 (* The entry points *)
-
+(*
 let translate_matching_check_failure loc casel =
   let casel' =
     List.map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
   if partial_match casel then not_exhaustive_warning loc;
   let (lambda, total) = conquer_matching (make_initial_matching casel') in
-  if total then lambda else Lstatichandle(lambda, partial_fun loc)
+  if total then lambda else lstatichandle(lambda, partial_fun loc)
+;;
+*)
+let translate_matching ~param failure_code casel =
+  let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
+  let casel = check_unused casel in
+  let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
+  let (lambda, total) = conquer_matching (make_initial_matching ~param casel) in
+  if total then lambda else lstatichandle(lambda, failure_code)
 ;;
 
-let translate_matching failure_code casel =
-  let casel' =
-    List.map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
-  let (lambda, total) = conquer_matching (make_initial_matching casel') in
-  if total then lambda else Lstatichandle(lambda, failure_code)
-;;
+
+let for_function loc repr param pat_act_list partial =
+  translate_matching ~param lstaticfail pat_act_list
+
+let for_trywith _ _ = assert false
+let for_let _ _ _ _ = assert false
+let for_multiple_match _ _ _ _ = assert false
+let for_tupled_function _ _ _ _ = assert false
+exception Cannot_flatten
+let flatten_pattern _ _ = assert false
+let make_test_sequence _ _ _ _ _ = assert false
+let inline_lazy_force _ _ = assert false
