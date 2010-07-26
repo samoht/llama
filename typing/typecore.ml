@@ -20,16 +20,16 @@ exception Error of Location.t * error
 
 (* To convert type expressions to types *)
 
-let type_of_type_expression strict_flag typexp =
+let type_of_type_expression varkind typexp =
   let rec type_of typexp =
     match typexp.te_desc with
-        Ttyp_var v ->
-          if v.tvar_type == type_none then
-            let ty = Tvar(new_phrase_nongeneric()) in
-            v.tvar_type <- ty;
+        Ttyp_var utv ->
+          if utv.tvar_type == type_none then
+            let ty = Tvar { tv_kind = varkind } in
+            utv.tvar_type <- ty;
             ty
           else
-            v.tvar_type
+            utv.tvar_type
       | Ttyp_arrow(arg1, arg2) ->
           type_arrow(type_of arg1, type_of arg2)
       | Ttyp_tuple argl ->
@@ -109,7 +109,7 @@ let rec tpat (pat, ty) =
       | _  -> orpat_should_be_closed_err pat
       end
   | Tpat_constraint(pat, ty_expr) ->
-      let ty' = type_of_type_expression false ty_expr in
+      let ty' = type_of_type_expression (Level 1) ty_expr in
        tpat  (pat, ty');
         unify_pat pat ty ty'
   | Tpat_record lbl_pat_list ->
@@ -424,7 +424,7 @@ let rec type_expr expr =
       type_statement body;
       type_unit
   | Texp_constraint (e, ty_expr) ->
-      let ty' = type_of_type_expression false ty_expr in
+      let ty' = type_of_type_expression (Level 1) ty_expr in
       type_expect e ty';
       ty'
   | Texp_array elist ->

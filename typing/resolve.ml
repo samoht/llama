@@ -343,7 +343,7 @@ let type_declaration env decl loc =
         let nparams = List.length params in
         { tcs_id = Env.qualified_id name;
           tcs_arity = nparams;
-          tcs_params = new_generics nparams; (* xxx *)
+          tcs_params = new_generics nparams; (* bending the rules *)
           tcs_kind = Type_abstract }
       end
       decl

@@ -37,77 +37,48 @@ let check_recursive_abbrev cstr =
   end
       
 let define_new_type tcs params body =
-  push_type_level();
   let ty_res = Tconstruct (ref_type_constr tcs, List.map tvar params) in
   begin match body with
-      Ttype_abstract ->
-        pop_type_level ()
+      Ttype_abstract -> ()
     | Ttype_variant l ->
         List.iter
           begin fun (cs, args) ->
-            let ty_args = List.map (type_of_type_expression true) args in
+            let ty_args = List.map (type_of_type_expression Generic) args in
             cs.cs_res <- ty_res;
             cs.cs_args <- ty_args
-          end l;
-        pop_type_level ();
-        generalize_type ty_res;
-        List.iter (fun (cs, _) -> List.iter generalize_type cs.cs_args) l
+          end l
     | Ttype_record l ->
         List.iter
           begin fun (lbl, arg) ->
             lbl.lbl_res <- ty_res;
-            lbl.lbl_arg <- type_of_type_expression true arg
-          end l;
-        pop_type_level ();
-        generalize_type ty_res;
-        List.iter (fun (lbl, _) -> generalize_type lbl.lbl_arg) l
+            lbl.lbl_arg <- type_of_type_expression Generic arg
+          end l
     | Ttype_abbrev arg ->
-        let ty_arg = type_of_type_expression true arg in
-        tcs.tcs_kind <- Type_abbrev ty_arg;
-        pop_type_level ();
-        generalize_type ty_res;
-        generalize_type ty_arg
+        let ty_arg = type_of_type_expression Generic arg in
+        tcs.tcs_kind <- Type_abbrev ty_arg
   end
 
 let type_typedecl_new decl loc =
   List.iter
     begin fun (tcs, params, body) ->
-      let params =
-        List.map
-          begin fun v ->
-            let tv = new_phrase_nongeneric () in
-            v.tvar_type <- Tvar tv;
-            tv
-          end
-          params
-      in
-      tcs.tcs_params <- params;
-      define_new_type tcs params body
-    end
-    decl;
+      List.iter2 (fun utv tv -> utv.tvar_type <- Tvar tv) params tcs.tcs_params;
+      define_new_type tcs tcs.tcs_params body
+    end decl;
   List.iter
     begin fun (tcs, _, _) ->
       try
         check_recursive_abbrev tcs
       with Recursive_abbrev ->
         recursive_abbrev_err loc tcs
-    end
-    decl
+    end decl
 
 let type_excdecl cs args  =
-  push_type_level();
-  let ty_args = List.map (type_of_type_expression true) args in
+  let ty_args = List.map (type_of_type_expression Generic) args in
   cs.cs_res <- type_exn;
-  cs.cs_args <- ty_args;
-  pop_type_level ();
-  List.iter generalize_type ty_args
+  cs.cs_args <- ty_args
 
 let type_valuedecl_new v typexp =
-  push_type_level();
-  let ty = type_of_type_expression false typexp in
-  pop_type_level();
-  generalize_type ty;
-  v.val_type <- ty
+  v.val_type <- type_of_type_expression Generic typexp
 
 let type_letdef pat_exp_list =
   push_type_level();

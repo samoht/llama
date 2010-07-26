@@ -37,7 +37,7 @@ and type_variable_kind =
 
 and type_constructor =
   { tcs_id : qualified_id;
-    mutable tcs_params : type_variable list;
+    tcs_params : type_variable list;
     tcs_arity: int;
     mutable tcs_kind: type_constructor_kind }
 
