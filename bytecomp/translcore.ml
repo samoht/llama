@@ -18,7 +18,6 @@
 open Misc
 open Asttypes
 open Primitive
-open Path
 open Types
 open Typedtree
 open Typeopt
@@ -33,8 +32,8 @@ exception Error of Location.t * error
 
 (* Forward declaration -- to be filled in by Translmod.transl_module *)
 let transl_module =
-  ref((fun cc rootpath modl -> assert false) :
-      module_coercion -> Path.t option -> module_expr -> lambda)
+  ref((fun cc (* rootpath *) modl -> assert false) :
+      module_coercion -> (* Path.t option -> *) module_expr -> lambda)
 
 let transl_object =
   ref (fun id s cl -> assert false :
@@ -553,7 +552,7 @@ let assert_failed loc =
   let line = pos.Lexing.pos_lnum in
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise, [Lprim(Pmakeblock(0, Immutable),
-          [transl_path Predef.path_assert_failure;
+          [transl_predef_exn Predef.cs_assert_failure;
            Lconst(Const_block(0,
               [Const_base(Const_string fname);
                Const_base(Const_int line);

@@ -13,7 +13,6 @@
 (* $Id: lambda.ml 9547 2010-01-22 12:48:24Z doligez $ *)
 
 open Misc
-open Path
 open Asttypes
 
 type primitive =
@@ -349,6 +348,10 @@ let rec patch_guarded patch = function
 
 (* Translate an access path *)
 
+let transl_predef_exn cs =
+  Lprim(Pgetglobal (Ident.Exception cs), [])
+
+(*
 let rec transl_path = function
     Pident id ->
       if Ident.global id then Lprim(Pgetglobal id, []) else Lvar id
@@ -356,7 +359,7 @@ let rec transl_path = function
       Lprim(Pfield pos, [transl_path p])
   | Papply(p1, p2) ->
       fatal_error "Lambda.transl_path"
-
+*)
 (* Compile a sequence of expressions *)
 
 let rec make_sequence fn = function

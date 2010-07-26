@@ -30,7 +30,7 @@ val transl_let:
       rec_flag -> (pattern * expression) list -> lambda -> lambda
 val transl_primitive: Primitive.description -> lambda
 val transl_exception:
-      Ident.t -> Path.t option -> exception_declaration -> lambda
+      (* Ident.t -> Path.t option -> *) exception_declaration -> lambda
 
 val check_recursive_lambda: Ident.t list -> lambda -> bool
 
