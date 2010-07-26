@@ -21,10 +21,6 @@ type 'a reference =
 (* Core types and type constructors.                                      *)
 (* ---------------------------------------------------------------------- *)
 
-(* Defs: a _generic_ type has no Nongeneric type variables. A
-_genericized_ type further has no Forwards, e.g. because it was tested
-as generic and a fresh copy made. *)
-
 type llama_type =
     Tvar of type_variable
   | Tarrow of llama_type * llama_type
@@ -32,7 +28,7 @@ type llama_type =
   | Tconstr of type_constructor reference * llama_type list
 
 and type_variable = {
-  mutable info : type_variable_kind }
+  mutable tv_kind : type_variable_kind }
 
 and type_variable_kind =
   | Generic
@@ -41,11 +37,11 @@ and type_variable_kind =
 
 and type_constructor =
   { tcs_id : qualified_id;
-    mutable tcs_params : type_variable list;  (* genericized *)
+    mutable tcs_params : type_variable list;
     tcs_arity: int;
-    mutable tcs_body: type_constructor_body }
+    mutable tcs_kind: type_constructor_kind }
 
-and type_constructor_body =
+and type_constructor_kind =
     Type_abstract
   | Type_variant of constructor list (* Sum type -> list of constr. *)
   | Type_record of label list (* Record type -> list of labels *)
@@ -111,9 +107,9 @@ and rec_status =
 (* ---------------------------------------------------------------------- *)
 
 let tvar tv = Tvar tv
-let new_generic () = { info=Generic }
+let new_generic () = { tv_kind=Generic }
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
-let new_nongeneric_gen lev = { info=Nongeneric lev }
+let new_nongeneric_gen lev = { tv_kind=Nongeneric lev }
 let module_level = 0
 let phrase_level = 1
 

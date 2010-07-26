@@ -100,7 +100,7 @@ let rec print_val prio depth obj ty =
         print_concrete_type prio depth obj cstr ty ty_list
 
 and print_concrete_type prio depth obj cstr ty ty_list =
-  match (get_type_constr cstr).tcs_body with
+  match (get_type_constr cstr).tcs_kind with
       Type_abstract ->
         print_string "<abstr>"
     | Type_abbrev body ->

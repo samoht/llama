@@ -19,12 +19,12 @@ let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let constructors_of_type decl =
-  match decl.tcs_body with
+  match decl.tcs_kind with
       Type_variant cstrs -> cstrs
     | _ -> []
 
 let labels_of_type decl =
-  match decl.tcs_body with
+  match decl.tcs_kind with
       Type_record lbls -> lbls
     | _ -> []
 
@@ -116,7 +116,7 @@ let same_label r1 r2 = get_label r1 == get_label r2
 
 let rec erase_type m t = match t with
     Tvar v ->
-      begin match v.info with
+      begin match v.tv_kind with
         | Forward ty -> erase_type m ty
         | _ -> ()
       end
@@ -132,13 +132,13 @@ let erase_label m lbl =
   erase_type m lbl.lbl_res;
   erase_type m lbl.lbl_arg
 let erase_value m v = erase_type m v.val_type
-let erase_tcs_body m = function
+let erase_tcs_kind m = function
     Type_abstract -> ()
   | Type_variant l -> List.iter (erase_constr m) l
   | Type_record l -> List.iter (erase_label m) l
   | Type_abbrev t -> erase_type m t
 let erase_type_constr m t =
-  erase_tcs_body m t.tcs_body
+  erase_tcs_kind m t.tcs_kind
 let erase_item m = function
     Sig_value v -> erase_value m v
   | Sig_type tcs -> erase_type_constr m tcs

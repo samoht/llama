@@ -70,7 +70,7 @@ and stream_pattern =
 
 type constr_decl = string * type_expression list
 
-type tcs_body =
+type tcs_kind =
     Ptype_abstract
   | Ptype_variant of constr_decl list
   | Ptype_record of (string * type_expression * mutable_flag) list
@@ -82,7 +82,7 @@ type signature_item =
 
 and signature_item_desc =
     Psig_value of string * type_expression * string option
-  | Psig_type of (string * string list * tcs_body) list
+  | Psig_type of (string * string list * tcs_kind) list
   | Psig_exception of constr_decl
   | Psig_open of module_name
 
@@ -94,7 +94,7 @@ and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of bool * (pattern * expression) list
   | Pstr_primitive of string * type_expression * string
-  | Pstr_type of (string * string list * tcs_body) list
+  | Pstr_type of (string * string list * tcs_kind) list
   | Pstr_exception of constr_decl
   | Pstr_open of module_name
 

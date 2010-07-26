@@ -124,9 +124,9 @@ let rec get_type_descr ty =
 
 let rec get_constr tag ty =
   match get_type_descr ty with
-  | {tcs_body=Type_variant constr_list} ->
+  | {tcs_kind=Type_variant constr_list} ->
       Types.find_constr_by_tag tag constr_list
-  | {tcs_body=Type_abbrev _} ->
+  | {tcs_kind=Type_abbrev _} ->
       get_constr tag (Ctype.expand_head_once (clean_copy ty))
   | _ -> fatal_error "Parmatch.get_constr"
 
@@ -137,8 +137,8 @@ let find_label lbl lbls =
 
 let rec get_record_labels ty =
   match get_type_descr ty with
-  | {tcs_body = Type_record(lbls)} -> lbls
-  | {tcs_body = Type_abbrev _} ->
+  | {tcs_kind = Type_record(lbls)} -> lbls
+  | {tcs_kind = Type_abbrev _} ->
       get_record_labels (Ctype.expand_head_once (clean_copy ty))
   | _ -> fatal_error "Parmatch.get_record_labels"
 

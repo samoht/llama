@@ -9,7 +9,7 @@ let repr = Btype.repr
 (* Extract the list of labels of a record type. *)
 
 let labels_of_type ty =
-  begin match ty.tcs_body with
+  begin match ty.tcs_kind with
     | Type_record l -> l
     | _ -> assert false
   end
@@ -19,14 +19,14 @@ let labels_of_type ty =
 (* ---------------------------------------------------------------------- *)
 
 let has_abbrev tcs =
-  begin match (get_type_constr tcs).tcs_body with
+  begin match (get_type_constr tcs).tcs_kind with
     | Type_abbrev _ -> true
     | _ -> false
   end
 
 let get_abbrev tcs =
   let tcs = get_type_constr tcs in
-  begin match tcs.tcs_body with
+  begin match tcs.tcs_kind with
     | Type_abbrev body -> tcs.tcs_params, body
     | _ -> assert false
   end
@@ -54,7 +54,7 @@ let expand_abbrev ty =
   match ty with
       Tconstr (tcs, args) ->
         let tcs = Module.get_type_constr tcs in
-        begin match tcs.tcs_body with
+        begin match tcs.tcs_kind with
           | Type_abbrev body -> expand_abbrev_aux tcs.tcs_params body args
           | _ -> raise Cannot_expand
         end
@@ -90,7 +90,7 @@ let rec expand_head ty =
   begin match ty with
     | Tconstr (tcs, args) ->
         let tcs = Module.get_type_constr tcs in
-        begin match tcs.tcs_body with
+        begin match tcs.tcs_kind with
           | Type_abbrev body ->
               expand_head (expand_abbrev_aux tcs.tcs_params body args)
           | _ -> ty
@@ -109,7 +109,7 @@ exception Unify of (core_type * core_type) list
 
 let rec occur_check v = function
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
         | Generic -> assert false
         | Nongeneric _ -> tv == v
         | Forward ty -> occur_check v ty
@@ -127,7 +127,7 @@ let rec unify (ty1, ty2) =
   let ty1 = repr ty1 in
   let ty2 = repr ty2 in
   let level tv =
-    begin match tv.info with
+    begin match tv.tv_kind with
       | Nongeneric level -> level
       | Generic | Forward _ -> assert false
     end
@@ -136,16 +136,16 @@ let rec unify (ty1, ty2) =
       Tvar tv1, Tvar tv2 ->
         if tv1 == tv2 then () else
           if level tv1 < level tv2 then begin
-            tv2.info <- Forward ty1
+            tv2.tv_kind <- Forward ty1
           end else begin
-            tv1.info <- Forward ty2
+            tv1.tv_kind <- Forward ty2
           end
     | Tvar tv1, _ when not (occur_check tv1 ty2) ->
         rectify_type (level tv1) ty2;
-        tv1.info <- Forward ty2
+        tv1.tv_kind <- Forward ty2
     | _, Tvar tv2 when not (occur_check tv2 ty1) ->
         rectify_type (level tv2) ty1;
-        tv2.info <- Forward ty1
+        tv2.tv_kind <- Forward ty1
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         unify (t1arg, t2arg);
         unify (t1res, t2res)
@@ -171,7 +171,7 @@ and unify_list = function
 (* Two special cases of unification *)
 
 let nongeneric_level tv =
-  begin match tv.info with
+  begin match tv.tv_kind with
     | Generic | Forward _ -> assert false
     | Nongeneric level -> level
   end
@@ -183,7 +183,7 @@ let rec filter_arrow ty =
       let level = nongeneric_level tv in
       let ty1 = Tvar(new_nongeneric_gen level) in
       let ty2 = Tvar(new_nongeneric_gen level) in
-      tv.info <- Forward(Tarrow(ty1, ty2));
+      tv.tv_kind <- Forward(Tarrow(ty1, ty2));
       (ty1, ty2)
   | Tarrow(ty1, ty2) ->
       (ty1, ty2)
@@ -200,7 +200,7 @@ let rec filter_product arity ty =
     Tvar tv ->
       let level = nongeneric_level tv in
       let tyl = List.map (fun tv -> Tvar tv) (new_nongenerics_gen arity level) in
-      tv.info <- Forward(Tproduct tyl);
+      tv.tv_kind <- Forward(Tproduct tyl);
       tyl
   | Tproduct tyl ->
       if List.length tyl == arity then tyl else raise OldUnify
@@ -243,7 +243,7 @@ let equiv alist = equiv_gen (fun id -> List.assq id alist)
 let rec moregeneral subst ty1 ty2 =
   match ty1, ty2 with
     | Tvar tv, _ ->
-        begin match tv.info with
+        begin match tv.tv_kind with
             Generic ->
               if List.mem_assq tv !subst then begin
                 equal (List.assq tv !subst) ty2

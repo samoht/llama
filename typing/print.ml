@@ -59,7 +59,7 @@ type out_type =
 let rec tree_of_typexp sch ty =
   begin match ty with
     | Tvar tv ->
-        begin match tv.info with
+        begin match tv.tv_kind with
           | Generic ->
               Otyp_var (false, name_of_type tv)
           | Nongeneric _ ->

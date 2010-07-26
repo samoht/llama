@@ -39,8 +39,8 @@ let maybe_pointer exp =
       not (Module.get_type_constr p == Predef.tcs_char) &&
       begin try
         match Module.get_type_constr p with
-          {tcs_body = Type_variant []} -> true (* type exn *)
-        | {tcs_body = Type_variant cstrs} ->
+          {tcs_kind = Type_variant []} -> true (* type exn *)
+        | {tcs_kind = Type_variant cstrs} ->
             List.exists (fun cs -> cs.cs_args <> []) cstrs
         | _ -> true
       with Not_found -> true
@@ -71,12 +71,12 @@ let array_element_kind env ty =
       else begin
         try
           match tcs with
-            {tcs_body = (Type_abstract | Type_abbrev _)} ->
+            {tcs_kind = (Type_abstract | Type_abbrev _)} ->
               Pgenarray
-          | {tcs_body = Type_variant cstrs}
+          | {tcs_kind = Type_variant cstrs}
             when List.for_all (fun cs -> cs.cs_args = []) cstrs ->
               Pintarray
-          | {tcs_body = _} ->
+          | {tcs_kind = _} ->
               Paddrarray
         with Not_found ->
           (* This can happen due to e.g. missing -I options,

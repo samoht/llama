@@ -7,7 +7,7 @@ open Module
 
 let rec repr ty =
   match ty with
-      Tvar {info=Forward ty} -> repr ty
+      Tvar {tv_kind=Forward ty} -> repr ty
     | _ -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -33,12 +33,12 @@ let new_global_type_var () =Tvar (new_phrase_nongeneric ())
 
 let rec generalize_type vr = function
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
         | Generic ->
             ()
         | Nongeneric level ->
             if level > !current_level then
-              tv.info <- (if vr then Nongeneric !current_level else Generic)
+              tv.tv_kind <- (if vr then Nongeneric !current_level else Generic)
         | Forward ty ->
             generalize_type vr ty
       end
@@ -58,7 +58,7 @@ let generalize_type = generalize_type false
 
 let rec instantiate_type subst = function
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
         | Generic ->
             begin try
               Tvar (List.assq tv !subst)
@@ -99,11 +99,11 @@ let instantiate_label lbl =
 let rec rectify_type level0 x =
   match x with
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
           Generic ->
             ()
         | Nongeneric level ->
-            if level > level0 then tv.info <- Nongeneric level0
+            if level > level0 then tv.tv_kind <- Nongeneric level0
         | Forward ty ->
             rectify_type level0 ty
       end
@@ -122,7 +122,7 @@ exception Genericize
 
 let rec genericize_type = function
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
         | Generic ->
             Tvar tv
         | Nongeneric _ ->
@@ -142,7 +142,7 @@ let rec genericize_type = function
 
 let rec substitute_type subst = function
     Tvar tv ->
-      begin match tv.info with
+      begin match tv.tv_kind with
         | Generic ->
             List.assq tv subst
         | Nongeneric _ ->

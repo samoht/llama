@@ -38,7 +38,7 @@ let labels s params lbl1 lbl2 =
 let type_constructors s tcs1 tcs2 =
   tcs1.tcs_arity = tcs2.tcs_arity &&
   let params = List.combine tcs1.tcs_params tcs2.tcs_params in
-  begin match tcs1.tcs_body, tcs2.tcs_body with
+  begin match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Type_abstract ->
         true
     | Type_variant cstrs1, Type_variant cstrs2 ->

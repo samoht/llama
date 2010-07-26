@@ -20,7 +20,7 @@ let mkty name params =
   { tcs_id = { id_module = Module_builtin; id_name = name };
     tcs_params = params;
     tcs_arity = List.length params;
-    tcs_body = Type_abstract }
+    tcs_kind = Type_abstract }
 
 let tcs_unit = mkty "unit" []
 let tcs_exn = mkty "exn" []
@@ -119,7 +119,7 @@ let constr_true =
     cstr_tag = Cstr_constant 1}
 
 let _ =
-  List.iter (fun (tcs, tk) -> tcs.tcs_body <- tk)
+  List.iter (fun (tcs, tk) -> tcs.tcs_kind <- tk)
     [ tcs_unit, Type_variant [ constr_void ];
       tcs_exn, Type_variant [];
       tcs_bool, Type_variant [ constr_false; constr_true ];

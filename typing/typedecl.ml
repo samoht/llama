@@ -14,7 +14,7 @@ open Typecore
 exception Recursive_abbrev;;
 
 let check_recursive_abbrev cstr =
-  begin match cstr.tcs_body with
+  begin match cstr.tcs_kind with
       Type_abbrev body ->
         let rec check_abbrev seen ty =
           match (Btype.repr ty) with
@@ -27,7 +27,7 @@ let check_recursive_abbrev cstr =
                   raise Recursive_abbrev
                 else begin
                   List.iter (check_abbrev seen) tlist;
-                  begin match c.tcs_body with
+                  begin match c.tcs_kind with
                       Type_abbrev body -> check_abbrev (c :: seen) body
                     | _ -> ()
                   end
@@ -63,7 +63,7 @@ let define_new_type tcs params body =
         List.iter (fun (lbl, _) -> generalize_type lbl.lbl_arg) l
     | Ttype_abbrev arg ->
         let ty_arg = type_of_type_expression true arg in
-        tcs.tcs_body <- Type_abbrev ty_arg;
+        tcs.tcs_kind <- Type_abbrev ty_arg;
         pop_type_level ();
         generalize_type ty_res;
         generalize_type ty_arg

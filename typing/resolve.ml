@@ -344,7 +344,7 @@ let type_declaration env decl loc =
         { tcs_id = Env.qualified_id name;
           tcs_arity = nparams;
           tcs_params = new_generics nparams; (* xxx *)
-          tcs_body = Type_abstract }
+          tcs_kind = Type_abstract }
       end
       decl
   in
@@ -366,7 +366,7 @@ let type_declaration env decl loc =
   in
   List.iter
     begin fun (tcs, params, body) ->
-      tcs.tcs_body <-
+      tcs.tcs_kind <-
         begin match body with
           | Ttype_abstract -> Type_abstract
           | Ttype_variant l -> Type_variant (List.map fst l)
