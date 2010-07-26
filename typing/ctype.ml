@@ -124,20 +124,8 @@ let rec occur_check v = function
 (* Unification *)
 
 let rec unify (ty1, ty2) =
-  (* xxx: ok, i should optimize this a little *)
-  let ty1 = expand_head ty1 in
-  let ty2 = expand_head ty2 in
-  assert
-    (List.for_all
-       (fun ty ->
-          begin match ty with
-            | Tvar tv ->
-                begin match tv.info with
-                  | Nongeneric _ -> true
-                  | Generic | Forward _ -> false
-                end
-            | _ -> true
-          end) [ty1; ty2]);
+  let ty1 = repr ty1 in
+  let ty2 = repr ty2 in
   let level tv =
     begin match tv.info with
       | Nongeneric level -> level
@@ -163,7 +151,13 @@ let rec unify (ty1, ty2) =
         unify (t1res, t2res)
     | Tproduct tyl1, Tproduct tyl2 ->
         unify_list (tyl1, tyl2)
-    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+    | Tconstr (tcs1, tyl1), _ when has_abbrev tcs1 ->
+        let params1, body1 = get_abbrev tcs1 in
+        unify (expand_abbrev_aux params1 body1 tyl1, ty2)
+    | _, Tconstr (tcs2, tyl2) when has_abbrev tcs2 ->
+        let params2, body2 = get_abbrev tcs2 in
+        unify (ty1, expand_abbrev_aux params2 body2 tyl2)
+    | Tconstr (tcs1, tyl1), Tconstr (tcs2, tyl2) when same_type_constr tcs1 tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
         raise OldUnify
@@ -236,7 +230,7 @@ let rec equiv_gen corresp ty1 ty2 =
     | _, Tconstr (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp ty1 (expand_abbrev_aux params body args)
-    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when same_type_constr tcs1 tcs2 ->
         List.for_all2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
         false
@@ -269,7 +263,7 @@ let rec moregeneral subst ty1 ty2 =
     | _, Tconstr (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral subst ty1 (expand_abbrev_aux params body args)
-    | Tconstr(cstr1, tyl1), Tconstr(cstr2, tyl2) when same_type_constr cstr1 cstr2 ->
+    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when same_type_constr tcs1 tcs2 ->
         List.for_all2 (moregeneral subst) tyl1 tyl2
     | _ ->
         false
