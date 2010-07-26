@@ -24,7 +24,7 @@ type 'a reference =
 type llama_type =
     Tvar of type_variable
   | Tarrow of llama_type * llama_type
-  | Tproduct of llama_type list
+  | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
 
 and type_variable = {
@@ -159,7 +159,7 @@ let generic = -1
 let notgeneric = 0
 let level_global = 1
 
-let type_none = Tproduct []
+let type_none = Ttuple []
 
 type record_representation =
     Record_regular

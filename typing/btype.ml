@@ -45,7 +45,7 @@ let rec generalize_type vr = function
   | Tarrow (ty1, ty2) ->
       generalize_type vr ty1;
       generalize_type vr ty2
-  | Tproduct tyl ->
+  | Ttuple tyl ->
       List.iter (generalize_type vr) tyl
   | Tconstr (tcs, tyl) ->
       List.iter (generalize_type vr) tyl
@@ -74,8 +74,8 @@ let rec instantiate_type subst = function
       end
   | Tarrow (ty1, ty2) ->
       Tarrow (instantiate_type subst ty1, instantiate_type subst ty2)
-  | Tproduct tyl ->
-      Tproduct (List.map (instantiate_type subst) tyl)
+  | Ttuple tyl ->
+      Ttuple (List.map (instantiate_type subst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map (instantiate_type subst) tyl)
   
@@ -110,7 +110,7 @@ let rec rectify_type level0 x =
   | Tarrow (ty1, ty2) ->
       rectify_type level0 ty1;
       rectify_type level0 ty2
-  | Tproduct tyl ->
+  | Ttuple tyl ->
       List.iter (rectify_type level0) tyl
   | Tconstr (tcs, tyl) ->
       List.iter (rectify_type level0) tyl
@@ -132,8 +132,8 @@ let rec genericize_type = function
       end
   | Tarrow (ty1, ty2) ->
       Tarrow (genericize_type ty1, genericize_type ty2)
-  | Tproduct tyl ->
-      Tproduct (List.map genericize_type tyl)
+  | Ttuple tyl ->
+      Ttuple (List.map genericize_type tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map genericize_type tyl)
 
@@ -152,7 +152,7 @@ let rec substitute_type subst = function
       end
   | Tarrow (ty1, ty2) ->
       Tarrow (substitute_type subst ty1, substitute_type subst ty2)
-  | Tproduct tyl ->
-      Tproduct (List.map (substitute_type subst) tyl)
+  | Ttuple tyl ->
+      Ttuple (List.map (substitute_type subst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map (substitute_type subst) tyl)

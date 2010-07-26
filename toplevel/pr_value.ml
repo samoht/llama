@@ -83,7 +83,7 @@ let rec print_val prio depth obj ty =
         print_string "<poly>"
     | Tarrow(ty1, ty2) ->
         print_string "<fun>"
-    | Tproduct(ty_list) ->
+    | Ttuple(ty_list) ->
         if prio > 0 then begin open_box 1; print_string "(" end
          else open_box 0;
         print_val_list 1 depth obj ty_list;

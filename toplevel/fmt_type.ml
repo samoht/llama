@@ -58,7 +58,7 @@ let rec print_typ priority ty =
       print_typ 0 ty2;
       if priority >= 1 then print_string ")";
       close_box()
-  | Tproduct(ty_list) ->
+  | Ttuple(ty_list) ->
       if priority >= 2 then begin open_box 1; print_string "(" end
        else open_box 0;
       print_typ_list 2 " *" ty_list;

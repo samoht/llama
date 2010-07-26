@@ -116,7 +116,7 @@ let rec occur_check v = function
       end
   | Tarrow (ty1, ty2) ->
       occur_check v ty1 || occur_check v ty2
-  | Tproduct tyl ->
+  | Ttuple tyl ->
       List.exists (occur_check v) tyl
   | Tconstr (tcs, tyl) ->
       List.exists (occur_check v) tyl
@@ -149,7 +149,7 @@ let rec unify (ty1, ty2) =
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         unify (t1arg, t2arg);
         unify (t1res, t2res)
-    | Tproduct tyl1, Tproduct tyl2 ->
+    | Ttuple tyl1, Ttuple tyl2 ->
         unify_list (tyl1, tyl2)
     | Tconstr (tcs1, tyl1), _ when has_abbrev tcs1 ->
         let params1, body1 = get_abbrev tcs1 in
@@ -201,9 +201,9 @@ let rec filter_product arity ty =
     Tvar tv ->
       let level = nongeneric_level tv in
       let tyl = List.map (fun tv -> Tvar tv) (new_nongenerics_gen arity level) in
-      tv.tv_kind <- Forward(Tproduct tyl);
+      tv.tv_kind <- Forward(Ttuple tyl);
       tyl
-  | Tproduct tyl ->
+  | Ttuple tyl ->
       if List.length tyl == arity then tyl else raise OldUnify
   | Tconstr(tcs,args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
@@ -223,7 +223,7 @@ let rec equiv_gen corresp ty1 ty2 =
         corresp tv1 == tv2
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
-    | Tproduct(t1args), Tproduct(t2args) ->
+    | Ttuple(t1args), Ttuple(t2args) ->
         List.for_all2 (equiv_gen corresp) t1args t2args
     | Tconstr (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
@@ -257,7 +257,7 @@ let rec moregeneral subst ty1 ty2 =
         end
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         moregeneral subst t1arg t2arg && moregeneral subst t1res t2res
-    | Tproduct(t1args), Tproduct(t2args) ->
+    | Ttuple(t1args), Ttuple(t2args) ->
         List.for_all2 (moregeneral subst) t1args t2args
     | Tconstr (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in

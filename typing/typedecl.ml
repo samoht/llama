@@ -20,7 +20,7 @@ let check_recursive_abbrev cstr =
           match (Btype.repr ty) with
               Tvar _ -> ()
             | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
-            | Tproduct tlist -> List.iter (check_abbrev seen) tlist
+            | Ttuple tlist -> List.iter (check_abbrev seen) tlist
             | Tconstr(c, tlist) ->
                 let c = Get.type_constructor c in
                 if List.memq c seen then

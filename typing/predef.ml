@@ -41,7 +41,7 @@ let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = No
 (* ---------------------------------------------------------------------- *)
 
 let type_arrow (t1,t2) = Tarrow(t1,t2)
-let type_product tlist = Tproduct tlist
+let type_product tlist = Ttuple tlist
 let type_unit = Tconstr(ref_type_constr tcs_unit, [])
 let type_exn = Tconstr(ref_type_constr tcs_exn, [])
 let type_bool = Tconstr(ref_type_constr tcs_bool, [])
