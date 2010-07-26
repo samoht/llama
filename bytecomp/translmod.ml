@@ -18,14 +18,11 @@
 open Misc
 open Asttypes
 open Longident
-open Path
 open Types
 open Typedtree
 open Primitive
 open Lambda
-open Translobj
 open Translcore
-open Translclass
 
 type error =
   Circular_dependency of Ident.t
@@ -42,13 +39,6 @@ let rec apply_coercion restr arg =
       name_lambda arg (fun id ->
         Lprim(Pmakeblock(0, Immutable),
               List.map (apply_coercion_field id) pos_cc_list))
-  | Tcoerce_functor(cc_arg, cc_res) ->
-      let param = Ident.create "funarg" in
-      name_lambda arg (fun id ->
-        Lfunction(Curried, [param],
-          apply_coercion cc_res
-            (Lapply(Lvar id, [apply_coercion cc_arg (Lvar param)],
-                    Location.none))))
   | Tcoerce_primitive p ->
       transl_primitive p
 
@@ -72,9 +62,6 @@ let rec compose_coercions c1 c2 =
                   | (p1, c1) ->
                       let (p2, c2) = v2.(p1) in (p2, compose_coercions c1 c2))
              pc1)
-  | (Tcoerce_functor(arg1, res1), Tcoerce_functor(arg2, res2)) ->
-      Tcoerce_functor(compose_coercions arg2 arg1,
-                      compose_coercions res1 res2)
   | (_, _) ->
       fatal_error "Translmod.compose_coercions"
 

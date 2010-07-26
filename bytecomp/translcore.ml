@@ -689,6 +689,7 @@ and transl_exp0 e =
       end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
       let lbl1 = Get.label lbl1 in
+      let lbl_expr_list = List.map (fun (lbl, exp) -> (Get.label lbl, exp)) lbl_expr_list in
       transl_record (Ctype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
@@ -917,7 +918,7 @@ and transl_function loc untuplify_fn repr partial pat_expr_list =
   match pat_expr_list with
     [pat, ({exp_desc = Texp_function(pl,partial')} as exp)]
     when Parmatch.fluid pat ->
-      let param = name_pattern "param" pat_expr_list in
+      let param = Ident.create(name_pattern "param" pat_expr_list) in
       let ((_, params), body) =
         transl_function exp.exp_loc false repr partial' pl in
       ((Curried, param :: params),
@@ -934,20 +935,20 @@ and transl_function loc untuplify_fn repr partial pat_expr_list =
          Matching.for_tupled_function loc params
            (transl_tupled_cases pats_expr_list) partial)
       with Matching.Cannot_flatten ->
-        let param = name_pattern "param" pat_expr_list in
+        let param = Ident.create(name_pattern "param" pat_expr_list) in
         ((Curried, [param]),
          Matching.for_function loc repr (Lvar param)
            (transl_cases pat_expr_list) partial)
       end
   | _ ->
-      let param = name_pattern "param" pat_expr_list in
+      let param = Ident.create(name_pattern "param" pat_expr_list) in
       ((Curried, [param]),
        Matching.for_function loc repr (Lvar param)
          (transl_cases pat_expr_list) partial)
 
 and transl_let rec_flag pat_expr_list body =
   match rec_flag with
-    Nonrecursive | Default ->
+    Nonrecursive (*| Default*) ->
       let rec transl = function
         [] ->
           body
@@ -959,7 +960,7 @@ and transl_let rec_flag pat_expr_list body =
         List.map
           (fun (pat, expr) ->
             match pat.pat_desc with
-              Tpat_var id -> id
+              Tpat_var id -> Ident.Value id
             | _ -> raise(Error(pat.pat_loc, Illegal_letrec_pat)))
         pat_expr_list in
       let transl_case (pat, expr) id =
@@ -968,10 +969,6 @@ and transl_let rec_flag pat_expr_list body =
           raise(Error(expr.exp_loc, Illegal_letrec_expr));
         (id, lam) in
       Lletrec(List.map2 transl_case pat_expr_list idlist, body)
-
-and transl_setinstvar self var expr =
-  Lprim(Parraysetu (if maybe_pointer expr then Paddrarray else Pintarray),
-                    [self; transl_path var; transl_exp expr])
 
 and transl_record all_labels repres lbl_expr_list opt_init_expr =
   let size = List.length all_labels in
@@ -1026,10 +1023,12 @@ and transl_record all_labels repres lbl_expr_list opt_init_expr =
        [check_recursive_recordwith] in this file. *)
     let copy_id = Ident.create "newrecord" in
     let rec update_field (lbl, expr) cont =
-      let upd =
+      let upd = Psetfield(lbl.lbl_pos, maybe_pointer expr) in
+(*
         match lbl.lbl_repres with
           Record_regular -> Psetfield(lbl.lbl_pos, maybe_pointer expr)
         | Record_float -> Psetfloatfield lbl.lbl_pos in
+*)
       Lsequence(Lprim(upd, [Lvar copy_id; transl_exp expr]), cont) in
     begin match opt_init_expr with
       None -> assert false
@@ -1055,11 +1054,14 @@ let transl_let rec_flag pat_expr_list body =
 
 (* Compile an exception definition *)
 
-let transl_exception id path decl =
+let transl_exception (*id path*) cs =
+(*
   let name =
     match path with
       None -> Ident.name id
     | Some p -> Path.name p in
+*)
+  let name = cs.cs_name in
   Lprim(Pmakeblock(0, Immutable), [Lconst(Const_base(Const_string name))])
 
 (* Error report *)

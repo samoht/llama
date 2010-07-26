@@ -295,3 +295,5 @@ let check_unused ~has_guard casel =
    | [] -> [] in
    check_rec prefs
 ;;
+
+let fluid pat = failwith "Parmatch.fluid"

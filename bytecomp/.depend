@@ -20,14 +20,11 @@ runtimedef.cmi:
 simplif.cmi: lambda.cmi
 switch.cmi:
 symtable.cmi: ident.cmx cmo_format.cmi
-translclass.cmi: ../typing/typedtree.cmi ../parsing/location.cmi lambda.cmi \
-    ident.cmx ../parsing/asttypes.cmi
 translcore.cmi: ../typing/types.cmx ../typing/typedtree.cmi \
     ../typing/primitive.cmx ../parsing/location.cmi lambda.cmi ident.cmx \
-    compat.cmx ../parsing/asttypes.cmi
+    ../parsing/asttypes.cmi
 translmod.cmi: ../typing/typedtree.cmi ../typing/primitive.cmx \
     ../parsing/location.cmi lambda.cmi ident.cmx
-translobj.cmi: lambda.cmi ident.cmx ../typing/env.cmi
 typeopt.cmi: ../typing/types.cmx ../typing/typedtree.cmi lambda.cmi
 bytegen.cmo: ../typing/types.cmx switch.cmi ../typing/subst.cmx \
     ../typing/primitive.cmx ../utils/misc.cmx lambda.cmi instruct.cmi \
@@ -55,8 +52,6 @@ bytepackager.cmx: ../typing/typemod.cmx translmod.cmx ../typing/subst.cmx \
     bytegen.cmx bytepackager.cmi
 bytesections.cmo: ../utils/config.cmi bytesections.cmi
 bytesections.cmx: ../utils/config.cmx bytesections.cmi
-compat.cmo: ../typing/types.cmx
-compat.cmx: ../typing/types.cmx
 dll.cmo: ../utils/misc.cmx ../utils/config.cmi dll.cmi
 dll.cmx: ../utils/misc.cmx ../utils/config.cmx dll.cmi
 emitcode.cmo: translmod.cmi ../typing/primitive.cmx opcodes.cmx \
@@ -129,44 +124,26 @@ symtable.cmx: ../utils/tbl.cmx runtimedef.cmx ../typing/predef.cmx \
     ../utils/misc.cmx meta.cmx lambda.cmx ident.cmx dll.cmx cmo_format.cmi \
     ../utils/clflags.cmx bytesections.cmx ../parsing/asttypes.cmi \
     symtable.cmi
-translclass.cmo: ../typing/types.cmx typeopt.cmi ../typing/typedtree.cmi \
-    translobj.cmi translcore.cmi ../utils/misc.cmx matching.cmi \
-    ../parsing/location.cmi lambda.cmi ident.cmx ../typing/env.cmi \
-    ../utils/clflags.cmi ../typing/btype.cmx ../parsing/asttypes.cmi \
-    translclass.cmi
-translclass.cmx: ../typing/types.cmx typeopt.cmx ../typing/typedtree.cmi \
-    translobj.cmx translcore.cmx ../utils/misc.cmx matching.cmx \
-    ../parsing/location.cmx lambda.cmx ident.cmx ../typing/env.cmx \
-    ../utils/clflags.cmx ../typing/btype.cmx ../parsing/asttypes.cmi \
-    translclass.cmi
 translcore.cmo: ../typing/types.cmx typeopt.cmi ../typing/typedtree.cmi \
     ../typing/primitive.cmx ../typing/predef.cmx ../typing/parmatch.cmx \
     ../utils/misc.cmx matching.cmi ../parsing/location.cmi lambda.cmi \
-    ident.cmx ../typing/get.cmi ../typing/env.cmi ../utils/clflags.cmi \
-    ../parsing/asttypes.cmi translcore.cmi
+    ident.cmx ../typing/get.cmi ../typing/env.cmi ../typing/ctype.cmx \
+    ../utils/clflags.cmi ../parsing/asttypes.cmi translcore.cmi
 translcore.cmx: ../typing/types.cmx typeopt.cmx ../typing/typedtree.cmi \
     ../typing/primitive.cmx ../typing/predef.cmx ../typing/parmatch.cmx \
     ../utils/misc.cmx matching.cmx ../parsing/location.cmx lambda.cmx \
-    ident.cmx ../typing/get.cmx ../typing/env.cmx ../utils/clflags.cmx \
-    ../parsing/asttypes.cmi translcore.cmi
-translmod.cmo: ../typing/types.cmx ../typing/typedtree.cmi translobj.cmi \
-    translcore.cmi translclass.cmi ../typing/primitive.cmx \
-    ../typing/predef.cmx ../utils/misc.cmx ../parsing/longident.cmi \
-    ../parsing/location.cmi lambda.cmi ident.cmx ../typing/env.cmi \
-    ../typing/ctype.cmx ../parsing/asttypes.cmi translmod.cmi
-translmod.cmx: ../typing/types.cmx ../typing/typedtree.cmi translobj.cmx \
-    translcore.cmx translclass.cmx ../typing/primitive.cmx \
-    ../typing/predef.cmx ../utils/misc.cmx ../parsing/longident.cmx \
-    ../parsing/location.cmx lambda.cmx ident.cmx ../typing/env.cmx \
-    ../typing/ctype.cmx ../parsing/asttypes.cmi translmod.cmi
-translobj.cmo: ../typing/primitive.cmx ../utils/misc.cmx \
-    ../parsing/longident.cmi lambda.cmi ident.cmx ../typing/env.cmi \
-    ../utils/clflags.cmi ../typing/btype.cmx ../parsing/asttypes.cmi \
-    translobj.cmi
-translobj.cmx: ../typing/primitive.cmx ../utils/misc.cmx \
-    ../parsing/longident.cmx lambda.cmx ident.cmx ../typing/env.cmx \
-    ../utils/clflags.cmx ../typing/btype.cmx ../parsing/asttypes.cmi \
-    translobj.cmi
+    ident.cmx ../typing/get.cmx ../typing/env.cmx ../typing/ctype.cmx \
+    ../utils/clflags.cmx ../parsing/asttypes.cmi translcore.cmi
+translmod.cmo: ../typing/types.cmx ../typing/typedtree.cmi translcore.cmi \
+    ../typing/primitive.cmx ../typing/predef.cmx ../utils/misc.cmx \
+    ../parsing/longident.cmi ../parsing/location.cmi lambda.cmi ident.cmx \
+    ../typing/env.cmi ../typing/ctype.cmx ../parsing/asttypes.cmi \
+    translmod.cmi
+translmod.cmx: ../typing/types.cmx ../typing/typedtree.cmi translcore.cmx \
+    ../typing/primitive.cmx ../typing/predef.cmx ../utils/misc.cmx \
+    ../parsing/longident.cmx ../parsing/location.cmx lambda.cmx ident.cmx \
+    ../typing/env.cmx ../typing/ctype.cmx ../parsing/asttypes.cmi \
+    translmod.cmi
 typeopt.cmo: ../typing/types.cmx ../typing/typedtree.cmi \
     ../typing/primitive.cmx ../typing/predef.cmx ../utils/misc.cmx lambda.cmi \
     ../typing/get.cmi ../typing/ctype.cmx ../parsing/asttypes.cmi typeopt.cmi

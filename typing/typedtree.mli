@@ -107,6 +107,8 @@ and structure_item_desc =
   | Tstr_exception of constructor * type_expression list
   | Tstr_open of module_id
 
+type structure = structure_item list
+
 type module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list

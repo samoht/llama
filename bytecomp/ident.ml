@@ -1,4 +1,3 @@
-open Format
 open Types
 
 type t =
@@ -31,9 +30,10 @@ let postincr r = let n = !r in incr r; n
 
 let create s = Created s
 
-let print ppf = function
-    Module s -> fprintf ppf "%s" s
-  | Value v -> fprintf ppf "%s" (val_name v)
-  | Created s -> fprintf ppf "%s" s
-  | Exception cs -> fprintf ppf "%s" cs.cs_name
+let name = function
+    Module s -> s
+  | Value v -> val_name v
+  | Created s -> s
+  | Exception cs -> cs.cs_name
 
+let print ppf id = Format.pp_print_string ppf (name id)

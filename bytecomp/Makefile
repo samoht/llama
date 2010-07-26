@@ -7,7 +7,7 @@ FLAGS=-g $(INCLUDES)
 SRC=lambda.cmx printlambda.cmx \
   typeopt.cmx switch.cmx matching.cmx \
   translcore.cmx \
-  translclass.cmx translmod.cmx \
+  translmod.cmx \
   simplif.cmx runtimedef.cmx \
   meta.cmx instruct.cmx bytegen.cmx \
   printinstr.cmx opcodes.cmx emitcode.cmx \
