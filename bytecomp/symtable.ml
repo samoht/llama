@@ -83,6 +83,7 @@ let num_of_prim name =
     if !Clflags.custom_runtime then
       enter_numtable c_prim_table name
     else begin
+      raise(Error(Unavailable_primitive name));
       let symb =
         try Dll.find_primitive name
         with Not_found -> raise(Error(Unavailable_primitive name)) in
@@ -136,8 +137,9 @@ let init () =
   Array.iter
     (fun name ->
       let id =
-        try List.assoc name Predef.builtin_values
-        with Not_found -> fatal_error "Symtable.init" in
+        Ident.Exception
+          (try List.find (fun cs -> cs.Types.cs_name = name) Predef.builtin_values
+           with Not_found -> fatal_error "Symtable.init") in
       let c = slot_for_setglobal id in
       let cst = Const_block(0, [Const_base(Const_string name)]) in
       literal_table := (c, cst) :: !literal_table)

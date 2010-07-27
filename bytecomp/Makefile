@@ -12,7 +12,7 @@ SRC=lambda.cmx printlambda.cmx \
   meta.cmx instruct.cmx bytegen.cmx \
   printinstr.cmx opcodes.cmx emitcode.cmx \
   bytesections.cmx dll.cmx symtable.cmx \
-  bytelink.cmx bytelibrarian.cmx bytepackager.cmx
+  bytelink.cmx bytelibrarian.cmx
 
 all: $(SRC)
 

@@ -287,7 +287,15 @@ let rec crude_arity ptyp =
 let primitive o typexp =
   begin match o with
     | None ->Val_reg
-    | Some s -> Val_prim (Primitive.mk s (crude_arity typexp))
+    | Some s ->
+        let prim = 
+          { prim_name = s;
+            prim_arity = crude_arity typexp;
+            prim_alloc = true;
+            prim_native_name = "";
+            prim_native_float = false }
+        in
+        Val_prim prim
   end
 
 let mapi f =

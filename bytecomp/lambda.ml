@@ -349,9 +349,7 @@ let rec patch_guarded patch = function
 (* Translate an access path *)
 
 let transl_noncurrent_module m =
-  match m with
-    | Types.Module name -> Lprim(Pgetglobal (Ident.Module name), [])
-    | _ -> assert false
+  Lprim(Pgetglobal (Ident.Module m), [])
 let transl_exception cs =
   let m = cs.Types.cs_parent.Types.tcs_id.Types.id_module in
   if m = Env.current_module () then

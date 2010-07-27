@@ -13,7 +13,7 @@ let offset_compiled_phrase ofs cp =
 
 let add_to_library outchan (offset, index_rest) filename =
   try
-    let inchan = open_in_bin (find_in_path filename) in
+    let inchan = open_in_bin (find_in_path !Config.load_path filename) in
     let ofs = input_binary_int inchan in
     let len = ofs - 4 in
     let buffer = String.make len '\000' in
@@ -23,8 +23,8 @@ let add_to_library outchan (offset, index_rest) filename =
     close_in inchan;
     let new_index = List.map (offset_compiled_phrase offset) old_index in
       (offset + len, new_index @ index_rest)
-  with Cannot_find_file name ->
-    Printf.eprintf "Cannot find file %s.\n" name;
+  with Not_found ->
+    Printf.eprintf "Cannot find file %s.\n" filename;
     raise Toplevel
 ;;    
 

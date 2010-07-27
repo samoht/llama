@@ -174,3 +174,6 @@ let signature =
     Sig_exception cs_match_failure;
     Sig_exception cs_assert_failure;
   ]
+
+let builtin_values =
+  [ cs_match_failure; cs_assert_failure ]

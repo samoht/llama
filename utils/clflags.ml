@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: clflags.ml,v 1.53.2.1 2008/10/15 08:48:51 xleroy Exp $ *)
+(* $Id: clflags.ml 9464 2009-12-09 09:17:12Z weis $ *)
 
 (* Command-line parameters *)
 
@@ -20,7 +20,7 @@ and dllibs = ref ([] : string list)     (* .so and -dllib -lxxx *)
 
 let compile_only = ref false            (* -c *)
 and output_name = ref (None : string option) (* -o *)
-(*and include_dirs = ref ([] : string list)(* -I *)*)
+and include_dirs = ref ([] : string list)(* -I *)
 and no_std_include = ref false          (* -nostdlib *)
 and print_types = ref false             (* -i *)
 and make_archive = ref false            (* -a *)
@@ -44,6 +44,8 @@ and use_prims = ref ""                  (* -use-prims ... *)
 and use_runtime = ref ""                (* -use-runtime ... *)
 and principal = ref false               (* -principal *)
 and recursive_types = ref false         (* -rectypes *)
+and strict_sequence = ref false         (* -strict-sequence *)
+and applicative_functors = ref true     (* -no-app-funct *)
 and make_runtime = ref false            (* -make_runtime *)
 and gprofile = ref false                (* -p *)
 and c_compiler = ref (None: string option) (* -cc *)
@@ -78,6 +80,11 @@ let native_code = ref false             (* set to true under ocamlopt *)
 let inline_threshold = ref 10
 
 let dont_write_files = ref false        (* set to true under ocamldoc *)
+
+let std_include_flag prefix =
+  if !no_std_include then ""
+  else (prefix ^ (Filename.quote Config.standard_library))
+;;
 
 let std_include_dir () =
   if !no_std_include then [] else [Config.standard_library]

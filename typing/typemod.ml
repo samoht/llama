@@ -83,3 +83,10 @@ let genericize_core_signature l =
       | _ -> ()
     end
     l
+
+let transl_signature env l =
+  let l, sg, env = Resolve.signature env l in
+  ignore env;
+  type_signature l;
+  genericize_core_signature sg;
+  sg

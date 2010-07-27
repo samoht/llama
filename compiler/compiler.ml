@@ -77,7 +77,8 @@ let compile_interface modname filename =
   let ic = open_in_bin source_name (* See compile_impl *)
   and oc = open_out_bin intf_name in
     try
-      let env = Env.start_compiling (Module modname) in
+      Env.set_current_unit (Module modname);
+      let env = Env.initial_env () in
       Location.input_name := source_name;
       let lexbuf = Lexing.from_channel ic in
       Location.init lexbuf source_name;
@@ -144,18 +145,19 @@ let compile_impl env modname filename suffix =
 ;;
 
 let compile_implementation modname filename suffix =
-  if file_exists (filename ^ ".mli") then begin
+  if Sys.file_exists (filename ^ ".mli") then begin
     try
       let intfname =
         try
-          find_in_path (String.lowercase modname ^ ".zi")
-        with Cannot_find_file _ ->
+          find_in_path !Config.load_path (String.lowercase modname ^ ".zi")
+        with Not_found ->
           eprintf
             "Cannot find file %s.zi. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
       let intf_sg = Get.signature modname in
-      let env = Env.start_compiling (Module modname) in
+      Env.set_current_unit (Module modname);
+      let env = Env.initial_env () in
       let impl_sg, env = compile_impl env modname filename suffix in
       ignore (Includemod.signatures (Subst.identity (Module modname)) impl_sg intf_sg)
     with Sys_error _ as x -> (* xxx *)
@@ -165,7 +167,8 @@ let compile_implementation modname filename suffix =
     let intf_name = filename ^ ".zi" in
     let oc = open_out_bin intf_name in
     try
-      let env = Env.start_compiling (Module modname) in 
+      Env.set_current_unit (Module modname);
+      let env = Env.initial_env () in
       let sg, env = compile_impl env modname filename suffix in
       Module.write oc (Env.current_module_name ()) sg;
       close_out oc

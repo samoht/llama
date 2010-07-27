@@ -14,7 +14,7 @@ module Warnings = struct
   let parse_options b s = ()
 end
 
-let interactive_loop env =
+let interactive_loop () =
   Printf.printf "\tLlama version %s\n" Config.version;
   print_newline();
   Sys.catch_break true;
@@ -25,6 +25,7 @@ let interactive_loop env =
   (* start parsing stdin *)
   let lexbuf = Lexing.from_channel stdin in
   input_lexbuf := Some lexbuf;
+  let env = Env.initial_env () in
   let envref = ref env in
   while true do
     try
@@ -58,14 +59,14 @@ let initialize () =
   (* load things *)
   List.iter (Toplevel.load_object Env.initial) (List.rev !preload_objects);
   (* open things *)
-  Env.start_compiling Module_toplevel
+  Env.set_current_unit Module_toplevel
 
 let file_argument name =
   if Filename.check_suffix name ".zo" || Filename.check_suffix name ".za"
   then preload_objects := name :: !preload_objects
   else begin
-    let env = initialize () in
-    Toplevel.load env name;
+    initialize ();
+    Toplevel.load (Env.initial_env ()) name;
     exit 0
   end
 
@@ -109,7 +110,7 @@ let main () =
          \032    default setting is a (all warnings are non-fatal)";
     ]
     file_argument usage;
-  let env = initialize () in
-  interactive_loop env
+  initialize ();
+  interactive_loop ()
 
 let _ = main ()

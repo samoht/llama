@@ -69,7 +69,7 @@ let rename_relocation objfile mapping defined base (rel, ofs) =
 let relocate_debug base prefix subst ev =
   let ev' = { ev with ev_pos = base + ev.ev_pos;
                       ev_module = prefix ^ "." ^ ev.ev_module;
-                      ev_typsubst = Subst.compose ev.ev_typsubst subst } in
+                      (* ev_typsubst = Subst.compose ev.ev_typsubst subst *) } in
   events := ev' :: !events
 
 (* Read the unit information from a .cmo file. *)

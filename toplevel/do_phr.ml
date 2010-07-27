@@ -85,7 +85,7 @@ let do_toplevel_phrase env topphr =
         |  ("disasm", s) ->
             Meta.set_trace_flag (s<>"")
         | ("directory", dirname) ->
-            load_path := dirname :: !load_path
+            Config.load_path := dirname :: !Config.load_path
         | (d, name) ->
             (* xxx:location? *)
             eprintf 

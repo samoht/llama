@@ -57,3 +57,8 @@ let rec pat_irrefutable pat =
       List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
 ;;
 
+let let_bound_values pat_expr_list =
+  List.flatten (List.map (fun (pat, expr) -> free_vars_of_pat pat) pat_expr_list)
+
+let rev_let_bound_values pat_expr_list =
+  List.rev (let_bound_values pat_expr_list)

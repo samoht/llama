@@ -55,7 +55,7 @@ let set_nopervasives () =
   Clflags.nopervasives := true
 
 let main () =
-  Misc.load_path := [Config.standard_library];
+  Config.load_path := [""; Config.standard_library];
   Symtable.reset_linker_tables();
   Arg.parse
     [ "-a", Arg.Set make_archive, " Build a library";
@@ -63,7 +63,7 @@ let main () =
       "-g", Arg.Set debug, " Save debugging information";
       "-i", Arg.Unit (fun () -> print_types := true; compile_only := true),
       " Print inferred interface";
-      "-I", Arg.String (fun s -> Misc.load_path := s :: !Misc.load_path),
+      "-I", Arg.String (fun s -> Config.load_path := s :: !Config.load_path),
            "<dir>  Add <dir> to the list of include directories";
       "-nostdlib", Arg.Set no_std_include,
       " do not add default directory to the list of include directories";

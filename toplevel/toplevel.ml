@@ -44,9 +44,9 @@ let load_object env name =
   let (_, filename) = add_suffix name ".zo" in
   let truename = 
     try
-      find_in_path filename
-    with Cannot_find_file name ->
-      Printf.eprintf "Cannot find file %s.\n" name;
+      find_in_path !Config.load_path filename
+    with Not_found ->
+      Printf.eprintf "Cannot find file %s.\n" filename;
       raise Toplevel in
   let inchan = open_in_bin truename in
   let stop = input_binary_int inchan in
@@ -94,9 +94,9 @@ let protect_current_input fct =
 let loadfile env filename =
   let truename =
     try
-      find_in_path filename
-    with Cannot_find_file name ->
-      Printf.eprintf "Cannot find file %s.\n" name;
+      find_in_path !Config.load_path filename
+    with Not_found ->
+      Printf.eprintf "Cannot find file %s.\n" filename;
       raise Toplevel in
   let ic = open_in truename in
   let lexbuf = Lexing.from_channel ic in
@@ -122,8 +122,8 @@ let load env name =
   let (simplename, filename) = add_suffix name ".ml" in
   let modname = String.capitalize(Filename.basename simplename) in
   protect_current_module (fun () ->
-                         Env.start_compiling (Module modname);
-    loadfile env filename)
+                            Env.set_current_unit (Module modname);
+                            loadfile env filename)
 ;;
 
 (* To quit. (Alternative: ctrl-D) *)
@@ -171,7 +171,7 @@ let cd s = Sys.chdir s;;
 (* Add a directory to the search path *)
 
 let directory dirname =
-  load_path := dirname :: !load_path;;
+  Config.load_path := dirname :: !Config.load_path;;
 
 (* Compile a file *)
 

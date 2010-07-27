@@ -68,7 +68,8 @@ let cached_module mod_id =
         begin try
           Tbl.find name !cached_modules
         with Not_found ->
-          read_cached_module name (Misc.find_in_path (String.uncapitalize name ^ ".zi"))
+          read_cached_module name
+            (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".zi"))
         end
     | Module_toplevel ->
         failwith "Get.cached_module"

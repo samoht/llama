@@ -93,6 +93,9 @@ let add_signature sg env =
            add_type_constructor tcs env)
     env sg
 
+let open_pers_signature str env =
+  add_signature (Get.signature str) env
+
 let initial = add_signature Predef.signature empty
 
 let open_module name env = add_signature (Get.signature name) env
@@ -103,12 +106,20 @@ let qualified_id name =
   { id_module = !the_current_module;
     id_name = name }
 
-let start_compiling m =
-  the_current_module := m;
-  if not !Clflags.nopervasives then
-    open_module "Pervasives" initial
-  else
-    initial
+let initial_env () =
+(*  Ident.reinit(); *)
+  try
+    if !Clflags.nopervasives
+    then initial
+    else open_pers_signature "Pervasives" initial
+  with Not_found ->
+    fatal_error "cannot open pervasives.cmi"
+
+let set_current_unit m =
+  the_current_module := m
+
+let set_unit_name s =
+  set_current_unit (Module s)
 
 let current_module () = !the_current_module
 
@@ -121,3 +132,4 @@ let current_module_name () =
 
 type summary = unit
 let summary _ = ()
+let imported_units () = assert false

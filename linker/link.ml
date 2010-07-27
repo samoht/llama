@@ -46,7 +46,7 @@ let scan_phrase tolink phr =
 
 let scan_file tolink name =
   try
-    let truename = find_in_path name in
+    let truename = find_in_path !Config.load_path name in
     let inchan = open_in_bin truename in
     let n = input_binary_int inchan in
     seek_in inchan n;
@@ -54,7 +54,7 @@ let scan_file tolink name =
     let required = List.fold_left scan_phrase [] phrase_index in
     close_in inchan;
     (truename, required)::tolink
-  with Cannot_find_file name ->
+  with Not_found ->
     Printf.eprintf "Cannot find file %s.\n" name;
     raise Toplevel
 ;;

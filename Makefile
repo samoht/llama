@@ -8,10 +8,10 @@ OCAMLYACC=ocamlyacc
 INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel
 FLAGS=-g $(INCLUDES)
 
-UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx
+UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx utils/consistbl.cmx utils/ccomp.cmx
 
 PARSING=parsing/location.cmx parsing/syntaxerr.cmx \
- parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx 
+ parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx parsing/parse.cmx parsing/printast.cmx
 
 TYPING=typing/primitive.cmx \
  typing/types.cmx \

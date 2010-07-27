@@ -1,12 +1,10 @@
 open Types
 
 type t =
-  | Module of string
+  | Module of module_id
   | Value of value
-  | Created of string
   | Exception of constructor
-
-type 'a tbl = (t * 'a) list
+  | Basic of string
 
 let same i1 i2 =
   begin match i1, i2 with
@@ -14,26 +12,43 @@ let same i1 i2 =
         s1 = s2
     | Value v1, Value v2 ->
         v1 == v2
-    | Created _, Created _ ->
-        i1 == i2
     | Exception cs1, Exception cs2 ->
         cs1 == cs2
+    | Basic _, Basic _ ->
+        i1 == i2 (* NB *)
     | _ ->
-        failwith "Ident.same"
+        false
   end
-
-let find_same id tbl = snd (List.find (fun (id', _) -> same id id') tbl)
 
 let next_stamp = ref 0
 
 let postincr r = let n = !r in incr r; n
 
-let create s = Created s
+let create s = Basic s
 
 let name = function
-    Module s -> s
+    Module m ->
+      begin match m with
+        | Types.Module_toplevel -> "(toplevel)"
+        | Types.Module s -> s
+        | Types.Module_builtin -> assert false
+      end
   | Value v -> val_name v
-  | Created s -> s
   | Exception cs -> cs.cs_name
+  | Basic s -> s
+
+let rename id = Basic (name id)
+
+let unique_name = name (* xxx *)
 
 let print ppf id = Format.pp_print_string ppf (name id)
+
+type 'a tbl = (t * 'a) list
+
+let empty = []
+
+let find_same id tbl = snd (List.find (fun (id', _) -> same id id') tbl)
+
+let add id y tbl = (id, y) :: tbl
+
+let unique_toplevel_name id = assert false (* xxx *)
