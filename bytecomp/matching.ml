@@ -3,7 +3,6 @@
 open Misc;;
 open Asttypes;;
 open Types;;
-open Predef;;
 open Error;;
 open Typedtree;;
 open Location;;

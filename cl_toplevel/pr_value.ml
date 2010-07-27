@@ -3,7 +3,6 @@
 open Misc;;
 open Asttypes;;
 open Types;;
-open Predef;;
 open Module;;
 open Btype;;
 open Format;;
@@ -41,15 +40,15 @@ let find_exception tag =
 ;;
 
 let printers = ref [
-  "", type_int,
+  "", Predef.type_int,
     (fun x -> print_int (Llama_obj.to_int x));
-  "", type_float,
+  "", Predef.type_float,
     (fun x -> print_float (Llama_obj.to_float x));
-  "", type_char,
+  "", Predef.type_char,
     (fun x -> print_string "`";
               print_string (Char.escaped (Llama_obj.to_char x));
               print_string "`");
-  "", type_string,
+  "", Predef.type_string,
    (fun x -> print_string "\"";
              print_string (String.escaped (Llama_obj.to_string x));
              print_string "\"")
@@ -92,9 +91,9 @@ let rec print_val prio depth obj ty =
     | Tconstruct(c, ty_list) when has_abbrev c ->
         let params, body = get_abbrev c in
         print_val prio depth obj (expand_abbrev_aux params body ty_list)
-    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_list ->
+    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == Predef.tcs_list ->
         print_list depth obj ty_arg
-    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == tcs_vect ->
+    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == Predef.tcs_vect ->
         print_vect depth obj ty_arg
     | Tconstruct(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
@@ -110,7 +109,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         let tag = Llama_obj.tag obj in
         begin try
           let constr = 
-            if Get.type_constructor cstr == tcs_exn
+            if Get.type_constructor cstr == Predef.tcs_exn
           then find_exception tag
             else
               find_constr tag constr_list

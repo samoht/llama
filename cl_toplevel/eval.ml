@@ -1,6 +1,5 @@
 open Types
 open Asttypes
-open Predef
 open Typedtree
 open Prim
 open Primdecl
@@ -83,9 +82,9 @@ let rec term_of_expr c expr =
     | Texp_function ([({pat_desc=Tpat_var s},e)], _) ->
         Cl_lambda (term_of_expr (val_name s::c) e)
     | Texp_ifthenelse (i, t, e) ->
-        app3 (Match tcs_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
+        app3 (Match Predef.tcs_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
-        Ctor  constr_void
+        Ctor Predef.constr_void
     | Texp_constraint (e, _) ->
         term_of_expr c e
     | Texp_array l ->
@@ -111,7 +110,7 @@ let rec eval env tm =
         List.nth env i
     | App (App (Prim Psequor, x), y) ->
         begin match scrutinize (eval env x) with
-          | 0 -> Ctor constr_false
+          | 0 -> Ctor Predef.constr_false
           | 1 -> eval env y
           | _ -> assert false
         end

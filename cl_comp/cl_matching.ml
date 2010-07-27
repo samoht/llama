@@ -3,7 +3,6 @@
 open Misc;;
 open Asttypes;;
 open Types;;
-open Predef;;
 open Error;;
 open Typedtree;;
 open Location;;
@@ -293,7 +292,7 @@ let partial_fun loc =
   let start = loc.loc_start.Lexing.pos_cnum in
   let stop = loc.loc_end.Lexing.pos_cnum in
   Lprim(Praise,
-    [Lconst(SCblock(tag_match_failure,
+    [Lconst(SCblock(Predef.tag_match_failure,
       [SCatom(Const_string !input_name);SCatom(Const_int start);SCatom(Const_int stop)]))])
 ;;
 

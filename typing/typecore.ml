@@ -5,7 +5,6 @@ open Asttypes;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux
-open Predef;;
 open Module;;
 open Btype;;
 open Ctype;;
@@ -31,9 +30,9 @@ let type_of_type_expression varkind typexp =
           else
             utv.utv_type
       | Ttyp_arrow(arg1, arg2) ->
-          type_arrow(type_of arg1, type_of arg2)
+          Tarrow(type_of arg1, type_of arg2)
       | Ttyp_tuple argl ->
-          type_product(List.map type_of argl)
+          Ttuple(List.map type_of argl)
       | Ttyp_constr(cstr, args) ->
           if List.length args != (Get.type_constructor cstr).tcs_arity then
             tcs_arity_err (Get.type_constructor cstr) args typexp.te_loc
@@ -47,10 +46,13 @@ let type_of_type_expression varkind typexp =
 (* Typecore of constants *)
 
 let type_of_constant = function
-    Const_int _ -> type_int
-  | Const_float _ -> type_float
-  | Const_string _ -> type_string
-  | Const_char _ -> type_char
+    Const_int _ -> Predef.type_int
+  | Const_float _ -> Predef.type_float
+  | Const_string _ -> Predef.type_string
+  | Const_char _ -> Predef.type_char
+  | Const_int32 _ -> Predef.type_int32
+  | Const_int64 _ -> Predef.type_int64
+  | Const_nativeint _ -> Predef.type_nativeint
 ;;
 
 (* Enables warnings *)
@@ -90,7 +92,7 @@ let rec tpat (pat, ty) =
         tpat_list patl (filter_product (List.length patl) ty)
       with OldUnify ->
         pat_wrong_type_err pat ty
-          (type_product(List.map tvar(new_nongenerics (List.length patl))))
+          (Ttuple(List.map tvar(new_nongenerics (List.length patl))))
       end
   | Tpat_construct(constr, args) ->
       if List.length args <> (Get.constructor constr).cs_arity then
@@ -172,7 +174,7 @@ let rec is_nonexpansive expr =
 
 let type_format loc fmt =
 
-  let ty_arrow gty ty = type_arrow(instantiate_one_type gty (* why? *), ty) in
+  let ty_arrow gty ty = Tarrow(instantiate_one_type gty (* why? *), ty) in
 
   let bad_conversion fmt i c =
     raise (Error (loc, Bad_conversion (fmt, i, c))) in
@@ -333,7 +335,7 @@ let type_format loc fmt =
 
     let ty_ureader, ty_args = scan_format 0 in
     Tconstruct
-      (ref_type_constr tcs_format6,
+      (ref_type_constr Predef.tcs_format6,
        [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
   type_in_format fmt
@@ -355,7 +357,7 @@ let rec type_expr expr =
   | Texp_constant cst ->
       type_of_constant cst
   | Texp_tuple(args) ->
-      type_product(List.map type_expr args)
+      Ttuple(List.map type_expr args)
   | Texp_construct(constr, args) ->
       if List.length args <> (Get.constructor constr).cs_arity then
         arity_err (Get.constructor constr) args expr.exp_loc;
@@ -387,42 +389,42 @@ let rec type_expr expr =
         type_pattern (pat, ty_arg);
         type_expect action ty_res in
       List.iter tcase matching;
-      type_arrow(ty_arg, ty_res)
+      Tarrow(ty_arg, ty_res)
   | Texp_try (body, matching) ->
       let ty = type_expr body in
       List.iter
         (fun (pat, expr) ->
-           type_pattern (pat, type_exn);
+           type_pattern (pat, Predef.type_exn);
           type_expect expr ty)
         matching;
       ty
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expr  e2
   | Texp_ifthenelse (cond, ifso, ifnot) ->
-      type_expect cond type_bool;
+      type_expect cond Predef.type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) when (Get.constructor cstr == constr_void) -> true | _ -> false
+         with Texp_construct (cstr,[]) when (Get.constructor cstr == Predef.constr_void) -> true | _ -> false
       then begin
-        type_expect ifso type_unit;
-        type_unit
+        type_expect ifso Predef.type_unit;
+        Predef.type_unit
       end else begin
         let ty = type_expr ifso in
         type_expect ifnot ty;
         ty
       end
   | Texp_when (cond, act) ->
-      type_expect cond type_bool;
+      type_expect cond Predef.type_bool;
       type_expr act
   | Texp_while (cond, body) ->
-      type_expect cond type_bool;
+      type_expect cond Predef.type_bool;
       type_statement body;
-      type_unit
+      Predef.type_unit
   | Texp_for (id, start, stop, up_flag, body) ->
-      id.val_type <- type_int;
-      type_expect start type_int;
-      type_expect stop type_int;
+      id.val_type <- Predef.type_int;
+      type_expect start Predef.type_int;
+      type_expect stop Predef.type_int;
       type_statement body;
-      type_unit
+      Predef.type_unit
   | Texp_constraint (e, ty_expr) ->
       let ty' = type_of_type_expression (Level 1) ty_expr in
       type_expect e ty';
@@ -430,7 +432,7 @@ let rec type_expr expr =
   | Texp_array elist ->
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
-      type_vect ty_arg
+      Predef.type_vect ty_arg
   | Texp_record (lbl_expr_list, exten) ->
       let ty = new_type_var() in
       List.iter
@@ -467,15 +469,15 @@ let rec type_expr expr =
       if (Get.label lbl).lbl_mut == Immutable then label_not_mutable_err expr (Get.label lbl);
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
-      type_unit
+      Predef.type_unit
   | Texp_assert e ->
-      type_expect e type_bool;
-      type_unit
+      type_expect e Predef.type_bool;
+      Predef.type_unit
   | Texp_assertfalse ->
       new_type_var ()
   | Texp_stream complist ->
       let ty_comp = new_type_var() in
-      let ty_res = type_stream ty_comp in
+      let ty_res = Predef.type_stream ty_comp in
       List.iter
         (function Zterm e -> type_expect e ty_comp
                 | Znonterm e -> type_expect e ty_res)
@@ -483,7 +485,7 @@ let rec type_expr expr =
       ty_res
   | Texp_parser casel ->
       let ty_comp = new_type_var() in
-      let ty_stream = type_stream ty_comp in
+      let ty_stream = Predef.type_stream ty_comp in
       let ty_res = new_type_var() in
       let rec type_stream_pat = function
         ([], act) ->
@@ -494,7 +496,7 @@ let rec type_expr expr =
       | (Znontermpat(parsexpr, p) :: rest, act) ->
           let ty_parser_result = new_type_var() in
           type_expect parsexpr
-                      (type_arrow(ty_stream, ty_parser_result));
+                      (Tarrow(ty_stream, ty_parser_result));
           tpat (p, ty_parser_result);
           type_stream_pat (rest,act)
       | (Zstreampat s :: rest, act) ->
@@ -502,7 +504,7 @@ let rec type_expr expr =
           type_stream_pat  (rest,act)
       in
       List.iter (type_stream_pat)  casel;
-      type_arrow(ty_stream, ty_res)
+      Tarrow(ty_stream, ty_res)
   in
     expr.exp_type <- inferred_ty;
     inferred_ty
@@ -517,11 +519,11 @@ and type_expect exp expected_ty =
         match expand_head expected_ty with
           (* Hack for format strings *)
           Tconstruct(cstr, _) ->
-            if Get.type_constructor cstr == tcs_format6
+            if Get.type_constructor cstr == Predef.tcs_format6
             then type_format exp.exp_loc s
-            else type_string
+            else Predef.type_string
         | _ ->
-            type_string in
+            Predef.type_string in
       unify_expr exp expected_ty actual_ty
   | Texp_let(rec_flag, pat_expr_list, body) ->
       type_let_decl rec_flag pat_expr_list;
@@ -529,7 +531,7 @@ and type_expect exp expected_ty =
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expect e2 expected_ty
   | Texp_ifthenelse (cond, ifso, ifnot) ->
-      type_expect cond type_bool;
+      type_expect cond Predef.type_bool;
       type_expect ifso expected_ty;
       type_expect ifnot expected_ty
   | Texp_tuple el ->
@@ -569,4 +571,4 @@ and type_statement expr =
   | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
   | Tvar _ -> ()
   | _ ->
-      if not (Ctype.equal ty type_unit) then not_unit_type_warning expr ty
+      if not (Ctype.equal ty Predef.type_unit) then not_unit_type_warning expr ty

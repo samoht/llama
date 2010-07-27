@@ -6,7 +6,6 @@ open Asttypes;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux
-open Predef;;
 open Module;;
 open Cl_lambda;;
 open Prim;;
@@ -76,9 +75,9 @@ let partial_try = Lprim(Praise, [Lvar 0]);;
 
 let translate_compar gen_fun (int_comp, float_comp) ty arg1 arg2 =
   let comparison =
-    if Ctype.equal ty type_int || Ctype.equal ty type_char then
+    if Ctype.equal ty Predef.type_int || Ctype.equal ty Predef.type_char then
       Ptest int_comp
-    else if Ctype.equal ty type_float then
+    else if Ctype.equal ty Predef.type_float then
       Ptest float_comp
     else match (int_comp, arg1, arg2) with
       (Pint_test PTeq, Lconst(SCblock(tag, [])), _) -> Ptest Peq_test
@@ -120,7 +119,7 @@ let assert_failed loc =
   let line = pos.Lexing.pos_lnum in
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise,
-          [Lconst(SCblock(tag_assert_failure,
+          [Lconst(SCblock(Predef.tag_assert_failure,
               [SCatom(Const_string fname);
                SCatom(Const_int line);
                SCatom(Const_int char)]))])
@@ -247,7 +246,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> Get.constructor cstr == constr_void
+                       Texp_construct(cstr,[]) -> Get.constructor cstr == Predef.constr_void
                     | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))

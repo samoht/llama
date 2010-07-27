@@ -26,8 +26,7 @@ let print_constr_decl cstr =
       printf "%s\n" cstr.cs_name
   | _ ->
       printf "%s of %a\n"
-        cstr.cs_name
-             output_type (Predef.type_product cstr.cs_args)
+        cstr.cs_name output_type (Ttuple cstr.cs_args)
 ;;
 
 let print_label_decl lbl =

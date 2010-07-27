@@ -7,7 +7,6 @@ open Asttypes;;
 open Location;;
 open Module;;
 open Types;;
-open Predef;;
 open Btype;;
 open Ctype;;
 open Patch;;
@@ -139,7 +138,7 @@ let install_printer name =
     begin try
       push_type_level();
       let ty_arg = new_type_var() in
-      let ty_printer = type_arrow(ty_arg, type_unit) in
+      let ty_printer = Tarrow(ty_arg, Predef.type_unit) in
       unify (instantiate_one_type val_desc.val_type, ty_printer);
       pop_type_level();
       generalize_type ty_arg;

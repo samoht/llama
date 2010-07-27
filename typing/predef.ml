@@ -37,8 +37,7 @@ let tcs_nativeint = mkty "nativeint" []
 let tcs_int32 = mkty "int32" []
 let tcs_int64 = mkty "int64" []
 let tcs_lazy_t = mkty "lazy_t" []
-
-let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
+let qualid_stream = { id_module = Module "Stream"; id_name = "stream" }
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -58,11 +57,7 @@ let type_nativeint = Tconstruct(ref_type_constr tcs_nativeint, [])
 let type_int32 = Tconstruct(ref_type_constr tcs_int32, [])
 let type_int64 = Tconstruct(ref_type_constr tcs_int64, [])
 let type_lazy_t t = Tconstruct(ref_type_constr tcs_lazy_t, [])
-
-let type_arrow (t1,t2) = Tarrow(t1,t2)
-let type_product tlist = Ttuple tlist
-let type_stream t = Tconstruct(fwdref "Stream" "stream", [t])
-let type_num = Tconstruct(fwdref "Num" "num", []) (* windows *)
+let type_stream t = Tconstruct({ref_id = qualid_stream; ref_contents = None}, [t])
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -137,58 +132,51 @@ let _ =
       tcs_list, Type_variant [ constr_nil; constr_cons ];
       tcs_option, Type_variant [ constr_none; constr_some ] ]
 
+let type_constructors =
+  [ tcs_int;
+    tcs_char;
+    tcs_string;
+    tcs_float;
+    tcs_bool;
+    tcs_unit;
+    tcs_exn;
+    tcs_vect;
+    tcs_list;
+    tcs_format6;
+    tcs_option;
+    tcs_lazy_t;
+    tcs_nativeint;
+    tcs_int32;
+    tcs_int64 ]
+
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let tag_match_failure, cs_match_failure =
-  let name = "Match_failure" in
+let predef_exn name tyl =
   let qualid = { id_module = Module_builtin; id_name = name } in
   let stamp = 1 (* xxx *) in
   let tag = ConstrExtensible (qualid, stamp) in
   tag,
   { cs_parent = tcs_exn;
     cs_name = name;
-    cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
-    cs_args = [type_string; type_int; type_int]; cs_arity = 3;
+    cs_res = Tconstruct (ref_type_constr tcs_exn, []);
+    cs_args = tyl;
+    cs_arity = List.length tyl;
     cs_tag = tag;
     cstr_tag = Cstr_exception (qualid, stamp) }
+  
+let tag_match_failure, cs_match_failure =
+  predef_exn "Match_failure" [type_string; type_int; type_int]
 
 let tag_assert_failure, cs_assert_failure =
-  let name = "Assert_failure" in
-  let qualid = { id_module = Module_builtin; id_name = name } in
-  let stamp = 1 (* xxx *) in
-  let tag = ConstrExtensible (qualid, stamp) in
-  tag,
-  { cs_parent = tcs_exn;
-    cs_name = name;
-    cs_res = Tconstruct(ref_type_constr tcs_exn,[]);
-    cs_args = [type_string; type_int; type_int]; cs_arity = 3;
-    cs_tag = tag;
-    cstr_tag = Cstr_exception (qualid, stamp);
-  }
+  predef_exn "Assert_failure" [type_string; type_int; type_int]
+
+let exceptions =
+  [ cs_match_failure; cs_assert_failure ]
 
 (* ---------------------------------------------------------------------- *)
 
 let signature =
-  [ Sig_type tcs_int;
-    Sig_type tcs_char;
-    Sig_type tcs_string;
-    Sig_type tcs_float;
-    Sig_type tcs_bool;
-    Sig_type tcs_unit;
-    Sig_type tcs_exn;
-    Sig_type tcs_vect;
-    Sig_type tcs_list;
-    Sig_type tcs_format6;
-    Sig_type tcs_option;
-    Sig_type tcs_lazy_t;
-    Sig_type tcs_nativeint;
-    Sig_type tcs_int32;
-    Sig_type tcs_int64;
-    Sig_exception cs_match_failure;
-    Sig_exception cs_assert_failure;
-  ]
-
-let builtin_values =
-  [ cs_match_failure; cs_assert_failure ]
+  List.map (fun tcs -> Sig_type tcs) type_constructors @
+    List.map (fun cs -> Sig_exception cs) exceptions

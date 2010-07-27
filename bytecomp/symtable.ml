@@ -138,7 +138,7 @@ let init () =
     (fun name ->
       let id =
         Ident.Exception
-          (try List.find (fun cs -> cs.Types.cs_name = name) Predef.builtin_values
+          (try List.find (fun cs -> cs.Types.cs_name = name) Predef.exceptions
            with Not_found -> fatal_error "Symtable.init") in
       let c = slot_for_setglobal id in
       let cst = Const_block(0, [Const_base(Const_string name)]) in

@@ -2,7 +2,6 @@
 
 open Asttypes
 open Types
-open Predef
 open Typedtree
 open Module
 open Btype
@@ -73,7 +72,7 @@ let type_typedecl_new decl loc =
     end decl
 
 let type_excdecl cs args  =
-  cs.cs_res <- type_exn;
+  cs.cs_res <- Predef.type_exn;
   cs.cs_args <- List.map (type_of_type_expression Generic) args
 
 let type_valuedecl_new v typexp =
