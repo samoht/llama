@@ -31,7 +31,7 @@ let name = function
       begin match m with
         | Types.Module_toplevel -> "(toplevel)"
         | Types.Module s -> s
-        | Types.Module_builtin -> assert false
+        | Types.Module_builtin -> "(builtin)"
       end
   | Value v -> val_name v
   | Exception cs -> cs.cs_name
