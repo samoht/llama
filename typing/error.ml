@@ -7,7 +7,7 @@ open Types;;
 open Typedtree;;
 open Typedtree_aux;;
 open Btype;;
-open Print;;
+open Printtyp;;
 open Printf;;
 open Ctype;;
 

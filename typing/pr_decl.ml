@@ -4,7 +4,7 @@ open Asttypes;;
 open Misc;;
 open Asttypes;;
 open Types;;
-open Print;;
+open Printtyp;;
 open Printf;;
 
 let print_expr ty =

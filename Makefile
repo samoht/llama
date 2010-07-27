@@ -20,7 +20,7 @@ TYPING=typing/primitive.cmx \
  typing/module.cmx \
  typing/env.cmx typing/btype.cmx \
  typing/subst.cmx \
- typing/print.cmx typing/pr_decl.cmx \
+ typing/printtyp.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \
  typing/error.cmx \
  typing/includecore.cmx typing/includemod.cmx \
