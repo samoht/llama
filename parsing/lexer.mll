@@ -142,6 +142,17 @@ let char_for_hexadecimal_code lexbuf i =
   in
   Char.chr (val1 * 16 + val2)
 
+(* To convert integer literals, allowing max_int + 1 (PR#4210) *)
+
+let cvt_int_literal s =
+  - int_of_string ("-" ^ s)
+let cvt_int32_literal s =
+  Int32.neg (Int32.of_string ("-" ^ String.sub s 0 (String.length s - 1)))
+let cvt_int64_literal s =
+  Int64.neg (Int64.of_string ("-" ^ String.sub s 0 (String.length s - 1)))
+let cvt_nativeint_literal s =
+  Nativeint.neg (Nativeint.of_string ("-" ^ String.sub s 0 (String.length s - 1)))
+
 (* Remove underscores from float literals *)
 
 let remove_underscores s =
@@ -238,6 +249,21 @@ rule token = parse
         with Failure _ ->
           raise (Error(Literal_overflow "int", Location.curr lexbuf))
       }
+  | int_literal "l"
+      { try
+          INT32 (cvt_int32_literal (Lexing.lexeme lexbuf))
+        with Failure _ ->
+          raise (Error(Literal_overflow "int32", Location.curr lexbuf)) }
+  | int_literal "L"
+      { try
+          INT64 (cvt_int64_literal (Lexing.lexeme lexbuf))
+        with Failure _ ->
+          raise (Error(Literal_overflow "int64", Location.curr lexbuf)) }
+  | int_literal "n"
+      { try
+          NATIVEINT (cvt_nativeint_literal (Lexing.lexeme lexbuf))
+        with Failure _ ->
+          raise (Error(Literal_overflow "nativeint", Location.curr lexbuf)) }
   | float_literal
       { FLOAT (remove_underscores(Lexing.lexeme lexbuf)) }
   | "\""
