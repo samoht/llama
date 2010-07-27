@@ -4,17 +4,12 @@ external ( ! ) : 'a ref -> 'a = "field0";;
 external ( := ) : 'a ref -> 'a -> unit = "setfield0";;
 external incr : int ref -> unit = "incr";;
 external decr : int ref -> unit = "decr";;
-exception Sys_error of string;;
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
 external raise : exn -> 'a = "raise";;
-exception Out_of_memory;;
-exception Invalid_argument of string;;
-exception Failure of string;;
-exception Not_found;;
 exception Exit;;
 
 external raise : exn -> 'a = "raise";;
@@ -93,7 +88,6 @@ external ( asr ) : int -> int -> int = "shift_right_signed"
 external lshift_right : int -> int -> int = "shift_right_signed"
 external int_of_string : string -> int = "int_of_string"
 external format_int : string -> int -> string = "format_int"
-exception Division_by_zero;;
 
 let abs n =
   if n < 0 then -n else n
@@ -257,7 +251,6 @@ external close_in : in_channel -> unit = "close_in"
 external fast_input : in_channel -> string -> int -> int -> int = "input"
 external fast_output : out_channel -> string -> int -> int -> unit = "output"
 external input_scan_line: in_channel -> int = "input_scan_line"
-exception End_of_file
 
 let std_in = open_descriptor_in 0
 and std_out = open_descriptor_out 1

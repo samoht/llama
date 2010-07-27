@@ -252,7 +252,7 @@ void sys_init(argv)
 
 /* Handling of user interrupts */
 
-unsigned char raise_break_exn[] = { ATOM, BREAK_EXN, RAISE };
+unsigned char raise_break_exn[] = { ATOM, UNDEFINED_RECURSIVE_MODULE_EXN/*xxx*/, RAISE };
 
 sighandler_return_type intr_handler(sig)
      int sig;

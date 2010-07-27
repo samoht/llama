@@ -119,11 +119,10 @@ cl_comp/more_predef.ml : runtime/globals.h runtime/fail.h
                 $< \
            | sed -e '$$s|;$$||'; \
          echo '];;'; \
-         echo 'let predef_exn = ['; \
-         sed -n -e 's|.*/\* \(".*"\), *\(".*"\), *\([0-9]*\) \*/$$|({id_module=Module \1; id_name=\2}, \3);|p' \
-                runtime/fail.h \
-           | sed -e '$$s|;$$||'; \
-         echo '];;') > $@
+         echo 'let predef_exn = [|'; \
+	 sed -n -e 's|.*/\* \("[A-Za-z_]*"\) \*/$$|  \1;|p' runtime/fail.h | \
+	 sed -e '$$s/;$$//'; \
+	 echo '|];;') > $@
 
 cl_comp/caml_light_extern.o: cl_comp/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<

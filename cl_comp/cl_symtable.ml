@@ -182,7 +182,9 @@ let reset_linker_tables () =
   List.iter reserve_slot_for_defined_variable predef_variables;
   exn_tag_table := new_numtable 31;
   tag_exn_table := Array.make 50 unknown_exn_name;
-  List.iter reserve_num_of_exn predef_exn;
+  for i=0 to Array.length predef_exn-1 do
+    reserve_num_of_exn ({id_module=Module_builtin; id_name=predef_exn.(i)}, i)
+  done;
   set_c_primitives Prim_c.primitives_table
 ;;
 

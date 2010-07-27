@@ -11,13 +11,6 @@ external incr : int ref -> unit = "incr";;
            Could be defined as [fun r -> r := succ !r]. *)
 external decr : int ref -> unit = "decr";;
 
-exception Sys_error of string;;
-        (* Raised by some functions in the [sys] and [io] modules,
-           when the underlying system calls fail. The argument to
-           [Sys_error] is a string describing the error. The texts
-           of the error messages are implementation-dependent, and should
-           not be relied upon to catch specific system errors. *)
-
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
@@ -27,18 +20,6 @@ external raise : exn -> 'a = "raise";;
 
 (*** A few general-purpose predefined exceptions. *)
 
-exception Out_of_memory;;
-        (* Raised by the garbage collector, when there is insufficient
-           memory to complete the computation. *)
-exception Invalid_argument of string;;
-        (* Raised by library functions to signal that the given
-           arguments do not make sense. *)
-exception Failure of string;;
-        (* Raised by library functions to signal that they are
-           undefined on the given arguments. *)
-exception Not_found;;
-        (* Raised by search functions when the desired object
-           could not be found. *)
 exception Exit;;
         (* This exception is not raised by any library function.  It is
 	   provided for use in your programs. *)
@@ -129,8 +110,6 @@ external ( != ) : 'a -> 'a -> bool = "!="
 (* Integers are 31 bits wide (or 63 bits on 64-bit processors).
    All operations are taken modulo $2^{31}$ (or $2^{63}$).
    They do not fail on overflow. *)
-
-exception Division_by_zero;;
 
 external minus : int -> int = "~int"
 external minus_int : int -> int = "~int"
@@ -350,10 +329,6 @@ type in_channel;;
 type out_channel;;
         (* The abstract types of input channels and output channels. *)
 
-exception End_of_file
-        (* Raised when an operation cannot complete, because the end
-           of the file has been reached. *)
-;;
 val stdin : in_channel
 val std_in : in_channel
 val stdout : out_channel
