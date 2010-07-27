@@ -80,7 +80,7 @@ type signature_item =
     psig_loc: Location.t }
 
 and signature_item_desc =
-    Psig_value of string * type_expression * string option
+    Psig_value of string * type_expression * string list option
   | Psig_type of (string * string list * tcs_kind) list
   | Psig_exception of constr_decl
   | Psig_open of module_name
@@ -92,7 +92,7 @@ type structure_item =
 and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
-  | Pstr_primitive of string * type_expression * string
+  | Pstr_primitive of string * type_expression * string list
   | Pstr_type of (string * string list * tcs_kind) list
   | Pstr_exception of constr_decl
   | Pstr_open of module_name
