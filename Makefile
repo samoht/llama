@@ -5,7 +5,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I parsing -I typing -I compiler -I toplevel -I bytecomp -I driver
+INCLUDES=-I utils -I parsing -I typing -I cl_comp -I cl_toplevel -I bytecomp -I driver
 FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx utils/consistbl.cmx utils/ccomp.cmx
@@ -29,19 +29,19 @@ TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/typedecl.cmx typing/typemod.cmx \
  typing/parmatch.cmx
 
-COMPILER=compiler/prim.cmx compiler/primdecl.cmx \
- compiler/cl_lambda.cmx compiler/cl_matching.cmx \
- compiler/event.cmx \
- compiler/tr_env.cmx compiler/trstream.cmx compiler/front.cmx \
- compiler/cl_instruct.cmx compiler/back.cmx compiler/cl_opcodes.cmx \
- compiler/prim_opc.cmx compiler/buffcode.cmx \
- compiler/labels.cmx compiler/reloc.cmx \
- compiler/cl_emitcode.cmx compiler/emit_phr.cmx \
- compiler/compiler.cmx \
- compiler/caml_light_extern.o \
-  compiler/more_predef.cmx compiler/prim_c.cmx compiler/cl_symtable.cmx \
-  compiler/patch.cmx compiler/tr_const.cmx compiler/link.cmx \
-  compiler/readword.cmx
+CL_COMP=cl_comp/prim.cmx cl_comp/primdecl.cmx \
+ cl_comp/cl_lambda.cmx cl_comp/cl_matching.cmx \
+ cl_comp/event.cmx \
+ cl_comp/tr_env.cmx cl_comp/trstream.cmx cl_comp/front.cmx \
+ cl_comp/cl_instruct.cmx cl_comp/back.cmx cl_comp/cl_opcodes.cmx \
+ cl_comp/prim_opc.cmx cl_comp/buffcode.cmx \
+ cl_comp/labels.cmx cl_comp/reloc.cmx \
+ cl_comp/cl_emitcode.cmx cl_comp/emit_phr.cmx \
+ cl_comp/compiler.cmx \
+ cl_comp/caml_light_extern.o \
+  cl_comp/more_predef.cmx cl_comp/prim_c.cmx cl_comp/cl_symtable.cmx \
+  cl_comp/patch.cmx cl_comp/tr_const.cmx cl_comp/link.cmx \
+  cl_comp/readword.cmx
 
 BYTECOMP=bytecomp/ident.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/typeopt.cmx bytecomp/switch.cmx bytecomp/matching.cmx \
@@ -55,13 +55,13 @@ BYTECOMP=bytecomp/ident.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
 
 DRIVER=driver/pparse.cmx driver/errors.cmx driver/compile.cmx driver/main_args.cmx driver/main.cmx
 
-TOPLEVEL=\
-  toplevel/eval.cmx toplevel/pr_value.cmx \
-  toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
-  toplevel/cl_topmain.cmx runtime/libcaml.a toplevel/llama.o
+CL_TOPLEVEL=\
+  cl_toplevel/eval.cmx cl_toplevel/pr_value.cmx \
+  cl_toplevel/load_phr.cmx cl_toplevel/do_phr.cmx cl_toplevel/toplevel.cmx \
+  cl_toplevel/cl_topmain.cmx runtime/libcaml.a cl_toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
- compiler/cl_opcodes.ml compiler/prim_c.ml compiler/more_predef.ml parsing/parser.ml
+ cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml
 
 all: runtime_dir llama llamac llamadep testprog stdlib_dir # llamac-new
 .PHONY: all
@@ -72,13 +72,13 @@ testprog: testprog.ml runtime_dir stdlib_dir
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Llama system is up and running."
 
-llama: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(TOPLEVEL)
+llama: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llamac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) compiler/librarian.cmx compiler/driver.cmx
+llamac: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(COMPILER:.cmx=.cmo) compiler/librarian.cmo compiler/driver.cmo
+llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(CL_COMP:.cmx=.cmo) cl_comp/librarian.cmo cl_comp/driver.cmo
 	$(OCAMLC) -custom $(FLAGS) -o $@ $^
 
 %.cmx: %.ml
@@ -103,16 +103,16 @@ parsing/lexer.ml: parsing/lexer.mll
 parsing/parser.ml parsing/parser.mli: parsing/parser.mly
 	$(OCAMLYACC) $<
 
-compiler/cl_opcodes.ml: runtime/instruct.h
+cl_comp/cl_opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
 
-compiler/prim_c.ml : runtime/primitives
+cl_comp/prim_c.ml : runtime/primitives
 	(echo 'let primitives_table = [|'; \
 	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' runtime/primitives; \
 	 echo '|];;') > $@
 
-compiler/more_predef.ml : runtime/globals.h runtime/fail.h
+cl_comp/more_predef.ml : runtime/globals.h runtime/fail.h
 	(echo 'open Types;;'; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{id_module=Module \1; id_name=\2};|p' \
@@ -125,10 +125,10 @@ compiler/more_predef.ml : runtime/globals.h runtime/fail.h
            | sed -e '$$s|;$$||'; \
          echo '];;') > $@
 
-compiler/caml_light_extern.o: compiler/caml_light_extern.c
+cl_comp/caml_light_extern.o: cl_comp/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
-toplevel/llama.o: toplevel/llama.c
+cl_toplevel/llama.o: cl_toplevel/llama.c
 	$(OCAMLOPT) -c -ccopt "-I . -o $@" $<
 
 runtime/primitives:
@@ -146,7 +146,7 @@ stdlib_dir:
 semiclean:
 	rm -f llama llamac llamarun stdlib.zo llamac-new
 	rm -f $(GENSOURCES)
-	rm -f {utils,parsing,typing,compiler,toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
+	rm -f {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd stdlib && make clean
 .PHONY: semiclean
@@ -155,7 +155,7 @@ clean: semiclean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,toplevel,bytecomp,driver}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend
