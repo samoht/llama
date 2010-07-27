@@ -63,11 +63,11 @@ CL_TOPLEVEL=\
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml
 
-all: runtime_dir llama llamac llamadep testprog stdlib_dir # llamac-new
+all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir # llamac-new
 .PHONY: all
 
-testprog: testprog.ml runtime_dir stdlib_dir
-	./llamac -I stdlib $< -o $@
+testprog: testprog.ml runtime_dir cl_stdlib_dir
+	./llamac -I cl_stdlib $< -o $@
 	runtime/llamarun testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Llama system is up and running."
@@ -139,16 +139,16 @@ runtime/libcamld.a:
 	cd runtime && make libcamld.a
 runtime_dir:
 	cd runtime && make
-stdlib_dir:
-	cd stdlib && make
-.PHONY: runtime_dir stdlib_dir
+cl_stdlib_dir:
+	cd cl_stdlib && make
+.PHONY: runtime_dir cl_stdlib_dir
 
 semiclean:
 	rm -f llama llamac llamarun stdlib.zo llamac-new
 	rm -f $(GENSOURCES)
 	rm -f {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
-	cd stdlib && make clean
+	cd cl_stdlib && make clean
 .PHONY: semiclean
 clean: semiclean
 	cd runtime && make clean
@@ -161,7 +161,7 @@ depend: $(GENSOURCES)
 include .depend
 
 configure-in-situ:
-	./configure -bindir ${PWD}/runtime -libdir ${PWD}/stdlib
+	./configure -bindir ${PWD}/runtime -libdir ${PWD}/cl_stdlib
 .PHONY: configure-in-situ
 
 llamac-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(DRIVER)
