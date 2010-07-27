@@ -5,7 +5,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel -I bytecomp -I driver
+INCLUDES=-I utils -I parsing -I typing -I compiler -I toplevel -I bytecomp -I driver
 FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx utils/consistbl.cmx utils/ccomp.cmx
@@ -37,12 +37,11 @@ COMPILER=compiler/prim.cmx compiler/primdecl.cmx \
  compiler/prim_opc.cmx compiler/buffcode.cmx \
  compiler/labels.cmx compiler/reloc.cmx \
  compiler/cl_emitcode.cmx compiler/emit_phr.cmx \
- compiler/compiler.cmx
-
-LINKER=linker/caml_light_extern.o \
-  linker/more_predef.cmx linker/prim_c.cmx linker/cl_symtable.cmx \
-  linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
-  linker/readword.cmx
+ compiler/compiler.cmx \
+ compiler/caml_light_extern.o \
+  compiler/more_predef.cmx compiler/prim_c.cmx compiler/cl_symtable.cmx \
+  compiler/patch.cmx compiler/tr_const.cmx compiler/link.cmx \
+  compiler/readword.cmx
 
 BYTECOMP=bytecomp/ident.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/typeopt.cmx bytecomp/switch.cmx bytecomp/matching.cmx \
@@ -62,7 +61,7 @@ TOPLEVEL=\
   toplevel/cl_topmain.cmx runtime/libcaml.a toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
- compiler/cl_opcodes.ml linker/prim_c.ml linker/more_predef.ml parsing/parser.ml
+ compiler/cl_opcodes.ml compiler/prim_c.ml compiler/more_predef.ml parsing/parser.ml
 
 all: runtime_dir llama llamac llamadep testprog stdlib_dir # llamac-new
 .PHONY: all
@@ -73,13 +72,13 @@ testprog: testprog.ml runtime_dir stdlib_dir
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Llama system is up and running."
 
-llama: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) $(TOPLEVEL)
+llama: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llamac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) $(LINKER) compiler/librarian.cmx compiler/driver.cmx
+llamac: $(UTILS) $(PARSING) $(TYPING) $(COMPILER) compiler/librarian.cmx compiler/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(COMPILER:.cmx=.cmo) $(LINKER:.cmx=.cmo) compiler/librarian.cmo compiler/driver.cmo
+llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(COMPILER:.cmx=.cmo) compiler/librarian.cmo compiler/driver.cmo
 	$(OCAMLC) -custom $(FLAGS) -o $@ $^
 
 %.cmx: %.ml
@@ -108,12 +107,12 @@ compiler/cl_opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
 
-linker/prim_c.ml : runtime/primitives
+compiler/prim_c.ml : runtime/primitives
 	(echo 'let primitives_table = [|'; \
 	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' runtime/primitives; \
 	 echo '|];;') > $@
 
-linker/more_predef.ml : runtime/globals.h runtime/fail.h
+compiler/more_predef.ml : runtime/globals.h runtime/fail.h
 	(echo 'open Types;;'; \
          echo 'let predef_variables = ['; \
 	 sed -n -e 's|.*/\* \(".*"\), *\(".*"\) \*/$$|{id_module=Module \1; id_name=\2};|p' \
@@ -126,7 +125,7 @@ linker/more_predef.ml : runtime/globals.h runtime/fail.h
            | sed -e '$$s|;$$||'; \
          echo '];;') > $@
 
-linker/caml_light_extern.o: linker/caml_light_extern.c
+compiler/caml_light_extern.o: compiler/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<
 
 toplevel/llama.o: toplevel/llama.c
@@ -147,7 +146,7 @@ stdlib_dir:
 semiclean:
 	rm -f llama llamac llamarun stdlib.zo llamac-new
 	rm -f $(GENSOURCES)
-	rm -f {utils,parsing,typing,compiler,linker,toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
+	rm -f {utils,parsing,typing,compiler,toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd stdlib && make clean
 .PHONY: semiclean
@@ -156,7 +155,7 @@ clean: semiclean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,linker,toplevel,bytecomp,driver}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,toplevel,bytecomp,driver}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend

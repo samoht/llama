@@ -21,8 +21,8 @@ launch/darkc
 launch/testprog
 stdlib/filename.ml
 stdlib/genlex.ml
-linker/predef.ml
-linker/prim_c.ml
+compiler/predef.ml
+compiler/prim_c.ml
 runtime/camlrun
 runtime/jumptbl.h
 runtime/libcaml.a
@@ -56,5 +56,5 @@ examples/pascal/cpascal
 examples/pascal/ipascal
 examples/picomach/asm
 examples/picomach/exec
-linker/more_predef.ml
+compiler/more_predef.ml
 llamac-new
