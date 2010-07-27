@@ -180,9 +180,9 @@ let string_of_int n =
 
 external int_of_string : string -> int = "caml_int_of_string"
 
-module String = struct
-  external get : string -> int -> char = "%string_safe_get"
-end
+(* module String = struct*)
+  external string_get : string -> int -> char = "%string_safe_get"  (* xxx unused? *)
+(* end *)
 
 let valid_float_lexem s =
   let l = string_length s in
@@ -381,16 +381,16 @@ let read_float () = float_of_string(read_line())
 
 (* Operations on large files *)
 
-module LargeFile =
-  struct
-    external seek_out : out_channel -> int64 -> unit = "caml_ml_seek_out_64"
-    external pos_out : out_channel -> int64 = "caml_ml_pos_out_64"
-    external out_channel_length : out_channel -> int64
+(* module LargeFile = *)
+(*   struct *)
+    external largefile_seek_out : out_channel -> int64 -> unit = "caml_ml_seek_out_64"
+    external largefile_pos_out : out_channel -> int64 = "caml_ml_pos_out_64"
+    external largefile_out_channel_length : out_channel -> int64
                                 = "caml_ml_channel_size_64"
-    external seek_in : in_channel -> int64 -> unit = "caml_ml_seek_in_64"
-    external pos_in : in_channel -> int64 = "caml_ml_pos_in_64"
-    external in_channel_length : in_channel -> int64 = "caml_ml_channel_size_64"
-  end
+    external largefile_seek_in : in_channel -> int64 -> unit = "caml_ml_seek_in_64"
+    external largefile_pos_in : in_channel -> int64 = "caml_ml_pos_in_64"
+    external largefile_in_channel_length : in_channel -> int64 = "caml_ml_channel_size_64"
+(*   end *)
 
 (* References *)
 
