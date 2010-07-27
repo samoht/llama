@@ -181,14 +181,14 @@ let string_of_int n =
 external int_of_string : string -> int = "caml_int_of_string"
 
 (* module String = struct*)
-  external string_get : string -> int -> char = "%string_safe_get"  (* xxx unused? *)
+  external string_get : string -> int -> char = "%string_safe_get"
 (* end *)
 
 let valid_float_lexem s =
   let l = string_length s in
   let rec loop i =
     if i >= l then s ^ "." else
-    match s.[i] with
+    match string_get s i with
     | '0' .. '9' | '-' -> loop (i+1)
     | _ -> s
   in
