@@ -308,6 +308,18 @@ linker/tr_const.cmx: linker/cl_symtable.cmx compiler/cl_lambda.cmx \
 toplevel/cl_meta.cmi: toplevel/llama_obj.cmi
 toplevel/llama_obj.cmi:
 toplevel/toplevel.cmi: typing/env.cmi
+toplevel/cl_topmain.cmo: typing/types.cmx typing/typecore.cmx \
+    toplevel/toplevel.cmi parsing/parser.cmi typing/module.cmx utils/misc.cmi \
+    parsing/location.cmi toplevel/load_phr.cmx parsing/lexer.cmx \
+    typing/env.cmi toplevel/do_phr.cmx utils/config.cmi compiler/compiler.cmx \
+    utils/clflags.cmi linker/cl_symtable.cmx toplevel/cl_meta.cmi \
+    compiler/cl_lambda.cmx parsing/asttypes.cmi
+toplevel/cl_topmain.cmx: typing/types.cmx typing/typecore.cmx \
+    toplevel/toplevel.cmx parsing/parser.cmx typing/module.cmx utils/misc.cmx \
+    parsing/location.cmx toplevel/load_phr.cmx parsing/lexer.cmx \
+    typing/env.cmx toplevel/do_phr.cmx utils/config.cmx compiler/compiler.cmx \
+    utils/clflags.cmx linker/cl_symtable.cmx toplevel/cl_meta.cmi \
+    compiler/cl_lambda.cmx parsing/asttypes.cmi
 toplevel/do_phr.cmo: typing/types.cmx typing/typemod.cmx typing/typedtree.cmi \
     typing/typedecl.cmx typing/typecore.cmx typing/resolve.cmx \
     typing/printtyp.cmx toplevel/pr_value.cmx parsing/parsetree.cmi \
@@ -346,18 +358,6 @@ toplevel/load_phr.cmx: compiler/reloc.cmx toplevel/pr_value.cmx \
     compiler/labels.cmx linker/cl_symtable.cmx compiler/cl_opcodes.cmx \
     toplevel/cl_meta.cmi compiler/cl_lambda.cmx compiler/cl_instruct.cmx \
     compiler/cl_emitcode.cmx compiler/buffcode.cmx parsing/asttypes.cmi
-toplevel/main.cmo: typing/types.cmx typing/typecore.cmx toplevel/toplevel.cmi \
-    parsing/parser.cmi typing/module.cmx utils/misc.cmi parsing/location.cmi \
-    toplevel/load_phr.cmx parsing/lexer.cmx typing/env.cmi \
-    toplevel/do_phr.cmx utils/config.cmi compiler/compiler.cmx \
-    utils/clflags.cmi linker/cl_symtable.cmx toplevel/cl_meta.cmi \
-    compiler/cl_lambda.cmx parsing/asttypes.cmi
-toplevel/main.cmx: typing/types.cmx typing/typecore.cmx toplevel/toplevel.cmx \
-    parsing/parser.cmx typing/module.cmx utils/misc.cmx parsing/location.cmx \
-    toplevel/load_phr.cmx parsing/lexer.cmx typing/env.cmx \
-    toplevel/do_phr.cmx utils/config.cmx compiler/compiler.cmx \
-    utils/clflags.cmx linker/cl_symtable.cmx toplevel/cl_meta.cmi \
-    compiler/cl_lambda.cmx parsing/asttypes.cmi
 toplevel/pr_value.cmo: typing/types.cmx typing/predef.cmx typing/module.cmx \
     utils/misc.cmi toplevel/llama_obj.cmi typing/get.cmi typing/ctype.cmx \
     linker/cl_symtable.cmx typing/btype.cmx parsing/asttypes.cmi

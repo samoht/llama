@@ -44,7 +44,7 @@ LINKER=linker/caml_light_extern.o \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
 
-BYTECOMP=bytecomp/lambda.cmx bytecomp/printlambda.cmx \
+BYTECOMP=bytecomp/ident.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/typeopt.cmx bytecomp/switch.cmx bytecomp/matching.cmx \
   bytecomp/translcore.cmx \
   bytecomp/translmod.cmx \
@@ -64,7 +64,7 @@ TOPLEVEL=\
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  compiler/cl_opcodes.ml linker/prim_c.ml linker/more_predef.ml parsing/parser.ml
 
-all: runtime_dir llama llamac llamadep testprog stdlib_dir
+all: runtime_dir llama llamac llamadep testprog stdlib_dir # llamac-new
 .PHONY: all
 
 testprog: testprog.ml runtime_dir stdlib_dir
@@ -145,7 +145,7 @@ stdlib_dir:
 .PHONY: runtime_dir stdlib_dir
 
 semiclean:
-	rm -f llama llamac llamarun stdlib.zo
+	rm -f llama llamac llamarun stdlib.zo llamac-new
 	rm -f $(GENSOURCES)
 	rm -f {utils,parsing,typing,compiler,linker,toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
@@ -165,5 +165,5 @@ configure-in-situ:
 	./configure -bindir ${PWD}/runtime -libdir ${PWD}/stdlib
 .PHONY: configure-in-situ
 
-newstuff: $(BYTECOMP) $(DRIVER)
-.PHONY: newstuff
+llamac-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(DRIVER)
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
