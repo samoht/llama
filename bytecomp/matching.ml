@@ -8,6 +8,7 @@ open Typedtree;;
 open Location;;
 open Lambda;;
 open Module
+open Primitive
 
 let lstaticfail = Lambda.staticfail
 let lstatichandle (action, lambda) = Lambda.Lstaticcatch (action, (0, []), lambda)
@@ -15,20 +16,88 @@ let has_guard = Lambda.is_guarded
 let check_unused = Parmatch.check_unused ~has_guard
 let partial_match = Parmatch.partial_match ~has_guard
 let share_lambda x = x
-let lcond (_, _) = assert false
-let lswitch (_, lambda, l) = assert false
-(*
-  let sw_numconsts = 
+
+let lambda_of_int i =  Lconst (Const_base (Const_int i))
+let prim_string_notequal =
+  Pccall{prim_name = "caml_string_notequal";
+          prim_arity = 2; prim_alloc = false;
+          prim_native_name = ""; prim_native_float = false}
+
+let lcond (arg, const_lambda_list) =
+  let cst = fst (List.hd const_lambda_list) in
+  let fail = None in
+  let lambda1 =
+    match cst with
+    | Const_int _ ->
+        let int_lambda_list =
+          List.map (function Const_int n, l -> n,l | _ -> assert false)
+            const_lambda_list in
+        Matching_aux.call_switcher
+          lambda_of_int fail arg min_int max_int int_lambda_list
+    | Const_char _ ->
+        let int_lambda_list =
+          List.map (function Const_char c, l -> (Char.code c, l)
+            | _ -> assert false)
+            const_lambda_list in
+        Matching_aux.call_switcher
+          (fun i -> Lconst (Const_base (Const_int i)))
+          fail arg 0 255 int_lambda_list
+    | Const_string _ ->
+        Matching_aux.make_test_sequence
+          fail prim_string_notequal Praise arg const_lambda_list
+    | Const_float _ ->
+        Matching_aux.make_test_sequence
+          fail
+          (Pfloatcomp Cneq) (Pfloatcomp Clt)
+          arg const_lambda_list
+    | Const_int32 _ ->
+        Matching_aux.make_test_sequence
+          fail
+          (Pbintcomp(Pint32, Cneq)) (Pbintcomp(Pint32, Clt))
+          arg const_lambda_list
+    | Const_int64 _ ->
+        Matching_aux.make_test_sequence
+          fail
+          (Pbintcomp(Pint64, Cneq)) (Pbintcomp(Pint64, Clt))
+          arg const_lambda_list
+    | Const_nativeint _ ->
+        Matching_aux.make_test_sequence
+          fail
+          (Pbintcomp(Pnativeint, Cneq)) (Pbintcomp(Pnativeint, Clt))
+          arg const_lambda_list
+  in lambda1
+
+let lswitch (_, lambda, l) =
+  let consts = ref [] in
+  let numconsts = ref 0 in
+  let addconst i action =
+    consts := (i, action) :: !consts;
+    numconsts := max !numconsts (i+1)
+  in
+  let blocks = ref [] in
+  let numblocks = ref 0 in
+  let addblock i action =
+    blocks := (i, action) :: !blocks;
+    numblocks := max !numblocks (i+1)
+  in
   List.iter
-    begin fun (caml_light_tag, action) ->
-      begin match caml_light_tag with
-        | ConstrRegular (i, _) ->
-
+    begin fun (tag, action) ->
+      begin match tag with
+        | Cstr_constant i -> addconst i action
+        | Cstr_block i -> addblock i action
+        | Cstr_exception _ -> assert false (* xxx *)
+      end
+    end l;
   Lswitch (lambda,
-           { sw_numconsts = 1 + 
-           List.map
-             l)*)
+           { sw_numconsts = !numconsts;
+             sw_consts = !consts;
+             sw_numblocks = !numblocks;
+             sw_blocks = !blocks;
+             sw_failaction = None
+           })
 
+
+(* ---------------------------------------------------------------------- *)
 
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
@@ -318,32 +387,41 @@ let partial_fun loc =
 ;;
 
 (* The entry points *)
-(*
-let translate_matching_check_failure loc casel =
-  let casel' =
-    List.map (fun (patl, act) -> (patl, share_lambda act)) (check_unused casel) in
+
+let translate_matching_check_failure ~param loc casel =
+  let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
+  let casel = check_unused casel in
+  let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
   if partial_match casel then not_exhaustive_warning loc;
-  let (lambda, total) = conquer_matching (make_initial_matching casel') in
+  let (lambda, total) = conquer_matching (make_initial_matching ~param casel) in
   if total then lambda else lstatichandle(lambda, partial_fun loc)
 ;;
-*)
+
 let translate_matching ~param failure_code casel =
   let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
   let casel = check_unused casel in
   let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
   let (lambda, total) = conquer_matching (make_initial_matching ~param casel) in
-  if total then lambda else lstatichandle(lambda, failure_code)
+  if total then lambda else lstatichandle(lambda, failure_code())
 ;;
 
-
 let for_function loc repr param pat_act_list partial =
-  translate_matching ~param lstaticfail pat_act_list
+  translate_matching_check_failure ~param loc pat_act_list
 
-let for_trywith _ _ = assert false
-let for_let _ _ _ _ = assert false
+let for_trywith param pat_act_list =
+  translate_matching ~param (fun () -> Lprim(Praise, [param])) pat_act_list
+
+let for_let loc param pat body =
+  translate_matching_check_failure ~param loc [pat, body]
+
 let for_multiple_match _ _ _ _ = assert false
+
 let for_tupled_function _ _ _ _ = assert false
+
 exception Cannot_flatten
+
 let flatten_pattern _ _ = assert false
+
 let make_test_sequence _ _ _ _ _ = assert false
+
 let inline_lazy_force _ _ = assert false

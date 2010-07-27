@@ -226,6 +226,7 @@ let rec make_matrix ~has_guard pses = match pses with
 | []           -> []
 ;;
 
+(* le_pat p q  means, forall V,  V matches q implies V matches p *)
 let rec le_pat p q =
   match p.pat_desc, q.pat_desc with
     (Tpat_var(_)|Tpat_any),_ -> true
@@ -296,4 +297,5 @@ let check_unused ~has_guard casel =
    check_rec prefs
 ;;
 
-let fluid pat = failwith "Parmatch.fluid"
+let irrefutable pat = le_pat pat omega
+let fluid pat = irrefutable pat
