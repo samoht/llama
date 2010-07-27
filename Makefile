@@ -63,7 +63,7 @@ CL_TOPLEVEL=\
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml
 
-all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir # llamac-new
+all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llamac-new
 .PHONY: all
 
 testprog: testprog.ml runtime_dir cl_stdlib_dir
