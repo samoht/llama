@@ -18,6 +18,7 @@ type dll_handle
 type dll_address
 type dll_mode = For_checking | For_execution
 
+(*
 external dll_open: dll_mode -> string -> dll_handle = "caml_dynlink_open_lib"
 external dll_close: dll_handle -> unit = "caml_dynlink_close_lib"
 external dll_sym: dll_handle -> string -> dll_address
@@ -26,6 +27,12 @@ external dll_sym: dll_handle -> string -> dll_address
 external add_primitive: dll_address -> int = "caml_dynlink_add_primitive"
 external get_current_dlls: unit -> dll_handle array
                                            = "caml_dynlink_get_current_libs"
+*)
+let dll_open _ _ = failwith "Dll.dll_open"
+let dll_close _ = failwith "Dll.dll_close"
+let dll_sym _ _ = failwith "Dll.dll_sym"
+let add_primitive _ = failwith "Dll.add_primitive"
+let get_current_dlls _ = failwith "Dll.get_current_dlls"
 
 (* Current search path for DLLs *)
 let search_path = ref ([] : string list)

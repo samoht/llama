@@ -235,6 +235,8 @@ let output_global_map oc =
 let data_global_map () =
   Obj.repr !global_table
 
+(*
+
 (* Functions for toplevel use *)
 
 (* Update the in-core table of globals *)
@@ -356,6 +358,8 @@ let filter_global_map p gmap =
     (fun id num -> if p id then newtbl := Tbl.add id num !newtbl)
     gmap.num_tbl;
   {num_cnt = gmap.num_cnt; num_tbl = !newtbl}
+
+*)
 
 (* Error report *)
 

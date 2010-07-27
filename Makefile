@@ -49,7 +49,7 @@ BYTECOMP=bytecomp/ident.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/translcore.cmx \
   bytecomp/translmod.cmx \
   bytecomp/simplif.cmx bytecomp/runtimedef.cmx \
-  bytecomp/meta.cmx bytecomp/instruct.cmx bytecomp/bytegen.cmx \
+  bytecomp/instruct.cmx bytecomp/bytegen.cmx \
   bytecomp/printinstr.cmx bytecomp/opcodes.cmx bytecomp/emitcode.cmx \
   bytecomp/bytesections.cmx bytecomp/dll.cmx bytecomp/symtable.cmx \
   bytecomp/bytelink.cmx bytecomp/bytelibrarian.cmx
