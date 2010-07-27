@@ -4,8 +4,8 @@ open Asttypes;;
 open Typedtree;;
 open Types;;
 open Prim;;
-open Lambda;;
-open Matching;;
+open Cl_lambda;;
+open Cl_matching;;
 open Tr_env;;
 
 (* The following constants must be kept in sync with the definition

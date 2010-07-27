@@ -1,7 +1,7 @@
 (* Handlings of local labels and backpatching *)
 
 open Misc;;
-open Instruct;;
+open Cl_instruct;;
 open Buffcode;;
 
 type label_definition =

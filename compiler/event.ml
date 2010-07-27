@@ -1,6 +1,6 @@
 (* Handling of debugging events *)
 
-open Lambda;;
+open Cl_lambda;;
 open Typedtree;;
 open Location;;
 open Module;;

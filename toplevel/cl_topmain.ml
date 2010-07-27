@@ -5,9 +5,9 @@ open Do_phr
 open Compiler
 open Clflags
 open Module
-open Symtable
+open Cl_symtable
 open Asttypes
-open Lambda
+open Cl_lambda
 open Types
 
 module Warnings = struct
@@ -21,7 +21,7 @@ let interactive_loop () =
   (* set Sys.interactive to true *)
   let const_true = SCblock(ConstrRegular(1,2), []) in
   let repr_true = Load_phr.transl_structured_const const_true in
-  Meta.set_global_data 16 repr_true; (* 16: cf ../runtime/globals.h *)
+  Cl_meta.set_global_data 16 repr_true; (* 16: cf ../runtime/globals.h *)
   (* start parsing stdin *)
   let lexbuf = Lexing.from_channel stdin in
   input_lexbuf := Some lexbuf;
@@ -52,10 +52,10 @@ let preload_objects = ref ["stdlib.zo"]
 
 let initialize () =
   (* initialize the runtime *)
-  Meta.llama_init Sys.argv;
+  Cl_meta.llama_init Sys.argv;
   (* initialize our view of the runtime *)
-  Symtable.reset_linker_tables();
-  set_c_primitives (Meta.available_primitives ()); (* currently a no-op *)
+  Cl_symtable.reset_linker_tables();
+  set_c_primitives (Cl_meta.available_primitives ()); (* currently a no-op *)
   (* load things *)
   List.iter (Toplevel.load_object Env.initial) (List.rev !preload_objects);
   (* open things *)

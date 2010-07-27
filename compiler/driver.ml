@@ -56,7 +56,7 @@ let set_nopervasives () =
 
 let main () =
   Config.load_path := [""; Config.standard_library];
-  Symtable.reset_linker_tables();
+  Cl_symtable.reset_linker_tables();
   Arg.parse
     [ "-a", Arg.Set make_archive, " Build a library";
       "-c", Arg.Set compile_only, " Compile only (do not link)";

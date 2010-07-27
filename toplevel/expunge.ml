@@ -2,7 +2,7 @@
 
 open Asttypes;;
 open Sys;;
-open Symtable;;
+open Cl_symtable;;
 
 let (debug_flag, input_name, output_name, perv_pos) =
   if argv.(1) = "-g"

@@ -40,7 +40,7 @@ let reserve_in_numtable nt key =
 let global_table =
   ref (new_numtable 1 : qualified_id numtable)
 and literal_table =
-  ref ([] : (int * Lambda.struct_constant) list)
+  ref ([] : (int * Cl_lambda.struct_constant) list)
 ;;
 
 let get_slot_for_variable qualid =

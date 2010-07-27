@@ -7,13 +7,13 @@ open Predef;;
 open Error;;
 open Typedtree;;
 open Location;;
-open Lambda;;
+open Cl_lambda;;
 open Prim;;
 open Parmatch;;
 open Module
 
-let check_unused = Parmatch.check_unused ~has_guard:Lambda.has_guard
-let partial_match = Parmatch.partial_match ~has_guard:Lambda.has_guard
+let check_unused = Parmatch.check_unused ~has_guard:Cl_lambda.has_guard
+let partial_match = Parmatch.partial_match ~has_guard:Cl_lambda.has_guard
 
 (*  See Peyton-Jones, The Implementation of functional programming
     languages, chapter 5. *)
@@ -30,7 +30,7 @@ let partial_match = Parmatch.partial_match ~has_guard:Lambda.has_guard
   A pattern "pat" applies to (i.e. must match) the expression below it. *)
 
 type pattern_matching =
-  Matching of (pattern list * lambda) list * lambda list
+  Cl_matching of (pattern list * lambda) list * lambda list
 ;;
 
 (* Simple pattern manipulations *)
@@ -44,26 +44,26 @@ let make_path n = function
       fatal_error "make_path"
 ;;
 
-let add_to_match (Matching(casel,pathl)) cas =
-  Matching(cas :: casel, pathl)
+let add_to_match (Cl_matching(casel,pathl)) cas =
+  Cl_matching(cas :: casel, pathl)
 
 and make_constant_match paths cas = match paths with
-    (path :: pathl) -> Matching([cas], pathl)
+    (path :: pathl) -> Cl_matching([cas], pathl)
   | _ -> fatal_error "make_constant_match"
 
 and make_tuple_match arity pathl =
-  Matching([], make_path arity pathl)
+  Cl_matching([], make_path arity pathl)
 
 and make_construct_match cstr pathl0 cas =
   begin match pathl0 with
     | path :: pathl ->
         begin match (Get.constructor cstr).cs_arity with
           | 0 ->
-              Matching([cas], pathl)
+              Cl_matching([cas], pathl)
           | 1 ->
-              Matching([cas], begin Lprim(Pfield 0, [path]) :: pathl end)
+              Cl_matching([cas], begin Lprim(Pfield 0, [path]) :: pathl end)
           | n ->
-              Matching([cas], make_path n pathl0)
+              Cl_matching([cas], make_path n pathl0)
         end
     | _ -> fatal_error "make_construct_match"
   end
@@ -93,7 +93,7 @@ let rec simpl_casel = function
 
 (* Factoring pattern-matchings. *)
 
-let divide_constant_matching (Matching(casel, pathl)) =
+let divide_constant_matching (Cl_matching(casel, pathl)) =
   let rec divide_rec casel =
     match simpl_casel casel with
         ({pat_desc = Tpat_constant(cst)} :: patl, action) :: rest ->
@@ -102,7 +102,7 @@ let divide_constant_matching (Matching(casel, pathl)) =
             (make_constant_match pathl) constant cst (patl, action),
           others
       | casel ->
-        [], Matching(casel, pathl)
+        [], Cl_matching(casel, pathl)
   in
   divide_rec casel 
 ;;
@@ -110,7 +110,7 @@ let divide_constant_matching (Matching(casel, pathl)) =
 let wildcard_pat =
   {pat_desc = Tpat_any; pat_loc = Location.none; pat_env=Env.empty; pat_type = type_none};;
 
-let divide_tuple_matching arity (Matching(casel, pathl)) =
+let divide_tuple_matching arity (Cl_matching(casel, pathl)) =
   let rec divide_rec casel =
     match simpl_casel casel with
       ({pat_desc = Tpat_tuple(args)} :: patl, action) :: rest ->
@@ -126,7 +126,7 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
   in divide_rec casel
 ;;
 
-let divide_construct_matching (Matching(casel, pathl)) =
+let divide_construct_matching (Cl_matching(casel, pathl)) =
   let rec divide_rec casel =
     match simpl_casel casel with
     | ({pat_desc = Tpat_construct(c,argl)} :: patl, action) :: rest ->
@@ -137,12 +137,12 @@ let divide_construct_matching (Matching(casel, pathl)) =
           (make_construct_match c pathl) constrs (Get.constructor c).cs_tag (patl', action),
         others
     | casel ->
-        [], Matching(casel, pathl)
+        [], Cl_matching(casel, pathl)
   in divide_rec casel
 ;;
 
 let divide_var_matching = function
-  Matching(casel, (_ :: endpathl as pathl)) ->
+  Cl_matching(casel, (_ :: endpathl as pathl)) ->
     let rec divide_rec casel =
       match simpl_casel casel with
         ({pat_desc = (Tpat_any | Tpat_var _)} :: patl, action) :: rest ->
@@ -150,12 +150,12 @@ let divide_var_matching = function
             add_to_match vars (patl, action),
             others
       | casel ->
-          Matching([], endpathl), Matching(casel, pathl)
+          Cl_matching([], endpathl), Cl_matching(casel, pathl)
     in divide_rec casel
 | _ -> fatal_error "divide_var_matching"
 ;;
 
-let divide_record_matching ty_record (Matching(casel, pathl)) =
+let divide_record_matching ty_record (Cl_matching(casel, pathl)) =
   let labels = Ctype.labels_of_type ty_record in
   let num_labels = List.length labels in
   let rec divide_rec = function
@@ -170,7 +170,7 @@ let divide_record_matching ty_record (Matching(casel, pathl)) =
     | ({pat_desc = (Tpat_any | Tpat_var _)} :: patl, action) :: rest ->
         divide_rec_cont [] patl action rest
     | [] ->
-        Matching([], make_path num_labels pathl)
+        Cl_matching([], make_path num_labels pathl)
     | _ ->
         fatal_error "divide_record_matching"
   and divide_rec_cont pat_expr_list patl action rest =
@@ -183,7 +183,7 @@ let divide_record_matching ty_record (Matching(casel, pathl)) =
 
 (* Utilities on pattern-matchings *)
 
-let length_of_matching (Matching(casel,_)) = List.length casel
+let length_of_matching (Cl_matching(casel,_)) = List.length casel
 ;;
 
 let upper_left_pattern =
@@ -192,7 +192,7 @@ let upper_left_pattern =
     | {pat_desc = Tpat_constraint(pat,_)} -> strip pat
     | {pat_desc = Tpat_or(pat1,pat2)} -> strip pat1
     | pat -> pat in
-  function Matching((pat::_, _) :: _, _) -> strip pat
+  function Cl_matching((pat::_, _) :: _, _) -> strip pat
       |                _                 -> fatal_error "upper_left_pattern"
 ;;
 
@@ -234,15 +234,15 @@ let rec conquer_matching =
       and (list2,   total2) = conquer_divided_matching rest in
         ((key, lambda1) :: list2, total1 && total2)
   in function
-    Matching([], _) ->
+    Cl_matching([], _) ->
       (Lstaticfail 0, false)
-   | Matching(([], action) :: rest, pathl) ->
+   | Cl_matching(([], action) :: rest, pathl) ->
       if has_guard action then begin
-        let (lambda2, total2) = conquer_matching (Matching (rest, pathl)) in
+        let (lambda2, total2) = conquer_matching (Cl_matching (rest, pathl)) in
         (Lstatichandle(action, lambda2), total2)
       end else
         (action, true)
-  | Matching(_, (path :: _)) as matching ->
+  | Cl_matching(_, (path :: _)) as matching ->
       begin match upper_left_pattern matching with
         {pat_desc = (Tpat_any | Tpat_var _)} ->
           let vars, rest = divide_var_matching matching in
@@ -286,7 +286,7 @@ let make_initial_matching = function
       let rec make_path n =
         if n <= 0 then [] else Lvar(n-1) :: make_path(n-1)
       in
-        Matching(casel, make_path(List.length patl))
+        Cl_matching(casel, make_path(List.length patl))
 ;;
 
 let partial_fun loc =

@@ -5,7 +5,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I compiler -I linker -I toplevel -I bytecomp -I driver
 FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx utils/consistbl.cmx utils/ccomp.cmx
@@ -29,41 +29,40 @@ TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/typedecl.cmx typing/typemod.cmx \
  typing/parmatch.cmx
 
-#TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
-#  typing/primitive.cmo typing/types.cmo \
-#  typing/btype.cmo typing/oprint.cmo \
-#  typing/subst.cmo typing/predef.cmo \
-#  typing/datarepr.cmo typing/env.cmo \
-#  typing/typedtree.cmo typing/ctype.cmo \
-#  typing/printtyp.cmo typing/includeclass.cmo \
-#  typing/mtype.cmo typing/includecore.cmo \
-#  typing/includemod.cmo typing/parmatch.cmo \
-#  typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
-#  typing/typedecl.cmo typing/typeclass.cmo \
-#  typing/typemod.cmo
-
 COMPILER=compiler/prim.cmx compiler/primdecl.cmx \
- compiler/lambda.cmx compiler/matching.cmx \
+ compiler/cl_lambda.cmx compiler/cl_matching.cmx \
  compiler/event.cmx \
  compiler/tr_env.cmx compiler/trstream.cmx compiler/front.cmx \
- compiler/instruct.cmx compiler/back.cmx compiler/opcodes.cmx \
+ compiler/cl_instruct.cmx compiler/back.cmx compiler/cl_opcodes.cmx \
  compiler/prim_opc.cmx compiler/buffcode.cmx \
  compiler/labels.cmx compiler/reloc.cmx \
- compiler/emitcode.cmx compiler/emit_phr.cmx \
+ compiler/cl_emitcode.cmx compiler/emit_phr.cmx \
  compiler/compiler.cmx
 
 LINKER=linker/caml_light_extern.o \
-  linker/more_predef.cmx linker/prim_c.cmx linker/symtable.cmx \
+  linker/more_predef.cmx linker/prim_c.cmx linker/cl_symtable.cmx \
   linker/patch.cmx linker/tr_const.cmx linker/link.cmx \
   linker/readword.cmx
+
+BYTECOMP=bytecomp/lambda.cmx bytecomp/printlambda.cmx \
+  bytecomp/typeopt.cmx bytecomp/switch.cmx bytecomp/matching.cmx \
+  bytecomp/translcore.cmx \
+  bytecomp/translmod.cmx \
+  bytecomp/simplif.cmx bytecomp/runtimedef.cmx \
+  bytecomp/meta.cmx bytecomp/instruct.cmx bytecomp/bytegen.cmx \
+  bytecomp/printinstr.cmx bytecomp/opcodes.cmx bytecomp/emitcode.cmx \
+  bytecomp/bytesections.cmx bytecomp/dll.cmx bytecomp/symtable.cmx \
+  bytecomp/bytelink.cmx bytecomp/bytelibrarian.cmx
+
+DRIVER=driver/pparse.cmx driver/errors.cmx driver/compile.cmx driver/main_args.cmx driver/main.cmx
 
 TOPLEVEL=\
   toplevel/eval.cmx toplevel/pr_value.cmx \
   toplevel/load_phr.cmx toplevel/do_phr.cmx toplevel/toplevel.cmx \
-  toplevel/main.cmx runtime/libcaml.a toplevel/llama.o
+  toplevel/cl_topmain.cmx runtime/libcaml.a toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
- compiler/opcodes.ml linker/prim_c.ml linker/more_predef.ml parsing/parser.ml
+ compiler/cl_opcodes.ml linker/prim_c.ml linker/more_predef.ml parsing/parser.ml
 
 all: runtime_dir llama llamac llamadep testprog stdlib_dir
 .PHONY: all
@@ -105,7 +104,7 @@ parsing/lexer.ml: parsing/lexer.mll
 parsing/parser.ml parsing/parser.mli: parsing/parser.mly
 	$(OCAMLYACC) $<
 
-compiler/opcodes.ml: runtime/instruct.h
+compiler/cl_opcodes.ml: runtime/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//' -e '/^  /p' $< | \
         awk -f tools/make-opcodes > $@
 
@@ -148,7 +147,7 @@ stdlib_dir:
 semiclean:
 	rm -f llama llamac llamarun stdlib.zo
 	rm -f $(GENSOURCES)
-	rm -f {utils,parsing,typing,compiler,linker,toplevel}/*.{cmi,cmx,o}
+	rm -f {utils,parsing,typing,compiler,linker,toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd stdlib && make clean
 .PHONY: semiclean
@@ -157,7 +156,7 @@ clean: semiclean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,linker,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,compiler,linker,toplevel,bytecomp,driver}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend
@@ -165,3 +164,6 @@ include .depend
 configure-in-situ:
 	./configure -bindir ${PWD}/runtime -libdir ${PWD}/stdlib
 .PHONY: configure-in-situ
+
+newstuff: $(BYTECOMP) $(DRIVER)
+.PHONY: newstuff

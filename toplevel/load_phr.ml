@@ -1,13 +1,13 @@
 (* To load in-core a compiled bytecode phrase, and execute it *)
 
 open Misc;;
-open Meta;;
-open Instruct;;
-open Opcodes;;
+open Cl_meta;;
+open Cl_instruct;;
+open Cl_opcodes;;
 open Buffcode;;
-open Symtable;;
-open Emitcode;;
-open Lambda;;
+open Cl_symtable;;
+open Cl_emitcode;;
+open Cl_lambda;;
 open Pr_value;;
 open Format;;
 

@@ -8,9 +8,9 @@ open Typedtree;;
 open Typedtree_aux
 open Predef;;
 open Module;;
-open Lambda;;
+open Cl_lambda;;
 open Prim;;
-open Matching;;
+open Cl_matching;;
 open Tr_env;;
 open Trstream;;
 open Error;;

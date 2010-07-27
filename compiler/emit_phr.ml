@@ -1,9 +1,9 @@
 (* Emitting phrases *)
 
-open Instruct;;
-open Lambda;;
+open Cl_instruct;;
+open Cl_lambda;;
 open Buffcode;;
-open Emitcode;;
+open Cl_emitcode;;
 
 type compiled_phrase =
   { cph_pos: int;                       (* Position of start of code *)

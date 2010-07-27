@@ -1,8 +1,8 @@
-(* Opcodes for the simple primitives. *)
+(* Cl_opcodes for the simple primitives. *)
 
 open Misc;;
 open Prim;;
-open Opcodes;;
+open Cl_opcodes;;
 
 let opcode_for_primitive = function
     Pupdate -> opUPDATE

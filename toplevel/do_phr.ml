@@ -1,6 +1,6 @@
 (* To execute toplevel phrases *)
 
-open Meta;;
+open Cl_meta;;
 open Misc;;
 open Asttypes;;
 open Module;;
@@ -12,7 +12,7 @@ open Front;;
 open Back;;
 open Pr_value;;
 open Format;;
-open Symtable;;
+open Cl_symtable;;
 open Load_phr;;
 open Compiler;;
 open Types;;
@@ -83,7 +83,7 @@ let do_toplevel_phrase env topphr =
         | ("use", filename) ->
             !fwd_load_file env filename
         |  ("disasm", s) ->
-            Meta.set_trace_flag (s<>"")
+            Cl_meta.set_trace_flag (s<>"")
         | ("directory", dirname) ->
             Config.load_path := dirname :: !Config.load_path
         | (d, name) ->

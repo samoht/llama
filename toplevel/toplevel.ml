@@ -1,7 +1,7 @@
 (* System functions for interactive use. *)
 
 open Obj;;
-open Meta;;
+open Cl_meta;;
 open Misc;;
 open Asttypes;;
 open Location;;
@@ -12,7 +12,7 @@ open Btype;;
 open Ctype;;
 open Patch;;
 open Emit_phr;;
-open Symtable;;
+open Cl_symtable;;
 open Do_phr;;
 open Load_phr;;
 open Compiler;;
@@ -55,7 +55,7 @@ let load_object env name =
   let block_len = code_len + 1 in
   let code = static_alloc block_len in
   unsafe_really_input inchan code 0 code_len;
-  String.unsafe_set code code_len (char_of_int Opcodes.opSTOP);
+  String.unsafe_set code code_len (char_of_int Cl_opcodes.opSTOP);
   let phrase_index = (input_value inchan : compiled_phrase list) in
   close_in inchan;
   List.iter

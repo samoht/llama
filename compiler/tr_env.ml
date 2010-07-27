@@ -4,7 +4,7 @@ open Asttypes;;
 open Misc;;
 open Asttypes;;
 open Typedtree;;
-open Lambda;;
+open Cl_lambda;;
 open Prim;;
 open Error;;
 open Types;;

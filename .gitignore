@@ -15,7 +15,7 @@ parsing/parser.mli
 parsing/lexer.ml
 parsing/lexer.mll
 typing/location.ml
-compiler/opcodes.ml
+compiler/cl_opcodes.ml
 launch/camlexec
 launch/darkc
 launch/testprog

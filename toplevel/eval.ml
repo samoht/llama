@@ -5,11 +5,11 @@ open Typedtree
 open Prim
 open Primdecl
 open Primitive
-open Symtable
+open Cl_symtable
 open Module
 
 type term =
-  | Lambda of term
+  | Cl_lambda of term
   | Rel of int
   | App of term * term
   | Const of constant
@@ -81,7 +81,7 @@ let rec term_of_expr c expr =
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function ([({pat_desc=Tpat_var s},e)], _) ->
-        Lambda (term_of_expr (val_name s::c) e)
+        Cl_lambda (term_of_expr (val_name s::c) e)
     | Texp_ifthenelse (i, t, e) ->
         app3 (Match tcs_bool) (term_of_expr c e) (term_of_expr c t) (term_of_expr c i)
     | Texp_while _ | Texp_for _ ->
@@ -119,7 +119,7 @@ let rec eval env tm =
         let func' = eval env func in
         let arg' = eval env arg in
         begin match func', arg' with
-          | Lambda y, x ->
+          | Cl_lambda y, x ->
               eval (x :: env) y
           | App (Prim Paddint, x), y ->
               begin match x, y with

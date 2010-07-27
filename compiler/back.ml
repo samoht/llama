@@ -3,9 +3,9 @@
 open Misc;;
 open Asttypes;;
 open Types;; (* for qualified_ident *)
-open Lambda;;
+open Cl_lambda;;
 open Prim;;
-open Instruct;;
+open Cl_instruct;;
 
 (* "is_return" determines if we're in tail call position. *)
 

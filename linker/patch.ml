@@ -1,7 +1,7 @@
 (* To relocate a block of object bytecode *)
 
 open Reloc;;
-open Symtable;;
+open Cl_symtable;;
 
 let patch_short buff pos value =
   String.unsafe_set buff pos (char_of_int (value land 0xFF));

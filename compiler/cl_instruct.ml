@@ -5,7 +5,7 @@ open Prim;;
 open Types;;
 
 type zam_instruction =
-    Kquote of Lambda.struct_constant 
+    Kquote of Cl_lambda.struct_constant 
   | Kget_global of qualified_id
   | Kset_global of qualified_id
   | Kaccess of int
@@ -33,7 +33,7 @@ type zam_instruction =
   | Ktest of bool_test * int
   | Kbranchinterval of int * int * int * int
   | Kswitch of int array
-  | Kevent of Lambda.event
+  | Kevent of Cl_lambda.event
 ;;
 
 type zam_phrase =

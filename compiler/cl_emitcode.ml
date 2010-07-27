@@ -2,10 +2,10 @@
 
 open Misc;;
 open Asttypes;;
-open Lambda;;
-open Instruct;;
+open Cl_lambda;;
+open Cl_instruct;;
 open Prim;;
-open Opcodes;;
+open Cl_opcodes;;
 open Prim_opc;;
 open Buffcode;;
 open Config;;

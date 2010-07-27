@@ -5,7 +5,7 @@ open Buffcode;;
 open Types;; (* for qualified_ident *)
 
 type info =
-    Reloc_literal of Lambda.struct_constant    (* structured constant *)
+    Reloc_literal of Cl_lambda.struct_constant    (* structured constant *)
   | Reloc_getglobal of qualified_id  (* reference to a global *)
   | Reloc_setglobal of qualified_id  (* definition of a global *)
   | Reloc_tag of qualified_id * int  (* exception tag *)
