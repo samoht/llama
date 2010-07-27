@@ -22,17 +22,21 @@ let mkty name params =
     tcs_arity = List.length params;
     tcs_kind = Type_abstract }
 
+let tcs_int = mkty "int" []
+let tcs_char = mkty "char" []
+let tcs_string = mkty "string" []
+let tcs_float = mkty "float" []
+let tcs_bool = mkty "bool" []
 let tcs_unit = mkty "unit" []
 let tcs_exn = mkty "exn" []
-let tcs_bool = mkty "bool" []
-let tcs_int = mkty "int" []
-let tcs_float = mkty "float" []
-let tcs_string = mkty "string" []
-let tcs_char = mkty "char" []
-let tcs_list = mkty "list" [list_generic]
 let tcs_vect = mkty "vect" [vect_generic]
-let tcs_option =  mkty "option" [option_generic]
+let tcs_list = mkty "list" [list_generic]
 let tcs_format6 = mkty "format6" format6_generics
+let tcs_option =  mkty "option" [option_generic]
+let tcs_nativeint = mkty "nativeint" []
+let tcs_int32 = mkty "int32" []
+let tcs_int64 = mkty "int64" []
+let tcs_lazy_t = mkty "lazy_t" []
 
 let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = None }
 
@@ -40,16 +44,23 @@ let fwdref m s = { ref_id = {id_module=Module m;id_name = s};  ref_contents = No
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let type_arrow (t1,t2) = Tarrow(t1,t2)
-let type_product tlist = Ttuple tlist
+let type_int = Tconstruct(ref_type_constr tcs_int, [])
+let type_char = Tconstruct(ref_type_constr tcs_char, [])
+let type_string = Tconstruct(ref_type_constr tcs_string, [])
+let type_float = Tconstruct(ref_type_constr tcs_float, [])
+let type_bool = Tconstruct(ref_type_constr tcs_bool, [])
 let type_unit = Tconstruct(ref_type_constr tcs_unit, [])
 let type_exn = Tconstruct(ref_type_constr tcs_exn, [])
-let type_bool = Tconstruct(ref_type_constr tcs_bool, [])
-let type_int = Tconstruct(ref_type_constr tcs_int, [])
-let type_float = Tconstruct(ref_type_constr tcs_float, [])
-let type_string = Tconstruct(ref_type_constr tcs_string, [])
-let type_char = Tconstruct(ref_type_constr tcs_char, [])
 let type_vect t = Tconstruct(ref_type_constr tcs_vect, [t])
+let type_list t = Tconstruct(ref_type_constr tcs_list, [t])
+let type_option t = Tconstruct(ref_type_constr tcs_option, [t])
+let type_nativeint = Tconstruct(ref_type_constr tcs_nativeint, [])
+let type_int32 = Tconstruct(ref_type_constr tcs_int32, [])
+let type_int64 = Tconstruct(ref_type_constr tcs_int64, [])
+let type_lazy_t t = Tconstruct(ref_type_constr tcs_lazy_t, [])
+
+let type_arrow (t1,t2) = Tarrow(t1,t2)
+let type_product tlist = Ttuple tlist
 let type_stream t = Tconstruct(fwdref "Stream" "stream", [t])
 let type_num = Tconstruct(fwdref "Num" "num", []) (* windows *)
 
@@ -160,17 +171,21 @@ let tag_assert_failure, cs_assert_failure =
 (* ---------------------------------------------------------------------- *)
 
 let signature =
-  [ Sig_type tcs_unit;
-    Sig_type tcs_exn;
-    Sig_type tcs_bool;
-    Sig_type tcs_int;
-    Sig_type tcs_float;
-    Sig_type tcs_string;
+  [ Sig_type tcs_int;
     Sig_type tcs_char;
-    Sig_type tcs_list;
+    Sig_type tcs_string;
+    Sig_type tcs_float;
+    Sig_type tcs_bool;
+    Sig_type tcs_unit;
+    Sig_type tcs_exn;
     Sig_type tcs_vect;
-    Sig_type tcs_option;
+    Sig_type tcs_list;
     Sig_type tcs_format6;
+    Sig_type tcs_option;
+    Sig_type tcs_lazy_t;
+    Sig_type tcs_nativeint;
+    Sig_type tcs_int32;
+    Sig_type tcs_int64;
     Sig_exception cs_match_failure;
     Sig_exception cs_assert_failure;
   ]

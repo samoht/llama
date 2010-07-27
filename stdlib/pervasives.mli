@@ -803,15 +803,12 @@ val set_binary_mode_in : in_channel -> bool -> unit
 
 (** {7 Operations on large files} *)
 
-module LargeFile :
-  sig
-    val seek_out : out_channel -> int64 -> unit
-    val pos_out : out_channel -> int64
-    val out_channel_length : out_channel -> int64
-    val seek_in : in_channel -> int64 -> unit
-    val pos_in : in_channel -> int64
-    val in_channel_length : in_channel -> int64
-  end
+    val largefile_seek_out : out_channel -> int64 -> unit
+    val largefile_pos_out : out_channel -> int64
+    val largefile_out_channel_length : out_channel -> int64
+    val largefile_seek_in : in_channel -> int64 -> unit
+    val largefile_pos_in : in_channel -> int64
+    val largefile_in_channel_length : in_channel -> int64
 (** Operations on large files.
   This sub-module provides 64-bit variants of the channel functions
   that manipulate file positions and file sizes.  By representing
