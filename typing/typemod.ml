@@ -90,3 +90,10 @@ let transl_signature env l =
   type_signature l;
   genericize_core_signature sg;
   sg
+
+let type_implementation _sourcefile _outputprefix _modulename env l =
+  let l, sg, env = Resolve.structure env l in
+  ignore env;
+  type_structure l;
+  genericize_core_signature sg;
+  l, Tcoerce_none(*xxx*)

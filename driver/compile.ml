@@ -85,8 +85,8 @@ let interface ppf sourcefile outputprefix =
     if !Clflags.dump_parsetree then fprintf ppf "%a@." Printast.interface ast;
     let sg = Typemod.transl_signature (initial_env()) ast in
     if !Clflags.print_types then
-      fprintf std_formatter "%a@." Printtyp.signature
-                                   (Typemod.simplify_signature sg);
+      fprintf std_formatter "%a@." Printtyp.signature sg;
+(*                                   (Typemod.simplify_signature sg);*)
     Warnings.check_fatal ();
     if not !Clflags.print_types then
       Env.save_signature sg modulename (outputprefix ^ ".cmi");
@@ -138,12 +138,12 @@ let implementation ppf sourcefile outputprefix =
       Warnings.check_fatal ();
       close_out oc;
       Pparse.remove_preprocessed inputfile;
-      Stypes.dump (outputprefix ^ ".annot");
+(*      Stypes.dump (outputprefix ^ ".annot");*)
     with x ->
       close_out oc;
       remove_file objfile;
       Pparse.remove_preprocessed_if_ast inputfile;
-      Stypes.dump (outputprefix ^ ".annot");
+(*      Stypes.dump (outputprefix ^ ".annot");*)
       raise x
   end
 

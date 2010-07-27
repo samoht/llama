@@ -130,7 +130,7 @@ module Options = Main_args.Make_bytecomp_options (struct
   let _vnum = print_version_string
   let _w = (Warnings.parse_options false)
   let _warn_error = (Warnings.parse_options true)
-  let _warn_help = Warnings.help_warnings
+  let _warn_help = (fun () -> ()) (* Warnings.help_warnings xxx *)
   let _where = print_standard_library
   let _verbose = set verbose
   let _nopervasives = set nopervasives
@@ -171,11 +171,13 @@ let main () =
       Bytelibrarian.create_archive (List.rev !objfiles)
                                    (extract_output !output_name)
     end
+(*
     else if !make_package then begin
       Compile.init_path();
       Bytepackager.package_files (List.rev !objfiles)
                                  (extract_output !output_name)
     end
+*)
     else if not !compile_only && !objfiles <> [] then begin
       let target =
         if !output_c_object then

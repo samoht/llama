@@ -133,3 +133,8 @@ let current_module_name () =
 type summary = unit
 let summary _ = ()
 let imported_units () = assert false
+
+let save_signature sg modname filename =
+  let oc = open_out_bin filename in
+  Module.write oc modname sg;
+  close_out oc

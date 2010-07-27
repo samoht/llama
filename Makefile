@@ -13,7 +13,7 @@ UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warn
 PARSING=parsing/location.cmx parsing/syntaxerr.cmx \
  parsing/longident.cmx parsing/parser.cmx parsing/lexer.cmx parsing/parse.cmx parsing/printast.cmx
 
-TYPING=typing/primitive.cmx \
+TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/types.cmx \
  typing/predef.cmx \
  typing/get.cmx \

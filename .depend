@@ -60,6 +60,7 @@ typing/pr_type.cmi: typing/types.cmx
 typing/primitive.cmi:
 typing/typedtree.cmi: typing/types.cmx typing/primitive.cmi \
     parsing/location.cmi typing/env.cmi parsing/asttypes.cmi
+typing/unused_var.cmi: parsing/parsetree.cmi
 typing/btype.cmo: typing/types.cmx typing/module.cmx utils/misc.cmi \
     parsing/asttypes.cmi
 typing/btype.cmx: typing/types.cmx typing/module.cmx utils/misc.cmx \
@@ -164,6 +165,8 @@ typing/typemod.cmx: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
     parsing/parsetree.cmi typing/module.cmx typing/error.cmx typing/btype.cmx
 typing/types.cmo: typing/primitive.cmi parsing/asttypes.cmi
 typing/types.cmx: typing/primitive.cmx parsing/asttypes.cmi
+typing/unused_var.cmo: typing/unused_var.cmi
+typing/unused_var.cmx: typing/unused_var.cmi
 compiler/back.cmo: typing/types.cmx compiler/prim.cmx utils/misc.cmi \
     compiler/lambda.cmx compiler/instruct.cmx parsing/asttypes.cmi
 compiler/back.cmx: typing/types.cmx compiler/prim.cmx utils/misc.cmx \

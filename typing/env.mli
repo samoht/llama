@@ -37,3 +37,4 @@ val summary : t -> summary
 (* Return the set of compilation units imported, with their CRC *)
 
 val imported_units: unit -> (string * Digest.t) list
+val save_signature : signature -> string -> string -> unit

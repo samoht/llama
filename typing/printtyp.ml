@@ -138,7 +138,33 @@ let schema ppf ty =
   out_type ppf (tree_of_typexp true ty)
 
 (* ---------------------------------------------------------------------- *)
-(* Compatibility stuff.                                                   *)
+(* Signatures.                                                            *)
+(* ---------------------------------------------------------------------- *)
+(*
+let signature_item ppf = function
+    Sig_value v ->
+      let kwd = if v.val_kind = Val_reg then "val" else "external" in
+      let pr_prims ppf =
+        function
+          [] -> ()
+        | s :: sl ->
+            fprintf ppf "@ = \"%s\"" s;
+            List.iter (fun s -> fprintf ppf "@ \"%s\"" s) sl
+      in
+      fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident name !out_type
+        ty pr_prims prims
+*)
+let signature_item ppf item =
+  failwith "Printtyp.signature_item"
+
+let rec signature ppf = function
+    [] -> ()
+  | [item] -> signature_item ppf item
+  | item :: items ->
+      fprintf ppf "%a@ %a" signature_item item signature items
+
+(* ---------------------------------------------------------------------- *)
+(* caml light compatibility stuff                                         *)
 (* ---------------------------------------------------------------------- *)
 
 let convert f oc x =
