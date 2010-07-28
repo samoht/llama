@@ -455,10 +455,15 @@ let rec type_expr expr =
           then label_multiply_defined_err expr (Get.label lbl)
           else defined.(p) <- true)
         lbl_expr_list;
-      for i = 0 to Array.length label - 1 do
-        if not defined.(i) then label_undefined_err expr label.(i)
-      done;
-      (* xxx exten *)
+      begin match exten with
+        | None ->
+            for i = 0 to Array.length label - 1 do
+              if not defined.(i) then label_undefined_err expr label.(i)
+            done
+        | Some exten ->
+            print_endline "Warning: record extensions still not supported in Caml Light backend";
+            type_expect exten ty
+      end;
       ty
   | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in

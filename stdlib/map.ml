@@ -13,49 +13,9 @@
 
 (* $Id: map.ml 10468 2010-05-25 13:29:43Z frisch $ *)
 
-module type OrderedType =
-  sig
-    type t
-    val compare: t -> t -> int
-  end
-
-module type S =
-  sig
-    type key
-    type +'a t
-    val empty: 'a t
-    val is_empty: 'a t -> bool
-    val mem:  key -> 'a t -> bool
-    val add: key -> 'a -> 'a t -> 'a t
-    val singleton: key -> 'a -> 'a t
-    val remove: key -> 'a t -> 'a t
-    val merge: (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
-    val compare: ('a -> 'a -> int) -> 'a t -> 'a t -> int
-    val equal: ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-    val iter: (key -> 'a -> unit) -> 'a t -> unit
-    val fold: (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-    val for_all: (key -> 'a -> bool) -> 'a t -> bool
-    val exists: (key -> 'a -> bool) -> 'a t -> bool
-    val filter: (key -> 'a -> bool) -> 'a t -> 'a t
-    val partition: (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
-    val cardinal: 'a t -> int
-    val bindings: 'a t -> (key * 'a) list
-    val min_binding: 'a t -> (key * 'a)
-    val max_binding: 'a t -> (key * 'a)
-    val choose: 'a t -> (key * 'a)
-    val split: key -> 'a t -> 'a t * 'a option * 'a t
-    val find: key -> 'a t -> 'a
-    val map: ('a -> 'b) -> 'a t -> 'b t
-    val mapi: (key -> 'a -> 'b) -> 'a t -> 'b t
-  end
-
-module Make(Ord: OrderedType) = struct
-
-    type key = Ord.t
-
-    type 'a t =
+    type ('key, 'a) t =
         Empty
-      | Node of 'a t * key * 'a * 'a t * int
+      | Node of ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
 
     let height = function
         Empty -> 0
@@ -105,7 +65,7 @@ module Make(Ord: OrderedType) = struct
         Empty ->
           Node(Empty, x, data, Empty, 1)
       | Node(l, v, d, r, h) ->
-          let c = Ord.compare x v in
+          let c = Pervasives.compare x v in
           if c = 0 then
             Node(l, x, data, r, h)
           else if c < 0 then
@@ -117,7 +77,7 @@ module Make(Ord: OrderedType) = struct
         Empty ->
           raise Not_found
       | Node(l, v, d, r, _) ->
-          let c = Ord.compare x v in
+          let c = Pervasives.compare x v in
           if c = 0 then d
           else find x (if c < 0 then l else r)
 
@@ -125,7 +85,7 @@ module Make(Ord: OrderedType) = struct
         Empty ->
           false
       | Node(l, v, d, r, _) ->
-          let c = Ord.compare x v in
+          let c = Pervasives.compare x v in
           c = 0 || mem x (if c < 0 then l else r)
 
     let rec min_binding = function
@@ -155,7 +115,7 @@ module Make(Ord: OrderedType) = struct
         Empty ->
           Empty
       | Node(l, v, d, r, h) ->
-          let c = Ord.compare x v in
+          let c = Pervasives.compare x v in
           if c = 0 then
             merge l r
           else if c < 0 then
@@ -247,7 +207,7 @@ module Make(Ord: OrderedType) = struct
         Empty ->
           (Empty, None, Empty)
       | Node(l, v, d, r, _) ->
-          let c = Ord.compare x v in
+          let c = Pervasives.compare x v in
           if c = 0 then (l, Some d, r)
           else if c < 0 then
             let (ll, pres, rl) = split x l in (ll, pres, join rl v d r)
@@ -266,7 +226,7 @@ module Make(Ord: OrderedType) = struct
       | _ ->
           assert false
 
-    type 'a enumeration = End | More of key * 'a * 'a t * 'a enumeration
+    type ('key, 'a) enumeration = End | More of 'key * 'a * ('key, 'a) t * ('key, 'a) enumeration
 
     let rec cons_enum m e =
       match m with
@@ -280,7 +240,7 @@ module Make(Ord: OrderedType) = struct
         | (End, _)  -> -1
         | (_, End) -> 1
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            let c = Ord.compare v1 v2 in
+            let c = Pervasives.compare v1 v2 in
             if c <> 0 then c else
             let c = cmp d1 d2 in
             if c <> 0 then c else
@@ -294,7 +254,7 @@ module Make(Ord: OrderedType) = struct
         | (End, _)  -> false
         | (_, End) -> false
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            Ord.compare v1 v2 = 0 && cmp d1 d2 &&
+            Pervasives.compare v1 v2 = 0 && cmp d1 d2 &&
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
       in equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
@@ -311,4 +271,4 @@ module Make(Ord: OrderedType) = struct
 
     let choose = min_binding
 
-end
+
