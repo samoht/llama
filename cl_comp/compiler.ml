@@ -73,7 +73,7 @@ let verbose = ref false;;
   
 let compile_interface modname filename =
   let source_name = filename ^ ".mli"
-  and intf_name = filename ^ ".zi" in
+  and intf_name = filename ^ ".lli" in
   let ic = open_in_bin source_name (* See compile_impl *) in
     try
       Env.set_current_unit (Module modname);
@@ -145,10 +145,10 @@ let compile_implementation modname filename suffix =
     try
       let intfname =
         try
-          find_in_path !Config.load_path (String.lowercase modname ^ ".zi")
+          find_in_path !Config.load_path (String.lowercase modname ^ ".lli")
         with Not_found ->
           eprintf
-            "Cannot find file %s.zi. Please compile %s.mli first.\n"
+            "Cannot find file %s.lli. Please compile %s.mli first.\n"
             modname filename;
           raise Toplevel in
       let intf_sg = Get.signature modname in
@@ -160,7 +160,7 @@ let compile_implementation modname filename suffix =
       remove_file (filename ^ ".zo");
       raise x
   end else begin
-    let intf_name = filename ^ ".zi" in
+    let intf_name = filename ^ ".lli" in
     try
       Env.set_current_unit (Module modname);
       let env = Env.initial_env () in

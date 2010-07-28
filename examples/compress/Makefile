@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.zi *.zix *.zo *~ #*#
+	$(RM) *.lli *.zo *~ #*#
 
 beforedepend::
 
@@ -37,9 +37,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .zi .ml .zo
+.SUFFIXES: .mli .lli .ml .zo
 
-.mli.zi:
+.mli.lli:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -47,9 +47,9 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-compr.zo: huffman.zi 
-decompr.zo: huffman.zi 
-esbit.zo: esbit.zi 
-fileprio.zo: fileprio.zi 
-huffman.zo: huffman.zi esbit.zi fileprio.zi 
+compr.zo: huffman.lli 
+decompr.zo: huffman.lli 
+esbit.zo: esbit.lli 
+fileprio.zo: fileprio.lli 
+huffman.zo: huffman.lli esbit.lli fileprio.lli 
 loadall.zo: compr.zo 

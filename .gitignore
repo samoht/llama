@@ -1,7 +1,6 @@
 *.o
 *.a
-*.zi
-*.zix
+*.lli
 *.zo
 *.cmi
 *.cmo

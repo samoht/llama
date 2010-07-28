@@ -117,9 +117,6 @@ makefiles::
 
 # (end Imakefile)
 
-clean::
-	$(RM) *.zi *.zix *.zo *~ #*#
-
 beforedepend::
 
 makefile: beforedepend

@@ -40,12 +40,12 @@ let process_file ppf name =
   else if Filename.check_suffix name !Config.interface_suffix then begin
     let opref = output_prefix name in
     Compile.interface ppf name opref;
-    if !make_package then objfiles := (opref ^ ".cmi") :: !objfiles
+    if !make_package then objfiles := (opref ^ ".lli") :: !objfiles
   end
   else if Filename.check_suffix name ".cmo"
        || Filename.check_suffix name ".cma" then
     objfiles := name :: !objfiles
-  else if Filename.check_suffix name ".cmi" && !make_package then
+  else if Filename.check_suffix name ".lli" && !make_package then
     objfiles := name :: !objfiles
   else if Filename.check_suffix name ext_obj
        || Filename.check_suffix name ext_lib then

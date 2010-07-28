@@ -46,7 +46,7 @@ let initial_env () =
     then Env.initial
     else Env.open_pers_signature "Pervasives" Env.initial
   with Not_found ->
-    fatal_error "cannot open pervasives.cmi"
+    fatal_error "cannot open pervasives.lli"
 
 (* Note: this function is duplicated in optcompile.ml *)
 let check_unit_name ppf filename name =
@@ -89,7 +89,7 @@ let interface ppf sourcefile outputprefix =
 (*                                   (Typemod.simplify_signature sg);*)
     Warnings.check_fatal ();
     if not !Clflags.print_types then
-      Env.save_signature sg modulename (outputprefix ^ ".cmi");
+      Env.save_signature sg modulename (outputprefix ^ ".lli");
     Pparse.remove_preprocessed inputfile
   with e ->
     Pparse.remove_preprocessed_if_ast inputfile;

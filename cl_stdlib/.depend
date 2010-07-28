@@ -87,4 +87,4 @@ stream.zo: string.zi obj.zi fstring.zi stream.zi
 stream.zx: string.zx obj.zi fstring.zx stream.zi
 string.zo: sys.zi fstring.zi char.zi string.zi
 string.zx: sys.zi fstring.zx char.zx string.zi
-genlex.zo: genlex.zi pervasives.zi fstring.zi stream.zi hashtbl.zi list.zi
+genlex.zo: genlex.lli pervasives.lli fstring.lli stream.lli hashtbl.lli list.lli

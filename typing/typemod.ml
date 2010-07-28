@@ -109,7 +109,7 @@ let type_implementation sourcefile outputprefix modulename env str =
       genericize_core_signature sg; (* xxx should normalize only *)
       let intf_file =
         try
-          find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
+          find_in_path_uncap !Config.load_path (modulename ^ ".lli")
         with Not_found ->
           assert false in
             (* raise(Error(Location.none, Interface_not_compiled sourceintf)) in *)
@@ -124,7 +124,7 @@ let type_implementation sourcefile outputprefix modulename env str =
         Includemod.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
       if not !Clflags.dont_write_files then
-        Env.save_signature simple_sg modulename (outputprefix ^ ".cmi");
+        Env.save_signature simple_sg modulename (outputprefix ^ ".lli");
       (str, coercion)
     end
   end

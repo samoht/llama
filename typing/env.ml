@@ -122,7 +122,7 @@ let cached_module mod_id =
           Tbl.find name !persistent_structures
         with Not_found ->
           read_cached_module name
-            (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".zi"))
+            (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".lli"))
         end
     | Module_toplevel ->
         failwith "Get.cached_module"
@@ -256,7 +256,7 @@ let initial_env () =
     then initial
     else open_pers_signature "Pervasives" initial
   with Not_found ->
-    fatal_error "cannot open pervasives.cmi"
+    fatal_error "cannot open pervasives.lli"
 
 let set_current_unit m =
   current_module := m

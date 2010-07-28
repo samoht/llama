@@ -98,7 +98,12 @@ let usage speclist errmsg =
 
 let current = ref 0;;
 
-let parse_argv ?(current=current) argv speclist anonfun errmsg =
+let parse_argv current_opt argv speclist anonfun errmsg =
+  let current =
+    match current_opt with
+        None -> current
+      | Some current -> current
+  in
   let l = Array.length argv in
   let b = Buffer.create 200 in
   let initpos = !current in
