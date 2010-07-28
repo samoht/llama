@@ -143,11 +143,13 @@ let save_signature_with_imports sg modname filename imports =
     flush oc;
     let crc = Digest.file filename in
     let crcs = (modname, crc) :: imports in
+(*
     print_endline "Saving crcs";
     List.iter
       begin fun (s, d) ->
         print_endline ("  "^Digest.to_hex d^" "^s)
       end crcs;
+*)
     output_value oc crcs;
     close_out oc;
     (* Enter signature in persistent table so that imported_unit()

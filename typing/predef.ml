@@ -153,9 +153,8 @@ let type_constructors =
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let predef_exn name tyl =
+let predef_exn stamp name tyl =
   let qualid = { id_module = Module_builtin; id_name = name } in
-  let stamp = 1 (* xxx *) in
   let tag = ConstrExtensible (qualid, stamp) in
   tag,
   { cs_parent = tcs_exn;
@@ -165,37 +164,37 @@ let predef_exn name tyl =
     cs_arity = List.length tyl;
     cs_tag = tag;
     cstr_tag = Cstr_exception (qualid, stamp) }
-let qkexn name tyl = snd(predef_exn name tyl)
+let qkexn stamp name tyl = snd(predef_exn stamp name tyl)
   
-let cs_undefined_recursive_module =
-  qkexn "Undefined_recursive_module" [type_string; type_int; type_int]
-let tag_assert_failure, cs_assert_failure =
-  predef_exn "Assert_failure" [type_string; type_int; type_int]
-let cs_division_by_zero = qkexn "Division_by_zero" []
-let cs_end_of_file = qkexn "End_of_file" []
-let cs_sys_error = qkexn "Sys_error" [type_string]
-let cs_sys_blocked_io = qkexn "Sys_blocked_io" []
-let cs_not_found = qkexn "Not_found" []
-let cs_failure = qkexn "Failure" [type_string]
-let cs_invalid_argument = qkexn "Invalid_argument" [type_string]
-let cs_stack_overflow = qkexn "Stack_overflow" []
-let cs_out_of_memory = qkexn "Out_of_memory" []
+let cs_out_of_memory = qkexn 0 "Out_of_memory" []
+let cs_sys_error = qkexn 1 "Sys_error" [type_string]
+let cs_failure = qkexn 2 "Failure" [type_string]
+let cs_invalid_argument = qkexn 3 "Invalid_argument" [type_string]
+let cs_end_of_file = qkexn 4 "End_of_file" []
+let cs_division_by_zero = qkexn 5 "Division_by_zero" []
+let cs_not_found = qkexn 6 "Not_found" []
 let tag_match_failure, cs_match_failure =
-  predef_exn "Match_failure" [type_string; type_int; type_int]
+  predef_exn 7 "Match_failure" [type_string; type_int; type_int]
+let cs_stack_overflow = qkexn 8 "Stack_overflow" []
+let cs_sys_blocked_io = qkexn 9 "Sys_blocked_io" []
+let tag_assert_failure, cs_assert_failure =
+  predef_exn 10 "Assert_failure" [type_string; type_int; type_int]
+let cs_undefined_recursive_module =
+  qkexn 11 "Undefined_recursive_module" [type_string; type_int; type_int]
 
 let exceptions =
-  [ cs_undefined_recursive_module;
-    cs_assert_failure;
-    cs_division_by_zero;
-    cs_end_of_file;
+  [ cs_out_of_memory;
     cs_sys_error;
-    cs_sys_blocked_io;
-    cs_not_found;
     cs_failure;
     cs_invalid_argument;
-    cs_stack_overflow;
-    cs_out_of_memory;
+    cs_end_of_file;
+    cs_division_by_zero;
+    cs_not_found;
     cs_match_failure;
+    cs_stack_overflow;
+    cs_sys_blocked_io;
+    cs_assert_failure;
+    cs_undefined_recursive_module;
   ]
 
 (* ---------------------------------------------------------------------- *)
