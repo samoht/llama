@@ -3,15 +3,17 @@ LLAMAC=../llamac-new -nostdlib -I .
 
 all: pervasives.cmo
 
-%.cmi: %.mli
+%.lli: %.mli
 	$(LLAMAC) -c $<
 %.cmo: %.ml
 	$(LLAMAC) -c $<
-pervasives.cmi: pervasives.mli
+pervasives.lli: pervasives.mli
 	$(LLAMAC) -nopervasives -c $<
 pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
 
 clean:
-	rm *.cmi *.cmo
+	rm *.lli *.cmo
 .PHONY: clean
+
+include .depend
