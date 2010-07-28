@@ -345,11 +345,21 @@ let rec patch_guarded patch = function
 let transl_noncurrent_module m =
   Lprim(Pgetglobal (Ident.of_module m), [])
 let transl_exception cs =
-  let m = cs.Types.cs_parent.Types.tcs_id.Types.id_module in
+  let m =
+    match cs.Types.cstr_tag with
+      | Types.Cstr_exception ({Types.id_module=m}, _) -> m
+      | _ -> assert false
+  in
   if m = Env.get_current_module () then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
   else
-    let pos = Env.get_exception_position cs in
+    let pos = try Env.get_exception_position cs with
+        Not_found ->
+          print_endline (Types.module_name m);
+          print_endline (Types.module_name (Env.get_current_module ()));
+          print_endline cs.Types.cs_name;
+          raise Not_found
+    in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])

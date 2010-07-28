@@ -67,34 +67,45 @@ let lcond (arg, const_lambda_list) =
           arg const_lambda_list
   in lambda1
 
-let lswitch (_, lambda, l) =
-  let consts = ref [] in
-  let numconsts = ref 0 in
-  let addconst i action =
-    consts := (i, action) :: !consts;
-    numconsts := max !numconsts (i+1)
-  in
-  let blocks = ref [] in
-  let numblocks = ref 0 in
-  let addblock i action =
-    blocks := (i, action) :: !blocks;
-    numblocks := max !numblocks (i+1)
-  in
-  List.iter
-    begin fun (tag, action) ->
-      begin match tag with
-        | Cstr_constant i -> addconst i action
-        | Cstr_block i -> addblock i action
-        | Cstr_exception _ -> assert false (* xxx *)
-      end
-    end l;
-  Lswitch (lambda,
-           { sw_numconsts = !numconsts;
-             sw_consts = !consts;
-             sw_numblocks = !numblocks;
-             sw_blocks = !blocks;
-             sw_failaction = None
-           })
+let lswitch (_, arg, cs_action_list) =
+  begin match cs_action_list with
+    | (({cstr_tag=Cstr_exception _},_)::_) ->
+        List.fold_right
+          begin fun (ex, act) rem ->
+            Lifthenelse(Lprim(Pintcomp Ceq,
+                              [Lprim(Pfield 0, [arg]); transl_exception ex]),
+                        act, rem)
+          end
+          cs_action_list lstaticfail
+    | _ ->
+        let consts = ref [] in
+        let numconsts = ref 0 in
+        let addconst i action =
+          consts := (i, action) :: !consts;
+          numconsts := max !numconsts (i+1)
+        in
+        let blocks = ref [] in
+        let numblocks = ref 0 in
+        let addblock i action =
+          blocks := (i, action) :: !blocks;
+          numblocks := max !numblocks (i+1)
+        in
+        List.iter
+          begin fun (cs, action) ->
+            begin match cs.cstr_tag with
+              | Cstr_constant i -> addconst i action
+              | Cstr_block i -> addblock i action
+              | Cstr_exception _ -> assert false
+            end
+          end cs_action_list;
+        Lswitch (arg,
+                 { sw_numconsts = !numconsts;
+                   sw_consts = !consts;
+                   sw_numblocks = !numblocks;
+                   sw_blocks = !blocks;
+                   sw_failaction = None
+                 })
+  end
 
 
 (* ---------------------------------------------------------------------- *)
@@ -211,7 +222,7 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
 ;;
 
 let divide_construct_matching (Matching(casel, pathl))
-    : (constructor_tag * pattern_matching ref) list * pattern_matching =
+    : (constructor * pattern_matching ref) list * pattern_matching =
   let rec divide_rec casel =
     match simpl_casel casel with
     | ({pat_desc = Tpat_construct(c,argl)} :: patl, action) :: rest ->
@@ -219,7 +230,7 @@ let divide_construct_matching (Matching(casel, pathl))
         let (constrs, others) =
           divide_rec rest in
         add_to_division
-          (make_construct_match c pathl) constrs (Get.constructor c).cstr_tag (patl', action),
+          (make_construct_match c pathl) constrs (Get.constructor c) (patl', action),
         others
     | casel ->
         [], Matching(casel, pathl)
