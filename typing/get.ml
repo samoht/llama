@@ -2,15 +2,31 @@ open Types
 
 type cached_module =
   { mod_sig : signature_item list;
+    mod_crcs : (string * Digest.t) list;
     mutable mod_values: (string, value) Tbl.t;
     mutable mod_constrs: (string, constructor) Tbl.t;
     mutable mod_labels: (string, label) Tbl.t;
     mutable mod_types: (string, type_constructor) Tbl.t }
 
 let cached_modules = ref Tbl.empty
+let crc_units = Consistbl.create()
+let reset_cache () = cached_modules := Tbl.empty; Consistbl.clear crc_units
 
-let make_cached_module sg =
+(* Consistency between persistent structures *)
+
+let check_consistency filename crcs =
+  try
+    List.iter
+      (fun (name, crc) -> Consistbl.check crc_units name crc filename)
+      crcs
+  with Consistbl.Inconsistency(name, source, auth) ->
+    assert false (* raise(Error(Inconsistent_import(name, auth, source))) *)
+
+(* Reading persistent structures from .cmi files *)
+
+let make_cached_module sg crcs =
   let ps = { mod_sig = sg;
+             mod_crcs = crcs;
              mod_values = Tbl.empty;
              mod_constrs = Tbl.empty;
              mod_labels = Tbl.empty;
@@ -41,16 +57,16 @@ let make_cached_module sg =
     end sg;
   ps
 
-let cm_predef = make_cached_module Predef.signature
-
 let read_cached_module modname filename =
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
     let mod_sig = (input_value ic : signature_item list) in
+    let crcs = input_value ic in
     close_in ic;
     assert (mn = modname);
-    let cm = make_cached_module mod_sig in
+    check_consistency filename crcs;
+    let cm = make_cached_module mod_sig crcs in
     cached_modules := Tbl.add modname cm !cached_modules;
     cm
   with End_of_file | Failure _ ->
@@ -59,6 +75,9 @@ let read_cached_module modname filename =
                        Please recompile %s.mli or %s.ml first.\n"
       filename modname modname;
     assert false
+
+
+let cm_predef = make_cached_module Predef.signature []
 
 let cached_module mod_id =
   match mod_id with
@@ -89,3 +108,4 @@ let value = get (fun ps -> ps.mod_values)
 let label = get (fun ps -> ps.mod_labels)
 
 let signature name = (cached_module (Module name)).mod_sig
+let imported_units () = Consistbl.extract crc_units

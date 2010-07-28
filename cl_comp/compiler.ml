@@ -74,8 +74,7 @@ let verbose = ref false;;
 let compile_interface modname filename =
   let source_name = filename ^ ".mli"
   and intf_name = filename ^ ".zi" in
-  let ic = open_in_bin source_name (* See compile_impl *)
-  and oc = open_out_bin intf_name in
+  let ic = open_in_bin source_name (* See compile_impl *) in
     try
       Env.set_current_unit (Module modname);
       let env = Env.initial_env () in
@@ -88,12 +87,9 @@ let compile_interface modname filename =
       Typemod.type_signature l;
       Typemod.genericize_core_signature sg;
       close_in ic;
-      Module.write oc (Env.current_module_name ()) sg;
-      close_out oc;
+      Env.save_signature sg modname intf_name;
     with x ->
       close_in ic;
-      close_out oc;
-      remove_file intf_name;
       raise x
 ;;
 
@@ -165,15 +161,12 @@ let compile_implementation modname filename suffix =
       raise x
   end else begin
     let intf_name = filename ^ ".zi" in
-    let oc = open_out_bin intf_name in
     try
       Env.set_current_unit (Module modname);
       let env = Env.initial_env () in
       let sg, env = compile_impl env modname filename suffix in
-      Module.write oc (Env.current_module_name ()) sg;
-      close_out oc
+      Env.save_signature sg (Env.current_module_name ()) intf_name;
     with x ->
-      close_out oc;
       remove_file intf_name;
       raise x
   end

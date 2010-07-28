@@ -132,9 +132,33 @@ let current_module_name () =
 
 type summary = unit
 let summary _ = ()
-let imported_units () = assert false
+let imported_units () = Get.imported_units()
+
+let save_signature_with_imports sg modname filename imports =
+  erase_sig (Module modname) sg;
+  let oc = open_out_bin filename in
+  try
+    output_value oc modname;
+    output_value oc sg;
+    flush oc;
+    let crc = Digest.file filename in
+    let crcs = (modname, crc) :: imports in
+    print_endline "Saving crcs";
+    List.iter
+      begin fun (s, d) ->
+        print_endline ("  "^Digest.to_hex d^" "^s)
+      end crcs;
+    output_value oc crcs;
+    close_out oc;
+    (* Enter signature in persistent table so that imported_unit()
+       will also return its crc *)
+    let ps = Get.make_cached_module sg crcs in
+    Get.cached_modules := Tbl.add modname ps !Get.cached_modules;
+    Consistbl.set Get.crc_units modname crc filename
+  with exn ->
+    close_out oc;
+    remove_file filename;
+    raise exn
 
 let save_signature sg modname filename =
-  let oc = open_out_bin filename in
-  Module.write oc modname sg;
-  close_out oc
+  save_signature_with_imports sg modname filename (imported_units())

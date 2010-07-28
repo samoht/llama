@@ -34,11 +34,6 @@ let erase_item m = function
   | Sig_exception cs -> erase_constr m cs
 let erase_sig m l = List.iter (erase_item m) l
 
-let write oc mn sg =
-  erase_sig (Module mn) sg;
-  output_value oc mn;
-  output_value oc sg
-
 let next_exc_stamp = ref 1
 
 let new_exc_stamp () =
