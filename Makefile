@@ -16,9 +16,10 @@ PARSING=parsing/location.cmx parsing/syntaxerr.cmx \
 TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/types.cmx \
  typing/predef.cmx \
- typing/get.cmx \
  typing/module.cmx \
- typing/env.cmx typing/btype.cmx \
+ typing/env.cmx \
+ typing/get.cmx \
+ typing/btype.cmx \
  typing/subst.cmx \
  typing/printtyp.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \

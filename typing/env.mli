@@ -1,6 +1,14 @@
-(* Resolution of unqualified identifiers. *)
-
 open Types
+
+(* ------------------------------ *)
+
+val get_signature : string -> signature
+val get_type_constructor : type_constructor reference -> type_constructor
+val get_constructor : constructor reference -> constructor
+val get_label : label reference -> label
+val get_value : value reference -> value
+
+(* ------------------------------ *)
 
 type t
 
@@ -38,3 +46,6 @@ val summary : t -> summary
 
 val imported_units: unit -> (string * Digest.t) list
 val save_signature : signature -> string -> string -> unit
+
+val new_exc_stamp : unit -> int
+val reset_cache : unit -> unit

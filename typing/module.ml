@@ -34,8 +34,3 @@ let erase_item m = function
   | Sig_exception cs -> erase_constr m cs
 let erase_sig m l = List.iter (erase_item m) l
 
-let next_exc_stamp = ref 1
-
-let new_exc_stamp () =
-  let n = !next_exc_stamp in
-  incr next_exc_stamp; n
