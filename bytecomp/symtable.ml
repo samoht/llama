@@ -137,7 +137,7 @@ let init () =
   Array.iter
     (fun name ->
       let id =
-        Ident.Exception
+        Ident.of_exception
           (try List.find (fun cs -> cs.Types.cs_name = name) Predef.exceptions
            with Not_found -> fatal_error "Symtable.init") in
       let c = slot_for_setglobal id in

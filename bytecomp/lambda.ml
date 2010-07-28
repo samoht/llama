@@ -343,18 +343,18 @@ let rec patch_guarded patch = function
 (* Translate an access path *)
 
 let transl_noncurrent_module m =
-  Lprim(Pgetglobal (Ident.Module m), [])
+  Lprim(Pgetglobal (Ident.of_module m), [])
 let transl_exception cs =
   let m = cs.Types.cs_parent.Types.tcs_id.Types.id_module in
   if m = Env.current_module () then
-    Lprim(Pgetglobal (Ident.Exception cs), [])
+    Lprim(Pgetglobal (Ident.of_exception cs), [])
   else
     let pos = match cs.Types.cstr_tag with Types.Cstr_exception (_, pos) -> pos | _ -> assert false in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 let transl_predef_exn cs =
-  Lprim(Pgetglobal (Ident.Exception cs), [])
+  Lprim(Pgetglobal (Ident.of_exception cs), [])
 let transl_regular_value v =
-  let id = Ident.Value v in
+  let id = Ident.of_value v in
   if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id
 (*
 let rec transl_path = function

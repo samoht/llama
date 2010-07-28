@@ -749,7 +749,7 @@ and transl_exp0 e =
   | Texp_while(cond, body) ->
       Lwhile(transl_exp cond, event_before body (transl_exp body))
   | Texp_for(param, low, high, dir, body) ->
-      Lfor(Ident.Value param, transl_exp low, transl_exp high, dir,
+      Lfor(Ident.of_value param, transl_exp low, transl_exp high, dir,
            event_before body (transl_exp body))
   | Texp_when(cond, body) ->
       event_before cond
@@ -960,7 +960,7 @@ and transl_let rec_flag pat_expr_list body =
         List.map
           (fun (pat, expr) ->
             match pat.pat_desc with
-              Tpat_var id -> Ident.Value id
+              Tpat_var id -> Ident.of_value id
             | _ -> raise(Error(pat.pat_loc, Illegal_letrec_pat)))
         pat_expr_list in
       let transl_case (pat, expr) id =

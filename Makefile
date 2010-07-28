@@ -165,3 +165,6 @@ configure-in-situ:
 
 llamac-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(DRIVER)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
+llamac-new.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
+	$(OCAMLC) -custom $(FLAGS) -o $@ $^
+

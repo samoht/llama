@@ -25,9 +25,9 @@ open Lambda
 open Translcore
 
 let let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.Value v) (Typedtree_aux.let_bound_values pat_expr_list)
+  List.map (fun v -> Ident.of_value v) (Typedtree_aux.let_bound_values pat_expr_list)
 let rev_let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.Value v) (Typedtree_aux.rev_let_bound_values pat_expr_list)
+  List.map (fun v -> Ident.of_value v) (Typedtree_aux.rev_let_bound_values pat_expr_list)
 
 type error =
   Circular_dependency of Ident.t
@@ -261,7 +261,8 @@ let rec transl_module cc rootpath mexp =
   | Tmod_unpack(arg, _) ->
       Translcore.transl_exp arg
 *)
-let rec transl_structure fields cc = function
+let rec transl_structure fields cc x =
+  match x with
     [] ->
       begin match cc with
         Tcoerce_none ->
@@ -291,7 +292,7 @@ let rec transl_structure fields cc = function
   | Tstr_type(decls) :: rem ->
       transl_structure fields cc rem
   | Tstr_exception(cs, _) :: rem ->
-      let id = Ident.Exception cs in
+      let id = Ident.of_exception cs in
       Llet(Strict, id, transl_exception cs,
            transl_structure (id :: fields) cc rem)
 (*
@@ -348,7 +349,7 @@ let transl_implementation module_name (str, cc) =
   let str = List.map (fun si -> si.str_desc) str in
 (*reset_labels (); *)
   primitive_declarations := [];
-  let module_id = Ident.Module (Types.Module module_name) in
+  let module_id = Ident.of_module (Types.Module module_name) in
   Lprim(Psetglobal module_id,
         [(* transl_label_init *)
             (transl_structure [] cc str)])
@@ -392,7 +393,7 @@ let transl_store_structure glob map prims str =
   | Tstr_type(decls) :: rem ->
       transl_store subst rem
   | Tstr_exception(cs, _) :: rem ->
-      let id = Ident.Exception cs in
+      let id = Ident.of_exception cs in
       let lam = transl_exception cs in
       Lsequence(Llet(Strict, id, lam, store_ident id),
                 transl_store (add_ident false id subst) rem)
@@ -493,7 +494,7 @@ let rec defined_idents = function
       let_bound_idents pat_expr_list @ defined_idents rem
   | Tstr_primitive(id, descr) :: rem -> defined_idents rem
   | Tstr_type decls :: rem -> defined_idents rem
-  | Tstr_exception(cs, _) :: rem -> Ident.Exception cs :: defined_idents rem
+  | Tstr_exception(cs, _) :: rem -> Ident.of_exception cs :: defined_idents rem
 (*| Tstr_exn_rebind(id, path) :: rem -> id :: defined_idents rem *)
 (*| Tstr_module(id, modl) :: rem -> id :: defined_idents rem
   | Tstr_recmodule decls :: rem -> List.map fst decls @ defined_idents rem
@@ -546,7 +547,7 @@ let build_ident_map restr idlist =
 let transl_store_gen module_name (str, restr) topl =
 (*  reset_labels ();*)
   primitive_declarations := [];
-  let module_id = Ident.Module (Types.Module module_name) in
+  let module_id = Ident.of_module (Types.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
   let f = function
     | [ Tstr_eval expr ] when topl ->
@@ -571,7 +572,7 @@ let transl_store_implementation module_name (str, restr) =
 
 (* Compile a toplevel phrase *)
 
-let toploop_ident = Ident.Module Module_toplevel
+let toploop_ident = Ident.of_module Module_toplevel
 let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
 let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
 
@@ -615,7 +616,7 @@ let transl_toplevel_item = function
   | Tstr_type(decls) ->
       lambda_unit
   | Tstr_exception(cs, _) ->
-      toploop_setvalue (Ident.Exception cs) (transl_exception cs)
+      toploop_setvalue (Ident.of_exception cs) (transl_exception cs)
 (*  | Tstr_exn_rebind(id, path) ->
       toploop_setvalue id (transl_path path)*)
 (*| Tstr_module(id, modl) ->

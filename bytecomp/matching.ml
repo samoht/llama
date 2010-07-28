@@ -238,7 +238,7 @@ let divide_var_matching
             others
       | ({pat_desc = Tpat_var v} :: patl, action) :: rest ->
           let vars, others = divide_rec rest in
-            add_to_match vars (patl, Llet (Strict, Ident.Value v, xxx, action)),
+            add_to_match vars (patl, Llet (Strict, Ident.of_value v, xxx, action)),
             others
       | casel ->
           Matching([], endpathl), Matching(casel, pathl)

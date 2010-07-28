@@ -81,12 +81,6 @@ let add_ccobjs l =
 
 (* First pass: determine which units are needed *)
 
-module IdentSet =
-  Set.Make(struct
-    type t = Ident.t
-    let compare = compare
-  end)
-
 let missing_globals = ref IdentSet.empty
 
 let is_required (rel, pos) =
