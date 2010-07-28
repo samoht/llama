@@ -16,9 +16,9 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   filename.cmo complex.cmo \
   arrayLabels.cmo listLabels.cmo stringLabels.cmo moreLabels.cmo stdLabels.cmo
 
-all: stdlib.cma std_exit.cmo
+all: std_exit.cmo stdlib.cma
 
-stdlib.cma: pervasives.cmo array.cmo list.cmo char.cmo string.cmo
+stdlib.cma: $(OBJS)
 	$(LLAMAC) -a -o stdlib.cma $^
 
 test2: test2.ml
@@ -32,6 +32,8 @@ pervasives.lli: pervasives.mli
 	$(LLAMAC) -nopervasives -c $<
 pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
+
+std_exit.cmo: pervasives.cmo
 
 clean:
 	rm -f *.lli *.cmo

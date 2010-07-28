@@ -851,6 +851,8 @@ and transl_exp0 e =
           cl_type = Tcty_signature cty;
           cl_env = e.exp_env }
 *)
+  | Texp_constraint (e, _) -> transl_exp e
+
 and transl_list expr_list =
   List.map transl_exp expr_list
 
