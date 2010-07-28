@@ -11,151 +11,307 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: array.ml 10482 2010-05-31 12:46:27Z doligez $ *)
+(* $Id: list.ml 7597 2006-09-11 12:18:00Z doligez $ *)
 
-(* Array operations *)
+(* List operations *)
 
-external length : 'a array -> int = "%array_length"
-external get: 'a array -> int -> 'a = "%array_safe_get"
-external set: 'a array -> int -> 'a -> unit = "%array_safe_set"
-external unsafe_get: 'a array -> int -> 'a = "%array_unsafe_get"
-external unsafe_set: 'a array -> int -> 'a -> unit = "%array_unsafe_set"
-external make: int -> 'a -> 'a array = "caml_make_vect"
-external create: int -> 'a -> 'a array = "caml_make_vect"
+let rec length_aux len = function
+    [] -> len
+  | a::l -> length_aux (len + 1) l
 
-let init l f =
-  if l = 0 then [||] else
-   let res = create l (f 0) in
-   for i = 1 to pred l do
-     unsafe_set res i (f i)
-   done;
-   res
+let length l = length_aux 0 l
 
-let make_matrix sx sy init =
-  let res = create sx [||] in
-  for x = 0 to pred sx do
-    unsafe_set res x (create sy init)
-  done;
-  res
+let hd = function
+    [] -> failwith "hd"
+  | a::l -> a
 
-let create_matrix = make_matrix
+let tl = function
+    [] -> failwith "tl"
+  | a::l -> l
 
-let copy a =
-  let l = length a in
-  if l = 0 then [||] else begin
-    let res = create l (unsafe_get a 0) in
-    for i = 1 to pred l do
-      unsafe_set res i (unsafe_get a i)
-    done;
-    res
-  end
+let nth l n =
+  if n < 0 then invalid_arg "List.nth" else
+  let rec nth_aux l n =
+    match l with
+    | [] -> failwith "nth"
+    | a::l -> if n = 0 then a else nth_aux l (n-1)
+  in nth_aux l n
+(*
+let append = (@)
 
-let append a1 a2 =
-  let l1 = length a1 and l2 = length a2 in
-  if l1 = 0 && l2 = 0 then [||] else begin
-    let r = create (l1 + l2) (unsafe_get (if l1 > 0 then a1 else a2) 0) in
-    for i = 0 to l1 - 1 do unsafe_set r i (unsafe_get a1 i) done;
-    for i = 0 to l2 - 1 do unsafe_set r (i + l1) (unsafe_get a2 i) done;
-    r
-  end
+let rec rev_append l1 l2 =
+  match l1 with
+    [] -> l2
+  | a :: l -> rev_append l (a :: l2)
 
-let concat_aux init al =
-  let rec size accu = function
+let rev l = rev_append l []
+
+let rec flatten = function
+    [] -> []
+  | l::r -> l @ flatten r
+
+let concat = flatten
+
+let rec map f = function
+    [] -> []
+  | a::l -> let r = f a in r :: map f l
+
+let rev_map f l =
+  let rec rmap_f accu = function
     | [] -> accu
-    | h::t -> size (accu + length h) t
+    | a::l -> rmap_f (f a :: accu) l
   in
-  let res = create (size 0 al) init in
-  let rec fill pos = function
-    | [] -> ()
-    | h::t ->
-        for i = 0 to length h - 1 do
-          unsafe_set res (pos + i) (unsafe_get h i);
-        done;
-        fill (pos + length h) t;
-  in
-  fill 0 al;
-  res
+  rmap_f [] l
 ;;
 
-let concat al =
-  let rec find_init aa =
-    match aa with
-    | [] -> [||]
-    | a :: rem ->
-        if length a > 0 then concat_aux (unsafe_get a 0) aa else find_init rem
-  in find_init al
+let rec iter f = function
+    [] -> ()
+  | a::l -> f a; iter f l
 
-let sub a ofs len =
-  if ofs < 0 || len < 0 || ofs > length a - len then invalid_arg "Array.sub"
-  else if len = 0 then [||]
-  else begin
-    let r = create len (unsafe_get a ofs) in
-    for i = 1 to len - 1 do unsafe_set r i (unsafe_get a (ofs + i)) done;
-    r
-  end
+let rec fold_left f accu l =
+  match l with
+    [] -> accu
+  | a::l -> fold_left f (f accu a) l
 
-let fill a ofs len v =
-  if ofs < 0 || len < 0 || ofs > length a - len
-  then invalid_arg "Array.fill"
-  else for i = ofs to ofs + len - 1 do unsafe_set a i v done
+let rec fold_right f l accu =
+  match l with
+    [] -> accu
+  | a::l -> f a (fold_right f l accu)
 
-let blit a1 ofs1 a2 ofs2 len =
-  if len < 0 || ofs1 < 0 || ofs1 > length a1 - len
-             || ofs2 < 0 || ofs2 > length a2 - len
-  then invalid_arg "Array.blit"
-  else if ofs1 < ofs2 then
-    (* Top-down copy *)
-    for i = len - 1 downto 0 do
-      unsafe_set a2 (ofs2 + i) (unsafe_get a1 (ofs1 + i))
-    done
-  else
-    (* Bottom-up copy *)
-    for i = 0 to len - 1 do
-      unsafe_set a2 (ofs2 + i) (unsafe_get a1 (ofs1 + i))
-    done
+let rec map2 f l1 l2 =
+  match (l1, l2) with
+    ([], []) -> []
+  | (a1::l1, a2::l2) -> let r = f a1 a2 in r :: map2 f l1 l2
+  | (_, _) -> invalid_arg "List.map2"
 
-let iter f a =
-  for i = 0 to length a - 1 do f(unsafe_get a i) done
-
-let map f a =
-  let l = length a in
-  if l = 0 then [||] else begin
-    let r = create l (f(unsafe_get a 0)) in
-    for i = 1 to l - 1 do
-      unsafe_set r i (f(unsafe_get a i))
-    done;
-    r
-  end
-
-let iteri f a =
-  for i = 0 to length a - 1 do f i (unsafe_get a i) done
-
-let mapi f a =
-  let l = length a in
-  if l = 0 then [||] else begin
-    let r = create l (f 0 (unsafe_get a 0)) in
-    for i = 1 to l - 1 do
-      unsafe_set r i (f i (unsafe_get a i))
-    done;
-    r
-  end
-
-let to_list a =
-  let rec tolist i res =
-    if i < 0 then res else tolist (i - 1) (unsafe_get a i :: res) in
-  tolist (length a - 1) []
-
-(* Cannot use List.length here because the List module depends on Array. *)
-let rec list_length accu = function
-  | [] -> accu
-  | h::t -> list_length (succ accu) t
+let rev_map2 f l1 l2 =
+  let rec rmap2_f accu l1 l2 =
+    match (l1, l2) with
+    | ([], []) -> accu
+    | (a1::l1, a2::l2) -> rmap2_f (f a1 a2 :: accu) l1 l2
+    | (_, _) -> invalid_arg "List.rev_map2"
+  in
+  rmap2_f [] l1 l2
 ;;
 
-let of_list = function
-    [] -> [||]
-  | hd::tl as l ->
-      let a = create (list_length 0 l) hd in
-      let rec fill i = function
-          [] -> a
-        | hd::tl -> unsafe_set a i hd; fill (i+1) tl in
-      fill 1 tl
+let rec iter2 f l1 l2 =
+  match (l1, l2) with
+    ([], []) -> ()
+  | (a1::l1, a2::l2) -> f a1 a2; iter2 f l1 l2
+  | (_, _) -> invalid_arg "List.iter2"
+
+let rec fold_left2 f accu l1 l2 =
+  match (l1, l2) with
+    ([], []) -> accu
+  | (a1::l1, a2::l2) -> fold_left2 f (f accu a1 a2) l1 l2
+  | (_, _) -> invalid_arg "List.fold_left2"
+
+let rec fold_right2 f l1 l2 accu =
+  match (l1, l2) with
+    ([], []) -> accu
+  | (a1::l1, a2::l2) -> f a1 a2 (fold_right2 f l1 l2 accu)
+  | (_, _) -> invalid_arg "List.fold_right2"
+
+let rec for_all p = function
+    [] -> true
+  | a::l -> p a && for_all p l
+
+let rec exists p = function
+    [] -> false
+  | a::l -> p a || exists p l
+
+let rec for_all2 p l1 l2 =
+  match (l1, l2) with
+    ([], []) -> true
+  | (a1::l1, a2::l2) -> p a1 a2 && for_all2 p l1 l2
+  | (_, _) -> invalid_arg "List.for_all2"
+
+let rec exists2 p l1 l2 =
+  match (l1, l2) with
+    ([], []) -> false
+  | (a1::l1, a2::l2) -> p a1 a2 || exists2 p l1 l2
+  | (_, _) -> invalid_arg "List.exists2"
+
+let rec mem x = function
+    [] -> false
+  | a::l -> compare a x = 0 || mem x l
+
+let rec memq x = function
+    [] -> false
+  | a::l -> a == x || memq x l
+
+let rec assoc x = function
+    [] -> raise Not_found
+  | (a,b)::l -> if compare a x = 0 then b else assoc x l
+
+let rec assq x = function
+    [] -> raise Not_found
+  | (a,b)::l -> if a == x then b else assq x l
+
+let rec mem_assoc x = function
+  | [] -> false
+  | (a, b) :: l -> compare a x = 0 || mem_assoc x l
+
+let rec mem_assq x = function
+  | [] -> false
+  | (a, b) :: l -> a == x || mem_assq x l
+
+let rec remove_assoc x = function
+  | [] -> []
+  | (a, b as pair) :: l ->
+      if compare a x = 0 then l else pair :: remove_assoc x l
+
+let rec remove_assq x = function
+  | [] -> []
+  | (a, b as pair) :: l -> if a == x then l else pair :: remove_assq x l
+
+let rec find p = function
+  | [] -> raise Not_found
+  | x :: l -> if p x then x else find p l
+
+let find_all p =
+  let rec find accu = function
+  | [] -> rev accu
+  | x :: l -> if p x then find (x :: accu) l else find accu l in
+  find []
+
+let filter = find_all
+
+let partition p l =
+  let rec part yes no = function
+  | [] -> (rev yes, rev no)
+  | x :: l -> if p x then part (x :: yes) no l else part yes (x :: no) l in
+  part [] [] l
+
+let rec split = function
+    [] -> ([], [])
+  | (x,y)::l ->
+      let (rx, ry) = split l in (x::rx, y::ry)
+
+let rec combine l1 l2 =
+  match (l1, l2) with
+    ([], []) -> []
+  | (a1::l1, a2::l2) -> (a1, a2) :: combine l1 l2
+  | (_, _) -> invalid_arg "List.combine"
+
+(** sorting *)
+
+let rec merge cmp l1 l2 =
+  match l1, l2 with
+  | [], l2 -> l2
+  | l1, [] -> l1
+  | h1 :: t1, h2 :: t2 ->
+      if cmp h1 h2 <= 0
+      then h1 :: merge cmp t1 l2
+      else h2 :: merge cmp l1 t2
+;;
+
+let rec chop k l =
+  if k = 0 then l else begin
+    match l with
+    | x::t -> chop (k-1) t
+    | _ -> assert false
+  end
+;;
+
+let stable_sort cmp l =
+  let rec rev_merge l1 l2 accu =
+    match l1, l2 with
+    | [], l2 -> rev_append l2 accu
+    | l1, [] -> rev_append l1 accu
+    | h1::t1, h2::t2 ->
+        if cmp h1 h2 <= 0
+        then rev_merge t1 l2 (h1::accu)
+        else rev_merge l1 t2 (h2::accu)
+  in
+  let rec rev_merge_rev l1 l2 accu =
+    match l1, l2 with
+    | [], l2 -> rev_append l2 accu
+    | l1, [] -> rev_append l1 accu
+    | h1::t1, h2::t2 ->
+        if cmp h1 h2 > 0
+        then rev_merge_rev t1 l2 (h1::accu)
+        else rev_merge_rev l1 t2 (h2::accu)
+  in
+  let rec sort n l =
+    match n, l with
+    | 2, x1 :: x2 :: _ ->
+       if cmp x1 x2 <= 0 then [x1; x2] else [x2; x1]
+    | 3, x1 :: x2 :: x3 :: _ ->
+       if cmp x1 x2 <= 0 then begin
+         if cmp x2 x3 <= 0 then [x1; x2; x3]
+         else if cmp x1 x3 <= 0 then [x1; x3; x2]
+         else [x3; x1; x2]
+       end else begin
+         if cmp x1 x3 <= 0 then [x2; x1; x3]
+         else if cmp x2 x3 <= 0 then [x2; x3; x1]
+         else [x3; x2; x1]
+       end
+    | n, l ->
+       let n1 = n asr 1 in
+       let n2 = n - n1 in
+       let l2 = chop n1 l in
+       let s1 = rev_sort n1 l in
+       let s2 = rev_sort n2 l2 in
+       rev_merge_rev s1 s2 []
+  and rev_sort n l =
+    match n, l with
+    | 2, x1 :: x2 :: _ ->
+       if cmp x1 x2 > 0 then [x1; x2] else [x2; x1]
+    | 3, x1 :: x2 :: x3 :: _ ->
+       if cmp x1 x2 > 0 then begin
+         if cmp x2 x3 > 0 then [x1; x2; x3]
+         else if cmp x1 x3 > 0 then [x1; x3; x2]
+         else [x3; x1; x2]
+       end else begin
+         if cmp x1 x3 > 0 then [x2; x1; x3]
+         else if cmp x2 x3 > 0 then [x2; x3; x1]
+         else [x3; x2; x1]
+       end
+    | n, l ->
+       let n1 = n asr 1 in
+       let n2 = n - n1 in
+       let l2 = chop n1 l in
+       let s1 = sort n1 l in
+       let s2 = sort n2 l2 in
+       rev_merge s1 s2 []
+  in
+  let len = length l in
+  if len < 2 then l else sort len l
+;;
+
+let sort = stable_sort;;
+let fast_sort = stable_sort;;
+
+(* Note: on a list of length between about 100000 (depending on the minor
+   heap size and the type of the list) and Sys.max_array_size, it is
+   actually faster to use the following, but it might also use more memory
+   because the argument list cannot be deallocated incrementally.
+
+   Also, there seems to be a bug in this code or in the
+   implementation of obj_truncate.
+
+external obj_truncate : 'a array -> int -> unit = "caml_obj_truncate"
+
+let array_to_list_in_place a =
+  let l = Array.length a in
+  let rec loop accu n p =
+    if p <= 0 then accu else begin
+      if p = n then begin
+        obj_truncate a p;
+        loop (a.(p-1) :: accu) (n-1000) (p-1)
+      end else begin
+        loop (a.(p-1) :: accu) n (p-1)
+      end
+    end
+  in
+  loop [] (l-1000) l
+;;
+
+let stable_sort cmp l =
+  let a = Array.of_list l in
+  Array.stable_sort cmp a;
+  array_to_list_in_place a
+;;
+*)
+----------------------------------------------------------------------*)

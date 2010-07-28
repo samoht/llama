@@ -110,7 +110,7 @@ let mkpatvar s =
   { val_kind = Val_reg;
     val_id = Env.qualified_id s;
     val_type = type_none;
-    val_global = false }
+    val_global = false; foo = Random.int 1000 }
 (*  (fun () -> raise (Multiply_bound_variable s)) *)
 
 let rec pattern env p =
@@ -320,7 +320,7 @@ let value_declaration env name typexp primstuff =
     { val_id = Env.qualified_id name;
       val_type = type_none;
       val_kind = primitive primstuff typexp;
-      val_global = true }
+      val_global = true; foo = Random.int 1000 }
   in
   let typexp = type_expression false env typexp in
   v, typexp, Env.add_value v env

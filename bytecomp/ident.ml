@@ -4,7 +4,7 @@ type t =
   | Module of module_id
   | Value of value
   | Exception of constructor
-  | Basic of string
+  | Basic of string * int
 
 let of_module s = Module s
 let of_exception cs = Exception cs
@@ -24,24 +24,23 @@ let same i1 i2 =
         false
   end
 
-let create s = Basic s
+let create s = Basic (s, Random.int 1000)
 
 let name = function
-    Module m ->
-      begin match m with
-        | Types.Module_toplevel -> "(toplevel)"
-        | Types.Module s -> s
-        | Types.Module_builtin -> "(builtin)"
-      end
+    Module m -> module_name m
   | Value v -> val_name v
   | Exception cs -> cs.cs_name
-  | Basic s -> s
+  | Basic (s, _) -> s
 
-let rename id = Basic (name id)
+let rename id = create (name id)
 
-let unique_name = name (* xxx *)
+let unique_name = function
+    Basic (s, n) -> s ^ "/" ^ string_of_int n
+  | Value v -> val_name v ^ "-" ^ string_of_int v.foo
+  | id -> name id
+
 let unique_toplevel_name id = assert false (* xxx *)
-let print ppf id = Format.pp_print_string ppf (name id)
+let print ppf id = Format.pp_print_string ppf (unique_name id)
 
 (* ---------------------------------------------------------------------- *)
 

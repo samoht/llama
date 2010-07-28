@@ -16,7 +16,19 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   filename.cmo complex.cmo \
   arrayLabels.cmo listLabels.cmo stringLabels.cmo moreLabels.cmo stdLabels.cmo
 
-all: $(OBJS)
+all: stdlib.cma std_exit.cmo
+
+stdlib.cma: pervasives.cmo array.cmo list.cmo char.cmo string.cmo
+	$(LLAMAC) -a -o stdlib.cma $^
+
+test2.cmo: test2.ml
+	$(LLAMAC) -nopervasives -c $<
+test2: test2.cmo
+	$(LLAMAC) -nopervasives -o $@ $^
+test3.cmo: test3.ml
+	$(LLAMAC) -nopervasives -c $<
+test3: test3.cmo
+	$(LLAMAC) -nopervasives -o $@ $^
 
 %.lli: %.mli
 	$(LLAMAC) -c $<
@@ -28,7 +40,7 @@ pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
 
 clean:
-	rm *.lli *.cmo
+	rm -f *.lli *.cmo
 .PHONY: clean
 
 include .depend

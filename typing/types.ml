@@ -83,7 +83,8 @@ type value =
   { val_id : qualified_id;
     mutable val_type: llama_type;                (* Type of the value *)
     val_kind: value_kind;
-    mutable val_global: bool }
+    mutable val_global: bool;
+    foo : int }
 
 and value_kind =
     Val_reg                             (* Regular value *)
@@ -170,7 +171,7 @@ let dummy_value name =
   { val_id = { id_module = Module "dummy"; id_name = name };
     val_type = type_none;
     val_kind = Val_reg;
-    val_global = false }
+    val_global = false; foo = Random.int 1000 }
 
 exception Constr_not_found
 

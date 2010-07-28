@@ -350,7 +350,7 @@ let transl_exception cs =
       | Types.Cstr_exception ({Types.id_module=m}, _) -> m
       | _ -> assert false
   in
-  if m = Env.get_current_module () then
+  if m = Types.Module_builtin || m = Env.get_current_module () then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
   else
     let pos = try Env.get_exception_position cs with
@@ -365,7 +365,7 @@ let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
 let transl_regular_value v =
   let m = v.Types.val_id.Types.id_module in
-  if m = Env.get_current_module () then
+  if m = Types.Module_builtin || m = Env.get_current_module () then
     let id = Ident.of_value v in
     if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id
   else

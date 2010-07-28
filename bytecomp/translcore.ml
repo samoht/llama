@@ -487,7 +487,7 @@ let rec push_defaults loc bindings pat_expr_list partial =
   | (pat, exp) :: _ when bindings <> [] ->
       let param = Env.qualified_id(name_pattern "param" pat_expr_list) in
       let param_val = {val_type = pat.pat_type; val_kind = Val_reg;
-                       val_id = param; val_global = false }
+                       val_id = param; val_global = false; foo = Random.int 1000 }
       in
       let exp =
         { exp with exp_loc = loc; exp_desc =

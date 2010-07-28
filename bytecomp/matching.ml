@@ -13,6 +13,7 @@ open Primitive
 let lstaticfail = Lambda.staticfail
 let lstatichandle (action, lambda) = Lambda.Lstaticcatch (action, (0, []), lambda)
 let has_guard = Lambda.is_guarded
+let omega = Parmatch.omega
 let check_unused = Parmatch.check_unused ~has_guard
 let partial_match = Parmatch.partial_match ~has_guard
 let share_lambda x = x
@@ -107,6 +108,89 @@ let lswitch (_, arg, cs_action_list) =
                  })
   end
 
+(* ---------------------------------------------------------------------- *)
+
+(*
+   Simplify fonction normalize the first column of the match
+     - records are expanded so that they posses all fields
+     - aliases are removed and replaced by bindings in actions.
+   However or-patterns are simplified differently,
+     - aliases are not removed
+     - or patterns (_|p) are changed into _
+*)
+
+exception Var of pattern
+
+let simplify_or p =
+  let rec simpl_rec p = match p with
+    | {pat_desc = Tpat_any|Tpat_var _} -> raise (Var p)
+    | {pat_desc = Tpat_alias (q,id)} ->
+        begin try
+          {p with pat_desc = Tpat_alias (simpl_rec q,id)}
+        with
+        | Var q -> raise (Var {p with pat_desc = Tpat_alias (q,id)})
+        end
+    | {pat_desc = Tpat_or (p1,p2)} ->
+        let q1 = simpl_rec p1 in
+        begin try
+          let q2 = simpl_rec p2 in
+          {p with pat_desc = Tpat_or (q1, q2)}
+        with
+        | Var q2 -> raise (Var {p with pat_desc = Tpat_or (q1, q2)})
+        end
+(* xxx
+    | {pat_desc = Tpat_record lbls} ->
+        let all_lbls = all_record_args lbls in
+        {p with pat_desc=Tpat_record all_lbls}
+*)
+    | _ -> p in
+  try
+    simpl_rec p
+  with
+  | Var p -> p
+
+let rec simplify_cases args cls = match args with
+| [] -> assert false
+| (arg)::_ ->
+    let rec simplify = function
+      | [] -> []
+      | ((pat :: patl, action) as cl) :: rem ->
+          begin match pat.pat_desc with
+(*
+          | Tpat_var id ->
+              (omega :: patl, bind Strict (Ident.of_value id) arg action) ::
+              simplify rem
+          | Tpat_any ->
+              cl :: simplify rem
+*)
+          | Tpat_alias(p, id) ->
+              simplify ((p :: patl, bind Strict (Ident.of_value id) arg action) :: rem)
+(*
+          | Tpat_record [] ->
+              (omega :: patl, action)::
+              simplify rem
+          | Tpat_record lbls ->
+              let all_lbls = all_record_args lbls in
+              let full_pat = {pat with pat_desc=Tpat_record all_lbls} in
+              (full_pat::patl,action)::
+              simplify rem
+          | Tpat_or _ ->
+              let pat_simple  = simplify_or pat in
+              begin match pat_simple.pat_desc with
+              | Tpat_or _ ->
+                  (pat_simple :: patl, action) ::
+                  simplify rem
+              | _ ->
+                  simplify ((pat_simple::patl,action) :: rem)
+              end
+*)
+          | _ -> cl :: simplify rem
+          end
+      | _ -> assert false in
+
+    simplify cls
+
+
 
 (* ---------------------------------------------------------------------- *)
 
@@ -127,6 +211,8 @@ let lswitch (_, arg, cs_action_list) =
 type pattern_matching =
   Matching of (pattern list * lambda) list * lambda list
 ;;
+let simplify_pattern_matching (Matching (casel, argl)) = Matching (simplify_cases argl casel, argl)
+  
 
 (* Simple pattern manipulations *)
 
@@ -345,6 +431,7 @@ let rec conquer_matching =
       end else
         (action, true)
   | Matching(_, (path :: _)) as matching ->
+      let matching = simplify_pattern_matching matching in
       begin match upper_left_pattern matching with
         {pat_desc = (Tpat_any | Tpat_var _)} ->
           let vars, rest = divide_var_matching matching in
