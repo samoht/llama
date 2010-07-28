@@ -21,14 +21,8 @@ all: stdlib.cma std_exit.cmo
 stdlib.cma: pervasives.cmo array.cmo list.cmo char.cmo string.cmo
 	$(LLAMAC) -a -o stdlib.cma $^
 
-test2.cmo: test2.ml
-	$(LLAMAC) -nopervasives -c $<
-test2: test2.cmo
-	$(LLAMAC) -nopervasives -o $@ $^
-test3.cmo: test3.ml
-	$(LLAMAC) -nopervasives -c $<
-test3: test3.cmo
-	$(LLAMAC) -nopervasives -o $@ $^
+test2: test2.ml
+	../llamac-new $^ && ocamlrun a.out
 
 %.lli: %.mli
 	$(LLAMAC) -c $<

@@ -367,7 +367,8 @@ let transl_regular_value v =
   let m = v.Types.val_id.Types.id_module in
   if m = Types.Module_builtin || m = Env.get_current_module () then
     let id = Ident.of_value v in
-    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id
+    Lvar id
+(*    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id*)
   else
     let pos = Env.get_value_position v in
     Lprim(Pfield pos, [transl_noncurrent_module m])

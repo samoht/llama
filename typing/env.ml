@@ -62,8 +62,10 @@ let make_cached_module sg crcs =
       begin match item with
         | Sig_value v ->
             values := Tbl.add (val_name v) v !values;
-            value_positions := Tbl.add (val_name v) !pos !value_positions;
-            incr pos
+            if v.val_kind = Val_reg then begin
+              value_positions := Tbl.add (val_name v) !pos !value_positions;
+              incr pos
+            end
         | Sig_exception cs ->
             constructors := Tbl.add cs.cs_name cs !constructors;
             exception_positions := Tbl.add cs.cs_name !pos !exception_positions;

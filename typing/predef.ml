@@ -88,7 +88,7 @@ let constr_cons =
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
     cs_tag = ConstrRegular(1,2);
-    cstr_tag = Cstr_constant 1 }
+    cstr_tag = Cstr_block 0 }
 
 let constr_none =
   let arg = Tvar option_generic in
@@ -106,7 +106,7 @@ let constr_some =
     cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
     cs_tag = ConstrRegular(1,2);
-    cstr_tag = Cstr_constant 1 }
+    cstr_tag = Cstr_block 0 }
 
 let constr_false =
   { cs_parent = tcs_bool;
