@@ -6,6 +6,8 @@ open Typedecl
 open Module
 open Btype
 open Types
+open Format
+open Misc
 
 let gen_value x = Sig_value x
 let gen_type x = Sig_type x
@@ -91,9 +93,38 @@ let transl_signature env l =
   genericize_core_signature sg;
   sg
 
-let type_implementation _sourcefile _outputprefix _modulename env l =
-  let l, sg, env = Resolve.structure env l in
+let type_implementation sourcefile outputprefix modulename env str =
+  let str, sg, env = Resolve.structure env str in
   ignore env;
-  type_structure l;
-  genericize_core_signature sg;
-  l, Tcoerce_none(*xxx*)
+  type_structure str;
+  let simple_sg = (* simplify_signature *) sg in
+(*   Typecore.force_delayed_checks (); *)
+  if !Clflags.print_types then begin
+    fprintf std_formatter "%a@." Printtyp.signature simple_sg;
+    (str, Tcoerce_none)   (* result is ignored by Compile.implementation *)
+  end else begin
+    let sourceintf =
+      Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
+    if Sys.file_exists sourceintf then begin
+      genericize_core_signature sg; (* xxx should normalize only *)
+      let intf_file =
+        try
+          find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
+        with Not_found ->
+          assert false in
+            (* raise(Error(Location.none, Interface_not_compiled sourceintf)) in *)
+      let dclsig = Env.read_signature modulename intf_file in
+      let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
+      (str, coercion)
+    end else begin
+      (*      check_nongen_schemes finalenv str;*) genericize_core_signature sg;
+      
+(*      normalize_signature finalenv simple_sg; *)
+      let coercion =
+        Includemod.compunit (Module modulename) sourcefile sg
+                            "(inferred signature)" simple_sg in
+      if not !Clflags.dont_write_files then
+        Env.save_signature simple_sg modulename (outputprefix ^ ".cmi");
+      (str, coercion)
+    end
+  end

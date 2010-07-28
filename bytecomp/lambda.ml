@@ -349,13 +349,18 @@ let transl_exception cs =
   if m = Env.get_current_module () then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
   else
-    let pos = match cs.Types.cstr_tag with Types.Cstr_exception (_, pos) -> pos | _ -> assert false in
+    let pos = Env.get_exception_position cs in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
 let transl_regular_value v =
-  let id = Ident.of_value v in
-  if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id
+  let m = v.Types.val_id.Types.id_module in
+  if m = Env.get_current_module () then
+    let id = Ident.of_value v in
+    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id
+  else
+    let pos = Env.get_value_position v in
+    Lprim(Pfield pos, [transl_noncurrent_module m])
 (*
 let rec transl_path = function
     Pident id ->

@@ -7,6 +7,8 @@ val get_type_constructor : type_constructor reference -> type_constructor
 val get_constructor : constructor reference -> constructor
 val get_label : label reference -> label
 val get_value : value reference -> value
+val get_value_position : value -> int
+val get_exception_position : constructor -> int
 
 val reset_cache : unit -> unit
 val set_current_unit : module_id -> unit
@@ -48,4 +50,14 @@ val summary : t -> summary
 (* Return the set of compilation units imported, with their CRC *)
 
 val imported_units: unit -> (string * Digest.t) list
-val save_signature : signature -> string -> string -> unit
+
+(* Read, save a signature to/from a file *)
+
+val read_signature: string -> string -> signature
+        (* Arguments: module name, file name. Results: signature. *)
+val save_signature: signature -> string -> string -> unit
+        (* Arguments: signature, module name, file name. *)
+val save_signature_with_imports:
+            signature -> string -> string -> (string * Digest.t) list -> unit
+        (* Arguments: signature, module name, file name,
+           imported units with their CRCs. *)

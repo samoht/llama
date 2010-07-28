@@ -126,3 +126,12 @@ and signature_components subst = function
       (pos, Tcoerce_none) :: signature_components subst rem
   | _ ->
       assert false
+
+let compunit modulename impl_name impl_sig intf_name intf_sig =
+  try
+    signatures (Subst.identity modulename) impl_sig intf_sig
+  with Error reasons ->
+    assert false
+(*
+    raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
+*)

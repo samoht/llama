@@ -14,10 +14,12 @@ open Module
 type cached_module =
   { mod_sig : signature_item list;
     mod_crcs : (string * Digest.t) list;
-    mutable mod_values: (string, value) Tbl.t;
-    mutable mod_constrs: (string, constructor) Tbl.t;
-    mutable mod_labels: (string, label) Tbl.t;
-    mutable mod_types: (string, type_constructor) Tbl.t }
+    mod_values: (string, value) Tbl.t;
+    mod_constrs: (string, constructor) Tbl.t;
+    mod_labels: (string, label) Tbl.t;
+    mod_types: (string, type_constructor) Tbl.t;
+    value_positions : (string, int) Tbl.t;
+    exception_positions : (string, int) Tbl.t }
 
 let persistent_structures = ref Tbl.empty
 let crc_units = Consistbl.create()
@@ -48,39 +50,47 @@ let check_consistency filename crcs =
 (* Reading persistent structures from .cmi files *)
 
 let make_cached_module sg crcs =
-  let ps = { mod_sig = sg;
-             mod_crcs = crcs;
-             mod_values = Tbl.empty;
-             mod_constrs = Tbl.empty;
-             mod_labels = Tbl.empty;
-             mod_types = Tbl.empty }
-  in
+  let type_constructors = ref Tbl.empty in
+  let constructors = ref Tbl.empty in
+  let labels = ref Tbl.empty in
+  let values = ref Tbl.empty in
+  let value_positions = ref Tbl.empty in
+  let exception_positions = ref Tbl.empty in
+  let pos = ref 0 in
   List.iter
     begin fun item ->
       begin match item with
         | Sig_value v ->
-            ps.mod_values <- Tbl.add (val_name v) v ps.mod_values
+            values := Tbl.add (val_name v) v !values;
+            value_positions := Tbl.add (val_name v) !pos !value_positions;
+            incr pos
         | Sig_exception cs ->
-            ps.mod_constrs <- Tbl.add cs.cs_name cs ps.mod_constrs
+            constructors := Tbl.add cs.cs_name cs !constructors;
+            exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
+            incr pos
         | Sig_type tcs ->
-            ps.mod_types <- Tbl.add tcs.tcs_id.id_name tcs ps.mod_types;
+            type_constructors := Tbl.add tcs.tcs_id.id_name tcs !type_constructors;
             begin match tcs.tcs_kind with
               | Type_variant cstrs ->
-                  List.iter
-                    (fun cs -> ps.mod_constrs <- Tbl.add cs.cs_name cs ps.mod_constrs)
-                    cstrs
+                  List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
               | Type_record lbls ->
-                  List.iter
-                    (fun lbl -> ps.mod_labels <- Tbl.add lbl.lbl_name lbl ps.mod_labels)
-                    lbls
+                  List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
               | _ ->
                   ()
             end
       end
     end sg;
-  ps
+  { mod_sig = sg;
+    mod_crcs = crcs;
+    mod_values = !values;
+    mod_constrs = !constructors;
+    mod_labels = !labels;
+    mod_types = !type_constructors;
+    value_positions = !value_positions;
+    exception_positions = !exception_positions }
 
 let read_cached_module modname filename =
+  print_endline ("read_cached_module: "^modname^" "^filename);
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
@@ -99,6 +109,9 @@ let read_cached_module modname filename =
       filename modname modname;
     assert false
 
+let read_signature modname filename =
+  print_endline ("read_signature: "^modname^" "^filename);
+  (read_cached_module modname filename).mod_sig
 
 let cm_predef = make_cached_module Predef.signature []
 
@@ -107,9 +120,11 @@ let cached_module mod_id =
     | Module_builtin ->
         cm_predef
     | Module name ->
+        print_endline ("cached_module:"^name);
         begin try
           Tbl.find name !persistent_structures
         with Not_found ->
+          print_endline "cache miss";
           read_cached_module name
             (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".zi"))
         end
@@ -130,6 +145,12 @@ let get_constructor = get (fun ps -> ps.mod_constrs)
 let get_value = get (fun ps -> ps.mod_values)
 let get_label = get (fun ps -> ps.mod_labels)
 let get_signature name = (cached_module (Module name)).mod_sig
+
+let get_value_position v =
+  let id = v.val_id in
+  Tbl.find id.id_name (cached_module v.val_id.id_module).value_positions
+let get_exception_position cs =
+  Tbl.find cs.cs_name (cached_module cs.cs_parent.tcs_id.id_module).exception_positions
 
 (* ---------------------------------------------------------------------- *)
 (* Handling of unqualified identifiers.                                   *)
@@ -222,6 +243,7 @@ let add_signature sg env =
     env sg
 
 let open_pers_signature str env =
+  print_endline"open_pers_signature";
   add_signature (get_signature str) env
 
 let initial = add_signature Predef.signature empty
