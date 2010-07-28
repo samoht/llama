@@ -210,7 +210,8 @@ let divide_tuple_matching arity (Matching(casel, pathl)) =
   in divide_rec casel
 ;;
 
-let divide_construct_matching (Matching(casel, pathl)) =
+let divide_construct_matching (Matching(casel, pathl))
+    : (constructor_tag * pattern_matching ref) list * pattern_matching =
   let rec divide_rec casel =
     match simpl_casel casel with
     | ({pat_desc = Tpat_construct(c,argl)} :: patl, action) :: rest ->
@@ -225,13 +226,19 @@ let divide_construct_matching (Matching(casel, pathl)) =
   in divide_rec casel
 ;;
 
-let divide_var_matching = function
-  Matching(casel, (_ :: endpathl as pathl)) ->
+let divide_var_matching 
+    : pattern_matching -> pattern_matching * pattern_matching
+    = function
+  Matching(casel, (xxx :: endpathl as pathl)) ->
     let rec divide_rec casel =
       match simpl_casel casel with
-        ({pat_desc = (Tpat_any | Tpat_var _)} :: patl, action) :: rest ->
+        ({pat_desc = Tpat_any} :: patl, action) :: rest ->
           let vars, others = divide_rec rest in
             add_to_match vars (patl, action),
+            others
+      | ({pat_desc = Tpat_var v} :: patl, action) :: rest ->
+          let vars, others = divide_rec rest in
+            add_to_match vars (patl, Llet (Strict, Ident.Value v, xxx, action)),
             others
       | casel ->
           Matching([], endpathl), Matching(casel, pathl)
@@ -363,21 +370,6 @@ let rec conquer_matching =
 
 (* Auxiliaries to build the initial matching *)
 
-let make_initial_matching ~param = function
-    [] ->
-      fatal_error "make_initial_matching: empty"
-  | (patl, _) :: _ as casel ->
-(*
-      let rec make_path patl =
-        begin match patl with
-          | [] -> []
-          | (pat :: pattl) -> Lvar pat :: make_path pattl
-        end
-      in
-*)
-        Matching(casel, [param]) (* make_path(patl) *)
-;;
-
 let partial_fun loc =
   let start = loc.loc_start.Lexing.pos_cnum in
   let stop = loc.loc_end.Lexing.pos_cnum in
@@ -388,21 +380,16 @@ let partial_fun loc =
 
 (* The entry points *)
 
-let translate_matching_check_failure ~param loc casel =
-  let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
-  let casel = check_unused casel in
-  let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
-  if partial_match casel then not_exhaustive_warning loc;
-  let (lambda, total) = conquer_matching (make_initial_matching ~param casel) in
-  if total then lambda else lstatichandle(lambda, partial_fun loc)
-;;
-
 let translate_matching ~param failure_code casel =
   let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
   let casel = check_unused casel in
   let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
-  let (lambda, total) = conquer_matching (make_initial_matching ~param casel) in
+  let (lambda, total) = conquer_matching (Matching (casel, [param])) in
   if total then lambda else lstatichandle(lambda, failure_code())
+;;
+
+let translate_matching_check_failure ~param loc casel =
+  translate_matching ~param (fun () -> partial_fun loc) casel
 ;;
 
 let for_function loc repr param pat_act_list partial =

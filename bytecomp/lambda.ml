@@ -283,12 +283,6 @@ let rec iter f = function
   | Lifused (v, e) ->
       f e
 
-module IdentSet =
-  Set.Make(struct
-    type t = Ident.t
-    let compare = compare
-  end)
-
 let free_ids get l =
   let fv = ref IdentSet.empty in
   let rec free l =
