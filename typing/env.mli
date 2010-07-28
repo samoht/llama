@@ -8,6 +8,11 @@ val get_constructor : constructor reference -> constructor
 val get_label : label reference -> label
 val get_value : value reference -> value
 
+val reset_cache : unit -> unit
+val set_current_unit : module_id -> unit
+val set_unit_name : string -> unit
+val postincrement_position : unit -> int
+
 (* ------------------------------ *)
 
 type t
@@ -33,9 +38,7 @@ val lookup_value : Longident.t -> t -> value
 
 (* Current module *)
 
-val set_current_unit : module_id -> unit
-val set_unit_name : string -> unit
-val current_module : unit -> module_id
+val get_current_module : unit -> module_id
 val current_module_name : unit -> string
 val qualified_id : string -> qualified_id
 
@@ -46,6 +49,3 @@ val summary : t -> summary
 
 val imported_units: unit -> (string * Digest.t) list
 val save_signature : signature -> string -> string -> unit
-
-val new_exc_stamp : unit -> int
-val reset_cache : unit -> unit

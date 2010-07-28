@@ -19,9 +19,21 @@ type cached_module =
     mutable mod_labels: (string, label) Tbl.t;
     mutable mod_types: (string, type_constructor) Tbl.t }
 
-let cached_modules = ref Tbl.empty
+let persistent_structures = ref Tbl.empty
 let crc_units = Consistbl.create()
-let reset_cache () = cached_modules := Tbl.empty; Consistbl.clear crc_units
+let current_module = ref Module_none
+let current_position = ref 0
+
+let postincrement_position () =
+  let pos = !current_position in
+  incr current_position;
+  pos
+
+let reset_cache () =
+  persistent_structures := Tbl.empty;
+  Consistbl.clear crc_units;
+  current_module := Module_none;
+  current_position := 0
 
 (* Consistency between persistent structures *)
 
@@ -78,7 +90,7 @@ let read_cached_module modname filename =
     assert (mn = modname);
     check_consistency filename crcs;
     let cm = make_cached_module mod_sig crcs in
-    cached_modules := Tbl.add modname cm !cached_modules;
+    persistent_structures := Tbl.add modname cm !persistent_structures;
     cm
   with End_of_file | Failure _ ->
     close_in ic;
@@ -96,7 +108,7 @@ let cached_module mod_id =
         cm_predef
     | Module name ->
         begin try
-          Tbl.find name !cached_modules
+          Tbl.find name !persistent_structures
         with Not_found ->
           read_cached_module name
             (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".zi"))
@@ -216,10 +228,8 @@ let initial = add_signature Predef.signature empty
 
 let open_module name env = add_signature (get_signature name) env
 
-let the_current_module = ref (Module_builtin)
-
 let qualified_id name =
-  { id_module = !the_current_module;
+  { id_module = !current_module;
     id_name = name }
 
 let initial_env () =
@@ -232,15 +242,15 @@ let initial_env () =
     fatal_error "cannot open pervasives.cmi"
 
 let set_current_unit m =
-  the_current_module := m
+  current_module := m
 
 let set_unit_name s =
   set_current_unit (Module s)
 
-let current_module () = !the_current_module
+let get_current_module () = !current_module
 
 let current_module_name () =
-  begin match !the_current_module with
+  begin match !current_module with
     | Module s -> s
     | Module_builtin | Module_toplevel -> failwith "current_module_name"
   end
@@ -270,7 +280,7 @@ let save_signature_with_imports sg modname filename imports =
     (* Enter signature in persistent table so that imported_unit()
        will also return its crc *)
     let ps = make_cached_module sg crcs in
-    cached_modules := Tbl.add modname ps !cached_modules;
+    persistent_structures := Tbl.add modname ps !persistent_structures;
     Consistbl.set crc_units modname crc filename
   with exn ->
     close_out oc;
@@ -281,10 +291,3 @@ let imported_units () = Consistbl.extract crc_units
 
 let save_signature sg modname filename =
   save_signature_with_imports sg modname filename (imported_units())
-
-
-let next_exc_stamp = ref 1
-
-let new_exc_stamp () =
-  let n = !next_exc_stamp in
-  incr next_exc_stamp; n

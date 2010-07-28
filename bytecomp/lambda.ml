@@ -346,7 +346,7 @@ let transl_noncurrent_module m =
   Lprim(Pgetglobal (Ident.of_module m), [])
 let transl_exception cs =
   let m = cs.Types.cs_parent.Types.tcs_id.Types.id_module in
-  if m = Env.current_module () then
+  if m = Env.get_current_module () then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
   else
     let pos = match cs.Types.cstr_tag with Types.Cstr_exception (_, pos) -> pos | _ -> assert false in

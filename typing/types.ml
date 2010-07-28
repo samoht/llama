@@ -5,6 +5,7 @@ open Asttypes
 (* ---------------------------------------------------------------------- *)
 
 type module_id =
+  | Module_none
   | Module_builtin
   | Module of string
   | Module_toplevel
