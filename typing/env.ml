@@ -90,7 +90,6 @@ let make_cached_module sg crcs =
     exception_positions = !exception_positions }
 
 let read_cached_module modname filename =
-  print_endline ("read_cached_module: "^modname^" "^filename);
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
@@ -110,7 +109,6 @@ let read_cached_module modname filename =
     assert false
 
 let read_signature modname filename =
-  print_endline ("read_signature: "^modname^" "^filename);
   (read_cached_module modname filename).mod_sig
 
 let cm_predef = make_cached_module Predef.signature []
@@ -120,11 +118,9 @@ let cached_module mod_id =
     | Module_builtin ->
         cm_predef
     | Module name ->
-        print_endline ("cached_module:"^name);
         begin try
           Tbl.find name !persistent_structures
         with Not_found ->
-          print_endline "cache miss";
           read_cached_module name
             (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".zi"))
         end
@@ -243,7 +239,6 @@ let add_signature sg env =
     env sg
 
 let open_pers_signature str env =
-  print_endline"open_pers_signature";
   add_signature (get_signature str) env
 
 let initial = add_signature Predef.signature empty

@@ -396,3 +396,5 @@ let rec (@) l1 l2 =
     [] -> l2
   | hd :: tl -> hd :: (tl @ l2)
 
+
+type 'a vect = 'a array

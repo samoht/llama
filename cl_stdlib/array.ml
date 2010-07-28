@@ -55,3 +55,6 @@ let do_vect = Farray.do_vect
 and map_vect = Farray.map_vect
 and map_vect_list = Farray.map_vect_list
 ;;
+
+let get = vect_item
+let set = vect_assign

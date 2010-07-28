@@ -3,6 +3,7 @@
 external length : 'a vect -> int = "vect_length"
         (* Return the length (number of elements) of the given vector. *)
 ;;
+val get : 'a array -> int -> 'a
 val vect_item : 'a vect -> int -> 'a
         (* [vect_item v n] returns the element number [n] of vector [v].
            The first element has number 0.
@@ -10,6 +11,7 @@ val vect_item : 'a vect -> int -> 'a
            Raise [Invalid_argument "vect_item"]  if [n] is outside the range
            0 to [(vect_length v - 1)].
            You can also write [v.(n)] instead of [vect_item v n]. *)
+val set : 'a array -> int -> 'a -> unit
 val vect_assign : 'a vect -> int -> 'a -> unit
         (* [vect_assign v n x] modifies vector [v] in place, replacing
            element number [n] with [x].

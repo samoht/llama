@@ -60,12 +60,10 @@ let array_element_kind env ty =
       else if tcs == Predef.tcs_float then
         Pfloatarray
       else if tcs == Predef.tcs_string
-           || tcs == Predef.tcs_vect then
-(*
-           || Path.same p Predef.path_nativeint
-           || Path.same p Predef.path_int32
-           || Path.same p Predef.path_int64 then
-*)
+           || tcs == Predef.tcs_array
+           || tcs == Predef.tcs_nativeint
+           || tcs == Predef.tcs_int32
+           || tcs == Predef.tcs_int64 then
         Paddrarray
       else begin
         try
@@ -89,7 +87,7 @@ let array_element_kind env ty =
 let array_kind_gen ty env =
   match scrape env ty with
   | Tconstruct(p, [elt_ty])
-    when Get.type_constructor p == Predef.tcs_vect ->
+    when Get.type_constructor p == Predef.tcs_array ->
       array_element_kind env elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)

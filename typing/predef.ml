@@ -8,7 +8,7 @@ open Types
 (* ---------------------------------------------------------------------- *)
 
 let list_generic = new_generic ()
-let vect_generic = new_generic ()
+let array_generic = new_generic ()
 let option_generic = new_generic ()
 let format6_generics = new_generics 6
 
@@ -29,7 +29,7 @@ let tcs_float = mkty "float" []
 let tcs_bool = mkty "bool" []
 let tcs_unit = mkty "unit" []
 let tcs_exn = mkty "exn" []
-let tcs_vect = mkty "vect" [vect_generic]
+let tcs_array = mkty "array" [array_generic]
 let tcs_list = mkty "list" [list_generic]
 let tcs_format6 = mkty "format6" format6_generics
 let tcs_option =  mkty "option" [option_generic]
@@ -50,7 +50,7 @@ let type_float = Tconstruct(ref_type_constr tcs_float, [])
 let type_bool = Tconstruct(ref_type_constr tcs_bool, [])
 let type_unit = Tconstruct(ref_type_constr tcs_unit, [])
 let type_exn = Tconstruct(ref_type_constr tcs_exn, [])
-let type_vect t = Tconstruct(ref_type_constr tcs_vect, [t])
+let type_array t = Tconstruct(ref_type_constr tcs_array, [t])
 let type_list t = Tconstruct(ref_type_constr tcs_list, [t])
 let type_option t = Tconstruct(ref_type_constr tcs_option, [t])
 let type_nativeint = Tconstruct(ref_type_constr tcs_nativeint, [])
@@ -140,7 +140,7 @@ let type_constructors =
     tcs_bool;
     tcs_unit;
     tcs_exn;
-    tcs_vect;
+    tcs_array;
     tcs_list;
     tcs_format6;
     tcs_option;

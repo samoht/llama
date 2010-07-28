@@ -93,8 +93,8 @@ let rec print_val prio depth obj ty =
         print_val prio depth obj (expand_abbrev_aux params body ty_list)
     | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == Predef.tcs_list ->
         print_list depth obj ty_arg
-    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == Predef.tcs_vect ->
-        print_vect depth obj ty_arg
+    | Tconstruct(cstr, [ty_arg]) when Get.type_constructor cstr == Predef.tcs_array ->
+        print_array depth obj ty_arg
     | Tconstruct(cstr, ty_list) ->
         print_concrete_type prio depth obj cstr ty ty_list
 
@@ -200,7 +200,7 @@ and print_list depth obj ty_arg =
    print_string "]";
    close_box()
 
-and print_vect depth obj ty_arg =
+and print_array depth obj ty_arg =
   let print_items depth obj =
       let rec loop depth i =
           if i < Llama_obj.size obj then

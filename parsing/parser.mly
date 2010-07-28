@@ -485,7 +485,7 @@ expr:
   | simple_expr DOT label_longident LESSMINUS expr
       { mkexp(Pexp_setfield($1, $3, $5)) }
   | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "vect_assign")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "set")),
                          [$1; $4; $7])) }
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "set")),
@@ -520,7 +520,7 @@ simple_expr:
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
   | simple_expr DOT LPAREN seq_expr RPAREN
-      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "vect_item")),
+      { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "get")),
                          [$1; $4])) }
   | simple_expr DOT LPAREN seq_expr error
       { unclosed "(" 3 ")" 5 }

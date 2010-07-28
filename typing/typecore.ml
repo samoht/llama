@@ -432,7 +432,7 @@ let rec type_expr expr =
   | Texp_array elist ->
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
-      Predef.type_vect ty_arg
+      Predef.type_array ty_arg
   | Texp_record (lbl_expr_list, exten) ->
       let ty = new_type_var() in
       List.iter
