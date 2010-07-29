@@ -17,7 +17,7 @@ and type_expression_desc =
     Ttyp_var of user_type_variable
   | Ttyp_arrow of type_expression * type_expression
   | Ttyp_tuple of type_expression list
-  | Ttyp_constr of type_constructor reference * type_expression list
+  | Ttyp_constr of type_constructor * type_expression list
 
 type pattern =
   { pat_desc: pattern_desc;
@@ -31,7 +31,7 @@ and pattern_desc =
   | Tpat_alias of pattern * value
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
-  | Tpat_construct of constructor reference * pattern list
+  | Tpat_construct of constructor * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
   | Tpat_record of (label reference * pattern) list
@@ -53,7 +53,7 @@ and expression_desc =
   | Texp_match of expression * (pattern * expression) list * partial  (* xxx *)
   | Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
-  | Texp_construct of constructor reference * expression list
+  | Texp_construct of constructor * expression list
   | Texp_record of (label reference * expression) list * expression option(*xxx*)
   | Texp_field of expression * label reference
   | Texp_setfield of expression * label reference * expression

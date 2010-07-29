@@ -20,7 +20,7 @@ let rec omegas i =
 let simple_match p1 p2 = 
   match p1.pat_desc, p2.pat_desc with
     Tpat_construct(c1,_),Tpat_construct(c2,_) ->
-      Get.constructor c1 == Get.constructor c2
+      c1 == c2
   | Tpat_constant(c1),Tpat_constant(c2) ->
       c1 = c2
   | Tpat_tuple(_),Tpat_tuple(_) -> true
@@ -162,7 +162,7 @@ let filter_all pat0 pss =
 
       
 let get_span_of_constr cstr =
-  match (Get.constructor cstr).cs_tag with
+  match cstr.cs_tag with
     ConstrExtensible _      -> 0       (* Meaningless ... *)
   | ConstrRegular(_,span)   -> span
 ;;
@@ -240,7 +240,7 @@ let rec le_pat p q =
        le_pat p q1 && le_pat p q2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
-      (Get.constructor c1).cs_tag == (Get.constructor c2).cs_tag && le_pats ps qs
+      c1.cs_tag == c2.cs_tag && le_pats ps qs
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->
      let size = record_nargs l1 in

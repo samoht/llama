@@ -160,23 +160,23 @@ let rec translate_expr env =
         Lprim(Pmakeblock(ConstrRegular(0,1)), tr_args)
       end
   | Texp_construct(c,argl) ->
-      begin match (Get.constructor c).cs_arity with
+      begin match c.cs_arity with
       | 0 ->
-          Lconst(SCblock((Get.constructor c).cs_tag, []))
+          Lconst(SCblock(c.cs_tag, []))
       | 1 ->
           let arg = List.hd argl in
           let tr_arg = transl arg in
           begin try
-            Lconst(SCblock((Get.constructor c).cs_tag, [extract_constant tr_arg]))
+            Lconst(SCblock(c.cs_tag, [extract_constant tr_arg]))
           with Not_constant ->
-            Lprim(Pmakeblock (Get.constructor c).cs_tag, [tr_arg])
+            Lprim(Pmakeblock c.cs_tag, [tr_arg])
           end
       | n ->
               let tr_argl = List.map transl argl in
               begin try                           (* superfluous ==> pure *)
-                Lconst(SCblock((Get.constructor c).cs_tag, List.map extract_constant tr_argl))
+                Lconst(SCblock(c.cs_tag, List.map extract_constant tr_argl))
               with Not_constant ->
-                Lprim(Pmakeblock (Get.constructor c).cs_tag, tr_argl)
+                Lprim(Pmakeblock c.cs_tag, tr_argl)
               end
       end
   | Texp_apply({exp_desc = Texp_function ((pat,_)::_ as case_list, _)} as funct, args) ->
@@ -246,7 +246,7 @@ let rec translate_expr env =
       Lifthenelse(transl eif,
                   Event.before env ethen (transl ethen),
                   if match eelse.exp_desc with
-                       Texp_construct(cstr,[]) -> Get.constructor cstr == Predef.constr_void
+                       Texp_construct(cstr,[]) -> cstr == Predef.constr_void
                     | _ -> false
                   then transl eelse
                   else Event.before env eelse (transl eelse))

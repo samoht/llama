@@ -239,7 +239,7 @@ and make_tuple_match arity pathl =
 and make_construct_match cstr pathl0 cas =
   begin match pathl0 with
     | path :: pathl ->
-        begin match (Get.constructor cstr).cs_arity with
+        begin match cstr.cs_arity with
           | 0 ->
               Matching([cas], pathl)
           | 1 ->
@@ -317,7 +317,7 @@ let divide_construct_matching (Matching(casel, pathl))
         let (constrs, others) =
           divide_rec rest in
         add_to_division
-          (make_construct_match c pathl) constrs (Get.constructor c) (patl', action),
+          (make_construct_match c pathl) constrs c (patl', action),
         others
     | casel ->
         [], Matching(casel, pathl)
@@ -386,7 +386,7 @@ let upper_left_pattern =
 ;;
 
 let get_span_of_constr cstr =
-  match (Get.constructor cstr).cs_tag with
+  match cstr.cs_tag with
     ConstrExtensible _      -> 0       (* Meaningless ... *)
   | ConstrRegular(tag,span) -> span
 ;;

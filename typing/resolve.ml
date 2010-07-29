@@ -58,11 +58,11 @@ let rec values_of_tpat pat =
       List.flatten (List.map (fun (lbl,pat) -> values_of_tpat pat) lbl_pat_list)
 
 let lookup_type env li loc =
-  try ref_type_constr(Env.lookup_type li env)
+  try Env.lookup_type li env
   with Not_found -> Error.unbound_type_constr_err li loc
 
 let lookup_constructor env li loc =
-  try ref_constr(Env.lookup_constructor li env)
+  try Env.lookup_constructor li env
   with Not_found -> Error.unbound_constr_err li loc
 
 let lookup_label env li loc =
@@ -123,7 +123,7 @@ let rec pattern env p =
         | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
         | Ppat_construct (li,sarg) ->
             let cs = lookup_constructor env li p.ppat_loc in
-            let arity = (Get.constructor cs).cs_arity in
+            let arity = cs.cs_arity in
             let sargs =
               match sarg with
                   None -> []
@@ -159,7 +159,7 @@ let rec expr env ex =
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
         | Pexp_construct (li,sarg) ->
             let cs = lookup_constructor env li ex.pexp_loc in
-            let arity = (Get.constructor cs).cs_arity in
+            let arity = cs.cs_arity in
             let sargs =
               match sarg with
                   None -> []

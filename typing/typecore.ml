@@ -33,11 +33,11 @@ let type_of_type_expression varkind typexp =
           Tarrow(type_of arg1, type_of arg2)
       | Ttyp_tuple argl ->
           Ttuple(List.map type_of argl)
-      | Ttyp_constr(cstr, args) ->
-          if List.length args != (Get.type_constructor cstr).tcs_arity then
-            tcs_arity_err (Get.type_constructor cstr) args typexp.te_loc
+      | Ttyp_constr(tcs, args) ->
+          if List.length args != tcs.tcs_arity then
+            tcs_arity_err tcs args typexp.te_loc
           else
-            Tconstruct (cstr, List.map type_of args)
+            Tconstruct (ref_type_constr tcs, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -94,10 +94,10 @@ let rec tpat (pat, ty) =
         pat_wrong_type_err pat ty
           (Ttuple(List.map tvar(new_nongenerics (List.length patl))))
       end
-  | Tpat_construct(constr, args) ->
-      if List.length args <> (Get.constructor constr).cs_arity then
-        arity_err (Get.constructor constr) args pat.pat_loc;
-      let (ty_args, ty_res) = instantiate_constructor (Get.constructor constr) in
+  | Tpat_construct(cs, args) ->
+      if List.length args <> cs.cs_arity then
+        arity_err cs args pat.pat_loc;
+      let (ty_args, ty_res) = instantiate_constructor cs in
       unify_pat pat ty ty_res;
       List.iter2
         (fun arg ty_arg ->
@@ -358,10 +358,10 @@ let rec type_expr expr =
       type_of_constant cst
   | Texp_tuple(args) ->
       Ttuple(List.map type_expr args)
-  | Texp_construct(constr, args) ->
-      if List.length args <> (Get.constructor constr).cs_arity then
-        arity_err (Get.constructor constr) args expr.exp_loc;
-      let (ty_args, ty_res) = instantiate_constructor (Get.constructor constr) in
+  | Texp_construct(cs, args) ->
+      if List.length args <> cs.cs_arity then
+        arity_err cs args expr.exp_loc;
+      let (ty_args, ty_res) = instantiate_constructor cs in
       List.iter2 type_expect args ty_args;
       ty_res
   | Texp_apply(fct, args) ->
@@ -403,7 +403,7 @@ let rec type_expr expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect cond Predef.type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cstr,[]) when (Get.constructor cstr == Predef.constr_void) -> true | _ -> false
+         with Texp_construct (cs,[]) when (cs == Predef.constr_void) -> true | _ -> false
       then begin
         type_expect ifso Predef.type_unit;
         Predef.type_unit

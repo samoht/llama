@@ -297,10 +297,10 @@ let transl_prim prim args =
       Hashtbl.find comparisons_table prim.prim_name in
     begin match args with
       [arg1; {exp_desc = Texp_construct(cs, _)}]
-      when is_constant_constructor (Get.constructor cs) && simplify_constant_constructor ->
+      when is_constant_constructor cs && simplify_constant_constructor ->
         intcomp
     | [{exp_desc = Texp_construct(cs, _)}; arg2]
-      when is_constant_constructor (Get.constructor cs) && simplify_constant_constructor ->
+      when is_constant_constructor cs && simplify_constant_constructor ->
         intcomp
 (*
     | [arg1; {exp_desc = Texp_variant(_, None)}]
@@ -660,7 +660,6 @@ and transl_exp0 e =
         Lprim(Pmakeblock(0, Immutable), ll)
       end
   | Texp_construct(cstr, args) ->
-      let cstr = Get.constructor cstr in
       let ll = transl_list args in
       begin match cstr.cstr_tag with
         Cstr_constant n ->

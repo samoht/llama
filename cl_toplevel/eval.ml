@@ -76,7 +76,7 @@ let rec term_of_expr c expr =
     | Texp_tuple l ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (Tuple (List.length l)) l
     | Texp_construct (ct, l) ->
-        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor (Get.constructor ct)) l
+        List.fold_left (fun f x -> app f (term_of_expr c x)) (Ctor ct) l
     | Texp_apply (f, l) ->
         List.fold_left (fun f x -> app f (term_of_expr c x)) (term_of_expr c f) l
     | Texp_function ([({pat_desc=Tpat_var s},e)], _) ->
