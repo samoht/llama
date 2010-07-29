@@ -8,6 +8,12 @@ let repr = Btype.repr
 
 (* Extract the list of labels of a record type. *)
 
+let constructors_of_type ty =
+  begin match ty.tcs_kind with
+    | Type_variant l -> l
+    | _ -> assert false
+  end
+
 let labels_of_type ty =
   begin match ty.tcs_kind with
     | Type_record l -> l

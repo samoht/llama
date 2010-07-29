@@ -14,7 +14,7 @@
 
 (* Detection of partial matches and unused match cases. *)
 open Types
-open Typedtree
+open Mpattern
 
 val top_pretty : Format.formatter -> pattern -> unit
 val pretty_pat : pattern -> unit
@@ -26,7 +26,7 @@ val omegas : int -> pattern list
 val omega_list : 'a list -> pattern list
 val normalize_pat : pattern -> pattern
 val all_record_args :
-    (label reference * pattern) list -> (label reference * pattern) list
+    (label_description * pattern) list -> (label_description * pattern) list
 
 val le_pat : pattern -> pattern -> bool
 val le_pats : pattern list -> pattern list -> bool
@@ -51,8 +51,8 @@ val complete_constrs :
     pattern -> constructor_tag list -> constructor_description  list
 
 val pressure_variants: Env.t -> pattern list -> unit
-val check_partial: Location.t -> (pattern * expression) list -> partial
-val check_unused: Env.t -> (pattern * expression) list -> unit
+val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial
+val check_unused: Env.t -> (pattern * Typedtree.expression) list -> unit
 
 (* Irrefutability tests *)
 val irrefutable : pattern -> bool

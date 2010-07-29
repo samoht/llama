@@ -54,8 +54,6 @@ parsing/syntaxerr.cmo: parsing/location.cmi parsing/syntaxerr.cmi
 parsing/syntaxerr.cmx: parsing/location.cmx parsing/syntaxerr.cmi
 typing/env.cmi: typing/types.cmx parsing/longident.cmi
 typing/get.cmi: typing/types.cmx
-typing/optparmatch.cmi: typing/types.cmx typing/typedtree.cmi \
-    parsing/location.cmi typing/env.cmi
 typing/pr_type.cmi: typing/types.cmx
 typing/primitive.cmi:
 typing/typedtree.cmi: typing/types.cmx typing/primitive.cmi \
@@ -101,14 +99,6 @@ typing/module.cmo: typing/types.cmx utils/misc.cmi parsing/longident.cmi \
     parsing/asttypes.cmi
 typing/module.cmx: typing/types.cmx utils/misc.cmx parsing/longident.cmx \
     parsing/asttypes.cmi
-typing/optparmatch.cmo: utils/warnings.cmi typing/types.cmx \
-    typing/typedtree.cmi typing/predef.cmx utils/misc.cmi \
-    parsing/location.cmi typing/get.cmi typing/env.cmi typing/ctype.cmx \
-    parsing/asttypes.cmi typing/optparmatch.cmi
-typing/optparmatch.cmx: utils/warnings.cmx typing/types.cmx \
-    typing/typedtree.cmi typing/predef.cmx utils/misc.cmx \
-    parsing/location.cmx typing/get.cmx typing/env.cmx typing/ctype.cmx \
-    parsing/asttypes.cmi typing/optparmatch.cmi
 typing/parmatch.cmo: typing/types.cmx typing/typedtree.cmi typing/module.cmx \
     utils/misc.cmi parsing/location.cmi typing/error.cmx typing/env.cmi \
     typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
@@ -395,6 +385,8 @@ bytecomp/lambda.cmi: typing/types.cmx typing/primitive.cmi \
     typing/env.cmi parsing/asttypes.cmi
 bytecomp/matching.cmi: typing/typedtree.cmi parsing/location.cmi \
     bytecomp/lambda.cmi bytecomp/ident.cmx parsing/asttypes.cmi
+bytecomp/optparmatch.cmi: typing/types.cmx typing/typedtree.cmi \
+    bytecomp/mpattern.cmx parsing/location.cmi typing/env.cmi
 bytecomp/printinstr.cmi: bytecomp/instruct.cmi
 bytecomp/printlambda.cmi: bytecomp/lambda.cmi
 bytecomp/runtimedef.cmi:
@@ -488,10 +480,10 @@ bytecomp/matching_aux.cmo: bytecomp/switch.cmi utils/misc.cmi \
     bytecomp/lambda.cmi bytecomp/ident.cmx parsing/asttypes.cmi
 bytecomp/matching_aux.cmx: bytecomp/switch.cmx utils/misc.cmx \
     bytecomp/lambda.cmx bytecomp/ident.cmx parsing/asttypes.cmi
-bytecomp/mpattern.cmo: typing/types.cmx typing/typedtree.cmi \
+bytecomp/mpattern.cmo: typing/types.cmx typing/typedtree.cmi utils/misc.cmi \
     parsing/location.cmi bytecomp/ident.cmx typing/env.cmi \
     parsing/asttypes.cmi
-bytecomp/mpattern.cmx: typing/types.cmx typing/typedtree.cmi \
+bytecomp/mpattern.cmx: typing/types.cmx typing/typedtree.cmi utils/misc.cmx \
     parsing/location.cmx bytecomp/ident.cmx typing/env.cmx \
     parsing/asttypes.cmi
 bytecomp/opcodes.cmo:
@@ -508,6 +500,16 @@ bytecomp/optmatching.cmx: typing/types.cmx bytecomp/typeopt.cmx \
     parsing/longident.cmx parsing/location.cmx bytecomp/lambda.cmx \
     bytecomp/identSet.cmx bytecomp/ident.cmx typing/env.cmx utils/clflags.cmx \
     typing/btype.cmx parsing/asttypes.cmi
+bytecomp/optparmatch.cmo: utils/warnings.cmi typing/types.cmx \
+    typing/typedtree.cmi typing/predef.cmx bytecomp/mpattern.cmx \
+    utils/misc.cmi parsing/location.cmi bytecomp/ident.cmx typing/get.cmi \
+    typing/env.cmi typing/ctype.cmx parsing/asttypes.cmi \
+    bytecomp/optparmatch.cmi
+bytecomp/optparmatch.cmx: utils/warnings.cmx typing/types.cmx \
+    typing/typedtree.cmi typing/predef.cmx bytecomp/mpattern.cmx \
+    utils/misc.cmx parsing/location.cmx bytecomp/ident.cmx typing/get.cmx \
+    typing/env.cmx typing/ctype.cmx parsing/asttypes.cmi \
+    bytecomp/optparmatch.cmi
 bytecomp/printinstr.cmo: bytecomp/printlambda.cmi parsing/location.cmi \
     bytecomp/lambda.cmi bytecomp/instruct.cmi bytecomp/ident.cmx \
     bytecomp/printinstr.cmi

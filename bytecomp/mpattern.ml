@@ -18,6 +18,7 @@ and pattern_desc =
   | Tpat_array of pattern list
   | Tpat_or of pattern * pattern * unit
   | Tpat_lazy of pattern
+  | Tpat_dummy_exception
 
 let rec import pat =
   match pat.Typedtree.pat_desc with
@@ -57,6 +58,7 @@ let map_pattern_desc f d =
   | Tpat_var _
   | Tpat_constant _
   | Tpat_any -> d
+  | Tpat_dummy_exception -> Misc.fatal_error "map_pattern_desc"
 
 let alpha_var env id = List.assoc id env
 
@@ -74,3 +76,5 @@ let rec alpha_pat env p = match p.pat_desc with
     end
 | d ->
     {p with pat_desc = map_pattern_desc (alpha_pat env) d}
+
+type partial = Partial | Total
