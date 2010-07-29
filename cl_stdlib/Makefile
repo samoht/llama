@@ -62,7 +62,7 @@ depend: filename.ml
 	mv genlex.ml genlex.ml.bak
 	$(LLAMADEP) *.mli *.ml > .depend
 	mv genlex.ml.bak genlex.ml
-	sed -i '' -e 's/cm/z/g' .depend
+	sed -i '' -e 's/cmi/lli/g' .depend
 	echo "genlex.zo: genlex.lli pervasives.lli fstring.lli stream.lli hashtbl.lli list.lli" >> .depend
 
 .PHONY: depend
