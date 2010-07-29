@@ -213,7 +213,7 @@ let parse_argv current_opt argv speclist anonfun errmsg =
 
 let parse l f msg =
   try
-    parse_argv Sys.argv l f msg;
+    parse_argv None Sys.argv l f msg;
   with
   | Bad msg -> eprintf "%s" msg; exit 2;
   | Help msg -> printf "%s" msg; exit 0;

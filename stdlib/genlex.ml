@@ -56,7 +56,7 @@ let make_lexer keywords =
     try Hashtbl.find kwd_table s with
       Not_found -> raise (Stream.Error ("Illegal character " ^ s))
   in
-  let rec next_token (strm__ : _ Stream.t) =
+  let rec next_token (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some (' ' | '\010' | '\013' | '\009' | '\026' | '\012') ->
         Stream.junk strm__; next_token strm__
@@ -88,26 +88,26 @@ let make_lexer keywords =
     | Some '(' -> Stream.junk strm__; maybe_comment strm__
     | Some c -> Stream.junk strm__; Some (keyword_or_error c)
     | _ -> None
-  and ident (strm__ : _ Stream.t) =
+  and ident (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some
         ('A'..'Z' | 'a'..'z' | '\192'..'\255' | '0'..'9' | '_' | '\'' as c) ->
         Stream.junk strm__; let s = strm__ in store c; ident s
     | _ -> Some (ident_or_keyword (get_string ()))
-  and ident2 (strm__ : _ Stream.t) =
+  and ident2 (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some
         ('!' | '%' | '&' | '$' | '#' | '+' | '-' | '/' | ':' | '<' | '=' |
          '>' | '?' | '@' | '\\' | '~' | '^' | '|' | '*' as c) ->
         Stream.junk strm__; let s = strm__ in store c; ident2 s
     | _ -> Some (ident_or_keyword (get_string ()))
-  and neg_number (strm__ : _ Stream.t) =
+  and neg_number (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ('0'..'9' as c) ->
         Stream.junk strm__;
         let s = strm__ in reset_buffer (); store '-'; store c; number s
     | _ -> let s = strm__ in reset_buffer (); store '-'; ident2 s
-  and number (strm__ : _ Stream.t) =
+  and number (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ('0'..'9' as c) ->
         Stream.junk strm__; let s = strm__ in store c; number s
@@ -116,24 +116,24 @@ let make_lexer keywords =
     | Some ('e' | 'E') ->
         Stream.junk strm__; let s = strm__ in store 'E'; exponent_part s
     | _ -> Some (Int (int_of_string (get_string ())))
-  and decimal_part (strm__ : _ Stream.t) =
+  and decimal_part (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ('0'..'9' as c) ->
         Stream.junk strm__; let s = strm__ in store c; decimal_part s
     | Some ('e' | 'E') ->
         Stream.junk strm__; let s = strm__ in store 'E'; exponent_part s
     | _ -> Some (Float (float_of_string (get_string ())))
-  and exponent_part (strm__ : _ Stream.t) =
+  and exponent_part (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ('+' | '-' as c) ->
         Stream.junk strm__; let s = strm__ in store c; end_exponent_part s
     | _ -> end_exponent_part strm__
-  and end_exponent_part (strm__ : _ Stream.t) =
+  and end_exponent_part (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ('0'..'9' as c) ->
         Stream.junk strm__; let s = strm__ in store c; end_exponent_part s
     | _ -> Some (Float (float_of_string (get_string ())))
-  and string (strm__ : _ Stream.t) =
+  and string (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some '"' -> Stream.junk strm__; get_string ()
     | Some '\\' ->
@@ -145,7 +145,7 @@ let make_lexer keywords =
         let s = strm__ in store c; string s
     | Some c -> Stream.junk strm__; let s = strm__ in store c; string s
     | _ -> raise Stream.Failure
-  and char (strm__ : _ Stream.t) =
+  and char (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some '\\' ->
         Stream.junk strm__;
@@ -154,7 +154,7 @@ let make_lexer keywords =
         end
     | Some c -> Stream.junk strm__; c
     | _ -> raise Stream.Failure
-  and escape (strm__ : _ Stream.t) =
+  and escape (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some 'n' -> Stream.junk strm__; '\n'
     | Some 'r' -> Stream.junk strm__; '\r'
@@ -176,23 +176,23 @@ let make_lexer keywords =
         end
     | Some c -> Stream.junk strm__; c
     | _ -> raise Stream.Failure
-  and maybe_comment (strm__ : _ Stream.t) =
+  and maybe_comment (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some '*' ->
         Stream.junk strm__; let s = strm__ in comment s; next_token s
     | _ -> Some (keyword_or_error '(')
-  and comment (strm__ : _ Stream.t) =
+  and comment (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some '(' -> Stream.junk strm__; maybe_nested_comment strm__
     | Some '*' -> Stream.junk strm__; maybe_end_comment strm__
     | Some c -> Stream.junk strm__; comment strm__
     | _ -> raise Stream.Failure
-  and maybe_nested_comment (strm__ : _ Stream.t) =
+  and maybe_nested_comment (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some '*' -> Stream.junk strm__; let s = strm__ in comment s; comment s
     | Some c -> Stream.junk strm__; comment strm__
     | _ -> raise Stream.Failure
-  and maybe_end_comment (strm__ : _ Stream.t) =
+  and maybe_end_comment (strm__ (* : _ Stream.t *) ) =
     match Stream.peek strm__ with
       Some ')' -> Stream.junk strm__; ()
     | Some '*' -> Stream.junk strm__; maybe_end_comment strm__

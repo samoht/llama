@@ -1,5 +1,6 @@
 include ../config/Makefile
 LLAMAC=../llamac-new -nostdlib -I .
+LLAMADEP=ocamldep.opt
 
 OBJS=pervasives.cmo $(OTHERS)
 OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
@@ -7,14 +8,15 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   int32.cmo int64.cmo nativeint.cmo \
   lexing.cmo parsing.cmo \
   set.cmo map.cmo stack.cmo queue.cmo \
-  camlinternalLazy.cmo lazy.cmo stream.cmo \
-  buffer.cmo printf.cmo format.cmo scanf.cmo \
+  lazy.cmo stream.cmo \
+  buffer.cmo printf.cmo format.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random.cmo callback.cmo \
-  camlinternalOO.cmo oo.cmo camlinternalMod.cmo \
   genlex.cmo weak.cmo \
   filename.cmo complex.cmo \
   arrayLabels.cmo listLabels.cmo stringLabels.cmo moreLabels.cmo stdLabels.cmo
+
+# scanf.cmo
 
 all: std_exit.cmo stdlib.cma
 
@@ -23,6 +25,9 @@ stdlib.cma: $(OBJS)
 
 test2: test2.ml
 	../llamac-new $^ && ocamlrun a.out
+
+sys.ml: sys.mlp ../VERSION
+	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
 
 %.lli: %.mli
 	$(LLAMAC) -c $<
@@ -34,10 +39,13 @@ pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
 
 std_exit.cmo: pervasives.cmo
-stream.cmo: lazy.cmo
 
 clean:
 	rm -f *.lli *.cmo
 .PHONY: clean
+
+depend: sys.ml
+	$(LLAMADEP) *.mli *.ml > .depend
+	sed -i '' -e 's/cmi/lli/g' .depend
 
 include .depend

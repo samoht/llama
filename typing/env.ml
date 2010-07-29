@@ -68,6 +68,8 @@ let make_cached_module sg crcs =
             end
         | Sig_exception cs ->
             constructors := Tbl.add cs.cs_name cs !constructors;
+
+            if cs.cs_name = "Error" then print_endline "adding Error at some position...";
             exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
             incr pos
         | Sig_type tcs ->
@@ -148,7 +150,11 @@ let get_value_position v =
   let id = v.val_id in
   Tbl.find id.id_name (cached_module v.val_id.id_module).value_positions
 let get_exception_position cs =
-  Tbl.find cs.cs_name (cached_module cs.cs_parent.tcs_id.id_module).exception_positions
+  begin match cs.cstr_tag with
+    | Cstr_exception ({id_module=m},_) ->
+        Tbl.find cs.cs_name (cached_module m).exception_positions
+    | _ -> assert false
+  end
 
 (* ---------------------------------------------------------------------- *)
 (* Handling of unqualified identifiers.                                   *)

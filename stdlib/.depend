@@ -1,11 +1,7 @@
 arg.lli:
 array.lli:
-arrayLabels.lli:
 buffer.lli:
 callback.lli:
-camlinternalLazy.lli:
-camlinternalMod.lli: obj.lli
-camlinternalOO.lli: obj.lli
 char.lli:
 complex.lli:
 digest.lli:
@@ -16,50 +12,37 @@ genlex.lli: stream.lli
 hashtbl.lli:
 int32.lli:
 int64.lli:
-lazy.lli:
 lexing.lli:
 list.lli:
-listLabels.lli:
 map.lli:
 marshal.lli:
-moreLabels.lli: set.lli map.lli hashtbl.lli
 nativeint.lli:
 obj.lli: int32.lli
-oo.lli: camlinternalOO.lli
 parsing.lli: obj.lli lexing.lli
 pervasives.lli:
 printexc.lli:
-printf.lli: obj.lli buffer.lli
+printf.lli: buffer.lli
 queue.lli:
-random.lli: nativeint.lli int64.lli int32.lli
-scanf.lli: pervasives.lli
+random.lli: random_state.lli nativeint.lli int64.lli int32.lli
+random_state.lli: nativeint.lli int64.lli int32.lli
+scanf.lli: scanning.lli pervasives.lli
+scanning.lli: pervasives.lli
 set.lli:
 sort.lli:
 stack.lli:
-stdLabels.lli:
 stream.lli:
 string.lli:
-stringLabels.lli:
 sys.lli:
-weak.lli: hashtbl.lli
+weak.lli:
+weak_hashtbl.lli:
 arg.cmo: sys.lli string.lli printf.lli list.lli buffer.lli array.lli arg.lli
 arg.cmx: sys.cmx string.cmx printf.cmx list.cmx buffer.cmx array.cmx arg.lli
 array.cmo: array.lli
 array.cmx: array.lli
-arrayLabels.cmo: array.lli arrayLabels.lli
-arrayLabels.cmx: array.cmx arrayLabels.lli
 buffer.cmo: sys.lli string.lli buffer.lli
 buffer.cmx: sys.cmx string.cmx buffer.lli
 callback.cmo: obj.lli callback.lli
 callback.cmx: obj.cmx callback.lli
-camlinternalLazy.cmo: obj.lli camlinternalLazy.lli
-camlinternalLazy.cmx: obj.cmx camlinternalLazy.lli
-camlinternalMod.cmo: obj.lli camlinternalOO.lli array.lli camlinternalMod.lli
-camlinternalMod.cmx: obj.cmx camlinternalOO.cmx array.cmx camlinternalMod.lli
-camlinternalOO.cmo: sys.lli string.lli obj.lli map.lli list.lli char.lli \
-    array.lli camlinternalOO.lli
-camlinternalOO.cmx: sys.cmx string.cmx obj.cmx map.cmx list.cmx char.cmx \
-    array.cmx camlinternalOO.lli
 char.cmo: char.lli
 char.cmx: char.lli
 complex.cmo: complex.lli
@@ -70,10 +53,10 @@ filename.cmo: sys.lli string.lli random.lli printf.lli buffer.lli \
     filename.lli
 filename.cmx: sys.cmx string.cmx random.cmx printf.cmx buffer.cmx \
     filename.lli
-format.cmo: string.lli printf.lli pervasives.lli obj.lli list.lli buffer.lli \
-    format.lli
-format.cmx: string.cmx printf.cmx pervasives.cmx obj.cmx list.cmx buffer.cmx \
-    format.lli
+format.cmo: string.lli printf_tformat.cmo printf_sformat.cmo pervasives.lli \
+    obj.lli list.lli buffer.lli format.lli
+format.cmx: string.cmx printf_tformat.cmx printf_sformat.cmx pervasives.cmx \
+    obj.cmx list.cmx buffer.cmx format.lli
 gc.cmo: sys.lli printf.lli gc.lli
 gc.cmx: sys.cmx printf.cmx gc.lli
 genlex.cmo: string.lli stream.lli list.lli hashtbl.lli char.lli genlex.lli
@@ -84,165 +67,69 @@ int32.cmo: pervasives.lli int32.lli
 int32.cmx: pervasives.cmx int32.lli
 int64.cmo: pervasives.lli int64.lli
 int64.cmx: pervasives.cmx int64.lli
-lazy.cmo: obj.lli camlinternalLazy.lli lazy.lli
-lazy.cmx: obj.cmx camlinternalLazy.cmx lazy.lli
+lazy.cmo:
+lazy.cmx:
 lexing.cmo: sys.lli string.lli array.lli lexing.lli
 lexing.cmx: sys.cmx string.cmx array.cmx lexing.lli
 list.cmo: list.lli
 list.cmx: list.lli
-listLabels.cmo: list.lli listLabels.lli
-listLabels.cmx: list.cmx listLabels.lli
-map.cmo: map.lli
-map.cmx: map.lli
+map.cmo: pervasives.lli map.lli
+map.cmx: pervasives.cmx map.lli
 marshal.cmo: string.lli marshal.lli
 marshal.cmx: string.cmx marshal.lli
-moreLabels.cmo: set.lli map.lli hashtbl.lli moreLabels.lli
-moreLabels.cmx: set.cmx map.cmx hashtbl.cmx moreLabels.lli
 nativeint.cmo: sys.lli pervasives.lli nativeint.lli
 nativeint.cmx: sys.cmx pervasives.cmx nativeint.lli
 obj.cmo: marshal.lli int32.lli array.lli obj.lli
 obj.cmx: marshal.cmx int32.cmx array.cmx obj.lli
-oo.cmo: camlinternalOO.lli oo.lli
-oo.cmx: camlinternalOO.cmx oo.lli
 parsing.cmo: obj.lli lexing.lli array.lli parsing.lli
 parsing.cmx: obj.cmx lexing.cmx array.cmx parsing.lli
 pervasives.cmo: pervasives.lli
 pervasives.cmx: pervasives.lli
 printexc.cmo: printf.lli obj.lli buffer.lli array.lli printexc.lli
 printexc.cmx: printf.cmx obj.cmx buffer.cmx array.cmx printexc.lli
-printf.cmo: string.lli pervasives.lli obj.lli list.lli char.lli buffer.lli \
-    array.lli printf.lli
-printf.cmx: string.cmx pervasives.cmx obj.cmx list.cmx char.cmx buffer.cmx \
-    array.cmx printf.lli
+printf.cmo: printf_tformat.cmo printf.lli
+printf.cmx: printf_tformat.cmx printf.lli
+printf_sformat.cmo: string.lli
+printf_sformat.cmx: string.cmx
+printf_tformat.cmo: string.lli printf_sformat.cmo pervasives.lli obj.lli \
+    list.lli char.lli buffer.lli array.lli
+printf_tformat.cmx: string.cmx printf_sformat.cmx pervasives.cmx obj.cmx \
+    list.cmx char.cmx buffer.cmx array.cmx
 queue.cmo: obj.lli queue.lli
 queue.cmx: obj.cmx queue.lli
-random.cmo: string.lli pervasives.lli nativeint.lli int64.lli int32.lli \
-    digest.lli char.lli array.lli random.lli
-random.cmx: string.cmx pervasives.cmx nativeint.cmx int64.cmx int32.cmx \
-    digest.cmx char.cmx array.cmx random.lli
-scanf.cmo: string.lli printf.lli pervasives.lli obj.lli list.lli hashtbl.lli \
-    buffer.lli array.lli scanf.lli
-scanf.cmx: string.cmx printf.cmx pervasives.cmx obj.cmx list.cmx hashtbl.cmx \
-    buffer.cmx array.cmx scanf.lli
-set.cmo: set.lli
-set.cmx: set.lli
+random.cmo: random_state.lli random.lli
+random.cmx: random_state.cmx random.lli
+random_state.cmo: string.lli pervasives.lli nativeint.lli int64.lli int32.lli \
+    digest.lli char.lli array.lli random_state.lli
+random_state.cmx: string.cmx pervasives.cmx nativeint.cmx int64.cmx int32.cmx \
+    digest.cmx char.cmx array.cmx random_state.lli
+scanf.cmo: string.lli scanning.lli printf_tformat.cmo printf_sformat.cmo \
+    printf.lli obj.lli list.lli hashtbl.lli buffer.lli array.lli scanf.lli
+scanf.cmx: string.cmx scanning.cmx printf_tformat.cmx printf_sformat.cmx \
+    printf.cmx obj.cmx list.cmx hashtbl.cmx buffer.cmx array.cmx scanf.lli
+scanning.cmo: string.lli pervasives.lli list.lli buffer.lli scanning.lli
+scanning.cmx: string.cmx pervasives.cmx list.cmx buffer.cmx scanning.lli
+set.cmo: pervasives.lli set.lli
+set.cmx: pervasives.cmx set.lli
 sort.cmo: array.lli sort.lli
 sort.cmx: array.cmx sort.lli
 stack.cmo: list.lli stack.lli
 stack.cmx: list.cmx stack.lli
-stdLabels.cmo: stringLabels.lli listLabels.lli arrayLabels.lli stdLabels.lli
-stdLabels.cmx: stringLabels.cmx listLabels.cmx arrayLabels.cmx stdLabels.lli
 std_exit.cmo:
 std_exit.cmx:
-stream.cmo: string.lli obj.lli list.lli lazy.lli stream.lli
+stream.cmo: string.lli obj.lli list.lli lazy.cmo stream.lli
 stream.cmx: string.cmx obj.cmx list.cmx lazy.cmx stream.lli
 string.cmo: pervasives.lli list.lli char.lli string.lli
 string.cmx: pervasives.cmx list.cmx char.cmx string.lli
-stringLabels.cmo: string.lli stringLabels.lli
-stringLabels.cmx: string.cmx stringLabels.lli
 sys.cmo: sys.lli
 sys.cmx: sys.lli
-weak.cmo: sys.lli obj.lli hashtbl.lli array.lli weak.lli
-weak.cmx: sys.cmx obj.cmx hashtbl.cmx array.cmx weak.lli
-arg.cmo: sys.lli string.lli printf.lli list.lli buffer.lli array.lli arg.lli
-arg.p.cmx: sys.p.cmx string.p.cmx printf.p.cmx list.p.cmx buffer.p.cmx array.p.cmx arg.lli
-array.cmo: array.lli
-array.p.cmx: array.lli
-arrayLabels.cmo: array.lli arrayLabels.lli
-arrayLabels.p.cmx: array.p.cmx arrayLabels.lli
-buffer.cmo: sys.lli string.lli buffer.lli
-buffer.p.cmx: sys.p.cmx string.p.cmx buffer.lli
-callback.cmo: obj.lli callback.lli
-callback.p.cmx: obj.p.cmx callback.lli
-camlinternalLazy.cmo: obj.lli camlinternalLazy.lli
-camlinternalLazy.p.cmx: obj.p.cmx camlinternalLazy.lli
-camlinternalMod.cmo: obj.lli camlinternalOO.lli array.lli camlinternalMod.lli
-camlinternalMod.p.cmx: obj.p.cmx camlinternalOO.p.cmx array.p.cmx camlinternalMod.lli
-camlinternalOO.cmo: sys.lli string.lli obj.lli map.lli list.lli char.lli \
-    array.lli camlinternalOO.lli
-camlinternalOO.p.cmx: sys.p.cmx string.p.cmx obj.p.cmx map.p.cmx list.p.cmx char.p.cmx \
-    array.p.cmx camlinternalOO.lli
-char.cmo: char.lli
-char.p.cmx: char.lli
-complex.cmo: complex.lli
-complex.p.cmx: complex.lli
-digest.cmo: string.lli printf.lli digest.lli
-digest.p.cmx: string.p.cmx printf.p.cmx digest.lli
-filename.cmo: sys.lli string.lli random.lli printf.lli buffer.lli \
-    filename.lli
-filename.p.cmx: sys.p.cmx string.p.cmx random.p.cmx printf.p.cmx buffer.p.cmx \
-    filename.lli
-format.cmo: string.lli printf.lli pervasives.lli obj.lli list.lli buffer.lli \
-    format.lli
-format.p.cmx: string.p.cmx printf.p.cmx pervasives.p.cmx obj.p.cmx list.p.cmx buffer.p.cmx \
-    format.lli
-gc.cmo: sys.lli printf.lli gc.lli
-gc.p.cmx: sys.p.cmx printf.p.cmx gc.lli
-genlex.cmo: string.lli stream.lli list.lli hashtbl.lli char.lli genlex.lli
-genlex.p.cmx: string.p.cmx stream.p.cmx list.p.cmx hashtbl.p.cmx char.p.cmx genlex.lli
-hashtbl.cmo: sys.lli array.lli hashtbl.lli
-hashtbl.p.cmx: sys.p.cmx array.p.cmx hashtbl.lli
-int32.cmo: pervasives.lli int32.lli
-int32.p.cmx: pervasives.p.cmx int32.lli
-int64.cmo: pervasives.lli int64.lli
-int64.p.cmx: pervasives.p.cmx int64.lli
-lazy.cmo: obj.lli camlinternalLazy.lli lazy.lli
-lazy.p.cmx: obj.p.cmx camlinternalLazy.p.cmx lazy.lli
-lexing.cmo: sys.lli string.lli array.lli lexing.lli
-lexing.p.cmx: sys.p.cmx string.p.cmx array.p.cmx lexing.lli
-list.cmo: list.lli
-list.p.cmx: list.lli
-listLabels.cmo: list.lli listLabels.lli
-listLabels.p.cmx: list.p.cmx listLabels.lli
-map.cmo: map.lli
-map.p.cmx: map.lli
-marshal.cmo: string.lli marshal.lli
-marshal.p.cmx: string.p.cmx marshal.lli
-moreLabels.cmo: set.lli map.lli hashtbl.lli moreLabels.lli
-moreLabels.p.cmx: set.p.cmx map.p.cmx hashtbl.p.cmx moreLabels.lli
-nativeint.cmo: sys.lli pervasives.lli nativeint.lli
-nativeint.p.cmx: sys.p.cmx pervasives.p.cmx nativeint.lli
-obj.cmo: marshal.lli int32.lli array.lli obj.lli
-obj.p.cmx: marshal.p.cmx int32.p.cmx array.p.cmx obj.lli
-oo.cmo: camlinternalOO.lli oo.lli
-oo.p.cmx: camlinternalOO.p.cmx oo.lli
-parsing.cmo: obj.lli lexing.lli array.lli parsing.lli
-parsing.p.cmx: obj.p.cmx lexing.p.cmx array.p.cmx parsing.lli
-pervasives.cmo: pervasives.lli
-pervasives.p.cmx: pervasives.lli
-printexc.cmo: printf.lli obj.lli buffer.lli array.lli printexc.lli
-printexc.p.cmx: printf.p.cmx obj.p.cmx buffer.p.cmx array.p.cmx printexc.lli
-printf.cmo: string.lli pervasives.lli obj.lli list.lli char.lli buffer.lli \
-    array.lli printf.lli
-printf.p.cmx: string.p.cmx pervasives.p.cmx obj.p.cmx list.p.cmx char.p.cmx buffer.p.cmx \
-    array.p.cmx printf.lli
-queue.cmo: obj.lli queue.lli
-queue.p.cmx: obj.p.cmx queue.lli
-random.cmo: string.lli pervasives.lli nativeint.lli int64.lli int32.lli \
-    digest.lli char.lli array.lli random.lli
-random.p.cmx: string.p.cmx pervasives.p.cmx nativeint.p.cmx int64.p.cmx int32.p.cmx \
-    digest.p.cmx char.p.cmx array.p.cmx random.lli
-scanf.cmo: string.lli printf.lli pervasives.lli obj.lli list.lli hashtbl.lli \
-    buffer.lli array.lli scanf.lli
-scanf.p.cmx: string.p.cmx printf.p.cmx pervasives.p.cmx obj.p.cmx list.p.cmx hashtbl.p.cmx \
-    buffer.p.cmx array.p.cmx scanf.lli
-set.cmo: set.lli
-set.p.cmx: set.lli
-sort.cmo: array.lli sort.lli
-sort.p.cmx: array.p.cmx sort.lli
-stack.cmo: list.lli stack.lli
-stack.p.cmx: list.p.cmx stack.lli
-stdLabels.cmo: stringLabels.lli listLabels.lli arrayLabels.lli stdLabels.lli
-stdLabels.p.cmx: stringLabels.p.cmx listLabels.p.cmx arrayLabels.p.cmx stdLabels.lli
-std_exit.cmo:
-std_exit.p.cmx:
-stream.cmo: string.lli obj.lli list.lli lazy.lli stream.lli
-stream.p.cmx: string.p.cmx obj.p.cmx list.p.cmx lazy.p.cmx stream.lli
-string.cmo: pervasives.lli list.lli char.lli string.lli
-string.p.cmx: pervasives.p.cmx list.p.cmx char.p.cmx string.lli
-stringLabels.cmo: string.lli stringLabels.lli
-stringLabels.p.cmx: string.p.cmx stringLabels.lli
-sys.cmo: sys.lli
-sys.p.cmx: sys.lli
-weak.cmo: sys.lli obj.lli hashtbl.lli array.lli weak.lli
-weak.p.cmx: sys.p.cmx obj.p.cmx hashtbl.p.cmx array.p.cmx weak.lli
+test.cmo:
+test.cmx:
+test2.cmo: list.lli
+test2.cmx: list.cmx
+weak.cmo: obj.lli weak.lli
+weak.cmx: obj.cmx weak.lli
+weak_hashtbl.cmo: weak.lli sys.lli pervasives.lli obj.lli hashtbl.lli \
+    array.lli weak_hashtbl.lli
+weak_hashtbl.cmx: weak.cmx sys.cmx pervasives.cmx obj.cmx hashtbl.cmx \
+    array.cmx weak_hashtbl.lli

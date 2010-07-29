@@ -228,8 +228,8 @@ let signature_item ppf = function
         print_out_type_decl
           "type" (* (if rs = Orec_next then "and" else "type") *)
           ppf td
-  | Sig_exception _ ->
-      fprintf ppf "@[<2>exception@]" (* xxx *)
+  | Sig_exception cs ->
+      fprintf ppf "@[<2>exception %s@]" cs.cs_name (* xxx *)
 
 let rec signature ppf = function
     [] -> ()
