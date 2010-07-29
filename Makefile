@@ -44,7 +44,9 @@ CL_COMP=cl_comp/prim.cmx cl_comp/primdecl.cmx \
   cl_comp/patch.cmx cl_comp/tr_const.cmx cl_comp/link.cmx \
   cl_comp/readword.cmx
 
-BYTECOMP=bytecomp/ident.cmx bytecomp/identSet.cmx bytecomp/lambda.cmx bytecomp/printlambda.cmx \
+BYTECOMP=bytecomp/ident.cmx bytecomp/identSet.cmx \
+  bytecomp/mpattern.cmx \
+  bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/typeopt.cmx bytecomp/switch.cmx bytecomp/matching_aux.cmx bytecomp/matching.cmx \
   bytecomp/translcore.cmx \
   bytecomp/translmod.cmx \
