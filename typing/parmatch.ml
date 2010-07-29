@@ -34,7 +34,7 @@ let simple_match p1 p2 =
 let record_nargs someofthem =
   match someofthem with
     | [] -> assert false
-    | ((lbl1,_)::_) -> List.length (Ctype.labels_of_type (Get.label lbl1).lbl_parent)
+    | ((lbl1,_)::_) -> List.length (Ctype.labels_of_type lbl1.lbl_parent)
 ;;
 
 let set_fields size l =
@@ -42,7 +42,7 @@ let set_fields size l =
   let v = Array.make size omega in
 
   let rec change_rec l = match l with
-    (lbl,p)::l ->  v.((Get.label lbl).lbl_pos) <- p ;  change_rec l 
+    (lbl,p)::l ->  v.(lbl.lbl_pos) <- p ;  change_rec l 
   | [] -> () in
 
   change_rec l ; Array.to_list v
@@ -77,9 +77,9 @@ let rec simple_pat q pss = match pss with
 | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
     make_pat(Tpat_tuple(List.map (fun _ -> omega) args)) p.pat_type
 | (({pat_desc = Tpat_record((lbl1,_)::_)} as p)::_)::pss ->
-    let ty_record = (Get.label lbl1).lbl_parent in
+    let ty_record = lbl1.lbl_parent in
     let labels = Ctype.labels_of_type ty_record in
-    make_pat(Tpat_record (List.map (fun lbl -> ref_label lbl,omega) labels)) p.pat_type
+    make_pat(Tpat_record (List.map (fun lbl -> lbl,omega) labels)) p.pat_type
 | _ -> q
 ;;
 

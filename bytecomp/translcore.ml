@@ -493,7 +493,7 @@ let rec push_defaults loc bindings pat_expr_list partial =
         { exp with exp_loc = loc; exp_desc =
           Texp_match
             ({exp with exp_type = pat.pat_type; exp_desc =
-              Texp_ident (ref_value param_val)},
+              Texp_ident param_val},
              pat_expr_list, partial) }
       in
       push_defaults loc bindings
@@ -582,7 +582,6 @@ let rec transl_exp e =
 and transl_exp0 e =
   match e.exp_desc with
     Texp_ident v ->
-      let v = Get.value v in
       begin match v with
         | {val_kind = Val_prim p} ->
             transl_primitive p
@@ -602,10 +601,9 @@ and transl_exp0 e =
       in
       Lfunction(kind, params, body)
   | Texp_apply({exp_desc = Texp_ident(v)}, oargs)
-      when (match (Get.value v).val_kind with 
+      when (match v.val_kind with 
               | Val_prim p -> List.length oargs >= p.prim_arity
               | _ -> false) ->
-      let v = Get.value v in
       let p = match v.val_kind with Val_prim p -> p | _ -> assert false in
       let args, args' = cut p.prim_arity oargs in
       let wrap f =
@@ -687,13 +685,10 @@ and transl_exp0 e =
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      let lbl1 = Get.label lbl1 in
-      let lbl_expr_list = List.map (fun (lbl, exp) -> (Get.label lbl, exp)) lbl_expr_list in
       transl_record (Ctype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
   | Texp_field(arg, lbl) ->
-      let lbl = Get.label lbl in
       let access = Pfield lbl.lbl_pos in
 (*
         match lbl.lbl_repres with
@@ -702,7 +697,6 @@ and transl_exp0 e =
 *)
       Lprim(access, [transl_exp arg])
   | Texp_setfield(arg, lbl, newval) ->
-      let lbl = Get.label lbl in
       let access = Psetfield(lbl.lbl_pos, maybe_pointer newval) in
 (*
         match lbl.lbl_repres with

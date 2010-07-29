@@ -50,7 +50,6 @@ let rec count_args tm =
 let rec term_of_expr c expr =
   begin match expr.exp_desc with
     | Texp_ident v ->
-        let v = Get.value v in
         if v.val_global then
           begin match v.val_kind with
             | Val_reg ->

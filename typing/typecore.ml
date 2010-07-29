@@ -118,7 +118,7 @@ let rec tpat (pat, ty) =
       let rec tpat_lbl = function
         [] -> ()
       | (lbl,p) :: rest ->
-          let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
+          let (ty_res, ty_arg) = instantiate_label lbl in
           unify_pat pat ty ty_res;
           tpat (p, ty_arg);
           tpat_lbl rest
@@ -162,7 +162,7 @@ let rec is_nonexpansive expr =
   | Texp_array [] -> true
   | Texp_record (lbl_expr_list, exten) ->
       List.for_all (fun (lbl, expr) ->
-                  (Get.label lbl).lbl_mut == Immutable && is_nonexpansive expr)
+                  lbl.lbl_mut == Immutable && is_nonexpansive expr)
               lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_parser pat_expr_list -> true
@@ -353,7 +353,7 @@ let rec type_expr expr =
   let inferred_ty =
   match expr.exp_desc with
     Texp_ident v ->
-      instantiate_one_type (Get.value v).val_type
+      instantiate_one_type v.val_type
   | Texp_constant cst ->
       type_of_constant cst
   | Texp_tuple(args) ->
@@ -437,22 +437,22 @@ let rec type_expr expr =
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
-          let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
+          let (ty_res, ty_arg) = instantiate_label lbl in
           begin try unify (ty, ty_res)
-          with OldUnify -> label_not_belong_err expr (Get.label lbl) ty
+          with OldUnify -> label_not_belong_err expr lbl ty
           end;
           type_expect exp ty_arg)
         lbl_expr_list;
       let label =
         match lbl_expr_list with
-          | ((lbl1,_)::_) -> Array.of_list (labels_of_type (Get.label lbl1).lbl_parent)
+          | ((lbl1,_)::_) -> Array.of_list (labels_of_type lbl1.lbl_parent)
           | [] -> assert false
       in
       let defined = Array.make (Array.length label) false in
       List.iter (fun (lbl, exp) ->
-        let p = (Get.label lbl).lbl_pos in
+        let p = lbl.lbl_pos in
           if defined.(p)
-          then label_multiply_defined_err expr (Get.label lbl)
+          then label_multiply_defined_err expr lbl
           else defined.(p) <- true)
         lbl_expr_list;
       begin match exten with
@@ -466,12 +466,12 @@ let rec type_expr expr =
       end;
       ty
   | Texp_field (e, lbl) ->
-      let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
+      let (ty_res, ty_arg) = instantiate_label lbl in
       type_expect e ty_res;
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
-      let (ty_res, ty_arg) = instantiate_label (Get.label lbl) in
-      if (Get.label lbl).lbl_mut == Immutable then label_not_mutable_err expr (Get.label lbl);
+      let (ty_res, ty_arg) = instantiate_label lbl in
+      if lbl.lbl_mut == Immutable then label_not_mutable_err expr lbl;
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       Predef.type_unit

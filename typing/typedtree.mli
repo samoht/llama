@@ -34,7 +34,7 @@ and pattern_desc =
   | Tpat_construct of constructor * pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
-  | Tpat_record of (label reference * pattern) list
+  | Tpat_record of (label * pattern) list
 
 type partial = Partial | Total
 
@@ -45,7 +45,7 @@ type expression =
     mutable exp_type: core_type }
 
 and expression_desc =
-    Texp_ident of value reference
+    Texp_ident of value
   | Texp_constant of constant
   | Texp_let of rec_flag * (pattern * expression) list * expression
   | Texp_function of (pattern * expression) list * partial
@@ -54,9 +54,9 @@ and expression_desc =
   | Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
   | Texp_construct of constructor * expression list
-  | Texp_record of (label reference * expression) list * expression option(*xxx*)
-  | Texp_field of expression * label reference
-  | Texp_setfield of expression * label reference * expression
+  | Texp_record of (label * expression) list * expression option(*xxx*)
+  | Texp_field of expression * label
+  | Texp_setfield of expression * label * expression
   | Texp_array of expression list
   | Texp_ifthenelse of expression * expression * expression
   | Texp_sequence of expression * expression

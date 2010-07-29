@@ -131,7 +131,6 @@ let rec translate_expr env =
   let rec transl expr =
   match expr.exp_desc with
     Texp_ident v ->
-      let v = Get.value v in
       if v.val_global then
         (match v.val_kind with
              Val_reg ->
@@ -185,8 +184,7 @@ let rec translate_expr env =
              translate_match expr.exp_loc env (compat case_list))
       else
       Event.after env expr (Lapply(transl funct, List.map transl args))
-  | Texp_apply({exp_desc = Texp_ident v} as fct, args) when (Get.value v).val_global ->
-      let v = Get.value v in
+  | Texp_apply({exp_desc = Texp_ident v} as fct, args) when v.val_global ->
       begin match v.val_kind with
         Val_reg ->
           Event.after env expr (Lapply(transl fct, List.map transl args))
@@ -267,11 +265,11 @@ let rec translate_expr env =
   | Texp_record (lbl_expr_list, exten) (*xxx exten *) ->
       let v = Array.make (List.length lbl_expr_list) (Lconst const_unit) in
         List.iter
-          (fun (lbl, e) -> v.((Get.label lbl).lbl_pos) <- transl e)
+          (fun (lbl, e) -> v.(lbl.lbl_pos) <- transl e)
           lbl_expr_list;
         begin try
           if List.for_all
-               (fun (lbl, e) -> (Get.label lbl).lbl_mut == Immutable)
+               (fun (lbl, e) -> lbl.lbl_mut == Immutable)
                lbl_expr_list
           then Lconst(SCblock(ConstrRegular(0,0),
                               Array.to_list (Array.map extract_constant v)))
@@ -280,9 +278,9 @@ let rec translate_expr env =
           Lprim(Pmakeblock(ConstrRegular(0,0)), Array.to_list v)
         end
   | Texp_field (e, lbl) ->
-      Lprim(Pfield (Get.label lbl).lbl_pos, [transl e])
+      Lprim(Pfield lbl.lbl_pos, [transl e])
   | Texp_setfield (e1, lbl, e2) ->
-      Lprim(Psetfield (Get.label lbl).lbl_pos, [transl e1; transl e2])
+      Lprim(Psetfield lbl.lbl_pos, [transl e1; transl e2])
   | Texp_assert cond ->
       if !Clflags.noassert then
         lambda_unit

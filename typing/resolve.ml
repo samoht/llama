@@ -66,11 +66,11 @@ let lookup_constructor env li loc =
   with Not_found -> Error.unbound_constr_err li loc
 
 let lookup_label env li loc =
-  try ref_label(Env.lookup_label li env)
+  try Env.lookup_label li env
   with Not_found -> Error.unbound_label_err li loc
 
 let lookup_value env li loc =
-  try ref_value(Env.lookup_value li env)
+  try Env.lookup_value li env
   with Not_found -> Error.unbound_value_err li loc
 
 (* ---------------------------------------------------------------------- *)

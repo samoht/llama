@@ -174,7 +174,7 @@ let divide_record_matching ty_record (Cl_matching(casel, pathl)) =
         fatal_error "divide_record_matching"
   and divide_rec_cont pat_expr_list patl action rest =
     let v = Array.make num_labels wildcard_pat in
-    List.iter (fun (lbl, pat) -> v.((Get.label lbl).lbl_pos) <- pat) pat_expr_list;
+    List.iter (fun (lbl, pat) -> v.(lbl.lbl_pos) <- pat) pat_expr_list;
     add_to_match (divide_rec rest) (Array.to_list v @ patl, action)
   in
     divide_rec casel
@@ -269,7 +269,7 @@ let rec conquer_matching =
             and lambda2, total2 = conquer_matching vars in
               (Lstatichandle(Lcond(path, condlist1), lambda2), total2)
       | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
-          conquer_matching (divide_record_matching (Get.label lbl).lbl_parent matching)
+          conquer_matching (divide_record_matching lbl.lbl_parent matching)
       | _ ->
           fatal_error "conquer_matching 2"
       end
