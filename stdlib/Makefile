@@ -13,10 +13,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random.cmo callback.cmo \
   genlex.cmo weak.cmo \
-  filename.cmo complex.cmo \
-  arrayLabels.cmo listLabels.cmo stringLabels.cmo moreLabels.cmo stdLabels.cmo
-
-# scanf.cmo
+  filename.cmo complex.cmo # scanf.cmo
 
 all: std_exit.cmo stdlib.cma
 
