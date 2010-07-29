@@ -34,6 +34,7 @@ pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
 
 std_exit.cmo: pervasives.cmo
+stream.cmo: lazy.cmo
 
 clean:
 	rm -f *.lli *.cmo

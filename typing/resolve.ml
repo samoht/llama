@@ -326,18 +326,6 @@ let value_declaration env name typexp primstuff =
   v, typexp, Env.add_value v env
 
 let type_declaration env decl loc =
-  let params_list =
-    List.map
-      begin fun (name, sparams, body) ->
-        bind_type_expression_vars sparams loc
-      end
-      decl
-  in
-  let decl =
-    List.map2
-      (fun params (name, _, body) -> (name, params, body))
-      params_list decl
-  in
   let tcs_list =
     List.map
       begin fun (name, params, body) ->
@@ -349,21 +337,19 @@ let type_declaration env decl loc =
       end
       decl
   in
-  let decl =
-    List.map2
-      (fun tcs (_, params, body) -> (tcs, params, body))
-      tcs_list decl
-  in
   let temp_env =
     List.fold_left
       (fun env tcs -> Env.add_type_constructor tcs env)
       env tcs_list
   in
   let decl =
-    List.map
-      (fun (tcs, params, body) ->
-         (tcs, params, type_constructor_body temp_env tcs body))
-      decl
+    List.map2
+      begin fun tcs (_, sparams, body) ->
+        let params = bind_type_expression_vars sparams loc in
+        let body = type_constructor_body temp_env tcs body in
+        (tcs, params, body)
+      end
+      tcs_list decl
   in
   List.iter
     begin fun (tcs, params, body) ->
