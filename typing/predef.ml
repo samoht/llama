@@ -64,7 +64,7 @@ let type_stream t = Tconstruct({ref_id = qualid_stream; ref_contents = None}, [t
 (* ---------------------------------------------------------------------- *)
 
 let constr_void =
-  { cs_parent = tcs_unit;
+  { cs_parent = Parent tcs_unit;
     cs_name = "()";
     cs_res = Tconstruct(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
@@ -73,7 +73,7 @@ let constr_void =
 
 let constr_nil =
   let arg = Tvar list_generic in
-  { cs_parent = tcs_list;
+  { cs_parent = Parent tcs_list;
     cs_name = "[]";
     cs_res = Tconstruct(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
@@ -83,7 +83,7 @@ let constr_nil =
 let constr_cons =
   let arg1 = Tvar list_generic in
   let arg2 = Tconstruct(ref_type_constr tcs_list, [arg1]) in
-  { cs_parent = tcs_list;
+  { cs_parent = Parent tcs_list;
     cs_name = "::";
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
@@ -92,7 +92,7 @@ let constr_cons =
 
 let constr_none =
   let arg = Tvar option_generic in
-  { cs_parent = tcs_option;
+  { cs_parent = Parent tcs_option;
     cs_name = "None";
     cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
@@ -101,7 +101,7 @@ let constr_none =
 
 let constr_some =
   let arg = Tvar option_generic in
-  { cs_parent = tcs_option;
+  { cs_parent = Parent tcs_option;
     cs_name = "Some";
     cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
@@ -109,7 +109,7 @@ let constr_some =
     cstr_tag = Cstr_block 0 }
 
 let constr_false =
-  { cs_parent = tcs_bool;
+  { cs_parent = Parent tcs_bool;
     cs_name = "false";
     cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
@@ -117,7 +117,7 @@ let constr_false =
     cstr_tag = Cstr_constant 0 }
 
 let constr_true =
-  { cs_parent = tcs_bool;
+  { cs_parent = Parent tcs_bool;
     cs_name = "true";
     cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
@@ -157,7 +157,7 @@ let predef_exn stamp name tyl =
   let qualid = { id_module = Module_builtin; id_name = name } in
   let tag = ConstrExtensible (qualid, stamp) in
   tag,
-  { cs_parent = tcs_exn;
+  { cs_parent = Parent_exn;
     cs_name = name;
     cs_res = Tconstruct (ref_type_constr tcs_exn, []);
     cs_args = tyl;

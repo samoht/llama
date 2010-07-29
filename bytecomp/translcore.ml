@@ -369,7 +369,7 @@ let transl_primitive p =
   match prim with
     Plazyforce ->
       let parm = Ident.create "prim" in
-      Lfunction(Curried, [parm], Matching.inline_lazy_force (Lvar parm) Location.none)
+      Lfunction(Curried, [parm], Optmatching.inline_lazy_force (Lvar parm) Location.none)
   | _ ->
       let rec make_params n =
         if n <= 0 then [] else Ident.create "prim" :: make_params (n-1) in
@@ -632,7 +632,7 @@ and transl_exp0 e =
         | (_, _) ->
             begin match (prim, argl) with
             | (Plazyforce, [a]) ->
-                wrap (Matching.inline_lazy_force a e.exp_loc)
+                wrap (Optmatching.inline_lazy_force a e.exp_loc)
             | (Plazyforce, _) -> assert false
             |_ -> let p = Lprim(prim, argl) in
                if primitive_is_ccall prim then wrap p else wrap0 p
@@ -641,15 +641,15 @@ and transl_exp0 e =
   | Texp_apply(funct, oargs) ->
       event_after e (transl_apply (transl_exp funct) oargs e.exp_loc)
   | Texp_match({exp_desc = Texp_tuple argl}, pat_expr_list, partial) ->
-      Matching.for_multiple_match e.exp_loc
+      Optmatching.for_multiple_match e.exp_loc
         (transl_list argl) (transl_cases pat_expr_list) partial
   | Texp_match(arg, pat_expr_list, partial) ->
-      Matching.for_function e.exp_loc None
+      Optmatching.for_function e.exp_loc None
         (transl_exp arg) (transl_cases pat_expr_list) partial
   | Texp_try(body, pat_expr_list) ->
       let id = Ident.create (name_pattern "exn" pat_expr_list) in
       Ltrywith(transl_exp body, id,
-               Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
+               Optmatching.for_trywith (Lvar id) (transl_cases pat_expr_list))
   | Texp_tuple el ->
       let ll = transl_list el in
       begin try
@@ -917,28 +917,28 @@ and transl_function loc untuplify_fn repr partial pat_expr_list =
       let ((_, params), body) =
         transl_function exp.exp_loc false repr partial' pl in
       ((Curried, param :: params),
-       Matching.for_function loc None (Lvar param) [pat, body] partial)
+       Optmatching.for_function loc None (Lvar param) [pat, body] partial)
   | ({pat_desc = Tpat_tuple pl}, _) :: _ when untuplify_fn ->
       begin try
         let size = List.length pl in
         let pats_expr_list =
           List.map
-            (fun (pat, expr) -> (Matching.flatten_pattern size pat, expr))
+            (fun (pat, expr) -> (Optmatching.flatten_pattern size pat, expr))
             pat_expr_list in
         let params = List.map (fun p -> Ident.create "param") pl in
         ((Tupled, params),
-         Matching.for_tupled_function loc params
+         Optmatching.for_tupled_function loc params
            (transl_tupled_cases pats_expr_list) partial)
-      with Matching.Cannot_flatten ->
+      with Optmatching.Cannot_flatten ->
         let param = Ident.create(name_pattern "param" pat_expr_list) in
         ((Curried, [param]),
-         Matching.for_function loc repr (Lvar param)
+         Optmatching.for_function loc repr (Lvar param)
            (transl_cases pat_expr_list) partial)
       end
   | _ ->
       let param = Ident.create(name_pattern "param" pat_expr_list) in
       ((Curried, [param]),
-       Matching.for_function loc repr (Lvar param)
+       Optmatching.for_function loc repr (Lvar param)
          (transl_cases pat_expr_list) partial)
 
 and transl_let rec_flag pat_expr_list body =
@@ -948,7 +948,7 @@ and transl_let rec_flag pat_expr_list body =
         [] ->
           body
       | (pat, expr) :: rem ->
-          Matching.for_let pat.pat_loc (transl_exp expr) pat (transl rem)
+          Optmatching.for_let pat.pat_loc (transl_exp expr) pat (transl rem)
       in transl pat_expr_list
   | Recursive ->
       let idlist =

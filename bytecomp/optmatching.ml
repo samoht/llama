@@ -1129,7 +1129,7 @@ let make_field_args binding_kind arg first_pos last_pos argl =
   in make_args first_pos
 
 let get_key_constr = function
-  | {pat_desc=Tpat_construct (cstr,_)} -> cstr.cstr_tag
+  | {pat_desc=Tpat_construct (cstr,_)} -> cstr
   | _ -> assert false
 
 let get_args_constr p rem = match p with
@@ -1327,9 +1327,9 @@ let prim_obj_tag =
    prim_native_float = false}
 
 let get_mod_field modname field =
-  assert false
-(*
   lazy (
+    assert false
+(*
     try
       let mod_ident = Ident.create_persistent modname in
       let env = Env.open_pers_signature modname Env.initial in
@@ -1341,14 +1341,11 @@ let get_mod_field modname field =
       in
       Lprim(Pfield p, [Lprim(Pgetglobal mod_ident, [])])
     with Not_found -> fatal_error ("Module "^modname^" unavailable.")
-  )
 *)
+  )
 
 let code_force_lazy_block =
-  assert false
-(*
   get_mod_field "CamlinternalLazy" "force_lazy_block"
-*)
 ;;
 
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
@@ -1479,10 +1476,12 @@ let make_record_matching all_labels def = function
       let rec make_args pos =
         if pos >= Array.length all_labels then argl else begin
           let lbl = all_labels.(pos) in
-          let access =
+          let access = Pfield lbl.lbl_pos in
+(*
             match lbl.lbl_repres with
               Record_regular -> Pfield lbl.lbl_pos
             | Record_float -> Pfloatfield lbl.lbl_pos in
+*)
           let str =
             match lbl.lbl_mut with
               Immutable -> Alias
@@ -1922,7 +1921,7 @@ let mk_res get_key env last_choice idef cant_fail ctx =
 *)
 
 let mk_failaction_neg partial ctx def = match partial with
-| Partial ->
+| Typedtree.Partial ->
     begin match def with
     | (_,idef)::_ ->
         Some (Lstaticraise (idef,[])),[],jumps_singleton idef ctx
@@ -1932,7 +1931,7 @@ let mk_failaction_neg partial ctx def = match partial with
           then this switch cannot fail *)
         None, [], jumps_empty
     end
-| Total ->
+| Typedtree.Total ->
     None, [], jumps_empty
 
 
@@ -2021,7 +2020,7 @@ let split_cases tag_lambda_list =
       [] -> ([], [])
     | (cstr, act) :: rem ->
         let (consts, nonconsts) = split_rec rem in
-        match cstr with
+        match cstr.cstr_tag with
           Cstr_constant n -> ((n, act) :: consts, nonconsts)
         | Cstr_block n    -> (consts, (n, act) :: nonconsts)
         | _ -> assert false in
@@ -2032,7 +2031,7 @@ let split_cases tag_lambda_list =
 
 let combine_constructor arg ex_pat cstr partial ctx def
     (tag_lambda_list, total1, pats) =
-  if cstr.cstr_consts < 0 then begin
+  if cstr.cs_parent = Parent_exn then begin
     (* Special cases for exceptions *)
     let fail, to_add, local_jumps =
       mk_failaction_neg partial ctx def in
@@ -2048,10 +2047,10 @@ let combine_constructor arg ex_pat cstr partial ctx def
         | Some fail -> fail, tag_lambda_list in
       List.fold_right
         (fun (ex, act) rem ->
-          match ex with
-          | Cstr_exception path ->
+          match ex.cstr_tag with
+          | Cstr_exception _ ->
               Lifthenelse(Lprim(Pintcomp Ceq,
-                                [Lprim(Pfield 0, [arg]); transl_path path]),
+                                [Lprim(Pfield 0, [arg]); transl_exception ex]),
                           act, rem)
           | _ -> assert false)
         tests default in
@@ -2059,7 +2058,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
   end else begin
     (* Regular concrete type *)
     let ncases = List.length tag_lambda_list
-    and nconstrs =  cstr.cstr_consts + cstr.cstr_nonconsts in
+    and nconstrs =  List.length (Ctype.constructors_of_type (cs_parent cstr)) in
     let sig_complete = ncases = nconstrs in
     let fails,local_jumps =
       if sig_complete then [],jumps_empty
@@ -2072,8 +2071,10 @@ let combine_constructor arg ex_pat cstr partial ctx def
       match same_actions tag_lambda_list with
       | Some act -> act
       | _ ->
+          let cstr_consts, cstr_nonconsts =
+            Mpattern.count_constructors (cs_parent cstr) in
           match
-            (cstr.cstr_consts, cstr.cstr_nonconsts, consts, nonconsts)
+            (cstr_consts, cstr_nonconsts, consts, nonconsts)
           with
           | (1, 1, [0, act1], [0, act2]) ->
               Lifthenelse(arg, act2, act1)
@@ -2084,9 +2085,9 @@ let combine_constructor arg ex_pat cstr partial ctx def
           | (n, _, _, _) ->
               match same_actions nonconsts with
               | None ->
-                  make_switch(arg, {sw_numconsts = cstr.cstr_consts;
+                  make_switch(arg, {sw_numconsts = cstr_consts;
                                      sw_consts = consts;
-                                     sw_numblocks = cstr.cstr_nonconsts;
+                                     sw_numblocks = cstr_nonconsts;
                                      sw_blocks = nonconsts;
                                      sw_failaction = None})
               | Some act ->
@@ -2120,6 +2121,8 @@ let call_switcher_variant_constr fail arg int_lambda_list =
          fail (Lvar v) min_int max_int int_lambda_list)
 
 let combine_variant row arg partial ctx def (tag_lambda_list, total1, pats) =
+  assert false
+(*
   let row = Btype.row_repr row in
   let num_constr = ref 0 in
   if row.row_closed then
@@ -2137,7 +2140,7 @@ let combine_variant row arg partial ctx def (tag_lambda_list, total1, pats) =
   and one_action = same_actions tag_lambda_list in
   let fail, to_add, local_jumps =
     if
-      sig_complete  || (match partial with Total -> true | _ -> false)
+      sig_complete  || (match partial with Typedtree.Total -> true | _ -> false)
     then
       None, [], jumps_empty
     else
@@ -2170,6 +2173,7 @@ let combine_variant row arg partial ctx def (tag_lambda_list, total1, pats) =
           test_int_or_block arg lam_const lam_nonconst
   in
   lambda1, jumps_union local_jumps total1
+*)
 
 
 let combine_array arg kind partial ctx def
@@ -2356,7 +2360,7 @@ let rec comp_match_handlers comp_fun partial ctx arg first_match next_matchs = m
                 try
                   let li,total_i =
                     comp_fun
-                      (match rem with [] -> partial | _ -> Partial)
+                      (match rem with [] -> partial | _ -> Typedtree.Partial)
                       ctx_i arg pm in
                   c_rec
                     (Lstaticcatch (body,(i,[]),li))
@@ -2368,7 +2372,7 @@ let rec comp_match_handlers comp_fun partial ctx arg first_match next_matchs = m
                       total_rem  rem
             end in
    try
-      let first_lam,total = comp_fun Partial ctx arg first_match in
+      let first_lam,total = comp_fun Typedtree.Partial ctx arg first_match in
       c_rec first_lam total rem
    with Unused -> match next_matchs with
    | [] -> raise Unused
@@ -2452,7 +2456,7 @@ and do_compile_matching repr partial ctx arg pmh = match pmh with
         repr partial ctx pm
   | Tpat_record ((lbl,_)::_) ->
       compile_no_test
-        (divide_record lbl.lbl_all (normalize_pat pat))
+        (divide_record (Mpattern.calc_lbl_all lbl) (normalize_pat pat))
         ctx_combine repr partial ctx pm
   | Tpat_constant cst ->
       compile_test
@@ -2466,7 +2470,7 @@ and do_compile_matching repr partial ctx arg pmh = match pmh with
         divide_constructor (combine_constructor arg pat cstr partial)
         ctx pm
   | Tpat_array _ ->
-      let kind = Typeopt.array_pattern_kind pat in
+      let kind = Mpattern.array_pattern_kind pat in
       compile_test (compile_match repr partial) partial
         (divide_array kind) (combine_array arg kind partial)
         ctx pm
@@ -2511,7 +2515,7 @@ let check_partial pat_act_list partial =
       (fun (_,lam) -> is_guarded lam)
        pat_act_list
   then begin
-    Partial
+    Typedtree.Partial
   end else
     partial
 
@@ -2530,7 +2534,7 @@ let check_total total lambda i handler_fun =
 let compile_matching loc repr handler_fun arg pat_act_list partial =
   let partial = check_partial pat_act_list partial in
   match partial with
-  | Partial ->
+  | Typedtree.Partial ->
       let raise_num = next_raise_count () in
       let pm =
         { cases = List.map (fun (pat, act) -> ([pat], act)) pat_act_list;
@@ -2542,7 +2546,7 @@ let compile_matching loc repr handler_fun arg pat_act_list partial =
       with
       | Unused -> assert false (* ; handler_fun() *)
       end
-  | Total ->
+  | Typedtree.Total ->
       let pm =
         { cases = List.map (fun (pat, act) -> ([pat], act)) pat_act_list;
           args = [arg, Strict] ;
@@ -2562,22 +2566,24 @@ let partial_function loc () =
   let line = pos.Lexing.pos_lnum in
   let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise, [Lprim(Pmakeblock(0, Immutable),
-          [transl_path Predef.path_match_failure;
+          [transl_exception Predef.cs_match_failure;
            Lconst(Const_block(0,
               [Const_base(Const_string fname);
                Const_base(Const_int line);
                Const_base(Const_int char)]))])])
 
 let for_function loc repr param pat_act_list partial =
+  let pat_act_list = List.map (fun (pat, act) -> (import pat, act)) pat_act_list in
   compile_matching loc repr (partial_function loc) param pat_act_list partial
 
 (* In the following two cases, exhaustiveness info is not available! *)
 let for_trywith param pat_act_list =
+  let pat_act_list = List.map (fun (pat, act) -> (import pat, act)) pat_act_list in
   compile_matching Location.none None (fun () -> Lprim(Praise, [param]))
-    param pat_act_list Partial
+    param pat_act_list Typedtree.Partial
 
 let for_let loc param pat body =
-  compile_matching loc None (partial_function loc) param [pat, body] Partial
+  compile_matching loc None (partial_function loc) param [import pat, body] Typedtree.Partial
 
 (* Handling of tupled functions and matchings *)
 
@@ -2663,11 +2669,12 @@ let compile_flattened repr partial ctx _ pmh = match pmh with
 | PmVar _ -> assert false
 
 let do_for_multiple_match loc paraml pat_act_list partial =
+  let pat_act_list = List.map (fun (pat, act) -> (import pat, act)) pat_act_list in
   let repr = None in
   let partial = check_partial pat_act_list partial in
   let raise_num,pm1 =
     match partial with
-    | Partial ->
+    | Typedtree.Partial ->
         let raise_num = next_raise_count () in
         raise_num,
         { cases = List.map (fun (pat, act) -> ([pat], act)) pat_act_list;
@@ -2700,17 +2707,17 @@ let do_for_multiple_match loc paraml pat_act_list partial =
           partial (start_ctx size) () flat_next flat_nexts in
       List.fold_right2 (bind Strict) idl paraml
         (match partial with
-        | Partial ->
+        | Typedtree.Partial ->
             check_total total lam raise_num (partial_function loc)
-        | Total ->
+        | Typedtree.Total ->
             assert (jumps_is_empty total) ;
             lam)
     with Cannot_flatten ->
       let (lambda, total) = compile_match None partial (start_ctx 1) pm1 in
       begin match partial with
-      | Partial ->
+      | Typedtree.Partial ->
           check_total total lambda raise_num (partial_function loc)
-      | Total ->
+      | Typedtree.Total ->
           assert (jumps_is_empty total) ;
           lambda
       end
@@ -2740,3 +2747,9 @@ let for_multiple_match loc paraml pat_act_list partial =
   let paraml = List.map (fun (v,_) -> Lvar v) v_paraml in
   List.fold_right bind_opt v_paraml
     (do_for_multiple_match loc paraml pat_act_list partial)
+
+(* for export *)
+let flatten_pattern size p = match p.Typedtree.pat_desc with
+| Typedtree.Tpat_tuple args -> List.map import args
+| Typedtree.Tpat_any -> omegas size
+| _ -> raise Cannot_flatten

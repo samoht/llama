@@ -48,10 +48,10 @@ val set_args_erase_mutable : pattern -> pattern list -> pattern list
 
 val pat_of_constr : pattern -> constructor_description -> pattern
 val complete_constrs :
-    pattern -> constructor_tag list -> constructor_description  list
+    pattern -> constructor list -> constructor_description  list
 
 val pressure_variants: Env.t -> pattern list -> unit
-val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial
+val check_partial: Location.t -> (pattern * Typedtree.expression) list -> Typedtree.partial
 val check_unused: Env.t -> (pattern * Typedtree.expression) list -> unit
 
 (* Irrefutability tests *)

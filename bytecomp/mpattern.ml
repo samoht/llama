@@ -55,11 +55,14 @@ let map_pattern_desc f d =
   | Tpat_array pats ->
       Tpat_array (List.map f pats)
   | Tpat_lazy p1 -> Tpat_lazy (f p1)
+  | Tpat_variant (x1, Some p1, x2) ->
+      Tpat_variant (x1, Some (f p1), x2)
   | Tpat_or (p1,p2,path) ->
       Tpat_or (f p1, f p2, path)
   | Tpat_var _
   | Tpat_constant _
-  | Tpat_any -> d
+  | Tpat_any
+  | Tpat_variant (_,None,_) -> d
 
 let alpha_var env id = List.assoc id env
 
@@ -78,4 +81,22 @@ let rec alpha_pat env p = match p.pat_desc with
 | d ->
     {p with pat_desc = map_pattern_desc (alpha_pat env) d}
 
-type partial = Partial | Total
+let count_constructors tcs =
+  let a = ref 0 in
+  let b = ref 0 in
+  List.iter
+    begin fun cs ->
+      begin match cs.cstr_tag with
+        | Cstr_constant _ -> incr a
+        | Cstr_block _ -> incr b
+        | Cstr_exception _ -> assert false
+      end
+    end
+    (Ctype.constructors_of_type tcs);
+  !a, !b
+
+let calc_lbl_all lbl =
+  Array.of_list (Ctype.labels_of_type lbl.lbl_parent)
+
+let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
+

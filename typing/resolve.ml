@@ -251,7 +251,7 @@ let constructor env tcs n idx_const idx_block idx (name, typexps) =
   let postincr idx = let n = !idx in incr idx; n in
   let arity = List.length typexps in
   let cs =
-    { cs_parent = tcs;
+    { cs_parent = Parent tcs;
       cs_name = name;
       cs_res = type_none;
       cs_args = replicate_list type_none arity;
@@ -391,7 +391,7 @@ let exception_declaration env name args =
   let stamp = Env.postincrement_position () in
   let tag = ConstrExtensible(qualid, stamp) in
   let cs =
-    { cs_parent = Predef.tcs_exn;
+    { cs_parent = Parent_exn;
       cs_name = name;
       cs_res = type_none;
       cs_args = replicate_list type_none nargs;

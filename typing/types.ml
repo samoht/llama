@@ -49,7 +49,7 @@ and type_constructor_kind =
   | Type_abbrev of llama_type
 
 and constructor =
-  { cs_parent: type_constructor;
+  { cs_parent: cs_parent;
     cs_name: string;
     mutable cs_res: llama_type;                       (* Result type *)
     mutable cs_args: llama_type list;                 (* Argument types *)
@@ -57,6 +57,10 @@ and constructor =
     cs_tag: constr_tag;        (* caml light tag *)
     cstr_tag: constructor_tag; (* ocaml tag *)
   }
+
+and cs_parent =
+  | Parent of type_constructor
+  | Parent_exn
 
 and constr_tag =
     ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
@@ -123,9 +127,13 @@ let rec new_nongenerics_gen n lev =
 
 let new_phrase_nongeneric () = new_nongeneric_gen phrase_level
 
+let cs_parent cs =
+  match cs.cs_parent with
+    | Parent tcs -> tcs
+    | Parent_exn -> assert false
 
-let constr_id cs = { id_module = cs.cs_parent.tcs_id.id_module;
-                            id_name = cs.cs_name }
+let constr_id cs = { id_module = (cs_parent cs).tcs_id.id_module;
+                            id_name = cs.cs_name } (* xxx *)
 
 let label_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
                             id_name = lbl.lbl_name }
@@ -135,8 +143,8 @@ let ref_label lbl =
                id_name = lbl.lbl_name };
     ref_contents = Some lbl }
 let ref_constr cs =
-  { ref_id = { id_module = cs.cs_parent.tcs_id.id_module;
-               id_name = cs.cs_name };
+  { ref_id = { id_module = (cs_parent cs).tcs_id.id_module;
+               id_name = cs.cs_name }; (* xxx *)
     ref_contents = Some cs }
 let ref_value v =
   { ref_id = v.val_id;

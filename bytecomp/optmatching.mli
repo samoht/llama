@@ -29,12 +29,12 @@ val for_multiple_match:
         lambda
 
 val for_tupled_function:
-        Location.t -> Ident.t list -> (pattern list * lambda) list ->
+        Location.t -> Ident.t list -> (Mpattern.pattern list * lambda) list ->
         partial -> lambda
 
 exception Cannot_flatten
 
-val flatten_pattern: int -> pattern -> pattern list
+val flatten_pattern: int -> pattern -> Mpattern.pattern list
 
 val make_test_sequence:
         lambda option -> primitive -> primitive -> lambda ->

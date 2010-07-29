@@ -281,7 +281,7 @@ let sort_record p = match p.pat_desc with
 
 let all_record_args lbls = match lbls with
 | (lbl1,_)::_ ->
-    let lbl_all = Array.of_list (Ctype.labels_of_type lbl1.lbl_parent) in
+    let lbl_all = Mpattern.calc_lbl_all lbl1 in
     let t =
       Array.map
         (fun lbl -> lbl,omega) lbl_all in
@@ -587,7 +587,7 @@ let full_match closing env =  match env with
 | ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
-    List.length env = List.length (Ctype.constructors_of_type c.cs_parent)
+    List.length env = List.length (Ctype.constructors_of_type (cs_parent c))
 | ({pat_desc = Tpat_variant _} as p,_) :: _ ->
     ignore p; assert false
 (*
@@ -646,7 +646,7 @@ let should_extend ext env = match ext with
 
 (* complement constructor tags *)
 let complete_tags cs_list tags =
-  List.rev (List.filter (fun cs -> not (List.mem cs.cstr_tag tags)) cs_list)
+  List.rev (List.filter (fun cs -> not (List.mem cs tags)) cs_list)
 
 (* build a pattern from a constructor list *)
 let pat_of_constr ex_pat cstr =
@@ -665,7 +665,7 @@ let rec pat_of_constrs ex_pat = function
 (* Sends back a pattern that complements constructor tags all_tag *)
 let complete_constrs p all_tags = match p.pat_desc with
 | Tpat_construct (c,_) ->
-    let tcs = c.cs_parent in
+    let tcs = cs_parent c in
     let cs_list = Ctype.constructors_of_type tcs in
     complete_tags cs_list all_tags
 | _ -> fatal_error "Parmatch.complete_constr"
@@ -698,7 +698,7 @@ let build_other ext env =  match env with
         extra_pat
     | _ ->
         let get_tag = function
-          | {pat_desc = Tpat_construct (c,_)} -> c.cstr_tag
+          | {pat_desc = Tpat_construct (c,_)} -> c
           | _ -> fatal_error "Parmatch.get_tag" in
         let all_tags =  List.map (fun (p,_) -> get_tag p) env in
         pat_of_constrs p (complete_constrs p all_tags)
@@ -1476,10 +1476,10 @@ let do_check_partial loc casel pss = match pss with
     | [] -> ()
     | _  -> Location.prerr_warning loc Warnings.All_clauses_guarded
     end ;
-    Partial
+    Typedtree.Partial
 | ps::_  ->
     begin match exhaust None pss (List.length ps) with
-    | Rnone -> Total
+    | Rnone -> Typedtree.Total
     | Rsome [v] ->
         let errmsg =
           try
@@ -1500,7 +1500,7 @@ let do_check_partial loc casel pss = match pss with
           with _ ->
             "" in
         Location.prerr_warning loc (Warnings.Partial_match errmsg) ;
-        Partial
+        Typedtree.Partial
     | _ ->
         fatal_error "Parmatch.check_partial"
     end
@@ -1589,13 +1589,13 @@ let check_partial loc casel =
     let pss = get_mins le_pats pss in
     let total = do_check_partial loc casel pss in
     if
-      total = Total && Warnings.is_active (Warnings.Fragile_match "")
+      total = Typedtree.Total && Warnings.is_active (Warnings.Fragile_match "")
     then begin
       do_check_fragile loc casel pss
     end ;
     total
   end else
-    Partial
+    Typedtree.Partial
 
 
 (********************************)
