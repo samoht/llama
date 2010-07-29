@@ -1,6 +1,8 @@
 open Asttypes
 open Types
 
+type row_desc = unit
+
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
@@ -14,11 +16,11 @@ and pattern_desc =
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor * pattern list
+  | Tpat_variant of string * pattern option * row_desc ref
   | Tpat_record of (label * pattern) list
   | Tpat_array of pattern list
-  | Tpat_or of pattern * pattern * unit
+  | Tpat_or of pattern * pattern * row_desc option
   | Tpat_lazy of pattern
-  | Tpat_dummy_exception
 
 let rec import pat =
   match pat.Typedtree.pat_desc with
@@ -37,7 +39,7 @@ and import_desc = function
   | Typedtree.Tpat_tuple lp -> Tpat_tuple (List.map import lp)
   | Typedtree.Tpat_construct (cs, lp) -> Tpat_construct (cs, List.map import lp)
   | Typedtree.Tpat_record l -> Tpat_record (List.map (fun (lbl, p) -> (lbl, import p)) l)
-  | Typedtree.Tpat_or (p1, p2) -> Tpat_or (import p1, import p2, ())
+  | Typedtree.Tpat_or (p1, p2) -> Tpat_or (import p1, import p2, None)
   | Typedtree.Tpat_constraint (p, _) -> assert false
 
 let map_pattern_desc f d =
@@ -58,7 +60,6 @@ let map_pattern_desc f d =
   | Tpat_var _
   | Tpat_constant _
   | Tpat_any -> d
-  | Tpat_dummy_exception -> Misc.fatal_error "map_pattern_desc"
 
 let alpha_var env id = List.assoc id env
 

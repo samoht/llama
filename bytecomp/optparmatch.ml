@@ -45,7 +45,11 @@ let zero = make_pat (Tpat_constant (Const_int 0)) Ctype.none Env.empty
 
 (* p and q compatible means, there exists V that matches both *)
 
-let is_absent_pat p = false
+let is_absent tag row = assert false (* Btype.row_field tag !row = Rabsent *)
+
+let is_absent_pat p = match p.pat_desc with
+| Tpat_variant (tag, _, row) -> is_absent tag row
+| _ -> false
 
 let sort_fields args =
   Sort.list
@@ -82,6 +86,12 @@ let rec compat p q =
   | Tpat_lazy p, Tpat_lazy q -> compat p q
   | Tpat_construct (c1,ps1), Tpat_construct (c2,ps2) ->
       c1.cstr_tag = c2.cstr_tag && compats ps1 ps2
+  | Tpat_variant(l1,Some p1, r1), Tpat_variant(l2,Some p2,_) ->
+      l1=l2 && compat p1 p2
+  | Tpat_variant (l1,None,r1), Tpat_variant(l2,None,_) ->
+      l1 = l2
+  | Tpat_variant (_, None, _), Tpat_variant (_,Some _, _) -> false
+  | Tpat_variant (_, Some _, _), Tpat_variant (_, None, _) -> false
   | Tpat_record l1,Tpat_record l2 ->
       let ps,qs = records_args l1 l2 in
       compats ps qs
@@ -148,6 +158,10 @@ let rec pretty_val ppf v = match v.pat_desc with
       |  _ ->
           fprintf ppf "@[<2>%s@ @[(%a)@]@]" name (pretty_vals ",") vs
       end
+  | Tpat_variant (l, None, _) ->
+      fprintf ppf "`%s" l
+  | Tpat_variant (l, Some w, _) ->
+      fprintf ppf "@[<2>`%s@ %a@]" l pretty_arg w
   | Tpat_record lvs ->
       fprintf ppf "@[{%a}@]"
         (pretty_lvals (List.map fst lvs))
@@ -163,8 +177,6 @@ let rec pretty_val ppf v = match v.pat_desc with
       fprintf ppf "@[(%a@ as %a)@]" pretty_val v Ident.print x
   | Tpat_or (v,w,_)    ->
       fprintf ppf "@[(%a|@,%a)@]" pretty_or v pretty_or w
-  | Tpat_dummy_exception ->
-      pp_print_string ppf "*exception*"
 
 and pretty_car ppf v = match v.pat_desc with
 | Tpat_construct (cs, [_ ; _])
@@ -220,6 +232,8 @@ let simple_match p1 p2 =
   match p1.pat_desc, p2.pat_desc with
   | Tpat_construct(c1, _), Tpat_construct(c2, _) ->
       c1.cstr_tag = c2.cstr_tag
+  | Tpat_variant(l1, _, _), Tpat_variant(l2, _, _) ->
+      l1 = l2
   | Tpat_constant(Const_float s1), Tpat_constant(Const_float s2) ->
       float_of_string s1 = float_of_string s2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
@@ -282,6 +296,7 @@ let all_record_args lbls = match lbls with
 let rec simple_match_args p1 p2 = match p2.pat_desc with
 | Tpat_alias (p2,_) -> simple_match_args p1 p2
 | Tpat_construct(cstr, args) -> args
+| Tpat_variant(lab, Some arg, _) -> [arg]
 | Tpat_tuple(args)  -> args
 | Tpat_record(args) ->  extract_fields (record_arg p1) args
 | Tpat_array(args) -> args
@@ -289,6 +304,7 @@ let rec simple_match_args p1 p2 = match p2.pat_desc with
 | (Tpat_any | Tpat_var(_)) ->
     begin match p1.pat_desc with
       Tpat_construct(_, args) -> omega_list args
+    | Tpat_variant(_, Some _, _) -> [omega]
     | Tpat_tuple(args) -> omega_list args
     | Tpat_record(args) ->  omega_list args
     | Tpat_array(args) ->  omega_list args
@@ -310,6 +326,9 @@ let rec normalize_pat q = match q.pat_desc with
       make_pat (Tpat_tuple (omega_list args)) q.pat_type q.pat_env
   | Tpat_construct  (c,args) ->
       make_pat (Tpat_construct (c,omega_list args)) q.pat_type q.pat_env
+  | Tpat_variant (l, arg, row) ->
+      make_pat (Tpat_variant (l, may_map (fun _ -> omega) arg, row))
+        q.pat_type q.pat_env
   | Tpat_array (args) ->
       make_pat (Tpat_array (omega_list args))  q.pat_type q.pat_env
   | Tpat_record (largs) ->
@@ -317,7 +336,7 @@ let rec normalize_pat q = match q.pat_desc with
         q.pat_type q.pat_env
   | Tpat_lazy _ ->
       make_pat (Tpat_lazy omega) q.pat_type q.pat_env
-  | Tpat_or _ | Tpat_dummy_exception -> fatal_error "Parmatch.normalize_pat"
+  | Tpat_or _ -> fatal_error "Parmatch.normalize_pat"
 
 
 (*
@@ -394,6 +413,16 @@ let do_set_args erase_mutable q r = match q with
     let args,rest = read_args omegas r in
     make_pat
       (Tpat_construct (c,args)) q.pat_type q.pat_env::
+    rest
+| {pat_desc = Tpat_variant (l, omega, row)} ->
+    let arg, rest =
+      match omega, r with
+        Some _, a::r -> Some a, r
+      | None, r -> None, r
+      | _ -> assert false
+    in
+    make_pat
+      (Tpat_variant (l, arg, row)) q.pat_type q.pat_env::
     rest
 | {pat_desc = Tpat_lazy omega} ->
     begin match r with
@@ -518,6 +547,37 @@ let rec mark_partial = function
       (set_last zero ps) :: mark_partial pss
   | [] -> []
 
+let close_variant env row =
+  assert false
+(*
+  let row = Btype.row_repr row in
+  let nm =
+    List.fold_left
+      (fun nm (tag,f) ->
+        match Btype.row_field_repr f with
+        | Reither(_, _, false, e) ->
+            (* m=false means that this tag is not explicitly matched *)
+            Btype.set_row_field e Rabsent;
+            None
+        | Rabsent | Reither (_, _, true, _) | Rpresent _ -> nm)
+      row.row_name row.row_fields in
+  if not row.row_closed || nm != row.row_name then begin
+    (* this unification cannot fail *)
+    Ctype.unify env row.row_more
+      (Btype.newgenty
+         (Tvariant {row with row_fields = []; row_more = Btype.newgenvar();
+                    row_closed = true; row_name = nm}))
+  end
+*)
+
+let row_of_pat pat =
+  assert false
+(*
+  match Ctype.expand_head pat.pat_env pat.pat_type with
+    {desc = Tvariant row} -> Btype.row_repr row
+  | _ -> assert false
+*)
+
 (*
   Check whether the first column of env makes up a complete signature or
   not.
@@ -528,6 +588,33 @@ let full_match closing env =  match env with
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
     List.length env = List.length (Ctype.constructors_of_type c.cs_parent)
+| ({pat_desc = Tpat_variant _} as p,_) :: _ ->
+    ignore p; assert false
+(*
+    let fields =
+      List.map
+        (function ({pat_desc = Tpat_variant (tag, _, _)}, _) -> tag
+          | _ -> assert false)
+        env
+    in
+    let row = row_of_pat p in
+    if closing && not row.row_fixed then
+      (* closing=true, we are considering the variant as closed *)
+      List.for_all
+        (fun (tag,f) ->
+          match Btype.row_field_repr f with
+            Rabsent | Reither(_, _, false, _) -> true
+          | Reither (_, _, true, _)
+              (* m=true, do not discard matched tags, rather warn *)
+          | Rpresent _ -> List.mem tag fields)
+        row.row_fields
+    else
+      row.row_closed &&
+      List.for_all
+        (fun (tag,f) ->
+          Btype.row_field_repr f = Rabsent || List.mem tag fields)
+        row.row_fields
+*)
 | ({pat_desc = Tpat_constant(Const_char _)},_) :: _ ->
     List.length env = 256
 | ({pat_desc = Tpat_constant(_)},_) :: _ -> false
@@ -573,7 +660,7 @@ let rec pat_of_constrs ex_pat = function
     pat_desc=
       Tpat_or
         (pat_of_constr ex_pat cstr,
-         pat_of_constrs ex_pat rem, ())}
+         pat_of_constrs ex_pat rem, None)}
 
 (* Sends back a pattern that complements constructor tags all_tag *)
 let complete_constrs p all_tags = match p.pat_desc with
@@ -603,7 +690,7 @@ let build_other ext env =  match env with
 | ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)
   ::_ ->
     make_pat
-      Tpat_dummy_exception
+      (Tpat_var (Ident.create "*exception*"))
       Ctype.none Env.empty
 | ({pat_desc = Tpat_construct (_,_)} as p,_) :: _ ->
     begin match ext with
@@ -616,6 +703,39 @@ let build_other ext env =  match env with
         let all_tags =  List.map (fun (p,_) -> get_tag p) env in
         pat_of_constrs p (complete_constrs p all_tags)
     end
+| ({pat_desc = Tpat_variant (_,_,r)} as p,_) :: _ ->
+    ignore p; assert false
+(*
+    let tags =
+      List.map
+        (function ({pat_desc = Tpat_variant (tag, _, _)}, _) -> tag
+                | _ -> assert false)
+        env
+    in
+    let row = row_of_pat p in
+    let make_other_pat tag const =
+      let arg = if const then None else Some omega in
+      make_pat (Tpat_variant(tag, arg, r)) p.pat_type p.pat_env in
+    begin match
+      List.fold_left
+        (fun others (tag,f) ->
+          if List.mem tag tags then others else
+          match Btype.row_field_repr f with
+            Rabsent (* | Reither _ *) -> others
+          (* This one is called after erasing pattern info *)
+          | Reither (c, _, _, _) -> make_other_pat tag c :: others
+          | Rpresent arg -> make_other_pat tag (arg = None) :: others)
+        [] row.row_fields
+    with
+      [] ->
+        make_other_pat "AnyExtraTag" true
+    | pat::other_pats ->
+        List.fold_left
+          (fun p_res pat ->
+            make_pat (Tpat_or (pat, p_res, None)) p.pat_type p.pat_env)
+          pat other_pats
+    end
+*)
 | ({pat_desc = Tpat_constant(Const_char _)} as p,_) :: _ ->
     let all_chars =
       List.map
@@ -704,13 +824,13 @@ let build_other ext env =  match env with
 *)
 
 let rec has_instance p = match p.pat_desc with
-  | Tpat_any | Tpat_var _ | Tpat_constant _ -> true
-  | Tpat_alias (p,_) -> has_instance p
+  | Tpat_variant (l,_,r) when is_absent l r -> false
+  | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_,None,_) -> true
+  | Tpat_alias (p,_) | Tpat_variant (_,Some p,_) -> has_instance p
   | Tpat_or (p1,p2,_) -> has_instance p1 || has_instance p2
   | Tpat_construct (_,ps) | Tpat_tuple ps | Tpat_array ps -> has_instances ps
   | Tpat_record lps -> has_instances (List.map snd lps)
   | Tpat_lazy p -> has_instance p
-  | Tpat_dummy_exception -> fatal_error "has_instance"
 
 and has_instances = function
   | [] -> true
@@ -740,6 +860,7 @@ let rec satisfiable pss qs = match pss with
             else
               satisfiable (filter_extra pss) qs
         end
+    | {pat_desc=Tpat_variant (l,_,r)}::_ when is_absent l r -> false
     | q::qs ->
         let q0 = discr_pat q pss in
         satisfiable (filter_one q0 pss) (simple_match_args q0 q @ qs)
@@ -822,7 +943,8 @@ let rec exhaust ext pss n = match pss with
    (even if it doesn't help in making the matching exhaustive).
 *)
 
-let rec pressure_variants tdefs = function
+let rec pressure_variants tdefs = assert false
+(* function
   | []    -> false
   | []::_ -> true
   | pss   ->
@@ -846,9 +968,17 @@ let rec pressure_variants tdefs = function
               if full then try_non_omega constrs
               else try_non_omega (filter_all q0 (mark_partial pss))
             in
+            begin match constrs, tdefs with
+              ({pat_desc=Tpat_variant _} as p,_):: _, Some env ->
+                let row = row_of_pat p in
+                if row.row_fixed
+                || pressure_variants None (filter_extra pss) then ()
+                else close_variant env row
+            | _ -> ()
+            end;
             ok
       end
-
+*)
 
 (* Yet another satisfiable fonction *)
 
@@ -1073,6 +1203,8 @@ let rec every_satisfiables pss qs = match qs.active with
         else
 (* this is a real or-pattern *)
           every_satisfiables (push_or_column pss) (push_or qs)
+    | Tpat_variant (l,_,r) when is_absent l r -> (* Ah Jacques... *)
+        Unused
     | _ ->
 (* standard case, filter matrix *)
         let q0 = discr_pat q pss in
@@ -1126,6 +1258,11 @@ let rec le_pat p q =
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
       c1.cstr_tag = c2.cstr_tag && le_pats ps qs
+  | Tpat_variant(l1,Some p1,_), Tpat_variant(l2,Some p2,_) ->
+      (l1 = l2 && le_pat p1 p2)
+  | Tpat_variant(l1,None,r1), Tpat_variant(l2,None,_) ->
+      l1 = l2
+  | Tpat_variant(_,_,_), Tpat_variant(_,_,_) -> false
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_lazy p, Tpat_lazy q -> le_pat p q
   | Tpat_record l1, Tpat_record l2 ->
@@ -1173,6 +1310,12 @@ let rec lub p q = match p.pat_desc,q.pat_desc with
       when  c1.cstr_tag = c2.cstr_tag  ->
         let rs = lubs ps1 ps2 in
         make_pat (Tpat_construct (c1,rs)) p.pat_type p.pat_env
+| Tpat_variant(l1,Some p1,row), Tpat_variant(l2,Some p2,_)
+          when  l1=l2 ->
+            let r=lub p1 p2 in
+            make_pat (Tpat_variant (l1,Some r,row)) p.pat_type p.pat_env
+| Tpat_variant (l1,None,row), Tpat_variant(l2,None,_)
+              when l1 = l2 -> p
 | Tpat_record l1,Tpat_record l2 ->
     let rs = record_lubs l1 l2 in
     make_pat (Tpat_record rs) p.pat_type p.pat_env
@@ -1187,7 +1330,7 @@ and orlub p1 p2 q =
   try
     let r1 = lub p1 q in
     try
-      {q with pat_desc=(Tpat_or (r1,lub p2 q,()))}
+      {q with pat_desc=(Tpat_or (r1,lub p2 q,None))}
   with
   | Empty -> r1
 with
@@ -1219,8 +1362,11 @@ and lubs ps qs = match ps,qs with
 (* Apply pressure to variants *)
 
 let pressure_variants tdefs patl =
+  assert false
+(*
   let pss = List.map (fun p -> [p;omega]) patl in
   ignore (pressure_variants (Some tdefs) pss)
+*)
 
 (*****************************)
 (* Utilities for diagnostics *)
@@ -1385,7 +1531,7 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
       collect_paths_from_pat
       (if extendable_path path then add_path path r else r)
       ps
-| Tpat_any|Tpat_var _|Tpat_constant _ -> r
+| Tpat_any|Tpat_var _|Tpat_constant _| Tpat_variant (_,None,_) -> r
 | Tpat_tuple ps | Tpat_array ps
 | Tpat_construct ({cstr_tag=Cstr_exception _}, ps)->
     List.fold_left collect_paths_from_pat r ps
@@ -1393,13 +1539,11 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
     List.fold_left
       (fun r (_,p) -> collect_paths_from_pat r p)
       r lps
-| Tpat_alias (p,_) -> collect_paths_from_pat r p
+| Tpat_variant (_, Some p, _) | Tpat_alias (p,_) -> collect_paths_from_pat r p
 | Tpat_or (p1,p2,_) ->
     collect_paths_from_pat (collect_paths_from_pat r p1) p2
 | Tpat_lazy p ->
     collect_paths_from_pat r p
-| Tpat_dummy_exception ->
-    fatal_error "collect_paths_from_pat"
 
 
 (*
@@ -1502,18 +1646,16 @@ let irrefutable pat = le_pat pat omega
 let rec inactive pat = match pat with
 | Tpat_lazy _ ->
     false
-| Tpat_any | Tpat_var _ | Tpat_constant _ ->
+| Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_, None, _) ->
     true
 | Tpat_tuple ps | Tpat_construct (_, ps) | Tpat_array ps ->
     List.for_all (fun p -> inactive p.pat_desc) ps
-| Tpat_alias (p,_) ->
+| Tpat_alias (p,_) | Tpat_variant (_, Some p, _) ->
     inactive p.pat_desc
 | Tpat_record ldps ->
     List.exists (fun (_, p) -> inactive p.pat_desc) ldps
 | Tpat_or (p,q,_) ->
     inactive p.pat_desc && inactive q.pat_desc
-| Tpat_dummy_exception ->
-    fatal_error "inactive"
 
 
 (* A `fluid' pattern is both irrefutable and inactive *)
