@@ -140,7 +140,78 @@ let schema ppf ty =
 (* ---------------------------------------------------------------------- *)
 (* Signatures.                                                            *)
 (* ---------------------------------------------------------------------- *)
-(*
+
+let parenthesized_ident name =
+  (List.mem name ["or"; "mod"; "land"; "lor"; "lxor"; "lsl"; "lsr"; "asr"])
+  ||
+  (match name.[0] with
+      'a'..'z' | '\223'..'\246' | '\248'..'\255' | '_' ->
+        false
+    | _ -> true)
+
+let value_ident ppf name =
+  if parenthesized_ident name then
+    fprintf ppf "( %s )" name
+  else
+    fprintf ppf "%s" name
+
+let rec print_list_init pr sep ppf =
+  function
+    [] -> ()
+  | a :: l -> sep ppf; pr ppf a; print_list_init pr sep ppf l
+
+let rec print_list pr sep ppf =
+  function
+    [] -> ()
+  | [a] -> pr ppf a
+  | a :: l -> pr ppf a; sep ppf; print_list pr sep ppf l
+
+let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
+
+let rec print_out_type_decl kwd ppf tcs =
+  let name = tcs.tcs_id.id_name in
+  let args = tcs.tcs_params in
+  let ty = tcs.tcs_kind in
+  let type_defined ppf =
+    match args with
+      [] -> fprintf ppf "%s" name
+    | [arg] -> fprintf ppf "@[%a@ %s@]" type_parameter arg name
+    | _ ->
+        fprintf ppf "@[(@[%a)@]@ %s@]"
+          (print_list type_parameter (fun ppf -> fprintf ppf ",@ ")) args name
+  in
+  let print_name_args ppf =
+    fprintf ppf "%s %t" kwd type_defined
+  in
+  let rec print_out_tkind ppf = function
+  | Type_abstract -> ()
+  | Type_record lbls ->
+      fprintf ppf " = {%a@;<1 -2>}"
+        (print_list_init print_out_label (fun ppf -> fprintf ppf "@ ")) lbls
+  | Type_variant constrs ->
+      fprintf ppf " =@;<1 2>%a"
+        (print_list print_out_constr (fun ppf -> fprintf ppf "@ | ")) constrs
+  | Type_abbrev ty ->
+      fprintf ppf " =@;<1 2>%a" core_type ty
+  in
+  fprintf ppf "@[<2>@[<hv 2>%t%a@]@]"
+    print_name_args
+    print_out_tkind ty
+and print_out_constr ppf cs =
+  let name = cs.cs_name in
+  let tyl = cs.cs_args in
+  match tyl with
+    [] -> fprintf ppf "%s" name
+  | _ ->
+      fprintf ppf "@[<2>%s of@ %a@]" name
+        (out_typlist simple_out_type " *") (List.map (tree_of_typexp true) tyl)
+and print_out_label ppf lbl =
+  let name = lbl.lbl_name in
+  let mut = lbl.lbl_mut = Asttypes.Mutable in
+  let arg = lbl.lbl_arg in
+  fprintf ppf "@[<2>%s%s :@ %a@];" (if mut then "mutable " else "") name
+    core_type arg
+
 let signature_item ppf = function
     Sig_value v ->
       let kwd = if v.val_kind = Val_reg then "val" else "external" in
@@ -151,11 +222,14 @@ let signature_item ppf = function
             fprintf ppf "@ = \"%s\"" s;
             List.iter (fun s -> fprintf ppf "@ \"%s\"" s) sl
       in
-      fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident name !out_type
-        ty pr_prims prims
-*)
-let signature_item ppf item =
-  failwith "Printtyp.signature_item"
+      fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident (val_name v) core_type
+        v.val_type pr_prims (match v.val_kind with Val_reg -> [] | Val_prim pr -> [pr.Primitive.prim_name](*xxx*))
+  | Sig_type(td) ->
+        print_out_type_decl
+          "type" (* (if rs = Orec_next then "and" else "type") *)
+          ppf td
+  | Sig_exception _ ->
+      fprintf ppf "@[<2>exception@]" (* xxx *)
 
 let rec signature ppf = function
     [] -> ()

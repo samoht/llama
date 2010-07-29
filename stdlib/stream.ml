@@ -156,7 +156,7 @@ let of_channel ic =
 ;;
 
 (* Stream expressions builders *)
-
+(*
 let iapp i s = {count = 0; data = Sapp (i.data, s.data)};;
 let icons i s = {count = 0; data = Scons (i, s.data)};;
 let ising i = {count = 0; data = Scons (i, Sempty)};;
@@ -169,7 +169,7 @@ let lsing f = {count = 0; data = Slazy (lazy(Scons (f (), Sempty)))};;
 
 let sempty = {count = 0; data = Sempty};;
 let slazy f = {count = 0; data = Slazy (lazy(f ()).data)};;
-
+*)
 (* For debugging use *)
 
 let rec dump f s =
