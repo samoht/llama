@@ -18,9 +18,9 @@ open Misc
 open Asttypes
 open Primitive
 open Types
-open Typedtree
+open Mpattern
 open Lambda
-open Parmatch
+open Optparmatch
 open Printf
 
 (*  See Peyton-Jones, ``The Implementation of functional programming
@@ -137,7 +137,7 @@ let filter_matrix matcher pss =
               | NoMatch -> rem
               | OrPat   ->
                 match p.pat_desc with
-                | Tpat_or (p1,p2) -> filter_rec [(p1::ps) ;(p2::ps)]@rem
+                | Tpat_or (p1,p2,_) -> filter_rec [(p1::ps) ;(p2::ps)]@rem
                 | _ -> assert false
             end
         end
@@ -174,13 +174,25 @@ let ctx_matcher p =
           p,rem
       | Tpat_any -> p,rem
       | _ -> raise NoMatch)
-(*| Tpat_array omegas ->
+  | Tpat_variant (lab,Some omega,_) ->
+      (fun q rem -> match q.pat_desc with
+      | Tpat_variant (lab',Some arg,_) when lab=lab' ->
+          p,arg::rem
+      | Tpat_any -> p,omega::rem
+      | _ -> raise NoMatch)
+  | Tpat_variant (lab,None,_) ->
+      (fun q rem -> match q.pat_desc with
+      | Tpat_variant (lab',None,_) when lab=lab' ->
+          p,rem
+      | Tpat_any -> p,rem
+      | _ -> raise NoMatch)
+  | Tpat_array omegas ->
       let len = List.length omegas in
       (fun q rem -> match q.pat_desc with
       | Tpat_array args when List.length args=len ->
           p,args @ rem
       | Tpat_any -> p, omegas @ rem
-      | _ -> raise NoMatch) *)
+      | _ -> raise NoMatch)
   | Tpat_tuple omegas ->
       (fun q rem -> match q.pat_desc with
       | Tpat_tuple args -> p,args @ rem
@@ -191,10 +203,10 @@ let ctx_matcher p =
           let l' = all_record_args l' in
           p, List.fold_right (fun (_,p) r -> p::r) l' rem
       | _ -> p,List.fold_right (fun (_,p) r -> p::r) l rem)
-(*| Tpat_lazy omega ->
+  | Tpat_lazy omega ->
       (fun q rem -> match q.pat_desc with
       | Tpat_lazy arg -> p, (arg::rem)
-      | _          -> p, (omega::rem)) *)
+      | _          -> p, (omega::rem))
  | _ -> fatal_error "Matching.ctx_matcher"
 
 
@@ -368,7 +380,7 @@ let pretty_cases cases =
     (fun ((ps),l) ->
       List.iter
         (fun p ->
-          Parmatch.top_pretty Format.str_formatter p ;
+          Optparmatch.top_pretty Format.str_formatter p ;
           prerr_string " " ;
           prerr_string (Format.flush_str_formatter ()))
         ps ;
@@ -477,7 +489,7 @@ let up_ok (ps,act_p) l =
   List.for_all
     (fun (qs,act_q) ->
       up_ok_action act_p act_q ||
-      not (Parmatch.compats ps qs))
+      not (Optparmatch.compats ps qs))
     l
 
 
@@ -584,7 +596,7 @@ let default_compat p def =
       let qss =
         List.fold_right
           (fun qs r -> match qs with
-            | q::rem when Parmatch.compat p q -> rem::r
+            | q::rem when Optparmatch.compat p q -> rem::r
             | _ -> r)
           pss [] in
       match qss with
@@ -699,7 +711,7 @@ let is_or p = match p.pat_desc with
 
 (* Conditions for appending to the Or matrix *)
 let conda p q = not (compat p q)
-and condb act ps qs =  not (is_guarded act) && Parmatch.le_pats qs ps
+and condb act ps qs =  not (is_guarded act) && Optparmatch.le_pats qs ps
 
 let or_ok p ps l =
   List.for_all
@@ -967,7 +979,7 @@ and precompile_or argo cls ors args def k = match ors with
                  (extract_vars IdentSet.empty orp)
                  (pm_free_variables orpm)) in
           let or_num = next_raise_count () in
-          let new_patl = Parmatch.omega_list patl in
+          let new_patl = Optparmatch.omega_list patl in
 
           let mk_new_action vs =
             Lstaticraise
@@ -1129,7 +1141,7 @@ let pat_as_constr = function
   | _ -> fatal_error "Matching.pat_as_constr"
 
 
-let matcher_constr cstr = match cstr.cstr_arity with
+let matcher_constr cstr = match cstr.cs_arity with
 | 0 ->
     let rec matcher_rec q rem = match q.pat_desc with
     | Tpat_or (p1,p2,_) ->
@@ -1170,7 +1182,7 @@ pat_desc = Tpat_or (a1, a2, None)}::
     | Tpat_or (_,_,_) -> raise OrPat
     | Tpat_construct (cstr1, args)
         when cstr.cstr_tag = cstr1.cstr_tag -> args @ rem
-    | Tpat_any -> Parmatch.omegas cstr.cstr_arity @ rem
+    | Tpat_any -> Optparmatch.omegas cstr.cs_arity @ rem
     | _        -> raise NoMatch
 
 let make_constr_matching p def ctx = function
@@ -1180,9 +1192,9 @@ let make_constr_matching p def ctx = function
       let newargs =
         match cstr.cstr_tag with
           Cstr_constant _ | Cstr_block _ ->
-            make_field_args Alias arg 0 (cstr.cstr_arity - 1) argl
+            make_field_args Alias arg 0 (cstr.cs_arity - 1) argl
         | Cstr_exception _ ->
-            make_field_args Alias arg 1 cstr.cstr_arity argl in
+            make_field_args Alias arg 1 cstr.cs_arity argl in
       {pm=
         {cases = []; args = newargs;
           default = make_default (matcher_constr cstr) def} ;
@@ -1238,12 +1250,17 @@ let make_variant_matching_nonconst p lab def ctx = function
         ctx=ctx ;
         pat = normalize_pat p}
 
-let get_key_variant p = match p.pat_desc with
+let get_key_variant p = assert false
+(*
+match p.pat_desc with
 | Tpat_variant(lab, Some _ , _) ->  Cstr_block (Btype.hash_variant lab)
 | Tpat_variant(lab, None , _) -> Cstr_constant (Btype.hash_variant lab)
 |  _ -> assert false
+*)
 
 let divide_variant row ctx {cases = cl; args = al; default=def} =
+assert false
+(*
   let row = Btype.row_repr row in
   let rec divide = function
       ({pat_desc = Tpat_variant(lab, pato, _)} as p:: patl, action) :: rem ->
@@ -1265,6 +1282,7 @@ let divide_variant row ctx {cases = cl; args = al; default=def} =
     | cl -> []
   in
   divide cl
+*)
 
 (*
   Three ``no-test'' cases
@@ -1309,6 +1327,8 @@ let prim_obj_tag =
    prim_native_float = false}
 
 let get_mod_field modname field =
+  assert false
+(*
   lazy (
     try
       let mod_ident = Ident.create_persistent modname in
@@ -1322,9 +1342,13 @@ let get_mod_field modname field =
       Lprim(Pfield p, [Lprim(Pgetglobal mod_ident, [])])
     with Not_found -> fatal_error ("Module "^modname^" unavailable.")
   )
+*)
 
 let code_force_lazy_block =
+  assert false
+(*
   get_mod_field "CamlinternalLazy" "force_lazy_block"
+*)
 ;;
 
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
@@ -1491,7 +1515,7 @@ let get_args_array p rem = match p with
 let matcher_array len p rem = match p.pat_desc with
 | Tpat_or (_,_,_) -> raise OrPat
 | Tpat_array args when List.length args=len -> args @ rem
-| Tpat_any -> Parmatch.omegas len @ rem
+| Tpat_any -> Optparmatch.omegas len @ rem
 | _ -> raise NoMatch
 
 let make_array_matching kind p def ctx = function
@@ -2372,7 +2396,7 @@ let arg_to_var arg cls = match arg with
   The main compilation function.
    Input:
       repr=used for inserting debug events
-      partial=exhaustiveness information from Parmatch
+      partial=exhaustiveness information from Optparmatch
       ctx=a context
       m=a pattern matching
 

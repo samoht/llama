@@ -1,18 +1,6 @@
-type t = Ident.t list
+module S = Set.Make(struct
+                      type t = Ident.t
+                      let compare = compare
+                    end)
 
-let empty = []
-
-let add x l =
-  if List.exists (Ident.same x) l then l else x :: l
-
-let remove x l =
-  List.filter (fun y -> not (Ident.same x y)) l
-
-let mem x l =
-  List.exists (Ident.same x) l
-
-let fold = List.fold_right
-
-let cardinal = List.length
-
-let elements l = l
+include S
