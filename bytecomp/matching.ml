@@ -156,13 +156,11 @@ let rec simplify_cases args cls = match args with
       | [] -> []
       | ((pat :: patl, action) as cl) :: rem ->
           begin match pat.pat_desc with
-(*
           | Tpat_var id ->
               (omega :: patl, bind Strict (Ident.of_value id) arg action) ::
               simplify rem
           | Tpat_any ->
               cl :: simplify rem
-*)
           | Tpat_alias(p, id) ->
               simplify ((p :: patl, bind Strict (Ident.of_value id) arg action) :: rem)
 (*
