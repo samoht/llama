@@ -24,9 +24,8 @@ let prim_string_notequal =
           prim_arity = 2; prim_alloc = false;
           prim_native_name = ""; prim_native_float = false}
 
-let lcond (arg, const_lambda_list) =
+let lcond (arg, const_lambda_list) fail =
   let cst = fst (List.hd const_lambda_list) in
-  let fail = None in
   let lambda1 =
     match cst with
     | Const_int _ ->
@@ -455,7 +454,7 @@ let rec conquer_matching =
           let constants, vars = divide_constant_matching matching in
             let condlist1, _ = conquer_divided_matching constants
             and lambda2, total2 = conquer_matching vars in
-              (lstatichandle(lcond(path, condlist1), lambda2), total2)
+              (lcond (path, condlist1) (Some lambda2), total2)
       | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
           conquer_matching (divide_record_matching (Get.label lbl).lbl_parent matching)
       | _ ->
