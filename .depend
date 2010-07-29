@@ -460,8 +460,8 @@ bytecomp/emitcode.cmx: bytecomp/translmod.cmx typing/primitive.cmx \
     bytecomp/instruct.cmx typing/env.cmx utils/config.cmx \
     bytecomp/cmo_format.cmi utils/clflags.cmx parsing/asttypes.cmi \
     bytecomp/emitcode.cmi
-bytecomp/ident.cmo: typing/types.cmx
-bytecomp/ident.cmx: typing/types.cmx
+bytecomp/ident.cmo: typing/types.cmx utils/tbl.cmi
+bytecomp/ident.cmx: typing/types.cmx utils/tbl.cmx
 bytecomp/identSet.cmo: bytecomp/ident.cmx
 bytecomp/identSet.cmx: bytecomp/ident.cmx
 bytecomp/instruct.cmo: typing/types.cmx parsing/location.cmi \
@@ -572,18 +572,18 @@ driver/optmain.cmi:
 driver/pparse.cmi:
 driver/compile.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/typemod.cmx typing/typedtree.cmi bytecomp/translmod.cmi \
-    typing/printtyp.cmx bytecomp/printlambda.cmi bytecomp/printinstr.cmi \
-    parsing/printast.cmi driver/pparse.cmi parsing/parse.cmi utils/misc.cmi \
-    parsing/location.cmi typing/env.cmi bytecomp/emitcode.cmi \
-    utils/config.cmi utils/clflags.cmi utils/ccomp.cmi bytecomp/bytegen.cmi \
-    driver/compile.cmi
+    bytecomp/simplif.cmi typing/printtyp.cmx bytecomp/printlambda.cmi \
+    bytecomp/printinstr.cmi parsing/printast.cmi driver/pparse.cmi \
+    parsing/parse.cmi utils/misc.cmi parsing/location.cmi typing/env.cmi \
+    bytecomp/emitcode.cmi utils/config.cmi utils/clflags.cmi utils/ccomp.cmi \
+    bytecomp/bytegen.cmi driver/compile.cmi
 driver/compile.cmx: utils/warnings.cmx typing/unused_var.cmx \
     typing/typemod.cmx typing/typedtree.cmi bytecomp/translmod.cmx \
-    typing/printtyp.cmx bytecomp/printlambda.cmx bytecomp/printinstr.cmx \
-    parsing/printast.cmx driver/pparse.cmx parsing/parse.cmx utils/misc.cmx \
-    parsing/location.cmx typing/env.cmx bytecomp/emitcode.cmx \
-    utils/config.cmx utils/clflags.cmx utils/ccomp.cmx bytecomp/bytegen.cmx \
-    driver/compile.cmi
+    bytecomp/simplif.cmx typing/printtyp.cmx bytecomp/printlambda.cmx \
+    bytecomp/printinstr.cmx parsing/printast.cmx driver/pparse.cmx \
+    parsing/parse.cmx utils/misc.cmx parsing/location.cmx typing/env.cmx \
+    bytecomp/emitcode.cmx utils/config.cmx utils/clflags.cmx utils/ccomp.cmx \
+    bytecomp/bytegen.cmx driver/compile.cmi
 driver/errors.cmo: utils/warnings.cmi bytecomp/translmod.cmi \
     bytecomp/translcore.cmi parsing/syntaxerr.cmi bytecomp/symtable.cmi \
     driver/pparse.cmi parsing/location.cmi parsing/lexer.cmx \

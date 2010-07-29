@@ -130,8 +130,8 @@ let implementation ppf sourcefile outputprefix =
       ++ Typemod.type_implementation sourcefile outputprefix modulename env
       ++ Translmod.transl_implementation modulename
       ++ print_if ppf Clflags.dump_rawlambda Printlambda.lambda
-(*      ++ Simplif.simplify_lambda
-      ++ print_if ppf Clflags.dump_lambda Printlambda.lambda *)
+      ++ Simplif.simplify_lambda
+      ++ print_if ppf Clflags.dump_lambda Printlambda.lambda
       ++ Bytegen.compile_implementation modulename
       ++ print_if ppf Clflags.dump_instr Printinstr.instrlist
       ++ Emitcode.to_file oc modulename;
