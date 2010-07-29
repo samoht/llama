@@ -68,8 +68,6 @@ let make_cached_module sg crcs =
             end
         | Sig_exception cs ->
             constructors := Tbl.add cs.cs_name cs !constructors;
-
-            if cs.cs_name = "Error" then print_endline "adding Error at some position...";
             exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
             incr pos
         | Sig_type tcs ->

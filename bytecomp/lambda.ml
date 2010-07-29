@@ -350,8 +350,10 @@ let transl_exception cs =
       | Types.Cstr_exception ({Types.id_module=m}, _) -> m
       | _ -> assert false
   in
-  if m = Types.Module_builtin || m = Env.get_current_module () then
+  if m = Types.Module_builtin then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
+  else if m = Env.get_current_module () then
+    Lvar (Ident.of_exception cs)
   else
     let pos = try Env.get_exception_position cs with
         Not_found ->

@@ -88,7 +88,7 @@ let rec eliminate_ref id = function
 let simplify_exits lam =
 
   (* Count occurrences of (exit n ...) statements *)
-  let exits : (int, int ref) Hashtbl.t = Hashtbl.create 17 in
+  let exits = Hashtbl.create 17 in
 
   let count_exit i =
     try
@@ -181,7 +181,7 @@ let simplify_exits lam =
      occurs only when ``handler'' is a variable.)
   *)
 
-  let subst : (int, Ident.t list * lambda) Hashtbl.t = Hashtbl.create 17 in
+  let subst = Hashtbl.create 17 in
 
   let rec simplif = function
   | (Lvar _|Lconst _) as l -> l
@@ -212,7 +212,7 @@ let simplify_exits lam =
   | Lstaticraise (i,ls) ->
       let ls = List.map simplif ls in
       begin try
-        let xs,handler = Hashtbl.find subst i in
+        let xs,handler =  Hashtbl.find subst i in
         let ys = List.map Ident.rename xs in
         let env =
           List.fold_right2
@@ -261,17 +261,17 @@ let simplify_exits lam =
 let simplify_lets lam =
 
   (* First pass: count the occurrences of all identifiers *)
-  let occ = ref Ident.empty in
+  let occ = Hashtbl.create 83 in
   let count_var v =
     try
-      !(Ident.find_same v !occ)
+      !(Hashtbl.find occ v)
     with Not_found ->
       0
   and incr_var v =
     try
-      incr(Ident.find_same v !occ)
+      incr(Hashtbl.find occ v)
     with Not_found ->
-      occ := Ident.add v (ref 1) !occ in
+      Hashtbl.add occ v (ref 1) in
 
   let rec count = function
   | Lvar v -> incr_var v
@@ -284,9 +284,9 @@ let simplify_lets lam =
       count l2;
       let vc = count_var v in
       begin try
-        let r = Ident.find_same w !occ in r := !r + vc
+        let r = Hashtbl.find occ w in r := !r + vc
       with Not_found ->
-        occ := Ident.add w (ref vc) !occ
+        Hashtbl.add occ w (ref vc)
       end
   | Llet(str, v, l1, l2) ->
       count l2;
@@ -336,12 +336,12 @@ let simplify_lets lam =
   (* Second pass: remove Lalias bindings of unused variables,
      and substitute the bindings of variables used exactly once. *)
 
-  let subst = ref Ident.empty in
+  let subst = Hashtbl.create 83 in
 
   let rec simplif = function
     Lvar v as l ->
       begin try
-        Ident.find_same v !subst
+        Hashtbl.find subst v
       with Not_found ->
         l
       end
@@ -349,7 +349,7 @@ let simplify_lets lam =
   | Lapply(l1, ll, loc) -> Lapply(simplif l1, List.map simplif ll, loc)
   | Lfunction(kind, params, l) -> Lfunction(kind, params, simplif l)
   | Llet(str, v, Lvar w, l2) when not !Clflags.debug ->
-      subst := Ident.add v (simplif (Lvar w)) !subst;
+      Hashtbl.add subst v (simplif (Lvar w));
       simplif l2
   | Llet(Strict, v, Lprim(Pmakeblock(0, Mutable), [linit]), lbody)
     when not !Clflags.debug ->
@@ -364,7 +364,7 @@ let simplify_lets lam =
       begin match count_var v with
         0 -> simplif l2
       | 1 when not !Clflags.debug ->
-          subst := Ident.add v (simplif l1) !subst; simplif l2
+             Hashtbl.add subst v (simplif l1); simplif l2
       | n -> Llet(Alias, v, simplif l1, simplif l2)
       end
   | Llet(StrictOpt, v, l1, l2) ->
