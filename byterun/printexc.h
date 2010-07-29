@@ -4,20 +4,24 @@
 /*                                                                     */
 /*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
 /*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Copyright 2001 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: printexc.h 6045 2004-01-01 16:42:43Z doligez $ */
 
-#include <stdio.h>
+#ifndef CAML_PRINTEXC_H
+#define CAML_PRINTEXC_H
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+
+#include "misc.h"
+#include "mlvalues.h"
+
+CAMLextern char * caml_format_exception (value);
+void caml_fatal_uncaught_exception (value) Noreturn;
+
+
+#endif /* CAML_PRINTEXC_H */

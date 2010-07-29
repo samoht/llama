@@ -2,22 +2,25 @@
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
+/*            Damien Doligez, projet Para, INRIA Rocquencourt          */
 /*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Copyright 1997 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: weak.h 6045 2004-01-01 16:42:43Z doligez $ */
 
-#include <stdio.h>
+/* Operations on weak arrays */
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+#ifndef CAML_WEAK_H
+#define CAML_WEAK_H
+
+#include "mlvalues.h"
+
+extern value caml_weak_list_head;
+extern value caml_weak_none;
+
+#endif /* CAML_WEAK_H */

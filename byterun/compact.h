@@ -2,22 +2,26 @@
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
+/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
 /*                                                                     */
 /*  Copyright 1996 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: compact.h 6044 2003-12-31 14:20:40Z doligez $ */
 
-#include <stdio.h>
+#ifndef CAML_COMPACT_H
+#define CAML_COMPACT_H
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+
+#include "config.h"
+#include "misc.h"
+
+extern void caml_compact_heap (void);
+extern void caml_compact_heap_maybe (void);
+
+
+#endif /* CAML_COMPACT_H */

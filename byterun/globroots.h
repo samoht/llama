@@ -2,22 +2,26 @@
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
+/*           Xavier Leroy, projet Cristal, INRIA Rocquencourt          */
 /*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Copyright 2001 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: globroots.h 8828 2008-03-10 19:56:39Z xleroy $ */
 
-#include <stdio.h>
+/* Registration of global memory roots */
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+#ifndef CAML_GLOBROOTS_H
+#define CAML_GLOBROOTS_H
+
+#include "mlvalues.h"
+#include "roots.h"
+
+void caml_scan_global_roots(scanning_action f);
+void caml_scan_global_young_roots(scanning_action f);
+
+#endif /* CAML_GLOBROOTS_H */

@@ -7,17 +7,24 @@
 /*  Copyright 1996 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: sys.h 7919 2007-02-25 12:38:36Z xleroy $ */
 
-#include <stdio.h>
+#ifndef CAML_SYS_H
+#define CAML_SYS_H
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+#include "misc.h"
+
+#define NO_ARG Val_int(0)
+
+CAMLextern void caml_sys_error (value);
+CAMLextern void caml_sys_io_error (value);
+extern void caml_sys_init (char * exe_name, char ** argv);
+CAMLextern value caml_sys_exit (value);
+
+extern char * caml_exe_name;
+
+#endif /* CAML_SYS_H */

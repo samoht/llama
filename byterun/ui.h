@@ -2,22 +2,27 @@
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
+/*            Damien Doligez, projet Para, INRIA Rocquencourt          */
 /*                                                                     */
 /*  Copyright 1996 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: sizes.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: ui.h 6021 2003-12-15 18:10:51Z doligez $ */
 
-#include <stdio.h>
+/* Function declarations for non-Unix user interfaces */
 
-int main(int argc, char **argv)
-{
-  printf("%d %d %d %d\n",
-         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
-  return 0;
-}
+#ifndef CAML_UI_H
+#define CAML_UI_H
+
+#include "config.h"
+
+void ui_exit (int return_code);
+int ui_read (int file_desc, char *buf, unsigned int length);
+int ui_write (int file_desc, char *buf, unsigned int length);
+void ui_print_stderr (char *format, void *arg);
+
+#endif /* CAML_UI_H */

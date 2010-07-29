@@ -90,10 +90,10 @@ echo "MANEXT=$manext" >> Makefile
 
 export cc
 
-# Check the sizes of data types
+# Check the sizes of data types (old version)
 
-echo "Checking the sizes of integers and pointers..."
-set `sh ./runtest sizes.c`
+echo "Checking the sizes of integers and pointers...(old version)"
+set `sh ./runtest oldsizes.c`
 case "$1,$2,$3" in
   4,4,4) echo "OK, this is a regular 32 bit architecture.";;
   4,8,8) echo "Wow! A 64 bit architecture!"
@@ -116,9 +116,81 @@ case "$1,$2,$3" in
          exit 2;;
 esac
 
+# Check the sizes of data types (new version)
+
+echo "Checking the sizes of integers and pointers...(new version)"
+set `sh ./runtest sizes.c`
+case "$2,$3" in
+  4,4) echo "OK, this is a regular 32 bit architecture."
+       echo "#undef ARCH_SIXTYFOUR" >> m.h
+       arch64=false;;
+  *,8) echo "Wow! A 64 bit architecture!"
+       echo "#define ARCH_SIXTYFOUR" >> m.h
+       arch64=true;;
+  *,*) echo "This architecture seems to be neither 32 bits nor 64 bits."
+       echo "Objective Caml won't run on this architecture."
+       exit 2;;
+    *) echo "Unable to compile the test program."
+       echo "Make sure the C compiler $cc is properly installed."
+       exit 2;;
+esac
+if test $1 != 4 && test $2 != 4 && test $4 != 4; then
+  echo "Sorry, we can't find a 32-bit integer type"
+  echo "(sizeof(short) = $4, sizeof(int) = $1, sizeof(long) = $2)"
+  echo "Objective Caml won't run on this architecture."
+  exit 2
+fi
+
+echo "#define SIZEOF_INT $1" >> m.h
+echo "#define SIZEOF_LONG $2" >> m.h
+echo "#define SIZEOF_PTR $3" >> m.h
+echo "#define SIZEOF_SHORT $4" >> m.h
+
+if test $2 = 8; then
+     echo "#define ARCH_INT64_TYPE long" >> m.h
+     echo "#define ARCH_UINT64_TYPE unsigned long" >> m.h
+     echo '#define ARCH_INT64_PRINTF_FORMAT "l"' >> m.h
+     int64_native=true
+else
+  sh ./runtest longlong.c
+  case $? in
+  0) echo "64-bit \"long long\" integer type found (printf with \"%ll\")."
+     echo "#define ARCH_INT64_TYPE long long" >> m.h
+     echo "#define ARCH_UINT64_TYPE unsigned long long" >> m.h
+     echo '#define ARCH_INT64_PRINTF_FORMAT "ll"' >> m.h
+     int64_native=true;;
+  1) echo "64-bit \"long long\" integer type found (printf with \"%q\")."
+     echo "#define ARCH_INT64_TYPE long long" >> m.h
+     echo "#define ARCH_UINT64_TYPE unsigned long long" >> m.h
+     echo '#define ARCH_INT64_PRINTF_FORMAT "q"' >> m.h
+     int64_native=true;;
+  2) echo "64-bit \"long long\" integer type found (but no printf)."
+     echo "#define ARCH_INT64_TYPE long long" >> m.h
+     echo "#define ARCH_UINT64_TYPE unsigned long long" >> m.h
+     echo '#undef ARCH_INT64_PRINTF_FORMAT' >> m.h
+     int64_native=true;;
+  *) echo "No suitable 64-bit integer type found, will use software emulation."
+     echo "#undef ARCH_INT64_TYPE" >> m.h
+     echo "#undef ARCH_UINT64_TYPE" >> m.h
+     echo '#undef ARCH_INT64_PRINTF_FORMAT' >> m.h
+     int64_native=false;;
+  esac
+fi
+
+if test $3 = 8 && test $int64_native = false; then
+  echo "This architecture has 64-bit pointers but no 64-bit integer type."
+  echo "Objective Caml won't run on this architecture."
+  exit 2
+fi
+
 # "unix" is not always defined by cpp, so add it here just in case
 
 (echo "#ifndef unix"; echo "#define unix"; echo "#endif") >> s.h
+
+# xxx and similar for ocaml
+
+ostype=Unix
+echo "#define OCAML_OS_TYPE \"$ostype\"" >> s.h
 
 # Are chars signed?
 
@@ -153,15 +225,18 @@ esac
 sh ./runtest endian.c
 case $? in
   0) echo "This is a big-endian architecture."
-     echo "#define CAML_BIG_ENDIAN" >> m.h;;
+     echo "#define CAML_BIG_ENDIAN" >> m.h
+     echo "#define ARCH_BIG_ENDIAN" >> m.h;;
   1) echo "This is a little-endian architecture."
-     echo "#undef CAML_BIG_ENDIAN" >> m.h;;
+     echo "#undef CAML_BIG_ENDIAN" >> m.h
+     echo "#undef ARCH_BIG_ENDIAN" >> m.h;;
   2) echo "This architecture seems to be neither big endian nor little endian."
      echo "Llama won't run on this architecture."
      exit 2;;
   *) echo "Something went wrong during endianness determination."
      echo "You'll have to figure out endianness yourself"
-     echo "(option CAML_BIG_ENDIAN in m.h).";;
+     echo "(option CAML_BIG_ENDIAN in m.h)."
+     echo "(option ARCH_BIG_ENDIAN in m.h).";;
 esac
 
 # Determine alignment constraints
