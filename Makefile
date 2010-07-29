@@ -65,6 +65,10 @@ CL_TOPLEVEL=\
   cl_toplevel/load_phr.cmx cl_toplevel/do_phr.cmx cl_toplevel/toplevel.cmx \
   cl_toplevel/cl_topmain.cmx runtime/libcaml.a cl_toplevel/llama.o
 
+TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
+  driver/main_args.cmo toplevel/genprintval.cmo toplevel/toploop.cmo \
+  toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
+
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
@@ -79,6 +83,9 @@ testprog: testprog.ml runtime_dir cl_stdlib_dir
 	@ echo "The Llama system is up and running."
 
 llama: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
+	$(OCAMLOPT) $(FLAGS) -o $@ $^
+
+llama-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 llamac: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
