@@ -39,18 +39,18 @@
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 
-char * caml_decompose_path(struct ext_table * tbl, char * path)
+char * llama_decompose_path(struct ext_table * tbl, char * path)
 {
   char * p, * q;
   int n;
 
   if (path == NULL) return NULL;
-  p = caml_stat_alloc(strlen(path) + 1);
+  p = llama_stat_alloc(strlen(path) + 1);
   strcpy(p, path);
   q = p;
   while (1) {
     for (n = 0; q[n] != 0 && q[n] != ';'; n++) /*nothing*/;
-    caml_ext_table_add(tbl, q);
+    llama_ext_table_add(tbl, q);
     q = q + n;
     if (*q == 0) break;
     *q = 0;
@@ -59,7 +59,7 @@ char * caml_decompose_path(struct ext_table * tbl, char * path)
   return p;
 }
 
-char * caml_search_in_path(struct ext_table * path, char * name)
+char * llama_search_in_path(struct ext_table * path, char * name)
 {
   char * p, * fullname;
   int i;
@@ -69,23 +69,23 @@ char * caml_search_in_path(struct ext_table * path, char * name)
     if (*p == '/' || *p == '\\') goto not_found;
   }
   for (i = 0; i < path->size; i++) {
-    fullname = caml_stat_alloc(strlen((char *)(path->contents[i])) +
+    fullname = llama_stat_alloc(strlen((char *)(path->contents[i])) +
                                strlen(name) + 2);
     strcpy(fullname, (char *)(path->contents[i]));
     strcat(fullname, "\\");
     strcat(fullname, name);
-    caml_gc_message(0x100, "Searching %s\n", (uintnat) fullname);
+    llama_gc_message(0x100, "Searching %s\n", (uintnat) fullname);
     if (stat(fullname, &st) == 0 && S_ISREG(st.st_mode)) return fullname;
-    caml_stat_free(fullname);
+    llama_stat_free(fullname);
   }
  not_found:
-  caml_gc_message(0x100, "%s not found in search path\n", (uintnat) name);
-  fullname = caml_stat_alloc(strlen(name) + 1);
+  llama_gc_message(0x100, "%s not found in search path\n", (uintnat) name);
+  fullname = llama_stat_alloc(strlen(name) + 1);
   strcpy(fullname, name);
   return fullname;
 }
 
-CAMLexport char * caml_search_exe_in_path(char * name)
+CAMLexport char * llama_search_exe_in_path(char * name)
 {
   char * fullname, * filepart;
   DWORD pathlen, retcode;
@@ -101,7 +101,7 @@ CAMLexport char * caml_search_exe_in_path(char * name)
                          fullname,
                          &filepart);
     if (retcode == 0) {
-      caml_gc_message(0x100, "%s not found in search path\n",
+      llama_gc_message(0x100, "%s not found in search path\n",
                       (uintnat) name);
       strcpy(fullname, name);
       break;
@@ -113,46 +113,46 @@ CAMLexport char * caml_search_exe_in_path(char * name)
   return fullname;
 }
 
-char * caml_search_dll_in_path(struct ext_table * path, char * name)
+char * llama_search_dll_in_path(struct ext_table * path, char * name)
 {
-  char * dllname = caml_stat_alloc(strlen(name) + 5);
+  char * dllname = llama_stat_alloc(strlen(name) + 5);
   char * res;
   strcpy(dllname, name);
   strcat(dllname, ".dll");
-  res = caml_search_in_path(path, dllname);
-  caml_stat_free(dllname);
+  res = llama_search_in_path(path, dllname);
+  llama_stat_free(dllname);
   return res;
 }
 
-void * caml_dlopen(char * libname, int for_execution, int global)
+void * llama_dlopen(char * libname, int for_execution, int global)
 {
   void *handle;
   int flags = (global ? FLEXDLL_RTLD_GLOBAL : 0);
   if (!for_execution) flags |= FLEXDLL_RTLD_NOEXEC;
   handle = flexdll_dlopen(libname, flags);
-  if ((handle != NULL) && ((caml_verb_gc & 0x100) != 0)) {
+  if ((handle != NULL) && ((llama_verb_gc & 0x100) != 0)) {
     flexdll_dump_exports(handle);
     fflush(stdout);
   }
   return handle;
 }
 
-void caml_dlclose(void * handle)
+void llama_dlclose(void * handle)
 {
   flexdll_dlclose(handle);
 }
 
-void * caml_dlsym(void * handle, char * name)
+void * llama_dlsym(void * handle, char * name)
 {
   return flexdll_dlsym(handle, name);
 }
 
-void * caml_globalsym(char * name)
+void * llama_globalsym(char * name)
 {
   return flexdll_dlsym(flexdll_dlopen(NULL,0), name);
 }
 
-char * caml_dlerror(void)
+char * llama_dlerror(void)
 {
   return flexdll_dlerror();
 }
@@ -177,12 +177,12 @@ static BOOL WINAPI ctrl_handler(DWORD event)
   /* Win32 doesn't like it when we do a longjmp() at this point
      (it looks like we're running in a different thread than
      the main program!).  So, just record the signal. */
-  caml_record_signal(SIGINT);
+  llama_record_signal(SIGINT);
   /* We have handled the event */
   return TRUE;
 }
 
-sighandler caml_win32_signal(int sig, sighandler action)
+sighandler llama_win32_signal(int sig, sighandler action)
 {
   sighandler oldaction;
 
@@ -322,7 +322,7 @@ static void expand_diversion(char * filename)
   }
 }
 
-CAMLexport void caml_expand_command_line(int * argcp, char *** argvp)
+CAMLexport void llama_expand_command_line(int * argcp, char *** argvp)
 {
   int i;
   argc = 0;
@@ -339,7 +339,7 @@ CAMLexport void caml_expand_command_line(int * argcp, char *** argvp)
    the directory named [dirname].  No entries are added for [.] and [..].
    Return 0 on success, -1 on error; set errno in the case of error. */
 
-int caml_read_directory(char * dirname, struct ext_table * contents)
+int llama_read_directory(char * dirname, struct ext_table * contents)
 {
   int dirnamelen;
   char * template;
@@ -352,7 +352,7 @@ int caml_read_directory(char * dirname, struct ext_table * contents)
   char * p;
 
   dirnamelen = strlen(dirname);
-  template = caml_stat_alloc(dirnamelen + 5);
+  template = llama_stat_alloc(dirnamelen + 5);
   strcpy(template, dirname);
   switch (dirname[dirnamelen - 1]) {
   case '/': case '\\': case ':':
@@ -361,13 +361,13 @@ int caml_read_directory(char * dirname, struct ext_table * contents)
     strcat(template, "\\*.*");
   }
   h = _findfirst(template, &fileinfo);
-  caml_stat_free(template);
+  llama_stat_free(template);
   if (h == -1) return errno == ENOENT ? 0 : -1;
   do {
     if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0) {
-      p = caml_stat_alloc(strlen(fileinfo.name) + 1);
+      p = llama_stat_alloc(strlen(fileinfo.name) + 1);
       strcpy(p, fileinfo.name);
-      caml_ext_table_add(contents, p);
+      llama_ext_table_add(contents, p);
     }
   } while (_findnext(h, &fileinfo) == 0);
   _findclose(h);
@@ -378,7 +378,7 @@ int caml_read_directory(char * dirname, struct ext_table * contents)
 
 /* Set up a new thread for control-C emulation and termination */
 
-void caml_signal_thread(void * lpParam)
+void llama_signal_thread(void * lpParam)
 {
   char *endptr;
   HANDLE h;
@@ -390,10 +390,10 @@ void caml_signal_thread(void * lpParam)
     char iobuf[2];
     /* This shall always return a single character */
     ret = ReadFile(h, iobuf, 1, &numread, NULL);
-    if (!ret || numread != 1) caml_sys_exit(Val_int(2));
+    if (!ret || numread != 1) llama_sys_exit(Val_int(2));
     switch (iobuf[0]) {
     case 'C':
-      caml_record_signal(SIGINT);
+      llama_record_signal(SIGINT);
       break;
     case 'T':
       raise(SIGTERM);
@@ -432,9 +432,9 @@ void caml_signal_thread(void * lpParam)
  * since it determines the stack pointer by calling alloca(): it would
  * try to protect the alternate stack.
  *
- * Finally, we call caml_raise_stack_overflow; it will either call
- * caml_raise_exception which switches back to the normal stack, or
- * call caml_fatal_uncaught_exception which terminates the program
+ * Finally, we call llama_raise_stack_overflow; it will either call
+ * llama_raise_exception which switches back to the normal stack, or
+ * call llama_fatal_uncaught_exception which terminates the program
  * quickly.
  *
  * NB: The PAGE_GUARD protection is only available on WinNT, not
@@ -446,7 +446,7 @@ void caml_signal_thread(void * lpParam)
 
 static uintnat win32_alt_stack[0x80];
 
-static void caml_reset_stack (void *faulting_address)
+static void llama_reset_stack (void *faulting_address)
 {
   OSVERSIONINFO osi;
   SYSTEM_INFO si;
@@ -480,19 +480,19 @@ static void caml_reset_stack (void *faulting_address)
   }
 
  failed:
-  caml_raise_stack_overflow();
+  llama_raise_stack_overflow();
 }
 
-extern char * caml_code_area_start, * caml_code_area_end;
-CAMLextern int caml_is_in_code(void *);
+extern char * llama_code_area_start, * llama_code_area_end;
+CAMLextern int llama_is_in_code(void *);
 
 #define Is_in_code_area(pc) \
- ( ((char *)(pc) >= caml_code_area_start && \
-    (char *)(pc) <= caml_code_area_end)     \
+ ( ((char *)(pc) >= llama_code_area_start && \
+    (char *)(pc) <= llama_code_area_end)     \
    || (Classify_addr(pc) & In_code_area) )
 
 static LONG CALLBACK
-    caml_UnhandledExceptionFilter (EXCEPTION_POINTERS* exn_info)
+    llama_UnhandledExceptionFilter (EXCEPTION_POINTERS* exn_info)
 {
   DWORD code   = exn_info->ExceptionRecord->ExceptionCode;
   CONTEXT *ctx = exn_info->ContextRecord;
@@ -507,11 +507,11 @@ static LONG CALLBACK
       /* grab the address that caused the fault */
       faulting_address = exn_info->ExceptionRecord->ExceptionInformation[1];
 
-      /* call caml_reset_stack(faulting_address) using the alternate stack */
+      /* call llama_reset_stack(faulting_address) using the alternate stack */
       alt_esp  = win32_alt_stack + sizeof(win32_alt_stack) / sizeof(uintnat);
       *--alt_esp = faulting_address;
       *ctx_sp = (uintnat) (alt_esp - 1);
-      *ctx_ip = (uintnat) &caml_reset_stack;
+      *ctx_ip = (uintnat) &llama_reset_stack;
 
       return EXCEPTION_CONTINUE_EXECUTION;
     }
@@ -519,16 +519,16 @@ static LONG CALLBACK
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void caml_win32_overflow_detection()
+void llama_win32_overflow_detection()
 {
-  SetUnhandledExceptionFilter (caml_UnhandledExceptionFilter);
+  SetUnhandledExceptionFilter (llama_UnhandledExceptionFilter);
 }
 
 #endif
 
 /* Seeding of pseudo-random number generators */
 
-intnat caml_win32_random_seed (void)
+intnat llama_win32_random_seed (void)
 {
   intnat seed;
   SYSTEMTIME t;

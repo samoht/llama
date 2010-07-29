@@ -23,29 +23,29 @@
 #include "mlvalues.h"
 
 /* <private> */
-CAMLextern intnat volatile caml_signals_are_pending;
-CAMLextern intnat volatile caml_pending_signals[];
-CAMLextern int volatile caml_something_to_do;
-extern int volatile caml_force_major_slice;
+CAMLextern intnat volatile llama_signals_are_pending;
+CAMLextern intnat volatile llama_pending_signals[];
+CAMLextern int volatile llama_something_to_do;
+extern int volatile llama_force_major_slice;
 /* </private> */
 
-CAMLextern void caml_enter_blocking_section (void);
-CAMLextern void caml_leave_blocking_section (void);
+CAMLextern void llama_enter_blocking_section (void);
+CAMLextern void llama_leave_blocking_section (void);
 
 /* <private> */
-void caml_urge_major_slice (void);
-CAMLextern int caml_convert_signal_number (int);
-CAMLextern int caml_rev_convert_signal_number (int);
-void caml_execute_signal(int signal_number, int in_signal_handler);
-void caml_record_signal(int signal_number);
-void caml_process_pending_signals(void);
-void caml_process_event(void);
-int caml_set_signal_action(int signo, int action);
+void llama_urge_major_slice (void);
+CAMLextern int llama_convert_signal_number (int);
+CAMLextern int llama_rev_convert_signal_number (int);
+void llama_execute_signal(int signal_number, int in_signal_handler);
+void llama_record_signal(int signal_number);
+void llama_process_pending_signals(void);
+void llama_process_event(void);
+int llama_set_signal_action(int signo, int action);
 
-CAMLextern void (*caml_enter_blocking_section_hook)(void);
-CAMLextern void (*caml_leave_blocking_section_hook)(void);
-CAMLextern int (*caml_try_leave_blocking_section_hook)(void);
-CAMLextern void (* volatile caml_async_action_hook)(void);
+CAMLextern void (*llama_enter_blocking_section_hook)(void);
+CAMLextern void (*llama_leave_blocking_section_hook)(void);
+CAMLextern int (*llama_try_leave_blocking_section_hook)(void);
+CAMLextern void (* volatile llama_async_action_hook)(void);
 /* </private> */
 
 #endif /* CAML_SIGNALS_H */

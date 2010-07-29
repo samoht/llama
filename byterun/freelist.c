@@ -31,7 +31,7 @@
 
 /* The free-list is kept sorted by increasing addresses.
    This makes the merging of adjacent free blocks possible.
-   (See [caml_fl_merge_block].)
+   (See [llama_fl_merge_block].)
 */
 
 typedef struct {
@@ -50,10 +50,10 @@ static struct {
 #define Fl_head ((char *) (&(sentinel.first_bp)))
 static char *fl_prev = Fl_head;  /* Current allocation pointer. */
 static char *fl_last = NULL;     /* Last block in the list.  Only valid
-                                 just after [caml_fl_allocate] returns NULL. */
-char *caml_fl_merge = Fl_head;   /* Current insertion pointer.  Managed
+                                 just after [llama_fl_allocate] returns NULL. */
+char *llama_fl_merge = Fl_head;   /* Current insertion pointer.  Managed
                                     jointly with [sweep_slice]. */
-asize_t caml_fl_cur_size = 0;    /* Number of words in the free list,
+asize_t llama_fl_cur_size = 0;    /* Number of words in the free list,
                                     including headers but not fragments. */
 
 #define FLP_MAX 1000
@@ -65,8 +65,8 @@ static char *beyond = NULL;
 
 #define Policy_next_fit 0
 #define Policy_first_fit 1
-uintnat caml_allocation_policy = Policy_next_fit;
-#define policy caml_allocation_policy
+uintnat llama_allocation_policy = Policy_next_fit;
+#define policy llama_allocation_policy
 
 #ifdef DEBUG
 static void fl_check (void)
@@ -91,19 +91,19 @@ static void fl_check (void)
         Assert (beyond == NULL || cur >= Next (beyond));
       }
     }
-    if (cur == caml_fl_merge) merge_found = 1;
+    if (cur == llama_fl_merge) merge_found = 1;
     prev = cur;
     cur = Next (prev);
   }
   if (policy == Policy_next_fit) Assert (prev_found || fl_prev == Fl_head);
   if (policy == Policy_first_fit) Assert (flp_found == flp_size);
-  Assert (merge_found || caml_fl_merge == Fl_head);
-  Assert (size_found == caml_fl_cur_size);
+  Assert (merge_found || llama_fl_merge == Fl_head);
+  Assert (size_found == llama_fl_cur_size);
 }
 
 #endif
 
-/* [allocate_block] is called by [caml_fl_allocate].  Given a suitable free
+/* [allocate_block] is called by [llama_fl_allocate].  Given a suitable free
    block and the desired size, it allocates a new block from the free
    block.  There are three cases:
    0. The free block has the desired size.  Detach the block from the
@@ -122,16 +122,16 @@ static char *allocate_block (mlsize_t wh_sz, int flpi, char *prev, char *cur)
   header_t h = Hd_bp (cur);
                                              Assert (Whsize_hd (h) >= wh_sz);
   if (Wosize_hd (h) < wh_sz + 1){                        /* Cases 0 and 1. */
-    caml_fl_cur_size -= Whsize_hd (h);
+    llama_fl_cur_size -= Whsize_hd (h);
     Next (prev) = Next (cur);
                     Assert (Is_in_heap (Next (prev)) || Next (prev) == NULL);
-    if (caml_fl_merge == cur) caml_fl_merge = prev;
+    if (llama_fl_merge == cur) llama_fl_merge = prev;
 #ifdef DEBUG
     fl_last = NULL;
 #endif
       /* In case 1, the following creates the empty block correctly.
          In case 0, it gives an invalid header to the block.  The function
-         calling [caml_fl_allocate] will overwrite it. */
+         calling [llama_fl_allocate] will overwrite it. */
     Hd_op (cur) = Make_header (0, 0, Caml_white);
     if (policy == Policy_first_fit){
       if (flpi + 1 < flp_size && flp[flpi + 1] == cur){
@@ -142,18 +142,18 @@ static char *allocate_block (mlsize_t wh_sz, int flpi, char *prev, char *cur)
       }
     }
   }else{                                                        /* Case 2. */
-    caml_fl_cur_size -= wh_sz;
+    llama_fl_cur_size -= wh_sz;
     Hd_op (cur) = Make_header (Wosize_hd (h) - wh_sz, 0, Caml_blue);
   }
   if (policy == Policy_next_fit) fl_prev = prev;
   return cur + Bosize_hd (h) - Bsize_wsize (wh_sz);
 }
 
-/* [caml_fl_allocate] does not set the header of the newly allocated block.
+/* [llama_fl_allocate] does not set the header of the newly allocated block.
    The calling function must do it before any GC function gets called.
-   [caml_fl_allocate] returns a head pointer.
+   [llama_fl_allocate] returns a head pointer.
 */
-char *caml_fl_allocate (mlsize_t wo_sz)
+char *llama_fl_allocate (mlsize_t wo_sz)
 {
   char *cur = NULL, *prev, *result;
   int i;
@@ -338,10 +338,10 @@ char *caml_fl_allocate (mlsize_t wo_sz)
 
 static char *last_fragment;
 
-void caml_fl_init_merge (void)
+void llama_fl_init_merge (void)
 {
   last_fragment = NULL;
-  caml_fl_merge = Fl_head;
+  llama_fl_merge = Fl_head;
 #ifdef DEBUG
   fl_check ();
 #endif
@@ -358,8 +358,8 @@ static void truncate_flp (char *changed)
   }
 }
 
-/* This is called by caml_compact_heap. */
-void caml_fl_reset (void)
+/* This is called by llama_compact_heap. */
+void llama_fl_reset (void)
 {
   Next (Fl_head) = NULL;
   switch (policy){
@@ -373,24 +373,24 @@ void caml_fl_reset (void)
     Assert (0);
     break;
   }
-  caml_fl_cur_size = 0;
-  caml_fl_init_merge ();
+  llama_fl_cur_size = 0;
+  llama_fl_init_merge ();
 }
 
-/* [caml_fl_merge_block] returns the head pointer of the next block after [bp],
+/* [llama_fl_merge_block] returns the head pointer of the next block after [bp],
    because merging blocks may change the size of [bp]. */
-char *caml_fl_merge_block (char *bp)
+char *llama_fl_merge_block (char *bp)
 {
   char *prev, *cur, *adj;
   header_t hd = Hd_bp (bp);
   mlsize_t prev_wosz;
 
-  caml_fl_cur_size += Whsize_hd (hd);
+  llama_fl_cur_size += Whsize_hd (hd);
 
 #ifdef DEBUG
-  caml_set_fields (bp, 0, Debug_free_major);
+  llama_set_fields (bp, 0, Debug_free_major);
 #endif
-  prev = caml_fl_merge;
+  prev = llama_fl_merge;
   cur = Next (prev);
   /* The sweep code makes sure that this is the right place to insert
      this block: */
@@ -406,7 +406,7 @@ char *caml_fl_merge_block (char *bp)
       hd = Make_header (bp_whsz, 0, Caml_white);
       bp = last_fragment;
       Hd_bp (bp) = hd;
-      caml_fl_cur_size += Whsize_wosize (0);
+      llama_fl_cur_size += Whsize_wosize (0);
     }
   }
 
@@ -440,25 +440,25 @@ char *caml_fl_merge_block (char *bp)
 #ifdef DEBUG
     Hd_bp (bp) = Debug_free_major;
 #endif
-    Assert (caml_fl_merge == prev);
+    Assert (llama_fl_merge == prev);
   }else if (Wosize_hd (hd) != 0){
     Hd_bp (bp) = Bluehd_hd (hd);
     Next (bp) = cur;
     Next (prev) = bp;
-    caml_fl_merge = bp;
+    llama_fl_merge = bp;
   }else{
     /* This is a fragment.  Leave it in white but remember it for eventual
        merging with the next block. */
     last_fragment = bp;
-    caml_fl_cur_size -= Whsize_wosize (0);
+    llama_fl_cur_size -= Whsize_wosize (0);
   }
   return adj;
 }
 
 /* This is a heap extension.  We have to insert it in the right place
    in the free-list.
-   [caml_fl_add_blocks] can only be called right after a call to
-   [caml_fl_allocate] that returned NULL.
+   [llama_fl_add_blocks] can only be called right after a call to
+   [llama_fl_allocate] that returned NULL.
    Most of the heap extensions are expected to be at the end of the
    free list.  (This depends on the implementation of [malloc].)
 
@@ -466,16 +466,16 @@ char *caml_fl_merge_block (char *bp)
    terminated by NULL, and field 1 of the first block must point to
    the last block.
 */
-void caml_fl_add_blocks (char *bp)
+void llama_fl_add_blocks (char *bp)
 {
                                                    Assert (fl_last != NULL);
                                             Assert (Next (fl_last) == NULL);
-  caml_fl_cur_size += Whsize_bp (bp);
+  llama_fl_cur_size += Whsize_bp (bp);
 
   if (bp > fl_last){
     Next (fl_last) = bp;
-    if (fl_last == caml_fl_merge && bp < caml_gc_sweep_hp){
-      caml_fl_merge = (char *) Field (bp, 1);
+    if (fl_last == llama_fl_merge && bp < llama_gc_sweep_hp){
+      llama_fl_merge = (char *) Field (bp, 1);
     }
     if (policy == Policy_first_fit && flp_size < FLP_MAX){
       flp [flp_size++] = fl_last;
@@ -493,11 +493,11 @@ void caml_fl_add_blocks (char *bp)
                                             Assert (cur > bp || cur == NULL);
     Next (Field (bp, 1)) = cur;
     Next (prev) = bp;
-    /* When inserting blocks between [caml_fl_merge] and [caml_gc_sweep_hp],
-       we must advance [caml_fl_merge] to the new block, so that [caml_fl_merge]
-       is always the last free-list block before [caml_gc_sweep_hp]. */
-    if (prev == caml_fl_merge && bp < caml_gc_sweep_hp){
-      caml_fl_merge = (char *) Field (bp, 1);
+    /* When inserting blocks between [llama_fl_merge] and [llama_gc_sweep_hp],
+       we must advance [llama_fl_merge] to the new block, so that [llama_fl_merge]
+       is always the last free-list block before [llama_gc_sweep_hp]. */
+    if (prev == llama_fl_merge && bp < llama_gc_sweep_hp){
+      llama_fl_merge = (char *) Field (bp, 1);
     }
     if (policy == Policy_first_fit) truncate_flp (bp);
   }
@@ -510,7 +510,7 @@ void caml_fl_add_blocks (char *bp)
    size: size of the block (in words)
    do_merge: 1 -> do merge; 0 -> do not merge
 */
-void caml_make_free_blocks (value *p, mlsize_t size, int do_merge)
+void llama_make_free_blocks (value *p, mlsize_t size, int do_merge)
 {
   mlsize_t sz;
 
@@ -521,13 +521,13 @@ void caml_make_free_blocks (value *p, mlsize_t size, int do_merge)
       sz = size;
     }
     *(header_t *)p = Make_header (Wosize_whsize (sz), 0, Caml_white);
-    if (do_merge) caml_fl_merge_block (Bp_hp (p));
+    if (do_merge) llama_fl_merge_block (Bp_hp (p));
     size -= sz;
     p += sz;
   }
 }
 
-void caml_set_allocation_policy (uintnat p)
+void llama_set_allocation_policy (uintnat p)
 {
   switch (p){
   case Policy_next_fit:

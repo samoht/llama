@@ -1321,7 +1321,7 @@ let matcher_lazy p rem = match p.pat_desc with
 *)
 
 let prim_obj_tag =
-  {prim_name = "caml_obj_tag";
+  {prim_name = "llama_obj_tag";
    prim_arity = 1; prim_alloc = false;
    prim_native_name = "";
    prim_native_float = false}
@@ -1594,7 +1594,7 @@ let make_offset x arg = if x=0 then arg else Lprim(Poffsetint(x), [arg])
 
 
 let prim_string_notequal =
-  Pccall{prim_name = "caml_string_notequal";
+  Pccall{prim_name = "llama_string_notequal";
           prim_arity = 2; prim_alloc = false;
           prim_native_name = ""; prim_native_float = false}
 

@@ -23,21 +23,21 @@
 #include "mlvalues.h"
 #include "memory.h"
 
-CAMLextern value * caml_stack_low;
-CAMLextern value * caml_stack_high;
-CAMLextern value * caml_stack_threshold;
-CAMLextern value * caml_extern_sp;
-CAMLextern value * caml_trapsp;
-CAMLextern value * caml_trap_barrier;
+CAMLextern value * llama_stack_low;
+CAMLextern value * llama_stack_high;
+CAMLextern value * llama_stack_threshold;
+CAMLextern value * llama_extern_sp;
+CAMLextern value * llama_trapsp;
+CAMLextern value * llama_trap_barrier;
 
 #define Trap_pc(tp) (((code_t *)(tp))[0])
 #define Trap_link(tp) (((value **)(tp))[1])
 
-void caml_init_stack (uintnat init_max_size);
-void caml_realloc_stack (asize_t required_size);
-void caml_change_max_stack_size (uintnat new_max_size);
-uintnat caml_stack_usage (void);
+void llama_init_stack (uintnat init_max_size);
+void llama_realloc_stack (asize_t required_size);
+void llama_change_max_stack_size (uintnat new_max_size);
+uintnat llama_stack_usage (void);
 
-CAMLextern uintnat (*caml_stack_usage_hook)(void);
+CAMLextern uintnat (*llama_stack_usage_hook)(void);
 
 #endif /* CAML_STACKS_H */

@@ -65,31 +65,31 @@ enum {
    type struct channel *.  No locking is performed. */
 
 #define putch(channel, ch) do{                                            \
-  if ((channel)->curr >= (channel)->end) caml_flush_partial(channel);     \
+  if ((channel)->curr >= (channel)->end) llama_flush_partial(channel);     \
   *((channel)->curr)++ = (ch);                                            \
 }while(0)
 
 #define getch(channel)                                                      \
   ((channel)->curr >= (channel)->max                                        \
-   ? caml_refill(channel)                                                   \
+   ? llama_refill(channel)                                                   \
    : (unsigned char) *((channel)->curr)++)
 
-CAMLextern struct channel * caml_open_descriptor_in (int);
-CAMLextern struct channel * caml_open_descriptor_out (int);
-CAMLextern void caml_close_channel (struct channel *);
-CAMLextern int caml_channel_binary_mode (struct channel *);
-CAMLextern value caml_alloc_channel(struct channel *chan);
+CAMLextern struct channel * llama_open_descriptor_in (int);
+CAMLextern struct channel * llama_open_descriptor_out (int);
+CAMLextern void llama_close_channel (struct channel *);
+CAMLextern int llama_channel_binary_mode (struct channel *);
+CAMLextern value llama_alloc_channel(struct channel *chan);
 
-CAMLextern int caml_flush_partial (struct channel *);
-CAMLextern void caml_flush (struct channel *);
-CAMLextern void caml_putword (struct channel *, uint32);
-CAMLextern int caml_putblock (struct channel *, char *, intnat);
-CAMLextern void caml_really_putblock (struct channel *, char *, intnat);
+CAMLextern int llama_flush_partial (struct channel *);
+CAMLextern void llama_flush (struct channel *);
+CAMLextern void llama_putword (struct channel *, uint32);
+CAMLextern int llama_putblock (struct channel *, char *, intnat);
+CAMLextern void llama_really_putblock (struct channel *, char *, intnat);
 
-CAMLextern unsigned char caml_refill (struct channel *);
-CAMLextern uint32 caml_getword (struct channel *);
-CAMLextern int caml_getblock (struct channel *, char *, intnat);
-CAMLextern int caml_really_getblock (struct channel *, char *, intnat);
+CAMLextern unsigned char llama_refill (struct channel *);
+CAMLextern uint32 llama_getword (struct channel *);
+CAMLextern int llama_getblock (struct channel *, char *, intnat);
+CAMLextern int llama_really_getblock (struct channel *, char *, intnat);
 
 /* Extract a struct channel * from the heap object representing it */
 
@@ -97,30 +97,30 @@ CAMLextern int caml_really_getblock (struct channel *, char *, intnat);
 
 /* The locking machinery */
 
-CAMLextern void (*caml_channel_mutex_free) (struct channel *);
-CAMLextern void (*caml_channel_mutex_lock) (struct channel *);
-CAMLextern void (*caml_channel_mutex_unlock) (struct channel *);
-CAMLextern void (*caml_channel_mutex_unlock_exn) (void);
+CAMLextern void (*llama_channel_mutex_free) (struct channel *);
+CAMLextern void (*llama_channel_mutex_lock) (struct channel *);
+CAMLextern void (*llama_channel_mutex_unlock) (struct channel *);
+CAMLextern void (*llama_channel_mutex_unlock_exn) (void);
 
-CAMLextern struct channel * caml_all_opened_channels;
+CAMLextern struct channel * llama_all_opened_channels;
 
 #define Lock(channel) \
-  if (caml_channel_mutex_lock != NULL) (*caml_channel_mutex_lock)(channel)
+  if (llama_channel_mutex_lock != NULL) (*llama_channel_mutex_lock)(channel)
 #define Unlock(channel) \
-  if (caml_channel_mutex_unlock != NULL) (*caml_channel_mutex_unlock)(channel)
+  if (llama_channel_mutex_unlock != NULL) (*llama_channel_mutex_unlock)(channel)
 #define Unlock_exn() \
-  if (caml_channel_mutex_unlock_exn != NULL) (*caml_channel_mutex_unlock_exn)()
+  if (llama_channel_mutex_unlock_exn != NULL) (*llama_channel_mutex_unlock_exn)()
 
 /* Conversion between file_offset and int64 */
 
 #ifdef ARCH_INT64_TYPE
-#define Val_file_offset(fofs) caml_copy_int64(fofs)
+#define Val_file_offset(fofs) llama_copy_int64(fofs)
 #define File_offset_val(v) ((file_offset) Int64_val(v))
 #else
-CAMLextern value caml_Val_file_offset(file_offset fofs);
-CAMLextern file_offset caml_File_offset_val(value v);
-#define Val_file_offset caml_Val_file_offset
-#define File_offset_val caml_File_offset_val
+CAMLextern value llama_Val_file_offset(file_offset fofs);
+CAMLextern file_offset llama_File_offset_val(value v);
+#define Val_file_offset llama_Val_file_offset
+#define File_offset_val llama_File_offset_val
 #endif
 
 #endif /* CAML_IO_H */

@@ -30,38 +30,38 @@
 #include "mlvalues.h"
 #include "reverse.h"
 
-code_t caml_start_code;
-asize_t caml_code_size;
-unsigned char * caml_saved_code;
-unsigned char caml_code_md5[16];
+code_t llama_start_code;
+asize_t llama_code_size;
+unsigned char * llama_saved_code;
+unsigned char llama_code_md5[16];
 
 /* Read the main bytecode block from a file */
 
-void caml_load_code(int fd, asize_t len)
+void llama_load_code(int fd, asize_t len)
 {
   int i;
   struct MD5Context ctx;
 
-  caml_code_size = len;
-  caml_start_code = (code_t) caml_stat_alloc(caml_code_size);
-  if (read(fd, (char *) caml_start_code, caml_code_size) != caml_code_size)
-    caml_fatal_error("Fatal error: truncated bytecode file.\n");
-  caml_MD5Init(&ctx);
-  caml_MD5Update(&ctx, (unsigned char *) caml_start_code, caml_code_size);
-  caml_MD5Final(caml_code_md5, &ctx);
+  llama_code_size = len;
+  llama_start_code = (code_t) llama_stat_alloc(llama_code_size);
+  if (read(fd, (char *) llama_start_code, llama_code_size) != llama_code_size)
+    llama_fatal_error("Fatal error: truncated bytecode file.\n");
+  llama_MD5Init(&ctx);
+  llama_MD5Update(&ctx, (unsigned char *) llama_start_code, llama_code_size);
+  llama_MD5Final(llama_code_md5, &ctx);
 #ifdef ARCH_BIG_ENDIAN
-  caml_fixup_endianness(caml_start_code, caml_code_size);
+  llama_fixup_endianness(llama_start_code, llama_code_size);
 #endif
-  if (caml_debugger_in_use) {
+  if (llama_debugger_in_use) {
     len /= sizeof(opcode_t);
-    caml_saved_code = (unsigned char *) caml_stat_alloc(len);
-    for (i = 0; i < len; i++) caml_saved_code[i] = caml_start_code[i];
+    llama_saved_code = (unsigned char *) llama_stat_alloc(len);
+    for (i = 0; i < len; i++) llama_saved_code[i] = llama_start_code[i];
   }
 #ifdef THREADED_CODE
-  /* Better to thread now than at the beginning of [caml_interprete],
+  /* Better to thread now than at the beginning of [llama_interprete],
      since the debugger interface needs to perform SET_EVENT requests
      on the code. */
-  caml_thread_code(caml_start_code, caml_code_size);
+  llama_thread_code(llama_start_code, llama_code_size);
 #endif
 }
 
@@ -69,7 +69,7 @@ void caml_load_code(int fd, asize_t len)
 
 #ifdef ARCH_BIG_ENDIAN
 
-void caml_fixup_endianness(code_t code, asize_t len)
+void llama_fixup_endianness(code_t code, asize_t len)
 {
   code_t p;
   len /= sizeof(opcode_t);
@@ -84,10 +84,10 @@ void caml_fixup_endianness(code_t code, asize_t len)
 
 #ifdef THREADED_CODE
 
-char ** caml_instr_table;
-char * caml_instr_base;
+char ** llama_instr_table;
+char * llama_instr_base;
 
-void caml_thread_code (code_t code, asize_t len)
+void llama_thread_code (code_t code, asize_t len)
 {
   code_t p;
   int l [STOP + 1];
@@ -119,12 +119,12 @@ void caml_thread_code (code_t code, asize_t len)
     opcode_t instr = *p;
     if (instr < 0 || instr > STOP){
       /* FIXME -- should Assert(false) ?
-      caml_fatal_error_arg ("Fatal error in fix_code: bad opcode (%lx)\n",
+      llama_fatal_error_arg ("Fatal error in fix_code: bad opcode (%lx)\n",
                             (char *)(long)instr);
       */
       instr = STOP;
     }
-    *p++ = (opcode_t)(caml_instr_table[instr] - caml_instr_base);
+    *p++ = (opcode_t)(llama_instr_table[instr] - llama_instr_base);
     if (instr == SWITCH) {
       uint32 sizes = *p++;
       uint32 const_size = sizes & 0xFFFF;
@@ -143,19 +143,19 @@ void caml_thread_code (code_t code, asize_t len)
 
 #endif /* THREADED_CODE */
 
-void caml_set_instruction(code_t pos, opcode_t instr)
+void llama_set_instruction(code_t pos, opcode_t instr)
 {
 #ifdef THREADED_CODE
-  *pos = (opcode_t)(caml_instr_table[instr] - caml_instr_base);
+  *pos = (opcode_t)(llama_instr_table[instr] - llama_instr_base);
 #else
   *pos = instr;
 #endif
 }
 
-int caml_is_instruction(opcode_t instr1, opcode_t instr2)
+int llama_is_instruction(opcode_t instr1, opcode_t instr2)
 {
 #ifdef THREADED_CODE
-  return instr1 == (opcode_t)(caml_instr_table[instr2] - caml_instr_base);
+  return instr1 == (opcode_t)(llama_instr_table[instr2] - llama_instr_base);
 #else
   return instr1 == instr2;
 #endif

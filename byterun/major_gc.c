@@ -29,26 +29,26 @@
 #include "roots.h"
 #include "weak.h"
 
-uintnat caml_percent_free;
-uintnat caml_major_heap_increment;
-CAMLexport char *caml_heap_start;
-char *caml_gc_sweep_hp;
-int caml_gc_phase;        /* always Phase_mark, Phase_sweep, or Phase_idle */
+uintnat llama_percent_free;
+uintnat llama_major_heap_increment;
+CAMLexport char *llama_heap_start;
+char *llama_gc_sweep_hp;
+int llama_gc_phase;        /* always Phase_mark, Phase_sweep, or Phase_idle */
 static value *gray_vals;
 static value *gray_vals_cur, *gray_vals_end;
 static asize_t gray_vals_size;
 static int heap_is_pure;   /* The heap is pure if the only gray objects
                               below [markhp] are also in [gray_vals]. */
-uintnat caml_allocated_words;
-uintnat caml_dependent_size, caml_dependent_allocated;
-double caml_extra_heap_resources;
-uintnat caml_fl_size_at_phase_change = 0;
+uintnat llama_allocated_words;
+uintnat llama_dependent_size, llama_dependent_allocated;
+double llama_extra_heap_resources;
+uintnat llama_fl_size_at_phase_change = 0;
 
-extern char *caml_fl_merge;  /* Defined in freelist.c. */
+extern char *llama_fl_merge;  /* Defined in freelist.c. */
 
 static char *markhp, *chunk, *limit;
 
-int caml_gc_subphase;     /* Subphase_{main,weak1,weak2,final} */
+int llama_gc_subphase;     /* Subphase_{main,weak1,weak2,final} */
 static value *weak_prev;
 
 #ifdef DEBUG
@@ -60,14 +60,14 @@ static void realloc_gray_vals (void)
   value *new;
 
   Assert (gray_vals_cur == gray_vals_end);
-  if (gray_vals_size < caml_stat_heap_size / 128){
-    caml_gc_message (0x08, "Growing gray_vals to %"
+  if (gray_vals_size < llama_stat_heap_size / 128){
+    llama_gc_message (0x08, "Growing gray_vals to %"
                            ARCH_INTNAT_PRINTF_FORMAT "uk bytes\n",
                      (intnat) gray_vals_size * sizeof (value) / 512);
     new = (value *) realloc ((char *) gray_vals,
                              2 * gray_vals_size * sizeof (value));
     if (new == NULL){
-      caml_gc_message (0x08, "No room for growing gray_vals\n", 0);
+      llama_gc_message (0x08, "No room for growing gray_vals\n", 0);
       gray_vals_cur = gray_vals;
       heap_is_pure = 0;
     }else{
@@ -82,7 +82,7 @@ static void realloc_gray_vals (void)
   }
 }
 
-void caml_darken (value v, value *p /* not used */)
+void llama_darken (value v, value *p /* not used */)
 {
   if (Is_block (v) && Is_in_heap (v)) {
     header_t h = Hd_val (v);
@@ -107,16 +107,16 @@ void caml_darken (value v, value *p /* not used */)
 
 static void start_cycle (void)
 {
-  Assert (caml_gc_phase == Phase_idle);
+  Assert (llama_gc_phase == Phase_idle);
   Assert (gray_vals_cur == gray_vals);
-  caml_gc_message (0x01, "Starting new major GC cycle\n", 0);
-  caml_darken_all_roots();
-  caml_gc_phase = Phase_mark;
-  caml_gc_subphase = Subphase_main;
+  llama_gc_message (0x01, "Starting new major GC cycle\n", 0);
+  llama_darken_all_roots();
+  llama_gc_phase = Phase_mark;
+  llama_gc_subphase = Subphase_main;
   markhp = NULL;
 #ifdef DEBUG
   ++ major_gc_counter;
-  caml_heap_check ();
+  llama_heap_check ();
 #endif
 }
 
@@ -127,8 +127,8 @@ static void mark_slice (intnat work)
   header_t hd;
   mlsize_t size, i;
 
-  caml_gc_message (0x40, "Marking %ld words\n", work);
-  caml_gc_message (0x40, "Subphase = %ld\n", caml_gc_subphase);
+  llama_gc_message (0x40, "Marking %ld words\n", work);
+  llama_gc_message (0x40, "Subphase = %ld\n", llama_gc_subphase);
   gray_vals_ptr = gray_vals_cur;
   while (work > 0){
     if (gray_vals_ptr > gray_vals){
@@ -187,16 +187,16 @@ static void mark_slice (intnat work)
       }
     }else if (!heap_is_pure){
       heap_is_pure = 1;
-      chunk = caml_heap_start;
+      chunk = llama_heap_start;
       markhp = chunk;
       limit = chunk + Chunk_size (chunk);
     }else{
-      switch (caml_gc_subphase){
+      switch (llama_gc_subphase){
       case Subphase_main: {
         /* The main marking phase is over.  Start removing weak pointers to
            dead values. */
-        caml_gc_subphase = Subphase_weak1;
-        weak_prev = &caml_weak_list_head;
+        llama_gc_subphase = Subphase_weak1;
+        weak_prev = &llama_weak_list_head;
       }
         break;
       case Subphase_weak1: {
@@ -211,7 +211,7 @@ static void mark_slice (intnat work)
           for (i = 1; i < sz; i++){
             curfield = Field (cur, i);
           weak_again:
-            if (curfield != caml_weak_none
+            if (curfield != llama_weak_none
                 && Is_block (curfield) && Is_in_heap (curfield)){
               if (Tag_val (curfield) == Forward_tag){
                 value f = Forward_val (curfield);
@@ -226,7 +226,7 @@ static void mark_slice (intnat work)
                 }
               }
               if (Is_white_val (curfield)){
-                Field (cur, i) = caml_weak_none;
+                Field (cur, i) = llama_weak_none;
               }
             }
           }
@@ -234,8 +234,8 @@ static void mark_slice (intnat work)
           work -= Whsize_hd (hd);
         }else{
           /* Subphase_weak1 is done.  Start removing dead weak arrays. */
-          caml_gc_subphase = Subphase_weak2;
-          weak_prev = &caml_weak_list_head;
+          llama_gc_subphase = Subphase_weak2;
+          weak_prev = &llama_weak_list_head;
         }
       }
         break;
@@ -256,23 +256,23 @@ static void mark_slice (intnat work)
         }else{
           /* Subphase_weak2 is done.  Handle finalised values. */
           gray_vals_cur = gray_vals_ptr;
-          caml_final_update ();
+          llama_final_update ();
           gray_vals_ptr = gray_vals_cur;
-          caml_gc_subphase = Subphase_final;
+          llama_gc_subphase = Subphase_final;
         }
       }
         break;
       case Subphase_final: {
         /* Initialise the sweep phase. */
         gray_vals_cur = gray_vals_ptr;
-        caml_gc_sweep_hp = caml_heap_start;
-        caml_fl_init_merge ();
-        caml_gc_phase = Phase_sweep;
-        chunk = caml_heap_start;
-        caml_gc_sweep_hp = chunk;
+        llama_gc_sweep_hp = llama_heap_start;
+        llama_fl_init_merge ();
+        llama_gc_phase = Phase_sweep;
+        chunk = llama_heap_start;
+        llama_gc_sweep_hp = chunk;
         limit = chunk + Chunk_size (chunk);
         work = 0;
-        caml_fl_size_at_phase_change = caml_fl_cur_size;
+        llama_fl_size_at_phase_change = llama_fl_cur_size;
       }
         break;
       default: Assert (0);
@@ -287,40 +287,40 @@ static void sweep_slice (intnat work)
   char *hp;
   header_t hd;
 
-  caml_gc_message (0x40, "Sweeping %ld words\n", work);
+  llama_gc_message (0x40, "Sweeping %ld words\n", work);
   while (work > 0){
-    if (caml_gc_sweep_hp < limit){
-      hp = caml_gc_sweep_hp;
+    if (llama_gc_sweep_hp < limit){
+      hp = llama_gc_sweep_hp;
       hd = Hd_hp (hp);
       work -= Whsize_hd (hd);
-      caml_gc_sweep_hp += Bhsize_hd (hd);
+      llama_gc_sweep_hp += Bhsize_hd (hd);
       switch (Color_hd (hd)){
       case Caml_white:
         if (Tag_hd (hd) == Custom_tag){
           void (*final_fun)(value) = Custom_ops_val(Val_hp(hp))->finalize;
           if (final_fun != NULL) final_fun(Val_hp(hp));
         }
-        caml_gc_sweep_hp = caml_fl_merge_block (Bp_hp (hp));
+        llama_gc_sweep_hp = llama_fl_merge_block (Bp_hp (hp));
         break;
       case Caml_blue:
         /* Only the blocks of the free-list are blue.  See [freelist.c]. */
-        caml_fl_merge = Bp_hp (hp);
+        llama_fl_merge = Bp_hp (hp);
         break;
       default:          /* gray or black */
         Assert (Color_hd (hd) == Caml_black);
         Hd_hp (hp) = Whitehd_hd (hd);
         break;
       }
-      Assert (caml_gc_sweep_hp <= limit);
+      Assert (llama_gc_sweep_hp <= limit);
     }else{
       chunk = Chunk_next (chunk);
       if (chunk == NULL){
         /* Sweeping is done. */
-        ++ caml_stat_major_collections;
+        ++ llama_stat_major_collections;
         work = 0;
-        caml_gc_phase = Phase_idle;
+        llama_gc_phase = Phase_idle;
       }else{
-        caml_gc_sweep_hp = chunk;
+        llama_gc_sweep_hp = chunk;
         limit = chunk + Chunk_size (chunk);
       }
     }
@@ -331,14 +331,14 @@ static void sweep_slice (intnat work)
    [howmuch] is the amount of work to do, 0 to let the GC compute it.
    Return the computed amount of work to do.
  */
-intnat caml_major_collection_slice (intnat howmuch)
+intnat llama_major_collection_slice (intnat howmuch)
 {
   double p, dp;
   intnat computed_work;
   /*
      Free memory at the start of the GC cycle (garbage + free list) (assumed):
-                 FM = caml_stat_heap_size * caml_percent_free
-                      / (100 + caml_percent_free)
+                 FM = llama_stat_heap_size * llama_percent_free
+                      / (100 + llama_percent_free)
 
      Assuming steady state and enforcing a constant allocation rate, then
      FM is divided in 2/3 for garbage and 1/3 for free list.
@@ -347,17 +347,17 @@ intnat caml_major_collection_slice (intnat howmuch)
      (still assuming steady state).
 
      Proportion of G consumed since the previous slice:
-                 PH = caml_allocated_words / G
-                    = caml_allocated_words * 3 * (100 + caml_percent_free)
-                      / (2 * caml_stat_heap_size * caml_percent_free)
+                 PH = llama_allocated_words / G
+                    = llama_allocated_words * 3 * (100 + llama_percent_free)
+                      / (2 * llama_stat_heap_size * llama_percent_free)
      Proportion of extra-heap resources consumed since the previous slice:
-                 PE = caml_extra_heap_resources
+                 PE = llama_extra_heap_resources
      Proportion of total work to do in this slice:
                  P  = max (PH, PE)
      Amount of marking work for the GC cycle:
-                 MW = caml_stat_heap_size * 100 / (100 + caml_percent_free)
+                 MW = llama_stat_heap_size * 100 / (100 + llama_percent_free)
      Amount of sweeping work for the GC cycle:
-                 SW = caml_stat_heap_size
+                 SW = llama_stat_heap_size
 
      In order to finish marking with a non-empty free list, we will
      use 40% of the time for marking, and 60% for sweeping.
@@ -371,80 +371,80 @@ intnat caml_major_collection_slice (intnat howmuch)
 
      Amount of marking work for a marking slice:
                  MS = P * MW / (40/100)
-                 MS = P * caml_stat_heap_size * 250 / (100 + caml_percent_free)
+                 MS = P * llama_stat_heap_size * 250 / (100 + llama_percent_free)
      Amount of sweeping work for a sweeping slice:
                  SS = P * SW / (60/100)
-                 SS = P * caml_stat_heap_size * 5 / 3
+                 SS = P * llama_stat_heap_size * 5 / 3
 
      This slice will either mark MS words or sweep SS words.
   */
 
-  if (caml_gc_phase == Phase_idle) start_cycle ();
+  if (llama_gc_phase == Phase_idle) start_cycle ();
 
-  p = (double) caml_allocated_words * 3.0 * (100 + caml_percent_free)
-      / Wsize_bsize (caml_stat_heap_size) / caml_percent_free / 2.0;
-  if (caml_dependent_size > 0){
-    dp = (double) caml_dependent_allocated * (100 + caml_percent_free)
-         / caml_dependent_size / caml_percent_free;
+  p = (double) llama_allocated_words * 3.0 * (100 + llama_percent_free)
+      / Wsize_bsize (llama_stat_heap_size) / llama_percent_free / 2.0;
+  if (llama_dependent_size > 0){
+    dp = (double) llama_dependent_allocated * (100 + llama_percent_free)
+         / llama_dependent_size / llama_percent_free;
   }else{
     dp = 0.0;
   }
   if (p < dp) p = dp;
-  if (p < caml_extra_heap_resources) p = caml_extra_heap_resources;
+  if (p < llama_extra_heap_resources) p = llama_extra_heap_resources;
 
-  caml_gc_message (0x40, "allocated_words = %"
+  llama_gc_message (0x40, "allocated_words = %"
                          ARCH_INTNAT_PRINTF_FORMAT "u\n",
-                   caml_allocated_words);
-  caml_gc_message (0x40, "extra_heap_resources = %"
+                   llama_allocated_words);
+  llama_gc_message (0x40, "extra_heap_resources = %"
                          ARCH_INTNAT_PRINTF_FORMAT "uu\n",
-                   (uintnat) (caml_extra_heap_resources * 1000000));
-  caml_gc_message (0x40, "amount of work to do = %"
+                   (uintnat) (llama_extra_heap_resources * 1000000));
+  llama_gc_message (0x40, "amount of work to do = %"
                          ARCH_INTNAT_PRINTF_FORMAT "uu\n",
                    (uintnat) (p * 1000000));
 
-  if (caml_gc_phase == Phase_mark){
-    computed_work = (intnat) (p * Wsize_bsize (caml_stat_heap_size) * 250
-                              / (100 + caml_percent_free));
+  if (llama_gc_phase == Phase_mark){
+    computed_work = (intnat) (p * Wsize_bsize (llama_stat_heap_size) * 250
+                              / (100 + llama_percent_free));
   }else{
-    computed_work = (intnat) (p * Wsize_bsize (caml_stat_heap_size) * 5 / 3);
+    computed_work = (intnat) (p * Wsize_bsize (llama_stat_heap_size) * 5 / 3);
   }
-  caml_gc_message (0x40, "ordered work = %ld words\n", howmuch);
-  caml_gc_message (0x40, "computed work = %ld words\n", computed_work);
+  llama_gc_message (0x40, "ordered work = %ld words\n", howmuch);
+  llama_gc_message (0x40, "computed work = %ld words\n", computed_work);
   if (howmuch == 0) howmuch = computed_work;
-  if (caml_gc_phase == Phase_mark){
+  if (llama_gc_phase == Phase_mark){
     mark_slice (howmuch);
-    caml_gc_message (0x02, "!", 0);
+    llama_gc_message (0x02, "!", 0);
   }else{
-    Assert (caml_gc_phase == Phase_sweep);
+    Assert (llama_gc_phase == Phase_sweep);
     sweep_slice (howmuch);
-    caml_gc_message (0x02, "$", 0);
+    llama_gc_message (0x02, "$", 0);
   }
 
-  if (caml_gc_phase == Phase_idle) caml_compact_heap_maybe ();
+  if (llama_gc_phase == Phase_idle) llama_compact_heap_maybe ();
 
-  caml_stat_major_words += caml_allocated_words;
-  caml_allocated_words = 0;
-  caml_dependent_allocated = 0;
-  caml_extra_heap_resources = 0.0;
+  llama_stat_major_words += llama_allocated_words;
+  llama_allocated_words = 0;
+  llama_dependent_allocated = 0;
+  llama_extra_heap_resources = 0.0;
   return computed_work;
 }
 
 /* The minor heap must be empty when this function is called;
    the minor heap is empty when this function returns.
 */
-/* This does not call caml_compact_heap_maybe because the estimations of
+/* This does not call llama_compact_heap_maybe because the estimations of
    free and live memory are only valid for a cycle done incrementally.
-   Besides, this function is called by caml_compact_heap_maybe.
+   Besides, this function is called by llama_compact_heap_maybe.
 */
-void caml_finish_major_cycle (void)
+void llama_finish_major_cycle (void)
 {
-  if (caml_gc_phase == Phase_idle) start_cycle ();
-  while (caml_gc_phase == Phase_mark) mark_slice (LONG_MAX);
-  Assert (caml_gc_phase == Phase_sweep);
-  while (caml_gc_phase == Phase_sweep) sweep_slice (LONG_MAX);
-  Assert (caml_gc_phase == Phase_idle);
-  caml_stat_major_words += caml_allocated_words;
-  caml_allocated_words = 0;
+  if (llama_gc_phase == Phase_idle) start_cycle ();
+  while (llama_gc_phase == Phase_mark) mark_slice (LONG_MAX);
+  Assert (llama_gc_phase == Phase_sweep);
+  while (llama_gc_phase == Phase_sweep) sweep_slice (LONG_MAX);
+  Assert (llama_gc_phase == Phase_idle);
+  llama_stat_major_words += llama_allocated_words;
+  llama_allocated_words = 0;
 }
 
 /* Make sure the request is at least Heap_chunk_min and round it up
@@ -458,52 +458,52 @@ static asize_t clip_heap_chunk_size (asize_t request)
   return ((request + Page_size - 1) >> Page_log) << Page_log;
 }
 
-/* Make sure the request is >= caml_major_heap_increment, then call
+/* Make sure the request is >= llama_major_heap_increment, then call
    clip_heap_chunk_size, then make sure the result is >= request.
 */
-asize_t caml_round_heap_chunk_size (asize_t request)
+asize_t llama_round_heap_chunk_size (asize_t request)
 {
   asize_t result = request;
 
-  if (result < caml_major_heap_increment){
-    result = caml_major_heap_increment;
+  if (result < llama_major_heap_increment){
+    result = llama_major_heap_increment;
   }
   result = clip_heap_chunk_size (result);
 
   if (result < request){
-    caml_raise_out_of_memory ();
+    llama_raise_out_of_memory ();
     return 0; /* not reached */
   }
   return result;
 }
 
-void caml_init_major_heap (asize_t heap_size)
+void llama_init_major_heap (asize_t heap_size)
 {
-  caml_stat_heap_size = clip_heap_chunk_size (heap_size);
-  caml_stat_top_heap_size = caml_stat_heap_size;
-  Assert (caml_stat_heap_size % Page_size == 0);
-  caml_heap_start = (char *) caml_alloc_for_heap (caml_stat_heap_size);
-  if (caml_heap_start == NULL)
-    caml_fatal_error ("Fatal error: not enough memory for the initial heap.\n");
-  Chunk_next (caml_heap_start) = NULL;
-  caml_stat_heap_chunks = 1;
+  llama_stat_heap_size = clip_heap_chunk_size (heap_size);
+  llama_stat_top_heap_size = llama_stat_heap_size;
+  Assert (llama_stat_heap_size % Page_size == 0);
+  llama_heap_start = (char *) llama_alloc_for_heap (llama_stat_heap_size);
+  if (llama_heap_start == NULL)
+    llama_fatal_error ("Fatal error: not enough memory for the initial heap.\n");
+  Chunk_next (llama_heap_start) = NULL;
+  llama_stat_heap_chunks = 1;
 
-  if (caml_page_table_add(In_heap, caml_heap_start,
-                          caml_heap_start + caml_stat_heap_size) != 0) {
-    caml_fatal_error ("Fatal error: not enough memory for the initial page table.\n");
+  if (llama_page_table_add(In_heap, llama_heap_start,
+                          llama_heap_start + llama_stat_heap_size) != 0) {
+    llama_fatal_error ("Fatal error: not enough memory for the initial page table.\n");
   }
 
-  caml_fl_init_merge ();
-  caml_make_free_blocks ((value *) caml_heap_start,
-                         Wsize_bsize (caml_stat_heap_size), 1);
-  caml_gc_phase = Phase_idle;
+  llama_fl_init_merge ();
+  llama_make_free_blocks ((value *) llama_heap_start,
+                         Wsize_bsize (llama_stat_heap_size), 1);
+  llama_gc_phase = Phase_idle;
   gray_vals_size = 2048;
   gray_vals = (value *) malloc (gray_vals_size * sizeof (value));
   if (gray_vals == NULL)
-    caml_fatal_error ("Fatal error: not enough memory for the gray cache.\n");
+    llama_fatal_error ("Fatal error: not enough memory for the gray cache.\n");
   gray_vals_cur = gray_vals;
   gray_vals_end = gray_vals + gray_vals_size;
   heap_is_pure = 1;
-  caml_allocated_words = 0;
-  caml_extra_heap_resources = 0.0;
+  llama_allocated_words = 0;
+  llama_extra_heap_resources = 0.0;
 }

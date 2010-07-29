@@ -44,7 +44,7 @@ external set : string -> int -> char -> unit = "%string_safe_set"
 
    Raise [Invalid_argument] if [n] is not a valid character number in [s]. *)
 
-external create : int -> string = "caml_create_string"
+external create : int -> string = "llama_create_string"
 (** [String.create n] returns a fresh string of length [n].
    The string initially contains arbitrary characters.
 
@@ -179,6 +179,6 @@ val compare: t -> t -> int
 external unsafe_get : string -> int -> char = "%string_unsafe_get"
 external unsafe_set : string -> int -> char -> unit = "%string_unsafe_set"
 external unsafe_blit :
-  string -> int -> string -> int -> int -> unit = "caml_blit_string" "noalloc"
+  string -> int -> string -> int -> int -> unit = "llama_blit_string" "noalloc"
 external unsafe_fill :
-  string -> int -> int -> char -> unit = "caml_fill_string" "noalloc"
+  string -> int -> int -> char -> unit = "llama_fill_string" "noalloc"

@@ -74,7 +74,7 @@ let print_bigarray name unsafe kind ppf layout =
      | Pbigarray_uint16 -> "uint16"
      | Pbigarray_int32 -> "int32"
      | Pbigarray_int64 -> "int64"
-     | Pbigarray_caml_int -> "camlint"
+     | Pbigarray_llama_int -> "llamaint"
      | Pbigarray_native_int -> "nativeint"
      | Pbigarray_complex32 -> "complex32"
      | Pbigarray_complex64 -> "complex64")

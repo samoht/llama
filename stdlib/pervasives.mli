@@ -261,74 +261,74 @@ external ( *. ) : float -> float -> float = "%mulfloat"
 external ( /. ) : float -> float -> float = "%divfloat"
 (** Floating-point division. *)
 
-external ( ** ) : float -> float -> float = "caml_power_float" "pow" "float"
+external ( ** ) : float -> float -> float = "llama_power_float" "pow" "float"
 (** Exponentiation. *)
 
-external sqrt : float -> float = "caml_sqrt_float" "sqrt" "float"
+external sqrt : float -> float = "llama_sqrt_float" "sqrt" "float"
 (** Square root. *)
 
-external exp : float -> float = "caml_exp_float" "exp" "float"
+external exp : float -> float = "llama_exp_float" "exp" "float"
 (** Exponential. *)
 
-external log : float -> float = "caml_log_float" "log" "float"
+external log : float -> float = "llama_log_float" "log" "float"
 (** Natural logarithm. *)
 
-external log10 : float -> float = "caml_log10_float" "log10" "float"
+external log10 : float -> float = "llama_log10_float" "log10" "float"
 (** Base 10 logarithm. *)
 
-external expm1 : float -> float = "caml_expm1_float" "caml_expm1" "float"
+external expm1 : float -> float = "llama_expm1_float" "llama_expm1" "float"
 (** [expm1 x] computes [exp x -. 1.0], giving numerically-accurate results
     even if [x] is close to [0.0].
     @since 3.12.0
 *)
 
-external log1p : float -> float = "caml_log1p_float" "caml_log1p" "float"
+external log1p : float -> float = "llama_log1p_float" "llama_log1p" "float"
 (** [log1p x] computes [log(1.0 +. x)] (natural logarithm),
     giving numerically-accurate results even if [x] is close to [0.0].
     @since 3.12.0
 *)
 
-external cos : float -> float = "caml_cos_float" "cos" "float"
+external cos : float -> float = "llama_cos_float" "cos" "float"
 (** Cosine.  Argument is in radians. *)
 
-external sin : float -> float = "caml_sin_float" "sin" "float"
+external sin : float -> float = "llama_sin_float" "sin" "float"
 (** Sine.  Argument is in radians. *)
 
-external tan : float -> float = "caml_tan_float" "tan" "float"
+external tan : float -> float = "llama_tan_float" "tan" "float"
 (** Tangent.  Argument is in radians. *)
 
-external acos : float -> float = "caml_acos_float" "acos" "float"
+external acos : float -> float = "llama_acos_float" "acos" "float"
 (** Arc cosine.  The argument must fall within the range [[-1.0, 1.0]].
     Result is in radians and is between [0.0] and [pi]. *)
 
-external asin : float -> float = "caml_asin_float" "asin" "float"
+external asin : float -> float = "llama_asin_float" "asin" "float"
 (** Arc sine.  The argument must fall within the range [[-1.0, 1.0]].
     Result is in radians and is between [-pi/2] and [pi/2]. *)
 
-external atan : float -> float = "caml_atan_float" "atan" "float"
+external atan : float -> float = "llama_atan_float" "atan" "float"
 (** Arc tangent.
     Result is in radians and is between [-pi/2] and [pi/2]. *)
 
-external atan2 : float -> float -> float = "caml_atan2_float" "atan2" "float"
+external atan2 : float -> float -> float = "llama_atan2_float" "atan2" "float"
 (** [atan x y] returns the arc tangent of [y /. x].  The signs of [x]
     and [y] are used to determine the quadrant of the result.
     Result is in radians and is between [-pi] and [pi]. *)
 
-external cosh : float -> float = "caml_cosh_float" "cosh" "float"
+external cosh : float -> float = "llama_cosh_float" "cosh" "float"
 (** Hyperbolic cosine.  Argument is in radians. *)
 
-external sinh : float -> float = "caml_sinh_float" "sinh" "float"
+external sinh : float -> float = "llama_sinh_float" "sinh" "float"
 (** Hyperbolic sine.  Argument is in radians. *)
 
-external tanh : float -> float = "caml_tanh_float" "tanh" "float"
+external tanh : float -> float = "llama_tanh_float" "tanh" "float"
 (** Hyperbolic tangent.  Argument is in radians. *)
 
-external ceil : float -> float = "caml_ceil_float" "ceil" "float"
+external ceil : float -> float = "llama_ceil_float" "ceil" "float"
 (** Round above to an integer value.
     [ceil f] returns the least integer value greater than or equal to [f].
     The result is returned as a float. *)
 
-external floor : float -> float = "caml_floor_float" "floor" "float"
+external floor : float -> float = "llama_floor_float" "floor" "float"
 (** Round below to an integer value.
     [floor f] returns the greatest integer value less than or
     equal to [f].
@@ -337,22 +337,22 @@ external floor : float -> float = "caml_floor_float" "floor" "float"
 external abs_float : float -> float = "%absfloat"
 (** [abs_float f] returns the absolute value of [f]. *)
 
-external mod_float : float -> float -> float = "caml_fmod_float" "fmod" "float"
+external mod_float : float -> float -> float = "llama_fmod_float" "fmod" "float"
 (** [mod_float a b] returns the remainder of [a] with respect to
    [b].  The returned value is [a -. n *. b], where [n]
    is the quotient [a /. b] rounded towards zero to an integer. *)
 
-external frexp : float -> float * int = "caml_frexp_float"
+external frexp : float -> float * int = "llama_frexp_float"
 (** [frexp f] returns the pair of the significant
    and the exponent of [f].  When [f] is zero, the
    significant [x] and the exponent [n] of [f] are equal to
    zero.  When [f] is non-zero, they are defined by
    [f = x *. 2 ** n] and [0.5 <= x < 1.0]. *)
 
-external ldexp : float -> int -> float = "caml_ldexp_float"
+external ldexp : float -> int -> float = "llama_ldexp_float"
 (** [ldexp x n] returns [x *. 2 ** n]. *)
 
-external modf : float -> float * float = "caml_modf_float"
+external modf : float -> float * float = "llama_modf_float"
 (** [modf f] returns the pair of the fractional and integral
    part of [f]. *)
 
@@ -403,7 +403,7 @@ type fpclass =
 (** The five classes of floating-point numbers, as determined by
    the {!Pervasives.classify_float} function. *)
 
-external classify_float : float -> fpclass = "caml_classify_float"
+external classify_float : float -> fpclass = "llama_classify_float"
 (** Return the class of the given floating-point number:
    normal, subnormal, zero, infinite, or not a number. *)
 
@@ -455,7 +455,7 @@ val bool_of_string : string -> bool
 val string_of_int : int -> string
 (** Return the string representation of an integer, in decimal. *)
 
-external int_of_string : string -> int = "caml_int_of_string"
+external int_of_string : string -> int = "llama_int_of_string"
 (** Convert the given string to an integer.
    The string is read in decimal (by default) or in hexadecimal (if it
    begins with [0x] or [0X]), octal (if it begins with [0o] or [0O]),
@@ -467,7 +467,7 @@ external int_of_string : string -> int = "caml_int_of_string"
 val string_of_float : float -> string
 (** Return the string representation of a floating-point number. *)
 
-external float_of_string : string -> float = "caml_float_of_string"
+external float_of_string : string -> float = "llama_float_of_string"
 (** Convert the given string to a float.  Raise [Failure "float_of_string"]
    if the given string is not a valid representation of a float. *)
 

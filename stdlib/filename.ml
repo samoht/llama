@@ -189,8 +189,8 @@ let chop_extension name =
     else search_dot (i - 1) in
   search_dot (String.length name - 1)
 
-external open_desc: string -> open_flag list -> int -> int = "caml_sys_open"
-external close_desc: int -> unit = "caml_sys_close"
+external open_desc: string -> open_flag list -> int -> int = "llama_sys_open"
+external close_desc: int -> unit = "llama_sys_close"
 
 let prng = Random_state.make_self_init ();;
 

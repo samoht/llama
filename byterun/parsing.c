@@ -70,7 +70,7 @@ struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
 #define Short(tbl,n) (((short *)(tbl))[n])
 #endif
 
-int caml_parser_trace = 0;
+int llama_parser_trace = 0;
 
 /* Input codes */
 /* Mirrors parser_input in ../stdlib/parsing.ml */
@@ -138,7 +138,7 @@ static void print_token(struct parser_tables *tables, int state, value tok)
 
 /* The pushdown automata */
 
-CAMLprim value caml_parse_engine(struct parser_tables *tables,
+CAMLprim value llama_parse_engine(struct parser_tables *tables,
                                  struct parser_env *env, value cmd, value arg)
 {
   int state;
@@ -165,12 +165,12 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     RESTORE;
     if (Is_block(arg)) {
       env->curr_char = Field(tables->transl_block, Tag_val(arg));
-      caml_modify(&env->lval, Field(arg, 0));
+      llama_modify(&env->lval, Field(arg, 0));
     } else {
       env->curr_char = Field(tables->transl_const, Int_val(arg));
-      caml_modify(&env->lval, Val_long(0));
+      llama_modify(&env->lval, Val_long(0));
     }
-    if (caml_parser_trace) print_token(tables, state, arg);
+    if (llama_parser_trace) print_token(tables, state, arg);
 
   testshift:
     n1 = Short(tables->sindex, state);
@@ -199,15 +199,15 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
         n2 = n1 + ERRCODE;
         if (n1 != 0 && n2 >= 0 && n2 <= Int_val(tables->tablesize) &&
             Short(tables->check, n2) == ERRCODE) {
-          if (caml_parser_trace)
+          if (llama_parser_trace)
             fprintf(stderr, "Recovering in state %d\n", state1);
           goto shift_recover;
         } else {
-          if (caml_parser_trace){
+          if (llama_parser_trace){
             fprintf(stderr, "Discarding state %d\n", state1);
           }
           if (sp <= Int_val(env->stackbase)) {
-            if (caml_parser_trace){
+            if (llama_parser_trace){
               fprintf(stderr, "No more states to discard\n");
             }
             return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
@@ -218,7 +218,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     } else {
       if (Int_val(env->curr_char) == 0)
         return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
-      if (caml_parser_trace) fprintf(stderr, "Discarding last token read\n");
+      if (llama_parser_trace) fprintf(stderr, "Discarding last token read\n");
       env->curr_char = Val_int(-1);
       goto loop;
     }
@@ -227,7 +227,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     env->curr_char = Val_int(-1);
     if (errflag > 0) errflag--;
   shift_recover:
-    if (caml_parser_trace)
+    if (llama_parser_trace)
       fprintf(stderr, "State %d: shift to state %d\n",
               state, Short(tables->table, n2));
     state = Short(tables->table, n2);
@@ -240,13 +240,13 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     RESTORE;
   push:
     Field(env->s_stack, sp) = Val_int(state);
-    caml_modify(&Field(env->v_stack, sp), env->lval);
+    llama_modify(&Field(env->v_stack, sp), env->lval);
     Store_field (env->symb_start_stack, sp, env->symb_start);
     Store_field (env->symb_end_stack, sp, env->symb_end);
     goto loop;
 
   reduce:
-    if (caml_parser_trace)
+    if (llama_parser_trace)
       fprintf(stderr, "State %d: reduce by rule %d\n", state, n);
     m = Short(tables->len, n);
     env->asp = Val_int(sp);
@@ -276,7 +276,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
   case SEMANTIC_ACTION_COMPUTED:
     RESTORE;
     Field(env->s_stack, sp) = Val_int(state);
-    caml_modify(&Field(env->v_stack, sp), arg);
+    llama_modify(&Field(env->v_stack, sp), arg);
     asp = Int_val(env->asp);
     Store_field (env->symb_end_stack, sp, Field(env->symb_end_stack, asp));
     if (sp > asp) {
@@ -294,9 +294,9 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
 
 /* Control printing of debugging info */
 
-CAMLprim value caml_set_parser_trace(value flag)
+CAMLprim value llama_set_parser_trace(value flag)
 {
-  value oldflag = Val_bool(caml_parser_trace);
-  caml_parser_trace = Bool_val(flag);
+  value oldflag = Val_bool(llama_parser_trace);
+  llama_parser_trace = Bool_val(flag);
   return oldflag;
 }

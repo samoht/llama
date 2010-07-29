@@ -30,22 +30,22 @@
 #include "misc.h"
 #include "mlvalues.h"
 
-CAMLextern value caml_alloc_shr (mlsize_t, tag_t);
-CAMLextern void caml_adjust_gc_speed (mlsize_t, mlsize_t);
-CAMLextern void caml_alloc_dependent_memory (mlsize_t);
-CAMLextern void caml_free_dependent_memory (mlsize_t);
-CAMLextern void caml_modify (value *, value);
-CAMLextern void caml_initialize (value *, value);
-CAMLextern value caml_check_urgent_gc (value);
-CAMLextern void * caml_stat_alloc (asize_t);              /* Size in bytes. */
-CAMLextern void caml_stat_free (void *);
-CAMLextern void * caml_stat_resize (void *, asize_t);     /* Size in bytes. */
-char *caml_alloc_for_heap (asize_t request);   /* Size in bytes. */
-void caml_free_for_heap (char *mem);
-int caml_add_to_heap (char *mem);
-color_t caml_allocation_color (void *hp);
+CAMLextern value llama_alloc_shr (mlsize_t, tag_t);
+CAMLextern void llama_adjust_gc_speed (mlsize_t, mlsize_t);
+CAMLextern void llama_alloc_dependent_memory (mlsize_t);
+CAMLextern void llama_free_dependent_memory (mlsize_t);
+CAMLextern void llama_modify (value *, value);
+CAMLextern void llama_initialize (value *, value);
+CAMLextern value llama_check_urgent_gc (value);
+CAMLextern void * llama_stat_alloc (asize_t);              /* Size in bytes. */
+CAMLextern void llama_stat_free (void *);
+CAMLextern void * llama_stat_resize (void *, asize_t);     /* Size in bytes. */
+char *llama_alloc_for_heap (asize_t request);   /* Size in bytes. */
+void llama_free_for_heap (char *mem);
+int llama_add_to_heap (char *mem);
+color_t llama_allocation_color (void *hp);
 
-/* void caml_shrink_heap (char *);        Only used in compact.c */
+/* void llama_shrink_heap (char *);        Only used in compact.c */
 
 /* <private> */
 
@@ -58,8 +58,8 @@ color_t caml_allocation_color (void *hp);
 #ifdef ARCH_SIXTYFOUR
 
 /* 64 bits: Represent page table as a sparse hash table */
-int caml_page_table_lookup(void * addr);
-#define Classify_addr(a) (caml_page_table_lookup((void *)(a)))
+int llama_page_table_lookup(void * addr);
+#define Classify_addr(a) (llama_page_table_lookup((void *)(a)))
 
 #else
 
@@ -68,13 +68,13 @@ int caml_page_table_lookup(void * addr);
 #define Pagetable2_size (1 << Pagetable2_log)
 #define Pagetable1_log (Page_log + Pagetable2_log)
 #define Pagetable1_size (1 << (32 - Pagetable1_log))
-CAMLextern unsigned char * caml_page_table[Pagetable1_size];
+CAMLextern unsigned char * llama_page_table[Pagetable1_size];
 
 #define Pagetable_index1(a) (((uintnat)(a)) >> Pagetable1_log)
 #define Pagetable_index2(a) \
   ((((uintnat)(a)) >> Page_log) & (Pagetable2_size - 1))
 #define Classify_addr(a) \
-  caml_page_table[Pagetable_index1(a)][Pagetable_index2(a)]
+  llama_page_table[Pagetable_index1(a)][Pagetable_index2(a)]
 
 #endif
 
@@ -83,15 +83,15 @@ CAMLextern unsigned char * caml_page_table[Pagetable1_size];
 #define Is_in_heap(a) (Classify_addr(a) & In_heap)
 #define Is_in_heap_or_young(a) (Classify_addr(a) & (In_heap | In_young))
 
-int caml_page_table_add(int kind, void * start, void * end);
-int caml_page_table_remove(int kind, void * start, void * end);
-int caml_page_table_initialize(mlsize_t bytesize);
+int llama_page_table_add(int kind, void * start, void * end);
+int llama_page_table_remove(int kind, void * start, void * end);
+int llama_page_table_initialize(mlsize_t bytesize);
 
 #ifdef DEBUG
 #define DEBUG_clear(result, wosize) do{ \
-  uintnat caml__DEBUG_i; \
-  for (caml__DEBUG_i = 0; caml__DEBUG_i < (wosize); ++ caml__DEBUG_i){ \
-    Field ((result), caml__DEBUG_i) = Debug_uninit_minor; \
+  uintnat llama__DEBUG_i; \
+  for (llama__DEBUG_i = 0; llama__DEBUG_i < (wosize); ++ llama__DEBUG_i){ \
+    Field ((result), llama__DEBUG_i) = Debug_uninit_minor; \
   } \
 }while(0)
 #else
@@ -101,16 +101,16 @@ int caml_page_table_initialize(mlsize_t bytesize);
 #define Alloc_small(result, wosize, tag) do{    CAMLassert ((wosize) >= 1); \
                                           CAMLassert ((tag_t) (tag) < 256); \
                                  CAMLassert ((wosize) <= Max_young_wosize); \
-  caml_young_ptr -= Bhsize_wosize (wosize);                                 \
-  if (caml_young_ptr < caml_young_limit){                                   \
-    caml_young_ptr += Bhsize_wosize (wosize);                               \
+  llama_young_ptr -= Bhsize_wosize (wosize);                                 \
+  if (llama_young_ptr < llama_young_limit){                                   \
+    llama_young_ptr += Bhsize_wosize (wosize);                               \
     Setup_for_gc;                                                           \
-    caml_minor_collection ();                                               \
+    llama_minor_collection ();                                               \
     Restore_after_gc;                                                       \
-    caml_young_ptr -= Bhsize_wosize (wosize);                               \
+    llama_young_ptr -= Bhsize_wosize (wosize);                               \
   }                                                                         \
-  Hd_hp (caml_young_ptr) = Make_header ((wosize), (tag), Caml_black);       \
-  (result) = Val_hp (caml_young_ptr);                                       \
+  Hd_hp (llama_young_ptr) = Make_header ((wosize), (tag), Caml_black);       \
+  (result) = Val_hp (llama_young_ptr);                                       \
   DEBUG_clear ((result), (wosize));                                         \
 }while(0)
 
@@ -129,28 +129,28 @@ int caml_page_table_initialize(mlsize_t bytesize);
   value _old_ = *(fp);                                                      \
   *(fp) = (val);                                                            \
   if (Is_in_heap (fp)){                                                     \
-    if (caml_gc_phase == Phase_mark) caml_darken (_old_, NULL);             \
+    if (llama_gc_phase == Phase_mark) llama_darken (_old_, NULL);             \
     if (Is_block (val) && Is_young (val)                                    \
         && ! (Is_block (_old_) && Is_young (_old_))){                       \
-      if (caml_ref_table.ptr >= caml_ref_table.limit){                      \
-        CAMLassert (caml_ref_table.ptr == caml_ref_table.limit);            \
-        caml_realloc_ref_table (&caml_ref_table);                           \
+      if (llama_ref_table.ptr >= llama_ref_table.limit){                      \
+        CAMLassert (llama_ref_table.ptr == llama_ref_table.limit);            \
+        llama_realloc_ref_table (&llama_ref_table);                           \
       }                                                                     \
-      *caml_ref_table.ptr++ = (fp);                                         \
+      *llama_ref_table.ptr++ = (fp);                                         \
     }                                                                       \
   }                                                                         \
 }while(0)
 
 /* </private> */
 
-struct caml__roots_block {
-  struct caml__roots_block *next;
+struct llama__roots_block {
+  struct llama__roots_block *next;
   intnat ntables;
   intnat nitems;
   value *tables [5];
 };
 
-CAMLextern struct caml__roots_block *caml_local_roots;  /* defined in roots.c */
+CAMLextern struct llama__roots_block *llama_local_roots;  /* defined in roots.c */
 
 /* The following macros are used to declare C local variables and
    function parameters of type [value].
@@ -176,13 +176,13 @@ CAMLextern struct caml__roots_block *caml_local_roots;  /* defined in roots.c */
    your function.  Do NOT directly return a [value] with the [return]
    keyword.  If your function returns void, use [CAMLreturn0].
 
-   All the identifiers beginning with "caml__" are reserved by Caml.
+   All the identifiers beginning with "llama__" are reserved by Caml.
    Do not use them for anything (local or global variables, struct or
    union tags, macros, etc.)
 */
 
 #define CAMLparam0() \
-  struct caml__roots_block *caml__frame = caml_local_roots
+  struct llama__roots_block *llama__frame = llama_local_roots
 
 #define CAMLparam1(x) \
   CAMLparam0 (); \
@@ -216,73 +216,73 @@ CAMLextern struct caml__roots_block *caml_local_roots;  /* defined in roots.c */
 #endif
 
 #define CAMLxparam1(x) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = 1), \
-    (caml__roots_##x.ntables = 1), \
-    (caml__roots_##x.tables [0] = &x), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = 1), \
+    (llama__roots_##x.ntables = 1), \
+    (llama__roots_##x.tables [0] = &x), \
     0)
 
 #define CAMLxparam2(x, y) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = 1), \
-    (caml__roots_##x.ntables = 2), \
-    (caml__roots_##x.tables [0] = &x), \
-    (caml__roots_##x.tables [1] = &y), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = 1), \
+    (llama__roots_##x.ntables = 2), \
+    (llama__roots_##x.tables [0] = &x), \
+    (llama__roots_##x.tables [1] = &y), \
     0)
 
 #define CAMLxparam3(x, y, z) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = 1), \
-    (caml__roots_##x.ntables = 3), \
-    (caml__roots_##x.tables [0] = &x), \
-    (caml__roots_##x.tables [1] = &y), \
-    (caml__roots_##x.tables [2] = &z), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = 1), \
+    (llama__roots_##x.ntables = 3), \
+    (llama__roots_##x.tables [0] = &x), \
+    (llama__roots_##x.tables [1] = &y), \
+    (llama__roots_##x.tables [2] = &z), \
     0)
 
 #define CAMLxparam4(x, y, z, t) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = 1), \
-    (caml__roots_##x.ntables = 4), \
-    (caml__roots_##x.tables [0] = &x), \
-    (caml__roots_##x.tables [1] = &y), \
-    (caml__roots_##x.tables [2] = &z), \
-    (caml__roots_##x.tables [3] = &t), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = 1), \
+    (llama__roots_##x.ntables = 4), \
+    (llama__roots_##x.tables [0] = &x), \
+    (llama__roots_##x.tables [1] = &y), \
+    (llama__roots_##x.tables [2] = &z), \
+    (llama__roots_##x.tables [3] = &t), \
     0)
 
 #define CAMLxparam5(x, y, z, t, u) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = 1), \
-    (caml__roots_##x.ntables = 5), \
-    (caml__roots_##x.tables [0] = &x), \
-    (caml__roots_##x.tables [1] = &y), \
-    (caml__roots_##x.tables [2] = &z), \
-    (caml__roots_##x.tables [3] = &t), \
-    (caml__roots_##x.tables [4] = &u), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = 1), \
+    (llama__roots_##x.ntables = 5), \
+    (llama__roots_##x.tables [0] = &x), \
+    (llama__roots_##x.tables [1] = &y), \
+    (llama__roots_##x.tables [2] = &z), \
+    (llama__roots_##x.tables [3] = &t), \
+    (llama__roots_##x.tables [4] = &u), \
     0)
 
 #define CAMLxparamN(x, size) \
-  struct caml__roots_block caml__roots_##x; \
-  CAMLunused int caml__dummy_##x = ( \
-    (caml__roots_##x.next = caml_local_roots), \
-    (caml_local_roots = &caml__roots_##x), \
-    (caml__roots_##x.nitems = (size)), \
-    (caml__roots_##x.ntables = 1), \
-    (caml__roots_##x.tables[0] = &(x[0])), \
+  struct llama__roots_block llama__roots_##x; \
+  CAMLunused int llama__dummy_##x = ( \
+    (llama__roots_##x.next = llama_local_roots), \
+    (llama_local_roots = &llama__roots_##x), \
+    (llama__roots_##x.nitems = (size)), \
+    (llama__roots_##x.ntables = 1), \
+    (llama__roots_##x.tables[0] = &(x[0])), \
     0)
 
 #define CAMLlocal1(x) \
@@ -311,26 +311,26 @@ CAMLextern struct caml__roots_block *caml_local_roots;  /* defined in roots.c */
 
 
 #define CAMLreturn0 do{ \
-  caml_local_roots = caml__frame; \
+  llama_local_roots = llama__frame; \
   return; \
 }while (0)
 
 #define CAMLreturnT(type, result) do{ \
-  type caml__temp_result = (result); \
-  caml_local_roots = caml__frame; \
-  return (caml__temp_result); \
+  type llama__temp_result = (result); \
+  llama_local_roots = llama__frame; \
+  return (llama__temp_result); \
 }while(0)
 
 #define CAMLreturn(result) CAMLreturnT(value, result)
 
-#define CAMLnoreturn ((void) caml__frame)
+#define CAMLnoreturn ((void) llama__frame)
 
 
 /* convenience macro */
 #define Store_field(block, offset, val) do{ \
-  mlsize_t caml__temp_offset = (offset); \
-  value caml__temp_val = (val); \
-  caml_modify (&Field ((block), caml__temp_offset), caml__temp_val); \
+  mlsize_t llama__temp_offset = (offset); \
+  value llama__temp_val = (val); \
+  llama_modify (&Field ((block), llama__temp_offset), llama__temp_val); \
 }while(0)
 
 /*
@@ -356,104 +356,104 @@ CAMLextern struct caml__roots_block *caml_local_roots;  /* defined in roots.c */
 #define Begin_root Begin_roots1
 
 #define Begin_roots1(r0) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = 1; \
-  caml__roots_block.ntables = 1; \
-  caml__roots_block.tables[0] = &(r0);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = 1; \
+  llama__roots_block.ntables = 1; \
+  llama__roots_block.tables[0] = &(r0);
 
 #define Begin_roots2(r0, r1) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = 1; \
-  caml__roots_block.ntables = 2; \
-  caml__roots_block.tables[0] = &(r0); \
-  caml__roots_block.tables[1] = &(r1);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = 1; \
+  llama__roots_block.ntables = 2; \
+  llama__roots_block.tables[0] = &(r0); \
+  llama__roots_block.tables[1] = &(r1);
 
 #define Begin_roots3(r0, r1, r2) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = 1; \
-  caml__roots_block.ntables = 3; \
-  caml__roots_block.tables[0] = &(r0); \
-  caml__roots_block.tables[1] = &(r1); \
-  caml__roots_block.tables[2] = &(r2);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = 1; \
+  llama__roots_block.ntables = 3; \
+  llama__roots_block.tables[0] = &(r0); \
+  llama__roots_block.tables[1] = &(r1); \
+  llama__roots_block.tables[2] = &(r2);
 
 #define Begin_roots4(r0, r1, r2, r3) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = 1; \
-  caml__roots_block.ntables = 4; \
-  caml__roots_block.tables[0] = &(r0); \
-  caml__roots_block.tables[1] = &(r1); \
-  caml__roots_block.tables[2] = &(r2); \
-  caml__roots_block.tables[3] = &(r3);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = 1; \
+  llama__roots_block.ntables = 4; \
+  llama__roots_block.tables[0] = &(r0); \
+  llama__roots_block.tables[1] = &(r1); \
+  llama__roots_block.tables[2] = &(r2); \
+  llama__roots_block.tables[3] = &(r3);
 
 #define Begin_roots5(r0, r1, r2, r3, r4) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = 1; \
-  caml__roots_block.ntables = 5; \
-  caml__roots_block.tables[0] = &(r0); \
-  caml__roots_block.tables[1] = &(r1); \
-  caml__roots_block.tables[2] = &(r2); \
-  caml__roots_block.tables[3] = &(r3); \
-  caml__roots_block.tables[4] = &(r4);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = 1; \
+  llama__roots_block.ntables = 5; \
+  llama__roots_block.tables[0] = &(r0); \
+  llama__roots_block.tables[1] = &(r1); \
+  llama__roots_block.tables[2] = &(r2); \
+  llama__roots_block.tables[3] = &(r3); \
+  llama__roots_block.tables[4] = &(r4);
 
 #define Begin_roots_block(table, size) { \
-  struct caml__roots_block caml__roots_block; \
-  caml__roots_block.next = caml_local_roots; \
-  caml_local_roots = &caml__roots_block; \
-  caml__roots_block.nitems = (size); \
-  caml__roots_block.ntables = 1; \
-  caml__roots_block.tables[0] = (table);
+  struct llama__roots_block llama__roots_block; \
+  llama__roots_block.next = llama_local_roots; \
+  llama_local_roots = &llama__roots_block; \
+  llama__roots_block.nitems = (size); \
+  llama__roots_block.ntables = 1; \
+  llama__roots_block.tables[0] = (table);
 
-#define End_roots() caml_local_roots = caml__roots_block.next; }
+#define End_roots() llama_local_roots = llama__roots_block.next; }
 
 
-/* [caml_register_global_root] registers a global C variable as a memory root
-   for the duration of the program, or until [caml_remove_global_root] is
+/* [llama_register_global_root] registers a global C variable as a memory root
+   for the duration of the program, or until [llama_remove_global_root] is
    called. */
 
-CAMLextern void caml_register_global_root (value *);
+CAMLextern void llama_register_global_root (value *);
 
-/* [caml_remove_global_root] removes a memory root registered on a global C
-   variable with [caml_register_global_root]. */
+/* [llama_remove_global_root] removes a memory root registered on a global C
+   variable with [llama_register_global_root]. */
 
-CAMLextern void caml_remove_global_root (value *);
+CAMLextern void llama_remove_global_root (value *);
 
-/* [caml_register_generational_global_root] registers a global C
+/* [llama_register_generational_global_root] registers a global C
    variable as a memory root for the duration of the program, or until
-   [caml_remove_generational_global_root] is called.
+   [llama_remove_generational_global_root] is called.
    The program guarantees that the value contained in this variable
    will not be assigned directly.  If the program needs to change
    the value of this variable, it must do so by calling
-   [caml_modify_generational_global_root].  The [value *] pointer
-   passed to [caml_register_generational_global_root] must contain
+   [llama_modify_generational_global_root].  The [value *] pointer
+   passed to [llama_register_generational_global_root] must contain
    a valid Caml value before the call.
    In return for these constraints, scanning of memory roots during
    minor collection is made more efficient. */
 
-CAMLextern void caml_register_generational_global_root (value *);
+CAMLextern void llama_register_generational_global_root (value *);
 
-/* [caml_remove_generational_global_root] removes a memory root
+/* [llama_remove_generational_global_root] removes a memory root
    registered on a global C variable with
-   [caml_register_generational_global_root]. */
+   [llama_register_generational_global_root]. */
 
-CAMLextern void caml_remove_generational_global_root (value *);
+CAMLextern void llama_remove_generational_global_root (value *);
 
-/* [caml_modify_generational_global_root(r, newval)]
+/* [llama_modify_generational_global_root(r, newval)]
    modifies the value contained in [r], storing [newval] inside.
    In other words, the assignment [*r = newval] is performed,
    but in a way that is compatible with the optimized scanning of
    generational global roots.  [r] must be a global memory root
-   previously registered with [caml_register_generational_global_root]. */
+   previously registered with [llama_register_generational_global_root]. */
 
-CAMLextern void caml_modify_generational_global_root(value *r, value newval);
+CAMLextern void llama_modify_generational_global_root(value *r, value newval);
 
 #endif /* CAML_MEMORY_H */

@@ -56,3 +56,9 @@ llamac-new
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml
+bytecomp/runtimedef.ml
+byterun/jumptbl.h
+byterun/ocamlrun
+byterun/primitives
+byterun/prims.c
+byterun/version.h

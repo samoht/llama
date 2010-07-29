@@ -291,7 +291,7 @@ let fast_sort = stable_sort;;
    Also, there seems to be a bug in this code or in the
    implementation of obj_truncate.
 
-external obj_truncate : 'a array -> int -> unit = "caml_obj_truncate"
+external obj_truncate : 'a array -> int -> unit = "llama_obj_truncate"
 
 let array_to_list_in_place a =
   let l = Array.length a in

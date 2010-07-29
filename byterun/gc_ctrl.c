@@ -31,24 +31,24 @@
 #endif
 
 #ifndef NATIVE_CODE
-extern uintnat caml_max_stack_size;    /* defined in stacks.c */
+extern uintnat llama_max_stack_size;    /* defined in stacks.c */
 #endif
 
-double caml_stat_minor_words = 0.0,
-       caml_stat_promoted_words = 0.0,
-       caml_stat_major_words = 0.0;
+double llama_stat_minor_words = 0.0,
+       llama_stat_promoted_words = 0.0,
+       llama_stat_major_words = 0.0;
 
-intnat caml_stat_minor_collections = 0,
-       caml_stat_major_collections = 0,
-       caml_stat_heap_size = 0,              /* bytes */
-       caml_stat_top_heap_size = 0,          /* bytes */
-       caml_stat_compactions = 0,
-       caml_stat_heap_chunks = 0;
+intnat llama_stat_minor_collections = 0,
+       llama_stat_major_collections = 0,
+       llama_stat_heap_size = 0,              /* bytes */
+       llama_stat_top_heap_size = 0,          /* bytes */
+       llama_stat_compactions = 0,
+       llama_stat_heap_chunks = 0;
 
-extern uintnat caml_major_heap_increment;  /* bytes; see major_gc.c */
-extern uintnat caml_percent_free;          /*        see major_gc.c */
-extern uintnat caml_percent_max;           /*        see compact.c */
-extern uintnat caml_allocation_policy;     /*        see freelist.c */
+extern uintnat llama_major_heap_increment;  /* bytes; see major_gc.c */
+extern uintnat llama_percent_free;          /*        see major_gc.c */
+extern uintnat llama_percent_max;           /*        see compact.c */
+extern uintnat llama_allocation_policy;     /*        see freelist.c */
 
 #define Next(hp) ((hp) + Bhsize_hp (hp))
 
@@ -128,12 +128,12 @@ static value heap_stats (int returnstats)
   intnat live_words = 0, live_blocks = 0,
          free_words = 0, free_blocks = 0, largest_free = 0,
          fragments = 0, heap_chunks = 0;
-  char *chunk = caml_heap_start, *chunk_end;
+  char *chunk = llama_heap_start, *chunk_end;
   char *cur_hp, *prev_hp;
   header_t cur_hd;
 
 #ifdef DEBUG
-  caml_gc_message (-1, "### O'Caml runtime: heap check ###\n", 0);
+  llama_gc_message (-1, "### O'Caml runtime: heap check ###\n", 0);
 #endif
 
   while (chunk != NULL){
@@ -150,9 +150,9 @@ static value heap_stats (int returnstats)
           ++ fragments;
           Assert (prev_hp == NULL
                   || Color_hp (prev_hp) != Caml_blue
-                  || cur_hp == caml_gc_sweep_hp);
+                  || cur_hp == llama_gc_sweep_hp);
         }else{
-          if (caml_gc_phase == Phase_sweep && cur_hp >= caml_gc_sweep_hp){
+          if (llama_gc_phase == Phase_sweep && cur_hp >= llama_gc_sweep_hp){
             ++ free_blocks;
             free_words += Whsize_hd (cur_hd);
             if (Whsize_hd (cur_hd) > largest_free){
@@ -185,12 +185,12 @@ static value heap_stats (int returnstats)
         /* not true any more with big heap chunks
         Assert (prev_hp == NULL
                 || (Color_hp (prev_hp) != Caml_blue && Wosize_hp (prev_hp) > 0)
-                || cur_hp == caml_gc_sweep_hp);
+                || cur_hp == llama_gc_sweep_hp);
         Assert (Next (cur_hp) == chunk_end
                 || (Color_hp (Next (cur_hp)) != Caml_blue
                     && Wosize_hp (Next (cur_hp)) > 0)
                 || (Whsize_hd (cur_hd) + Wosize_hp (Next (cur_hp)) > Max_wosize)
-                || Next (cur_hp) == caml_gc_sweep_hp);
+                || Next (cur_hp) == llama_gc_sweep_hp);
         */
         break;
       }
@@ -200,28 +200,28 @@ static value heap_stats (int returnstats)
     chunk = Chunk_next (chunk);
   }
 
-  Assert (heap_chunks == caml_stat_heap_chunks);
+  Assert (heap_chunks == llama_stat_heap_chunks);
   Assert (live_words + free_words + fragments
-          == Wsize_bsize (caml_stat_heap_size));
+          == Wsize_bsize (llama_stat_heap_size));
 
   if (returnstats){
     CAMLlocal1 (res);
 
     /* get a copy of these before allocating anything... */
-    double minwords = caml_stat_minor_words
-                      + (double) Wsize_bsize (caml_young_end - caml_young_ptr);
-    double prowords = caml_stat_promoted_words;
-    double majwords = caml_stat_major_words + (double) caml_allocated_words;
-    intnat mincoll = caml_stat_minor_collections;
-    intnat majcoll = caml_stat_major_collections;
-    intnat heap_words = Wsize_bsize (caml_stat_heap_size);
-    intnat cpct = caml_stat_compactions;
-    intnat top_heap_words = Wsize_bsize (caml_stat_top_heap_size);
+    double minwords = llama_stat_minor_words
+                      + (double) Wsize_bsize (llama_young_end - llama_young_ptr);
+    double prowords = llama_stat_promoted_words;
+    double majwords = llama_stat_major_words + (double) llama_allocated_words;
+    intnat mincoll = llama_stat_minor_collections;
+    intnat majcoll = llama_stat_major_collections;
+    intnat heap_words = Wsize_bsize (llama_stat_heap_size);
+    intnat cpct = llama_stat_compactions;
+    intnat top_heap_words = Wsize_bsize (llama_stat_top_heap_size);
 
-    res = caml_alloc_tuple (16);
-    Store_field (res, 0, caml_copy_double (minwords));
-    Store_field (res, 1, caml_copy_double (prowords));
-    Store_field (res, 2, caml_copy_double (majwords));
+    res = llama_alloc_tuple (16);
+    Store_field (res, 0, llama_copy_double (minwords));
+    Store_field (res, 1, llama_copy_double (prowords));
+    Store_field (res, 2, llama_copy_double (majwords));
     Store_field (res, 3, Val_long (mincoll));
     Store_field (res, 4, Val_long (majcoll));
     Store_field (res, 5, Val_long (heap_words));
@@ -234,7 +234,7 @@ static value heap_stats (int returnstats)
     Store_field (res, 12, Val_long (fragments));
     Store_field (res, 13, Val_long (cpct));
     Store_field (res, 14, Val_long (top_heap_words));
-    Store_field (res, 15, Val_long (caml_stack_usage()));
+    Store_field (res, 15, Val_long (llama_stack_usage()));
     CAMLreturn (res);
   }else{
     CAMLreturn (Val_unit);
@@ -242,39 +242,39 @@ static value heap_stats (int returnstats)
 }
 
 #ifdef DEBUG
-void caml_heap_check (void)
+void llama_heap_check (void)
 {
   heap_stats (0);
 }
 #endif
 
-CAMLprim value caml_gc_stat(value v)
+CAMLprim value llama_gc_stat(value v)
 {
   Assert (v == Val_unit);
   return heap_stats (1);
 }
 
-CAMLprim value caml_gc_quick_stat(value v)
+CAMLprim value llama_gc_quick_stat(value v)
 {
   CAMLparam0 ();
   CAMLlocal1 (res);
 
   /* get a copy of these before allocating anything... */
-  double minwords = caml_stat_minor_words
-                    + (double) Wsize_bsize (caml_young_end - caml_young_ptr);
-  double prowords = caml_stat_promoted_words;
-  double majwords = caml_stat_major_words + (double) caml_allocated_words;
-  intnat mincoll = caml_stat_minor_collections;
-  intnat majcoll = caml_stat_major_collections;
-  intnat heap_words = caml_stat_heap_size / sizeof (value);
-  intnat top_heap_words = caml_stat_top_heap_size / sizeof (value);
-  intnat cpct = caml_stat_compactions;
-  intnat heap_chunks = caml_stat_heap_chunks;
+  double minwords = llama_stat_minor_words
+                    + (double) Wsize_bsize (llama_young_end - llama_young_ptr);
+  double prowords = llama_stat_promoted_words;
+  double majwords = llama_stat_major_words + (double) llama_allocated_words;
+  intnat mincoll = llama_stat_minor_collections;
+  intnat majcoll = llama_stat_major_collections;
+  intnat heap_words = llama_stat_heap_size / sizeof (value);
+  intnat top_heap_words = llama_stat_top_heap_size / sizeof (value);
+  intnat cpct = llama_stat_compactions;
+  intnat heap_chunks = llama_stat_heap_chunks;
 
-  res = caml_alloc_tuple (16);
-  Store_field (res, 0, caml_copy_double (minwords));
-  Store_field (res, 1, caml_copy_double (prowords));
-  Store_field (res, 2, caml_copy_double (majwords));
+  res = llama_alloc_tuple (16);
+  Store_field (res, 0, llama_copy_double (minwords));
+  Store_field (res, 1, llama_copy_double (prowords));
+  Store_field (res, 2, llama_copy_double (majwords));
   Store_field (res, 3, Val_long (mincoll));
   Store_field (res, 4, Val_long (majcoll));
   Store_field (res, 5, Val_long (heap_words));
@@ -287,45 +287,45 @@ CAMLprim value caml_gc_quick_stat(value v)
   Store_field (res, 12, Val_long (0));
   Store_field (res, 13, Val_long (cpct));
   Store_field (res, 14, Val_long (top_heap_words));
-  Store_field (res, 15, Val_long (caml_stack_usage()));
+  Store_field (res, 15, Val_long (llama_stack_usage()));
   CAMLreturn (res);
 }
 
-CAMLprim value caml_gc_counters(value v)
+CAMLprim value llama_gc_counters(value v)
 {
   CAMLparam0 ();   /* v is ignored */
   CAMLlocal1 (res);
 
   /* get a copy of these before allocating anything... */
-  double minwords = caml_stat_minor_words
-                    + (double) Wsize_bsize (caml_young_end - caml_young_ptr);
-  double prowords = caml_stat_promoted_words;
-  double majwords = caml_stat_major_words + (double) caml_allocated_words;
+  double minwords = llama_stat_minor_words
+                    + (double) Wsize_bsize (llama_young_end - llama_young_ptr);
+  double prowords = llama_stat_promoted_words;
+  double majwords = llama_stat_major_words + (double) llama_allocated_words;
 
-  res = caml_alloc_tuple (3);
-  Store_field (res, 0, caml_copy_double (minwords));
-  Store_field (res, 1, caml_copy_double (prowords));
-  Store_field (res, 2, caml_copy_double (majwords));
+  res = llama_alloc_tuple (3);
+  Store_field (res, 0, llama_copy_double (minwords));
+  Store_field (res, 1, llama_copy_double (prowords));
+  Store_field (res, 2, llama_copy_double (majwords));
   CAMLreturn (res);
 }
 
-CAMLprim value caml_gc_get(value v)
+CAMLprim value llama_gc_get(value v)
 {
   CAMLparam0 ();   /* v is ignored */
   CAMLlocal1 (res);
 
-  res = caml_alloc_tuple (7);
-  Store_field (res, 0, Val_long (Wsize_bsize (caml_minor_heap_size)));  /* s */
-  Store_field (res, 1,Val_long(Wsize_bsize(caml_major_heap_increment)));/* i */
-  Store_field (res, 2, Val_long (caml_percent_free));                   /* o */
-  Store_field (res, 3, Val_long (caml_verb_gc));                        /* v */
-  Store_field (res, 4, Val_long (caml_percent_max));                    /* O */
+  res = llama_alloc_tuple (7);
+  Store_field (res, 0, Val_long (Wsize_bsize (llama_minor_heap_size)));  /* s */
+  Store_field (res, 1,Val_long(Wsize_bsize(llama_major_heap_increment)));/* i */
+  Store_field (res, 2, Val_long (llama_percent_free));                   /* o */
+  Store_field (res, 3, Val_long (llama_verb_gc));                        /* v */
+  Store_field (res, 4, Val_long (llama_percent_max));                    /* O */
 #ifndef NATIVE_CODE
-  Store_field (res, 5, Val_long (caml_max_stack_size));                 /* l */
+  Store_field (res, 5, Val_long (llama_max_stack_size));                 /* l */
 #else
   Store_field (res, 5, Val_long (0));
 #endif
-  Store_field (res, 6, Val_long (caml_allocation_policy));              /* a */
+  Store_field (res, 6, Val_long (llama_allocation_policy));              /* a */
   CAMLreturn (res);
 }
 
@@ -365,57 +365,57 @@ static intnat norm_policy (intnat p)
   }
 }
 
-CAMLprim value caml_gc_set(value v)
+CAMLprim value llama_gc_set(value v)
 {
   uintnat newpf, newpm;
   asize_t newheapincr;
   asize_t newminsize;
   uintnat newpolicy;
 
-  caml_verb_gc = Long_val (Field (v, 3));
+  llama_verb_gc = Long_val (Field (v, 3));
 
 #ifndef NATIVE_CODE
-  caml_change_max_stack_size (Long_val (Field (v, 5)));
+  llama_change_max_stack_size (Long_val (Field (v, 5)));
 #endif
 
   newpf = norm_pfree (Long_val (Field (v, 2)));
-  if (newpf != caml_percent_free){
-    caml_percent_free = newpf;
-    caml_gc_message (0x20, "New space overhead: %d%%\n", caml_percent_free);
+  if (newpf != llama_percent_free){
+    llama_percent_free = newpf;
+    llama_gc_message (0x20, "New space overhead: %d%%\n", llama_percent_free);
   }
 
   newpm = norm_pmax (Long_val (Field (v, 4)));
-  if (newpm != caml_percent_max){
-    caml_percent_max = newpm;
-    caml_gc_message (0x20, "New max overhead: %d%%\n", caml_percent_max);
+  if (newpm != llama_percent_max){
+    llama_percent_max = newpm;
+    llama_gc_message (0x20, "New max overhead: %d%%\n", llama_percent_max);
   }
 
   newheapincr = Bsize_wsize (norm_heapincr (Long_val (Field (v, 1))));
-  if (newheapincr != caml_major_heap_increment){
-    caml_major_heap_increment = newheapincr;
-    caml_gc_message (0x20, "New heap increment size: %luk bytes\n",
-                     caml_major_heap_increment/1024);
+  if (newheapincr != llama_major_heap_increment){
+    llama_major_heap_increment = newheapincr;
+    llama_gc_message (0x20, "New heap increment size: %luk bytes\n",
+                     llama_major_heap_increment/1024);
   }
   newpolicy = norm_policy (Long_val (Field (v, 6)));
-  if (newpolicy != caml_allocation_policy){
-    caml_gc_message (0x20, "New allocation policy: %d\n", newpolicy);
-    caml_set_allocation_policy (newpolicy);
+  if (newpolicy != llama_allocation_policy){
+    llama_gc_message (0x20, "New allocation policy: %d\n", newpolicy);
+    llama_set_allocation_policy (newpolicy);
   }
 
     /* Minor heap size comes last because it will trigger a minor collection
        (thus invalidating [v]) and it can raise [Out_of_memory]. */
   newminsize = norm_minsize (Bsize_wsize (Long_val (Field (v, 0))));
-  if (newminsize != caml_minor_heap_size){
-    caml_gc_message (0x20, "New minor heap size: %luk bytes\n",
+  if (newminsize != llama_minor_heap_size){
+    llama_gc_message (0x20, "New minor heap size: %luk bytes\n",
                      newminsize/1024);
-    caml_set_minor_heap_size (newminsize);
+    llama_set_minor_heap_size (newminsize);
   }
   return Val_unit;
 }
 
-CAMLprim value caml_gc_minor(value v)
+CAMLprim value llama_gc_minor(value v)
 {                                                    Assert (v == Val_unit);
-  caml_minor_collection ();
+  llama_minor_collection ();
   return Val_unit;
 }
 
@@ -423,78 +423,78 @@ static void test_and_compact (void)
 {
   float fp;
 
-  fp = 100.0 * caml_fl_cur_size
-       / (Wsize_bsize (caml_stat_heap_size) - caml_fl_cur_size);
+  fp = 100.0 * llama_fl_cur_size
+       / (Wsize_bsize (llama_stat_heap_size) - llama_fl_cur_size);
   if (fp > 999999.0) fp = 999999.0;
-  caml_gc_message (0x200, "Estimated overhead (lower bound) = %"
+  llama_gc_message (0x200, "Estimated overhead (lower bound) = %"
                           ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                    (uintnat) fp);
-  if (fp >= caml_percent_max && caml_stat_heap_chunks > 1){
-    caml_gc_message (0x200, "Automatic compaction triggered.\n", 0);
-    caml_compact_heap ();
+  if (fp >= llama_percent_max && llama_stat_heap_chunks > 1){
+    llama_gc_message (0x200, "Automatic compaction triggered.\n", 0);
+    llama_compact_heap ();
   }
 }
 
-CAMLprim value caml_gc_major(value v)
+CAMLprim value llama_gc_major(value v)
 {                                                    Assert (v == Val_unit);
-  caml_gc_message (0x1, "Major GC cycle requested\n", 0);
-  caml_empty_minor_heap ();
-  caml_finish_major_cycle ();
+  llama_gc_message (0x1, "Major GC cycle requested\n", 0);
+  llama_empty_minor_heap ();
+  llama_finish_major_cycle ();
   test_and_compact ();
-  caml_final_do_calls ();
+  llama_final_do_calls ();
   return Val_unit;
 }
 
-CAMLprim value caml_gc_full_major(value v)
+CAMLprim value llama_gc_full_major(value v)
 {                                                    Assert (v == Val_unit);
-  caml_gc_message (0x1, "Full major GC cycle requested\n", 0);
-  caml_empty_minor_heap ();
-  caml_finish_major_cycle ();
-  caml_final_do_calls ();
-  caml_empty_minor_heap ();
-  caml_finish_major_cycle ();
+  llama_gc_message (0x1, "Full major GC cycle requested\n", 0);
+  llama_empty_minor_heap ();
+  llama_finish_major_cycle ();
+  llama_final_do_calls ();
+  llama_empty_minor_heap ();
+  llama_finish_major_cycle ();
   test_and_compact ();
-  caml_final_do_calls ();
+  llama_final_do_calls ();
   return Val_unit;
 }
 
-CAMLprim value caml_gc_major_slice (value v)
+CAMLprim value llama_gc_major_slice (value v)
 {
   Assert (Is_long (v));
-  caml_empty_minor_heap ();
-  return Val_long (caml_major_collection_slice (Long_val (v)));
+  llama_empty_minor_heap ();
+  return Val_long (llama_major_collection_slice (Long_val (v)));
 }
 
-CAMLprim value caml_gc_compaction(value v)
+CAMLprim value llama_gc_compaction(value v)
 {                                                    Assert (v == Val_unit);
-  caml_empty_minor_heap ();
-  caml_finish_major_cycle ();
-  caml_finish_major_cycle ();
-  caml_compact_heap ();
-  caml_final_do_calls ();
+  llama_empty_minor_heap ();
+  llama_finish_major_cycle ();
+  llama_finish_major_cycle ();
+  llama_compact_heap ();
+  llama_final_do_calls ();
   return Val_unit;
 }
 
-void caml_init_gc (uintnat minor_size, uintnat major_size,
+void llama_init_gc (uintnat minor_size, uintnat major_size,
                    uintnat major_incr, uintnat percent_fr,
                    uintnat percent_m)
 {
   uintnat major_heap_size = Bsize_wsize (norm_heapincr (major_size));
 
-  caml_page_table_initialize(Bsize_wsize(minor_size) + major_heap_size);
-  caml_set_minor_heap_size (Bsize_wsize (norm_minsize (minor_size)));
-  caml_major_heap_increment = Bsize_wsize (norm_heapincr (major_incr));
-  caml_percent_free = norm_pfree (percent_fr);
-  caml_percent_max = norm_pmax (percent_m);
-  caml_init_major_heap (major_heap_size);
-  caml_gc_message (0x20, "Initial minor heap size: %luk bytes\n",
-                   caml_minor_heap_size / 1024);
-  caml_gc_message (0x20, "Initial major heap size: %luk bytes\n",
+  llama_page_table_initialize(Bsize_wsize(minor_size) + major_heap_size);
+  llama_set_minor_heap_size (Bsize_wsize (norm_minsize (minor_size)));
+  llama_major_heap_increment = Bsize_wsize (norm_heapincr (major_incr));
+  llama_percent_free = norm_pfree (percent_fr);
+  llama_percent_max = norm_pmax (percent_m);
+  llama_init_major_heap (major_heap_size);
+  llama_gc_message (0x20, "Initial minor heap size: %luk bytes\n",
+                   llama_minor_heap_size / 1024);
+  llama_gc_message (0x20, "Initial major heap size: %luk bytes\n",
                    major_heap_size / 1024);
-  caml_gc_message (0x20, "Initial space overhead: %lu%%\n", caml_percent_free);
-  caml_gc_message (0x20, "Initial max overhead: %lu%%\n", caml_percent_max);
-  caml_gc_message (0x20, "Initial heap increment: %luk bytes\n",
-                   caml_major_heap_increment / 1024);
-  caml_gc_message (0x20, "Initial allocation policy: %d\n",
-                   caml_allocation_policy);
+  llama_gc_message (0x20, "Initial space overhead: %lu%%\n", llama_percent_free);
+  llama_gc_message (0x20, "Initial max overhead: %lu%%\n", llama_percent_max);
+  llama_gc_message (0x20, "Initial heap increment: %luk bytes\n",
+                   llama_major_heap_increment / 1024);
+  llama_gc_message (0x20, "Initial allocation policy: %d\n",
+                   llama_allocation_policy);
 }

@@ -48,13 +48,13 @@ val add_path: string list -> unit
 
 (* Initialization for separate compilation.
    Initialize the DLL search path to the directories given in the
-   environment variable CAML_LD_LIBRARY_PATH, plus contents of ld.conf file
+   environment variable LLAMA_LD_LIBRARY_PATH, plus contents of ld.conf file
    if argument is [false].  If argument is [true], ignore ld.conf. *)
 val init_compile: bool -> unit
 
 (* Initialization for linking in core (dynlink or toplevel).
    Initialize the search path to the same path that was used to start
-   the running program (CAML_LD_LIBRARY_PATH + directories in executable +
+   the running program (LLAMA_LD_LIBRARY_PATH + directories in executable +
    contents of ld.conf file).  Take note of the DLLs that were opened
    when starting the running program. *)
 val init_toplevel: string -> unit

@@ -21,18 +21,18 @@
 #include "misc.h"
 #include "mlvalues.h"
 
-CAMLextern int caml_debugger_in_use;
-CAMLextern int caml_debugger_fork_mode; /* non-zero for parent */
-extern uintnat caml_event_count;
+CAMLextern int llama_debugger_in_use;
+CAMLextern int llama_debugger_fork_mode; /* non-zero for parent */
+extern uintnat llama_event_count;
 
 enum event_kind {
   EVENT_COUNT, BREAKPOINT, PROGRAM_START, PROGRAM_EXIT,
   TRAP_BARRIER, UNCAUGHT_EXC
 };
 
-void caml_debugger_init (void);
-void caml_debugger (enum event_kind event);
-void caml_debugger_cleanup_fork (void);
+void llama_debugger_init (void);
+void llama_debugger (enum event_kind event);
+void llama_debugger_cleanup_fork (void);
 
 /* Communication protocol */
 
@@ -84,7 +84,7 @@ enum debugger_request {
   /* As REQ_GET_OBJ, but sends only one field. */
   REQ_MARSHAL_OBJ = 'M',        /* mlvalue v */
   /* Send a copy of the data structure rooted at v, using the same
-     format as [caml_output_value]. */
+     format as [llama_output_value]. */
   REQ_GET_CLOSURE_CODE = 'C',   /* mlvalue v */
   /* Send the code address of the given closure.
      Reply is one uint32. */

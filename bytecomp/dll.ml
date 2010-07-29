@@ -19,14 +19,14 @@ type dll_address
 type dll_mode = For_checking | For_execution
 
 (*
-external dll_open: dll_mode -> string -> dll_handle = "caml_dynlink_open_lib"
-external dll_close: dll_handle -> unit = "caml_dynlink_close_lib"
+external dll_open: dll_mode -> string -> dll_handle = "llama_dynlink_open_lib"
+external dll_close: dll_handle -> unit = "llama_dynlink_close_lib"
 external dll_sym: dll_handle -> string -> dll_address
-                = "caml_dynlink_lookup_symbol"
+                = "llama_dynlink_lookup_symbol"
          (* returned dll_address may be Val_unit *)
-external add_primitive: dll_address -> int = "caml_dynlink_add_primitive"
+external add_primitive: dll_address -> int = "llama_dynlink_add_primitive"
 external get_current_dlls: unit -> dll_handle array
-                                           = "caml_dynlink_get_current_libs"
+                                           = "llama_dynlink_get_current_libs"
 *)
 let dll_open _ _ = failwith "Dll.dll_open"
 let dll_close _ = failwith "Dll.dll_close"
@@ -133,7 +133,7 @@ let ld_conf_contents () =
   end;
   List.rev !path
 
-(* Split the CAML_LD_LIBRARY_PATH environment variable and return
+(* Split the LLAMA_LD_LIBRARY_PATH environment variable and return
    the corresponding list of directories.  *)
 
 let split str sep =
@@ -155,7 +155,7 @@ let ld_library_path_contents () =
     | "Win32" -> ';'
     | _ -> assert false in
   try
-    split (Sys.getenv "CAML_LD_LIBRARY_PATH") path_separator
+    split (Sys.getenv "LLAMA_LD_LIBRARY_PATH") path_separator
   with Not_found ->
     []
 

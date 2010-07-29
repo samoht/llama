@@ -58,15 +58,15 @@ typedef char * addr;
 /* <private> */
 
 #ifdef DEBUG
-#define CAMLassert(x) ((x) ? 0 : caml_failed_assert ( #x , __FILE__, __LINE__))
-CAMLextern int caml_failed_assert (char *, char *, int);
+#define CAMLassert(x) ((x) ? 0 : llama_failed_assert ( #x , __FILE__, __LINE__))
+CAMLextern int llama_failed_assert (char *, char *, int);
 #else
 #define CAMLassert(x) ((void) 0)
 #endif
 
-CAMLextern void caml_fatal_error (char *msg) Noreturn;
-CAMLextern void caml_fatal_error_arg (char *fmt, char *arg) Noreturn;
-CAMLextern void caml_fatal_error_arg2 (char *fmt1, char *arg1,
+CAMLextern void llama_fatal_error (char *msg) Noreturn;
+CAMLextern void llama_fatal_error_arg (char *fmt, char *arg) Noreturn;
+CAMLextern void llama_fatal_error_arg2 (char *fmt1, char *arg1,
                                        char *fmt2, char *arg2) Noreturn;
 
 /* Data structures */
@@ -77,18 +77,18 @@ struct ext_table {
   void ** contents;
 };
 
-extern void caml_ext_table_init(struct ext_table * tbl, int init_capa);
-extern int caml_ext_table_add(struct ext_table * tbl, void * data);
-extern void caml_ext_table_free(struct ext_table * tbl, int free_entries);
+extern void llama_ext_table_init(struct ext_table * tbl, int init_capa);
+extern int llama_ext_table_add(struct ext_table * tbl, void * data);
+extern void llama_ext_table_free(struct ext_table * tbl, int free_entries);
 
 /* GC flags and messages */
 
-extern uintnat caml_verb_gc;
-void caml_gc_message (int, char *, uintnat);
+extern uintnat llama_verb_gc;
+void llama_gc_message (int, char *, uintnat);
 
 /* Memory routines */
 
-char *caml_aligned_malloc (asize_t, int, void **);
+char *llama_aligned_malloc (asize_t, int, void **);
 
 #ifdef DEBUG
 #ifdef ARCH_SIXTYFOUR
@@ -103,14 +103,14 @@ char *caml_aligned_malloc (asize_t, int, void **);
   00 -> free words in minor heap
   01 -> fields of free list blocks in major heap
   03 -> heap chunks deallocated by heap shrinking
-  04 -> fields deallocated by [caml_obj_truncate]
+  04 -> fields deallocated by [llama_obj_truncate]
   10 -> uninitialised fields of minor objects
   11 -> uninitialised fields of major objects
-  15 -> uninitialised words of [caml_aligned_malloc] blocks
-  85 -> filler bytes of [caml_aligned_malloc]
+  15 -> uninitialised words of [llama_aligned_malloc] blocks
+  85 -> filler bytes of [llama_aligned_malloc]
 
   special case (byte by byte):
-  D7 -> uninitialised words of [caml_stat_alloc] blocks
+  D7 -> uninitialised words of [llama_stat_alloc] blocks
 */
 #define Debug_free_minor     Debug_tag (0x00)
 #define Debug_free_major     Debug_tag (0x01)
@@ -123,7 +123,7 @@ char *caml_aligned_malloc (asize_t, int, void **);
 
 #define Debug_uninit_stat    0xD7
 
-extern void caml_set_fields (char *, unsigned long, unsigned long);
+extern void llama_set_fields (char *, unsigned long, unsigned long);
 #endif /* DEBUG */
 
 

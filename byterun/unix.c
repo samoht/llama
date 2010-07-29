@@ -48,18 +48,18 @@
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 
-char * caml_decompose_path(struct ext_table * tbl, char * path)
+char * llama_decompose_path(struct ext_table * tbl, char * path)
 {
   char * p, * q;
   int n;
 
   if (path == NULL) return NULL;
-  p = caml_stat_alloc(strlen(path) + 1);
+  p = llama_stat_alloc(strlen(path) + 1);
   strcpy(p, path);
   q = p;
   while (1) {
     for (n = 0; q[n] != 0 && q[n] != ':'; n++) /*nothing*/;
-    caml_ext_table_add(tbl, q);
+    llama_ext_table_add(tbl, q);
     q = q + n;
     if (*q == 0) break;
     *q = 0;
@@ -68,7 +68,7 @@ char * caml_decompose_path(struct ext_table * tbl, char * path)
   return p;
 }
 
-char * caml_search_in_path(struct ext_table * path, char * name)
+char * llama_search_in_path(struct ext_table * path, char * name)
 {
   char * p, * fullname;
   int i;
@@ -78,16 +78,16 @@ char * caml_search_in_path(struct ext_table * path, char * name)
     if (*p == '/') goto not_found;
   }
   for (i = 0; i < path->size; i++) {
-    fullname = caml_stat_alloc(strlen((char *)(path->contents[i])) +
+    fullname = llama_stat_alloc(strlen((char *)(path->contents[i])) +
                                strlen(name) + 2);
     strcpy(fullname, (char *)(path->contents[i]));
     if (fullname[0] != 0) strcat(fullname, "/");
     strcat(fullname, name);
     if (stat(fullname, &st) == 0 && S_ISREG(st.st_mode)) return fullname;
-    caml_stat_free(fullname);
+    llama_stat_free(fullname);
   }
  not_found:
-  fullname = caml_stat_alloc(strlen(name) + 1);
+  fullname = llama_stat_alloc(strlen(name) + 1);
   strcpy(fullname, name);
   return fullname;
 }
@@ -116,7 +116,7 @@ static char * cygwin_search_exe_in_path(struct ext_table * path, char * name)
     if (*p == '/' || *p == '\\') goto not_found;
   }
   for (i = 0; i < path->size; i++) {
-    fullname = caml_stat_alloc(strlen((char *)(path->contents[i])) +
+    fullname = llama_stat_alloc(strlen((char *)(path->contents[i])) +
                                strlen(name) + 6);
     strcpy(fullname, (char *)(path->contents[i]));
     strcat(fullname, "/");
@@ -124,10 +124,10 @@ static char * cygwin_search_exe_in_path(struct ext_table * path, char * name)
     if (cygwin_file_exists(fullname)) return fullname;
     strcat(fullname, ".exe");
     if (cygwin_file_exists(fullname)) return fullname;
-    caml_stat_free(fullname);
+    llama_stat_free(fullname);
   }
  not_found:
-  fullname = caml_stat_alloc(strlen(name) + 5);
+  fullname = llama_stat_alloc(strlen(name) + 5);
   strcpy(fullname, name);
   if (cygwin_file_exists(fullname)) return fullname;
   strcat(fullname, ".exe");
@@ -138,32 +138,32 @@ static char * cygwin_search_exe_in_path(struct ext_table * path, char * name)
 
 #endif
 
-char * caml_search_exe_in_path(char * name)
+char * llama_search_exe_in_path(char * name)
 {
   struct ext_table path;
   char * tofree;
   char * res;
 
-  caml_ext_table_init(&path, 8);
-  tofree = caml_decompose_path(&path, getenv("PATH"));
+  llama_ext_table_init(&path, 8);
+  tofree = llama_decompose_path(&path, getenv("PATH"));
 #ifndef __CYGWIN32__
-  res = caml_search_in_path(&path, name);
+  res = llama_search_in_path(&path, name);
 #else
   res = cygwin_search_exe_in_path(&path, name);
 #endif
-  caml_stat_free(tofree);
-  caml_ext_table_free(&path, 0);
+  llama_stat_free(tofree);
+  llama_ext_table_free(&path, 0);
   return res;
 }
 
-char * caml_search_dll_in_path(struct ext_table * path, char * name)
+char * llama_search_dll_in_path(struct ext_table * path, char * name)
 {
-  char * dllname = caml_stat_alloc(strlen(name) + 4);
+  char * dllname = llama_stat_alloc(strlen(name) + 4);
   char * res;
   strcpy(dllname, name);
   strcat(dllname, ".so");
-  res = caml_search_in_path(path, dllname);
-  caml_stat_free(dllname);
+  res = llama_search_in_path(path, dllname);
+  llama_stat_free(dllname);
   return res;
 }
 
@@ -171,29 +171,29 @@ char * caml_search_dll_in_path(struct ext_table * path, char * name)
 #ifdef __CYGWIN32__
 /* Use flexdll */
 
-void * caml_dlopen(char * libname, int for_execution, int global)
+void * llama_dlopen(char * libname, int for_execution, int global)
 {
   int flags = (global ? FLEXDLL_RTLD_GLOBAL : 0);
   if (!for_execution) flags |= FLEXDLL_RTLD_NOEXEC;
   return flexdll_dlopen(libname, flags);
 }
 
-void caml_dlclose(void * handle)
+void llama_dlclose(void * handle)
 {
   flexdll_dlclose(handle);
 }
 
-void * caml_dlsym(void * handle, char * name)
+void * llama_dlsym(void * handle, char * name)
 {
   return flexdll_dlsym(handle, name);
 }
 
-void * caml_globalsym(char * name)
+void * llama_globalsym(char * name)
 {
   return flexdll_dlsym(flexdll_dlopen(NULL,0), name);
 }
 
-char * caml_dlerror(void)
+char * llama_dlerror(void)
 {
   return flexdll_dlerror();
 }
@@ -211,18 +211,18 @@ char * caml_dlerror(void)
 #define RTLD_NODELETE 0
 #endif
 
-void * caml_dlopen(char * libname, int for_execution, int global)
+void * llama_dlopen(char * libname, int for_execution, int global)
 {
   return dlopen(libname, RTLD_NOW | (global ? RTLD_GLOBAL : RTLD_LOCAL) | RTLD_NODELETE);
   /* Could use RTLD_LAZY if for_execution == 0, but needs testing */
 }
 
-void caml_dlclose(void * handle)
+void llama_dlclose(void * handle)
 {
   dlclose(handle);
 }
 
-void * caml_dlsym(void * handle, char * name)
+void * llama_dlsym(void * handle, char * name)
 {
 #ifdef DL_NEEDS_UNDERSCORE
   char _name[1000] = "_";
@@ -232,16 +232,16 @@ void * caml_dlsym(void * handle, char * name)
   return dlsym(handle, name);
 }
 
-void * caml_globalsym(char * name)
+void * llama_globalsym(char * name)
 {
 #ifdef RTLD_DEFAULT
-  return caml_dlsym(RTLD_DEFAULT, name);
+  return llama_dlsym(RTLD_DEFAULT, name);
 #else
   return NULL;
 #endif
 }
 
-char * caml_dlerror(void)
+char * llama_dlerror(void)
 {
   return (char*) dlerror();
 }
@@ -249,26 +249,26 @@ char * caml_dlerror(void)
 #endif
 #else
 
-void * caml_dlopen(char * libname, int for_execution, int global)
+void * llama_dlopen(char * libname, int for_execution, int global)
 {
   return NULL;
 }
 
-void caml_dlclose(void * handle)
+void llama_dlclose(void * handle)
 {
 }
 
-void * caml_dlsym(void * handle, char * name)
-{
-  return NULL;
-}
-
-void * caml_globalsym(char * name)
+void * llama_dlsym(void * handle, char * name)
 {
   return NULL;
 }
 
-char * caml_dlerror(void)
+void * llama_globalsym(char * name)
+{
+  return NULL;
+}
+
+char * llama_dlerror(void)
 {
   return "dynamic loading not supported on this platform";
 }
@@ -279,7 +279,7 @@ char * caml_dlerror(void)
    the directory named [dirname].  No entries are added for [.] and [..].
    Return 0 on success, -1 on error; set errno in the case of error. */
 
-int caml_read_directory(char * dirname, struct ext_table * contents)
+int llama_read_directory(char * dirname, struct ext_table * contents)
 {
   DIR * d;
 #ifdef HAS_DIRENT
@@ -295,9 +295,9 @@ int caml_read_directory(char * dirname, struct ext_table * contents)
     e = readdir(d);
     if (e == NULL) break;
     if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0) continue;
-    p = caml_stat_alloc(strlen(e->d_name) + 1);
+    p = llama_stat_alloc(strlen(e->d_name) + 1);
     strcpy(p, e->d_name);
-    caml_ext_table_add(contents, p);
+    llama_ext_table_add(contents, p);
   }
   closedir(d);
   return 0;
@@ -307,7 +307,7 @@ int caml_read_directory(char * dirname, struct ext_table * contents)
 
 #ifdef __linux__
 
-int caml_executable_name(char * name, int name_len)
+int llama_executable_name(char * name, int name_len)
 {
   int retcode;
   struct stat st;

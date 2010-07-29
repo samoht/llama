@@ -34,7 +34,7 @@ static struct compare_item * compare_stack = compare_stack_init;
 static struct compare_item * compare_stack_limit = compare_stack_init
                                                    + COMPARE_STACK_INIT_SIZE;
 
-CAMLexport int caml_compare_unordered;
+CAMLexport int llama_compare_unordered;
 
 /* Free the compare stack if needed */
 static void compare_free_stack(void)
@@ -50,9 +50,9 @@ static void compare_free_stack(void)
 /* Same, then raise Out_of_memory */
 static void compare_stack_overflow(void)
 {
-  caml_gc_message (0x04, "Stack overflow in structural comparison\n", 0);
+  llama_gc_message (0x04, "Stack overflow in structural comparison\n", 0);
   compare_free_stack();
-  caml_raise_out_of_memory();
+  llama_raise_out_of_memory();
 }
 
 /* Grow the compare stack */
@@ -137,8 +137,8 @@ static intnat compare_val(value v1, value v2, int total)
       mlsize_t len1, len2, len;
       unsigned char * p1, * p2;
       if (v1 == v2) break;
-      len1 = caml_string_length(v1);
-      len2 = caml_string_length(v2);
+      len1 = llama_string_length(v1);
+      len2 = llama_string_length(v2);
       for (len = (len1 <= len2 ? len1 : len2),
              p1 = (unsigned char *) String_val(v1),
              p2 = (unsigned char *) String_val(v2);
@@ -184,11 +184,11 @@ static intnat compare_val(value v1, value v2, int total)
     }
     case Abstract_tag:
       compare_free_stack();
-      caml_invalid_argument("equal: abstract value");
+      llama_invalid_argument("equal: abstract value");
     case Closure_tag:
     case Infix_tag:
       compare_free_stack();
-      caml_invalid_argument("equal: functional value");
+      llama_invalid_argument("equal: functional value");
     case Object_tag: {
       intnat oid1 = Oid_val(v1);
       intnat oid2 = Oid_val(v2);
@@ -200,11 +200,11 @@ static intnat compare_val(value v1, value v2, int total)
       int (*compare)(value v1, value v2) = Custom_ops_val(v1)->compare;
       if (compare == NULL) {
         compare_free_stack();
-        caml_invalid_argument("equal: abstract value");
+        llama_invalid_argument("equal: abstract value");
       }
-      caml_compare_unordered = 0;
+      llama_compare_unordered = 0;
       res = Custom_ops_val(v1)->compare(v1, v2);
-      if (caml_compare_unordered && !total) return UNORDERED;
+      if (llama_compare_unordered && !total) return UNORDERED;
       if (res != 0) return res;
       break;
     }
@@ -237,7 +237,7 @@ static intnat compare_val(value v1, value v2, int total)
   }
 }
 
-CAMLprim value caml_compare(value v1, value v2)
+CAMLprim value llama_compare(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 1);
   /* Free stack if needed */
@@ -250,42 +250,42 @@ CAMLprim value caml_compare(value v1, value v2)
     return Val_int(EQUAL);
 }
 
-CAMLprim value caml_equal(value v1, value v2)
+CAMLprim value llama_equal(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();
   return Val_int(res == 0);
 }
 
-CAMLprim value caml_notequal(value v1, value v2)
+CAMLprim value llama_notequal(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();
   return Val_int(res != 0);
 }
 
-CAMLprim value caml_lessthan(value v1, value v2)
+CAMLprim value llama_lessthan(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();
   return Val_int(res < 0 && res != UNORDERED);
 }
 
-CAMLprim value caml_lessequal(value v1, value v2)
+CAMLprim value llama_lessequal(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();
   return Val_int(res <= 0 && res != UNORDERED);
 }
 
-CAMLprim value caml_greaterthan(value v1, value v2)
+CAMLprim value llama_greaterthan(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();
   return Val_int(res > 0);
 }
 
-CAMLprim value caml_greaterequal(value v1, value v2)
+CAMLprim value llama_greaterequal(value v1, value v2)
 {
   intnat res = compare_val(v1, v2, 0);
   if (compare_stack != compare_stack_init) compare_free_stack();

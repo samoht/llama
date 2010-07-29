@@ -99,7 +99,7 @@ and bigarray_kind =
   | Pbigarray_sint8 | Pbigarray_uint8
   | Pbigarray_sint16 | Pbigarray_uint16
   | Pbigarray_int32 | Pbigarray_int64
-  | Pbigarray_caml_int | Pbigarray_native_int
+  | Pbigarray_llama_int | Pbigarray_native_int
   | Pbigarray_complex32 | Pbigarray_complex64
 
 and bigarray_layout =

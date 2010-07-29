@@ -114,7 +114,7 @@ let kind_table =
    "int16_unsigned_elt", Pbigarray_uint16;
    "int32_elt", Pbigarray_int32;
    "int64_elt", Pbigarray_int64;
-   "int_elt", Pbigarray_caml_int;
+   "int_elt", Pbigarray_llama_int;
    "nativeint_elt", Pbigarray_native_int;
    "complex32_elt", Pbigarray_complex32;
    "complex64_elt", Pbigarray_complex64]
@@ -125,7 +125,7 @@ let layout_table =
 
 let bigarray_kind_and_layout exp =
   match scrape exp.exp_env exp.exp_type with
-  | Tconstruct(p, [caml_type; elt_type; layout_type]) ->
+  | Tconstruct(p, [llama_type; elt_type; layout_type]) ->
       (bigarray_decode_type exp.exp_env elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type exp.exp_env layout_type layout_table Pbigarray_unknown_layout)
   | _ ->

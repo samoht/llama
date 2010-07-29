@@ -42,12 +42,12 @@ PUBLIC_INCLUDES=\
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
 
-all:: ocamlrun$(EXE) ld.conf libcamlrun.$(A)
+all:: ocamlrun$(EXE) libcamlrun.$(A) # ld.conf 
 .PHONY: all
 
-ld.conf: ../config/Makefile
-	echo "$(STUBLIBDIR)" > ld.conf
-	echo "$(LIBDIR)" >> ld.conf
+#ld.conf: ../config/Makefile
+#	echo "$(STUBLIBDIR)" > ld.conf
+#	echo "$(LIBDIR)" >> ld.conf
 
 install::
 	cp ocamlrun$(EXE) $(BINDIR)/ocamlrun$(EXE)
@@ -57,7 +57,7 @@ install::
 	for i in $(PUBLIC_INCLUDES); do \
 	  sed -f ../tools/cleanup-header $$i > $(LIBDIR)/caml/$$i; \
 	done
-	cp ld.conf $(LIBDIR)/ld.conf
+#	cp ld.conf $(LIBDIR)/ld.conf
 .PHONY: install
 
 
@@ -69,10 +69,10 @@ prims.c : primitives
 	(echo '#include "mlvalues.h"'; \
 	 echo '#include "prims.h"'; \
 	 sed -e 's/.*/extern value &();/' primitives; \
-	 echo 'c_primitive caml_builtin_cprim[] = {'; \
+	 echo 'c_primitive llama_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	&,/' primitives; \
 	 echo '	 0 };'; \
-	 echo 'char * caml_names_of_builtin_cprim[] = {'; \
+	 echo 'char * llama_names_of_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	"&",/' primitives; \
 	 echo '	 0 };') > prims.c
 
@@ -93,7 +93,7 @@ version.h : ../VERSION
 
 clean ::
 	rm -f ocamlrun$(EXE) ocamlrund$(EXE) *.$(O) *.$(A) *.$(SO)
-	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
+	rm -f primitives prims.c opnames.h jumptbl.h # ld.conf
 	rm -f version.h
 .PHONY: clean
 

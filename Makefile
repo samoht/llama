@@ -66,7 +66,8 @@ CL_TOPLEVEL=\
   cl_toplevel/cl_topmain.cmx runtime/libcaml.a cl_toplevel/llama.o
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
- cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml
+ cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
+ bytecomp/runtimedef.ml
 
 all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llamac-new
 .PHONY: all
@@ -128,6 +129,15 @@ cl_comp/more_predef.ml : runtime/globals.h runtime/fail.h
 	 sed -n -e 's|.*/\* \("[A-Za-z_]*"\) \*/$$|  \1;|p' runtime/fail.h | \
 	 sed -e '$$s/;$$//'; \
 	 echo '|];;') > $@
+
+bytecomp/runtimedef.ml: byterun/primitives byterun/fail.h
+	(echo 'let builtin_exceptions = [|'; \
+	 sed -n -e 's|.*/\* \("[A-Za-z_]*"\) \*/$$|  \1;|p' byterun/fail.h | \
+	 sed -e '$$s/;$$//'; \
+	 echo '|]'; \
+	 echo 'let builtin_primitives = [|'; \
+	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' byterun/primitives; \
+	 echo '|]') > bytecomp/runtimedef.ml
 
 cl_comp/caml_light_extern.o: cl_comp/caml_light_extern.c
 	$(OCAMLOPT) -c -ccopt "-o $@" $<

@@ -18,16 +18,16 @@
 
 #include "mlvalues.h"
 
-CAMLextern int caml_backtrace_active;
-CAMLextern int caml_backtrace_pos;
-CAMLextern code_t * caml_backtrace_buffer;
-CAMLextern value caml_backtrace_last_exn;
-CAMLextern char * caml_cds_file;
+CAMLextern int llama_backtrace_active;
+CAMLextern int llama_backtrace_pos;
+CAMLextern code_t * llama_backtrace_buffer;
+CAMLextern value llama_backtrace_last_exn;
+CAMLextern char * llama_cds_file;
 
-CAMLprim value caml_record_backtrace(value vflag);
+CAMLprim value llama_record_backtrace(value vflag);
 #ifndef NATIVE_CODE
-extern void caml_stash_backtrace(value exn, code_t pc, value * sp);
+extern void llama_stash_backtrace(value exn, code_t pc, value * sp);
 #endif
-CAMLextern void caml_print_exception_backtrace(void);
+CAMLextern void llama_print_exception_backtrace(void);
 
 #endif /* CAML_BACKTRACE_H */

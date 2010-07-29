@@ -137,7 +137,7 @@ static void init_extern_output(void)
 {
   extern_userprovided_output = NULL;
   extern_output_first = malloc(sizeof(struct output_block));
-  if (extern_output_first == NULL) caml_raise_out_of_memory();
+  if (extern_output_first == NULL) llama_raise_out_of_memory();
   extern_output_block = extern_output_first;
   extern_output_block->next = NULL;
   extern_ptr = extern_output_block->data;
@@ -170,7 +170,7 @@ static void grow_extern_output(intnat required)
 
   if (extern_userprovided_output != NULL) {
     extern_replay_trail();
-    caml_failwith("Marshal.to_buffer: buffer overflow");
+    llama_failwith("Marshal.to_buffer: buffer overflow");
   }
   extern_output_block->end = extern_ptr;
   if (required <= SIZE_EXTERN_OUTPUT_BLOCK / 2)
@@ -206,14 +206,14 @@ static void extern_out_of_memory(void)
 {
   extern_replay_trail();
   free_extern_output();
-  caml_raise_out_of_memory();
+  llama_raise_out_of_memory();
 }
 
 static void extern_invalid_argument(char *msg)
 {
   extern_replay_trail();
   free_extern_output();
-  caml_invalid_argument(msg);
+  llama_invalid_argument(msg);
 }
 
 /* Write characters, integers, and blocks in the output buffer */
@@ -234,7 +234,7 @@ static void writeblock(char *data, intnat len)
   writeblock((char *)(data), (ndoubles) * 8)
 #else
 #define writeblock_float8(data,ndoubles) \
-  caml_serialize_block_float_8((data), (ndoubles))
+  llama_serialize_block_float_8((data), (ndoubles))
 #endif
 
 static void writecode8(int code, intnat val)
@@ -348,7 +348,7 @@ static void extern_rec(value v)
     /* Output the contents of the object */
     switch(tag) {
     case String_tag: {
-      mlsize_t len = caml_string_length(v);
+      mlsize_t len = llama_string_length(v);
       if (len < 0x20) {
         Write(PREFIX_SMALL_STRING + len);
       } else if (len < 0x100) {
@@ -438,12 +438,12 @@ static void extern_rec(value v)
     }
     }
   }
-  else if ((char *) v >= caml_code_area_start &&
-           (char *) v < caml_code_area_end) {
+  else if ((char *) v >= llama_code_area_start &&
+           (char *) v < llama_code_area_end) {
     if (!extern_closures)
       extern_invalid_argument("output_value: functional value");
-    writecode32(CODE_CODEPOINTER, (char *) v - caml_code_area_start);
-    writeblock((char *) caml_code_checksum(), 16);
+    writecode32(CODE_CODEPOINTER, (char *) v - llama_code_area_start);
+    writeblock((char *) llama_code_checksum(), 16);
   } else {
     extern_invalid_argument("output_value: abstract value (outside heap)");
   }
@@ -457,7 +457,7 @@ static intnat extern_value(value v, value flags)
   intnat res_len;
   int fl;
   /* Parse flag list */
-  fl = caml_convert_flag_list(flags, extern_flags);
+  fl = llama_convert_flag_list(flags, extern_flags);
   extern_ignore_sharing = fl & NO_SHARING;
   extern_closures = fl & CLOSURES;
   /* Initializations */
@@ -484,7 +484,7 @@ static intnat extern_value(value v, value flags)
        Besides, some of the array lengths or string lengths or shared offsets
        it contains may have overflowed the 32 bits used to write them. */
     free_extern_output();
-    caml_failwith("output_value: object too big");
+    llama_failwith("output_value: object too big");
   }
 #endif
   if (extern_userprovided_output != NULL)
@@ -500,39 +500,39 @@ static intnat extern_value(value v, value flags)
   return res_len;
 }
 
-void caml_output_val(struct channel *chan, value v, value flags)
+void llama_output_val(struct channel *chan, value v, value flags)
 {
   intnat len;
   struct output_block * blk, * nextblk;
 
-  if (! caml_channel_binary_mode(chan))
-    caml_failwith("output_value: not a binary channel");
+  if (! llama_channel_binary_mode(chan))
+    llama_failwith("output_value: not a binary channel");
   init_extern_output();
   len = extern_value(v, flags);
-  /* During [caml_really_putblock], concurrent [caml_output_val] operations
+  /* During [llama_really_putblock], concurrent [llama_output_val] operations
      can take place (via signal handlers or context switching in systhreads),
      and [extern_output_first] may change. So, save it in a local variable. */
   blk = extern_output_first;
   while (blk != NULL) {
-    caml_really_putblock(chan, blk->data, blk->end - blk->data);
+    llama_really_putblock(chan, blk->data, blk->end - blk->data);
     nextblk = blk->next;
     free(blk);
     blk = nextblk;
   }
 }
 
-CAMLprim value caml_output_value(value vchan, value v, value flags)
+CAMLprim value llama_output_value(value vchan, value v, value flags)
 {
   CAMLparam3 (vchan, v, flags);
   struct channel * channel = Channel(vchan);
 
   Lock(channel);
-  caml_output_val(channel, v, flags);
+  llama_output_val(channel, v, flags);
   Unlock(channel);
   CAMLreturn (Val_unit);
 }
 
-CAMLprim value caml_output_value_to_string(value v, value flags)
+CAMLprim value llama_output_value_to_string(value v, value flags)
 {
   intnat len, ofs;
   value res;
@@ -541,9 +541,9 @@ CAMLprim value caml_output_value_to_string(value v, value flags)
   init_extern_output();
   len = extern_value(v, flags);
   /* PR#4030: it is prudent to save extern_output_first before allocating
-     the result, as in caml_output_val */
+     the result, as in llama_output_val */
   blk = extern_output_first;
-  res = caml_alloc_string(len);
+  res = llama_alloc_string(len);
   ofs = 0;
   while (blk != NULL) {
     int n = blk->end - blk->data;
@@ -556,7 +556,7 @@ CAMLprim value caml_output_value_to_string(value v, value flags)
   return res;
 }
 
-CAMLprim value caml_output_value_to_buffer(value buf, value ofs, value len,
+CAMLprim value llama_output_value_to_buffer(value buf, value ofs, value len,
                                            value v, value flags)
 {
   intnat len_res;
@@ -567,7 +567,7 @@ CAMLprim value caml_output_value_to_buffer(value buf, value ofs, value len,
   return Val_long(len_res);
 }
 
-CAMLexport void caml_output_value_to_malloc(value v, value flags,
+CAMLexport void llama_output_value_to_malloc(value v, value flags,
                                             /*out*/ char ** buf,
                                             /*out*/ intnat * len)
 {
@@ -589,7 +589,7 @@ CAMLexport void caml_output_value_to_malloc(value v, value flags,
   free_extern_output();
 }
 
-CAMLexport intnat caml_output_value_to_block(value v, value flags,
+CAMLexport intnat llama_output_value_to_block(value v, value flags,
                                              char * buf, intnat len)
 {
   intnat len_res;
@@ -602,14 +602,14 @@ CAMLexport intnat caml_output_value_to_block(value v, value flags,
 
 /* Functions for writing user-defined marshallers */
 
-CAMLexport void caml_serialize_int_1(int i)
+CAMLexport void llama_serialize_int_1(int i)
 {
   if (extern_ptr + 1 > extern_limit) grow_extern_output(1);
   extern_ptr[0] = i;
   extern_ptr += 1;
 }
 
-CAMLexport void caml_serialize_int_2(int i)
+CAMLexport void llama_serialize_int_2(int i)
 {
   if (extern_ptr + 2 > extern_limit) grow_extern_output(2);
   extern_ptr[0] = i >> 8;
@@ -617,7 +617,7 @@ CAMLexport void caml_serialize_int_2(int i)
   extern_ptr += 2;
 }
 
-CAMLexport void caml_serialize_int_4(int32 i)
+CAMLexport void llama_serialize_int_4(int32 i)
 {
   if (extern_ptr + 4 > extern_limit) grow_extern_output(4);
   extern_ptr[0] = i >> 24;
@@ -627,29 +627,29 @@ CAMLexport void caml_serialize_int_4(int32 i)
   extern_ptr += 4;
 }
 
-CAMLexport void caml_serialize_int_8(int64 i)
+CAMLexport void llama_serialize_int_8(int64 i)
 {
-  caml_serialize_block_8(&i, 1);
+  llama_serialize_block_8(&i, 1);
 }
 
-CAMLexport void caml_serialize_float_4(float f)
+CAMLexport void llama_serialize_float_4(float f)
 {
-  caml_serialize_block_4(&f, 1);
+  llama_serialize_block_4(&f, 1);
 }
 
-CAMLexport void caml_serialize_float_8(double f)
+CAMLexport void llama_serialize_float_8(double f)
 {
-  caml_serialize_block_float_8(&f, 1);
+  llama_serialize_block_float_8(&f, 1);
 }
 
-CAMLexport void caml_serialize_block_1(void * data, intnat len)
+CAMLexport void llama_serialize_block_1(void * data, intnat len)
 {
   if (extern_ptr + len > extern_limit) grow_extern_output(len);
   memmove(extern_ptr, data, len);
   extern_ptr += len;
 }
 
-CAMLexport void caml_serialize_block_2(void * data, intnat len)
+CAMLexport void llama_serialize_block_2(void * data, intnat len)
 {
   if (extern_ptr + 2 * len > extern_limit) grow_extern_output(2 * len);
 #ifndef ARCH_BIG_ENDIAN
@@ -666,7 +666,7 @@ CAMLexport void caml_serialize_block_2(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_serialize_block_4(void * data, intnat len)
+CAMLexport void llama_serialize_block_4(void * data, intnat len)
 {
   if (extern_ptr + 4 * len > extern_limit) grow_extern_output(4 * len);
 #ifndef ARCH_BIG_ENDIAN
@@ -683,7 +683,7 @@ CAMLexport void caml_serialize_block_4(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_serialize_block_8(void * data, intnat len)
+CAMLexport void llama_serialize_block_8(void * data, intnat len)
 {
   if (extern_ptr + 8 * len > extern_limit) grow_extern_output(8 * len);
 #ifndef ARCH_BIG_ENDIAN
@@ -700,7 +700,7 @@ CAMLexport void caml_serialize_block_8(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_serialize_block_float_8(void * data, intnat len)
+CAMLexport void llama_serialize_block_float_8(void * data, intnat len)
 {
   if (extern_ptr + 8 * len > extern_limit) grow_extern_output(8 * len);
 #if ARCH_FLOAT_ENDIANNESS == 0x01234567
