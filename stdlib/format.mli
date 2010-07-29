@@ -372,10 +372,10 @@ val get_formatter_output_functions :
  characters that have to be printed! *)
 
 val set_all_formatter_output_functions :
-  out:(string -> int -> int -> unit) ->
-  flush:(unit -> unit) ->
-  newline:(unit -> unit) ->
-  spaces:(int -> unit) ->
+  (string -> int -> int -> unit) ->
+  (unit -> unit) ->
+  (unit -> unit) ->
+  (int -> unit) ->
   unit
 ;;
 (** [set_all_formatter_output_functions out flush outnewline outspace]
@@ -553,8 +553,8 @@ val pp_get_formatter_output_functions :
   formatter -> unit -> (string -> int -> int -> unit) * (unit -> unit)
 ;;
 val pp_set_all_formatter_output_functions :
-  formatter -> out:(string -> int -> int -> unit) -> flush:(unit -> unit) ->
-  newline:(unit -> unit) -> spaces:(int -> unit) -> unit
+  formatter -> (string -> int -> int -> unit) -> (unit -> unit) ->
+  (unit -> unit) -> (int -> unit) -> unit
 ;;
 val pp_get_all_formatter_output_functions :
   formatter -> unit ->
