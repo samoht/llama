@@ -5,12 +5,10 @@ open Asttypes;;
 open Types;;
 open Error;;
 open Typedtree;;
-open Location;;
 open Lambda;;
 open Module
 open Primitive
 
-let lstaticfail = Lambda.staticfail
 let lstatichandle (action, lambda) = Lambda.Lstaticcatch (action, (0, []), lambda)
 let has_guard = Lambda.is_guarded
 let omega = Parmatch.omega
@@ -67,7 +65,7 @@ let lcond (arg, const_lambda_list) fail =
           arg const_lambda_list
   in lambda1
 
-let lswitch (_, arg, cs_action_list) =
+let lswitch (arg, cs_action_list) fail =
   begin match cs_action_list with
     | (({cstr_tag=Cstr_exception _},_)::_) ->
         List.fold_right
@@ -76,7 +74,7 @@ let lswitch (_, arg, cs_action_list) =
                               [Lprim(Pfield 0, [arg]); transl_exception ex]),
                         act, rem)
           end
-          cs_action_list lstaticfail
+          cs_action_list fail, false
     | _ ->
         let consts = ref [] in
         let numconsts = ref 0 in
@@ -98,13 +96,19 @@ let lswitch (_, arg, cs_action_list) =
               | Cstr_exception _ -> assert false
             end
           end cs_action_list;
-        Lswitch (arg,
-                 { sw_numconsts = !numconsts;
-                   sw_consts = !consts;
-                   sw_numblocks = !numblocks;
-                   sw_blocks = !blocks;
-                   sw_failaction = None
-                 })
+        let full =
+          List.length !consts = !numconsts &&
+          List.length !blocks = !numblocks
+        in
+        let sw =
+          { sw_numconsts = !numconsts;
+            sw_consts = !consts;
+            sw_numblocks = !numblocks;
+            sw_blocks = !blocks;
+            sw_failaction = if full then None else Some fail
+          }
+        in
+        Lswitch (arg, sw), full
   end
 
 (* ---------------------------------------------------------------------- *)
@@ -410,6 +414,7 @@ let tristate_or = function
    The "total" flag is approximated: it is true if the matching is
    guaranteed to be total, and false otherwise. *)
 
+let compile_matching failnum =
 let rec conquer_matching =
   let rec conquer_divided_matching = function
     [] ->
@@ -420,7 +425,7 @@ let rec conquer_matching =
         ((key, lambda1) :: list2, total1 && total2)
   in function
     Matching([], _) ->
-      (lstaticfail, false)
+      (Lstaticraise (failnum,[]), false)
    | Matching(([], action) :: rest, pathl) ->
       if has_guard action then begin
         let (lambda2, total2) = conquer_matching (Matching (rest, pathl)) in
@@ -443,13 +448,8 @@ let rec conquer_matching =
           let constrs, vars = divide_construct_matching matching in
           let (switchlst, total1) = conquer_divided_matching constrs
           and (lambda,    total2) = conquer_matching vars in
-          let span = get_span_of_matching matching
-          and num_cstr = List.length constrs in
-            if num_cstr = span && total1 then
-              (lswitch(span, path, switchlst), true)
-            else
-              (lstatichandle(lswitch(span, path, switchlst), lambda),
-               total2)
+          let result, full = lswitch (path, switchlst) lambda in
+          result, ((full && total1) || total2)
       | {pat_desc = Tpat_constant _} ->
           let constants, vars = divide_constant_matching matching in
             let condlist1, _ = conquer_divided_matching constants
@@ -461,26 +461,40 @@ let rec conquer_matching =
           fatal_error "conquer_matching 2"
       end
   | _ -> fatal_error "conquer_matching 1"
-;;
+in conquer_matching;;
 
 (* Auxiliaries to build the initial matching *)
 
 let partial_fun loc =
-  let start = loc.loc_start.Lexing.pos_cnum in
-  let stop = loc.loc_end.Lexing.pos_cnum in
+  let fname = match loc.Location.loc_start.Lexing.pos_fname with
+              | "" -> !Location.input_name
+              | x -> x
+  in
+  let pos = loc.Location.loc_start in
+  let line = pos.Lexing.pos_lnum in
+  let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
   Lprim(Praise,
-    [Lconst(Const_block(0 (* ? *),
-      [Const_immstring !input_name;Const_base(Const_int start);Const_base(Const_int stop)]))])
+        [Lprim(Pmakeblock(0, Immutable),
+               [transl_exception Predef.cs_match_failure;
+                Lconst(Const_block(0,
+                                   [Const_base(Const_string fname);
+                                    Const_base(Const_int line);
+                                    Const_base(Const_int char)]))])])
 ;;
 
 (* The entry points *)
 
+let next_failnum = ref 0
 let translate_matching ~param failure_code casel =
   let casel = List.map (fun (pat, act) -> ([pat], act)) casel in
   let casel = check_unused casel in
   let casel = List.map (fun (patl, act) -> (patl, share_lambda act)) casel in
-  let (lambda, total) = conquer_matching (Matching (casel, [param])) in
-  if total then lambda else lstatichandle(lambda, failure_code())
+  let failnum = !next_failnum in
+  let (lambda, total) = compile_matching failnum (Matching (casel, [param])) in
+  if total then lambda else begin
+    incr next_failnum;
+    Lstaticcatch(lambda, (failnum, []), failure_code())
+  end
 ;;
 
 let translate_matching_check_failure ~param loc casel =
