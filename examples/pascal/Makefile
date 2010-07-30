@@ -38,7 +38,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.lli *.zo *~ #*#
+	$(RM) *.cmi *.zo *~ #*#
 
 beforedepend::
 
@@ -48,9 +48,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .lli .ml .zo
+.SUFFIXES: .mli .cmi .ml .zo
 
-.mli.lli:
+.mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -58,17 +58,17 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-compil.lli: syntaxe.lli 
-envir.lli: syntaxe.lli 
-interp.lli: syntaxe.lli 
-typage.lli: syntaxe.lli 
-compil.zo: compil.lli syntaxe.lli typage.lli envir.lli 
-cpascal.zo: syntaxe.lli typage.lli compil.lli 
-envir.zo: envir.lli syntaxe.lli 
-interp.zo: interp.lli valeur.lli syntaxe.lli envir.lli 
-ipascal.zo: interp.lli syntaxe.lli typage.lli 
-lexuniv.zo: lexuniv.lli 
+compil.cmi: syntaxe.cmi 
+envir.cmi: syntaxe.cmi 
+interp.cmi: syntaxe.cmi 
+typage.cmi: syntaxe.cmi 
+compil.zo: compil.cmi syntaxe.cmi typage.cmi envir.cmi 
+cpascal.zo: syntaxe.cmi typage.cmi compil.cmi 
+envir.zo: envir.cmi syntaxe.cmi 
+interp.zo: interp.cmi valeur.cmi syntaxe.cmi envir.cmi 
+ipascal.zo: interp.cmi syntaxe.cmi typage.cmi 
+lexuniv.zo: lexuniv.cmi 
 loadall.zo: cpascal.zo ipascal.zo 
-syntaxe.zo: syntaxe.lli lexuniv.lli 
-typage.zo: typage.lli syntaxe.lli envir.lli 
-valeur.zo: valeur.lli interp.lli 
+syntaxe.zo: syntaxe.cmi lexuniv.cmi 
+typage.zo: typage.cmi syntaxe.cmi envir.cmi 
+valeur.zo: valeur.cmi interp.cmi 

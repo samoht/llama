@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.lli *.zo *~ #*#
+	$(RM) *.cmi *.zo *~ #*#
 
 beforedepend::
 
@@ -37,9 +37,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .lli .ml .zo
+.SUFFIXES: .mli .cmi .ml .zo
 
-.mli.lli:
+.mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -47,9 +47,9 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-asynt.lli: prop.lli 
-asynt.zo: asynt.lli prop.lli lexuniv.lli 
-demo.zo: prop.lli asynt.lli 
-lexuniv.zo: lexuniv.lli 
+asynt.cmi: prop.cmi 
+asynt.zo: asynt.cmi prop.cmi lexuniv.cmi 
+demo.zo: prop.cmi asynt.cmi 
+lexuniv.zo: lexuniv.cmi 
 loadall.zo: demo.zo 
-prop.zo: prop.lli 
+prop.zo: prop.cmi 

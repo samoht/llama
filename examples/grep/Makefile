@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.lli *.zo *~ #*#
+	$(RM) *.cmi *.zo *~ #*#
 
 beforedepend::
 
@@ -37,9 +37,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .lli .ml .zo
+.SUFFIXES: .mli .cmi .ml .zo
 
-.mli.lli:
+.mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -47,11 +47,11 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-auto.lli: expr.lli 
-determ.lli: auto.lli 
-auto.zo: auto.lli expr.lli 
-determ.zo: determ.lli auto.lli ensent.lli 
-ensent.zo: ensent.lli 
-expr.zo: expr.lli 
-grep.zo: auto.lli expr.lli determ.lli 
+auto.cmi: expr.cmi 
+determ.cmi: auto.cmi 
+auto.zo: auto.cmi expr.cmi 
+determ.zo: determ.cmi auto.cmi ensent.cmi 
+ensent.zo: ensent.cmi 
+expr.zo: expr.cmi 
+grep.zo: auto.cmi expr.cmi determ.cmi 
 loadall.zo: grep.zo 

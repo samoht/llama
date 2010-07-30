@@ -9,7 +9,7 @@ parser.ml parser.mli: parser.mly
 parser.cmi: parser.mli
 	ocamlc -c $<
 
-parser.lli: parser.mli
+parser.cmi: parser.mli
 	llamac -c $<
 
 %.cmo: %.ml
@@ -24,9 +24,9 @@ calc: lexer.zo parser.zo calc.zo
 calcd: lexer.cmo parser.cmo calc.cmo
 	ocamlc -o $@ $^
 
-parser.zo: parser.lli
-lexer.zo: parser.lli
-calc.zo: parser.lli lexer.zo
+parser.zo: parser.cmi
+lexer.zo: parser.cmi
+calc.zo: parser.cmi lexer.zo
 
 parser.cmo: parser.cmi
 lexer.cmo: parser.cmi

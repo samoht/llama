@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.lli *.zo *~ #*#
+	$(RM) *.cmi *.zo *~ #*#
 
 beforedepend::
 
@@ -37,9 +37,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .lli .ml .zo
+.SUFFIXES: .mli .cmi .ml .zo
 
-.mli.lli:
+.mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -47,14 +47,14 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-eval.lli: syntaxe.lli 
-synthese.lli: types.lli syntaxe.lli 
-caml.zo: types.lli synthese.lli syntaxe.lli eval.lli 
-eval.zo: eval.lli syntaxe.lli 
-interp.zo: syntaxe.lli eval.lli 
-lexuniv.zo: lexuniv.lli 
+eval.cmi: syntaxe.cmi 
+synthese.cmi: types.cmi syntaxe.cmi 
+caml.zo: types.cmi synthese.cmi syntaxe.cmi eval.cmi 
+eval.zo: eval.cmi syntaxe.cmi 
+interp.zo: syntaxe.cmi eval.cmi 
+lexuniv.zo: lexuniv.cmi 
 loadall.zo: caml.zo 
-syntaxe.zo: syntaxe.lli lexuniv.lli 
-synthese.zo: synthese.lli types.lli syntaxe.lli 
-types.zo: types.lli 
-typeur.zo: types.lli synthese.lli syntaxe.lli 
+syntaxe.zo: syntaxe.cmi lexuniv.cmi 
+synthese.zo: synthese.cmi types.cmi syntaxe.cmi 
+types.zo: types.cmi 
+typeur.zo: types.cmi synthese.cmi syntaxe.cmi 

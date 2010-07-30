@@ -17,7 +17,7 @@ let process_file ppf name =
   else if Filename.check_suffix name ".zo"
        || Filename.check_suffix name ".za" then
     objfiles := name :: !objfiles
-  else if Filename.check_suffix name ".lli" then
+  else if Filename.check_suffix name ".cmi" then
     objfiles := name :: !objfiles
   else
     raise(Arg.Bad("don't know what to do with " ^ name))

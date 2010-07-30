@@ -9,11 +9,11 @@ COMPFLAGS=-g
 
 # The list of all interfaces. Order irrelevant.
 
-STD_INTF= arg.lli char.lli string.lli array.lli \
-    filename.lli fstring.lli farray.lli hashtbl.lli \
-    lexing.lli list.lli obj.lli parsing.lli printexc.lli \
-    sort.lli sys.lli printf.lli stream.lli stack.lli queue.lli random.lli \
-    genlex.lli baltree.lli set.lli map.lli gc.lli pervasives.lli  buffer.lli format.lli
+STD_INTF= arg.cmi char.cmi string.cmi array.cmi \
+    filename.cmi fstring.cmi farray.cmi hashtbl.cmi \
+    lexing.cmi list.cmi obj.cmi parsing.cmi printexc.cmi \
+    sort.cmi sys.cmi printf.cmi stream.cmi stack.cmi queue.cmi random.cmi \
+    genlex.cmi baltree.cmi set.cmi map.cmi gc.cmi pervasives.cmi  buffer.cmi format.cmi
 
 # The list of all implementations. In dependency order.
 
@@ -34,20 +34,20 @@ header: ../config/Makefile
 	echo '#!$(BINDIR)/llamarun' > header
 
 clean:
-	rm -f *.lli *.zo
+	rm -f *.cmi *.zo
 	rm -f filename.ml
 
 install:
-	cp -f stdlib.zo *.lli *.mli *.ml $(LIBDIR)
+	cp -f stdlib.zo *.cmi *.mli *.ml $(LIBDIR)
 #	rm $(LIBDIR)/iparsing.mli
 
-pervasives.lli: pervasives.mli
+pervasives.cmi: pervasives.mli
 	$(LLAMAC) -nopervasives -c $(COMPFLAGS) $<
 pervasives.zo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $(COMPFLAGS) $<
-$(OTHERS:.zo=.lli): pervasives.lli
+$(OTHERS:.zo=.cmi): pervasives.cmi
 
-%.lli: %.mli
+%.cmi: %.mli
 	$(LLAMAC) -c $(COMPFLAGS) $<
 %.zo: %.ml
 	$(LLAMAC) -c $(COMPFLAGS) $<
@@ -62,8 +62,7 @@ depend: filename.ml
 	mv genlex.ml genlex.ml.bak
 	$(LLAMADEP) *.mli *.ml > .depend
 	mv genlex.ml.bak genlex.ml
-	sed -i '' -e 's/cmi/lli/g' .depend
-	echo "genlex.zo: genlex.lli pervasives.lli fstring.lli stream.lli hashtbl.lli list.lli" >> .depend
+	echo "genlex.zo: genlex.cmi pervasives.cmi fstring.cmi stream.cmi hashtbl.cmi list.cmi" >> .depend
 
 .PHONY: depend
 

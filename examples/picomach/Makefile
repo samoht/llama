@@ -38,7 +38,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.lli *.zo *~ #*#
+	$(RM) *.cmi *.zo *~ #*#
 
 beforedepend::
 
@@ -48,9 +48,9 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .lli .ml .zo
+.SUFFIXES: .mli .cmi .ml .zo
 
-.mli.lli:
+.mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 .ml.zo:
@@ -58,14 +58,14 @@ makefiles:: makefile
 
 # Generated dependencies below
 
-lecture.lli: code.lli 
-simul.lli: code.lli 
-stockage.lli: code.lli 
-asm.zo: stockage.lli lecture.lli 
-code.zo: code.lli 
-exec.zo: simul.lli code.lli 
-lecture.zo: lecture.lli lexuniv.lli stockage.lli code.lli 
-lexuniv.zo: lexuniv.lli 
+lecture.cmi: code.cmi 
+simul.cmi: code.cmi 
+stockage.cmi: code.cmi 
+asm.zo: stockage.cmi lecture.cmi 
+code.zo: code.cmi 
+exec.zo: simul.cmi code.cmi 
+lecture.zo: lecture.cmi lexuniv.cmi stockage.cmi code.cmi 
+lexuniv.zo: lexuniv.cmi 
 loadall.zo: asm.zo exec.zo 
-simul.zo: simul.lli code.lli 
-stockage.zo: stockage.lli code.lli 
+simul.zo: simul.cmi code.cmi 
+stockage.zo: stockage.cmi code.cmi 
