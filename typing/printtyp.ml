@@ -14,7 +14,7 @@ let qualified_id ppf id =
   pp_print_string ppf id.id_name
 
 let type_constructor ppf tcs = qualified_id ppf (tcs.tcs_id)
-let constructor ppf cs = qualified_id ppf (constr_id cs)
+let constructor ppf cs = qualified_id ppf (Btype.constr_id cs)
 let label ppf lbl = qualified_id ppf (label_id lbl)
 let value ppf v = qualified_id ppf v.val_id
 

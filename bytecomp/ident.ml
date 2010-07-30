@@ -18,8 +18,8 @@ let same = (=)
 let of_exception cs =
   let name = cs.cs_name in
   match cs.cstr_tag with
-      Cstr_exception (id, _) ->
-        if id.id_module = Module_builtin then Id_predef_exn name
+      Cstr_exception m ->
+        if m = Module_builtin then Id_predef_exn name
         else
           begin try List.assq cs (Hashtbl.find_all exceptions name)
           with Not_found ->

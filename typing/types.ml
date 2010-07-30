@@ -49,13 +49,12 @@ and type_constructor_kind =
   | Type_abbrev of llama_type
 
 and constructor =
-  { cs_parent: cs_parent;
-    cs_name: string;
+  { cs_name: string;
     mutable cs_res: llama_type;                       (* Result type *)
     mutable cs_args: llama_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
     cs_tag: constr_tag;        (* caml light tag *)
-    cstr_tag: constructor_tag; (* ocaml tag *)
+    cstr_tag: constructor_kind; (* ocaml tag *)
   }
 
 and cs_parent =
@@ -66,10 +65,10 @@ and constr_tag =
     ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
 
-and constructor_tag =
-    Cstr_constant of int                  (* Constant constructor (an int) *)
-  | Cstr_block of int                     (* Regular constructor (a block) *)
-  | Cstr_exception of qualified_id * int  (* Exception constructor *)
+and constructor_kind =
+    Cstr_constant of type_constructor * int  (* Constant constructor (an int) *)
+  | Cstr_block of type_constructor * int     (* Regular constructor (a block) *)
+  | Cstr_exception of module_id              (* Exception constructor *)
 
 and label =
   { lbl_parent: type_constructor;
@@ -114,6 +113,11 @@ type signature = signature_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
+let is_exception cs =
+  match cs.cstr_tag with
+      Cstr_exception _ -> true
+    | _ -> false
+
 let tvar tv = Tvar tv
 let new_generic () = { tv_kind=Generic }
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
@@ -127,14 +131,6 @@ let rec new_nongenerics_gen n lev =
 
 let new_phrase_nongeneric () = new_nongeneric_gen phrase_level
 
-let cs_parent cs =
-  match cs.cs_parent with
-    | Parent tcs -> tcs
-    | Parent_exn -> assert false
-
-let constr_id cs = { id_module = (cs_parent cs).tcs_id.id_module;
-                            id_name = cs.cs_name } (* xxx *)
-
 let label_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
                             id_name = lbl.lbl_name }
 
@@ -142,10 +138,7 @@ let ref_label lbl =
   { ref_id = { id_module = lbl.lbl_parent.tcs_id.id_module;
                id_name = lbl.lbl_name };
     ref_contents = Some lbl }
-let ref_constr cs =
-  { ref_id = { id_module = (cs_parent cs).tcs_id.id_module;
-               id_name = cs.cs_name }; (* xxx *)
-    ref_contents = Some cs }
+
 let ref_value v =
   { ref_id = v.val_id;
     ref_contents = Some v }
@@ -182,22 +175,6 @@ let dummy_value name =
     val_global = false; foo = Random.int 1000 }
 
 exception Constr_not_found
-
-let rec find_constr tag num_const num_nonconst = function
-    [] ->
-      raise Constr_not_found
-  | cs :: rem ->
-      if cs.cs_args = [] then
-        if tag = Cstr_constant num_const
-        then cs
-        else find_constr tag (num_const + 1) num_nonconst rem
-      else
-        if tag = Cstr_block num_nonconst
-        then cs
-        else find_constr tag num_const (num_nonconst + 1) rem
-
-let find_constr_by_tag tag cstrlist =
-  find_constr tag 0 0 cstrlist
 
 let qualid_name qualid =
   begin match qualid.id_module with

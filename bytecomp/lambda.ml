@@ -347,7 +347,7 @@ let transl_noncurrent_module m =
 let transl_exception cs =
   let m =
     match cs.Types.cstr_tag with
-      | Types.Cstr_exception ({Types.id_module=m}, _) -> m
+      | Types.Cstr_exception m -> m
       | _ -> assert false
   in
   if m = Types.Module_builtin then

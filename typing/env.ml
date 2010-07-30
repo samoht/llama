@@ -149,7 +149,7 @@ let get_value_position v =
   Tbl.find id.id_name (cached_module v.val_id.id_module).value_positions
 let get_exception_position cs =
   begin match cs.cstr_tag with
-    | Cstr_exception ({id_module=m},_) ->
+    | Cstr_exception m ->
         Tbl.find cs.cs_name (cached_module m).exception_positions
     | _ -> assert false
   end

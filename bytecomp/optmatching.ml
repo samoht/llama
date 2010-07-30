@@ -164,7 +164,7 @@ let ctx_matcher p =
   match p.pat_desc with
   | Tpat_construct (cstr,omegas) ->
       (fun q rem -> match q.pat_desc with
-      | Tpat_construct (cstr',args) when cstr.cstr_tag=cstr'.cstr_tag ->
+      | Tpat_construct (cstr',args) when cstr==cstr' ->
           p,args @ rem
       | Tpat_any -> p,omegas @ rem
       | _ -> raise NoMatch)
@@ -1151,7 +1151,7 @@ let matcher_constr cstr = match cstr.cs_arity with
           with
           | NoMatch -> matcher_rec p2 rem
         end
-    | Tpat_construct (cstr1, []) when cstr.cstr_tag = cstr1.cstr_tag ->
+    | Tpat_construct (cstr1, []) when cstr == cstr1 ->
         rem
     | Tpat_any -> rem
     | _ -> raise NoMatch in
@@ -1172,7 +1172,7 @@ pat_desc = Tpat_or (a1, a2, None)}::
             rem
         | _, _ -> assert false
         end
-    | Tpat_construct (cstr1, [arg]) when cstr.cstr_tag = cstr1.cstr_tag ->
+    | Tpat_construct (cstr1, [arg]) when cstr == cstr1 ->
         arg::rem
     | Tpat_any -> omega::rem
     | _ -> raise NoMatch in
@@ -1181,7 +1181,7 @@ pat_desc = Tpat_or (a1, a2, None)}::
     fun q rem -> match q.pat_desc with
     | Tpat_or (_,_,_) -> raise OrPat
     | Tpat_construct (cstr1, args)
-        when cstr.cstr_tag = cstr1.cstr_tag -> args @ rem
+        when cstr == cstr1 -> args @ rem
     | Tpat_any -> Optparmatch.omegas cstr.cs_arity @ rem
     | _        -> raise NoMatch
 
@@ -2021,8 +2021,8 @@ let split_cases tag_lambda_list =
     | (cstr, act) :: rem ->
         let (consts, nonconsts) = split_rec rem in
         match cstr.cstr_tag with
-          Cstr_constant n -> ((n, act) :: consts, nonconsts)
-        | Cstr_block n    -> (consts, (n, act) :: nonconsts)
+          Cstr_constant (_, n) -> ((n, act) :: consts, nonconsts)
+        | Cstr_block (_, n)    -> (consts, (n, act) :: nonconsts)
         | _ -> assert false in
   let const, nonconst = split_rec tag_lambda_list in
   sort_int_lambda_list const,
@@ -2031,7 +2031,7 @@ let split_cases tag_lambda_list =
 
 let combine_constructor arg ex_pat cstr partial ctx def
     (tag_lambda_list, total1, pats) =
-  if cstr.cs_parent = Parent_exn then begin
+  if is_exception cstr then begin
     (* Special cases for exceptions *)
     let fail, to_add, local_jumps =
       mk_failaction_neg partial ctx def in
@@ -2058,7 +2058,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
   end else begin
     (* Regular concrete type *)
     let ncases = List.length tag_lambda_list
-    and nconstrs =  List.length (Ctype.constructors_of_type (cs_parent cstr)) in
+    and nconstrs =  List.length (Ctype.constructors_of_type (Btype.cs_parent cstr)) in
     let sig_complete = ncases = nconstrs in
     let fails,local_jumps =
       if sig_complete then [],jumps_empty
@@ -2072,7 +2072,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
       | Some act -> act
       | _ ->
           let cstr_consts, cstr_nonconsts =
-            Mpattern.count_constructors (cs_parent cstr) in
+            Mpattern.count_constructors (Btype.cs_parent cstr) in
           match
             (cstr_consts, cstr_nonconsts, consts, nonconsts)
           with

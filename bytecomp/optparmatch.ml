@@ -85,7 +85,7 @@ let rec compat p q =
   | Tpat_tuple ps, Tpat_tuple qs -> compats ps qs
   | Tpat_lazy p, Tpat_lazy q -> compat p q
   | Tpat_construct (c1,ps1), Tpat_construct (c2,ps2) ->
-      c1.cstr_tag = c2.cstr_tag && compats ps1 ps2
+      c1 == c2 && compats ps1 ps2
   | Tpat_variant(l1,Some p1, r1), Tpat_variant(l2,Some p2,_) ->
       l1=l2 && compat p1 p2
   | Tpat_variant (l1,None,r1), Tpat_variant(l2,None,_) ->
@@ -127,7 +127,7 @@ let get_type_path ty =
 open Format
 ;;
 
-let get_constr_name cs = qualid_name (constr_id cs)
+let get_constr_name cs = qualid_name (Btype.constr_id cs)
 
 let is_cons cs = (cs == Predef.constr_cons)
 
@@ -231,7 +231,7 @@ let prerr_pat v =
 let simple_match p1 p2 =
   match p1.pat_desc, p2.pat_desc with
   | Tpat_construct(c1, _), Tpat_construct(c2, _) ->
-      c1.cstr_tag = c2.cstr_tag
+      c1 == c2
   | Tpat_variant(l1, _, _), Tpat_variant(l2, _, _) ->
       l1 = l2
   | Tpat_constant(Const_float s1), Tpat_constant(Const_float s2) ->
@@ -587,7 +587,7 @@ let full_match closing env =  match env with
 | ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
-    List.length env = List.length (Ctype.constructors_of_type (cs_parent c))
+    List.length env = List.length (Ctype.constructors_of_type (Btype.cs_parent c))
 | ({pat_desc = Tpat_variant _} as p,_) :: _ ->
     ignore p; assert false
 (*
@@ -665,7 +665,7 @@ let rec pat_of_constrs ex_pat = function
 (* Sends back a pattern that complements constructor tags all_tag *)
 let complete_constrs p all_tags = match p.pat_desc with
 | Tpat_construct (c,_) ->
-    let tcs = cs_parent c in
+    let tcs = Btype.cs_parent c in
     let cs_list = Ctype.constructors_of_type tcs in
     complete_tags cs_list all_tags
 | _ -> fatal_error "Parmatch.complete_constr"
@@ -1257,7 +1257,7 @@ let rec le_pat p q =
   | _, Tpat_alias(q,_) -> le_pat p q
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
-      c1.cstr_tag = c2.cstr_tag && le_pats ps qs
+      c1 == c2 && le_pats ps qs
   | Tpat_variant(l1,Some p1,_), Tpat_variant(l2,Some p2,_) ->
       (l1 = l2 && le_pat p1 p2)
   | Tpat_variant(l1,None,r1), Tpat_variant(l2,None,_) ->
@@ -1307,7 +1307,7 @@ let rec lub p q = match p.pat_desc,q.pat_desc with
     let r = lub p q in
     make_pat (Tpat_lazy r) p.pat_type p.pat_env
 | Tpat_construct (c1,ps1), Tpat_construct (c2,ps2)
-      when  c1.cstr_tag = c2.cstr_tag  ->
+      when  c1 == c2 ->
         let rs = lubs ps1 ps2 in
         make_pat (Tpat_construct (c1,rs)) p.pat_type p.pat_env
 | Tpat_variant(l1,Some p1,row), Tpat_variant(l2,Some p2,_)

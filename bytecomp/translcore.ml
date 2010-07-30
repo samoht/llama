@@ -660,9 +660,9 @@ and transl_exp0 e =
   | Texp_construct(cstr, args) ->
       let ll = transl_list args in
       begin match cstr.cstr_tag with
-        Cstr_constant n ->
+        Cstr_constant (_, n) ->
           Lconst(Const_pointer n)
-      | Cstr_block n ->
+      | Cstr_block (_, n) ->
           begin try
             Lconst(Const_block(n, List.map extract_constant ll))
           with Not_constant ->
