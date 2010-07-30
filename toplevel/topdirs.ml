@@ -17,10 +17,10 @@
 open Format
 open Misc
 open Longident
-open Path
+(* open Path*)
 open Types
 open Cmo_format
-open Trace
+(* open Trace *)
 open Toploop
 
 (* The standard output formatter *)
@@ -139,7 +139,9 @@ type 'a printer_type_new = Format.formatter -> 'a -> unit
 type 'a printer_type_old = 'a -> unit
 
 let match_printer_type ppf desc typename =
-  let (printer_type, _) =
+  assert false
+(*
+  let printer_type =
     try
       Env.lookup_type (Ldot(Lident "Topdirs", typename)) !toplevel_env
     with Not_found ->
@@ -154,8 +156,11 @@ let match_printer_type ppf desc typename =
   Ctype.end_def();
   Ctype.generalize ty_arg;
   ty_arg
+*)
 
 let find_printer_type ppf lid =
+  assert false
+(*
   try
     let (path, desc) = Env.lookup_value lid !toplevel_env in
     let (ty_arg, is_old_style) =
@@ -172,8 +177,11 @@ let find_printer_type ppf lid =
       fprintf ppf "%a has a wrong type for a printing function.@."
       Printtyp.longident lid;
       raise Exit
+*)
 
 let dir_install_printer ppf lid =
+  assert false
+(*
   try
     let (ty_arg, path, is_old_style) = find_printer_type ppf lid in
     let v = eval_path path in
@@ -184,6 +192,7 @@ let dir_install_printer ppf lid =
         (fun formatter repr -> Obj.obj v formatter (Obj.obj repr)) in
     install_printer path ty_arg print_function
   with Exit -> ()
+*)
 
 let dir_remove_printer ppf lid =
   try
@@ -205,10 +214,15 @@ let _ = Hashtbl.add directive_table "remove_printer"
 external current_environment: unit -> Obj.t = "caml_get_current_environment"
 
 let tracing_function_ptr =
+  assert false
+(*
   get_code_pointer
-    (Obj.repr (fun arg -> Trace.print_trace (current_environment()) arg))
+    (Obj.repr (fun arg -> print_trace (current_environment()) arg))
+*)
 
 let dir_trace ppf lid =
+  assert false
+(*
   try
     let (path, desc) = Env.lookup_value lid !toplevel_env in
     (* Check if this is a primitive *)
@@ -243,8 +257,11 @@ let dir_trace ppf lid =
         end else fprintf ppf "%a is not a function.@." Printtyp.longident lid
   with
   | Not_found -> fprintf ppf "Unbound value %a.@." Printtyp.longident lid
+*)
 
 let dir_untrace ppf lid =
+  assert false
+(*
   try
     let (path, desc) = Env.lookup_value lid !toplevel_env in
     let rec remove = function
@@ -260,14 +277,18 @@ let dir_untrace ppf lid =
     traced_functions := remove !traced_functions
   with
   | Not_found -> fprintf ppf "Unbound value %a.@." Printtyp.longident lid
+*)
 
 let dir_untrace_all ppf () =
+  assert false
+(*
   List.iter
     (fun f ->
       set_code_pointer f.closure f.actual_code;
       fprintf ppf "%a is no longer traced.@." Printtyp.path f.path)
     !traced_functions;
   traced_functions := []
+*)
 
 let parse_warnings ppf iserr s =
   try Warnings.parse_options iserr s

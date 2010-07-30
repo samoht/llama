@@ -61,3 +61,5 @@ val save_signature_with_imports:
             signature -> string -> string -> (string * Digest.t) list -> unit
         (* Arguments: signature, module name, file name,
            imported units with their CRCs. *)
+
+val crc_units : Consistbl.t

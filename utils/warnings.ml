@@ -183,3 +183,10 @@ let check_fatal () =
     raise e;
   end;
 ;;
+
+let help_warnings () =
+  assert false
+(*
+  List.iter (fun (i, s) -> Printf.printf "%3i %s\n" i s) descriptions;
+  exit 0
+*)

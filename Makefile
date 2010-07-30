@@ -68,7 +68,7 @@ CL_TOPLEVEL=\
 
 TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
   driver/main_args.cmo toplevel/genprintval.cmo toplevel/toploop.cmo \
-  toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
+  toplevel/topdirs.cmo toplevel/topmain.cmo
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
@@ -86,8 +86,8 @@ testprog: testprog.ml runtime_dir cl_stdlib_dir
 llama: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llama-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(TOPLEVEL)
-	$(OCAMLOPT) $(FLAGS) -o $@ $^
+llama-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(TOPLEVEL)
+	$(OCAMLC) $(FLAGS) -o $@ $^
 
 llamac: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^

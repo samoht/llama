@@ -204,14 +204,13 @@ let directive_table = (Hashtbl.create 13 : (string, directive_fun) Hashtbl.t)
 let execute_phrase print_outcome ppf phr =
   match phr with
   | Ptop_def sstr ->
-      let sstr = [sstr] in (* xxx *)
       let oldenv = !toplevel_env in
-      let _ = Unused_var.warn ppf sstr in
+      let _ = Unused_var.warn ppf [sstr] in
 (*       Typecore.reset_delayed_checks (); *)
-      let (str, sg, newenv) = Typemod.type_structure oldenv sstr Location.none
-      in
+      let (str, sg, newenv) = Resolve.structure_item oldenv sstr in
+      Typemod.type_structure_item str;
 (*       Typecore.force_delayed_checks (); *)
-      let lam = Translmod.transl_toplevel_definition str in
+      let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
@@ -220,14 +219,14 @@ let execute_phrase print_outcome ppf phr =
           match res with
           | Result v ->
               if print_outcome then
-                match str with
-                | [Tstr_eval exp] ->
+                match str.str_desc with
+                | Tstr_eval exp ->
                     let outv = outval_of_value newenv v exp.exp_type in
                     let ty = Printtyp.tree_of_type_scheme exp.exp_type in
                     Ophr_eval (outv, ty)
-                | [] -> Ophr_signature []
-                | _ -> Ophr_signature (item_list newenv
-                                             (Typemod.simplify_signature sg))
+(*                | [] -> Ophr_signature [] *)
+                | _ -> Ophr_signature (item_list newenv sg)
+(*                                             (Typemod.simplify_signature sg)) *)
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;
@@ -397,19 +396,19 @@ let loop ppf =
   Sys.catch_break true;
   load_ocamlinit ppf;
   while true do
-    let snap = Btype.snapshot () in
+(*    let snap = Btype.snapshot () in *)
     try
       Lexing.flush_input lb;
-      Location.reset();
+(*      Location.reset();*)
       first_line := true;
       let phr = try !parse_toplevel_phrase lb with Exit -> raise PPerror in
       if !Clflags.dump_parsetree then Printast.top_phrase ppf phr;
       ignore(execute_phrase true ppf phr)
     with
     | End_of_file -> exit 0
-    | Sys.Break -> fprintf ppf "Interrupted.@."; Btype.backtrack snap
+    | Sys.Break -> fprintf ppf "Interrupted.@." (* ; Btype.backtrack snap*)
     | PPerror -> ()
-    | x -> Errors.report_error ppf x; Btype.backtrack snap
+    | x -> Errors.report_error ppf x (* ; Btype.backtrack snap*)
   done
 
 (* Execute a script *)

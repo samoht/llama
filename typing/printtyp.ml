@@ -1,8 +1,15 @@
 open Format
+open Longident
 open Types
 open Module
 open Outcometree
 open Oprint
+
+(* Print a long identifier *)
+
+let rec longident ppf = function
+  | Lident s -> fprintf ppf "%s" s
+  | Ldot(p, s) -> fprintf ppf "%a.%s" longident p s
 
 (* ---------------------------------------------------------------------- *)
 (* Printing of identifiers, named entities, and references.               *)
@@ -85,6 +92,8 @@ let rec tree_of_typexp sch ty =
 
 and tree_of_typlist sch tyl =
   List.map (tree_of_typexp sch) tyl
+
+let tree_of_type_scheme = tree_of_typexp true
 (*
 and is_non_gen sch ty =
   sch && ty.desc = Tvar && ty.level <> generic
