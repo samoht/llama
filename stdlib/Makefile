@@ -1,5 +1,5 @@
 include ../config/Makefile
-LLAMAC=../llamac-new -nostdlib -I .
+LLAMAC=../boot/llamac -nostdlib -I .
 LLAMADEP=ocamldep.opt
 
 OBJS=pervasives.cmo $(OTHERS)

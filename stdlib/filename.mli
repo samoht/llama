@@ -85,7 +85,7 @@ val temp_file : string option -> string -> string -> string
    @before 3.11.2 no ?temp_dir optional argument
 *)
 
-val open_temp_file :
+val open_temp_file_gen :
       open_flag list option -> string option -> string -> string -> string * out_channel
 (** Same as {!Filename.temp_file}, but returns both the name of a fresh
    temporary file, and an output channel opened (atomically) on
@@ -97,6 +97,9 @@ val open_temp_file :
    and [Open_text].  The default is [[Open_text]] (open in text mode).
    @before 3.11.2 no ?temp_dir optional argument
 *)
+
+val open_temp_file:
+      string -> string -> string * out_channel
 
 val temp_dir_name : string
 (** The name of the temporary directory:

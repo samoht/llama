@@ -1,6 +1,6 @@
 include config/Makefile
 
-OCAMLC=ocamlc.opt
+OCAMLC=ocamlc.opt # boot/llamac
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
@@ -75,8 +75,14 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llama-new llamac-new
+all: llamac-new
 .PHONY: all
+promote:
+	cp llamac-new boot/llamac
+.PHONY: promote
+
+old: runtime_dir llama llamac llamadep testprog cl_stdlib_dir
+.PHONY: old
 
 testprog: testprog.ml runtime_dir cl_stdlib_dir
 	./llamac -I cl_stdlib $< -o $@
@@ -102,7 +108,7 @@ llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(CL_CO
 	$(OCAMLC) -c $(FLAGS) -o $@ $<
 
 %.cmi: %.mli
-	$(OCAMLOPT) -c $(FLAGS) -o $@ $<
+	$(OCAMLC) -c $(FLAGS) -o $@ $<
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
@@ -178,7 +184,7 @@ clean: semiclean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver,toplevel}/*.{mli,ml} > .depend
+	$(OCAMLDEP) $(INCLUDES) {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend
