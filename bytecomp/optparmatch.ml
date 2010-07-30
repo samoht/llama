@@ -127,7 +127,7 @@ let get_type_path ty =
 open Format
 ;;
 
-let get_constr_name cs = qualid_name (Btype.constr_id cs)
+let get_constr_name cs = cs.cs_name
 
 let is_cons cs = (cs == Predef.constr_cons)
 
@@ -1569,7 +1569,7 @@ let do_check_fragile loc casel pss =
             | Rnone ->
                 Location.prerr_warning
                   loc
-                  (Warnings.Fragile_match (qualid_name ext.tcs_id))
+                  (Warnings.Fragile_match ext.tcs_id.id_name)
             | Rsome _ -> ())
           exts
 

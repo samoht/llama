@@ -176,17 +176,5 @@ let dummy_value name =
 
 exception Constr_not_found
 
-let qualid_name qualid =
-  begin match qualid.id_module with
-    | Module_builtin | Module_toplevel -> qualid.id_name 
-    | Module m -> m ^ "." ^ qualid.id_name
-  end
-
-let module_name = function
-    Module_none -> "(no module)"
-  | Module_builtin -> "(builtin module)"
-  | Module_toplevel -> "(toplevel module)"
-  | Module s -> s
-
 type module_expr = unit
 type class_expr = unit

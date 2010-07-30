@@ -355,13 +355,7 @@ let transl_exception cs =
   else if m = Env.get_current_module () then
     Lvar (Ident.of_exception cs)
   else
-    let pos = try Env.get_exception_position cs with
-        Not_found ->
-          print_endline (Types.module_name m);
-          print_endline (Types.module_name (Env.get_current_module ()));
-          print_endline cs.Types.cs_name;
-          raise Not_found
-    in
+    let pos = Env.get_exception_position cs in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
