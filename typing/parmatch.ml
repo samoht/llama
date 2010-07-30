@@ -217,12 +217,12 @@ let rec satisfiable pss qs = match pss with
 ;;
 
 
-let rec make_matrix ~has_guard pses = match pses with
+let rec make_matrix has_guard pses = match pses with
   (ps,act)::pses ->
      if has_guard act then
-       make_matrix ~has_guard pses
+       make_matrix has_guard pses
      else
-       ps::make_matrix ~has_guard pses
+       ps::make_matrix has_guard pses
 | []           -> []
 ;;
 
@@ -263,8 +263,8 @@ let get_mins ps =
   select_rec [] (select_rec [] ps)
 ;;
 
-let partial_match ~has_guard casel =
-  let pss = get_mins (make_matrix ~has_guard casel) in
+let partial_match has_guard casel =
+  let pss = get_mins (make_matrix has_guard casel) in
   match pss with
     []     -> true
   | ps::_  -> satisfiable pss (List.map (fun _ -> omega) ps)
@@ -276,7 +276,7 @@ let extract_loc_from_clause clause = match clause with
 | _ -> fatal_error "extract_loc_from_clause"
 ;;
 
-let check_unused ~has_guard casel =
+let check_unused has_guard casel =
   let prefs =   
     List.fold_right
       (fun (ps,act as clause) r ->

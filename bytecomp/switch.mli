@@ -21,35 +21,33 @@ type 'a t_store =
     {act_get : unit -> 'a array ; act_store : 'a -> int}
 val mk_store : ('a -> 'a -> bool) -> 'a t_store
 
-(* Arguments to the Make functor *)
-module type S =
-  sig
-    (* type of basic tests *)
-    type primitive
+(* Arguments to the make function *)
+(* 'primitive = type of basic tests *)
+(* 'act = type of actions *)
+type ('primitive, 'act) _Arg = {
+
     (* basic tests themselves *)
-    val eqint : primitive
-    val neint : primitive
-    val leint : primitive
-    val ltint : primitive
-    val geint : primitive
-    val gtint : primitive
-    (* type of actions *)
-    type act
+    eqint : 'primitive;
+    neint : 'primitive;
+    leint : 'primitive;
+    ltint : 'primitive;
+    geint : 'primitive;
+    gtint : 'primitive;
 
     (* Various constructors, for making a binder,
         adding one integer, etc. *)
-    val bind : act -> (act -> act) -> act
-    val make_offset : act -> int -> act
-    val make_prim : primitive -> act list -> act
-    val make_isout : act -> act -> act
-    val make_isin : act -> act -> act
-    val make_if : act -> act -> act -> act
+    bind : 'act -> ('act -> 'act) -> 'act;
+    make_offset : 'act -> int -> 'act;
+    make_prim : 'primitive -> 'act list -> 'act;
+    make_isout : 'act -> 'act -> 'act;
+    make_isin : 'act -> 'act -> 'act;
+    make_if : 'act -> 'act -> 'act -> 'act;
    (* construct an actual switch :
       make_switch arg cases acts
       NB:  cases is in the value form *)
-    val make_switch :
-        act -> int array -> act array -> act
-  end
+    make_switch :
+        'act -> int array -> 'act array -> 'act;
+}
 
 
 (*
@@ -63,20 +61,17 @@ module type S =
   All these arguments specify a switch construct and zyva
   returns an action that performs the switch,
 *)
-module Make :
-  functor (Arg : S) ->
-    sig
-      val zyva :
+      val zyva : ('primitive, 'act) _Arg ->
           (int * int) ->
-          (int -> Arg.act) ->
-           Arg.act ->
+          (int -> 'act) ->
+           'act ->
            (int * int * int) array ->
-           Arg.act array ->
-           Arg.act
-     val test_sequence :
-          (int -> Arg.act) ->
-           Arg.act ->
+           'act array ->
+           'act
+
+     val test_sequence : ('primitive, 'act) _Arg ->
+          (int -> 'act) ->
+           'act ->
            (int * int * int) array ->
-           Arg.act array ->
-           Arg.act
-    end
+           'act array ->
+           'act

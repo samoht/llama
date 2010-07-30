@@ -1697,38 +1697,32 @@ sw_failaction = Some (Lstaticraise (default,[]))})
       Lswitch (arg,sw)
 | _ -> Lswitch (arg,sw)
 
-module SArg = struct
-  type primitive = Lambda.primitive
+open Switch
+let _SArg : (Lambda.primitive, Lambda.lambda) _Arg = {
+  eqint = Pintcomp Ceq;
+  neint = Pintcomp Cneq;
+  leint = Pintcomp Cle;
+  ltint = Pintcomp Clt;
+  geint = Pintcomp Cge;
+  gtint = Pintcomp Cgt;
 
-  let eqint = Pintcomp Ceq
-  let neint = Pintcomp Cneq
-  let leint = Pintcomp Cle
-  let ltint = Pintcomp Clt
-  let geint = Pintcomp Cge
-  let gtint = Pintcomp Cgt
-
-  type act = Lambda.lambda
-
-  let make_prim p args = Lprim (p,args)
-  let make_offset arg n = match n with
+  make_prim = (fun p args -> Lprim (p,args));
+  make_offset = (fun arg n -> match n with
   | 0 -> arg
-  | _ -> Lprim (Poffsetint n,[arg])
-  let bind arg body =
+  | _ -> Lprim (Poffsetint n,[arg]));
+  bind = (fun arg body ->
     let newvar,newarg = match arg with
     | Lvar v -> v,arg
     | _      ->
         let newvar = Ident.create "switcher" in
         newvar,Lvar newvar in
-    bind Alias newvar arg (body newarg)
+    bind Alias newvar arg (body newarg));
 
-  let make_isout h arg = Lprim (Pisout, [h ; arg])
-  let make_isin h arg = Lprim (Pnot,[make_isout h arg])
-  let make_if cond ifso ifnot = Lifthenelse (cond, ifso, ifnot)
-  let make_switch = make_switch_switcher
-end
-
-module Switcher = Switch.Make(SArg)
-open Switch
+  make_isout = (fun h arg -> Lprim (Pisout, [h ; arg]));
+  make_isin = (fun h arg -> Lprim (Pnot,[Lprim (Pisout, [h ; arg])]));
+  make_if = (fun cond ifso ifnot -> Lifthenelse (cond, ifso, ifnot));
+  make_switch = make_switch_switcher
+}
 
 let lambda_of_int i =  Lconst (Const_base (Const_int i))
 
@@ -1828,7 +1822,7 @@ let as_interval fail low high l =
 let call_switcher konst fail arg low high int_lambda_list =
   let edges, (cases, actions) =
     as_interval fail low high int_lambda_list in
-  Switcher.zyva edges konst arg cases actions
+  Switch.zyva _SArg edges konst arg cases actions
 
 
 let exists_ctx ok ctx =
@@ -2104,7 +2098,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
 let make_test_sequence_variant_constant fail arg int_lambda_list =
   let _, (cases, actions) =
     as_interval fail min_int max_int int_lambda_list in
-  Switcher.test_sequence
+  Switch.test_sequence _SArg
     (fun i -> Lconst (Const_base (Const_int i))) arg cases actions
 
 let call_switcher_variant_constant fail arg int_lambda_list =
