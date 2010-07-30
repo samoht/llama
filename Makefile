@@ -68,7 +68,8 @@ CL_TOPLEVEL=\
 
 TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
   driver/main_args.cmo toplevel/genprintval.cmo toplevel/toploop.cmo \
-  toplevel/topdirs.cmo toplevel/topmain.cmo
+  toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo \
+  toplevel/topstart.cmo
 
 GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \

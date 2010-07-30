@@ -20,7 +20,7 @@ open Longident
 (* open Path*)
 open Types
 open Cmo_format
-(* open Trace *)
+open Trace
 open Toploop
 
 (* The standard output formatter *)
@@ -214,11 +214,8 @@ let _ = Hashtbl.add directive_table "remove_printer"
 external current_environment: unit -> Obj.t = "caml_get_current_environment"
 
 let tracing_function_ptr =
-  assert false
-(*
   get_code_pointer
     (Obj.repr (fun arg -> print_trace (current_environment()) arg))
-*)
 
 let dir_trace ppf lid =
   assert false

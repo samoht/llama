@@ -45,7 +45,11 @@ let check_consistency filename crcs =
       (fun (name, crc) -> Consistbl.check crc_units name crc filename)
       crcs
   with Consistbl.Inconsistency(name, source, auth) ->
-    assert false (* raise(Error(Inconsistent_import(name, auth, source))) *)
+    print_endline name;
+    print_endline auth;
+    print_endline source;
+    assert false
+    (* raise(Error(Inconsistent_import(name, auth, source))) *)
 
 (* Reading persistent structures from .cmi files *)
 

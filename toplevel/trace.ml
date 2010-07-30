@@ -23,7 +23,7 @@ open Toploop
 type codeptr = Obj.t
 
 type traced_function =
-  { path: Path.t;                       (* Name under which it is traced *)
+  { path: qualified_id;                 (* Name under which it is traced *)
     closure: Obj.t;                     (* Its function closure (patched) *)
     actual_code: codeptr;               (* Its original code pointer *)
     instrumented_fun: codeptr -> Obj.t -> Obj.t -> Obj.t }
@@ -59,13 +59,12 @@ let print_label ppf l = if l <> "" then fprintf ppf "%s:" l
 (* If a function returns a functional value, wrap it into a trace code *)
 
 let rec instrument_result env name ppf clos_typ =
-  match (Ctype.repr(Ctype.expand_head env clos_typ)).desc with
-  | Tarrow(l, t1, t2, _) ->
+  match (Ctype.repr(Ctype.expand_head clos_typ)) with
+  | Tarrow(t1, t2) ->
       let starred_name =
         match name with
         | Lident s -> Lident(s ^ "*")
-        | Ldot(lid, s) -> Ldot(lid, s ^ "*")
-        | Lapply(l1, l2) -> fatal_error "Trace.instrument_result" in
+        | Ldot(lid, s) -> Ldot(lid, s ^ "*") in
       let trace_res = instrument_result env starred_name ppf t2 in
       (fun clos_val ->
         Obj.repr (fun arg ->
@@ -74,9 +73,8 @@ let rec instrument_result env name ppf clos_typ =
           else begin
             may_trace := false;
             try
-              fprintf ppf "@[<2>%a <--@ %a%a@]@."
+              fprintf ppf "@[<2>%a <--@ %a@]@."
                 Printtyp.longident starred_name
-                print_label l
                 (print_value !toplevel_env arg) t1;
               may_trace := true;
               let res = (Obj.magic clos_val : Obj.t -> Obj.t) arg in
@@ -99,8 +97,8 @@ let rec instrument_result env name ppf clos_typ =
 (* Same as instrument_result, but for a toplevel closure (modified in place) *)
 
 let instrument_closure env name ppf clos_typ =
-  match (Ctype.repr(Ctype.expand_head env clos_typ)).desc with
-  | Tarrow(l, t1, t2, _) ->
+  match (Ctype.repr(Ctype.expand_head clos_typ)) with
+  | Tarrow(t1, t2) ->
       let trace_res = instrument_result env name ppf t2 in
       (fun actual_code closure arg ->
         if not !may_trace then begin
@@ -109,9 +107,8 @@ let instrument_closure env name ppf clos_typ =
         end else begin
           may_trace := false;
           try
-            fprintf ppf "@[<2>%a <--@ %a%a@]@."
+            fprintf ppf "@[<2>%a <--@ %a@]@."
               Printtyp.longident name
-              print_label l
               (print_value !toplevel_env arg) t1;
             may_trace := true;
             let res = invoke_traced_function actual_code closure arg in
