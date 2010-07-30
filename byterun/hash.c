@@ -26,7 +26,7 @@ static intnat hash_univ_limit, hash_univ_count;
 
 static void hash_aux(value obj);
 
-CAMLprim value llama_hash_univ_param(value count, value limit, value obj)
+CAMLprim value caml_hash_univ_param(value count, value limit, value obj)
 {
   hash_univ_limit = Long_val(limit);
   hash_univ_count = Long_val(count);
@@ -67,7 +67,7 @@ static void hash_aux(value obj)
     switch (tag) {
     case String_tag:
       hash_univ_count--;
-      i = llama_string_length(obj);
+      i = caml_string_length(obj);
       for (p = &Byte_u(obj, 0); i > 0; i--, p++)
         Combine_small(*p);
       break;
@@ -142,7 +142,7 @@ static void hash_aux(value obj)
 
 /* Hashing variant tags */
 
-CAMLexport value llama_hash_variant(char const * tag)
+CAMLexport value caml_hash_variant(char const * tag)
 {
   value accu;
   /* Same hashing algorithm as in ../typing/btype.ml, function hash_variant */

@@ -63,19 +63,19 @@
 #define SEEK_END 2
 #endif
 
-extern int llama_parser_trace;
+extern int caml_parser_trace;
 
-CAMLexport header_t llama_atom_table[256];
+CAMLexport header_t caml_atom_table[256];
 
 /* Initialize the atom table */
 
 static void init_atoms(void)
 {
   int i;
-  for(i = 0; i < 256; i++) llama_atom_table[i] = Make_header(0, i, Caml_white);
-  if (llama_page_table_add(In_static_data,
-                          llama_atom_table, llama_atom_table + 256) != 0) {
-    llama_fatal_error("Fatal error: not enough memory for the initial page table");
+  for(i = 0; i < 256; i++) caml_atom_table[i] = Make_header(0, i, Caml_white);
+  if (caml_page_table_add(In_static_data,
+                          caml_atom_table, caml_atom_table + 256) != 0) {
+    caml_fatal_error("Fatal error: not enough memory for the initial page table");
   }
 }
 
@@ -100,7 +100,7 @@ static int read_trailer(int fd, struct exec_trailer *trail)
     return BAD_BYTECODE;
 }
 
-int llama_attempt_open(char **name, struct exec_trailer *trail,
+int caml_attempt_open(char **name, struct exec_trailer *trail,
                       int do_open_script)
 {
   char * truename;
@@ -108,27 +108,27 @@ int llama_attempt_open(char **name, struct exec_trailer *trail,
   int err;
   char buf [2];
 
-  truename = llama_search_exe_in_path(*name);
+  truename = caml_search_exe_in_path(*name);
   *name = truename;
-  llama_gc_message(0x100, "Opening bytecode executable %s\n",
+  caml_gc_message(0x100, "Opening bytecode executable %s\n",
                   (uintnat) truename);
   fd = open(truename, O_RDONLY | O_BINARY);
   if (fd == -1) {
-    llama_gc_message(0x100, "Cannot open file\n", 0);
+    caml_gc_message(0x100, "Cannot open file\n", 0);
     return FILE_NOT_FOUND;
   }
   if (!do_open_script) {
     err = read (fd, buf, 2);
     if (err < 2 || (buf [0] == '#' && buf [1] == '!')) {
       close(fd);
-      llama_gc_message(0x100, "Rejected #! script\n", 0);
+      caml_gc_message(0x100, "Rejected #! script\n", 0);
       return BAD_BYTECODE;
     }
   }
   err = read_trailer(fd, trail);
   if (err != 0) {
     close(fd);
-    llama_gc_message(0x100, "Not a bytecode executable\n", 0);
+    caml_gc_message(0x100, "Not a bytecode executable\n", 0);
     return err;
   }
   return fd;
@@ -136,15 +136,15 @@ int llama_attempt_open(char **name, struct exec_trailer *trail,
 
 /* Read the section descriptors */
 
-void llama_read_section_descriptors(int fd, struct exec_trailer *trail)
+void caml_read_section_descriptors(int fd, struct exec_trailer *trail)
 {
   int toc_size, i;
 
   toc_size = trail->num_sections * 8;
-  trail->section = llama_stat_alloc(toc_size);
+  trail->section = caml_stat_alloc(toc_size);
   lseek(fd, - (long) (TRAILER_SIZE + toc_size), SEEK_END);
   if (read(fd, (char *) trail->section, toc_size) != toc_size)
-    llama_fatal_error("Fatal error: cannot read section table\n");
+    caml_fatal_error("Fatal error: cannot read section table\n");
   /* Fixup endianness of lengths */
   for (i = 0; i < trail->num_sections; i++)
     fixup_endianness_trailer(&(trail->section[i].len));
@@ -154,7 +154,7 @@ void llama_read_section_descriptors(int fd, struct exec_trailer *trail)
    Return the length of the section data in bytes, or -1 if no section
    found with that name. */
 
-int32 llama_seek_optional_section(int fd, struct exec_trailer *trail, char *name)
+int32 caml_seek_optional_section(int fd, struct exec_trailer *trail, char *name)
 {
   long ofs;
   int i;
@@ -173,11 +173,11 @@ int32 llama_seek_optional_section(int fd, struct exec_trailer *trail, char *name
 /* Position fd at the beginning of the section having the given name.
    Return the length of the section data in bytes. */
 
-int32 llama_seek_section(int fd, struct exec_trailer *trail, char *name)
+int32 caml_seek_section(int fd, struct exec_trailer *trail, char *name)
 {
-  int32 len = llama_seek_optional_section(fd, trail, name);
+  int32 len = caml_seek_optional_section(fd, trail, name);
   if (len == -1)
-    llama_fatal_error_arg("Fatal_error: section `%s' is missing\n", name);
+    caml_fatal_error_arg("Fatal_error: section `%s' is missing\n", name);
   return len;
 }
 
@@ -189,11 +189,11 @@ static char * read_section(int fd, struct exec_trailer *trail, char *name)
   int32 len;
   char * data;
 
-  len = llama_seek_optional_section(fd, trail, name);
+  len = caml_seek_optional_section(fd, trail, name);
   if (len == -1) return NULL;
-  data = llama_stat_alloc(len + 1);
+  data = caml_stat_alloc(len + 1);
   if (read(fd, data, len) != len)
-    llama_fatal_error_arg("Fatal error: error reading section %s\n", name);
+    caml_fatal_error_arg("Fatal error: error reading section %s\n", name);
   data[len] = 0;
   return data;
 }
@@ -242,7 +242,7 @@ static int parse_command_line(char **argv)
     switch(argv[i][1]) {
 #ifdef DEBUG
     case 't':
-      llama_trace_flag++;
+      caml_trace_flag++;
       break;
 #endif
     case 'v':
@@ -253,25 +253,25 @@ static int parse_command_line(char **argv)
         printf (OCAML_VERSION "\n");
         exit (0);
       }else{
-        llama_verb_gc = 0x001+0x004+0x008+0x010+0x020;
+        caml_verb_gc = 0x001+0x004+0x008+0x010+0x020;
       }
       break;
     case 'p':
-      for (j = 0; llama_names_of_builtin_cprim[j] != NULL; j++)
-        printf("%s\n", llama_names_of_builtin_cprim[j]);
+      for (j = 0; caml_names_of_builtin_cprim[j] != NULL; j++)
+        printf("%s\n", caml_names_of_builtin_cprim[j]);
       exit(0);
       break;
     case 'b':
-      llama_record_backtrace(Val_true);
+      caml_record_backtrace(Val_true);
       break;
     case 'I':
       if (argv[i + 1] != NULL) {
-        llama_ext_table_add(&llama_shared_libs_path, argv[i + 1]);
+        caml_ext_table_add(&caml_shared_libs_path, argv[i + 1]);
         i++;
       }
       break;
     default:
-      llama_fatal_error_arg("Unknown option %s.\n", argv[i]);
+      caml_fatal_error_arg("Unknown option %s.\n", argv[i]);
     }
   }
   return i;
@@ -315,24 +315,24 @@ static void parse_camlrunparam(void)
       case 'l': scanmult (opt, &max_stack_init); break;
       case 'o': scanmult (opt, &percent_free_init); break;
       case 'O': scanmult (opt, &max_percent_free_init); break;
-      case 'v': scanmult (opt, &llama_verb_gc); break;
-      case 'b': llama_record_backtrace(Val_true); break;
-      case 'p': llama_parser_trace = 1; break;
-      case 'a': scanmult (opt, &p); llama_set_allocation_policy (p); break;
+      case 'v': scanmult (opt, &caml_verb_gc); break;
+      case 'b': caml_record_backtrace(Val_true); break;
+      case 'p': caml_parser_trace = 1; break;
+      case 'a': scanmult (opt, &p); caml_set_allocation_policy (p); break;
       }
     }
   }
 }
 
-extern void llama_init_ieee_floats (void);
+extern void caml_init_ieee_floats (void);
 
 #ifdef _WIN32
-extern void llama_signal_thread(void * lpParam);
+extern void caml_signal_thread(void * lpParam);
 #endif
 
 /* Main entry point when loading code from a file */
 
-CAMLexport void llama_main(char **argv)
+CAMLexport void caml_main(char **argv)
 {
   int fd, pos;
   struct exec_trailer trail;
@@ -346,104 +346,104 @@ CAMLexport void llama_main(char **argv)
 
   /* Machine-dependent initialization of the floating-point hardware
      so that it behaves as much as possible as specified in IEEE */
-  llama_init_ieee_floats();
-  llama_init_custom_operations();
-  llama_ext_table_init(&llama_shared_libs_path, 8);
-  llama_external_raise = NULL;
+  caml_init_ieee_floats();
+  caml_init_custom_operations();
+  caml_ext_table_init(&caml_shared_libs_path, 8);
+  caml_external_raise = NULL;
   /* Determine options and position of bytecode file */
 #ifdef DEBUG
-  llama_verb_gc = 0xBF;
+  caml_verb_gc = 0xBF;
 #endif
   parse_camlrunparam();
   pos = 0;
   exe_name = argv[0];
 #ifdef __linux__
-  if (llama_executable_name(proc_self_exe, sizeof(proc_self_exe)) == 0)
+  if (caml_executable_name(proc_self_exe, sizeof(proc_self_exe)) == 0)
     exe_name = proc_self_exe;
 #endif
-  fd = llama_attempt_open(&exe_name, &trail, 0);
+  fd = caml_attempt_open(&exe_name, &trail, 0);
   if (fd < 0) {
     pos = parse_command_line(argv);
     if (argv[pos] == 0)
-      llama_fatal_error("No bytecode file specified.\n");
+      caml_fatal_error("No bytecode file specified.\n");
     exe_name = argv[pos];
-    fd = llama_attempt_open(&exe_name, &trail, 1);
+    fd = caml_attempt_open(&exe_name, &trail, 1);
     switch(fd) {
     case FILE_NOT_FOUND:
-      llama_fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
+      caml_fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
       break;
     case BAD_BYTECODE:
-      llama_fatal_error_arg(
+      caml_fatal_error_arg(
         "Fatal error: the file %s is not a bytecode executable file\n",
         argv[pos]);
       break;
     }
   }
   /* Read the table of contents (section descriptors) */
-  llama_read_section_descriptors(fd, &trail);
+  caml_read_section_descriptors(fd, &trail);
   /* Initialize the abstract machine */
-  llama_init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
+  caml_init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
                 percent_free_init, max_percent_free_init);
-  llama_init_stack (max_stack_init);
+  caml_init_stack (max_stack_init);
   init_atoms();
   /* Initialize the interpreter */
-  llama_interprete(NULL, 0);
+  caml_interprete(NULL, 0);
   /* Initialize the debugger, if needed */
-  llama_debugger_init();
+  caml_debugger_init();
   /* Load the code */
-  llama_code_size = llama_seek_section(fd, &trail, "CODE");
-  llama_load_code(fd, llama_code_size);
+  caml_code_size = caml_seek_section(fd, &trail, "CODE");
+  caml_load_code(fd, caml_code_size);
   /* Build the table of primitives */
   shared_lib_path = read_section(fd, &trail, "DLPT");
   shared_libs = read_section(fd, &trail, "DLLS");
   req_prims = read_section(fd, &trail, "PRIM");
-  if (req_prims == NULL) llama_fatal_error("Fatal error: no PRIM section\n");
+  if (req_prims == NULL) caml_fatal_error("Fatal error: no PRIM section\n");
 /* ---------------------------------------------------------------------- */
 #if 0
 /* ---------------------------------------------------------------------- */
-  llama_build_primitive_table(shared_lib_path, shared_libs, req_prims);
+  caml_build_primitive_table(shared_lib_path, shared_libs, req_prims);
 /* ---------------------------------------------------------------------- */
 #endif
 /* ---------------------------------------------------------------------- */
-  llama_build_primitive_table_builtin();
+  caml_build_primitive_table_builtin();
 
-  llama_stat_free(shared_lib_path);
-  llama_stat_free(shared_libs);
-  llama_stat_free(req_prims);
+  caml_stat_free(shared_lib_path);
+  caml_stat_free(shared_libs);
+  caml_stat_free(req_prims);
   /* Load the globals */
-  llama_seek_section(fd, &trail, "DATA");
-  chan = llama_open_descriptor_in(fd);
-  llama_global_data = llama_input_val(chan);
-  llama_close_channel(chan); /* this also closes fd */
-  llama_stat_free(trail.section);
+  caml_seek_section(fd, &trail, "DATA");
+  chan = caml_open_descriptor_in(fd);
+  caml_global_data = caml_input_val(chan);
+  caml_close_channel(chan); /* this also closes fd */
+  caml_stat_free(trail.section);
   /* Ensure that the globals are in the major heap. */
-  llama_oldify_one (llama_global_data, &llama_global_data);
-  llama_oldify_mopup ();
+  caml_oldify_one (caml_global_data, &caml_global_data);
+  caml_oldify_mopup ();
   /* Initialize system libraries */
-  llama_init_exceptions();
-  llama_sys_init(exe_name, argv + pos);
+  caml_init_exceptions();
+  caml_sys_init(exe_name, argv + pos);
 #ifdef _WIN32
   /* Start a thread to handle signals */
   if (getenv("CAMLSIGPIPE"))
-    _beginthread(llama_signal_thread, 4096, NULL);
+    _beginthread(caml_signal_thread, 4096, NULL);
 #endif
   /* Execute the program */
-  llama_debugger(PROGRAM_START);
-  res = llama_interprete(llama_start_code, llama_code_size);
+  caml_debugger(PROGRAM_START);
+  res = caml_interprete(caml_start_code, caml_code_size);
   if (Is_exception_result(res)) {
-    llama_exn_bucket = Extract_exception(res);
-    if (llama_debugger_in_use) {
-      llama_extern_sp = &llama_exn_bucket; /* The debugger needs the
+    caml_exn_bucket = Extract_exception(res);
+    if (caml_debugger_in_use) {
+      caml_extern_sp = &caml_exn_bucket; /* The debugger needs the
                                             exception value.*/
-      llama_debugger(UNCAUGHT_EXC);
+      caml_debugger(UNCAUGHT_EXC);
     }
-    llama_fatal_uncaught_exception(llama_exn_bucket);
+    caml_fatal_uncaught_exception(caml_exn_bucket);
   }
 }
 
 /* Main entry point when code is linked in as initialized data */
 
-CAMLexport void llama_startup_code(
+CAMLexport void caml_startup_code(
            code_t code, asize_t code_size,
            char *data, asize_t data_size,
            char *section_table, asize_t section_table_size,
@@ -452,62 +452,62 @@ CAMLexport void llama_startup_code(
   value res;
   char* cds_file;
 
-  llama_init_ieee_floats();
-  llama_init_custom_operations();
+  caml_init_ieee_floats();
+  caml_init_custom_operations();
 #ifdef DEBUG
-  llama_verb_gc = 63;
+  caml_verb_gc = 63;
 #endif
   cds_file = getenv("CAML_DEBUG_FILE");
   if (cds_file != NULL) {
-    llama_cds_file = llama_stat_alloc(strlen(cds_file) + 1);
-    strcpy(llama_cds_file, cds_file);
+    caml_cds_file = caml_stat_alloc(strlen(cds_file) + 1);
+    strcpy(caml_cds_file, cds_file);
   }
   parse_camlrunparam();
-  llama_external_raise = NULL;
+  caml_external_raise = NULL;
   /* Initialize the abstract machine */
-  llama_init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
+  caml_init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
                 percent_free_init, max_percent_free_init);
-  llama_init_stack (max_stack_init);
+  caml_init_stack (max_stack_init);
   init_atoms();
   /* Initialize the interpreter */
-  llama_interprete(NULL, 0);
+  caml_interprete(NULL, 0);
   /* Initialize the debugger, if needed */
-  llama_debugger_init();
+  caml_debugger_init();
   /* Load the code */
-  llama_start_code = code;
-  llama_code_size = code_size;
-  if (llama_debugger_in_use) {
+  caml_start_code = code;
+  caml_code_size = code_size;
+  if (caml_debugger_in_use) {
     int len, i;
     len = code_size / sizeof(opcode_t);
-    llama_saved_code = (unsigned char *) llama_stat_alloc(len);
-    for (i = 0; i < len; i++) llama_saved_code[i] = llama_start_code[i];
+    caml_saved_code = (unsigned char *) caml_stat_alloc(len);
+    for (i = 0; i < len; i++) caml_saved_code[i] = caml_start_code[i];
   }
 #ifdef THREADED_CODE
-  llama_thread_code(llama_start_code, code_size);
+  caml_thread_code(caml_start_code, code_size);
 #endif
   /* Use the builtin table of primitives */
-  llama_build_primitive_table_builtin();
+  caml_build_primitive_table_builtin();
   /* Load the globals */
-  llama_global_data = llama_input_value_from_block(data, data_size);
+  caml_global_data = caml_input_value_from_block(data, data_size);
   /* Ensure that the globals are in the major heap. */
-  llama_oldify_one (llama_global_data, &llama_global_data);
-  llama_oldify_mopup ();
-  /* Record the sections (for llama_get_section_table in meta.c) */
-  llama_section_table = section_table;
-  llama_section_table_size = section_table_size;
+  caml_oldify_one (caml_global_data, &caml_global_data);
+  caml_oldify_mopup ();
+  /* Record the sections (for caml_get_section_table in meta.c) */
+  caml_section_table = section_table;
+  caml_section_table_size = section_table_size;
   /* Initialize system libraries */
-  llama_init_exceptions();
-  llama_sys_init("", argv);
+  caml_init_exceptions();
+  caml_sys_init("", argv);
   /* Execute the program */
-  llama_debugger(PROGRAM_START);
-  res = llama_interprete(llama_start_code, llama_code_size);
+  caml_debugger(PROGRAM_START);
+  res = caml_interprete(caml_start_code, caml_code_size);
   if (Is_exception_result(res)) {
-    llama_exn_bucket = Extract_exception(res);
-    if (llama_debugger_in_use) {
-      llama_extern_sp = &llama_exn_bucket; /* The debugger needs the
+    caml_exn_bucket = Extract_exception(res);
+    if (caml_debugger_in_use) {
+      caml_extern_sp = &caml_exn_bucket; /* The debugger needs the
                                             exception value.*/
-      llama_debugger(UNCAUGHT_EXC);
+      caml_debugger(UNCAUGHT_EXC);
     }
-    llama_fatal_uncaught_exception(llama_exn_bucket);
+    caml_fatal_uncaught_exception(caml_exn_bucket);
   }
 }

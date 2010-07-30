@@ -30,7 +30,7 @@
 #include "fix_code.h"
 #include "stacks.h"
 
-CAMLexport int llama_callback_depth = 0;
+CAMLexport int caml_callback_depth = 0;
 
 #ifndef LOCAL_CALLBACK_BYTECODE
 static opcode_t callback_code[] = { ACC, 0, APPLY, 0, POP, 1, STOP };
@@ -43,7 +43,7 @@ static int callback_code_threaded = 0;
 
 static void thread_callback(void)
 {
-  llama_thread_code(callback_code, sizeof(callback_code));
+  caml_thread_code(callback_code, sizeof(callback_code));
   callback_code_threaded = 1;
 }
 
@@ -55,7 +55,7 @@ static void thread_callback(void)
 
 #endif
 
-CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
+CAMLexport value caml_callbackN_exn(value closure, int narg, value args[])
 {
   int i;
   value res;
@@ -69,22 +69,22 @@ CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
 
   Assert(narg + 4 <= 256);
 
-  llama_extern_sp -= narg + 4;
-  for (i = 0; i < narg; i++) llama_extern_sp[i] = args[i]; /* arguments */
+  caml_extern_sp -= narg + 4;
+  for (i = 0; i < narg; i++) caml_extern_sp[i] = args[i]; /* arguments */
 #ifndef LOCAL_CALLBACK_BYTECODE
-  llama_extern_sp[narg] = (value) (callback_code + 4); /* return address */
-  llama_extern_sp[narg + 1] = Val_unit;    /* environment */
-  llama_extern_sp[narg + 2] = Val_long(0); /* extra args */
-  llama_extern_sp[narg + 3] = closure;
+  caml_extern_sp[narg] = (value) (callback_code + 4); /* return address */
+  caml_extern_sp[narg + 1] = Val_unit;    /* environment */
+  caml_extern_sp[narg + 2] = Val_long(0); /* extra args */
+  caml_extern_sp[narg + 3] = closure;
   Init_callback();
   callback_code[1] = narg + 3;
   callback_code[3] = narg;
-  res = llama_interprete(callback_code, sizeof(callback_code));
+  res = caml_interprete(callback_code, sizeof(callback_code));
 #else /*have LOCAL_CALLBACK_BYTECODE*/
-  llama_extern_sp[narg] = (value) (local_callback_code + 4); /* return address */
-  llama_extern_sp[narg + 1] = Val_unit;    /* environment */
-  llama_extern_sp[narg + 2] = Val_long(0); /* extra args */
-  llama_extern_sp[narg + 3] = closure;
+  caml_extern_sp[narg] = (value) (local_callback_code + 4); /* return address */
+  caml_extern_sp[narg + 1] = Val_unit;    /* environment */
+  caml_extern_sp[narg + 2] = Val_long(0); /* extra args */
+  caml_extern_sp[narg + 3] = closure;
   local_callback_code[0] = ACC;
   local_callback_code[1] = narg + 3;
   local_callback_code[2] = APPLY;
@@ -93,45 +93,45 @@ CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
   local_callback_code[5] =  1;
   local_callback_code[6] = STOP;
 #ifdef THREADED_CODE
-  llama_thread_code(local_callback_code, sizeof(local_callback_code));
+  caml_thread_code(local_callback_code, sizeof(local_callback_code));
 #endif /*THREADED_CODE*/
-  res = llama_interprete(local_callback_code, sizeof(local_callback_code));
-  llama_release_bytecode(local_callback_code, sizeof(local_callback_code));
+  res = caml_interprete(local_callback_code, sizeof(local_callback_code));
+  caml_release_bytecode(local_callback_code, sizeof(local_callback_code));
 #endif /*LOCAL_CALLBACK_BYTECODE*/
-  if (Is_exception_result(res)) llama_extern_sp += narg + 4; /* PR#1228 */
+  if (Is_exception_result(res)) caml_extern_sp += narg + 4; /* PR#1228 */
   return res;
 }
 
-CAMLexport value llama_callback_exn(value closure, value arg1)
+CAMLexport value caml_callback_exn(value closure, value arg1)
 {
   value arg[1];
   arg[0] = arg1;
-  return llama_callbackN_exn(closure, 1, arg);
+  return caml_callbackN_exn(closure, 1, arg);
 }
 
-CAMLexport value llama_callback2_exn(value closure, value arg1, value arg2)
+CAMLexport value caml_callback2_exn(value closure, value arg1, value arg2)
 {
   value arg[2];
   arg[0] = arg1;
   arg[1] = arg2;
-  return llama_callbackN_exn(closure, 2, arg);
+  return caml_callbackN_exn(closure, 2, arg);
 }
 
-CAMLexport value llama_callback3_exn(value closure,
+CAMLexport value caml_callback3_exn(value closure,
                                value arg1, value arg2, value arg3)
 {
   value arg[3];
   arg[0] = arg1;
   arg[1] = arg2;
   arg[2] = arg3;
-  return llama_callbackN_exn(closure, 3, arg);
+  return caml_callbackN_exn(closure, 3, arg);
 }
 
 #else
 
-/* Native-code callbacks.  llama_callback[123]_exn are implemented in asm. */
+/* Native-code callbacks.  caml_callback[123]_exn are implemented in asm. */
 
-CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
+CAMLexport value caml_callbackN_exn(value closure, int narg, value args[])
 {
   CAMLparam1 (closure);
   CAMLxparamN (args, narg);
@@ -143,17 +143,17 @@ CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
     /* Pass as many arguments as possible */
     switch (narg - i) {
     case 1:
-      res = llama_callback_exn(res, args[i]);
+      res = caml_callback_exn(res, args[i]);
       if (Is_exception_result(res)) CAMLreturn (res);
       i += 1;
       break;
     case 2:
-      res = llama_callback2_exn(res, args[i], args[i + 1]);
+      res = caml_callback2_exn(res, args[i], args[i + 1]);
       if (Is_exception_result(res)) CAMLreturn (res);
       i += 2;
       break;
     default:
-      res = llama_callback3_exn(res, args[i], args[i + 1], args[i + 2]);
+      res = caml_callback3_exn(res, args[i], args[i + 1], args[i + 2]);
       if (Is_exception_result(res)) CAMLreturn (res);
       i += 3;
       break;
@@ -166,32 +166,32 @@ CAMLexport value llama_callbackN_exn(value closure, int narg, value args[])
 
 /* Exception-propagating variants of the above */
 
-CAMLexport value llama_callback (value closure, value arg)
+CAMLexport value caml_callback (value closure, value arg)
 {
-  value res = llama_callback_exn(closure, arg);
-  if (Is_exception_result(res)) llama_raise(Extract_exception(res));
+  value res = caml_callback_exn(closure, arg);
+  if (Is_exception_result(res)) caml_raise(Extract_exception(res));
   return res;
 }
 
-CAMLexport value llama_callback2 (value closure, value arg1, value arg2)
+CAMLexport value caml_callback2 (value closure, value arg1, value arg2)
 {
-  value res = llama_callback2_exn(closure, arg1, arg2);
-  if (Is_exception_result(res)) llama_raise(Extract_exception(res));
+  value res = caml_callback2_exn(closure, arg1, arg2);
+  if (Is_exception_result(res)) caml_raise(Extract_exception(res));
   return res;
 }
 
-CAMLexport value llama_callback3 (value closure, value arg1, value arg2,
+CAMLexport value caml_callback3 (value closure, value arg1, value arg2,
                                  value arg3)
 {
-  value res = llama_callback3_exn(closure, arg1, arg2, arg3);
-  if (Is_exception_result(res)) llama_raise(Extract_exception(res));
+  value res = caml_callback3_exn(closure, arg1, arg2, arg3);
+  if (Is_exception_result(res)) caml_raise(Extract_exception(res));
   return res;
 }
 
-CAMLexport value llama_callbackN (value closure, int narg, value args[])
+CAMLexport value caml_callbackN (value closure, int narg, value args[])
 {
-  value res = llama_callbackN_exn(closure, narg, args);
-  if (Is_exception_result(res)) llama_raise(Extract_exception(res));
+  value res = caml_callbackN_exn(closure, narg, args);
+  if (Is_exception_result(res)) caml_raise(Extract_exception(res));
   return res;
 }
 
@@ -214,7 +214,7 @@ static unsigned int hash_value_name(char const *name)
   return h % Named_value_size;
 }
 
-CAMLprim value llama_register_named_value(value vname, value val)
+CAMLprim value caml_register_named_value(value vname, value val)
 {
   struct named_value * nv;
   char * name = String_val(vname);
@@ -227,16 +227,16 @@ CAMLprim value llama_register_named_value(value vname, value val)
     }
   }
   nv = (struct named_value *)
-         llama_stat_alloc(sizeof(struct named_value) + strlen(name));
+         caml_stat_alloc(sizeof(struct named_value) + strlen(name));
   strcpy(nv->name, name);
   nv->val = val;
   nv->next = named_value_table[h];
   named_value_table[h] = nv;
-  llama_register_global_root(&nv->val);
+  caml_register_global_root(&nv->val);
   return Val_unit;
 }
 
-CAMLexport value * llama_named_value(char const *name)
+CAMLexport value * caml_named_value(char const *name)
 {
   struct named_value * nv;
   for (nv = named_value_table[hash_value_name(name)];

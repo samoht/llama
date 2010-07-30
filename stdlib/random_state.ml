@@ -1,4 +1,4 @@
-external random_seed: unit -> int = "llama_sys_random_seed";;
+external random_seed: unit -> int = "caml_sys_random_seed";;
 
   type t = { st : int array; mutable idx : int };;
 

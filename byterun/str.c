@@ -25,7 +25,7 @@
 #include <locale.h>
 #endif
 
-CAMLexport mlsize_t llama_string_length(value s)
+CAMLexport mlsize_t caml_string_length(value s)
 {
   mlsize_t temp;
   temp = Bosize_val(s) - 1;
@@ -33,7 +33,7 @@ CAMLexport mlsize_t llama_string_length(value s)
   return temp - Byte (s, temp);
 }
 
-CAMLprim value llama_ml_string_length(value s)
+CAMLprim value caml_ml_string_length(value s)
 {
   mlsize_t temp;
   temp = Bosize_val(s) - 1;
@@ -41,31 +41,31 @@ CAMLprim value llama_ml_string_length(value s)
   return Val_long(temp - Byte (s, temp));
 }
 
-CAMLprim value llama_create_string(value len)
+CAMLprim value caml_create_string(value len)
 {
   mlsize_t size = Long_val(len);
   if (size > Bsize_wsize (Max_wosize) - 1){
-    llama_invalid_argument("String.create");
+    caml_invalid_argument("String.create");
   }
-  return llama_alloc_string(size);
+  return caml_alloc_string(size);
 }
 
-CAMLprim value llama_string_get(value str, value index)
+CAMLprim value caml_string_get(value str, value index)
 {
   intnat idx = Long_val(index);
-  if (idx < 0 || idx >= llama_string_length(str)) llama_array_bound_error();
+  if (idx < 0 || idx >= caml_string_length(str)) caml_array_bound_error();
   return Val_int(Byte_u(str, idx));
 }
 
-CAMLprim value llama_string_set(value str, value index, value newval)
+CAMLprim value caml_string_set(value str, value index, value newval)
 {
   intnat idx = Long_val(index);
-  if (idx < 0 || idx >= llama_string_length(str)) llama_array_bound_error();
+  if (idx < 0 || idx >= caml_string_length(str)) caml_array_bound_error();
   Byte_u(str, idx) = Int_val(newval);
   return Val_unit;
 }
 
-CAMLprim value llama_string_equal(value s1, value s2)
+CAMLprim value caml_string_equal(value s1, value s2)
 {
   mlsize_t sz1, sz2;
   value * p1, * p2;
@@ -79,19 +79,19 @@ CAMLprim value llama_string_equal(value s1, value s2)
   return Val_true;
 }
 
-CAMLprim value llama_string_notequal(value s1, value s2)
+CAMLprim value caml_string_notequal(value s1, value s2)
 {
-  return Val_not(llama_string_equal(s1, s2));
+  return Val_not(caml_string_equal(s1, s2));
 }
 
-CAMLprim value llama_string_compare(value s1, value s2)
+CAMLprim value caml_string_compare(value s1, value s2)
 {
   mlsize_t len1, len2;
   int res;
 
   if (s1 == s2) return Val_int(0);
-  len1 = llama_string_length(s1);
-  len2 = llama_string_length(s2);
+  len1 = caml_string_length(s1);
+  len2 = caml_string_length(s2);
   res = memcmp(String_val(s1), String_val(s2), len1 <= len2 ? len1 : len2);
   if (res < 0) return Val_int(-1);
   if (res > 0) return Val_int(1);
@@ -100,40 +100,40 @@ CAMLprim value llama_string_compare(value s1, value s2)
   return Val_int(0);
 }
 
-CAMLprim value llama_string_lessthan(value s1, value s2)
+CAMLprim value caml_string_lessthan(value s1, value s2)
 {
-  return llama_string_compare(s1, s2) < Val_int(0) ? Val_true : Val_false;
+  return caml_string_compare(s1, s2) < Val_int(0) ? Val_true : Val_false;
 }
 
-CAMLprim value llama_string_lessequal(value s1, value s2)
+CAMLprim value caml_string_lessequal(value s1, value s2)
 {
-  return llama_string_compare(s1, s2) <= Val_int(0) ? Val_true : Val_false;
+  return caml_string_compare(s1, s2) <= Val_int(0) ? Val_true : Val_false;
 }
 
-CAMLprim value llama_string_greaterthan(value s1, value s2)
+CAMLprim value caml_string_greaterthan(value s1, value s2)
 {
-  return llama_string_compare(s1, s2) > Val_int(0) ? Val_true : Val_false;
+  return caml_string_compare(s1, s2) > Val_int(0) ? Val_true : Val_false;
 }
 
-CAMLprim value llama_string_greaterequal(value s1, value s2)
+CAMLprim value caml_string_greaterequal(value s1, value s2)
 {
-  return llama_string_compare(s1, s2) >= Val_int(0) ? Val_true : Val_false;
+  return caml_string_compare(s1, s2) >= Val_int(0) ? Val_true : Val_false;
 }
 
-CAMLprim value llama_blit_string(value s1, value ofs1, value s2, value ofs2,
+CAMLprim value caml_blit_string(value s1, value ofs1, value s2, value ofs2,
                                 value n)
 {
   memmove(&Byte(s2, Long_val(ofs2)), &Byte(s1, Long_val(ofs1)), Int_val(n));
   return Val_unit;
 }
 
-CAMLprim value llama_fill_string(value s, value offset, value len, value init)
+CAMLprim value caml_fill_string(value s, value offset, value len, value init)
 {
   memset(&Byte(s, Long_val(offset)), Int_val(init), Long_val(len));
   return Val_unit;
 }
 
-CAMLprim value llama_is_printable(value chr)
+CAMLprim value caml_is_printable(value chr)
 {
   int c;
 
@@ -148,7 +148,7 @@ CAMLprim value llama_is_printable(value chr)
   return Val_bool(isprint(c));
 }
 
-CAMLprim value llama_bitvect_test(value bv, value n)
+CAMLprim value caml_bitvect_test(value bv, value n)
 {
   int pos = Int_val(n);
   return Val_int(Byte_u(bv, pos >> 3) & (1 << (pos & 7)));

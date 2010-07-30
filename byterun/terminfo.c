@@ -41,7 +41,7 @@ static char *down = NULL;
 static char *standout = NULL;
 static char *standend = NULL;
 
-CAMLprim value llama_terminfo_setup (value vchan)
+CAMLprim value caml_terminfo_setup (value vchan)
 {
   value result;
   static char buffer[1024];
@@ -67,7 +67,7 @@ CAMLprim value llama_terminfo_setup (value vchan)
       || standout == NULL || standend == NULL){
     return Bad_term;
   }
-  result = llama_alloc_small (1, Good_term_tag);
+  result = caml_alloc_small (1, Good_term_tag);
   Field (result, 0) = Val_int (num_lines);
   return result;
 }
@@ -78,7 +78,7 @@ static int terminfo_putc (int c)
   return c;
 }
 
-CAMLprim value llama_terminfo_backup (value lines)
+CAMLprim value caml_terminfo_backup (value lines)
 {
   int i;
 
@@ -88,13 +88,13 @@ CAMLprim value llama_terminfo_backup (value lines)
   return Val_unit;
 }
 
-CAMLprim value llama_terminfo_standout (value start)
+CAMLprim value caml_terminfo_standout (value start)
 {
   tputs (Bool_val (start) ? standout : standend, 1, terminfo_putc);
   return Val_unit;
 }
 
-CAMLprim value llama_terminfo_resume (value lines)
+CAMLprim value caml_terminfo_resume (value lines)
 {
   int i;
 
@@ -106,26 +106,26 @@ CAMLprim value llama_terminfo_resume (value lines)
 
 #else /* defined (HAS_TERMCAP) && !defined (NATIVE_CODE) */
 
-CAMLexport value llama_terminfo_setup (value vchan)
+CAMLexport value caml_terminfo_setup (value vchan)
 {
   return Bad_term;
 }
 
-CAMLexport value llama_terminfo_backup (value lines)
+CAMLexport value caml_terminfo_backup (value lines)
 {
-  llama_invalid_argument("Terminfo.backup");
+  caml_invalid_argument("Terminfo.backup");
   return Val_unit;
 }
 
-CAMLexport value llama_terminfo_standout (value start)
+CAMLexport value caml_terminfo_standout (value start)
 {
-  llama_invalid_argument("Terminfo.standout");
+  caml_invalid_argument("Terminfo.standout");
   return Val_unit;
 }
 
-CAMLexport value llama_terminfo_resume (value lines)
+CAMLexport value caml_terminfo_resume (value lines)
 {
-  llama_invalid_argument("Terminfo.resume");
+  caml_invalid_argument("Terminfo.resume");
   return Val_unit;
 }
 

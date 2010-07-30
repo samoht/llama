@@ -19,24 +19,24 @@
 #include "misc.h"
 
 extern double
-     llama_stat_minor_words,
-     llama_stat_promoted_words,
-     llama_stat_major_words;
+     caml_stat_minor_words,
+     caml_stat_promoted_words,
+     caml_stat_major_words;
 
 extern intnat
-     llama_stat_minor_collections,
-     llama_stat_major_collections,
-     llama_stat_heap_size,
-     llama_stat_top_heap_size,
-     llama_stat_compactions,
-     llama_stat_heap_chunks;
+     caml_stat_minor_collections,
+     caml_stat_major_collections,
+     caml_stat_heap_size,
+     caml_stat_top_heap_size,
+     caml_stat_compactions,
+     caml_stat_heap_chunks;
 
-void llama_init_gc (uintnat, uintnat, uintnat,
+void caml_init_gc (uintnat, uintnat, uintnat,
                    uintnat, uintnat);
 
 
 #ifdef DEBUG
-void llama_heap_check (void);
+void caml_heap_check (void);
 #endif
 
 #endif /* CAML_GC_CTRL_H */

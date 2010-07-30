@@ -25,68 +25,68 @@
 #include "roots.h"
 #include "stacks.h"
 
-CAMLexport struct llama__roots_block *llama_local_roots = NULL;
+CAMLexport struct caml__roots_block *caml_local_roots = NULL;
 
-CAMLexport void (*llama_scan_roots_hook) (scanning_action f) = NULL;
+CAMLexport void (*caml_scan_roots_hook) (scanning_action f) = NULL;
 
-/* FIXME should rename to [llama_oldify_young_roots] and synchronise with
+/* FIXME should rename to [caml_oldify_young_roots] and synchronise with
    asmrun/roots.c */
-/* Call [llama_oldify_one] on (at least) all the roots that point to the minor
+/* Call [caml_oldify_one] on (at least) all the roots that point to the minor
    heap. */
-void llama_oldify_local_roots (void)
+void caml_oldify_local_roots (void)
 {
   register value * sp;
-  struct llama__roots_block *lr;
+  struct caml__roots_block *lr;
   intnat i, j;
 
   /* The stack */
-  for (sp = llama_extern_sp; sp < llama_stack_high; sp++) {
-    llama_oldify_one (*sp, sp);
+  for (sp = caml_extern_sp; sp < caml_stack_high; sp++) {
+    caml_oldify_one (*sp, sp);
   }
   /* Local C roots */  /* FIXME do the old-frame trick ? */
-  for (lr = llama_local_roots; lr != NULL; lr = lr->next) {
+  for (lr = caml_local_roots; lr != NULL; lr = lr->next) {
     for (i = 0; i < lr->ntables; i++){
       for (j = 0; j < lr->nitems; j++){
         sp = &(lr->tables[i][j]);
-        llama_oldify_one (*sp, sp);
+        caml_oldify_one (*sp, sp);
       }
     }
   }
   /* Global C roots */
-  llama_scan_global_young_roots(&llama_oldify_one);
+  caml_scan_global_young_roots(&caml_oldify_one);
   /* Finalised values */
-  llama_final_do_young_roots (&llama_oldify_one);
+  caml_final_do_young_roots (&caml_oldify_one);
   /* Hook */
-  if (llama_scan_roots_hook != NULL) (*llama_scan_roots_hook)(&llama_oldify_one);
+  if (caml_scan_roots_hook != NULL) (*caml_scan_roots_hook)(&caml_oldify_one);
 }
 
-/* Call [llama_darken] on all roots */
+/* Call [caml_darken] on all roots */
 
-void llama_darken_all_roots (void)
+void caml_darken_all_roots (void)
 {
-  llama_do_roots (llama_darken);
+  caml_do_roots (caml_darken);
 }
 
-void llama_do_roots (scanning_action f)
+void caml_do_roots (scanning_action f)
 {
   /* Global variables */
-  f(llama_global_data, &llama_global_data);
+  f(caml_global_data, &caml_global_data);
   /* The stack and the local C roots */
-  llama_do_local_roots(f, llama_extern_sp, llama_stack_high, llama_local_roots);
+  caml_do_local_roots(f, caml_extern_sp, caml_stack_high, caml_local_roots);
   /* Global C roots */
-  llama_scan_global_roots(f);
+  caml_scan_global_roots(f);
   /* Finalised values */
-  llama_final_do_strong_roots (f);
+  caml_final_do_strong_roots (f);
   /* Hook */
-  if (llama_scan_roots_hook != NULL) (*llama_scan_roots_hook)(f);
+  if (caml_scan_roots_hook != NULL) (*caml_scan_roots_hook)(f);
 }
 
-CAMLexport void llama_do_local_roots (scanning_action f, value *stack_low,
+CAMLexport void caml_do_local_roots (scanning_action f, value *stack_low,
                                      value *stack_high,
-                                     struct llama__roots_block *local_roots)
+                                     struct caml__roots_block *local_roots)
 {
   register value * sp;
-  struct llama__roots_block *lr;
+  struct caml__roots_block *lr;
   int i, j;
 
   for (sp = stack_low; sp < stack_high; sp++) {

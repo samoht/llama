@@ -87,7 +87,7 @@ type loc_info =
   | Unknown_location of bool (*is_raise*)
 
 external get_exception_backtrace:
-  unit -> loc_info array option = "llama_get_exception_backtrace"
+  unit -> loc_info array option = "caml_get_exception_backtrace"
 
 let format_loc_info pos li =
   let is_raise =
@@ -131,8 +131,8 @@ let get_backtrace () =
       done;
       Buffer.contents b
 
-external record_backtrace: bool -> unit = "llama_record_backtrace"
-external backtrace_status: unit -> bool = "llama_backtrace_status"
+external record_backtrace: bool -> unit = "caml_record_backtrace"
+external backtrace_status: unit -> bool = "caml_backtrace_status"
 
 let register_printer fn =
   printers := fn :: !printers

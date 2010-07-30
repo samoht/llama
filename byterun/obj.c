@@ -27,14 +27,14 @@
 #include "mlvalues.h"
 #include "prims.h"
 
-CAMLprim value llama_static_alloc(value size)
+CAMLprim value caml_static_alloc(value size)
 {
-  return (value) llama_stat_alloc((asize_t) Long_val(size));
+  return (value) caml_stat_alloc((asize_t) Long_val(size));
 }
 
-CAMLprim value llama_static_free(value blk)
+CAMLprim value caml_static_free(value blk)
 {
-  llama_stat_free((void *) blk);
+  caml_stat_free((void *) blk);
   return Val_unit;
 }
 
@@ -42,28 +42,28 @@ CAMLprim value llama_static_free(value blk)
    needed (before freeing it) - this might be useful for a JIT
    implementation */
 
-CAMLprim value llama_static_release_bytecode(value blk, value size)
+CAMLprim value caml_static_release_bytecode(value blk, value size)
 {
 #ifndef NATIVE_CODE
-  llama_release_bytecode((code_t) blk, (asize_t) Long_val(size));
+  caml_release_bytecode((code_t) blk, (asize_t) Long_val(size));
 #else
-  llama_failwith("Meta.static_release_bytecode impossible with native code");
+  caml_failwith("Meta.static_release_bytecode impossible with native code");
 #endif
   return Val_unit;
 }
 
 
-CAMLprim value llama_static_resize(value blk, value new_size)
+CAMLprim value caml_static_resize(value blk, value new_size)
 {
-  return (value) llama_stat_resize((char *) blk, (asize_t) Long_val(new_size));
+  return (value) caml_stat_resize((char *) blk, (asize_t) Long_val(new_size));
 }
 
-CAMLprim value llama_obj_is_block(value arg)
+CAMLprim value caml_obj_is_block(value arg)
 {
   return Val_bool(Is_block(arg));
 }
 
-CAMLprim value llama_obj_tag(value arg)
+CAMLprim value caml_obj_tag(value arg)
 {
   if (Is_long (arg)){
     return Val_int (1000);   /* int_tag */
@@ -76,13 +76,13 @@ CAMLprim value llama_obj_tag(value arg)
   }
 }
 
-CAMLprim value llama_obj_set_tag (value arg, value new_tag)
+CAMLprim value caml_obj_set_tag (value arg, value new_tag)
 {
   Tag_val (arg) = Int_val (new_tag);
   return Val_unit;
 }
 
-CAMLprim value llama_obj_block(value tag, value size)
+CAMLprim value caml_obj_block(value tag, value size)
 {
   value res;
   mlsize_t sz, i;
@@ -91,14 +91,14 @@ CAMLprim value llama_obj_block(value tag, value size)
   sz = Long_val(size);
   tg = Long_val(tag);
   if (sz == 0) return Atom(tg);
-  res = llama_alloc(sz, tg);
+  res = caml_alloc(sz, tg);
   for (i = 0; i < sz; i++)
     Field(res, i) = Val_long(0);
 
   return res;
 }
 
-CAMLprim value llama_obj_dup(value arg)
+CAMLprim value caml_obj_dup(value arg)
 {
   CAMLparam1 (arg);
   CAMLlocal1 (res);
@@ -109,14 +109,14 @@ CAMLprim value llama_obj_dup(value arg)
   if (sz == 0) CAMLreturn (arg);
   tg = Tag_val(arg);
   if (tg >= No_scan_tag) {
-    res = llama_alloc(sz, tg);
+    res = caml_alloc(sz, tg);
     memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
   } else if (sz <= Max_young_wosize) {
-    res = llama_alloc_small(sz, tg);
+    res = caml_alloc_small(sz, tg);
     for (i = 0; i < sz; i++) Field(res, i) = Field(arg, i);
   } else {
-    res = llama_alloc_shr(sz, tg);
-    for (i = 0; i < sz; i++) llama_initialize(&Field(res, i), Field(arg, i));
+    res = caml_alloc_shr(sz, tg);
+    for (i = 0; i < sz; i++) caml_initialize(&Field(res, i), Field(arg, i));
   }
   CAMLreturn (res);
 }
@@ -130,7 +130,7 @@ CAMLprim value llama_obj_dup(value arg)
    with the leftover part of the object: this is needed in the major
    heap and harmless in the minor heap.
 */
-CAMLprim value llama_obj_truncate (value v, value newsize)
+CAMLprim value caml_obj_truncate (value v, value newsize)
 {
   mlsize_t new_wosize = Long_val (newsize);
   header_t hd = Hd_val (v);
@@ -142,7 +142,7 @@ CAMLprim value llama_obj_truncate (value v, value newsize)
   if (tag == Double_array_tag) new_wosize *= Double_wosize;  /* PR#156 */
 
   if (new_wosize <= 0 || new_wosize > wosize){
-    llama_invalid_argument ("Obj.truncate");
+    caml_invalid_argument ("Obj.truncate");
   }
   if (new_wosize == wosize) return Val_unit;
   /* PR#61: since we're about to lose our references to the elements
@@ -150,7 +150,7 @@ CAMLprim value llama_obj_truncate (value v, value newsize)
      can darken them as appropriate. */
   if (tag < No_scan_tag) {
     for (i = new_wosize; i < wosize; i++){
-      llama_modify(&Field(v, i), Val_unit);
+      caml_modify(&Field(v, i), Val_unit);
 #ifdef DEBUG
       Field (v, i) = Debug_free_truncate;
 #endif
@@ -165,7 +165,7 @@ CAMLprim value llama_obj_truncate (value v, value newsize)
   return Val_unit;
 }
 
-CAMLprim value llama_obj_add_offset (value v, value offset)
+CAMLprim value caml_obj_add_offset (value v, value offset)
 {
   return v + (unsigned long) Int32_val (offset);
 }
@@ -175,7 +175,7 @@ CAMLprim value llama_obj_add_offset (value v, value offset)
    to the GC.
  */
 
-CAMLprim value llama_lazy_follow_forward (value v)
+CAMLprim value caml_lazy_follow_forward (value v)
 {
   if (Is_block (v) && Is_in_value_area(v)
       && Tag_val (v) == Forward_tag){
@@ -185,12 +185,12 @@ CAMLprim value llama_lazy_follow_forward (value v)
   }
 }
 
-CAMLprim value llama_lazy_make_forward (value v)
+CAMLprim value caml_lazy_make_forward (value v)
 {
   CAMLparam1 (v);
   CAMLlocal1 (res);
 
-  res = llama_alloc_small (1, Forward_tag);
+  res = caml_alloc_small (1, Forward_tag);
   Modify (&Field (res, 0), v);
   CAMLreturn (res);
 }
@@ -199,7 +199,7 @@ CAMLprim value llama_lazy_make_forward (value v)
    See also GETPUBMET in interp.c
  */
 
-CAMLprim value llama_get_public_method (value obj, value tag)
+CAMLprim value caml_get_public_method (value obj, value tag)
 {
   value meths = Field (obj, 0);
   int li = 3, hi = Field(meths,0), mi;
@@ -220,7 +220,7 @@ CAMLprim value llama_get_public_method (value obj, value tag)
 #else
 #define MARK 0
 #endif
-value llama_cache_public_method (value meths, value tag, value *cache)
+value caml_cache_public_method (value meths, value tag, value *cache)
 {
   int li = 3, hi = Field(meths,0), mi;
   while (li < hi) {
@@ -232,7 +232,7 @@ value llama_cache_public_method (value meths, value tag, value *cache)
   return Field (meths, li-1);
 }
 
-value llama_cache_public_method2 (value *meths, value tag, value *cache)
+value caml_cache_public_method2 (value *meths, value tag, value *cache)
 {
   value ofs = *cache & meths[1];
   if (*(value*)(((char*)(meths+3)) + ofs - MARK) == tag)

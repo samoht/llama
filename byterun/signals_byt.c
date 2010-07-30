@@ -28,23 +28,23 @@
 
 #ifdef _WIN32
 typedef void (*sighandler)(int sig);
-extern sighandler llama_win32_signal(int sig, sighandler action);
-#define signal(sig,act) llama_win32_signal(sig,act)
+extern sighandler caml_win32_signal(int sig, sighandler action);
+#define signal(sig,act) caml_win32_signal(sig,act)
 #endif
 
-CAMLexport int volatile llama_something_to_do = 0;
-CAMLexport void (* volatile llama_async_action_hook)(void) = NULL;
+CAMLexport int volatile caml_something_to_do = 0;
+CAMLexport void (* volatile caml_async_action_hook)(void) = NULL;
 
-void llama_process_event(void)
+void caml_process_event(void)
 {
   void (*async_action)(void);
 
-  if (llama_force_major_slice) llama_minor_collection ();
-                             /* FIXME should be [llama_check_urgent_gc] */
-  llama_process_pending_signals();
-  async_action = llama_async_action_hook;
+  if (caml_force_major_slice) caml_minor_collection ();
+                             /* FIXME should be [caml_check_urgent_gc] */
+  caml_process_pending_signals();
+  async_action = caml_async_action_hook;
   if (async_action != NULL) {
-    llama_async_action_hook = NULL;
+    caml_async_action_hook = NULL;
     (*async_action)();
   }
 }
@@ -55,15 +55,15 @@ static void handle_signal(int signal_number)
   signal(signal_number, handle_signal);
 #endif
   if (signal_number < 0 || signal_number >= NSIG) return;
-  if (llama_try_leave_blocking_section_hook()) {
-    llama_execute_signal(signal_number, 1);
-    llama_enter_blocking_section_hook();
+  if (caml_try_leave_blocking_section_hook()) {
+    caml_execute_signal(signal_number, 1);
+    caml_enter_blocking_section_hook();
   }else{
-    llama_record_signal(signal_number);
+    caml_record_signal(signal_number);
  }
 }
 
-int llama_set_signal_action(int signo, int action)
+int caml_set_signal_action(int signo, int action)
 {
   void (*act)(int signo), (*oldact)(int signo);
 #ifdef POSIX_SIGNALS

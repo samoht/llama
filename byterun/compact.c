@@ -26,8 +26,8 @@
 #include "roots.h"
 #include "weak.h"
 
-extern uintnat llama_percent_free;                   /* major_gc.c */
-extern void llama_shrink_heap (char *);              /* memory.c */
+extern uintnat caml_percent_free;                   /* major_gc.c */
+extern void caml_shrink_heap (char *);              /* memory.c */
 
 /* Encoded headers: the color is stored in the 2 least significant bits.
    (For pointer inversion, we need to distinguish headers from pointers.)
@@ -42,7 +42,7 @@ extern void llama_shrink_heap (char *);              /* memory.c */
   XXX Should be fixed:
   XXX The above assumes that all roots are aligned on a 4-byte boundary,
   XXX which is not always guaranteed by C.
-  XXX (see [llama_register_global_roots] and [llama_init_exceptions])
+  XXX (see [caml_register_global_roots] and [caml_init_exceptions])
   XXX Should be able to fix it to only assume 2-byte alignment.
 */
 #define Make_ehd(s,t,c) (((s) << 10) | (t) << 2 | (c))
@@ -116,12 +116,12 @@ static char *compact_fl;
 
 static void init_compact_allocate (void)
 {
-  char *ch = llama_heap_start;
+  char *ch = caml_heap_start;
   while (ch != NULL){
     Chunk_alloc (ch) = 0;
     ch = Chunk_next (ch);
   }
-  compact_fl = llama_heap_start;
+  compact_fl = caml_heap_start;
 }
 
 static char *compact_allocate (mlsize_t size)
@@ -144,19 +144,19 @@ static char *compact_allocate (mlsize_t size)
   return adr;
 }
 
-void llama_compact_heap (void)
+void caml_compact_heap (void)
 {
   char *ch, *chend;
-                                          Assert (llama_gc_phase == Phase_idle);
-  llama_gc_message (0x10, "Compacting heap...\n", 0);
+                                          Assert (caml_gc_phase == Phase_idle);
+  caml_gc_message (0x10, "Compacting heap...\n", 0);
 
 #ifdef DEBUG
-  llama_heap_check ();
+  caml_heap_check ();
 #endif
 
   /* First pass: encode all noninfix headers. */
   {
-    ch = llama_heap_start;
+    ch = caml_heap_start;
     while (ch != NULL){
       header_t *p = (header_t *) ch;
 
@@ -186,10 +186,10 @@ void llama_compact_heap (void)
     /* Invert roots first because the threads library needs some heap
        data structures to find its roots.  Fortunately, it doesn't need
        the headers (see above). */
-    llama_do_roots (invert_root);
-    llama_final_do_weak_roots (invert_root);
+    caml_do_roots (invert_root);
+    caml_final_do_weak_roots (invert_root);
 
-    ch = llama_heap_start;
+    ch = caml_heap_start;
     while (ch != NULL){
       word *p = (word *) ch;
       chend = ch + Chunk_size (ch);
@@ -222,7 +222,7 @@ void llama_compact_heap (void)
     }
     /* Invert weak pointers. */
     {
-      value *pp = &llama_weak_list_head;
+      value *pp = &caml_weak_list_head;
       value p;
       word q;
       size_t sz, i;
@@ -234,7 +234,7 @@ void llama_compact_heap (void)
         while (Ecolor (q) == 0) q = * (word *) q;
         sz = Wosize_ehd (q);
         for (i = 1; i < sz; i++){
-          if (Field (p,i) != llama_weak_none){
+          if (Field (p,i) != caml_weak_none){
             invert_pointer_at ((word *) &(Field (p,i)));
           }
         }
@@ -249,7 +249,7 @@ void llama_compact_heap (void)
      Rebuild infix headers. */
   {
     init_compact_allocate ();
-    ch = llama_heap_start;
+    ch = caml_heap_start;
     while (ch != NULL){
       word *p = (word *) ch;
 
@@ -304,7 +304,7 @@ void llama_compact_heap (void)
           }
           p += sz;
         }else{                                        Assert (Ecolor (q) == 3);
-          /* This is guaranteed only if llama_compact_heap was called after a
+          /* This is guaranteed only if caml_compact_heap was called after a
              nonincremental major GC:       Assert (Tag_ehd (q) == String_tag);
           */
           /* No pointers to the header and no infix header:
@@ -322,7 +322,7 @@ void llama_compact_heap (void)
      Use the exact same allocation algorithm as pass 3. */
   {
     init_compact_allocate ();
-    ch = llama_heap_start;
+    ch = caml_heap_start;
     while (ch != NULL){
       word *p = (word *) ch;
 
@@ -350,7 +350,7 @@ void llama_compact_heap (void)
     asize_t free = 0;
     asize_t wanted;
 
-    ch = llama_heap_start;
+    ch = caml_heap_start;
     while (ch != NULL){
       if (Chunk_alloc (ch) != 0){
         live += Wsize_bsize (Chunk_alloc (ch));
@@ -361,8 +361,8 @@ void llama_compact_heap (void)
 
     /* Add up the empty chunks until there are enough, then remove the
        other empty chunks. */
-    wanted = llama_percent_free * (live / 100 + 1);
-    ch = llama_heap_start;
+    wanted = caml_percent_free * (live / 100 + 1);
+    ch = caml_heap_start;
     while (ch != NULL){
       char *next_chunk = Chunk_next (ch);  /* Chunk_next (ch) will be erased */
 
@@ -370,7 +370,7 @@ void llama_compact_heap (void)
         if (free < wanted){
           free += Wsize_bsize (Chunk_size (ch));
         }else{
-          llama_shrink_heap (ch);
+          caml_shrink_heap (ch);
         }
       }
       ch = next_chunk;
@@ -379,63 +379,63 @@ void llama_compact_heap (void)
 
   /* Rebuild the free list. */
   {
-    ch = llama_heap_start;
-    llama_fl_reset ();
+    ch = caml_heap_start;
+    caml_fl_reset ();
     while (ch != NULL){
       if (Chunk_size (ch) > Chunk_alloc (ch)){
-        llama_make_free_blocks ((value *) (ch + Chunk_alloc (ch)),
+        caml_make_free_blocks ((value *) (ch + Chunk_alloc (ch)),
                                Wsize_bsize (Chunk_size(ch)-Chunk_alloc(ch)), 1);
       }
       ch = Chunk_next (ch);
     }
   }
-  ++ llama_stat_compactions;
-  llama_gc_message (0x10, "done.\n", 0);
+  ++ caml_stat_compactions;
+  caml_gc_message (0x10, "done.\n", 0);
 }
 
-uintnat llama_percent_max;  /* used in gc_ctrl.c and memory.c */
+uintnat caml_percent_max;  /* used in gc_ctrl.c and memory.c */
 
-void llama_compact_heap_maybe (void)
+void caml_compact_heap_maybe (void)
 {
   /* Estimated free words in the heap:
-         FW = fl_size_at_change + 3 * (llama_fl_cur_size
-                                       - llama_fl_size_at_phase_change)
-         FW = 3 * llama_fl_cur_size - 2 * llama_fl_size_at_phase_change
-     Estimated live words:      LW = llama_stat_heap_size - FW
+         FW = fl_size_at_change + 3 * (caml_fl_cur_size
+                                       - caml_fl_size_at_phase_change)
+         FW = 3 * caml_fl_cur_size - 2 * caml_fl_size_at_phase_change
+     Estimated live words:      LW = caml_stat_heap_size - FW
      Estimated free percentage: FP = 100 * FW / LW
-     We compact the heap if FP > llama_percent_max
+     We compact the heap if FP > caml_percent_max
   */
   float fw, fp;
-                                          Assert (llama_gc_phase == Phase_idle);
-  if (llama_percent_max >= 1000000) return;
-  if (llama_stat_major_collections < 3 || llama_stat_heap_chunks < 3) return;
+                                          Assert (caml_gc_phase == Phase_idle);
+  if (caml_percent_max >= 1000000) return;
+  if (caml_stat_major_collections < 3 || caml_stat_heap_chunks < 3) return;
 
-  fw = 3.0 * llama_fl_cur_size - 2.0 * llama_fl_size_at_phase_change;
-  if (fw < 0) fw = llama_fl_cur_size;
+  fw = 3.0 * caml_fl_cur_size - 2.0 * caml_fl_size_at_phase_change;
+  if (fw < 0) fw = caml_fl_cur_size;
 
-  if (fw >= Wsize_bsize (llama_stat_heap_size)){
+  if (fw >= Wsize_bsize (caml_stat_heap_size)){
     fp = 1000000.0;
   }else{
-    fp = 100.0 * fw / (Wsize_bsize (llama_stat_heap_size) - fw);
+    fp = 100.0 * fw / (Wsize_bsize (caml_stat_heap_size) - fw);
     if (fp > 1000000.0) fp = 1000000.0;
   }
-  llama_gc_message (0x200, "FL size at phase change = %"
+  caml_gc_message (0x200, "FL size at phase change = %"
                           ARCH_INTNAT_PRINTF_FORMAT "u\n",
-                   (uintnat) llama_fl_size_at_phase_change);
-  llama_gc_message (0x200, "Estimated overhead = %"
+                   (uintnat) caml_fl_size_at_phase_change);
+  caml_gc_message (0x200, "Estimated overhead = %"
                           ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                    (uintnat) fp);
-  if (fp >= llama_percent_max){
-    llama_gc_message (0x200, "Automatic compaction triggered.\n", 0);
-    llama_finish_major_cycle ();
+  if (fp >= caml_percent_max){
+    caml_gc_message (0x200, "Automatic compaction triggered.\n", 0);
+    caml_finish_major_cycle ();
 
     /* We just did a complete GC, so we can measure the overhead exactly. */
-    fw = llama_fl_cur_size;
-    fp = 100.0 * fw / (Wsize_bsize (llama_stat_heap_size) - fw);
-    llama_gc_message (0x200, "Measured overhead: %"
+    fw = caml_fl_cur_size;
+    fp = 100.0 * fw / (Wsize_bsize (caml_stat_heap_size) - fw);
+    caml_gc_message (0x200, "Measured overhead: %"
                             ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                      (uintnat) fp);
 
-    llama_compact_heap ();
+    caml_compact_heap ();
   }
 }

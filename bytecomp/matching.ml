@@ -18,7 +18,7 @@ let share_lambda x = x
 
 let lambda_of_int i =  Lconst (Const_base (Const_int i))
 let prim_string_notequal =
-  Pccall{prim_name = "llama_string_notequal";
+  Pccall{prim_name = "caml_string_notequal";
           prim_arity = 2; prim_alloc = false;
           prim_native_name = ""; prim_native_float = false}
 

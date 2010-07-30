@@ -30,7 +30,7 @@
 
 #ifdef ARCH_ALIGN_DOUBLE
 
-CAMLexport double llama_Double_val(value val)
+CAMLexport double caml_Double_val(value val)
 {
   union { value v[2]; double d; } buffer;
 
@@ -40,7 +40,7 @@ CAMLexport double llama_Double_val(value val)
   return buffer.d;
 }
 
-CAMLexport void llama_Store_double_val(value val, double dbl)
+CAMLexport void caml_Store_double_val(value val, double dbl)
 {
   union { value v[2]; double d; } buffer;
 
@@ -52,7 +52,7 @@ CAMLexport void llama_Store_double_val(value val, double dbl)
 
 #endif
 
-CAMLexport value llama_copy_double(double d)
+CAMLexport value caml_copy_double(double d)
 {
   value res;
 
@@ -65,7 +65,7 @@ CAMLexport value llama_copy_double(double d)
   return res;
 }
 
-CAMLprim value llama_format_float(value fmt, value arg)
+CAMLprim value caml_format_float(value fmt, value arg)
 {
 #define MAX_DIGITS 350
 /* Max number of decimal digits in a "natural" (not artificially padded)
@@ -96,17 +96,17 @@ CAMLprim value llama_format_float(value fmt, value arg)
   if (prec < sizeof(format_buffer)) {
     dest = format_buffer;
   } else {
-    dest = llama_stat_alloc(prec);
+    dest = caml_stat_alloc(prec);
   }
   sprintf(dest, String_val(fmt), Double_val(arg));
-  res = llama_copy_string(dest);
+  res = caml_copy_string(dest);
   if (dest != format_buffer) {
-    llama_stat_free(dest);
+    caml_stat_free(dest);
   }
   return res;
 }
 
-/*CAMLprim*/ value llama_float_of_substring(value vs, value idx, value l)
+/*CAMLprim*/ value caml_float_of_substring(value vs, value idx, value l)
 {
   char parse_buffer[64];
   char * buf, * src, * dst, * end;
@@ -115,11 +115,11 @@ CAMLprim value llama_format_float(value fmt, value arg)
   intnat flen = Long_val(l);
   intnat fidx = Long_val(idx);
 
-  lenvs = llama_string_length(vs);
+  lenvs = caml_string_length(vs);
   len =
     fidx >= 0 && fidx < lenvs && flen > 0 && flen <= lenvs - fidx
     ? flen : 0;
-  buf = len < sizeof(parse_buffer) ? parse_buffer : llama_stat_alloc(len + 1);
+  buf = len < sizeof(parse_buffer) ? parse_buffer : caml_stat_alloc(len + 1);
   src = String_val(vs) + fidx;
   dst = buf;
   while (len--) {
@@ -130,22 +130,22 @@ CAMLprim value llama_format_float(value fmt, value arg)
   if (dst == buf) goto error;
   d = strtod((const char *) buf, &end);
   if (end != dst) goto error;
-  if (buf != parse_buffer) llama_stat_free(buf);
-  return llama_copy_double(d);
+  if (buf != parse_buffer) caml_stat_free(buf);
+  return caml_copy_double(d);
  error:
-  if (buf != parse_buffer) llama_stat_free(buf);
-  llama_failwith("float_of_string");
+  if (buf != parse_buffer) caml_stat_free(buf);
+  caml_failwith("float_of_string");
 }
 
-CAMLprim value llama_float_of_string(value vs)
+CAMLprim value caml_float_of_string(value vs)
 {
   char parse_buffer[64];
   char * buf, * src, * dst, * end;
   mlsize_t len;
   double d;
 
-  len = llama_string_length(vs);
-  buf = len < sizeof(parse_buffer) ? parse_buffer : llama_stat_alloc(len + 1);
+  len = caml_string_length(vs);
+  buf = len < sizeof(parse_buffer) ? parse_buffer : caml_stat_alloc(len + 1);
   src = String_val(vs);
   dst = buf;
   while (len--) {
@@ -156,180 +156,180 @@ CAMLprim value llama_float_of_string(value vs)
   if (dst == buf) goto error;
   d = strtod((const char *) buf, &end);
   if (end != dst) goto error;
-  if (buf != parse_buffer) llama_stat_free(buf);
-  return llama_copy_double(d);
+  if (buf != parse_buffer) caml_stat_free(buf);
+  return caml_copy_double(d);
  error:
-  if (buf != parse_buffer) llama_stat_free(buf);
-  llama_failwith("float_of_string");
+  if (buf != parse_buffer) caml_stat_free(buf);
+  caml_failwith("float_of_string");
 }
 
-CAMLprim value llama_int_of_float(value f)
+CAMLprim value caml_int_of_float(value f)
 {
   return Val_long((intnat) Double_val(f));
 }
 
-CAMLprim value llama_float_of_int(value n)
+CAMLprim value caml_float_of_int(value n)
 {
-  return llama_copy_double((double) Long_val(n));
+  return caml_copy_double((double) Long_val(n));
 }
 
-CAMLprim value llama_neg_float(value f)
+CAMLprim value caml_neg_float(value f)
 {
-  return llama_copy_double(- Double_val(f));
+  return caml_copy_double(- Double_val(f));
 }
 
-CAMLprim value llama_abs_float(value f)
+CAMLprim value caml_abs_float(value f)
 {
-  return llama_copy_double(fabs(Double_val(f)));
+  return caml_copy_double(fabs(Double_val(f)));
 }
 
-CAMLprim value llama_add_float(value f, value g)
+CAMLprim value caml_add_float(value f, value g)
 {
-  return llama_copy_double(Double_val(f) + Double_val(g));
+  return caml_copy_double(Double_val(f) + Double_val(g));
 }
 
-CAMLprim value llama_sub_float(value f, value g)
+CAMLprim value caml_sub_float(value f, value g)
 {
-  return llama_copy_double(Double_val(f) - Double_val(g));
+  return caml_copy_double(Double_val(f) - Double_val(g));
 }
 
-CAMLprim value llama_mul_float(value f, value g)
+CAMLprim value caml_mul_float(value f, value g)
 {
-  return llama_copy_double(Double_val(f) * Double_val(g));
+  return caml_copy_double(Double_val(f) * Double_val(g));
 }
 
-CAMLprim value llama_div_float(value f, value g)
+CAMLprim value caml_div_float(value f, value g)
 {
-  return llama_copy_double(Double_val(f) / Double_val(g));
+  return caml_copy_double(Double_val(f) / Double_val(g));
 }
 
-CAMLprim value llama_exp_float(value f)
+CAMLprim value caml_exp_float(value f)
 {
-  return llama_copy_double(exp(Double_val(f)));
+  return caml_copy_double(exp(Double_val(f)));
 }
 
-CAMLprim value llama_floor_float(value f)
+CAMLprim value caml_floor_float(value f)
 {
-  return llama_copy_double(floor(Double_val(f)));
+  return caml_copy_double(floor(Double_val(f)));
 }
 
-CAMLprim value llama_fmod_float(value f1, value f2)
+CAMLprim value caml_fmod_float(value f1, value f2)
 {
-  return llama_copy_double(fmod(Double_val(f1), Double_val(f2)));
+  return caml_copy_double(fmod(Double_val(f1), Double_val(f2)));
 }
 
-CAMLprim value llama_frexp_float(value f)
+CAMLprim value caml_frexp_float(value f)
 {
   CAMLparam1 (f);
   CAMLlocal2 (res, mantissa);
   int exponent;
 
-  mantissa = llama_copy_double(frexp (Double_val(f), &exponent));
-  res = llama_alloc_tuple(2);
+  mantissa = caml_copy_double(frexp (Double_val(f), &exponent));
+  res = caml_alloc_tuple(2);
   Field(res, 0) = mantissa;
   Field(res, 1) = Val_int(exponent);
   CAMLreturn (res);
 }
 
-CAMLprim value llama_ldexp_float(value f, value i)
+CAMLprim value caml_ldexp_float(value f, value i)
 {
-  return llama_copy_double(ldexp(Double_val(f), Int_val(i)));
+  return caml_copy_double(ldexp(Double_val(f), Int_val(i)));
 }
 
-CAMLprim value llama_log_float(value f)
+CAMLprim value caml_log_float(value f)
 {
-  return llama_copy_double(log(Double_val(f)));
+  return caml_copy_double(log(Double_val(f)));
 }
 
-CAMLprim value llama_log10_float(value f)
+CAMLprim value caml_log10_float(value f)
 {
-  return llama_copy_double(log10(Double_val(f)));
+  return caml_copy_double(log10(Double_val(f)));
 }
 
-CAMLprim value llama_modf_float(value f)
+CAMLprim value caml_modf_float(value f)
 {
   double frem;
 
   CAMLparam1 (f);
   CAMLlocal3 (res, quo, rem);
 
-  quo = llama_copy_double(modf (Double_val(f), &frem));
-  rem = llama_copy_double(frem);
-  res = llama_alloc_tuple(2);
+  quo = caml_copy_double(modf (Double_val(f), &frem));
+  rem = caml_copy_double(frem);
+  res = caml_alloc_tuple(2);
   Field(res, 0) = quo;
   Field(res, 1) = rem;
   CAMLreturn (res);
 }
 
-CAMLprim value llama_sqrt_float(value f)
+CAMLprim value caml_sqrt_float(value f)
 {
-  return llama_copy_double(sqrt(Double_val(f)));
+  return caml_copy_double(sqrt(Double_val(f)));
 }
 
-CAMLprim value llama_power_float(value f, value g)
+CAMLprim value caml_power_float(value f, value g)
 {
-  return llama_copy_double(pow(Double_val(f), Double_val(g)));
+  return caml_copy_double(pow(Double_val(f), Double_val(g)));
 }
 
-CAMLprim value llama_sin_float(value f)
+CAMLprim value caml_sin_float(value f)
 {
-  return llama_copy_double(sin(Double_val(f)));
+  return caml_copy_double(sin(Double_val(f)));
 }
 
-CAMLprim value llama_sinh_float(value f)
+CAMLprim value caml_sinh_float(value f)
 {
-  return llama_copy_double(sinh(Double_val(f)));
+  return caml_copy_double(sinh(Double_val(f)));
 }
 
-CAMLprim value llama_cos_float(value f)
+CAMLprim value caml_cos_float(value f)
 {
-  return llama_copy_double(cos(Double_val(f)));
+  return caml_copy_double(cos(Double_val(f)));
 }
 
-CAMLprim value llama_cosh_float(value f)
+CAMLprim value caml_cosh_float(value f)
 {
-  return llama_copy_double(cosh(Double_val(f)));
+  return caml_copy_double(cosh(Double_val(f)));
 }
 
-CAMLprim value llama_tan_float(value f)
+CAMLprim value caml_tan_float(value f)
 {
-  return llama_copy_double(tan(Double_val(f)));
+  return caml_copy_double(tan(Double_val(f)));
 }
 
-CAMLprim value llama_tanh_float(value f)
+CAMLprim value caml_tanh_float(value f)
 {
-  return llama_copy_double(tanh(Double_val(f)));
+  return caml_copy_double(tanh(Double_val(f)));
 }
 
-CAMLprim value llama_asin_float(value f)
+CAMLprim value caml_asin_float(value f)
 {
-  return llama_copy_double(asin(Double_val(f)));
+  return caml_copy_double(asin(Double_val(f)));
 }
 
-CAMLprim value llama_acos_float(value f)
+CAMLprim value caml_acos_float(value f)
 {
-  return llama_copy_double(acos(Double_val(f)));
+  return caml_copy_double(acos(Double_val(f)));
 }
 
-CAMLprim value llama_atan_float(value f)
+CAMLprim value caml_atan_float(value f)
 {
-  return llama_copy_double(atan(Double_val(f)));
+  return caml_copy_double(atan(Double_val(f)));
 }
 
-CAMLprim value llama_atan2_float(value f, value g)
+CAMLprim value caml_atan2_float(value f, value g)
 {
-  return llama_copy_double(atan2(Double_val(f), Double_val(g)));
+  return caml_copy_double(atan2(Double_val(f), Double_val(g)));
 }
 
-CAMLprim value llama_ceil_float(value f)
+CAMLprim value caml_ceil_float(value f)
 {
-  return llama_copy_double(ceil(Double_val(f)));
+  return caml_copy_double(ceil(Double_val(f)));
 }
 
 /* These emulations of expm1() and log1p() are due to William Kahan.
    See http://www.plunk.org/~hatch/rightway.php */
 
-CAMLexport double llama_expm1(double x)
+CAMLexport double caml_expm1(double x)
 {
 #ifdef HAS_EXPM1_LOG1P
   return expm1(x);
@@ -343,7 +343,7 @@ CAMLexport double llama_expm1(double x)
 #endif
 }
 
-CAMLexport double llama_log1p(double x)
+CAMLexport double caml_log1p(double x)
 {
 #ifdef HAS_EXPM1_LOG1P
   return log1p(x);
@@ -356,47 +356,47 @@ CAMLexport double llama_log1p(double x)
 #endif
 }
 
-CAMLprim value llama_expm1_float(value f)
+CAMLprim value caml_expm1_float(value f)
 {
-  return llama_copy_double(llama_expm1(Double_val(f)));
+  return caml_copy_double(caml_expm1(Double_val(f)));
 }
 
-CAMLprim value llama_log1p_float(value f)
+CAMLprim value caml_log1p_float(value f)
 {
-  return llama_copy_double(llama_log1p(Double_val(f)));
+  return caml_copy_double(caml_log1p(Double_val(f)));
 }
 
-CAMLprim value llama_eq_float(value f, value g)
+CAMLprim value caml_eq_float(value f, value g)
 {
   return Val_bool(Double_val(f) == Double_val(g));
 }
 
-CAMLprim value llama_neq_float(value f, value g)
+CAMLprim value caml_neq_float(value f, value g)
 {
   return Val_bool(Double_val(f) != Double_val(g));
 }
 
-CAMLprim value llama_le_float(value f, value g)
+CAMLprim value caml_le_float(value f, value g)
 {
   return Val_bool(Double_val(f) <= Double_val(g));
 }
 
-CAMLprim value llama_lt_float(value f, value g)
+CAMLprim value caml_lt_float(value f, value g)
 {
   return Val_bool(Double_val(f) < Double_val(g));
 }
 
-CAMLprim value llama_ge_float(value f, value g)
+CAMLprim value caml_ge_float(value f, value g)
 {
   return Val_bool(Double_val(f) >= Double_val(g));
 }
 
-CAMLprim value llama_gt_float(value f, value g)
+CAMLprim value caml_gt_float(value f, value g)
 {
   return Val_bool(Double_val(f) > Double_val(g));
 }
 
-CAMLprim value llama_float_compare(value vf, value vg)
+CAMLprim value caml_float_compare(value vf, value vg)
 {
   double f = Double_val(vf);
   double g = Double_val(vg);
@@ -412,7 +412,7 @@ CAMLprim value llama_float_compare(value vf, value vg)
 
 enum { FP_normal, FP_subnormal, FP_zero, FP_infinite, FP_nan };
 
-CAMLprim value llama_classify_float(value vd)
+CAMLprim value caml_classify_float(value vd)
 {
   /* Cygwin 1.3 has problems with fpclassify (PR#1293), so don't use it */
 #if defined(fpclassify) && !defined(__CYGWIN32__) && !defined(__MINGW32__)
@@ -457,7 +457,7 @@ CAMLprim value llama_classify_float(value vd)
 #endif
 }
 
-/* The [llama_init_ieee_float] function should initialize floating-point hardware
+/* The [caml_init_ieee_float] function should initialize floating-point hardware
    so that it behaves as much as possible like the IEEE standard.
    In particular, return special numbers like Infinity and NaN instead
    of signalling exceptions.  Currently, everyone is in IEEE mode
@@ -470,7 +470,7 @@ CAMLprim value llama_classify_float(value vd)
 #endif
 #endif
 
-void llama_init_ieee_floats(void)
+void caml_init_ieee_floats(void)
 {
 #if defined(__FreeBSD__) && (__FreeBSD_version < 400017)
   fpsetmask(0);

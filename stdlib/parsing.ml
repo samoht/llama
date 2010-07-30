@@ -76,10 +76,10 @@ type parser_output =
 
 external parse_engine :
     parse_tables -> parser_env -> parser_input -> Obj.t -> parser_output
-    = "llama_parse_engine"
+    = "caml_parse_engine"
 
 external set_trace: bool -> bool
-    = "llama_set_parser_trace"
+    = "caml_set_parser_trace"
 
 let env =
   { s_stack = Array.create 100 0;

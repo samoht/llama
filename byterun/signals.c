@@ -34,21 +34,21 @@
 
 /* The set of pending signals (received but not yet processed) */
 
-CAMLexport intnat volatile llama_signals_are_pending = 0;
-CAMLexport intnat volatile llama_pending_signals[NSIG];
+CAMLexport intnat volatile caml_signals_are_pending = 0;
+CAMLexport intnat volatile caml_pending_signals[NSIG];
 
 /* Execute all pending signals */
 
-void llama_process_pending_signals(void)
+void caml_process_pending_signals(void)
 {
   int i;
 
-  if (llama_signals_are_pending) {
-    llama_signals_are_pending = 0;
+  if (caml_signals_are_pending) {
+    caml_signals_are_pending = 0;
     for (i = 0; i < NSIG; i++) {
-      if (llama_pending_signals[i]) {
-        llama_pending_signals[i] = 0;
-        llama_execute_signal(i, 0);
+      if (caml_pending_signals[i]) {
+        caml_pending_signals[i] = 0;
+        caml_execute_signal(i, 0);
       }
     }
   }
@@ -56,76 +56,76 @@ void llama_process_pending_signals(void)
 
 /* Record the delivery of a signal, and arrange for it to be processed
    as soon as possible:
-   - in bytecode: via llama_something_to_do, processed in llama_process_event
+   - in bytecode: via caml_something_to_do, processed in caml_process_event
    - in native-code: by playing with the allocation limit, processed
-       in llama_garbage_collection
+       in caml_garbage_collection
 */
 
-void llama_record_signal(int signal_number)
+void caml_record_signal(int signal_number)
 {
-  llama_pending_signals[signal_number] = 1;
-  llama_signals_are_pending = 1;
+  caml_pending_signals[signal_number] = 1;
+  caml_signals_are_pending = 1;
 #ifndef NATIVE_CODE
-  llama_something_to_do = 1;
+  caml_something_to_do = 1;
 #else
-  llama_young_limit = llama_young_end;
+  caml_young_limit = caml_young_end;
 #endif
 }
 
 /* Management of blocking sections. */
 
-static intnat volatile llama_async_signal_mode = 0;
+static intnat volatile caml_async_signal_mode = 0;
 
-static void llama_enter_blocking_section_default(void)
+static void caml_enter_blocking_section_default(void)
 {
-  Assert (llama_async_signal_mode == 0);
-  llama_async_signal_mode = 1;
+  Assert (caml_async_signal_mode == 0);
+  caml_async_signal_mode = 1;
 }
 
-static void llama_leave_blocking_section_default(void)
+static void caml_leave_blocking_section_default(void)
 {
-  Assert (llama_async_signal_mode == 1);
-  llama_async_signal_mode = 0;
+  Assert (caml_async_signal_mode == 1);
+  caml_async_signal_mode = 0;
 }
 
-static int llama_try_leave_blocking_section_default(void)
+static int caml_try_leave_blocking_section_default(void)
 {
   intnat res;
-  Read_and_clear(res, llama_async_signal_mode);
+  Read_and_clear(res, caml_async_signal_mode);
   return res;
 }
 
-CAMLexport void (*llama_enter_blocking_section_hook)(void) =
-   llama_enter_blocking_section_default;
-CAMLexport void (*llama_leave_blocking_section_hook)(void) =
-   llama_leave_blocking_section_default;
-CAMLexport int (*llama_try_leave_blocking_section_hook)(void) =
-   llama_try_leave_blocking_section_default;
+CAMLexport void (*caml_enter_blocking_section_hook)(void) =
+   caml_enter_blocking_section_default;
+CAMLexport void (*caml_leave_blocking_section_hook)(void) =
+   caml_leave_blocking_section_default;
+CAMLexport int (*caml_try_leave_blocking_section_hook)(void) =
+   caml_try_leave_blocking_section_default;
 
-CAMLexport void llama_enter_blocking_section(void)
+CAMLexport void caml_enter_blocking_section(void)
 {
   while (1){
     /* Process all pending signals now */
-    llama_process_pending_signals();
-    llama_enter_blocking_section_hook ();
+    caml_process_pending_signals();
+    caml_enter_blocking_section_hook ();
     /* Check again for pending signals.
        If none, done; otherwise, try again */
-    if (! llama_signals_are_pending) break;
-    llama_leave_blocking_section_hook ();
+    if (! caml_signals_are_pending) break;
+    caml_leave_blocking_section_hook ();
   }
 }
 
-CAMLexport void llama_leave_blocking_section(void)
+CAMLexport void caml_leave_blocking_section(void)
 {
-  llama_leave_blocking_section_hook ();
-  llama_process_pending_signals();
+  caml_leave_blocking_section_hook ();
+  caml_process_pending_signals();
 }
 
 /* Execute a signal handler immediately */
 
-static value llama_signal_handlers = 0;
+static value caml_signal_handlers = 0;
 
-void llama_execute_signal(int signal_number, int in_signal_handler)
+void caml_execute_signal(int signal_number, int in_signal_handler)
 {
   value res;
 #ifdef POSIX_SIGNALS
@@ -136,9 +136,9 @@ void llama_execute_signal(int signal_number, int in_signal_handler)
   sigaddset(&sigs, signal_number);
   sigprocmask(SIG_BLOCK, &sigs, &sigs);
 #endif
-  res = llama_callback_exn(
-           Field(llama_signal_handlers, signal_number),
-           Val_int(llama_rev_convert_signal_number(signal_number)));
+  res = caml_callback_exn(
+           Field(caml_signal_handlers, signal_number),
+           Val_int(caml_rev_convert_signal_number(signal_number)));
 #ifdef POSIX_SIGNALS
   if (! in_signal_handler) {
     /* Restore the original signal mask */
@@ -149,24 +149,24 @@ void llama_execute_signal(int signal_number, int in_signal_handler)
     sigprocmask(SIG_SETMASK, &sigs, NULL);
   }
 #endif
-  if (Is_exception_result(res)) llama_raise(Extract_exception(res));
+  if (Is_exception_result(res)) caml_raise(Extract_exception(res));
 }
 
 /* Arrange for a garbage collection to be performed as soon as possible */
 
-int volatile llama_force_major_slice = 0;
+int volatile caml_force_major_slice = 0;
 
-void llama_urge_major_slice (void)
+void caml_urge_major_slice (void)
 {
-  llama_force_major_slice = 1;
+  caml_force_major_slice = 1;
 #ifndef NATIVE_CODE
-  llama_something_to_do = 1;
+  caml_something_to_do = 1;
 #else
-  llama_young_limit = llama_young_end;
-  /* This is only moderately effective on ports that cache [llama_young_limit]
-     in a register, since [llama_modify] is called directly, not through
-     [llama_c_call], so it may take a while before the register is reloaded
-     from [llama_young_limit]. */
+  caml_young_limit = caml_young_end;
+  /* This is only moderately effective on ports that cache [caml_young_limit]
+     in a register, since [caml_modify] is called directly, not through
+     [caml_c_call], so it may take a while before the register is reloaded
+     from [caml_young_limit]. */
 #endif
 }
 
@@ -242,7 +242,7 @@ static int posix_signals[] = {
   SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGVTALRM, SIGPROF
 };
 
-CAMLexport int llama_convert_signal_number(int signo)
+CAMLexport int caml_convert_signal_number(int signo)
 {
   if (signo < 0 && signo >= -(sizeof(posix_signals) / sizeof(int)))
     return posix_signals[-signo-1];
@@ -250,7 +250,7 @@ CAMLexport int llama_convert_signal_number(int signo)
     return signo;
 }
 
-CAMLexport int llama_rev_convert_signal_number(int signo)
+CAMLexport int caml_rev_convert_signal_number(int signo)
 {
   int i;
   for (i = 0; i < sizeof(posix_signals) / sizeof(int); i++)
@@ -260,15 +260,15 @@ CAMLexport int llama_rev_convert_signal_number(int signo)
 
 /* Installation of a signal handler (as per [Sys.signal]) */
 
-CAMLprim value llama_install_signal_handler(value signal_number, value action)
+CAMLprim value caml_install_signal_handler(value signal_number, value action)
 {
   CAMLparam2 (signal_number, action);
   CAMLlocal1 (res);
   int sig, act, oldact;
 
-  sig = llama_convert_signal_number(Int_val(signal_number));
+  sig = caml_convert_signal_number(Int_val(signal_number));
   if (sig < 0 || sig >= NSIG)
-    llama_invalid_argument("Sys.signal: unavailable signal");
+    caml_invalid_argument("Sys.signal: unavailable signal");
   switch(action) {
   case Val_int(0):              /* Signal_default */
     act = 0;
@@ -280,7 +280,7 @@ CAMLprim value llama_install_signal_handler(value signal_number, value action)
     act = 2;
     break;
   }
-  oldact = llama_set_signal_action(sig, act);
+  oldact = caml_set_signal_action(sig, act);
   switch (oldact) {
   case 0:                       /* was Signal_default */
     res = Val_int(0);
@@ -289,19 +289,19 @@ CAMLprim value llama_install_signal_handler(value signal_number, value action)
     res = Val_int(1);
     break;
   case 2:                       /* was Signal_handle */
-    res = llama_alloc_small (1, 0);
-    Field(res, 0) = Field(llama_signal_handlers, sig);
+    res = caml_alloc_small (1, 0);
+    Field(res, 0) = Field(caml_signal_handlers, sig);
     break;
-  default:                      /* error in llama_set_signal_action */
-    llama_sys_error(NO_ARG);
+  default:                      /* error in caml_set_signal_action */
+    caml_sys_error(NO_ARG);
   }
   if (Is_block(action)) {
-    if (llama_signal_handlers == 0) {
-      llama_signal_handlers = llama_alloc(NSIG, 0);
-      llama_register_global_root(&llama_signal_handlers);
+    if (caml_signal_handlers == 0) {
+      caml_signal_handlers = caml_alloc(NSIG, 0);
+      caml_register_global_root(&caml_signal_handlers);
     }
-    llama_modify(&Field(llama_signal_handlers, sig), Field(action, 0));
+    caml_modify(&Field(caml_signal_handlers, sig), Field(action, 0));
   }
-  llama_process_pending_signals();
+  caml_process_pending_signals();
   CAMLreturn (res);
 }

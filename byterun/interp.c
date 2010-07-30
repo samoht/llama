@@ -37,10 +37,10 @@
         sp         the stack pointer (grows downward)
         accu       the accumulator
         env        heap-allocated environment
-        llama_trapsp pointer to the current trap frame
+        caml_trapsp pointer to the current trap frame
         extra_args number of extra arguments provided by the caller
 
-sp is a local copy of the global variable llama_extern_sp. */
+sp is a local copy of the global variable caml_extern_sp. */
 
 /* Instruction decoding */
 
@@ -65,13 +65,13 @@ sp is a local copy of the global variable llama_extern_sp. */
 /* GC interface */
 
 #define Setup_for_gc \
-  { sp -= 2; sp[0] = accu; sp[1] = env; llama_extern_sp = sp; }
+  { sp -= 2; sp[0] = accu; sp[1] = env; caml_extern_sp = sp; }
 #define Restore_after_gc \
   { accu = sp[0]; env = sp[1]; sp += 2; }
 #define Setup_for_c_call \
-  { saved_pc = pc; *--sp = env; llama_extern_sp = sp; }
+  { saved_pc = pc; *--sp = env; caml_extern_sp = sp; }
 #define Restore_after_c_call \
-  { sp = llama_extern_sp; env = *sp++; saved_pc = NULL; }
+  { sp = caml_extern_sp; env = *sp++; saved_pc = NULL; }
 
 /* An event frame must look like accu + a C_CALL frame + a RETURN 1 frame */
 #define Setup_for_event \
@@ -82,9 +82,9 @@ sp is a local copy of the global variable llama_extern_sp. */
     sp[3] = (value) pc; /* RETURN frame: saved return address */ \
     sp[4] = env; /* RETURN frame: saved environment */ \
     sp[5] = Val_long(extra_args); /* RETURN frame: saved extra args */ \
-    llama_extern_sp = sp; }
+    caml_extern_sp = sp; }
 #define Restore_after_event \
-  { sp = llama_extern_sp; accu = sp[0]; \
+  { sp = caml_extern_sp; accu = sp[0]; \
     pc = (code_t) sp[3]; env = sp[4]; extra_args = Long_val(sp[5]); \
     sp += 6; }
 
@@ -94,15 +94,15 @@ sp is a local copy of the global variable llama_extern_sp. */
    { sp -= 4; \
      sp[0] = accu; sp[1] = (value)(pc - 1); \
      sp[2] = env; sp[3] = Val_long(extra_args); \
-     llama_extern_sp = sp; }
+     caml_extern_sp = sp; }
 #define Restore_after_debugger { sp += 4; }
 
 #ifdef THREADED_CODE
 #define Restart_curr_instr \
-  goto *(jumptable[llama_saved_code[pc - 1 - llama_start_code]])
+  goto *(jumptable[caml_saved_code[pc - 1 - caml_start_code]])
 #else
 #define Restart_curr_instr \
-  curr_instr = llama_saved_code[pc - 1 - llama_start_code]; \
+  curr_instr = caml_saved_code[pc - 1 - caml_start_code]; \
   goto dispatch_instr
 #endif
 
@@ -179,18 +179,18 @@ sp is a local copy of the global variable llama_extern_sp. */
 /* Division and modulus madness */
 
 #ifdef NONSTANDARD_DIV_MOD
-extern intnat llama_safe_div(intnat p, intnat q);
-extern intnat llama_safe_mod(intnat p, intnat q);
+extern intnat caml_safe_div(intnat p, intnat q);
+extern intnat caml_safe_mod(intnat p, intnat q);
 #endif
 
 
 #ifdef DEBUG
-static intnat llama_bcodcount;
+static intnat caml_bcodcount;
 #endif
 
 /* The interpreter itself */
 
-value llama_interprete(code_t prog, asize_t prog_size)
+value caml_interprete(code_t prog, asize_t prog_size)
 {
 #ifdef PC_REG
   register code_t pc PC_REG;
@@ -214,7 +214,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
   int initial_sp_offset;
   /* volatile ensures that initial_local_roots and saved_pc
      will keep correct value across longjmp */
-  struct llama__roots_block * volatile initial_local_roots;
+  struct caml__roots_block * volatile initial_local_roots;
   volatile code_t saved_pc = NULL;
   struct longjmp_buffer raise_buf;
   value * modify_dest, modify_newval;
@@ -230,8 +230,8 @@ value llama_interprete(code_t prog, asize_t prog_size)
 
   if (prog == NULL) {           /* Interpreter is initializing */
 #ifdef THREADED_CODE
-    llama_instr_table = (char **) jumptable;
-    llama_instr_base = Jumptbl_base;
+    caml_instr_table = (char **) jumptable;
+    caml_instr_base = Jumptbl_base;
 #endif
     return Val_unit;
   }
@@ -239,24 +239,24 @@ value llama_interprete(code_t prog, asize_t prog_size)
 #if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
   jumptbl_base = Jumptbl_base;
 #endif
-  initial_local_roots = llama_local_roots;
-  initial_sp_offset = (char *) llama_stack_high - (char *) llama_extern_sp;
-  initial_external_raise = llama_external_raise;
-  llama_callback_depth++;
+  initial_local_roots = caml_local_roots;
+  initial_sp_offset = (char *) caml_stack_high - (char *) caml_extern_sp;
+  initial_external_raise = caml_external_raise;
+  caml_callback_depth++;
   saved_pc = NULL;
 
   if (sigsetjmp(raise_buf.buf, 0)) {
-    llama_local_roots = initial_local_roots;
-    sp = llama_extern_sp;
-    accu = llama_exn_bucket;
+    caml_local_roots = initial_local_roots;
+    sp = caml_extern_sp;
+    accu = caml_exn_bucket;
     pc = saved_pc; saved_pc = NULL;
     if (pc != NULL) pc += 2;
         /* +2 adjustement for the sole purpose of backtraces */
     goto raise_exception;
   }
-  llama_external_raise = &raise_buf;
+  caml_external_raise = &raise_buf;
 
-  sp = llama_extern_sp;
+  sp = caml_extern_sp;
   pc = prog;
   extra_args = 0;
   env = Atom(0);
@@ -265,27 +265,27 @@ value llama_interprete(code_t prog, asize_t prog_size)
 #ifdef THREADED_CODE
 #ifdef DEBUG
  next_instr:
-  if (llama_icount-- == 0) llama_stop_here ();
-  Assert(sp >= llama_stack_low);
-  Assert(sp <= llama_stack_high);
+  if (caml_icount-- == 0) caml_stop_here ();
+  Assert(sp >= caml_stack_low);
+  Assert(sp <= caml_stack_high);
 #endif
   goto *(void *)(jumptbl_base + *pc++); /* Jump to the first instruction */
 #else
   while(1) {
 #ifdef DEBUG
-    llama_bcodcount++;
-    if (llama_icount-- == 0) llama_stop_here ();
-    if (llama_trace_flag>1) printf("\n##%ld\n", llama_bcodcount);
-    if (llama_trace_flag) llama_disasm_instr(pc);
-    if (llama_trace_flag>1) {
+    caml_bcodcount++;
+    if (caml_icount-- == 0) caml_stop_here ();
+    if (caml_trace_flag>1) printf("\n##%ld\n", caml_bcodcount);
+    if (caml_trace_flag) caml_disasm_instr(pc);
+    if (caml_trace_flag>1) {
       printf("env=");
-      llama_trace_value_file(env,prog,prog_size,stdout);
+      caml_trace_value_file(env,prog,prog_size,stdout);
       putchar('\n');
-      llama_trace_accu_sp_file(accu,sp,prog,prog_size,stdout);
+      caml_trace_accu_sp_file(accu,sp,prog,prog_size,stdout);
       fflush(stdout);
     };
-    Assert(sp >= llama_stack_low);
-    Assert(sp <= llama_stack_high);
+    Assert(sp >= caml_stack_low);
+    Assert(sp <= caml_stack_high);
 #endif
     curr_instr = *pc++;
 
@@ -587,7 +587,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
       *--sp = accu;
       /* Fallthrough */
     Instruct(GETGLOBAL):
-      accu = Field(llama_global_data, *pc);
+      accu = Field(caml_global_data, *pc);
       pc++;
       Next;
 
@@ -595,7 +595,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
       *--sp = accu;
       /* Fallthrough */
     Instruct(GETGLOBALFIELD): {
-      accu = Field(llama_global_data, *pc);
+      accu = Field(caml_global_data, *pc);
       pc++;
       accu = Field(accu, *pc);
       pc++;
@@ -603,7 +603,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
     }
 
     Instruct(SETGLOBAL):
-      llama_modify(&Field(llama_global_data, *pc), accu);
+      caml_modify(&Field(caml_global_data, *pc), accu);
       accu = Val_unit;
       pc++;
       Next;
@@ -632,9 +632,9 @@ value llama_interprete(code_t prog, asize_t prog_size)
         Field(block, 0) = accu;
         for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
       } else {
-        block = llama_alloc_shr(wosize, tag);
-        llama_initialize(&Field(block, 0), accu);
-        for (i = 1; i < wosize; i++) llama_initialize(&Field(block, i), *sp++);
+        block = caml_alloc_shr(wosize, tag);
+        caml_initialize(&Field(block, 0), accu);
+        for (i = 1; i < wosize; i++) caml_initialize(&Field(block, i), *sp++);
       }
       accu = block;
       Next;
@@ -675,7 +675,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
       if (size <= Max_young_wosize / Double_wosize) {
         Alloc_small(block, size * Double_wosize, Double_array_tag);
       } else {
-        block = llama_alloc_shr(size * Double_wosize, Double_array_tag);
+        block = caml_alloc_shr(size * Double_wosize, Double_array_tag);
       }
       Store_double_field(block, 0, Double_val(accu));
       for (i = 1; i < size; i++){
@@ -800,40 +800,40 @@ value llama_interprete(code_t prog, asize_t prog_size)
     Instruct(PUSHTRAP):
       sp -= 4;
       Trap_pc(sp) = pc + *pc;
-      Trap_link(sp) = llama_trapsp;
+      Trap_link(sp) = caml_trapsp;
       sp[2] = env;
       sp[3] = Val_long(extra_args);
-      llama_trapsp = sp;
+      caml_trapsp = sp;
       pc++;
       Next;
 
     Instruct(POPTRAP):
-      if (llama_something_to_do) {
+      if (caml_something_to_do) {
         /* We must check here so that if a signal is pending and its
            handler triggers an exception, the exception is trapped
            by the current try...with, not the enclosing one. */
         pc--; /* restart the POPTRAP after processing the signal */
         goto process_signal;
       }
-      llama_trapsp = Trap_link(sp);
+      caml_trapsp = Trap_link(sp);
       sp += 4;
       Next;
 
     Instruct(RAISE):
     raise_exception:
-      if (llama_trapsp >= llama_trap_barrier) llama_debugger(TRAP_BARRIER);
-      if (llama_backtrace_active) llama_stash_backtrace(accu, pc, sp);
-      if ((char *) llama_trapsp
-          >= (char *) llama_stack_high - initial_sp_offset) {
-        llama_external_raise = initial_external_raise;
-        llama_extern_sp = (value *) ((char *) llama_stack_high
+      if (caml_trapsp >= caml_trap_barrier) caml_debugger(TRAP_BARRIER);
+      if (caml_backtrace_active) caml_stash_backtrace(accu, pc, sp);
+      if ((char *) caml_trapsp
+          >= (char *) caml_stack_high - initial_sp_offset) {
+        caml_external_raise = initial_external_raise;
+        caml_extern_sp = (value *) ((char *) caml_stack_high
                                     - initial_sp_offset);
-        llama_callback_depth--;
+        caml_callback_depth--;
         return Make_exception_result(accu);
       }
-      sp = llama_trapsp;
+      sp = caml_trapsp;
       pc = Trap_pc(sp);
-      llama_trapsp = Trap_link(sp);
+      caml_trapsp = Trap_link(sp);
       env = sp[2];
       extra_args = Long_val(sp[3]);
       sp += 4;
@@ -842,23 +842,23 @@ value llama_interprete(code_t prog, asize_t prog_size)
 /* Stack checks */
 
     check_stacks:
-      if (sp < llama_stack_threshold) {
-        llama_extern_sp = sp;
-        llama_realloc_stack(Stack_threshold / sizeof(value));
-        sp = llama_extern_sp;
+      if (sp < caml_stack_threshold) {
+        caml_extern_sp = sp;
+        caml_realloc_stack(Stack_threshold / sizeof(value));
+        sp = caml_extern_sp;
       }
       /* Fall through CHECK_SIGNALS */
 
 /* Signal handling */
 
     Instruct(CHECK_SIGNALS):    /* accu not preserved */
-      if (llama_something_to_do) goto process_signal;
+      if (caml_something_to_do) goto process_signal;
       Next;
 
     process_signal:
-      llama_something_to_do = 0;
+      caml_something_to_do = 0;
       Setup_for_event;
-      llama_process_event();
+      caml_process_event();
       Restore_after_event;
       Next;
 
@@ -950,9 +950,9 @@ value llama_interprete(code_t prog, asize_t prog_size)
 
     Instruct(DIVINT): {
       intnat divisor = Long_val(*sp++);
-      if (divisor == 0) { Setup_for_c_call; llama_raise_zero_divide(); }
+      if (divisor == 0) { Setup_for_c_call; caml_raise_zero_divide(); }
 #ifdef NONSTANDARD_DIV_MOD
-      accu = Val_long(llama_safe_div(Long_val(accu), divisor));
+      accu = Val_long(caml_safe_div(Long_val(accu), divisor));
 #else
       accu = Val_long(Long_val(accu) / divisor);
 #endif
@@ -960,9 +960,9 @@ value llama_interprete(code_t prog, asize_t prog_size)
     }
     Instruct(MODINT): {
       intnat divisor = Long_val(*sp++);
-      if (divisor == 0) { Setup_for_c_call; llama_raise_zero_divide(); }
+      if (divisor == 0) { Setup_for_c_call; caml_raise_zero_divide(); }
 #ifdef NONSTANDARD_DIV_MOD
-      accu = Val_long(llama_safe_mod(Long_val(accu), divisor));
+      accu = Val_long(caml_safe_mod(Long_val(accu), divisor));
 #else
       accu = Val_long(Long_val(accu) % divisor);
 #endif
@@ -1030,8 +1030,8 @@ value llama_interprete(code_t prog, asize_t prog_size)
 #define Lookup(obj, lab) Field (Field (obj, 0), Int_val(lab))
 
       /* please don't forget to keep below code in sync with the
-         functions llama_cache_public_method and
-         llama_cache_public_method2 in obj.c */
+         functions caml_cache_public_method and
+         caml_cache_public_method2 in obj.c */
 
     Instruct(GETMETHOD):
       accu = Lookup(sp[0], accu);
@@ -1097,22 +1097,22 @@ value llama_interprete(code_t prog, asize_t prog_size)
 /* Debugging and machine control */
 
     Instruct(STOP):
-      llama_external_raise = initial_external_raise;
-      llama_extern_sp = sp;
-      llama_callback_depth--;
+      caml_external_raise = initial_external_raise;
+      caml_extern_sp = sp;
+      caml_callback_depth--;
       return accu;
 
     Instruct(EVENT):
-      if (--llama_event_count == 0) {
+      if (--caml_event_count == 0) {
         Setup_for_debugger;
-        llama_debugger(EVENT_COUNT);
+        caml_debugger(EVENT_COUNT);
         Restore_after_debugger;
       }
       Restart_curr_instr;
 
     Instruct(BREAK):
       Setup_for_debugger;
-      llama_debugger(BREAKPOINT);
+      caml_debugger(BREAKPOINT);
       Restore_after_debugger;
       Restart_curr_instr;
 
@@ -1121,7 +1121,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
 #if _MSC_VER >= 1200
       __assume(0);
 #else
-      llama_fatal_error_arg("Fatal error: bad opcode (%"
+      caml_fatal_error_arg("Fatal error: bad opcode (%"
                            ARCH_INTNAT_PRINTF_FORMAT "x)\n",
                            (char *)(*(pc-1)));
 #endif
@@ -1130,7 +1130,7 @@ value llama_interprete(code_t prog, asize_t prog_size)
 #endif
 }
 
-void llama_prepare_bytecode(code_t prog, asize_t prog_size) {
+void caml_prepare_bytecode(code_t prog, asize_t prog_size) {
   /* other implementations of the interpreter (such as an hypothetical
      JIT translator) might want to do something with a bytecode before
      running it */
@@ -1139,7 +1139,7 @@ void llama_prepare_bytecode(code_t prog, asize_t prog_size) {
   /* actually, the threading of the bytecode might be done here */
 }
 
-void llama_release_bytecode(code_t prog, asize_t prog_size) {
+void caml_release_bytecode(code_t prog, asize_t prog_size) {
   /* other implementations of the interpreter (such as an hypothetical
      JIT translator) might want to know when a bytecode is removed */
   /* check that we have a program */

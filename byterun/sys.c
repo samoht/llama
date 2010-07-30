@@ -67,7 +67,7 @@ static char * error_message(void)
 #define EWOULDBLOCK (-1)
 #endif
 
-CAMLexport void llama_sys_error(value arg)
+CAMLexport void caml_sys_error(value arg)
 {
   CAMLparam1 (arg);
   char * err;
@@ -75,32 +75,32 @@ CAMLexport void llama_sys_error(value arg)
 
   err = error_message();
   if (arg == NO_ARG) {
-    str = llama_copy_string(err);
+    str = caml_copy_string(err);
   } else {
     int err_len = strlen(err);
-    int arg_len = llama_string_length(arg);
-    str = llama_alloc_string(arg_len + 2 + err_len);
+    int arg_len = caml_string_length(arg);
+    str = caml_alloc_string(arg_len + 2 + err_len);
     memmove(&Byte(str, 0), String_val(arg), arg_len);
     memmove(&Byte(str, arg_len), ": ", 2);
     memmove(&Byte(str, arg_len + 2), err, err_len);
   }
-  llama_raise_sys_error(str);
+  caml_raise_sys_error(str);
   CAMLnoreturn;
 }
 
-CAMLexport void llama_sys_io_error(value arg)
+CAMLexport void caml_sys_io_error(value arg)
 {
   if (errno == EAGAIN || errno == EWOULDBLOCK) {
-    llama_raise_sys_blocked_io();
+    caml_raise_sys_blocked_io();
   } else {
-    llama_sys_error(arg);
+    caml_sys_error(arg);
   }
 }
 
-CAMLprim value llama_sys_exit(value retcode)
+CAMLprim value caml_sys_exit(value retcode)
 {
 #ifndef NATIVE_CODE
-  llama_debugger(PROGRAM_EXIT);
+  caml_debugger(PROGRAM_EXIT);
 #endif
   exit(Int_val(retcode));
   return Val_unit;
@@ -125,44 +125,44 @@ static int sys_open_flags[] = {
   O_BINARY, O_TEXT, O_NONBLOCK
 };
 
-CAMLprim value llama_sys_open(value path, value vflags, value vperm)
+CAMLprim value caml_sys_open(value path, value vflags, value vperm)
 {
   CAMLparam3(path, vflags, vperm);
   int fd, flags, perm;
   char * p;
 
-  p = llama_stat_alloc(llama_string_length(path) + 1);
+  p = caml_stat_alloc(caml_string_length(path) + 1);
   strcpy(p, String_val(path));
-  flags = llama_convert_flag_list(vflags, sys_open_flags);
+  flags = caml_convert_flag_list(vflags, sys_open_flags);
   perm = Int_val(vperm);
   /* open on a named FIFO can block (PR#1533) */
-  llama_enter_blocking_section();
+  caml_enter_blocking_section();
   fd = open(p, flags, perm);
-  llama_leave_blocking_section();
-  llama_stat_free(p);
-  if (fd == -1) llama_sys_error(path);
+  caml_leave_blocking_section();
+  caml_stat_free(p);
+  if (fd == -1) caml_sys_error(path);
 #if defined(F_SETFD) && defined(FD_CLOEXEC)
   fcntl(fd, F_SETFD, FD_CLOEXEC);
 #endif
   CAMLreturn(Val_long(fd));
 }
 
-CAMLprim value llama_sys_close(value fd)
+CAMLprim value caml_sys_close(value fd)
 {
   close(Int_val(fd));
   return Val_unit;
 }
 
-CAMLprim value llama_sys_file_exists(value name)
+CAMLprim value caml_sys_file_exists(value name)
 {
   struct stat st;
   return Val_bool(stat(String_val(name), &st) == 0);
 }
 
-CAMLprim value llama_sys_is_directory(value name)
+CAMLprim value caml_sys_is_directory(value name)
 {
   struct stat st;
-  if (stat(String_val(name), &st) == -1) llama_sys_error(name);
+  if (stat(String_val(name), &st) == -1) caml_sys_error(name);
 #ifdef S_ISDIR
   return Val_bool(S_ISDIR(st.st_mode));
 #else
@@ -170,66 +170,66 @@ CAMLprim value llama_sys_is_directory(value name)
 #endif
 }
 
-CAMLprim value llama_sys_remove(value name)
+CAMLprim value caml_sys_remove(value name)
 {
   int ret;
   ret = unlink(String_val(name));
-  if (ret != 0) llama_sys_error(name);
+  if (ret != 0) caml_sys_error(name);
   return Val_unit;
 }
 
-CAMLprim value llama_sys_rename(value oldname, value newname)
+CAMLprim value caml_sys_rename(value oldname, value newname)
 {
   if (rename(String_val(oldname), String_val(newname)) != 0)
-    llama_sys_error(NO_ARG);
+    caml_sys_error(NO_ARG);
   return Val_unit;
 }
 
-CAMLprim value llama_sys_chdir(value dirname)
+CAMLprim value caml_sys_chdir(value dirname)
 {
-  if (chdir(String_val(dirname)) != 0) llama_sys_error(dirname);
+  if (chdir(String_val(dirname)) != 0) caml_sys_error(dirname);
   return Val_unit;
 }
 
-CAMLprim value llama_sys_getcwd(value unit)
+CAMLprim value caml_sys_getcwd(value unit)
 {
   char buff[4096];
 #ifdef HAS_GETCWD
-  if (getcwd(buff, sizeof(buff)) == 0) llama_sys_error(NO_ARG);
+  if (getcwd(buff, sizeof(buff)) == 0) caml_sys_error(NO_ARG);
 #else
-  if (getwd(buff) == 0) llama_sys_error(NO_ARG);
+  if (getwd(buff) == 0) caml_sys_error(NO_ARG);
 #endif /* HAS_GETCWD */
-  return llama_copy_string(buff);
+  return caml_copy_string(buff);
 }
 
-CAMLprim value llama_sys_getenv(value var)
+CAMLprim value caml_sys_getenv(value var)
 {
   char * res;
 
   res = getenv(String_val(var));
-  if (res == 0) llama_raise_not_found();
-  return llama_copy_string(res);
+  if (res == 0) caml_raise_not_found();
+  return caml_copy_string(res);
 }
 
-char * llama_exe_name;
-static char ** llama_main_argv;
+char * caml_exe_name;
+static char ** caml_main_argv;
 
-CAMLprim value llama_sys_get_argv(value unit)
+CAMLprim value caml_sys_get_argv(value unit)
 {
   CAMLparam0 ();   /* unit is unused */
   CAMLlocal3 (exe_name, argv, res);
-  exe_name = llama_copy_string(llama_exe_name);
-  argv = llama_copy_string_array((char const **) llama_main_argv);
-  res = llama_alloc_small(2, 0);
+  exe_name = caml_copy_string(caml_exe_name);
+  argv = caml_copy_string_array((char const **) caml_main_argv);
+  res = caml_alloc_small(2, 0);
   Field(res, 0) = exe_name;
   Field(res, 1) = argv;
   CAMLreturn(res);
 }
 
-void llama_sys_init(char * exe_name, char **argv)
+void caml_sys_init(char * exe_name, char **argv)
 {
-  llama_exe_name = exe_name;
-  llama_main_argv = argv;
+  caml_exe_name = exe_name;
+  caml_main_argv = argv;
 }
 
 #ifdef _WIN32
@@ -243,21 +243,21 @@ void llama_sys_init(char * exe_name, char **argv)
 #endif
 #endif
 
-CAMLprim value llama_sys_system_command(value command)
+CAMLprim value caml_sys_system_command(value command)
 {
   CAMLparam1 (command);
   int status, retcode;
   char *buf;
   intnat len;
 
-  len = llama_string_length (command);
-  buf = llama_stat_alloc (len + 1);
+  len = caml_string_length (command);
+  buf = caml_stat_alloc (len + 1);
   memmove (buf, String_val (command), len + 1);
-  llama_enter_blocking_section ();
+  caml_enter_blocking_section ();
   status = system(buf);
-  llama_leave_blocking_section ();
-  llama_stat_free(buf);
-  if (status == -1) llama_sys_error(command);
+  caml_leave_blocking_section ();
+  caml_stat_free(buf);
+  if (status == -1) caml_sys_error(command);
   if (WIFEXITED(status))
     retcode = WEXITSTATUS(status);
   else
@@ -265,13 +265,13 @@ CAMLprim value llama_sys_system_command(value command)
   CAMLreturn (Val_int(retcode));
 }
 
-CAMLprim value llama_sys_time(value unit)
+CAMLprim value caml_sys_time(value unit)
 {
 #ifdef HAS_GETRUSAGE
   struct rusage ru;
 
   getrusage (RUSAGE_SELF, &ru);
-  return llama_copy_double (ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1e6
+  return caml_copy_double (ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1e6
                            + ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1e6);
 #else
   #ifdef HAS_TIMES
@@ -284,22 +284,22 @@ CAMLprim value llama_sys_time(value unit)
     #endif
     struct tms t;
     times(&t);
-    return llama_copy_double((double)(t.tms_utime + t.tms_stime) / CLK_TCK);
+    return caml_copy_double((double)(t.tms_utime + t.tms_stime) / CLK_TCK);
   #else
     /* clock() is standard ANSI C */
-    return llama_copy_double((double)clock() / CLOCKS_PER_SEC);
+    return caml_copy_double((double)clock() / CLOCKS_PER_SEC);
   #endif
 #endif
 }
 
 #ifdef _WIN32
-extern intnat llama_win32_random_seed (void);
+extern intnat caml_win32_random_seed (void);
 #endif
 
-CAMLprim value llama_sys_random_seed (value unit)
+CAMLprim value caml_sys_random_seed (value unit)
 {
 #ifdef _WIN32
-  return Val_long(llama_win32_random_seed());
+  return Val_long(caml_win32_random_seed());
 #else
   intnat seed;
 #ifdef HAS_GETTIMEOFDAY
@@ -316,31 +316,31 @@ CAMLprim value llama_sys_random_seed (value unit)
 #endif
 }
 
-CAMLprim value llama_sys_get_config(value unit)
+CAMLprim value caml_sys_get_config(value unit)
 {
   CAMLparam0 ();   /* unit is unused */
   CAMLlocal2 (result, ostype);
 
-  ostype = llama_copy_string(OCAML_OS_TYPE);
-  result = llama_alloc_small (2, 0);
+  ostype = caml_copy_string(OCAML_OS_TYPE);
+  result = caml_alloc_small (2, 0);
   Field(result, 0) = ostype;
   Field(result, 1) = Val_long (8 * sizeof(value));
   CAMLreturn (result);
 }
 
-CAMLprim value llama_sys_read_directory(value path)
+CAMLprim value caml_sys_read_directory(value path)
 {
   CAMLparam1(path);
   CAMLlocal1(result);
   struct ext_table tbl;
 
-  llama_ext_table_init(&tbl, 50);
-  if (llama_read_directory(String_val(path), &tbl) == -1){
-    llama_ext_table_free(&tbl, 1);
-    llama_sys_error(path);
+  caml_ext_table_init(&tbl, 50);
+  if (caml_read_directory(String_val(path), &tbl) == -1){
+    caml_ext_table_free(&tbl, 1);
+    caml_sys_error(path);
   }
-  llama_ext_table_add(&tbl, NULL);
-  result = llama_copy_string_array((char const **) tbl.contents);
-  llama_ext_table_free(&tbl, 1);
+  caml_ext_table_add(&tbl, NULL);
+  result = caml_copy_string_array((char const **) tbl.contents);
+  caml_ext_table_free(&tbl, 1);
   CAMLreturn(result);
 }

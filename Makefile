@@ -74,7 +74,7 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llamac-new.byte
+all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llama-new llamac-new
 .PHONY: all
 
 testprog: testprog.ml runtime_dir cl_stdlib_dir
@@ -186,8 +186,6 @@ configure-in-situ:
 	./configure -bindir ${PWD}/runtime -libdir ${PWD}/cl_stdlib
 .PHONY: configure-in-situ
 
-llamac-new: $(UTILS) $(PARSING) $(TYPING) $(BYTECOMP) $(DRIVER)
-	$(OCAMLOPT) $(FLAGS) -o $@ $^
-llamac-new.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
+llamac-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
 	$(OCAMLC) -custom $(FLAGS) -o $@ $^
 

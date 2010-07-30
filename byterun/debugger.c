@@ -25,21 +25,21 @@
 #include "debugger.h"
 #include "misc.h"
 
-int llama_debugger_in_use = 0;
-uintnat llama_event_count;
-int llama_debugger_fork_mode = 1; /* parent by default */
+int caml_debugger_in_use = 0;
+uintnat caml_event_count;
+int caml_debugger_fork_mode = 1; /* parent by default */
 
 #if !defined(HAS_SOCKETS) || defined(NATIVE_CODE)
 
-void llama_debugger_init(void)
+void caml_debugger_init(void)
 {
 }
 
-void llama_debugger(enum event_kind event)
+void caml_debugger(enum event_kind event)
 {
 }
 
-void llama_debugger_cleanup_fork(void)
+void caml_debugger_cleanup_fork(void)
 {
 }
 
@@ -115,30 +115,30 @@ static void open_connection(void)
 #endif
   if (dbg_socket == -1 ||
       connect(dbg_socket, &sock_addr.s_gen, sock_addr_len) == -1){
-    llama_fatal_error_arg2 ("cannot connect to debugger at %s\n", dbg_addr,
+    caml_fatal_error_arg2 ("cannot connect to debugger at %s\n", dbg_addr,
                            "error: %s\n", strerror (errno));
   }
 #ifdef _WIN32
   dbg_socket = _open_osfhandle(dbg_socket, 0);
   if (dbg_socket == -1)
-    llama_fatal_error("_open_osfhandle failed");
+    caml_fatal_error("_open_osfhandle failed");
 #endif
-  dbg_in = llama_open_descriptor_in(dbg_socket);
-  dbg_out = llama_open_descriptor_out(dbg_socket);
-  if (!llama_debugger_in_use) llama_putword(dbg_out, -1); /* first connection */
+  dbg_in = caml_open_descriptor_in(dbg_socket);
+  dbg_out = caml_open_descriptor_out(dbg_socket);
+  if (!caml_debugger_in_use) caml_putword(dbg_out, -1); /* first connection */
 #ifdef _WIN32
-  llama_putword(dbg_out, _getpid());
+  caml_putword(dbg_out, _getpid());
 #else
-  llama_putword(dbg_out, getpid());
+  caml_putword(dbg_out, getpid());
 #endif
-  llama_flush(dbg_out);
+  caml_flush(dbg_out);
 }
 
 static void close_connection(void)
 {
-  llama_close_channel(dbg_in);
-  llama_close_channel(dbg_out);
-  dbg_socket = -1;              /* was closed by llama_close_channel */
+  caml_close_channel(dbg_in);
+  caml_close_channel(dbg_out);
+  dbg_socket = -1;              /* was closed by caml_close_channel */
 }
 
 #ifdef _WIN32
@@ -146,7 +146,7 @@ static void winsock_startup(void)
 {
   WSADATA wsaData;
   int err = WSAStartup(MAKEWORD(2, 0), &wsaData);
-  if (err) llama_fatal_error("WSAStartup failed");
+  if (err) caml_fatal_error("WSAStartup failed");
 }
 
 static void winsock_cleanup(void)
@@ -155,7 +155,7 @@ static void winsock_cleanup(void)
 }
 #endif
 
-void llama_debugger_init(void)
+void caml_debugger_init(void)
 {
   char * address;
   char * port, * p;
@@ -186,7 +186,7 @@ void llama_debugger_init(void)
       ((char *)&(sock_addr.s_unix.sun_path) - (char *)&(sock_addr.s_unix))
         + strlen(address);
 #else
-    llama_fatal_error("Unix sockets not supported");
+    caml_fatal_error("Unix sockets not supported");
 #endif
   } else {
     /* Internet domain */
@@ -198,44 +198,44 @@ void llama_debugger_init(void)
     if (sock_addr.s_inet.sin_addr.s_addr == -1) {
       host = gethostbyname(address);
       if (host == NULL)
-        llama_fatal_error_arg("Unknown debugging host %s\n", address);
+        caml_fatal_error_arg("Unknown debugging host %s\n", address);
       memmove(&sock_addr.s_inet.sin_addr, host->h_addr, host->h_length);
     }
     sock_addr.s_inet.sin_port = htons(atoi(port));
     sock_addr_len = sizeof(sock_addr.s_inet);
   }
   open_connection();
-  llama_debugger_in_use = 1;
-  llama_trap_barrier = llama_stack_high;
+  caml_debugger_in_use = 1;
+  caml_trap_barrier = caml_stack_high;
 }
 
 static value getval(struct channel *chan)
 {
   value res;
-  if (llama_really_getblock(chan, (char *) &res, sizeof(res)) == 0)
-    llama_raise_end_of_file(); /* Bad, but consistent with llama_getword */
+  if (caml_really_getblock(chan, (char *) &res, sizeof(res)) == 0)
+    caml_raise_end_of_file(); /* Bad, but consistent with caml_getword */
   return res;
 }
 
 static void putval(struct channel *chan, value val)
 {
-  llama_really_putblock(chan, (char *) &val, sizeof(val));
+  caml_really_putblock(chan, (char *) &val, sizeof(val));
 }
 
 static void safe_output_value(struct channel *chan, value val)
 {
   struct longjmp_buffer raise_buf, * saved_external_raise;
 
-  /* Catch exceptions raised by [llama_output_val] */
-  saved_external_raise = llama_external_raise;
+  /* Catch exceptions raised by [caml_output_val] */
+  saved_external_raise = caml_external_raise;
   if (sigsetjmp(raise_buf.buf, 0) == 0) {
-    llama_external_raise = &raise_buf;
-    llama_output_val(chan, val, Val_unit);
+    caml_external_raise = &raise_buf;
+    caml_output_val(chan, val, Val_unit);
   } else {
-    /* Send wrong magic number, will cause [llama_input_value] to fail */
-    llama_really_putblock(chan, "\000\000\000\000", 4);
+    /* Send wrong magic number, will cause [caml_input_value] to fail */
+    caml_really_putblock(chan, "\000\000\000\000", 4);
   }
-  llama_external_raise = saved_external_raise;
+  caml_external_raise = saved_external_raise;
 }
 
 #define Pc(sp) ((code_t)((sp)[0]))
@@ -243,7 +243,7 @@ static void safe_output_value(struct channel *chan, value val)
 #define Extra_args(sp) (Long_val(((sp)[2])))
 #define Locals(sp) ((sp) + 3)
 
-void llama_debugger(enum event_kind event)
+void caml_debugger(enum event_kind event)
 {
   int frame_number;
   value * frame;
@@ -254,7 +254,7 @@ void llama_debugger(enum event_kind event)
 
   /* Reset current frame */
   frame_number = 0;
-  frame = llama_extern_sp + 1;
+  frame = caml_extern_sp + 1;
 
   /* Report the event to the debugger */
   switch(event) {
@@ -276,16 +276,16 @@ void llama_debugger(enum event_kind event)
     putch(dbg_out, REP_UNCAUGHT_EXC);
     break;
   }
-  llama_putword(dbg_out, llama_event_count);
+  caml_putword(dbg_out, caml_event_count);
   if (event == EVENT_COUNT || event == BREAKPOINT) {
-    llama_putword(dbg_out, llama_stack_high - frame);
-    llama_putword(dbg_out, (Pc(frame) - llama_start_code) * sizeof(opcode_t));
+    caml_putword(dbg_out, caml_stack_high - frame);
+    caml_putword(dbg_out, (Pc(frame) - caml_start_code) * sizeof(opcode_t));
   } else {
     /* No PC and no stack frame associated with other events */
-    llama_putword(dbg_out, 0);
-    llama_putword(dbg_out, 0);
+    caml_putword(dbg_out, 0);
+    caml_putword(dbg_out, 0);
   }
-  llama_flush(dbg_out);
+  caml_flush(dbg_out);
 
  command_loop:
 
@@ -293,23 +293,23 @@ void llama_debugger(enum event_kind event)
   while(1) {
     switch(getch(dbg_in)) {
     case REQ_SET_EVENT:
-      pos = llama_getword(dbg_in);
+      pos = caml_getword(dbg_in);
       Assert (pos >= 0);
-      Assert (pos < llama_code_size);
-      llama_set_instruction(llama_start_code + pos / sizeof(opcode_t), EVENT);
+      Assert (pos < caml_code_size);
+      caml_set_instruction(caml_start_code + pos / sizeof(opcode_t), EVENT);
       break;
     case REQ_SET_BREAKPOINT:
-      pos = llama_getword(dbg_in);
+      pos = caml_getword(dbg_in);
       Assert (pos >= 0);
-      Assert (pos < llama_code_size);
-      llama_set_instruction(llama_start_code + pos / sizeof(opcode_t), BREAK);
+      Assert (pos < caml_code_size);
+      caml_set_instruction(caml_start_code + pos / sizeof(opcode_t), BREAK);
       break;
     case REQ_RESET_INSTR:
-      pos = llama_getword(dbg_in);
+      pos = caml_getword(dbg_in);
       Assert (pos >= 0);
-      Assert (pos < llama_code_size);
+      Assert (pos < caml_code_size);
       pos = pos / sizeof(opcode_t);
-      llama_set_instruction(llama_start_code + pos, llama_saved_code[pos]);
+      caml_set_instruction(caml_start_code + pos, caml_saved_code[pos]);
       break;
     case REQ_CHECKPOINT:
 #ifndef _WIN32
@@ -318,16 +318,16 @@ void llama_debugger(enum event_kind event)
         close_connection();     /* Close parent connection. */
         open_connection();      /* Open new connection with debugger */
       } else {
-        llama_putword(dbg_out, i);
-        llama_flush(dbg_out);
+        caml_putword(dbg_out, i);
+        caml_flush(dbg_out);
       }
 #else
-      llama_fatal_error("error: REQ_CHECKPOINT command");
+      caml_fatal_error("error: REQ_CHECKPOINT command");
       exit(-1);
 #endif
       break;
     case REQ_GO:
-      llama_event_count = llama_getword(dbg_in);
+      caml_event_count = caml_getword(dbg_in);
       return;
     case REQ_STOP:
       exit(0);
@@ -336,101 +336,101 @@ void llama_debugger(enum event_kind event)
 #ifndef _WIN32
       wait(NULL);
 #else
-      llama_fatal_error("Fatal error: REQ_WAIT command");
+      caml_fatal_error("Fatal error: REQ_WAIT command");
       exit(-1);
 #endif
       break;
     case REQ_INITIAL_FRAME:
-      frame = llama_extern_sp + 1;
+      frame = caml_extern_sp + 1;
       /* Fall through */
     case REQ_GET_FRAME:
-      llama_putword(dbg_out, llama_stack_high - frame);
-      if (frame < llama_stack_high){
-        llama_putword(dbg_out, (Pc(frame) - llama_start_code) * sizeof(opcode_t));
+      caml_putword(dbg_out, caml_stack_high - frame);
+      if (frame < caml_stack_high){
+        caml_putword(dbg_out, (Pc(frame) - caml_start_code) * sizeof(opcode_t));
       }else{
-        llama_putword (dbg_out, 0);
+        caml_putword (dbg_out, 0);
       }
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_SET_FRAME:
-      i = llama_getword(dbg_in);
-      frame = llama_stack_high - i;
+      i = caml_getword(dbg_in);
+      frame = caml_stack_high - i;
       break;
     case REQ_UP_FRAME:
-      i = llama_getword(dbg_in);
-      if (frame + Extra_args(frame) + i + 3 >= llama_stack_high) {
-        llama_putword(dbg_out, -1);
+      i = caml_getword(dbg_in);
+      if (frame + Extra_args(frame) + i + 3 >= caml_stack_high) {
+        caml_putword(dbg_out, -1);
       } else {
         frame += Extra_args(frame) + i + 3;
-        llama_putword(dbg_out, llama_stack_high - frame);
-        llama_putword(dbg_out, (Pc(frame) - llama_start_code) * sizeof(opcode_t));
+        caml_putword(dbg_out, caml_stack_high - frame);
+        caml_putword(dbg_out, (Pc(frame) - caml_start_code) * sizeof(opcode_t));
       }
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_SET_TRAP_BARRIER:
-      i = llama_getword(dbg_in);
-      llama_trap_barrier = llama_stack_high - i;
+      i = caml_getword(dbg_in);
+      caml_trap_barrier = caml_stack_high - i;
       break;
     case REQ_GET_LOCAL:
-      i = llama_getword(dbg_in);
+      i = caml_getword(dbg_in);
       putval(dbg_out, Locals(frame)[i]);
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_GET_ENVIRONMENT:
-      i = llama_getword(dbg_in);
+      i = caml_getword(dbg_in);
       putval(dbg_out, Field(Env(frame), i));
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_GET_GLOBAL:
-      i = llama_getword(dbg_in);
-      putval(dbg_out, Field(llama_global_data, i));
-      llama_flush(dbg_out);
+      i = caml_getword(dbg_in);
+      putval(dbg_out, Field(caml_global_data, i));
+      caml_flush(dbg_out);
       break;
     case REQ_GET_ACCU:
-      putval(dbg_out, *llama_extern_sp);
-      llama_flush(dbg_out);
+      putval(dbg_out, *caml_extern_sp);
+      caml_flush(dbg_out);
       break;
     case REQ_GET_HEADER:
       val = getval(dbg_in);
-      llama_putword(dbg_out, Hd_val(val));
-      llama_flush(dbg_out);
+      caml_putword(dbg_out, Hd_val(val));
+      caml_flush(dbg_out);
       break;
     case REQ_GET_FIELD:
       val = getval(dbg_in);
-      i = llama_getword(dbg_in);
+      i = caml_getword(dbg_in);
       if (Tag_val(val) != Double_array_tag) {
         putch(dbg_out, 0);
         putval(dbg_out, Field(val, i));
       } else {
         double d = Double_field(val, i);
         putch(dbg_out, 1);
-        llama_really_putblock(dbg_out, (char *) &d, 8);
+        caml_really_putblock(dbg_out, (char *) &d, 8);
       }
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_MARSHAL_OBJ:
       val = getval(dbg_in);
       safe_output_value(dbg_out, val);
-      llama_flush(dbg_out);
+      caml_flush(dbg_out);
       break;
     case REQ_GET_CLOSURE_CODE:
       val = getval(dbg_in);
-      llama_putword(dbg_out, (Code_val(val)-llama_start_code) * sizeof(opcode_t));
-      llama_flush(dbg_out);
+      caml_putword(dbg_out, (Code_val(val)-caml_start_code) * sizeof(opcode_t));
+      caml_flush(dbg_out);
       break;
     case REQ_SET_FORK_MODE:
-      llama_debugger_fork_mode = llama_getword(dbg_in);
+      caml_debugger_fork_mode = caml_getword(dbg_in);
       break;
     }
   }
 }
 
-void llama_debugger_cleanup_fork(void)
+void caml_debugger_cleanup_fork(void)
 {
   /* We could remove all of the breakpoints, but closing the connection
    * means that they'll just be skipped anyway. */
   close_connection();
-  llama_debugger_in_use = 0;
+  caml_debugger_in_use = 0;
 }
 
 #endif

@@ -47,7 +47,7 @@ static void alloc_to_do (int size)
 {
   struct to_do *result = malloc (sizeof (struct to_do)
                                  + size * sizeof (struct final));
-  if (result == NULL) llama_fatal_error ("out of memory");
+  if (result == NULL) caml_fatal_error ("out of memory");
   result->next = NULL;
   result->size = size;
   if (to_do_tl == NULL){
@@ -64,7 +64,7 @@ static void alloc_to_do (int size)
    darken them.
    The recent set is empty.
 */
-void llama_final_update (void)
+void caml_final_update (void)
 {
   uintnat i, j, k;
   uintnat todo_count = 0;
@@ -109,7 +109,7 @@ void llama_final_update (void)
     to_do_tl->size = k;
     for (i = 0; i < k; i++){
       CAMLassert (Is_white_val (to_do_tl->item[i].val));
-      llama_darken (to_do_tl->item[i].val, NULL);
+      caml_darken (to_do_tl->item[i].val, NULL);
     }
   }
 }
@@ -119,7 +119,7 @@ static int running_finalisation_function = 0;
 /* Call the finalisation functions for the finalising set.
    Note that this function must be reentrant.
 */
-void llama_final_do_calls (void)
+void caml_final_do_calls (void)
 {
   struct final f;
   value res;
@@ -127,7 +127,7 @@ void llama_final_do_calls (void)
   if (running_finalisation_function) return;
 
   if (to_do_hd != NULL){
-    llama_gc_message (0x80, "Calling finalisation functions.\n", 0);
+    caml_gc_message (0x80, "Calling finalisation functions.\n", 0);
     while (1){
       while (to_do_hd != NULL && to_do_hd->size == 0){
         struct to_do *next_hd = to_do_hd->next;
@@ -140,11 +140,11 @@ void llama_final_do_calls (void)
       -- to_do_hd->size;
       f = to_do_hd->item[to_do_hd->size];
       running_finalisation_function = 1;
-      res = llama_callback_exn (f.fun, f.val + f.offset);
+      res = caml_callback_exn (f.fun, f.val + f.offset);
       running_finalisation_function = 0;
-      if (Is_exception_result (res)) llama_raise (Extract_exception (res));
+      if (Is_exception_result (res)) caml_raise (Extract_exception (res));
     }
-    llama_gc_message (0x80, "Done calling finalisation functions.\n", 0);
+    caml_gc_message (0x80, "Done calling finalisation functions.\n", 0);
   }
 }
 
@@ -155,9 +155,9 @@ void llama_final_do_calls (void)
    the closures and values of the finalising set.
    The recent set is empty.
    This is called by the major GC and the compactor
-   through [llama_darken_all_roots].
+   through [caml_darken_all_roots].
 */
-void llama_final_do_strong_roots (scanning_action f)
+void caml_final_do_strong_roots (scanning_action f)
 {
   uintnat i;
   struct to_do *todo;
@@ -177,7 +177,7 @@ void llama_final_do_strong_roots (scanning_action f)
    The recent set is empty.
    This is called directly by the compactor.
 */
-void llama_final_do_weak_roots (scanning_action f)
+void caml_final_do_weak_roots (scanning_action f)
 {
   uintnat i;
 
@@ -186,9 +186,9 @@ void llama_final_do_weak_roots (scanning_action f)
 }
 
 /* Call [*f] on the closures and values of the recent set.
-   This is called by the minor GC through [llama_oldify_local_roots].
+   This is called by the minor GC through [caml_oldify_local_roots].
 */
-void llama_final_do_young_roots (scanning_action f)
+void caml_final_do_young_roots (scanning_action f)
 {
   uintnat i;
 
@@ -203,29 +203,29 @@ void llama_final_do_young_roots (scanning_action f)
    This is called at the end of each minor collection.
    The minor heap must be empty when this is called.
 */
-void llama_final_empty_young (void)
+void caml_final_empty_young (void)
 {
   old = young;
 }
 
 /* Put (f,v) in the recent set. */
-CAMLprim value llama_final_register (value f, value v)
+CAMLprim value caml_final_register (value f, value v)
 {
   if (!(Is_block (v) && Is_in_heap_or_young(v))) {
-    llama_invalid_argument ("Gc.finalise");
+    caml_invalid_argument ("Gc.finalise");
   }
   Assert (old <= young);
 
   if (young >= size){
     if (final_table == NULL){
       uintnat new_size = 30;
-      final_table = llama_stat_alloc (new_size * sizeof (struct final));
+      final_table = caml_stat_alloc (new_size * sizeof (struct final));
       Assert (old == 0);
       Assert (young == 0);
       size = new_size;
     }else{
       uintnat new_size = size * 2;
-      final_table = llama_stat_resize (final_table,
+      final_table = caml_stat_resize (final_table,
                                       new_size * sizeof (struct final));
       size = new_size;
     }
@@ -244,7 +244,7 @@ CAMLprim value llama_final_register (value f, value v)
   return Val_unit;
 }
 
-CAMLprim value llama_final_release (value unit)
+CAMLprim value caml_final_release (value unit)
 {
   running_finalisation_function = 0;
   return Val_unit;

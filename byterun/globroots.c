@@ -65,7 +65,7 @@ static int random_level(void)
 
 /* Insertion in a global root list */
 
-static void llama_insert_global_root(struct global_root_list * rootlist,
+static void caml_insert_global_root(struct global_root_list * rootlist,
                                     value * r)
 {
   struct global_root * update[NUM_LEVELS];
@@ -93,7 +93,7 @@ static void llama_insert_global_root(struct global_root_list * rootlist,
       update[i] = (struct global_root *) rootlist;
     rootlist->level = new_level;
   }
-  e = llama_stat_alloc(sizeof(struct global_root) +
+  e = caml_stat_alloc(sizeof(struct global_root) +
                       new_level * sizeof(struct global_root *));
   e->root = r;
   for (i = 0; i <= new_level; i++) {
@@ -104,7 +104,7 @@ static void llama_insert_global_root(struct global_root_list * rootlist,
 
 /* Deletion in a global root list */
 
-static void llama_delete_global_root(struct global_root_list * rootlist,
+static void caml_delete_global_root(struct global_root_list * rootlist,
                                     value * r)
 {
   struct global_root * update[NUM_LEVELS];
@@ -131,7 +131,7 @@ static void llama_delete_global_root(struct global_root_list * rootlist,
       update[i]->forward[i] = e->forward[i];
   }
   /* Reclaim list element */
-  llama_stat_free(e);
+  caml_stat_free(e);
   /* Down-correct list level */
   while (rootlist->level > 0 &&
          rootlist->forward[rootlist->level] == NULL)
@@ -140,7 +140,7 @@ static void llama_delete_global_root(struct global_root_list * rootlist,
 
 /* Iterate over a global root list */
 
-static void llama_iterate_global_roots(scanning_action f,
+static void caml_iterate_global_roots(scanning_action f,
                                       struct global_root_list * rootlist)
 {
   struct global_root * gr;
@@ -152,14 +152,14 @@ static void llama_iterate_global_roots(scanning_action f,
 
 /* Empty a global root list */
 
-static void llama_empty_global_roots(struct global_root_list * rootlist)
+static void caml_empty_global_roots(struct global_root_list * rootlist)
 {
   struct global_root * gr, * next;
   int i;
 
   for (gr = rootlist->forward[0]; gr != NULL; /**/) {
     next = gr->forward[0];
-    llama_stat_free(gr);
+    caml_stat_free(gr);
     gr = next;
   }
   for (i = 0; i <= rootlist->level; i++) rootlist->forward[i] = NULL;
@@ -168,58 +168,58 @@ static void llama_empty_global_roots(struct global_root_list * rootlist)
 
 /* The three global root lists */
 
-struct global_root_list llama_global_roots = { NULL, { NULL, }, 0 };
+struct global_root_list caml_global_roots = { NULL, { NULL, }, 0 };
                   /* mutable roots, don't know whether old or young */
-struct global_root_list llama_global_roots_young = { NULL, { NULL, }, 0 };
+struct global_root_list caml_global_roots_young = { NULL, { NULL, }, 0 };
                  /* generational roots pointing to minor or major heap */
-struct global_root_list llama_global_roots_old = { NULL, { NULL, }, 0 };
+struct global_root_list caml_global_roots_old = { NULL, { NULL, }, 0 };
                   /* generational roots pointing to major heap */
 
 /* Register a global C root of the mutable kind */
 
-CAMLexport void llama_register_global_root(value *r)
+CAMLexport void caml_register_global_root(value *r)
 {
   Assert (((intnat) r & 3) == 0);  /* compact.c demands this (for now) */
-  llama_insert_global_root(&llama_global_roots, r);
+  caml_insert_global_root(&caml_global_roots, r);
 }
 
 /* Un-register a global C root of the mutable kind */
 
-CAMLexport void llama_remove_global_root(value *r)
+CAMLexport void caml_remove_global_root(value *r)
 {
-  llama_delete_global_root(&llama_global_roots, r);
+  caml_delete_global_root(&caml_global_roots, r);
 }
 
 /* Register a global C root of the generational kind */
 
-CAMLexport void llama_register_generational_global_root(value *r)
+CAMLexport void caml_register_generational_global_root(value *r)
 {
   value v = *r;
   Assert (((intnat) r & 3) == 0);  /* compact.c demands this (for now) */
   if (Is_block(v)) {
     if (Is_young(v))
-      llama_insert_global_root(&llama_global_roots_young, r);
+      caml_insert_global_root(&caml_global_roots_young, r);
     else if (Is_in_heap(v))
-      llama_insert_global_root(&llama_global_roots_old, r);
+      caml_insert_global_root(&caml_global_roots_old, r);
   }
 }
 
 /* Un-register a global C root of the generational kind */
 
-CAMLexport void llama_remove_generational_global_root(value *r)
+CAMLexport void caml_remove_generational_global_root(value *r)
 {
   value v = *r;
   if (Is_block(v)) {
     if (Is_young(v))
-      llama_delete_global_root(&llama_global_roots_young, r);
+      caml_delete_global_root(&caml_global_roots_young, r);
     else if (Is_in_heap(v))
-      llama_delete_global_root(&llama_global_roots_old, r);
+      caml_delete_global_root(&caml_global_roots_old, r);
   }
 }
 
 /* Modify the value of a global C root of the generational kind */
 
-CAMLexport void llama_modify_generational_global_root(value *r, value newval)
+CAMLexport void caml_modify_generational_global_root(value *r, value newval)
 {
   value oldval = *r;
 
@@ -229,19 +229,19 @@ CAMLexport void llama_modify_generational_global_root(value *r, value newval)
      points to the young generation. */
   if (Is_block(newval) && Is_young(newval) &&
       Is_block(oldval) && Is_in_heap(oldval)) {
-    llama_delete_global_root(&llama_global_roots_old, r);
-    llama_insert_global_root(&llama_global_roots_young, r);
+    caml_delete_global_root(&caml_global_roots_old, r);
+    caml_insert_global_root(&caml_global_roots_young, r);
   }
   /* PR#4704 */
   else if (!Is_block(oldval) && Is_block(newval)) {
     /* The previous value in the root was unboxed but now it is boxed.
        The root won't appear in any of the root lists thus far (by virtue
-       of the operation of [llama_register_generational_global_root]), so we
+       of the operation of [caml_register_generational_global_root]), so we
        need to make sure it gets in, or else it will never be scanned. */
     if (Is_young(newval))
-      llama_insert_global_root(&llama_global_roots_young, r);
+      caml_insert_global_root(&caml_global_roots_young, r);
     else if (Is_in_heap(newval))
-      llama_insert_global_root(&llama_global_roots_old, r);
+      caml_insert_global_root(&caml_global_roots_old, r);
   }
   else if (Is_block(oldval) && !Is_block(newval)) {
     /* The previous value in the root was boxed but now it is unboxed, so
@@ -249,9 +249,9 @@ CAMLexport void llama_modify_generational_global_root(value *r, value newval)
        anyway at the next minor collection, but it is safer to delete it
        here. */
     if (Is_young(oldval))
-      llama_delete_global_root(&llama_global_roots_young, r);
+      caml_delete_global_root(&caml_global_roots_young, r);
     else if (Is_in_heap(oldval))
-      llama_delete_global_root(&llama_global_roots_old, r);
+      caml_delete_global_root(&caml_global_roots_old, r);
   }
   /* end PR#4704 */
   *r = newval;
@@ -259,25 +259,25 @@ CAMLexport void llama_modify_generational_global_root(value *r, value newval)
 
 /* Scan all global roots */
 
-void llama_scan_global_roots(scanning_action f)
+void caml_scan_global_roots(scanning_action f)
 {
-  llama_iterate_global_roots(f, &llama_global_roots);
-  llama_iterate_global_roots(f, &llama_global_roots_young);
-  llama_iterate_global_roots(f, &llama_global_roots_old);
+  caml_iterate_global_roots(f, &caml_global_roots);
+  caml_iterate_global_roots(f, &caml_global_roots_young);
+  caml_iterate_global_roots(f, &caml_global_roots_old);
 }
 
 /* Scan global roots for a minor collection */
 
-void llama_scan_global_young_roots(scanning_action f)
+void caml_scan_global_young_roots(scanning_action f)
 {
   struct global_root * gr;
 
-  llama_iterate_global_roots(f, &llama_global_roots);
-  llama_iterate_global_roots(f, &llama_global_roots_young);
+  caml_iterate_global_roots(f, &caml_global_roots);
+  caml_iterate_global_roots(f, &caml_global_roots_young);
   /* Move young roots to old roots */
-  for (gr = llama_global_roots_young.forward[0];
+  for (gr = caml_global_roots_young.forward[0];
        gr != NULL; gr = gr->forward[0]) {
-    llama_insert_global_root(&llama_global_roots_old, gr->root);
+    caml_insert_global_root(&caml_global_roots_old, gr->root);
   }
-  llama_empty_global_roots(&llama_global_roots_young);
+  caml_empty_global_roots(&caml_global_roots_young);
 }

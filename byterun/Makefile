@@ -69,10 +69,10 @@ prims.c : primitives
 	(echo '#include "mlvalues.h"'; \
 	 echo '#include "prims.h"'; \
 	 sed -e 's/.*/extern value &();/' primitives; \
-	 echo 'c_primitive llama_builtin_cprim[] = {'; \
+	 echo 'c_primitive caml_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	&,/' primitives; \
 	 echo '	 0 };'; \
-	 echo 'char * llama_names_of_builtin_cprim[] = {'; \
+	 echo 'char * caml_names_of_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	"&",/' primitives; \
 	 echo '	 0 };') > prims.c
 

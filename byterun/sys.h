@@ -20,11 +20,11 @@
 
 #define NO_ARG Val_int(0)
 
-CAMLextern void llama_sys_error (value);
-CAMLextern void llama_sys_io_error (value);
-extern void llama_sys_init (char * exe_name, char ** argv);
-CAMLextern value llama_sys_exit (value);
+CAMLextern void caml_sys_error (value);
+CAMLextern void caml_sys_io_error (value);
+extern void caml_sys_init (char * exe_name, char ** argv);
+CAMLextern value caml_sys_exit (value);
 
-extern char * llama_exe_name;
+extern char * caml_exe_name;
 
 #endif /* CAML_SYS_H */
