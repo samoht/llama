@@ -17,62 +17,26 @@
 open Misc
 open Format
 open Longident
-open Path
 open Types
 open Outcometree
-
-module type OBJ =
-  sig
-    type t
-    val obj : t -> 'a
-    val is_block : t -> bool
-    val tag : t -> int
-    val size : t -> int
-    val field : t -> int -> t
-  end
-
-module type EVALPATH =
-  sig
-    type value
-    val eval_path: Path.t -> value
-    exception Error
-    val same_value: value -> value -> bool
-  end
-
-module type S =
-  sig
-    type t
-    val install_printer :
-          Path.t -> Types.type_expr -> (formatter -> t -> unit) -> unit
-    val remove_printer : Path.t -> unit
-    val outval_of_untyped_exception : t -> Outcometree.out_value
-    val outval_of_value :
-          int -> int ->
-          (int -> t -> Types.type_expr -> Outcometree.out_value option) ->
-          Env.t -> t -> type_expr -> Outcometree.out_value
-  end
-
-module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
-
-    type t = O.t
 
     (* Given an exception value, we cannot recover its type,
        hence we cannot print its arguments in general.
        Here, we do a feeble attempt to print
        integer, string and float arguments... *)
     let outval_of_untyped_exception_args obj start_offset =
-      if O.size obj > start_offset then begin
+      if Llama_obj.size obj > start_offset then begin
         let list = ref [] in
-        for i = start_offset to O.size obj - 1 do
-          let arg = O.field obj i in
-          if not (O.is_block arg) then
-            list := Oval_int (O.obj arg : int) :: !list
+        for i = start_offset to Llama_obj.size obj - 1 do
+          let arg = Llama_obj.field obj i in
+          if not (Llama_obj.is_block arg) then
+            list := Oval_int (Llama_obj.to_int arg) :: !list
                (* Note: this could be a char or a constant constructor... *)
-          else if O.tag arg = Obj.string_tag then
+          else if Llama_obj.tag arg = Obj.string_tag then
             list :=
-              Oval_string (String.escaped (O.obj arg : string)) :: !list
-          else if O.tag arg = Obj.double_tag then
-            list := Oval_float (O.obj arg : float) :: !list
+              Oval_string (String.escaped (Llama_obj.to_string arg)) :: !list
+          else if Llama_obj.tag arg = Obj.double_tag then
+            list := Oval_float (Llama_obj.to_float arg) :: !list
           else
             list := Oval_constr (Oide_ident "_", []) :: !list
         done;
@@ -81,56 +45,60 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
       else []
 
     let outval_of_untyped_exception bucket =
-      let name = (O.obj(O.field(O.field bucket 0) 0) : string) in
+      let name = Llama_obj.to_string(Llama_obj.field(Llama_obj.field bucket 0) 0) in
       let args =
         if (name = "Match_failure"
             || name = "Assert_failure"
             || name = "Undefined_recursive_module")
-        && O.size bucket = 2
-        && O.tag(O.field bucket 1) = 0
-        then outval_of_untyped_exception_args (O.field bucket 1) 0
+        && Llama_obj.size bucket = 2
+        && Llama_obj.tag(Llama_obj.field bucket 1) = 0
+        then outval_of_untyped_exception_args (Llama_obj.field bucket 1) 0
         else outval_of_untyped_exception_args bucket 1 in
       Oval_constr (Oide_ident name, args)
 
     (* The user-defined printers. Also used for some builtin types. *)
 
-    let printers = ref ([
-      Pident(Ident.create "print_int"), Predef.type_int,
-        (fun x -> Oval_int (O.obj x : int));
-      Pident(Ident.create "print_float"), Predef.type_float,
-        (fun x -> Oval_float (O.obj x : float));
-      Pident(Ident.create "print_char"), Predef.type_char,
-        (fun x -> Oval_char (O.obj x : char));
-      Pident(Ident.create "print_string"), Predef.type_string,
-        (fun x -> Oval_string (O.obj x : string));
-      Pident(Ident.create "print_int32"), Predef.type_int32,
-        (fun x -> Oval_int32 (O.obj x : int32));
-      Pident(Ident.create "print_nativeint"), Predef.type_nativeint,
-        (fun x -> Oval_nativeint (O.obj x : nativeint));
-      Pident(Ident.create "print_int64"), Predef.type_int64,
-        (fun x -> Oval_int64 (O.obj x : int64))
-    ] : (Path.t * type_expr * (O.t -> Outcometree.out_value)) list)
+    type printer_id =
+      | Builtin of string
+      | Value of value
 
-    let install_printer path ty fn =
+    let printers = ref ([
+      Builtin "print_int", Predef.type_int,
+        (fun x -> Oval_int (Llama_obj.obj x : int));
+      Builtin "print_float", Predef.type_float,
+        (fun x -> Oval_float (Llama_obj.obj x : float));
+      Builtin "print_char", Predef.type_char,
+        (fun x -> Oval_char (Llama_obj.obj x : char));
+      Builtin "print_string", Predef.type_string,
+        (fun x -> Oval_string (Llama_obj.obj x : string));
+      Builtin "print_int32", Predef.type_int32,
+        (fun x -> Oval_int32 (Llama_obj.obj x : int32));
+      Builtin "print_nativeint", Predef.type_nativeint,
+        (fun x -> Oval_nativeint (Llama_obj.obj x : nativeint));
+      Builtin "print_int64", Predef.type_int64,
+        (fun x -> Oval_int64 (Llama_obj.obj x : int64))
+    ] : (printer_id * type_expr * (Llama_obj.t -> Outcometree.out_value)) list)
+
+    let install_printer v ty fn =
       let print_val ppf obj =
         try fn ppf obj with
         | exn ->
-           fprintf ppf "<printer %a raised an exception>" Printtyp.path path in
+           fprintf ppf "<printer %a raised an exception>" Printtyp.value v in
       let printer obj = Oval_printer (fun ppf -> print_val ppf obj) in
-      printers := (path, ty, printer) :: !printers
+      printers := (Value v, ty, printer) :: !printers
 
-    let remove_printer path =
+    let remove_printer v =
       let rec remove = function
       | [] -> raise Not_found
       | (p, ty, fn as printer) :: rem ->
-          if Path.same p path then rem else printer :: remove rem in
+          if (match p with Value w -> v == w | _ -> false) then rem else printer :: remove rem in
       printers := remove !printers
 
     let find_printer env ty =
       let rec find = function
       | [] -> raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Ctype.moregeneral env false sch ty
+          if Ctype.moregeneral sch ty (* xxx *)
           then printer
           else find remainder
       in find !printers
@@ -151,8 +119,6 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
              with Not_found -> false
           then Oide_ident name
           else Oide_dot (Printtyp.tree_of_path p, name)
-      | Papply(p1, p2) ->
-          Printtyp.tree_of_path ty_path
 
     let tree_of_constr =
       tree_of_qualified
@@ -190,17 +156,17 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
               tree_of_exception depth obj
           | Tconstr(path, [ty_arg], _)
             when Path.same path Predef.path_list ->
-              if O.is_block obj then
+              if Llama_obj.is_block obj then
                 match check_depth depth obj ty with
                   Some x -> x
                 | None ->
                     let rec tree_of_conses tree_list obj =
                       if !printer_steps < 0 || depth < 0 then
                         Oval_ellipsis :: tree_list
-                      else if O.is_block obj then
+                      else if Llama_obj.is_block obj then
                         let tree =
-                          tree_of_val (depth - 1) (O.field obj 0) ty_arg in
-                        let next_obj = O.field obj 1 in
+                          tree_of_val (depth - 1) (Llama_obj.field obj 0) ty_arg in
+                        let next_obj = Llama_obj.field obj 1 in
                         tree_of_conses (tree :: tree_list) next_obj
                       else tree_list
                     in
@@ -209,7 +175,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
                 Oval_list []
           | Tconstr(path, [ty_arg], _)
             when Path.same path Predef.path_array ->
-              let length = O.size obj in
+              let length = Llama_obj.size obj in
               if length > 0 then
                 match check_depth depth obj ty with
                   Some x -> x
@@ -219,7 +185,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
                         Oval_ellipsis :: tree_list
                       else if i < length then
                         let tree =
-                          tree_of_val (depth - 1) (O.field obj i) ty_arg in
+                          tree_of_val (depth - 1) (Llama_obj.field obj i) ty_arg in
                         tree_of_items (tree :: tree_list) (i + 1)
                       else tree_list
                     in
@@ -228,8 +194,8 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
                 Oval_array []
           | Tconstr (path, [ty_arg], _)
             when Path.same path Predef.path_lazy_t ->
-              if Lazy.lazy_is_val (O.obj obj)
-              then let v = tree_of_val depth (Lazy.force (O.obj obj)) ty_arg in
+              if Lazy.lazy_is_val (Llama_obj.obj obj)
+              then let v = tree_of_val depth (Lazy.force (Llama_obj.obj obj)) ty_arg in
                    Oval_constr (Oide_ident "lazy", [v])
               else Oval_stuff "<lazy>"
           | Tconstr(path, ty_list, _) ->
@@ -244,9 +210,9 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
                          Ctype.Cannot_apply -> abstract_type)
                 | {type_kind = Type_variant constr_list} ->
                     let tag =
-                      if O.is_block obj
-                      then Cstr_block(O.tag obj)
-                      else Cstr_constant(O.obj obj) in
+                      if Llama_obj.is_block obj
+                      then Cstr_block(Llama_obj.tag obj)
+                      else Cstr_constant(Llama_obj.obj obj) in
                     let (constr_name, constr_args) =
                       Datarepr.find_constr_by_tag tag constr_list in
                     let ty_args =
@@ -272,7 +238,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
                                   Ctype.Cannot_apply -> abstract_type in
                               let lid = tree_of_label env path lbl_name in
                               let v =
-                                tree_of_val (depth - 1) (O.field obj pos)
+                                tree_of_val (depth - 1) (Llama_obj.field obj pos)
                                   ty_arg
                               in
                               (lid, v) :: tree_of_fields (pos + 1) remainder
@@ -287,22 +253,22 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
               end
           | Tvariant row ->
               let row = Btype.row_repr row in
-              if O.is_block obj then
-                let tag : int = O.obj (O.field obj 0) in
+              if Llama_obj.is_block obj then
+                let tag : int = Llama_obj.obj (Llama_obj.field obj 0) in
                 let rec find = function
                   | (l, f) :: fields ->
                       if Btype.hash_variant l = tag then
                         match Btype.row_field_repr f with
                         | Rpresent(Some ty) | Reither(_,[ty],_,_) ->
                             let args =
-                              tree_of_val (depth - 1) (O.field obj 1) ty in
+                              tree_of_val (depth - 1) (Llama_obj.field obj 1) ty in
                             Oval_variant (l, Some args)
                         | _ -> find fields
                       else find fields
                   | [] -> Oval_stuff "<variant>" in
                 find row.row_fields
               else
-                let tag : int = O.obj obj in
+                let tag : int = Llama_obj.obj obj in
                 let rec find = function
                   | (l, _) :: fields ->
                       if Btype.hash_variant l = tag then
@@ -328,7 +294,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
         let rec tree_list i = function
           | [] -> []
           | ty :: ty_list ->
-              let tree = tree_of_val (depth - 1) (O.field obj i) ty in
+              let tree = tree_of_val (depth - 1) (Llama_obj.field obj i) ty in
               tree :: tree_list (i + 1) ty_list in
       tree_list start ty_list
 
@@ -339,7 +305,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
         Oval_constr (lid, args)
 
     and tree_of_exception depth bucket =
-      let name = (O.obj(O.field(O.field bucket 0) 0) : string) in
+      let name = (Llama_obj.obj(Llama_obj.field(Llama_obj.field bucket 0) 0) : string) in
       let lid = Longident.parse name in
       try
         (* Attempt to recover the constructor description for the exn
@@ -351,7 +317,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
         (* Make sure this is the right exception and not an homonym,
            by evaluating the exception found and comparing with the
            identifier contained in the exception bucket *)
-        if not (EVP.same_value (O.field bucket 0) (EVP.eval_path path))
+        if not (EVP.same_value (Llama_obj.field bucket 0) (EVP.eval_path path))
         then raise Not_found;
         tree_of_constr_with_args
            (fun x -> Oide_ident x) name 1 depth bucket cstr.cstr_args
@@ -361,5 +327,3 @@ module Make(O : OBJ)(EVP : EVALPATH with type value = O.t) = struct
         | None -> outval_of_untyped_exception bucket
 
     in tree_of_val max_depth obj ty
-
-end
