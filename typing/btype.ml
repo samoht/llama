@@ -44,7 +44,7 @@ let new_global_type_var () =Tvar (new_phrase_nongeneric ())
    type variables -- or, if [vr] (value restriction) is set, with new
    current-level type variables. *)
 
-let rec generalize_type vr = function
+let rec generalize_type_gen vr = function
     Tvar tv ->
       begin match tv.tv_kind with
         | Generic ->
@@ -53,18 +53,18 @@ let rec generalize_type vr = function
             if level > !current_level then
               tv.tv_kind <- (if vr then Level !current_level else Generic)
         | Forward ty ->
-            generalize_type vr ty
+            generalize_type_gen vr ty
       end
   | Tarrow (ty1, ty2) ->
-      generalize_type vr ty1;
-      generalize_type vr ty2
+      generalize_type_gen vr ty1;
+      generalize_type_gen vr ty2
   | Ttuple tyl ->
-      List.iter (generalize_type vr) tyl
+      List.iter (generalize_type_gen vr) tyl
   | Tconstruct (tcs, tyl) ->
-      List.iter (generalize_type vr) tyl
+      List.iter (generalize_type_gen vr) tyl
 
-let nongen_type = generalize_type true
-let generalize_type = generalize_type false
+let nongen_type = generalize_type_gen true
+let generalize_type = generalize_type_gen false
 
 (* Replace generic type variables by current-level type variables, per
    the provided substitution, which will grow automatically. *)

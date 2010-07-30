@@ -250,7 +250,7 @@ let equiv alist = equiv_gen (fun id -> List.assq id alist)
 
 (* Whether a genericized type is more general than an arbitrary type. *)
 
-let rec moregeneral subst ty1 ty2 =
+let rec moregeneral_gen subst ty1 ty2 =
   match ty1, ty2 with
     | Tvar tv, _ ->
         begin match tv.tv_kind with
@@ -264,23 +264,23 @@ let rec moregeneral subst ty1 ty2 =
               assert false
         end
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-        moregeneral subst t1arg t2arg && moregeneral subst t1res t2res
+        moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
-        List.for_all2 (moregeneral subst) t1args t2args
+        List.for_all2 (moregeneral_gen subst) t1args t2args
     | Tconstruct (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
-        moregeneral subst (expand_abbrev_aux params body args) ty2
+        moregeneral_gen subst (expand_abbrev_aux params body args) ty2
     | _, Tconstruct (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
-        moregeneral subst ty1 (expand_abbrev_aux params body args)
+        moregeneral_gen subst ty1 (expand_abbrev_aux params body args)
     | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2)
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.for_all2 (moregeneral subst) tyl1 tyl2
+        List.for_all2 (moregeneral_gen subst) tyl1 tyl2
     | _ ->
         false
 
 let filter ty1 ty2 =
   let subst = ref [] in
-  if not (moregeneral subst ty1 ty2) then raise OldUnify;
+  if not (moregeneral_gen subst ty1 ty2) then raise OldUnify;
   !subst
-let moregeneral = moregeneral (ref [])
+let moregeneral = moregeneral_gen (ref [])

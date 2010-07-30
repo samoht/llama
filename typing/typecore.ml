@@ -283,7 +283,7 @@ let type_format loc fmt =
             | 'l' | 'L' -> conversion j ty_e (Predef.type_list ty_e)
             | 'o' | 'O' -> conversion j ty_e (Predef.type_option ty_e)*)
             | _ -> conversion (j - 1) ty_e ty_e end
-(*        | 'r' ->
+(*      | 'r' ->
           let ty_e = newvar () in
           let j = j + 1 in
           if j >= len then conversion_r (j - 1) ty_e ty_e else begin
@@ -293,11 +293,10 @@ let type_format loc fmt =
             | 'o' | 'O' -> conversion_r j ty_e (Pref.type_option ty_e)
             | _ -> conversion_r (j - 1) ty_e ty_e end *)
         | 't' -> conversion j (ty_arrow ty_input ty_aresult)
-        | 'l' | 'n' | 'L' (* as c *) ->
+        | 'l' | 'n' | 'L' as c ->
           let j = j + 1 in
           if j >= len then conversion (j - 1) Predef.type_int else begin
             match fmt.[j] with
-(*
             | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' ->
               let ty_arg =
                 match c with
@@ -305,7 +304,6 @@ let type_format loc fmt =
                 | 'n' -> Predef.type_nativeint
                 | _ -> Predef.type_int64 in
               conversion j ty_arg
-*)
             | c -> conversion (j - 1) Predef.type_int
           end
 (*
@@ -313,7 +311,7 @@ let type_format loc fmt =
           let j = j + 1 in
           if j >= len then incomplete_format fmt else
           let sj =
-            Printf.CamlinternalPr.Tformat.sub_format
+            Printf_tformat.sub_format
               (fun fmt -> incomplete_format (format_to_string fmt))
               (fun fmt -> bad_conversion (format_to_string fmt))
               c (string_to_format fmt) j in
