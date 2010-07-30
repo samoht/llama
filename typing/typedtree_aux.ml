@@ -12,7 +12,7 @@ let rec free_vars_of_pat pat =
   | Tpat_constant _ -> []
   | Tpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
   | Tpat_construct(_, pats) -> List.flatten (List.map free_vars_of_pat pats)
-  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
+  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1
   | Tpat_constraint(pat, _) -> free_vars_of_pat pat
   | Tpat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)

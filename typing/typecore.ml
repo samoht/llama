@@ -73,17 +73,15 @@ let rec tpat (pat, ty) =
     Tpat_any ->
       ()
   | Tpat_var v ->
-      v.val_type <- ty
-(*
-      if List.mem_assoc v new_env then
-        non_linear_pattern_err pat v;
-*)
+      if v.val_type = type_none then
+        v.val_type <- ty
+      else
+        unify_pat pat ty v.val_type
   | Tpat_alias(pat, v) ->
-(*
-      if List.mem_assoc v new_env then
-        non_linear_pattern_err pat v;
-*)
-      v.val_type <- ty;
+      if v.val_type = type_none then
+        v.val_type <- ty
+      else
+        unify_pat pat ty v.val_type;
       tpat (pat, ty)
   | Tpat_constant cst ->
       unify_pat pat ty (type_of_constant cst)
@@ -104,12 +102,8 @@ let rec tpat (pat, ty) =
            tpat (arg, ty_arg))
         args ty_args
   | Tpat_or(pat1, pat2) ->
-      begin match free_vars_of_pat pat with
-        [] ->
-          tpat (pat1, ty);
-          tpat (pat2, ty);
-      | _  -> orpat_should_be_closed_err pat
-      end
+      tpat (pat1, ty);
+      tpat (pat2, ty)
   | Tpat_constraint(pat, ty_expr) ->
       let ty' = type_of_type_expression (Level 1) ty_expr in
        tpat  (pat, ty');

@@ -93,9 +93,9 @@ let upper_case_variable_warning pat name =
   flush stderr
 ;;
 
-let orpat_should_be_closed_err pat =
-  eprintf "%aA pattern with \"|\" must not bind variables.\n"
-    output_location pat.pat_loc;
+let orpat_should_be_good_err pat =
+  eprintf "%aA pattern with \"|\" must not bind different sets of variables.\n"
+    output_location pat.Parsetree.ppat_loc;
   raise Toplevel
 ;;
 

@@ -5,6 +5,7 @@ open Misc
 open Types
 open Parsetree
 open Typedtree
+open Typedtree_aux
 open Primitive
 open Module
 
@@ -30,32 +31,25 @@ let bind_type_expression_vars var_list loc =
       end)
     var_list
 
-let rec free_vars_of_pat pat =
+let rec var_names_of_pat pat =
   match pat.ppat_desc with
     Ppat_any -> []
   | Ppat_var v -> [v]
-  | Ppat_alias(pat,v) -> v :: free_vars_of_pat pat
+  | Ppat_alias(pat,v) -> v :: var_names_of_pat pat
   | Ppat_constant _ -> []
-  | Ppat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
+  | Ppat_tuple patl -> List.flatten (List.map var_names_of_pat patl)
   | Ppat_construct (_, None) -> []
-  | Ppat_construct(_, Some pat) -> free_vars_of_pat pat
-  | Ppat_or(pat1, pat2) -> free_vars_of_pat pat1 @ free_vars_of_pat pat2
-  | Ppat_constraint(pat, _) -> free_vars_of_pat pat
+  | Ppat_construct(_, Some pat) -> var_names_of_pat pat
+  | Ppat_or(pat1, pat2) ->
+      let l1 = List.sort compare (var_names_of_pat pat1) in
+      let l2 = List.sort compare (var_names_of_pat pat2) in
+      if l1 <> l2 then Error.orpat_should_be_good_err pat;
+      if l1 <> [] then
+        print_endline "Warning: non-closed or patterns not supported in Caml Light backend";
+      l1
+  | Ppat_constraint(pat, _) -> var_names_of_pat pat
   | Ppat_record lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
-
-let rec values_of_tpat pat =
-  match pat.pat_desc with
-    Tpat_any -> []
-  | Tpat_var v -> [v]
-  | Tpat_alias(pat,v) -> v :: values_of_tpat pat
-  | Tpat_constant _ -> []
-  | Tpat_tuple patl -> List.flatten (List.map values_of_tpat patl)
-  | Tpat_construct (_, pats) -> List.flatten (List.map values_of_tpat pats)
-  | Tpat_or(pat1, pat2) -> values_of_tpat pat1 @ values_of_tpat pat2
-  | Tpat_constraint(pat, _) -> values_of_tpat pat
-  | Tpat_record lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> values_of_tpat pat) lbl_pat_list)
+      List.flatten (List.map (fun (lbl,pat) -> var_names_of_pat pat) lbl_pat_list)
 
 let lookup_type env li loc =
   try Env.lookup_type li env
@@ -103,52 +97,59 @@ let rec type_expression strict_flag env te =
     te_env = env;
     te_type = type_none }
 
-(* pattern environment, xxx make local *)
-let pattern_variables = ref ([] : string list)
-let reset_pattern_variables () = pattern_variables := []
 let mkpatvar s =
   { val_kind = Val_reg;
     val_id = Env.qualified_id s;
     val_type = type_none;
     val_global = false; foo = Random.int 1000 }
-(*  (fun () -> raise (Multiply_bound_variable s)) *)
 
-let rec pattern env p =
-  { pat_desc =
-      begin match p.ppat_desc with
-        | Ppat_any -> Tpat_any
-        | Ppat_var s -> Tpat_var (mkpatvar s)
-        | Ppat_alias (p, s) -> Tpat_alias (pattern env p, mkpatvar s)
-        | Ppat_constant c -> Tpat_constant c
-        | Ppat_tuple l -> Tpat_tuple (List.map (pattern env) l)
-        | Ppat_construct (li,sarg) ->
-            let cs = lookup_constructor env li p.ppat_loc in
-            let arity = cs.cs_arity in
-            let sargs =
-              match sarg with
-                  None -> []
-                | Some {ppat_desc = Ppat_tuple spl} when arity > 1 -> spl
-                | Some({ppat_desc = Ppat_any} as sp) when arity <> 1 ->
-                    replicate_list sp arity
-                | Some sp -> [sp]
-            in
-            Tpat_construct (cs, List.map (pattern env) sargs)
-        | Ppat_or (p1, p2) -> Tpat_or (pattern env p1, pattern env p2)
-        | Ppat_constraint (p, te) -> Tpat_constraint (pattern env p, type_expression false env te)
-        | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, pattern env p)) l)
-      end;
-    pat_loc = p.ppat_loc;
-    pat_env = env;
-    pat_type = type_none }
+let rec check_unique l =
+  match l with
+    | [] | [_] -> ()
+    | (hd::(hd'::_ as tl)) ->
+        if hd = hd' then raise (Multiply_bound_variable hd);
+        check_unique tl
 
 let pattern env p =
-  pattern_variables := [];
-  pattern env p
+  let vars = List.sort compare (var_names_of_pat p) in
+  check_unique vars;
+  let vals = List.map mkpatvar vars in
+  let varmap = List.combine vars vals in
+  let rec aux p =
+    { pat_desc =
+        begin match p.ppat_desc with
+          | Ppat_any -> Tpat_any
+          | Ppat_var s -> Tpat_var (List.assoc s varmap)
+          | Ppat_alias (p, s) -> Tpat_alias (aux p, List.assoc s varmap)
+          | Ppat_constant c -> Tpat_constant c
+          | Ppat_tuple l -> Tpat_tuple (List.map aux l)
+          | Ppat_construct (li,sarg) ->
+              let cs = lookup_constructor env li p.ppat_loc in
+              let arity = cs.cs_arity in
+              let sargs =
+                match sarg with
+                    None -> []
+                  | Some {ppat_desc = Ppat_tuple spl} when arity > 1 -> spl
+                  | Some({ppat_desc = Ppat_any} as sp) when arity <> 1 ->
+                      replicate_list sp arity
+                  | Some sp -> [sp]
+              in
+              Tpat_construct (cs, List.map aux sargs)
+          | Ppat_or (p1, p2) ->
+              Tpat_or (aux p1, aux p2)
+          | Ppat_constraint (p, te) -> Tpat_constraint (aux p, type_expression false env te)
+          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
+        end;
+      pat_loc = p.ppat_loc;
+      pat_env = env;
+      pat_type = type_none }
+  in
+  aux p
 
 let ext env v = Env.add_value v env
 
 let extend_env env pat =
-  List.fold_left ext env (values_of_tpat pat)
+  List.fold_left ext env (free_vars_of_pat pat)
 
 let rec expr env ex =
   { exp_desc =
@@ -370,7 +371,7 @@ let type_declaration env decl loc =
 
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
-  let vals = List.flatten (List.map values_of_tpat pat_list) in
+  let vals = List.flatten (List.map free_vars_of_pat pat_list) in
   List.iter (fun v -> v.val_global <- true) vals;
   let enter_vals env =
     List.fold_left (fun env v -> Env.add_value v env) env vals in
