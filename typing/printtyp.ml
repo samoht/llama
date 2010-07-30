@@ -1,10 +1,23 @@
 open Format
 open Types
 open Module
+open Outcometree
+open Oprint
 
 (* ---------------------------------------------------------------------- *)
 (* Printing of identifiers, named entities, and references.               *)
 (* ---------------------------------------------------------------------- *)
+
+let tree_of_qualified id =
+  match id.id_module with
+      Module_builtin | Module_toplevel ->
+        Oide_ident id.id_name
+    | Module name ->
+        Oide_dot (Oide_ident name, id.id_name)
+
+let tree_of_type_constructor tcs = tree_of_qualified tcs.tcs_id
+let tree_of_constr cs = tree_of_qualified (Btype.constr_id cs)
+let tree_of_label lbl = tree_of_qualified (label_id lbl)
 
 let qualified_id ppf id =
   begin match id.id_module with
@@ -50,12 +63,6 @@ let name_of_type tv =
 (* Conversion of types to output trees.                                   *)
 (* ---------------------------------------------------------------------- *)
 
-type out_type =
-  | Otyp_arrow of out_type * out_type
-  | Otyp_constr of qualified_id * out_type list
-  | Otyp_tuple of out_type list
-  | Otyp_var of bool * string
-
 let rec tree_of_typexp sch ty =
   begin match ty with
     | Tvar tv ->
@@ -68,11 +75,12 @@ let rec tree_of_typexp sch ty =
               tree_of_typexp sch ty
         end
     | Tarrow (ty1, ty2) ->
-        Otyp_arrow (tree_of_typexp sch ty1, tree_of_typexp sch ty2)
+        Otyp_arrow ("", tree_of_typexp sch ty1, tree_of_typexp sch ty2)
     | Ttuple tyl ->
         Otyp_tuple (tree_of_typlist sch tyl)
-    | Tconstruct (tcsr, tyl) ->
-        Otyp_constr ((Get.type_constructor tcsr).tcs_id, tree_of_typlist sch tyl)
+    | Tconstruct (tcs, tyl) ->
+        let tcs = Get.type_constructor tcs in
+        Otyp_constr (tree_of_type_constructor tcs, tree_of_typlist sch tyl)
   end
 
 and tree_of_typlist sch tyl =
@@ -82,60 +90,19 @@ and is_non_gen sch ty =
   sch && ty.desc = Tvar && ty.level <> generic
 *)
 (* ---------------------------------------------------------------------- *)
-(* Printing of output trees.                                              *)
-(* ---------------------------------------------------------------------- *)
-
-let rec out_type ppf =
-  function
-      Otyp_arrow (ty1, ty2) ->
-        fprintf ppf "@[%a ->@ %a@]" out_type_1 ty1 out_type ty2
-    | ty ->
-        out_type_1 ppf ty
-
-and out_type_1 ppf =
-  function
-      Otyp_tuple tyl ->
-        fprintf ppf "@[<0>%a@]" (out_typlist simple_out_type " *") tyl
-    | ty ->
-        simple_out_type ppf ty
-
-and simple_out_type ppf =
-  function
-      Otyp_constr (id, tyl) ->
-        fprintf ppf "@[%a%a@]" out_typargs tyl qualified_id id
-    | Otyp_var (ng, s) ->
-        fprintf ppf "'%s%s" (if ng then "_" else "") s
-    | Otyp_arrow _ | Otyp_tuple _ as ty ->
-        fprintf ppf "@[<1>(%a)@]" out_type ty
-
-and out_typlist print_elem sep ppf =
-  function
-    [] -> ()
-  | [ty] -> print_elem ppf ty
-  | ty :: tyl ->
-      fprintf ppf "%a%s@ %a" print_elem ty sep (out_typlist print_elem sep)
-        tyl
-
-and out_typargs ppf =
-  function
-      [] -> ()
-    | [ty1] -> fprintf ppf "%a@ " simple_out_type ty1
-    | tyl -> fprintf ppf "@[<1>(%a)@]@ " (out_typlist out_type ",") tyl
-
-(* ---------------------------------------------------------------------- *)
 (* Printing of types.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
 let core_type ppf ty =
-  out_type ppf (tree_of_typexp false ty)
+  !out_type ppf (tree_of_typexp false ty)
 
 let one_type ppf ty =
   reset_type_var_names ();
-  out_type ppf (tree_of_typexp false ty)
+  !out_type ppf (tree_of_typexp false ty)
 
 let schema ppf ty =
   reset_type_var_names ();
-  out_type ppf (tree_of_typexp true ty)
+  !out_type ppf (tree_of_typexp true ty)
 
 (* ---------------------------------------------------------------------- *)
 (* Signatures.                                                            *)
@@ -168,74 +135,69 @@ let rec print_list pr sep ppf =
 
 let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 
-let rec print_out_type_decl kwd ppf tcs =
-  let name = tcs.tcs_id.id_name in
-  let args = tcs.tcs_params in
-  let ty = tcs.tcs_kind in
-  let type_defined ppf =
-    match args with
-      [] -> fprintf ppf "%s" name
-    | [arg] -> fprintf ppf "@[%a@ %s@]" type_parameter arg name
-    | _ ->
-        fprintf ppf "@[(@[%a)@]@ %s@]"
-          (print_list type_parameter (fun ppf -> fprintf ppf ",@ ")) args name
+let tree_of_value_description v =
+  let id = val_name v in
+  let ty = tree_of_typexp true v.val_type in
+  let prims =
+    match v.val_kind with
+    | Val_prim p -> Primitive.description_list p
+    | _ -> []
   in
-  let print_name_args ppf =
-    fprintf ppf "%s %t" kwd type_defined
-  in
-  let rec print_out_tkind ppf = function
-  | Type_abstract -> ()
-  | Type_record lbls ->
-      fprintf ppf " = {%a@;<1 -2>}"
-        (print_list_init print_out_label (fun ppf -> fprintf ppf "@ ")) lbls
-  | Type_variant constrs ->
-      fprintf ppf " =@;<1 2>%a"
-        (print_list print_out_constr (fun ppf -> fprintf ppf "@ | ")) constrs
-  | Type_abbrev ty ->
-      fprintf ppf " =@;<1 2>%a" core_type ty
-  in
-  fprintf ppf "@[<2>@[<hv 2>%t%a@]@]"
-    print_name_args
-    print_out_tkind ty
-and print_out_constr ppf cs =
-  let name = cs.cs_name in
-  let tyl = cs.cs_args in
-  match tyl with
-    [] -> fprintf ppf "%s" name
-  | _ ->
-      fprintf ppf "@[<2>%s of@ %a@]" name
-        (out_typlist simple_out_type " *") (List.map (tree_of_typexp true) tyl)
-and print_out_label ppf lbl =
-  let name = lbl.lbl_name in
-  let mut = lbl.lbl_mut = Asttypes.Mutable in
-  let arg = lbl.lbl_arg in
-  fprintf ppf "@[<2>%s%s :@ %a@];" (if mut then "mutable " else "") name
-    core_type arg
+  Osig_value (id, ty, prims)
 
-let signature_item ppf = function
+let rec tree_of_type_decl tcs =
+  reset_type_var_names ();
+  let params =
+    List.map (fun tv -> name_of_type tv, (true, true))
+      tcs.tcs_params
+  in
+  tcs.tcs_id.id_name,
+  params,
+  begin match tcs.tcs_kind with
+      Type_abstract ->
+        Otyp_abstract
+    | Type_variant cs_list ->
+        Otyp_sum (List.map tree_of_constructor cs_list)
+    | Type_record lbl_list ->
+        Otyp_record (List.map tree_of_label lbl_list)
+    | Type_abbrev ty ->
+        tree_of_typexp false ty
+  end,
+  []
+
+and tree_of_constructor cs =
+  (cs.cs_name, tree_of_typlist false cs.cs_args)
+
+and tree_of_label lbl =
+  (lbl.lbl_name, lbl.lbl_mut = Asttypes.Mutable, tree_of_typexp false lbl.lbl_arg)
+
+let tree_of_rec = function
+  | Rec_not -> Orec_not
+  | Rec_first -> Orec_first
+  | Rec_next -> Orec_next
+
+let tree_of_type_declaration tcs rs =
+  Osig_type (tree_of_type_decl tcs, tree_of_rec rs)
+
+let tree_of_exception_declaration cs =
+  let tyl = tree_of_typlist false cs.cs_args in
+  Osig_exception (cs.cs_name, tyl)
+
+let tree_of_signature_item = function
     Sig_value v ->
-      let kwd = if v.val_kind = Val_reg then "val" else "external" in
-      let pr_prims ppf =
-        function
-          [] -> ()
-        | s :: sl ->
-            fprintf ppf "@ = \"%s\"" s;
-            List.iter (fun s -> fprintf ppf "@ \"%s\"" s) sl
-      in
-      fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident (val_name v) core_type
-        v.val_type pr_prims (match v.val_kind with Val_reg -> [] | Val_prim pr -> [pr.Primitive.prim_name](*xxx*))
-  | Sig_type(td) ->
-        print_out_type_decl
-          "type" (* (if rs = Orec_next then "and" else "type") *)
-          ppf td
+      tree_of_value_description v
+  | Sig_type (tcs (*, rs *) ) ->
+      tree_of_type_declaration tcs Rec_not
   | Sig_exception cs ->
-      fprintf ppf "@[<2>exception %s@]" cs.cs_name (* xxx *)
+      tree_of_exception_declaration cs
 
-let rec signature ppf = function
-    [] -> ()
-  | [item] -> signature_item ppf item
-  | item :: items ->
-      fprintf ppf "%a@ %a" signature_item item signature items
+let tree_of_signature = List.map tree_of_signature_item
+
+let print_signature ppf tree =
+  fprintf ppf "@[<v>%a@]" !Oprint.out_signature tree
+
+let signature ppf sg =
+  fprintf ppf "%a" print_signature (tree_of_signature sg)
 
 (* ---------------------------------------------------------------------- *)
 (* caml light compatibility stuff                                         *)

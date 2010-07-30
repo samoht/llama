@@ -41,16 +41,16 @@ let find_exception tag =
 
 let printers = ref [
   "", Predef.type_int,
-    (fun x -> print_int (Llama_obj.to_int x));
+    (fun x -> print_int (Llobj.to_int x));
   "", Predef.type_float,
-    (fun x -> print_float (Llama_obj.to_float x));
+    (fun x -> print_float (Llobj.to_float x));
   "", Predef.type_char,
     (fun x -> print_string "`";
-              print_string (Char.escaped (Llama_obj.to_char x));
+              print_string (Char.escaped (Llobj.to_char x));
               print_string "`");
   "", Predef.type_string,
    (fun x -> print_string "\"";
-             print_string (String.escaped (Llama_obj.to_string x));
+             print_string (String.escaped (Llobj.to_string x));
              print_string "\"")
 ];;
 
@@ -106,7 +106,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
         print_val prio depth obj
           (expand_abbrev_aux (Get.type_constructor cstr).tcs_params body ty_list)
     | Type_variant constr_list ->
-        let tag = Llama_obj.tag obj in
+        let tag = Llobj.tag obj in
         begin try
           let constr = 
             if Get.type_constructor cstr == Predef.tcs_exn
@@ -124,7 +124,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
                 else open_box 1;
                 print_string constr.cs_name;
                 print_space();
-                cautious (print_val 2 (depth - 1) (Llama_obj.field obj 0)) (List.hd ty_args);
+                cautious (print_val 2 (depth - 1) (Llobj.field obj 0)) (List.hd ty_args);
                 if prio > 1 then print_string ")";
                 close_box()
             | n ->
@@ -155,7 +155,7 @@ and print_concrete_type prio depth obj cstr ty ty_list =
           let subst = filter lbl.lbl_res ty in
           let ty_arg = substitute_type subst lbl.lbl_arg in
           cautious (print_val 0 (depth - 1)
-                      (Llama_obj.field obj lbl.lbl_pos)) ty_arg;
+                      (Llobj.field obj lbl.lbl_pos)) ty_arg;
           close_box() in
         let print_fields depth label_list =
           let rec loop depth b = function
@@ -178,17 +178,17 @@ and print_val_list prio depth obj ty_list =
           [] -> ()
         | ty :: ty_list ->
            if i > 0 then begin print_string ","; print_space() end;
-           print_val prio (depth - 1) (Llama_obj.field obj i) ty;
+           print_val prio (depth - 1) (Llobj.field obj i) ty;
            loop (depth - 1) (succ i) ty_list in
       loop depth 0
   in cautious (print_list depth 0) ty_list
 
 and print_list depth obj ty_arg =
   let rec print_conses depth cons =
-   if Llama_obj.tag cons != 0 then begin
-     print_val 0 (depth - 1) (Llama_obj.field cons 0) ty_arg;
-     let next_obj = Llama_obj.field cons 1 in
-     if Llama_obj.tag next_obj != 0 then begin
+   if Llobj.tag cons != 0 then begin
+     print_val 0 (depth - 1) (Llobj.field cons 0) ty_arg;
+     let next_obj = Llobj.field cons 1 in
+     if Llobj.tag next_obj != 0 then begin
        print_string ";"; print_space();
        print_conses (depth - 1) next_obj
      end
@@ -203,10 +203,10 @@ and print_list depth obj ty_arg =
 and print_array depth obj ty_arg =
   let print_items depth obj =
       let rec loop depth i =
-          if i < Llama_obj.size obj then
+          if i < Llobj.size obj then
            begin
             if i > 0 then begin print_string ";"; print_space() end;
-            print_val 0 (depth - 1) (Llama_obj.field obj i) ty_arg;
+            print_val 0 (depth - 1) (Llobj.field obj i) ty_arg;
             loop (depth - 1) (i + 1)
            end in
       loop depth 0

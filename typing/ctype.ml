@@ -40,6 +40,8 @@ let get_abbrev tcs =
 let expand_abbrev_aux params body args =
   substitute_type (List.combine params args) body
 
+let apply _ = expand_abbrev_aux
+
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations: high-level.                                *)
 (* ---------------------------------------------------------------------- *)

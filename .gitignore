@@ -53,6 +53,7 @@ examples/picomach/asm
 examples/picomach/exec
 cl_comp/more_predef.ml
 llamac-new
+llamac-new.byte
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml

@@ -2,15 +2,15 @@ type t =
   | Lident of string
   | Ldot of t * string
 
-let is_string_upper s =
-  s = "true" || s = "false" ||
-  let c = s.[0] in
-  c >= 'A' && c <= 'Z' ||
-    c >= '\192' && c <= '\214' ||
-    c >= '\216' && c <= '\222'
+let rec split_at_dots s pos =
+  try
+    let dot = String.index_from s pos '.' in
+    String.sub s pos (dot - pos) :: split_at_dots s (dot + 1)
+  with Not_found ->
+    [String.sub s pos (String.length s - pos)]
 
-let is_upper x =
-  begin match x with
-    | Lident s -> is_string_upper s
-    | Ldot (_, s) -> is_string_upper s
-  end
+let parse s =
+  match split_at_dots s 0 with
+    [] -> Lident ""  (* should not happen, but don't put assert false
+                        so as not to crash the toplevel (see Genprintval) *)
+  | hd :: tl -> List.fold_left (fun p s -> Ldot(p, s)) (Lident hd) tl

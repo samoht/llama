@@ -22,8 +22,8 @@ val to_file: out_channel -> string -> instruction list -> unit
              channel on output file
              name of compilation unit implemented
              list of instructions to emit *)
-(*val to_memory: instruction list -> instruction list ->
-                    string * int * (reloc_info * int) list *)
+val to_memory: instruction list -> instruction list ->
+                    string * int * (reloc_info * int) list
         (* Arguments:
              initialization code (terminated by STOP)
              function code

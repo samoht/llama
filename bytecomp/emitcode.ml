@@ -386,7 +386,7 @@ let to_file outchan unit_name code =
   output_binary_int outchan pos_compunit
 
 (* Emission to a memory block *)
-(*
+
 let to_memory init_code fun_code =
   init();
   emit init_code;
@@ -397,7 +397,7 @@ let to_memory init_code fun_code =
   and code_size = !out_position in
   init();
   (code, code_size, reloc)
-*)
+
 (* Emission to a file for a packed library *)
 
 let to_packed_file outchan code =

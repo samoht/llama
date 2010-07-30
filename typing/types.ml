@@ -148,6 +148,20 @@ let ref_type_constr t =
 
 let val_name v = v.val_id.id_name
 
+type tag =
+  | Tag_block of int
+  | Tag_constant of int
+let find_constr_by_tag tag cs_list =
+  List.find
+    begin fun cs ->
+      begin match cs.cstr_tag, tag with
+        | Cstr_block (_, i), Tag_block j  -> i =j
+        | Cstr_constant (_, i), Tag_constant j -> i = j
+        | _ -> false
+      end
+    end
+    cs_list
+
 (* ---------------------------------------------------------------------- *)
 (* Detritus.                                                              *)
 (* ---------------------------------------------------------------------- *)

@@ -28,8 +28,6 @@ val output_primitive_table: out_channel -> unit
 val data_global_map: unit -> Obj.t
 val data_primitive_names: unit -> string
 
-(*
-
 (* Functions for the toplevel *)
 
 val init_toplevel: unit -> (string * Digest.t) list
@@ -45,8 +43,6 @@ val current_state: unit -> global_map
 val restore_state: global_map -> unit
 val hide_additions: global_map -> unit
 val filter_global_map: (Ident.t -> bool) -> global_map -> global_map
-
-*)
 
 (* Error report *)
 

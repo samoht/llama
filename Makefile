@@ -5,7 +5,7 @@ OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
 OCAMLYACC=ocamlyacc
-INCLUDES=-I utils -I parsing -I typing -I cl_comp -I cl_toplevel -I bytecomp -I driver
+INCLUDES=-I utils -I parsing -I typing -I cl_comp -I cl_toplevel -I bytecomp -I driver -I toplevel
 FLAGS=-g $(INCLUDES)
 
 UTILS=utils/config.cmx utils/clflags.cmx utils/misc.cmx utils/tbl.cmx utils/warnings.cmx utils/consistbl.cmx utils/ccomp.cmx
@@ -21,6 +21,7 @@ TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/get.cmx \
  typing/btype.cmx \
  typing/subst.cmx \
+ typing/oprint.cmx \
  typing/printtyp.cmx typing/pr_decl.cmx \
  typing/typedtree_aux.cmx typing/ctype.cmx \
  typing/error.cmx \
@@ -73,7 +74,7 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llamac-new
+all: runtime_dir llama llamac llamadep testprog cl_stdlib_dir llamac-new.byte
 .PHONY: all
 
 testprog: testprog.ml runtime_dir cl_stdlib_dir
@@ -167,7 +168,7 @@ cl_stdlib_dir:
 semiclean:
 	rm -f llama llamac llamarun stdlib.zo llamac-new
 	rm -f $(GENSOURCES)
-	rm -f {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver}/*.{cmi,cmo,cmx,o}
+	rm -f {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver,toplevel}/*.{cmi,cmo,cmx,o}
 	rm -f testprog{,.zi,.zo}
 	cd cl_stdlib && make clean
 .PHONY: semiclean
@@ -176,7 +177,7 @@ clean: semiclean
 .PHONY: clean
 
 depend: $(GENSOURCES)
-	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver}/*.{mli,ml} > .depend
+	$(OCAMLDEP) -native $(INCLUDES) {utils,parsing,typing,cl_comp,cl_toplevel,bytecomp,driver,toplevel}/*.{mli,ml} > .depend
 .PHONY: depend
 
 include .depend

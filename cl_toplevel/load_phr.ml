@@ -13,12 +13,12 @@ open Format;;
 
 open Asttypes;;
 let rec transl_structured_const = function
-    SCatom(Const_int i) -> Llama_obj.of_int i
-  | SCatom(Const_float f) -> Llama_obj.of_float (float_of_string f)
-  | SCatom(Const_string s) -> Llama_obj.of_string s
-  | SCatom(Const_char c) -> Llama_obj.of_char c
+    SCatom(Const_int i) -> Llobj.of_int i
+  | SCatom(Const_float f) -> Llobj.of_float (float_of_string f)
+  | SCatom(Const_string s) -> Llobj.of_string s
+  | SCatom(Const_char c) -> Llobj.of_char c
   | SCblock(tag, comps) ->
-      let res = Llama_obj.new_block (get_num_of_tag tag) (List.length comps) in
+      let res = Llobj.new_block (get_num_of_tag tag) (List.length comps) in
       fill_structured_const 0 res comps;
       res
 
@@ -26,7 +26,7 @@ and fill_structured_const n obj = function
     [] -> ()
   | cst::rest ->
       let zv = transl_structured_const cst in
-      Llama_obj.set_field obj n zv;
+      Llobj.set_field obj n zv;
       fill_structured_const (n+1) obj rest
 ;;
 

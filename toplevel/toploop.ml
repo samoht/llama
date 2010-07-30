@@ -14,7 +14,6 @@
 
 (* The interactive toplevel loop *)
 
-open Path
 open Lexing
 open Format
 open Config
@@ -47,6 +46,9 @@ let setvalue name v =
 
 (* Return the value referred to by a path *)
 
+let eval_exception cs =
+  Symtable.get_global_value (Ident.of_exception cs)
+(*
 let rec eval_path = function
   | Pident id ->
       if Ident.persistent id || Ident.global id then
@@ -60,15 +62,14 @@ let rec eval_path = function
       end
   | Pdot(p, s, pos) ->
       Obj.field (eval_path p) pos
-  | Papply(p1, p2) ->
-      fatal_error "Toploop.eval_path"
+*)
 
 (* To print values *)
 
 module EvalPath = struct
-  type value = Obj.t
+  type obj_t = Obj.t
   exception Error
-  let eval_path p = try eval_path p with Symtable.Error _ -> raise Error
+  let eval_exception = eval_exception
   let same_value v1 v2 = (v1 == v2)
 end
 
@@ -150,8 +151,8 @@ let load_lambda ppf lam =
 (* Print the outcome of an evaluation *)
 
 let rec pr_item env = function
-  | Tsig_value(id, decl) :: rem ->
-      let tree = Printtyp.tree_of_value_description id decl in
+  | Sig_value(decl) :: rem ->
+      let tree = Printtyp.tree_of_value_description decl in
       let valopt =
         match decl.val_kind with
         | Val_prim _ -> None
@@ -163,25 +164,11 @@ let rec pr_item env = function
             Some v
       in
       Some (tree, valopt, rem)
-  | Tsig_type(id, _, _) :: rem when Btype.is_row_name (Ident.name id) ->
-      pr_item env rem
-  | Tsig_type(id, decl, rs) :: rem ->
+  | Sig_type(tcs_list (* , rs *) ) :: rem ->
       let tree = Printtyp.tree_of_type_declaration id decl rs in
       Some (tree, None, rem)
-  | Tsig_exception(id, decl) :: rem ->
+  | Sig_exception(cs) :: rem ->
       let tree = Printtyp.tree_of_exception_declaration id decl in
-      Some (tree, None, rem)
-  | Tsig_module(id, mty, rs) :: rem ->
-      let tree = Printtyp.tree_of_module id mty rs in
-      Some (tree, None, rem)
-  | Tsig_modtype(id, decl) :: rem ->
-      let tree = Printtyp.tree_of_modtype_declaration id decl in
-      Some (tree, None, rem)
-  | Tsig_class(id, decl, rs) :: cltydecl :: tydecl1 :: tydecl2 :: rem ->
-      let tree = Printtyp.tree_of_class_declaration id decl rs in
-      Some (tree, None, rem)
-  | Tsig_cltype(id, decl, rs) :: tydecl1 :: tydecl2 :: rem ->
-      let tree = Printtyp.tree_of_cltype_declaration id decl rs in
       Some (tree, None, rem)
   | _ -> None
 
