@@ -157,6 +157,7 @@ let rec pr_item env = function
         match decl.val_kind with
         | Val_prim _ -> None
         | _ ->
+            let id = Ident.of_value decl in
             let v =
               outval_of_value env (getvalue (Translmod.toplevel_name id))
                 decl.val_type
@@ -164,11 +165,11 @@ let rec pr_item env = function
             Some v
       in
       Some (tree, valopt, rem)
-  | Sig_type(tcs_list (* , rs *) ) :: rem ->
-      let tree = Printtyp.tree_of_type_declaration id decl rs in
+  | Sig_type(tcs (* , rs *) ) :: rem ->
+      let tree = Printtyp.tree_of_type_declaration tcs Rec_not(* rs *) in
       Some (tree, None, rem)
   | Sig_exception(cs) :: rem ->
-      let tree = Printtyp.tree_of_exception_declaration id decl in
+      let tree = Printtyp.tree_of_exception_declaration cs in
       Some (tree, None, rem)
   | _ -> None
 
@@ -203,12 +204,13 @@ let directive_table = (Hashtbl.create 13 : (string, directive_fun) Hashtbl.t)
 let execute_phrase print_outcome ppf phr =
   match phr with
   | Ptop_def sstr ->
+      let sstr = [sstr] in (* xxx *)
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf sstr in
-      Typecore.reset_delayed_checks ();
+(*       Typecore.reset_delayed_checks (); *)
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr Location.none
       in
-      Typecore.force_delayed_checks ();
+(*       Typecore.force_delayed_checks (); *)
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try

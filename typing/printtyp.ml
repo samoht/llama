@@ -157,18 +157,18 @@ let rec tree_of_type_decl tcs =
       Type_abstract ->
         Otyp_abstract
     | Type_variant cs_list ->
-        Otyp_sum (List.map tree_of_constructor cs_list)
+        Otyp_sum (List.map tree_of_constructor_description cs_list)
     | Type_record lbl_list ->
-        Otyp_record (List.map tree_of_label lbl_list)
+        Otyp_record (List.map tree_of_label_description lbl_list)
     | Type_abbrev ty ->
         tree_of_typexp false ty
   end,
   []
 
-and tree_of_constructor cs =
+and tree_of_constructor_description cs =
   (cs.cs_name, tree_of_typlist false cs.cs_args)
 
-and tree_of_label lbl =
+and tree_of_label_description lbl =
   (lbl.lbl_name, lbl.lbl_mut = Asttypes.Mutable, tree_of_typexp false lbl.lbl_arg)
 
 let tree_of_rec = function
