@@ -661,6 +661,7 @@ let _StateSet_choose = Set.choose
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
 type 'a _MemMap_t = (int, 'a) Map.t
 let _MemMap_empty = Map.Empty Pervasives.compare
+let _MemMap_is_empty = Map.is_empty
 let _MemMap_add = Map.add
 let _MemMap_remove = Map.remove
 let _MemMap_iter = Map.iter
@@ -706,7 +707,7 @@ let dfa_state_empty =
 
 and dfa_state_is_empty {final=(act,_) ; others=o} =
   act = no_action &&
-  o = _MemMap_empty
+  _MemMap_is_empty o
 
 
 (* A key is an abstraction on a dfa state,
@@ -1150,7 +1151,7 @@ let do_tag_actions n env  m =
 
 let translate_state shortest_match tags chars follow st =
   let (n,(_,m)) = st.final in
-  if _MemMap_empty = st.others then
+  if _MemMap_is_empty st.others then
     Perform (n,do_tag_actions n tags m)
   else if shortest_match then begin
     if n=no_action then
