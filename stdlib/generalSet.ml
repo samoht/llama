@@ -77,9 +77,9 @@ type 'a t = Empty of 'a cmp | Node of 'a cmp * 'a t * 'a * 'a t * int
 
     (* Insertion of one element *)
 
-    let rec add x s = match s with
-        Empty cmp -> Node(cmp, s, x, s, 1)
-      | Node(cmp, l, v, r, _) ->
+    let rec add x = function
+        Empty cmp as s -> Node(cmp, s, x, s, 1)
+      | Node(cmp, l, v, r, _) as s ->
           let c = cmp x v in
           if c = 0 then s else
           if c < 0 then bal (add x l) v r else bal l v (add x r)
@@ -141,8 +141,8 @@ type 'a t = Empty of 'a cmp | Node of 'a cmp * 'a t * 'a * 'a t * int
         - present is false if s contains no element equal to x,
           or true if s contains an element equal to x. *)
 
-    let rec split x s = match s with
-        Empty _ ->
+    let rec split x = function
+        Empty _ as s ->
           (s, false, s)
       | Node(cmp, l, v, r, _) ->
           let c = cmp x v in

@@ -13,111 +13,113 @@
 
 (* $Id: map.ml 10468 2010-05-25 13:29:43Z frisch $ *)
 
-    type ('key, 'a) t = { desc : ('key, 'a) t_desc; cmp : 'key -> 'key -> int }
+type 'key cmp = 'key -> 'key -> int
 
-    and ('key, 'a) t_desc =
-        Empty
-      | Node of ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
+type ('key, 'a) t =
+    Empty of 'key cmp
+  | Node of 'key cmp * ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
 
-    let height m = match m.desc with
-        Empty -> 0
-      | Node(_,_,_,_,h) -> h
+    let comparator = function
+        Empty cmp -> cmp
+      | Node(cmp,_,_,_,_,_) -> cmp
+
+    let height = function
+        Empty _ -> 0
+      | Node(_,_,_,_,_,h) -> h
 
     let create l x d r =
       let hl = height l and hr = height r in
-      { desc = Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1));
-        cmp = l.cmp }
+      Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
 
     let bal l x d r =
-      let hl = match l.desc with Empty -> 0 | Node(_,_,_,_,h) -> h in
-      let hr = match r.desc with Empty -> 0 | Node(_,_,_,_,h) -> h in
+      let hl = match l with Empty _ -> 0 | Node(_,_,_,_,_,h) -> h in
+      let hr = match r with Empty _ -> 0 | Node(_,_,_,_,_,h) -> h in
       if hl > hr + 2 then begin
-        match l.desc with
-          Empty -> invalid_arg "Map.bal"
-        | Node(ll, lv, ld, lr, _) ->
+        match l with
+          Empty _ -> invalid_arg "Map.bal"
+        | Node(_, ll, lv, ld, lr, _) ->
             if height ll >= height lr then
               create ll lv ld (create lr x d r)
             else begin
-              match lr.desc with
-                Empty -> invalid_arg "Map.bal"
-              | Node(lrl, lrv, lrd, lrr, _)->
+              match lr with
+                Empty _ -> invalid_arg "Map.bal"
+              | Node(_, lrl, lrv, lrd, lrr, _)->
                   create (create ll lv ld lrl) lrv lrd (create lrr x d r)
             end
       end else if hr > hl + 2 then begin
-        match r.desc with
-          Empty -> invalid_arg "Map.bal"
-        | Node(rl, rv, rd, rr, _) ->
+        match r with
+          Empty _ -> invalid_arg "Map.bal"
+        | Node(_, rl, rv, rd, rr, _) ->
             if height rr >= height rl then
               create (create l x d rl) rv rd rr
             else begin
-              match rl.desc with
-                Empty -> invalid_arg "Map.bal"
-              | Node(rll, rlv, rld, rlr, _) ->
+              match rl with
+                Empty _ -> invalid_arg "Map.bal"
+              | Node(_, rll, rlv, rld, rlr, _) ->
                   create (create l x d rll) rlv rld (create rlr rv rd rr)
             end
       end else
-        { desc = Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1));
-          cmp = l.cmp }
+        Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
 
-    let empty cmp = { desc = Empty; cmp = cmp }
+    let empty cmp = Empty cmp
 
-    let is_empty m = match m.desc with Empty -> true | _ -> false
+    let is_empty = function Empty _ -> true | _ -> false
 
-    let rec add x data m = match m.desc with
-        Empty ->
-          { desc = Node(m, x, data, m, 1); cmp = m.cmp }
-      | Node(l, v, d, r, h) ->
-          let c = m.cmp x v in
+    let rec add x data = function
+        Empty cmp as m ->
+          Node(cmp, m, x, data, m, 1)
+      | Node(cmp, l, v, d, r, h) ->
+          let c = cmp x v in
           if c = 0 then
-            { desc = Node(l, x, data, r, h); cmp = m.cmp }
+            Node(cmp, l, x, data, r, h)
           else if c < 0 then
             bal (add x data l) v d r
           else
             bal l v d (add x data r)
 
-    let rec find x m = match m.desc with
-        Empty ->
+    let rec find x = function
+        Empty _ ->
           raise Not_found
-      | Node(l, v, d, r, _) ->
-          let c = m.cmp x v in
+      | Node(cmp, l, v, d, r, _) ->
+          let c = cmp x v in
           if c = 0 then d
           else find x (if c < 0 then l else r)
 
-    let rec mem x m = match m.desc with
-        Empty ->
+    let rec mem x = function
+        Empty _ ->
           false
-      | Node(l, v, d, r, _) ->
-          let c = m.cmp x v in
+      | Node(cmp, l, v, d, r, _) ->
+          let c = cmp x v in
           c = 0 || mem x (if c < 0 then l else r)
 
-    let rec min_binding m = match m.desc with
-        Empty -> raise Not_found
-      | Node({desc=Empty}, x, d, r, _) -> (x, d)
-      | Node(l, x, d, r, _) -> min_binding l
+    let rec min_binding = function
+        Empty _ -> raise Not_found
+      | Node(_, Empty _, x, d, r, _) -> (x, d)
+      | Node(_, l, x, d, r, _) -> min_binding l
 
-    let rec max_binding m = match m.desc with
-        Empty -> raise Not_found
-      | Node(l, x, d, {desc=Empty}, _) -> (x, d)
-      | Node(l, x, d, r, _) -> max_binding r
+    let rec max_binding = function
+        Empty _ -> raise Not_found
+      | Node(_, l, x, d, Empty _, _) -> (x, d)
+      | Node(_, l, x, d, r, _) -> max_binding r
 
-    let rec remove_min_binding m = match m.desc with
-        Empty -> invalid_arg "Map.remove_min_elt"
-      | Node({desc=Empty}, x, d, r, _) -> r
-      | Node(l, x, d, r, _) -> bal (remove_min_binding l) x d r
+    let rec remove_min_binding = function
+        Empty _ -> invalid_arg "Map.remove_min_elt"
+      | Node(_, Empty _, x, d, r, _) -> r
+      | Node(_, l, x, d, r, _) -> bal (remove_min_binding l) x d r
 
     let merge t1 t2 =
-      match (t1.desc, t2.desc) with
-        (Empty, _) -> t2
-      | (_, Empty) -> t1
+      match (t1, t2) with
+        (Empty _, _) -> t2
+      | (_, Empty _) -> t1
       | (_, _) ->
           let (x, d) = min_binding t2 in
           bal t1 x d (remove_min_binding t2)
 
-    let rec remove x m = match m.desc with
-        Empty ->
+    let rec remove x = function
+        Empty _ as m ->
           m
-      | Node(l, v, d, r, h) ->
-          let c = m.cmp x v in
+      | Node(cmp, l, v, d, r, h) ->
+          let c = cmp x v in
           if c = 0 then
             merge l r
           else if c < 0 then
@@ -125,13 +127,13 @@
           else
             bal l v d (remove x r)
 
-    let rec iter f m = match m.desc with
-        Empty -> ()
-      | Node(l, v, d, r, _) ->
+    let rec iter f = function
+        Empty _ -> ()
+      | Node(_, l, v, d, r, _) ->
           iter f l; f v d; iter f r
 (*
-    let rec map f m = match m.desc with
-        Empty ->
+    let rec map f = function
+        Empty _ ->
           m
       | Node(l, v, d, r, h) ->
           let l' = map f l in
@@ -139,8 +141,8 @@
           let r' = map f r in
           { desc = Node(l', v, d', r', h); cmp = m.cmp }
 
-    let rec mapi f m = match m.desc with
-        Empty ->
+    let rec mapi f = function
+        Empty _ ->
           m
       | Node(l, v, d, r, h) ->
           let l' = mapi f l in
@@ -149,41 +151,42 @@
           { desc = Node(l', v, d', r', h); cmp = m.cmp }
 *)
     let rec fold f m accu =
-      match m.desc with
-        Empty -> accu
-      | Node(l, v, d, r, _) ->
+      match m with
+        Empty _ -> accu
+      | Node(_, l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
 
-    let rec for_all p m = match m.desc with
-        Empty -> true
-      | Node(l, v, d, r, _) -> p v d && for_all p l && for_all p r
+    let rec for_all p = function
+        Empty _ -> true
+      | Node(_, l, v, d, r, _) -> p v d && for_all p l && for_all p r
 
-    let rec exists p m = match m.desc with
-        Empty -> false
-      | Node(l, v, d, r, _) -> p v d || exists p l || exists p r
+    let rec exists p = function
+        Empty _ -> false
+      | Node(_, l, v, d, r, _) -> p v d || exists p l || exists p r
 
     let filter p s =
-      let rec filt accu m' = match m'.desc with
-        | Empty -> accu
-        | Node(l, v, d, r, _) ->
+      let rec filt accu = function
+        | Empty _ -> accu
+        | Node(_, l, v, d, r, _) ->
             filt (filt (if p v d then add v d accu else accu) l) r in
-      filt (empty s.cmp) s
+      filt (empty (comparator s)) s
 
     let partition p s =
-      let rec part (t, f as accu) m' = match m'.desc with
-        | Empty -> accu
-        | Node(l, v, d, r, _) ->
+      let rec part (t, f as accu) = function
+        | Empty _ -> accu
+        | Node(_, l, v, d, r, _) ->
             part (part (if p v d then (add v d t, f) else (t, add v d f)) l) r in
-      part (empty s.cmp, empty s.cmp) s
+      let e = empty (comparator s) in
+      part (e, e) s
 
     (* Same as create and bal, but no assumptions are made on the
        relative heights of l and r. *)
 
     let rec join l v d r =
-      match (l.desc, r.desc) with
-        (Empty, _) -> add v d r
-      | (_, Empty) -> add v d l
-      | (Node(ll, lv, ld, lr, lh), Node(rl, rv, rd, rr, rh)) ->
+      match (l, r) with
+        (Empty _, _) -> add v d r
+      | (_, Empty _) -> add v d l
+      | (Node(_, ll, lv, ld, lr, lh), Node(_, rl, rv, rd, rr, rh)) ->
           if lh > rh + 2 then bal ll lv ld (join lr v d r) else
           if rh > lh + 2 then bal (join l v d rl) rv rd rr else
           create l v d r
@@ -193,9 +196,9 @@
        No assumption on the heights of l and r. *)
 
     let concat t1 t2 =
-      match (t1.desc, t2.desc) with
-        (Empty, _) -> t2
-      | (_, Empty) -> t1
+      match (t1, t2) with
+        (Empty _, _) -> t2
+      | (_, Empty _) -> t1
       | (_, _) ->
           let (x, d) = min_binding t2 in
           join t1 x d (remove_min_binding t2)
@@ -205,11 +208,11 @@
       | Some d -> join t1 v d t2
       | None -> concat t1 t2
 
-    let rec split x m = match m.desc with
-        Empty ->
+    let rec split x = function
+        Empty _ as m ->
           (m, None, m)
-      | Node(l, v, d, r, _) ->
-          let c = m.cmp x v in
+      | Node(cmp, l, v, d, r, _) ->
+          let c = cmp x v in
           if c = 0 then (l, Some d, r)
           else if c < 0 then
             let (ll, pres, rl) = split x l in (ll, pres, join rl v d r)
@@ -217,7 +220,7 @@
             let (lr, pres, rr) = split x r in (join l v d lr, pres, rr)
 (* xxx: moregeneral bug
     let rec merge f s1 s2 =
-      match (s1.desc, s2.desc) with
+      match (s1, s2) with
         (Empty, Empty) -> s1
       | (Node (l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
           let (l2, d2, r2) = split v1 s2 in
@@ -231,9 +234,9 @@
     type ('key, 'a) enumeration = End | More of 'key * 'a * ('key, 'a) t * ('key, 'a) enumeration
 
     let rec cons_enum m e =
-      match m.desc with
-        Empty -> e
-      | Node(l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
+      match m with
+        Empty _ -> e
+      | Node(_, l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
 
     let compare cmp m1 m2 =
       let rec compare_aux e1 e2 =
@@ -242,7 +245,7 @@
         | (End, _)  -> -1
         | (_, End) -> 1
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            let c = m1.cmp v1 v2 in
+            let c = comparator m1 v1 v2 in
             if c <> 0 then c else
             let c = cmp d1 d2 in
             if c <> 0 then c else
@@ -256,17 +259,17 @@
         | (End, _)  -> false
         | (_, End) -> false
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            m1.cmp v1 v2 = 0 && cmp d1 d2 &&
+            comparator m1 v1 v2 = 0 && cmp d1 d2 &&
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
       in equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
-    let rec cardinal m = match m.desc with
-        Empty -> 0
-      | Node(l, _, _, r, _) -> cardinal l + 1 + cardinal r
+    let rec cardinal = function
+        Empty _ -> 0
+      | Node(_, l, _, _, r, _) -> cardinal l + 1 + cardinal r
 
-    let rec bindings_aux accu m = match m.desc with
-        Empty -> accu
-      | Node(l, v, d, r, _) -> bindings_aux ((v, d) :: bindings_aux accu r) l
+    let rec bindings_aux accu = function
+        Empty _ -> accu
+      | Node(_, l, v, d, r, _) -> bindings_aux ((v, d) :: bindings_aux accu r) l
 
     let bindings s =
       bindings_aux [] s
