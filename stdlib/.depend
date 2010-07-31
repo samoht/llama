@@ -1,135 +1,137 @@
-arg.lli:
-array.lli:
-buffer.lli:
-callback.lli:
-char.lli:
-complex.lli:
-digest.lli:
-filename.lli:
-format.lli: pervasives.lli buffer.lli
-gc.lli:
-genlex.lli: stream.lli
-hashtbl.lli:
-int32.lli:
-int64.lli:
-lexing.lli:
-list.lli:
-map.lli:
-marshal.lli:
-nativeint.lli:
-obj.lli: int32.lli
-parsing.lli: obj.lli lexing.lli
-pervasives.lli:
-printexc.lli:
-printf.lli: buffer.lli
-queue.lli:
-random.lli: random_state.lli nativeint.lli int64.lli int32.lli
-random_state.lli: nativeint.lli int64.lli int32.lli
-scanf.lli: scanning.lli pervasives.lli
-scanning.lli: pervasives.lli
-set.lli:
-sort.lli:
-stack.lli:
-stream.lli:
-string.lli:
-sys.lli:
-weak.lli:
-weak_hashtbl.lli:
-arg.cmo: sys.lli string.lli printf.lli list.lli buffer.lli array.lli arg.lli
-arg.cmx: sys.cmx string.cmx printf.cmx list.cmx buffer.cmx array.cmx arg.lli
-array.cmo: array.lli
-array.cmx: array.lli
-buffer.cmo: sys.lli string.lli buffer.lli
-buffer.cmx: sys.cmx string.cmx buffer.lli
-callback.cmo: obj.lli callback.lli
-callback.cmx: obj.cmx callback.lli
-char.cmo: char.lli
-char.cmx: char.lli
-complex.cmo: complex.lli
-complex.cmx: complex.lli
-digest.cmo: string.lli printf.lli digest.lli
-digest.cmx: string.cmx printf.cmx digest.lli
-filename.cmo: sys.lli string.lli random.lli printf.lli buffer.lli \
-    filename.lli
-filename.cmx: sys.cmx string.cmx random.cmx printf.cmx buffer.cmx \
-    filename.lli
-format.cmo: string.lli printf_tformat.cmo printf_sformat.cmo pervasives.lli \
-    obj.lli list.lli buffer.lli format.lli
+arg.cmi:
+array.cmi:
+buffer.cmi:
+callback.cmi:
+char.cmi:
+complex.cmi:
+digest.cmi:
+filename.cmi:
+format.cmi: pervasives.cmi buffer.cmi
+gc.cmi:
+genlex.cmi: stream.cmi
+hashtbl.cmi:
+int32.cmi:
+int64.cmi:
+lexing.cmi:
+list.cmi:
+map.cmi:
+marshal.cmi:
+nativeint.cmi:
+obj.cmi: int32.cmi
+parsing.cmi: obj.cmi lexing.cmi
+pervasives.cmi:
+printexc.cmi:
+printf.cmi: buffer.cmi
+queue.cmi:
+random.cmi: random_state.cmi nativeint.cmi int64.cmi int32.cmi
+random_state.cmi: nativeint.cmi int64.cmi int32.cmi
+scanf.cmi: scanning.cmi pervasives.cmi
+scanning.cmi: pervasives.cmi
+set.cmi:
+sort.cmi:
+stack.cmi:
+stream.cmi:
+string.cmi:
+sys.cmi:
+weak.cmi:
+weak_hashtbl.cmi:
+arg.cmo: sys.cmi string.cmi printf.cmi list.cmi buffer.cmi array.cmi arg.cmi
+arg.cmx: sys.cmx string.cmx printf.cmx list.cmx buffer.cmx array.cmx arg.cmi
+array.cmo: array.cmi
+array.cmx: array.cmi
+buffer.cmo: sys.cmi string.cmi buffer.cmi
+buffer.cmx: sys.cmx string.cmx buffer.cmi
+bug.cmo:
+bug.cmx:
+callback.cmo: obj.cmi callback.cmi
+callback.cmx: obj.cmx callback.cmi
+char.cmo: char.cmi
+char.cmx: char.cmi
+complex.cmo: complex.cmi
+complex.cmx: complex.cmi
+digest.cmo: string.cmi printf.cmi digest.cmi
+digest.cmx: string.cmx printf.cmx digest.cmi
+filename.cmo: sys.cmi string.cmi random_state.cmi printf.cmi buffer.cmi \
+    filename.cmi
+filename.cmx: sys.cmx string.cmx random_state.cmx printf.cmx buffer.cmx \
+    filename.cmi
+format.cmo: string.cmi printf_tformat.cmo printf_sformat.cmo pervasives.cmi \
+    obj.cmi list.cmi buffer.cmi format.cmi
 format.cmx: string.cmx printf_tformat.cmx printf_sformat.cmx pervasives.cmx \
-    obj.cmx list.cmx buffer.cmx format.lli
-gc.cmo: sys.lli printf.lli gc.lli
-gc.cmx: sys.cmx printf.cmx gc.lli
-genlex.cmo: string.lli stream.lli list.lli hashtbl.lli char.lli genlex.lli
-genlex.cmx: string.cmx stream.cmx list.cmx hashtbl.cmx char.cmx genlex.lli
-hashtbl.cmo: sys.lli array.lli hashtbl.lli
-hashtbl.cmx: sys.cmx array.cmx hashtbl.lli
-int32.cmo: pervasives.lli int32.lli
-int32.cmx: pervasives.cmx int32.lli
-int64.cmo: pervasives.lli int64.lli
-int64.cmx: pervasives.cmx int64.lli
+    obj.cmx list.cmx buffer.cmx format.cmi
+gc.cmo: sys.cmi printf.cmi gc.cmi
+gc.cmx: sys.cmx printf.cmx gc.cmi
+genlex.cmo: string.cmi stream.cmi list.cmi hashtbl.cmi char.cmi genlex.cmi
+genlex.cmx: string.cmx stream.cmx list.cmx hashtbl.cmx char.cmx genlex.cmi
+hashtbl.cmo: sys.cmi array.cmi hashtbl.cmi
+hashtbl.cmx: sys.cmx array.cmx hashtbl.cmi
+int32.cmo: pervasives.cmi int32.cmi
+int32.cmx: pervasives.cmx int32.cmi
+int64.cmo: pervasives.cmi int64.cmi
+int64.cmx: pervasives.cmx int64.cmi
 lazy.cmo:
 lazy.cmx:
-lexing.cmo: sys.lli string.lli array.lli lexing.lli
-lexing.cmx: sys.cmx string.cmx array.cmx lexing.lli
-list.cmo: list.lli
-list.cmx: list.lli
-map.cmo: pervasives.lli map.lli
-map.cmx: pervasives.cmx map.lli
-marshal.cmo: string.lli marshal.lli
-marshal.cmx: string.cmx marshal.lli
-nativeint.cmo: sys.lli pervasives.lli nativeint.lli
-nativeint.cmx: sys.cmx pervasives.cmx nativeint.lli
-obj.cmo: marshal.lli int32.lli array.lli obj.lli
-obj.cmx: marshal.cmx int32.cmx array.cmx obj.lli
-parsing.cmo: obj.lli lexing.lli array.lli parsing.lli
-parsing.cmx: obj.cmx lexing.cmx array.cmx parsing.lli
-pervasives.cmo: pervasives.lli
-pervasives.cmx: pervasives.lli
-printexc.cmo: printf.lli obj.lli buffer.lli array.lli printexc.lli
-printexc.cmx: printf.cmx obj.cmx buffer.cmx array.cmx printexc.lli
-printf.cmo: printf_tformat.cmo printf.lli
-printf.cmx: printf_tformat.cmx printf.lli
-printf_sformat.cmo: string.lli
+lexing.cmo: sys.cmi string.cmi array.cmi lexing.cmi
+lexing.cmx: sys.cmx string.cmx array.cmx lexing.cmi
+list.cmo: list.cmi
+list.cmx: list.cmi
+map.cmo: pervasives.cmi map.cmi
+map.cmx: pervasives.cmx map.cmi
+marshal.cmo: string.cmi marshal.cmi
+marshal.cmx: string.cmx marshal.cmi
+nativeint.cmo: sys.cmi pervasives.cmi nativeint.cmi
+nativeint.cmx: sys.cmx pervasives.cmx nativeint.cmi
+obj.cmo: marshal.cmi int32.cmi array.cmi obj.cmi
+obj.cmx: marshal.cmx int32.cmx array.cmx obj.cmi
+parsing.cmo: obj.cmi lexing.cmi array.cmi parsing.cmi
+parsing.cmx: obj.cmx lexing.cmx array.cmx parsing.cmi
+pervasives.cmo: pervasives.cmi
+pervasives.cmx: pervasives.cmi
+printexc.cmo: printf.cmi obj.cmi buffer.cmi array.cmi printexc.cmi
+printexc.cmx: printf.cmx obj.cmx buffer.cmx array.cmx printexc.cmi
+printf.cmo: printf_tformat.cmo printf.cmi
+printf.cmx: printf_tformat.cmx printf.cmi
+printf_sformat.cmo: string.cmi
 printf_sformat.cmx: string.cmx
-printf_tformat.cmo: string.lli printf_sformat.cmo pervasives.lli obj.lli \
-    list.lli char.lli buffer.lli array.lli
+printf_tformat.cmo: string.cmi printf_sformat.cmo pervasives.cmi obj.cmi \
+    list.cmi char.cmi buffer.cmi array.cmi
 printf_tformat.cmx: string.cmx printf_sformat.cmx pervasives.cmx obj.cmx \
     list.cmx char.cmx buffer.cmx array.cmx
-queue.cmo: obj.lli queue.lli
-queue.cmx: obj.cmx queue.lli
-random.cmo: random_state.lli random.lli
-random.cmx: random_state.cmx random.lli
-random_state.cmo: string.lli pervasives.lli nativeint.lli int64.lli int32.lli \
-    digest.lli char.lli array.lli random_state.lli
+queue.cmo: obj.cmi queue.cmi
+queue.cmx: obj.cmx queue.cmi
+random.cmo: random_state.cmi random.cmi
+random.cmx: random_state.cmx random.cmi
+random_state.cmo: string.cmi pervasives.cmi nativeint.cmi int64.cmi int32.cmi \
+    digest.cmi char.cmi array.cmi random_state.cmi
 random_state.cmx: string.cmx pervasives.cmx nativeint.cmx int64.cmx int32.cmx \
-    digest.cmx char.cmx array.cmx random_state.lli
-scanf.cmo: string.lli scanning.lli printf_tformat.cmo printf_sformat.cmo \
-    printf.lli obj.lli list.lli hashtbl.lli buffer.lli array.lli scanf.lli
+    digest.cmx char.cmx array.cmx random_state.cmi
+scanf.cmo: string.cmi scanning.cmi printf_tformat.cmo printf_sformat.cmo \
+    printf.cmi obj.cmi list.cmi hashtbl.cmi buffer.cmi array.cmi scanf.cmi
 scanf.cmx: string.cmx scanning.cmx printf_tformat.cmx printf_sformat.cmx \
-    printf.cmx obj.cmx list.cmx hashtbl.cmx buffer.cmx array.cmx scanf.lli
-scanning.cmo: string.lli pervasives.lli list.lli buffer.lli scanning.lli
-scanning.cmx: string.cmx pervasives.cmx list.cmx buffer.cmx scanning.lli
-set.cmo: pervasives.lli set.lli
-set.cmx: pervasives.cmx set.lli
-sort.cmo: array.lli sort.lli
-sort.cmx: array.cmx sort.lli
-stack.cmo: list.lli stack.lli
-stack.cmx: list.cmx stack.lli
+    printf.cmx obj.cmx list.cmx hashtbl.cmx buffer.cmx array.cmx scanf.cmi
+scanning.cmo: string.cmi pervasives.cmi list.cmi buffer.cmi scanning.cmi
+scanning.cmx: string.cmx pervasives.cmx list.cmx buffer.cmx scanning.cmi
+set.cmo: pervasives.cmi set.cmi
+set.cmx: pervasives.cmx set.cmi
+sort.cmo: array.cmi sort.cmi
+sort.cmx: array.cmx sort.cmi
+stack.cmo: list.cmi stack.cmi
+stack.cmx: list.cmx stack.cmi
 std_exit.cmo:
 std_exit.cmx:
-stream.cmo: string.lli obj.lli list.lli lazy.cmo stream.lli
-stream.cmx: string.cmx obj.cmx list.cmx lazy.cmx stream.lli
-string.cmo: pervasives.lli list.lli char.lli string.lli
-string.cmx: pervasives.cmx list.cmx char.cmx string.lli
-sys.cmo: sys.lli
-sys.cmx: sys.lli
+stream.cmo: string.cmi obj.cmi list.cmi lazy.cmo stream.cmi
+stream.cmx: string.cmx obj.cmx list.cmx lazy.cmx stream.cmi
+string.cmo: pervasives.cmi list.cmi char.cmi string.cmi
+string.cmx: pervasives.cmx list.cmx char.cmx string.cmi
+sys.cmo: sys.cmi
+sys.cmx: sys.cmi
 test.cmo:
 test.cmx:
-test2.cmo: list.lli
+test2.cmo: list.cmi
 test2.cmx: list.cmx
-weak.cmo: obj.lli weak.lli
-weak.cmx: obj.cmx weak.lli
-weak_hashtbl.cmo: weak.lli sys.lli pervasives.lli obj.lli hashtbl.lli \
-    array.lli weak_hashtbl.lli
+weak.cmo: obj.cmi weak.cmi
+weak.cmx: obj.cmx weak.cmi
+weak_hashtbl.cmo: weak.cmi sys.cmi pervasives.cmi obj.cmi hashtbl.cmi \
+    array.cmi weak_hashtbl.cmi
 weak_hashtbl.cmx: weak.cmx sys.cmx pervasives.cmx obj.cmx hashtbl.cmx \
-    array.cmx weak_hashtbl.lli
+    array.cmx weak_hashtbl.cmi

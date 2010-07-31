@@ -23,11 +23,11 @@ stdlib.cma: $(OBJS)
 sys.ml: sys.mlp ../VERSION
 	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
 
-%.lli: %.mli
+%.cmi: %.mli
 	$(LLAMAC) -c $<
 %.cmo: %.ml
 	$(LLAMAC) -c $<
-pervasives.lli: pervasives.mli
+pervasives.cmi: pervasives.mli
 	$(LLAMAC) -nopervasives -c $<
 pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
@@ -38,11 +38,10 @@ camlheader: ../config/Makefile
 	echo '#!$(BINDIR)/llamarun' > $@
 
 clean:
-	rm -f *.lli *.cmo
+	rm -f *.cmi *.cmo
 .PHONY: clean
 
 depend: sys.ml
 	$(LLAMADEP) *.mli *.ml > .depend
-	sed -i '' -e 's/cmi/lli/g' .depend
 
 include .depend
