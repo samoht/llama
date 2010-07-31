@@ -67,7 +67,7 @@ CL_TOPLEVEL=\
   cl_toplevel/cl_topmain.cmx runtime/libcaml.a cl_toplevel/llama.o
 
 TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
-  driver/main_args.cmo toplevel/genprintval.cmo toplevel/toploop.cmo \
+  driver/main_args.cmo toplevel/printer.cmo toplevel/toploop.cmo \
   toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo \
   toplevel/topstart.cmo
 

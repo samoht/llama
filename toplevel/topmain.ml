@@ -55,39 +55,40 @@ let print_version_num () =
   exit 0;
 ;;
 
-module Options = Main_args.Make_bytetop_options (struct
-  let set r () = r := true
-  let clear r () = r := false
+let set r () = r := true
+let clear r () = r := false
 
-  let _I dir =
+open Main_args
+let options = make_bytetop_options {
+  bt_I = (fun dir ->
     let dir = Misc.expand_directory Config.standard_library dir in
-    include_dirs := dir :: !include_dirs
-  let _init s = init_file := Some s
-  let _labels = clear classic
-  let _no_app_funct = clear applicative_functors
-  let _noassert = set noassert
-  let _nolabels = set classic
-  let _noprompt = set noprompt
-  let _nostdlib = set no_std_include
-  let _principal = set principal
-  let _rectypes = set recursive_types
-  let _strict_sequence = set strict_sequence
-  let _unsafe = set fast
-  let _version () = print_version ()
-  let _vnum () = print_version_num ()
-  let _w s = Warnings.parse_options false s
-  let _warn_error s = Warnings.parse_options true s
-  let _warn_help = Warnings.help_warnings
-  let _dparsetree = set dump_parsetree
-  let _drawlambda = set dump_rawlambda
-  let _dlambda = set dump_lambda
-  let _dinstr = set dump_instr
+    include_dirs := dir :: !include_dirs);
+  bt_init = (fun s -> init_file := Some s);
+  bt_labels = clear classic;
+  bt_no_app_funct = clear applicative_functors;
+  bt_noassert = set noassert;
+  bt_nolabels = set classic;
+  bt_noprompt = set noprompt;
+  bt_nostdlib = set no_std_include;
+  bt_principal = set principal;
+  bt_rectypes = set recursive_types;
+  bt_strict_sequence = set strict_sequence;
+  bt_unsafe = set fast;
+  bt_version = print_version;
+  bt_vnum = print_version_num;
+  bt_w = Warnings.parse_options false;
+  bt_warn_error = Warnings.parse_options true;
+  bt_warn_help = Warnings.help_warnings;
+  bt_dparsetree = set dump_parsetree;
+  bt_drawlambda = set dump_rawlambda;
+  bt_dlambda = set dump_lambda;
+  bt_dinstr = set dump_instr;
 
-  let anonymous s = file_argument s
-end);;
+  bt_anonymous = file_argument;
+}
 
 
 let main () =
-  Arg.parse Options.list file_argument usage;
+  Arg.parse options file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter

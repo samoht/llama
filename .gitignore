@@ -51,6 +51,7 @@ examples/pascal/ipascal
 examples/picomach/asm
 examples/picomach/exec
 cl_comp/more_predef.ml
+/llama-new
 /llamac-new
 /llamac-new.byte
 stdlib/stdlib.cma

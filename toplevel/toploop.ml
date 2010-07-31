@@ -46,8 +46,6 @@ let setvalue name v =
 
 (* Return the value referred to by a path *)
 
-let eval_exception cs =
-  Symtable.get_global_value (Ident.of_exception cs)
 (*
 let rec eval_path = function
   | Pident id ->
@@ -65,15 +63,6 @@ let rec eval_path = function
 *)
 
 (* To print values *)
-
-module EvalPath = struct
-  type obj_t = Obj.t
-  exception Error
-  let eval_exception = eval_exception
-  let same_value v1 v2 = (v1 == v2)
-end
-
-module Printer = Genprintval.Make(Obj)(EvalPath)
 
 let max_printer_depth = ref 100
 let max_printer_steps = ref 300

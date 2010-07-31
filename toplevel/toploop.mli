@@ -60,7 +60,7 @@ val use_silently : formatter -> string -> bool
         (* Read and execute commands from a file.
            [use_file] prints the types and values of the results.
            [use_silently] does not print them. *)
-val eval_exception: Types.constructor -> Obj.t
+(*val eval_exception: Types.constructor -> Obj.t*)
         (* Return the toplevel object referred to by the given path *)
 
 (* Printing of values *)
