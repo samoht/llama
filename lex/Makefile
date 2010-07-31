@@ -13,7 +13,7 @@
 # $Id: Makefile 9467 2009-12-09 09:52:47Z weis $
 
 # The lexer generator
-CAMLC=../boot/llamarun ../boot/llamac -strict-sequence -nostdlib -I ../boot -g
+CAMLC=../boot/llamarun ../boot/llamac -strict-sequence -nostdlib -I ../boot
 CAMLOPT=../boot/llamarun ../llamaopt -nostdlib -I ../stdlib
 COMPFLAGS=-warn-error A
 CAMLYACC=../boot/llamayacc
