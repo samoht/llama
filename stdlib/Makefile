@@ -15,7 +15,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   genlex.cmo weak.cmo \
   filename.cmo complex.cmo # scanf.cmo
 
-all: std_exit.cmo stdlib.cma
+all: std_exit.cmo stdlib.cma camlheader
 
 stdlib.cma: $(OBJS)
 	$(LLAMAC) -a -o stdlib.cma $^
@@ -36,6 +36,9 @@ pervasives.cmo: pervasives.ml
 	$(LLAMAC) -nopervasives -c $<
 
 std_exit.cmo: pervasives.cmo
+
+camlheader: ../config/Makefile
+	echo '#!$(BINDIR)/ocamlrun' > $@
 
 clean:
 	rm -f *.lli *.cmo

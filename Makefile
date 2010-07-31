@@ -1,6 +1,6 @@
 include config/Makefile
 
-OCAMLC=ocamlc.opt # boot/llamac
+OCAMLC=boot/llamac
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt
@@ -189,8 +189,12 @@ depend: $(GENSOURCES)
 
 include .depend
 
-configure-in-situ:
+configure-in-situ-cl:
 	./configure -bindir ${PWD}/runtime -libdir ${PWD}/cl_stdlib
+.PHONY: configure-in-situ-cl
+
+configure-in-situ:
+	./configure -bindir ${PWD}/byterun -libdir ${PWD}/stdlib
 .PHONY: configure-in-situ
 
 llamac-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)

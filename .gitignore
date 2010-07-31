@@ -28,12 +28,12 @@ runtime/primitives
 runtime/prims.c
 runtime/version.h
 utils/config.ml
-llama
-llamac
+/llama
+/llamac
 runtime/llamarun
 runtime/llamarund
 runtime/opnames.h
-testprog
+/testprog
 cl_stdlib/header
 examples/asl/asl
 examples/basics/fib
@@ -51,8 +51,8 @@ examples/pascal/ipascal
 examples/picomach/asm
 examples/picomach/exec
 cl_comp/more_predef.ml
-llamac-new
-llamac-new.byte
+/llamac-new
+/llamac-new.byte
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml
@@ -62,3 +62,4 @@ byterun/ocamlrun
 byterun/primitives
 byterun/prims.c
 byterun/version.h
+stdlib/camlheader
