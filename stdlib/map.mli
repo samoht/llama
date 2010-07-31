@@ -22,11 +22,12 @@
    and insertion take time logarithmic in the size of the map.
 *)
 
-    type ('key, 'a) t
-    (** The type of maps from type [key] to type ['a]. *)
+    type ('key, 'a) t =
+        Empty of ('key -> 'key -> int)
+      | Node of 'key cmp * ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
+    and 'key cmp
 
-    val empty: ('key -> 'key -> int) -> ('key, 'a) t
-    (** The empty map. *)
+    (** The type of maps from type [key] to type ['a]. *)
 
     val is_empty: ('key, 'a) t -> bool
     (** Test whether a map is empty or not. *)

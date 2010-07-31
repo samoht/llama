@@ -61,7 +61,7 @@ type ('key, 'a) t =
       end else
         Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
 
-    let empty cmp = Empty cmp
+(*    let empty cmp = Empty cmp *)
 
     let is_empty = function Empty _ -> true | _ -> false
 
@@ -169,14 +169,14 @@ type ('key, 'a) t =
         | Empty _ -> accu
         | Node(_, l, v, d, r, _) ->
             filt (filt (if p v d then add v d accu else accu) l) r in
-      filt (empty (comparator s)) s
+      filt (Empty (comparator s)) s
 
     let partition p s =
       let rec part (t, f as accu) = function
         | Empty _ -> accu
         | Node(_, l, v, d, r, _) ->
             part (part (if p v d then (add v d t, f) else (t, add v d f)) l) r in
-      let e = empty (comparator s) in
+      let e = Empty (comparator s) in
       part (e, e) s
 
     (* Same as create and bal, but no assumptions are made on the

@@ -136,3 +136,8 @@ configure-in-situ:
 	./configure -bindir ${PWD}/byterun -libdir ${PWD}/stdlib
 .PHONY: configure-in-situ
 
+
+LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
+coldstart:
+	cd stdlib; cp $(LIBFILES) ../boot
+.PHONY: coldstart

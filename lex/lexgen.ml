@@ -104,7 +104,7 @@ let _Tags_fold = Set.fold
 (* module TagMap =
     Map.Make (struct type t = tag_info let compare = tag_compare end) *)
 type 'a _TagMap_t = (tag_info, 'a) Map.t
-let _TagMap_empty() = Map.empty tag_compare (* xxx *)
+let _TagMap_empty = Map.Empty tag_compare
 let _TagMap_add = Map.add
 let _TagMap_remove = Map.remove
 let _TagMap_iter = Map.iter
@@ -660,7 +660,7 @@ let _StateSet_choose = Set.choose
 (* module MemMap =
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
 type 'a _MemMap_t = (int, 'a) Map.t
-let _MemMap_empty() = Map.empty Pervasives.compare (* xxx *)
+let _MemMap_empty = Map.Empty Pervasives.compare
 let _MemMap_add = Map.add
 let _MemMap_remove = Map.remove
 let _MemMap_iter = Map.iter
@@ -701,12 +701,12 @@ let dstate {final=(act,(_,m)) ; others=o} =
 
 
 let dfa_state_empty =
-  {final=(no_action, (max_int,(_TagMap_empty()))) ;
-   others=(_MemMap_empty())}
+  {final=(no_action, (max_int,_TagMap_empty)) ;
+   others=_MemMap_empty}
 
 and dfa_state_is_empty {final=(act,_) ; others=o} =
   act = no_action &&
-  o = (_MemMap_empty())
+  o = _MemMap_empty
 
 
 (* A key is an abstraction on a dfa state,
@@ -758,7 +758,7 @@ let env_to_class m =
         with
         | Not_found ->
             _TagMap_add tag (_StateSetSet_add s _StateSetSet_empty) r)
-      m (_TagMap_empty()) in
+      m _TagMap_empty in
   _TagMap_fold
     (fun tag ss r -> _MemKey_add {tag=tag ; equiv=ss} r)
     env1 _MemKey_empty
@@ -784,8 +784,8 @@ let get_key {final=(act,(_,m_act)) ; others=o} =
   let env =
     _MemMap_fold inverse_mem_map_other
       o
-      (if act = no_action then (_MemMap_empty())
-      else inverse_mem_map (ToAction act) m_act (_MemMap_empty())) in
+      (if act = no_action then _MemMap_empty
+      else inverse_mem_map (ToAction act) m_act _MemMap_empty) in
   let state_key =
     _MemMap_fold (fun n _ r -> _StateSet_add (OnChars n) r) o
       (if act=no_action then _StateSet_empty
@@ -803,7 +803,7 @@ let key_compare k1 k2 = match _StateSet_compare k1.kstate k2.kstate with
 (* module StateMap =
      Map.Make(struct type t = dfa_key let compare = key_compare end) *)
 type 'a _StateMap_t = (dfa_key, 'a) Map.t
-let _StateMap_empty = Map.empty key_compare
+let _StateMap_empty = Map.Empty key_compare
 let _StateMap_add = Map.add
 let _StateMap_find = Map.find
 
@@ -876,7 +876,7 @@ let alloc_map used m mvs =
           a,_Ints_add a mvs
         else a,mvs in
       _TagMap_add tag a r,mvs)
-    m ((_TagMap_empty()),mvs)
+    m (_TagMap_empty,mvs)
 
 let create_new_state {final=(act,(_,m_act)) ; others=o} =
   let used =
@@ -888,13 +888,13 @@ let create_new_state {final=(act,(_,m_act)) ; others=o} =
     _MemMap_fold (fun k (x,m) (r,mvs) ->
       let m,mvs = alloc_map used m mvs in
       _MemMap_add k (x,m) r,mvs)
-      o ((_MemMap_empty()),mvs) in
+      o (_MemMap_empty,mvs) in
   {final=(act,(0,new_m_act)) ; others=new_o},
   _Ints_fold (fun x r -> Set x::r) mvs []
 
 type new_addr_gen = {mutable count : int ; mutable env : int _TagMap_t}
 
-let create_new_addr_gen () = {count = -1 ; env = (_TagMap_empty())}
+let create_new_addr_gen () = {count = -1 ; env = _TagMap_empty}
 
 let alloc_new_addr tag r =
   try
@@ -910,7 +910,7 @@ let alloc_new_addr tag r =
 let create_mem_map tags gen =
   _Tags_fold
     (fun tag r -> _TagMap_add tag (alloc_new_addr tag gen) r)
-    tags (_TagMap_empty())
+    tags _TagMap_empty
 
 let create_init_state pos =
   let gen = create_new_addr_gen () in
@@ -1150,7 +1150,7 @@ let do_tag_actions n env  m =
 
 let translate_state shortest_match tags chars follow st =
   let (n,(_,m)) = st.final in
-  if (_MemMap_empty()) = st.others then
+  if _MemMap_empty = st.others then
     Perform (n,do_tag_actions n tags m)
   else if shortest_match then begin
     if n=no_action then
@@ -1195,7 +1195,7 @@ let make_tag_entry id start act a r = match a with
   | _ -> r
 
 let extract_tags l =
-  let envs = Array.create (List.length l) (_TagMap_empty()) in
+  let envs = Array.create (List.length l) _TagMap_empty in
   List.iter
     (fun (act,m,_) ->
       envs.(act) <-
@@ -1205,7 +1205,7 @@ let extract_tags l =
            | Ident_string (_,t1,t2) ->
                make_tag_entry name true act t1
                (make_tag_entry name false act t2 r))
-           m (_TagMap_empty()))
+           m _TagMap_empty)
     l ;
   envs
 
