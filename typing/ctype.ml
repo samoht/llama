@@ -251,6 +251,8 @@ let equiv alist = equiv_gen (fun id -> List.assq id alist)
 (* Whether a genericized type is more general than an arbitrary type. *)
 
 let rec moregeneral_gen subst ty1 ty2 =
+  let ty1 = repr ty1 in
+  let ty2 = repr ty2 in
   match ty1, ty2 with
     | Tvar tv, _ ->
         begin match tv.tv_kind with

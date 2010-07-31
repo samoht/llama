@@ -23,7 +23,7 @@ let tree_of_qualified id =
         Oide_dot (Oide_ident name, id.id_name)
 
 let tree_of_type_constructor tcs = tree_of_qualified tcs.tcs_id
-let tree_of_constr cs = tree_of_qualified (Btype.constr_id cs)
+let tree_of_constr cs = tree_of_qualified (constr_id cs)
 let tree_of_label lbl = tree_of_qualified (label_id lbl)
 
 let qualified_id ppf id =
@@ -34,7 +34,7 @@ let qualified_id ppf id =
   pp_print_string ppf id.id_name
 
 let type_constructor ppf tcs = qualified_id ppf (tcs.tcs_id)
-let constructor ppf cs = qualified_id ppf (Btype.constr_id cs)
+let constructor ppf cs = qualified_id ppf (constr_id cs)
 let label ppf lbl = qualified_id ppf (label_id lbl)
 let value ppf v = qualified_id ppf v.val_id
 

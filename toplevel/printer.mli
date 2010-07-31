@@ -17,6 +17,8 @@
 open Types
 open Format
 
+val fwd_eval_exception : (constructor -> Obj.t) ref
+
     val install_printer :
           value -> Types.type_expr -> (formatter -> Obj.t -> unit) -> unit
     val remove_printer : value -> unit

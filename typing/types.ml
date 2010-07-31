@@ -57,10 +57,6 @@ and constructor =
     cstr_tag: constructor_kind; (* ocaml tag *)
   }
 
-and cs_parent =
-  | Parent of type_constructor
-  | Parent_exn
-
 and constr_tag =
     ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
   | ConstrRegular of int * int             (* tag number & number of constrs *)
@@ -118,6 +114,11 @@ let is_exception cs =
       Cstr_exception _ -> true
     | _ -> false
 
+let constructor_module cs =
+  match cs.cstr_tag with
+      Cstr_exception m -> m
+    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_id.id_module
+
 let tvar tv = Tvar tv
 let new_generic () = { tv_kind=Generic }
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
@@ -131,20 +132,14 @@ let rec new_nongenerics_gen n lev =
 
 let new_phrase_nongeneric () = new_nongeneric_gen phrase_level
 
+let constr_id cs = { id_module = constructor_module cs;
+                     id_name = cs.cs_name }
 let label_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
-                            id_name = lbl.lbl_name }
-
-let ref_label lbl =
-  { ref_id = { id_module = lbl.lbl_parent.tcs_id.id_module;
-               id_name = lbl.lbl_name };
-    ref_contents = Some lbl }
-
-let ref_value v =
-  { ref_id = v.val_id;
-    ref_contents = Some v }
-let ref_type_constr t =
-  { ref_id = t.tcs_id;
-    ref_contents = Some t }
+                     id_name = lbl.lbl_name }
+let ref_type_constr t = { ref_id = t.tcs_id; ref_contents = Some t }
+let ref_constr cs = { ref_id = constr_id cs; ref_contents = Some cs }
+let ref_label lbl = { ref_id = label_id lbl; ref_contents = Some lbl }
+let ref_value v = { ref_id = v.val_id; ref_contents = Some v }
 
 let val_name v = v.val_id.id_name
 

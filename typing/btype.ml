@@ -10,14 +10,6 @@ let cs_parent cs =
       Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs
     | Cstr_exception _ -> Predef.tcs_exn
 
-let constr_id cs = { id_module = (cs_parent cs).tcs_id.id_module;
-                     id_name = cs.cs_name }
-
-let ref_constr cs =
-  { ref_id = { id_module = (cs_parent cs).tcs_id.id_module;
-               id_name = cs.cs_name };
-    ref_contents = Some cs }
-
 let rec repr ty =
   match ty with
       Tvar {tv_kind=Forward ty} -> repr ty

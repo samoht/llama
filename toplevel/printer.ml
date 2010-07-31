@@ -20,8 +20,7 @@ open Longident
 open Types
 open Outcometree
 
-let eval_exception cs =
-  Symtable.get_global_value (Ident.of_exception cs)
+let fwd_eval_exception = ref (fun _ -> assert false)
 
     (* Given an exception value, we cannot recover its type,
        hence we cannot print its arguments in general.
@@ -99,7 +98,8 @@ let eval_exception cs =
 
     let find_printer env ty =
       let rec find = function
-      | [] -> raise Not_found
+      | [] ->
+          raise Not_found
       | (name, sch, printer) :: remainder ->
           if Ctype.moregeneral sch ty (* xxx *)
           then printer
@@ -260,7 +260,7 @@ let eval_exception cs =
         (* Make sure this is the right exception and not an homonym,
            by evaluating the exception found and comparing with the
            identifier contained in the exception bucket *)
-        if Obj.field bucket 0 != eval_exception cstr
+        if Obj.field bucket 0 != !fwd_eval_exception cstr
         then raise Not_found;
         tree_of_constr_with_args
            (fun x -> Oide_ident x.cs_name) cstr 1 depth bucket cstr.cs_args

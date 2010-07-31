@@ -46,6 +46,22 @@ let setvalue name v =
 
 (* Return the value referred to by a path *)
 
+let eval_exception cs =
+  begin match constructor_module cs with
+      Module_builtin ->
+        Symtable.get_global_value (Ident.of_exception cs)
+    | Module name ->
+        Obj.field
+          (Symtable.get_global_value (Ident.of_module_name name))
+          (Env.get_exception_position cs)
+    | Module_toplevel ->
+        let name = Translmod.toplevel_name (Ident.of_exception cs) in (* ? *)
+        try
+          Hashtbl.find toplevel_value_bindings name
+        with Not_found ->
+          assert false
+  end
+let _ = Printer.fwd_eval_exception := eval_exception
 (*
 let rec eval_path = function
   | Pident id ->
@@ -378,6 +394,7 @@ exception PPerror
 
 let loop ppf =
   fprintf ppf "        Objective Caml version %s@.@." Config.version;
+  Env.set_current_unit Module_toplevel;
   initialize_toplevel_env ();
   let lb = Lexing.from_function refill_lexbuf in
   Location.input_name := "";
