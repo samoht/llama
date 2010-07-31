@@ -23,6 +23,8 @@ parsing.cmi: obj.cmi lexing.cmi
 pervasives.cmi:
 printexc.cmi:
 printf.cmi: buffer.cmi
+proxyMap.cmi:
+proxySet.cmi:
 queue.cmi:
 random.cmi: random_state.cmi nativeint.cmi int64.cmi int32.cmi
 random_state.cmi: nativeint.cmi int64.cmi int32.cmi
@@ -99,6 +101,10 @@ printf_tformat.cmo: string.cmi printf_sformat.cmo pervasives.cmi obj.cmi \
     list.cmi char.cmi buffer.cmi array.cmi
 printf_tformat.cmx: string.cmx printf_sformat.cmx pervasives.cmx obj.cmx \
     list.cmx char.cmx buffer.cmx array.cmx
+proxyMap.cmo: basicMap.cmi proxyMap.cmi
+proxyMap.cmx: basicMap.cmx proxyMap.cmi
+proxySet.cmo: basicMap.cmi proxySet.cmi
+proxySet.cmx: basicMap.cmx proxySet.cmi
 queue.cmo: obj.cmi queue.cmi
 queue.cmx: obj.cmx queue.cmi
 random.cmo: random_state.cmi random.cmi

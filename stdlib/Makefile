@@ -7,7 +7,8 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   hashtbl.cmo sort.cmo marshal.cmo obj.cmo \
   int32.cmo int64.cmo nativeint.cmo \
   lexing.cmo parsing.cmo \
-  basicSet.cmo basicMap.cmo stack.cmo queue.cmo \
+  basicSet.cmo basicMap.cmo proxySet.cmo proxyMap.cmo \
+  stack.cmo queue.cmo \
   lazy.cmo stream.cmo \
   buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
   arg.cmo printexc.cmo gc.cmo \
