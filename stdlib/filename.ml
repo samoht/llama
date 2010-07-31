@@ -199,7 +199,7 @@ let temp_file_name temp_dir prefix suffix =
   concat temp_dir (Printf.sprintf "%s%06x%s" prefix rnd suffix)
 ;;
 
-let temp_file temp_dir_opt prefix suffix =
+let temp_file_gen temp_dir_opt prefix suffix =
   let temp_dir = match temp_dir_opt with None -> temp_dir_name | Some s -> s in
   let rec try_name counter =
     let name = temp_file_name temp_dir prefix suffix in
@@ -209,6 +209,8 @@ let temp_file temp_dir_opt prefix suffix =
     with Sys_error _ as e ->
       if counter >= 1000 then raise e else try_name (counter + 1)
   in try_name 0
+
+let temp_file = temp_file_gen None
 
 let open_temp_file_gen mode_opt temp_dir_opt prefix suffix =
   let mode = match mode_opt with None -> [Open_text] | Some m -> m in

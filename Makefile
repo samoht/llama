@@ -1,6 +1,6 @@
 include config/Makefile
 
-OCAMLC=ocamlc.opt #boot/llamac
+OCAMLC=ocamlc.opt # boot/llamac
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
 OCAMLLEX=ocamllex.opt

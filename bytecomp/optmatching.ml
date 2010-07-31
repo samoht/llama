@@ -1327,22 +1327,28 @@ let prim_obj_tag =
    prim_native_float = false}
 
 let get_mod_field modname field =
-  lazy (
-    assert false
-(*
-    try
-      let mod_ident = Ident.create_persistent modname in
-      let env = Env.open_pers_signature modname Env.initial in
-      let p = try
-        match Env.lookup_value (Longident.Lident field) env with
-        | (Path.Pdot(_,_,i), _) -> i
-        | _ -> fatal_error ("Primitive "^modname^"."^field^" not found.")
-      with Not_found -> fatal_error ("Primitive "^modname^"."^field^" not found.")
-      in
-      Lprim(Pfield p, [Lprim(Pgetglobal mod_ident, [])])
-    with Not_found -> fatal_error ("Module "^modname^" unavailable.")
-*)
-  )
+  let store = ref None in
+  begin fun () ->
+    begin match !store with
+        Some x -> x
+      | None ->
+          let x =
+            try
+              let mod_ident = Module modname in
+              let env = Env.open_pers_signature modname Env.initial in
+              let value =
+                try
+                  Env.lookup_value (Longident.Lident field) env
+                with Not_found -> fatal_error ("Primitive "^modname^"."^field^" not found.")
+              in
+              let p = Env.get_value_position value in
+              Lprim(Pfield p, [Lprim(Pgetglobal (Ident.of_module mod_ident), [])])
+            with Not_found -> fatal_error ("Module "^modname^" unavailable.")
+          in
+          store := Some x;
+          x
+    end
+  end
 
 let code_force_lazy_block =
   get_mod_field "CamlinternalLazy" "force_lazy_block"
@@ -1362,7 +1368,7 @@ let inline_lazy_force_cond arg loc =
   let idarg = Ident.create "lzarg" in
   let varg = Lvar idarg in
   let tag = Ident.create "tag" in
-  let force_fun = Lazy.force code_force_lazy_block in
+  let force_fun = code_force_lazy_block () in
   Llet(Strict, idarg, arg,
        Llet(Alias, tag, Lprim(Pccall prim_obj_tag, [varg]),
             Lifthenelse(
@@ -1381,7 +1387,7 @@ let inline_lazy_force_cond arg loc =
 let inline_lazy_force_switch arg loc =
   let idarg = Ident.create "lzarg" in
   let varg = Lvar idarg in
-  let force_fun = Lazy.force code_force_lazy_block in
+  let force_fun = code_force_lazy_block () in
   Llet(Strict, idarg, arg,
        Lifthenelse(
          Lprim(Pisint, [varg]), varg,

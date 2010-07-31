@@ -71,7 +71,7 @@ val basename : string -> string
 val dirname : string -> string
 (** See {!Filename.basename}. *)
 
-val temp_file : string option -> string -> string -> string
+val temp_file_gen : string option -> string -> string -> string
 (** [temp_file prefix suffix] returns the name of a
    fresh temporary file in the temporary directory.
    The base name of the temporary file is formed by concatenating
@@ -84,6 +84,8 @@ val temp_file : string option -> string -> string -> string
    [temp_file] was called.
    @before 3.11.2 no ?temp_dir optional argument
 *)
+
+val temp_file : string -> string -> string
 
 val open_temp_file_gen :
       open_flag list option -> string option -> string -> string -> string * out_channel
@@ -98,8 +100,7 @@ val open_temp_file_gen :
    @before 3.11.2 no ?temp_dir optional argument
 *)
 
-val open_temp_file:
-      string -> string -> string * out_channel
+val open_temp_file : string -> string -> string * out_channel
 
 val temp_dir_name : string
 (** The name of the temporary directory:
