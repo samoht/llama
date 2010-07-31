@@ -1,5 +1,8 @@
 open List
 
+let add l x = if List.mem x l then l else x :: l
+let union l1 l2 = List.fold_left add l1 l2
+
 (****************** Term manipulations *****************)
 
 type term = Var of int

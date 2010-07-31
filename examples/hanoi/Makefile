@@ -18,8 +18,8 @@ all::
 
 all::hanoi
 
-hanoi: hanoi.zo
-	$(CAMLC) $(LINKFLAGS)  hanoi.zo -o hanoi
+hanoi: hanoi.cmo
+	$(CAMLC) $(LINKFLAGS)  hanoi.cmo -o hanoi
 
 clean::
 	$(RM) hanoi
@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.cmi *.zo *~ #*#
+	$(RM) *.cmi *.cmo *~ #*#
 
 beforedepend::
 
@@ -37,14 +37,14 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .cmi .ml .zo
+.SUFFIXES: .mli .cmi .ml .cmo
 
 .mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
-.ml.zo:
+.ml.cmo:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 # Generated dependencies below
 
-loadall.zo: hanoi.zo 
+loadall.cmo: hanoi.cmo 

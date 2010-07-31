@@ -18,8 +18,8 @@ all::
 
 all::docteur
 
-docteur: docteur.zo
-	$(CAMLC) $(LINKFLAGS)  docteur.zo -o docteur
+docteur: docteur.cmo
+	$(CAMLC) $(LINKFLAGS)  docteur.cmo -o docteur
 
 clean::
 	$(RM) docteur
@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.cmi *.zo *~ #*#
+	$(RM) *.cmi *.cmo *~ #*#
 
 beforedepend::
 
@@ -37,14 +37,14 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .cmi .ml .zo
+.SUFFIXES: .mli .cmi .ml .cmo
 
 .mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
-.ml.zo:
+.ml.cmo:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 # Generated dependencies below
 
-loadall.zo: docteur.zo 
+loadall.cmo: docteur.cmo 

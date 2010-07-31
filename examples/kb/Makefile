@@ -18,8 +18,8 @@ all::
 
 all::kb
 
-kb: prelude.zo terms.zo equation.zo order.zo kb.zo go.zo
-	$(CAMLC) $(LINKFLAGS)  prelude.zo terms.zo equation.zo order.zo kb.zo go.zo -o kb
+kb: prelude.cmo terms.cmo equation.cmo order.cmo kb.cmo go.cmo
+	$(CAMLC) $(LINKFLAGS)  prelude.cmo terms.cmo equation.cmo order.cmo kb.cmo go.cmo -o kb
 
 clean::
 	$(RM) kb
@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.cmi *.zo *~ #*#
+	$(RM) *.cmi *.cmo *~ #*#
 
 beforedepend::
 
@@ -37,17 +37,17 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .cmi .ml .zo
+.SUFFIXES: .mli .cmi .ml .cmo
 
 .mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
-.ml.zo:
+.ml.cmo:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 # Generated dependencies below
 
-equation.zo: terms.zo prelude.zo 
-go.zo: order.zo terms.zo kb.zo 
-kb.zo: terms.zo equation.zo prelude.zo 
-order.zo: terms.zo 
+equation.cmo: terms.cmo prelude.cmo 
+go.cmo: order.cmo terms.cmo kb.cmo 
+kb.cmo: terms.cmo equation.cmo prelude.cmo 
+order.cmo: terms.cmo 

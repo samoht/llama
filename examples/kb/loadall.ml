@@ -1,6 +1,6 @@
-load "prelude.ml";;
-load "terms.ml";;
-load "equation.ml";;
-load "order.ml";;
-load "kb.ml";;
-load "go.ml";;
+#load "prelude.cmo";;
+#load "terms.cmo";;
+#load "equation.cmo";;
+#load "order.cmo";;
+#load "kb.cmo";;
+#load "go.cmo";;

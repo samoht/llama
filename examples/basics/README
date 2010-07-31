@@ -3,9 +3,9 @@ Three all-time favorites: Fibonacci, Eratosthene's sieve, and the Unix
 
 To compile: either "make", or, by hand:
 
-    camlc -o fib fib.ml
-    camlc -o wc wc.ml
-    camlc -o sieve sieve.ml
+    llamac -o fib fib.ml
+    llamac -o wc wc.ml
+    llamac -o sieve sieve.ml
 
 To run:
 

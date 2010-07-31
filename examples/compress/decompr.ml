@@ -8,12 +8,12 @@ let enlève_suffixe_cpr chaîne =
 open Sys
 exception Erreur;;
 let erreur = ref false;;
-for i = 1 to Array.length command_line - 1 do
+for i = 1 to Array.length argv - 1 do
   let (nom_entrée, nom_sortie) =
     try
-      (command_line.(i), enlève_suffixe_cpr command_line.(i))
+      (argv.(i), enlève_suffixe_cpr argv.(i))
     with Mauvais_suffixe ->
-      (command_line.(i) ^ ".cpr", command_line.(i)) in
+      (argv.(i) ^ ".cpr", argv.(i)) in
   try
     let entrée =
       try

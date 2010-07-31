@@ -549,7 +549,7 @@ let camélia () =
            message "\n\n\nVous pourriez être poli \
                     et me dire au revoir ...\n\n\n";
            au_revoir();;
-if Sys.interactive then () else begin
+if !Sys.interactive then () else begin
   Sys.catch_break true;
   camélia();
   exit 0

@@ -70,7 +70,7 @@ let jeu nombre_de_disques =
     imprime_jeu nombre_de_disques !gauche !milieu !droite;
     hanoi nombre_de_disques
           ("A", gauche) ("B", milieu) ("C", droite);;
-if Sys.interactive then () else begin
-  jeu (int_of_string (Sys.command_line.(1)));
+if !Sys.interactive then () else begin
+  jeu (int_of_string (Sys.argv.(1)));
   exit 0
 end;;

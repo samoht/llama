@@ -1,7 +1,7 @@
 open List
 
 type table_de_codage =
-  { caractère: int list vect;
+  { caractère: int list array;
     mutable fin: int list };;
 
 let encode entrée sortie codage =

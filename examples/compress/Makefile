@@ -18,8 +18,8 @@ all::
 
 all::compr
 
-compr: esbit.zo fileprio.zo huffman.zo compr.zo
-	$(CAMLC) $(LINKFLAGS)  esbit.zo fileprio.zo huffman.zo compr.zo -o compr
+compr: esbit.cmo fileprio.cmo huffman.cmo compr.cmo
+	$(CAMLC) $(LINKFLAGS)  esbit.cmo fileprio.cmo huffman.cmo compr.cmo -o compr
 
 clean::
 	$(RM) compr
@@ -27,7 +27,7 @@ clean::
 # (end Imakefile)
 
 clean::
-	$(RM) *.cmi *.zo *~ #*#
+	$(RM) *.cmi *.cmo *~ #*#
 
 beforedepend::
 
@@ -37,19 +37,19 @@ makefile: beforedepend
 
 makefiles:: makefile
 
-.SUFFIXES: .mli .cmi .ml .zo
+.SUFFIXES: .mli .cmi .ml .cmo
 
 .mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
-.ml.zo:
+.ml.cmo:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
 # Generated dependencies below
 
-compr.zo: huffman.cmi 
-decompr.zo: huffman.cmi 
-esbit.zo: esbit.cmi 
-fileprio.zo: fileprio.cmi 
-huffman.zo: huffman.cmi esbit.cmi fileprio.cmi 
-loadall.zo: compr.zo 
+compr.cmo: huffman.cmi 
+decompr.cmo: huffman.cmi 
+esbit.cmo: esbit.cmi 
+fileprio.cmo: fileprio.cmi 
+huffman.cmo: huffman.cmi esbit.cmi fileprio.cmi 
+loadall.cmo: compr.cmo 

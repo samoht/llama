@@ -38,17 +38,17 @@ let décompresse_fichier nom_fichier =
     let nom_entrée = nom_fichier
     and nom_sortie = String.sub nom_fichier 0 (longueur - 4) in
     traite_fichier Huffman.décompresse nom_entrée nom_sortie;;
-if Sys.interactive then () else
+if !Sys.interactive then () else
   begin
     let erreur = ref false in
-    if Array.length command_line >= 2 & command_line.(1) = "-d" then
-      for i = 2 to Array.length command_line - 1 do
-        try décompresse_fichier command_line.(i)
+    if Array.length argv >= 2 & argv.(1) = "-d" then
+      for i = 2 to Array.length argv - 1 do
+        try décompresse_fichier argv.(i)
         with Erreur -> erreur := true
       done
     else
-      for i = 1 to Array.length command_line - 1 do
-        try compresse_fichier command_line.(i)
+      for i = 1 to Array.length argv - 1 do
+        try compresse_fichier argv.(i)
         with Erreur -> erreur := true
       done;
     exit (if !erreur then 2 else 0)
