@@ -71,7 +71,7 @@
        The elements of [s] are presented to [f] in increasing order
        with respect to the ordering over the type of the elements. *)
 
-    val fold: ('elt -> 'elt -> 'elt) -> 'elt t -> 'elt -> 'elt
+    val fold: ('elt -> 'a -> 'a) -> 'elt t -> 'a -> 'a
     (** [fold f s a] computes [(f xN ... (f x2 (f x1 a))...)],
        where [x1 ... xN] are the elements of [s], in increasing order. *)
 

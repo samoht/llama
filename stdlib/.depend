@@ -10,6 +10,8 @@ digest.cmi:
 filename.cmi:
 format.cmi: pervasives.cmi buffer.cmi
 gc.cmi:
+generalMap.cmi:
+generalSet.cmi:
 genlex.cmi: stream.cmi
 hashtbl.cmi:
 int32.cmi:
@@ -67,6 +69,10 @@ format.cmx: string.cmx printf_tformat.cmx printf_sformat.cmx pervasives.cmx \
     obj.cmx list.cmx buffer.cmx format.cmi
 gc.cmo: sys.cmi printf.cmi gc.cmi
 gc.cmx: sys.cmx printf.cmx gc.cmi
+generalMap.cmo: generalMap.cmi
+generalMap.cmx: generalMap.cmi
+generalSet.cmo: generalSet.cmi
+generalSet.cmx: generalSet.cmi
 genlex.cmo: string.cmi stream.cmi list.cmi hashtbl.cmi char.cmi genlex.cmi
 genlex.cmx: string.cmx stream.cmx list.cmx hashtbl.cmx char.cmx genlex.cmi
 hashtbl.cmo: sys.cmi array.cmi hashtbl.cmi

@@ -22,8 +22,6 @@
     (* Sets are represented by balanced binary trees (the heights of the
        children differ by at most 2 *)
 
-    let empty cmp = { desc = Empty; cmp = cmp }
-
     let height s = match s.desc with
         Empty -> 0
       | Node(_, _, _, h) -> h
@@ -77,7 +75,7 @@
     (* Insertion of one element *)
 
     let rec add x s = match s.desc with
-        Empty -> { desc = Node(empty s.cmp, x, empty s.cmp, 1); cmp = s.cmp }
+        Empty -> { desc = Node(s, x, s, 1); cmp = s.cmp }
       | Node(l, v, r, _) as t ->
           let c = s.cmp x v in
           if c = 0 then s else
@@ -142,7 +140,7 @@
 
     let rec split x s = match s.desc with
         Empty ->
-          (empty s.cmp, false, empty s.cmp)
+          (s, false, s)
       | Node(l, v, r, _) ->
           let c = s.cmp x v in
           if c = 0 then (l, true, r)
@@ -152,6 +150,8 @@
             let (lr, pres, rr) = split x r in (join l v lr, pres, rr)
 
     (* Implementation of the set operations *)
+
+    let empty cmp = { desc = Empty; cmp = cmp }
 
     let is_empty s = match s.desc with Empty -> true | _ -> false
 
@@ -240,7 +240,7 @@
       | _, Empty ->
           false
       | Node (l1, v1, r1, _), Node (l2, v2, r2, _) ->
-          let c = Pervasives.compare v1 v2 in
+          let c = s2.cmp v1 v2 in
           if c = 0 then
             subset l1 l2 && subset r1 r2
           else if c < 0 then
