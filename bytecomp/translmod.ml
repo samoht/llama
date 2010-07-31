@@ -572,7 +572,7 @@ let transl_store_implementation module_name (str, restr) =
 
 (* Compile a toplevel phrase *)
 
-let toploop_ident = Ident.of_module Module_toplevel
+let toploop_ident = Ident.of_module (Module "Toploop")
 let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
 let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
 

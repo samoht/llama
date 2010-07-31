@@ -30,8 +30,7 @@ let of_module_name name = Id_module name
 let of_module m =
   match m with
       Module name -> of_module_name name
-    | Module_toplevel -> Id_module "(toplevel)" (* xxx *)
-    | _ -> assert false
+    | _ -> assert false (* xxx *)
 let of_value v =
   let name = val_name v in
   try List.assq v (Hashtbl.find_all values name)

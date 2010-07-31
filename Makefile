@@ -75,7 +75,7 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: llamac-new
+all: llamac-new llama-new
 .PHONY: all
 promote:
 	cp llamac-new boot/llamac
@@ -94,7 +94,7 @@ llama: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 llama-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(TOPLEVEL)
-	$(OCAMLC) $(FLAGS) -o $@ $^
+	$(OCAMLC) $(FLAGS) -linkall -o $@ $^
 
 llamac: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
