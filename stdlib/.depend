@@ -1,7 +1,5 @@
 arg.cmi:
 array.cmi:
-basicMap.cmi:
-basicSet.cmi:
 buffer.cmi:
 callback.cmi:
 char.cmi:
@@ -10,14 +8,13 @@ digest.cmi:
 filename.cmi:
 format.cmi: pervasives.cmi buffer.cmi
 gc.cmi:
-generalMap.cmi:
-generalSet.cmi:
 genlex.cmi: stream.cmi
 hashtbl.cmi:
 int32.cmi:
 int64.cmi:
 lexing.cmi:
 list.cmi:
+map.cmi:
 marshal.cmi:
 nativeint.cmi:
 obj.cmi: int32.cmi
@@ -25,13 +22,12 @@ parsing.cmi: obj.cmi lexing.cmi
 pervasives.cmi:
 printexc.cmi:
 printf.cmi: buffer.cmi
-proxyMap.cmi:
-proxySet.cmi:
 queue.cmi:
 random.cmi: random_state.cmi nativeint.cmi int64.cmi int32.cmi
 random_state.cmi: nativeint.cmi int64.cmi int32.cmi
 scanf.cmi: scanning.cmi pervasives.cmi
 scanning.cmi: pervasives.cmi
+set.cmi:
 sort.cmi:
 stack.cmi:
 stream.cmi:
@@ -43,10 +39,6 @@ arg.cmo: sys.cmi string.cmi printf.cmi list.cmi buffer.cmi array.cmi arg.cmi
 arg.cmx: sys.cmx string.cmx printf.cmx list.cmx buffer.cmx array.cmx arg.cmi
 array.cmo: array.cmi
 array.cmx: array.cmi
-basicMap.cmo: pervasives.cmi basicMap.cmi
-basicMap.cmx: pervasives.cmx basicMap.cmi
-basicSet.cmo: pervasives.cmi basicSet.cmi
-basicSet.cmx: pervasives.cmx basicSet.cmi
 buffer.cmo: sys.cmi string.cmi buffer.cmi
 buffer.cmx: sys.cmx string.cmx buffer.cmi
 bug.cmo:
@@ -69,10 +61,6 @@ format.cmx: string.cmx printf_tformat.cmx printf_sformat.cmx pervasives.cmx \
     obj.cmx list.cmx buffer.cmx format.cmi
 gc.cmo: sys.cmi printf.cmi gc.cmi
 gc.cmx: sys.cmx printf.cmx gc.cmi
-generalMap.cmo: generalMap.cmi
-generalMap.cmx: generalMap.cmi
-generalSet.cmo: generalSet.cmi
-generalSet.cmx: generalSet.cmi
 genlex.cmo: string.cmi stream.cmi list.cmi hashtbl.cmi char.cmi genlex.cmi
 genlex.cmx: string.cmx stream.cmx list.cmx hashtbl.cmx char.cmx genlex.cmi
 hashtbl.cmo: sys.cmi array.cmi hashtbl.cmi
@@ -87,6 +75,8 @@ lexing.cmo: sys.cmi string.cmi array.cmi lexing.cmi
 lexing.cmx: sys.cmx string.cmx array.cmx lexing.cmi
 list.cmo: list.cmi
 list.cmx: list.cmi
+map.cmo: map.cmi
+map.cmx: map.cmi
 marshal.cmo: string.cmi marshal.cmi
 marshal.cmx: string.cmx marshal.cmi
 nativeint.cmo: sys.cmi pervasives.cmi nativeint.cmi
@@ -107,10 +97,6 @@ printf_tformat.cmo: string.cmi printf_sformat.cmo pervasives.cmi obj.cmi \
     list.cmi char.cmi buffer.cmi array.cmi
 printf_tformat.cmx: string.cmx printf_sformat.cmx pervasives.cmx obj.cmx \
     list.cmx char.cmx buffer.cmx array.cmx
-proxyMap.cmo: basicMap.cmi proxyMap.cmi
-proxyMap.cmx: basicMap.cmx proxyMap.cmi
-proxySet.cmo: basicMap.cmi proxySet.cmi
-proxySet.cmx: basicMap.cmx proxySet.cmi
 queue.cmo: obj.cmi queue.cmi
 queue.cmx: obj.cmx queue.cmi
 random.cmo: random_state.cmi random.cmi
@@ -125,6 +111,8 @@ scanf.cmx: string.cmx scanning.cmx printf_tformat.cmx printf_sformat.cmx \
     printf.cmx obj.cmx list.cmx hashtbl.cmx buffer.cmx array.cmx scanf.cmi
 scanning.cmo: string.cmi pervasives.cmi list.cmi buffer.cmi scanning.cmi
 scanning.cmx: string.cmx pervasives.cmx list.cmx buffer.cmx scanning.cmi
+set.cmo: set.cmi
+set.cmx: set.cmi
 sort.cmo: array.cmi sort.cmi
 sort.cmx: array.cmx sort.cmi
 stack.cmo: list.cmi stack.cmi

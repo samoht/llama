@@ -81,47 +81,46 @@ type ('args,'action) automata_entry =
 (* A lot of sets and map structures *)
 
 (* module Ints = Set.Make(struct type t = int let compare = compare end)*)
-let _Ints_empty = BasicSet.empty
-let _Ints_mem = BasicSet.mem
-let _Ints_add = BasicSet.add
-let _Ints_diff = BasicSet.diff
-let _Ints_fold = BasicSet.fold
-let _Ints_choose = BasicSet.choose
+let _Ints_empty = Set.empty compare
+let _Ints_mem = Set.mem
+let _Ints_add = Set.add
+let _Ints_diff = Set.diff
+let _Ints_fold = Set.fold
+let _Ints_choose = Set.choose
 
-(* let id_compare (id1,_) (id2,_) = String.compare id1 id2 *)
-let id_proxy (id,_) = id
+let id_compare (id1,_) (id2,_) = String.compare id1 id2
 
 let tag_compare t1 t2 = Pervasives.compare t1 t2
 
 (* module Tags = Set.Make(struct type t = tag_info let compare = tag_compare end)*)
-type _Tags_t = tag_info BasicSet.t
-let _Tags_compare = BasicSet.compare
-let _Tags_empty = BasicSet.empty
-let _Tags_add = BasicSet.add
-let _Tags_union = BasicSet.union
-let _Tags_iter = BasicSet.iter
-let _Tags_fold = BasicSet.fold
+type _Tags_t = tag_info Set.t
+let _Tags_empty = Set.empty tag_compare
+let _Tags_add = Set.add
+let _Tags_union = Set.union
+let _Tags_compare = Set.compare
+let _Tags_iter = Set.iter
+let _Tags_fold = Set.fold
 
 (* module TagMap =
     Map.Make (struct type t = tag_info let compare = tag_compare end) *)
-type 'a _TagMap_t = (tag_info, 'a) BasicMap.t
-let _TagMap_empty = BasicMap.empty
-let _TagMap_add = BasicMap.add
-let _TagMap_remove = BasicMap.remove
-let _TagMap_iter = BasicMap.iter
-let _TagMap_fold = BasicMap.fold
-let _TagMap_find = BasicMap.find
+type 'a _TagMap_t = (tag_info, 'a) Map.t
+let _TagMap_empty() = Map.empty tag_compare (* xxx *)
+let _TagMap_add = Map.add
+let _TagMap_remove = Map.remove
+let _TagMap_iter = Map.iter
+let _TagMap_fold = Map.fold
+let _TagMap_find = Map.find
 
 (* module IdSet =
     Set.Make (struct type t = ident let compare = id_compare end) *)
-let _IdSet_empty = ProxySet.empty id_proxy
-let _IdSet_add = ProxySet.add
-let _IdSet_mem = ProxySet.mem
-let _IdSet_union = ProxySet.union
-let _IdSet_inter = ProxySet.inter
-let _IdSet_diff = ProxySet.diff
-let _IdSet_fold = ProxySet.fold
-let _IdSet_exists = ProxySet.exists
+let _IdSet_empty = Set.empty id_compare
+let _IdSet_add = Set.add
+let _IdSet_mem = Set.mem
+let _IdSet_union = Set.union
+let _IdSet_inter = Set.inter
+let _IdSet_diff = Set.diff
+let _IdSet_fold = Set.fold
+let _IdSet_exists = Set.exists
 
 (* module IdMap =
      Map.Make (struct type t =  ident let compare = id_compare end) *)
@@ -575,11 +574,11 @@ let trans_compare (t1,tags1) (t2,tags2) =
 
 (* module TransSet =
      Set.Make(struct type t = transition let compare = trans_compare end) *)
-let _TransSet_empty = GeneralSet.empty trans_compare
-let _TransSet_add = GeneralSet.add
-let _TransSet_union = GeneralSet.union
-let _TransSet_iter = GeneralSet.iter
-let _TransSet_fold = GeneralSet.fold
+let _TransSet_empty = Set.empty trans_compare
+let _TransSet_add = Set.add
+let _TransSet_union = Set.union
+let _TransSet_iter = Set.iter
+let _TransSet_fold = Set.fold
 
 let rec nullable = function
   | Empty|Tag _ -> true
@@ -651,22 +650,22 @@ let no_action = max_int
 
 (* module StateSet =
      Set.Make (struct type t = t_transition let compare = Pervasives.compare end) *)
-type _StateSet_t = t_transition BasicSet.t
-let _StateSet_empty = BasicSet.empty
-let _StateSet_add = BasicSet.add
-let _StateSet_compare = BasicSet.compare
-let _StateSet_choose = BasicSet.choose
+type _StateSet_t = t_transition Set.t
+let _StateSet_empty = Set.empty Pervasives.compare
+let _StateSet_add = Set.add
+let _StateSet_compare = Set.compare
+let _StateSet_choose = Set.choose
 
 
 (* module MemMap =
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
-type 'a _MemMap_t = (int, 'a) BasicMap.t
-let _MemMap_empty = BasicMap.empty
-let _MemMap_add = BasicMap.add
-let _MemMap_remove = BasicMap.remove
-let _MemMap_iter = BasicMap.iter
-let _MemMap_fold = BasicMap.fold
-let _MemMap_find = BasicMap.find
+type 'a _MemMap_t = (int, 'a) Map.t
+let _MemMap_empty() = Map.empty Pervasives.compare (* xxx *)
+let _MemMap_add = Map.add
+let _MemMap_remove = Map.remove
+let _MemMap_iter = Map.iter
+let _MemMap_fold = Map.fold
+let _MemMap_find = Map.find
 
 type 'a dfa_state =
   {final : int * ('a * int _TagMap_t) ;
@@ -702,12 +701,12 @@ let dstate {final=(act,(_,m)) ; others=o} =
 
 
 let dfa_state_empty =
-  {final=(no_action, (max_int,_TagMap_empty)) ;
-   others=_MemMap_empty}
+  {final=(no_action, (max_int,(_TagMap_empty()))) ;
+   others=(_MemMap_empty())}
 
 and dfa_state_is_empty {final=(act,_) ; others=o} =
   act = no_action &&
-  o = _MemMap_empty
+  o = (_MemMap_empty())
 
 
 (* A key is an abstraction on a dfa state,
@@ -717,11 +716,11 @@ and dfa_state_is_empty {final=(act,_) ; others=o} =
 
 (* module StateSetSet =
      Set.Make (struct type t = _StateSet_t let compare = _StateSet_compare end) *)
-type _StateSetSet_t = _StateSet_t GeneralSet.t
-let _StateSetSet_empty = GeneralSet.empty _StateSet_compare
-let _StateSetSet_compare = GeneralSet.compare
-let _StateSetSet_add = GeneralSet.add
-let _StateSetSet_fold = GeneralSet.fold
+type _StateSetSet_t = _StateSet_t Set.t
+let _StateSetSet_empty = Set.empty _StateSet_compare
+let _StateSetSet_compare = Set.compare
+let _StateSetSet_add = Set.add
+let _StateSetSet_fold = Set.fold
 
 type t_equiv = {tag:tag_info ; equiv:_StateSetSet_t}
 
@@ -736,14 +735,14 @@ module MemKey =
      | r -> r
    end)
 *)
-type _MemKey_t = t_equiv GeneralSet.t
-let _MemKey_empty = GeneralSet.empty
+type _MemKey_t = t_equiv Set.t
+let _MemKey_empty = Set.empty
   (fun e1 e2 -> match Pervasives.compare e1.tag e2.tag with
      | 0 -> _StateSetSet_compare e1.equiv e2.equiv
      | r -> r)
-let _MemKey_add = GeneralSet.add
-let _MemKey_fold = GeneralSet.fold
-let _MemKey_compare = GeneralSet.compare
+let _MemKey_add = Set.add
+let _MemKey_fold = Set.fold
+let _MemKey_compare = Set.compare
 
 type dfa_key = {kstate : _StateSet_t ; kmem : _MemKey_t}
 
@@ -759,7 +758,7 @@ let env_to_class m =
         with
         | Not_found ->
             _TagMap_add tag (_StateSetSet_add s _StateSetSet_empty) r)
-      m _TagMap_empty in
+      m (_TagMap_empty()) in
   _TagMap_fold
     (fun tag ss r -> _MemKey_add {tag=tag ; equiv=ss} r)
     env1 _MemKey_empty
@@ -785,8 +784,8 @@ let get_key {final=(act,(_,m_act)) ; others=o} =
   let env =
     _MemMap_fold inverse_mem_map_other
       o
-      (if act = no_action then _MemMap_empty
-      else inverse_mem_map (ToAction act) m_act _MemMap_empty) in
+      (if act = no_action then (_MemMap_empty())
+      else inverse_mem_map (ToAction act) m_act (_MemMap_empty())) in
   let state_key =
     _MemMap_fold (fun n _ r -> _StateSet_add (OnChars n) r) o
       (if act=no_action then _StateSet_empty
@@ -803,10 +802,10 @@ let key_compare k1 k2 = match _StateSet_compare k1.kstate k2.kstate with
 
 (* module StateMap =
      Map.Make(struct type t = dfa_key let compare = key_compare end) *)
-type 'a _StateMap_t = (dfa_key, 'a) GeneralMap.t
-let _StateMap_empty = GeneralMap.empty key_compare
-let _StateMap_add = GeneralMap.add
-let _StateMap_find = GeneralMap.find
+type 'a _StateMap_t = (dfa_key, 'a) Map.t
+let _StateMap_empty = Map.empty key_compare
+let _StateMap_add = Map.add
+let _StateMap_find = Map.find
 
 let state_map = ref (_StateMap_empty : int _StateMap_t)
 let todo = Stack.create()
@@ -877,7 +876,7 @@ let alloc_map used m mvs =
           a,_Ints_add a mvs
         else a,mvs in
       _TagMap_add tag a r,mvs)
-    m (_TagMap_empty,mvs)
+    m ((_TagMap_empty()),mvs)
 
 let create_new_state {final=(act,(_,m_act)) ; others=o} =
   let used =
@@ -889,13 +888,13 @@ let create_new_state {final=(act,(_,m_act)) ; others=o} =
     _MemMap_fold (fun k (x,m) (r,mvs) ->
       let m,mvs = alloc_map used m mvs in
       _MemMap_add k (x,m) r,mvs)
-      o (_MemMap_empty,mvs) in
+      o ((_MemMap_empty()),mvs) in
   {final=(act,(0,new_m_act)) ; others=new_o},
   _Ints_fold (fun x r -> Set x::r) mvs []
 
 type new_addr_gen = {mutable count : int ; mutable env : int _TagMap_t}
 
-let create_new_addr_gen () = {count = -1 ; env = _TagMap_empty}
+let create_new_addr_gen () = {count = -1 ; env = (_TagMap_empty())}
 
 let alloc_new_addr tag r =
   try
@@ -911,7 +910,7 @@ let alloc_new_addr tag r =
 let create_mem_map tags gen =
   _Tags_fold
     (fun tag r -> _TagMap_add tag (alloc_new_addr tag gen) r)
-    tags _TagMap_empty
+    tags (_TagMap_empty())
 
 let create_init_state pos =
   let gen = create_new_addr_gen () in
@@ -1151,7 +1150,7 @@ let do_tag_actions n env  m =
 
 let translate_state shortest_match tags chars follow st =
   let (n,(_,m)) = st.final in
-  if _MemMap_empty = st.others then
+  if (_MemMap_empty()) = st.others then
     Perform (n,do_tag_actions n tags m)
   else if shortest_match then begin
     if n=no_action then
@@ -1196,7 +1195,7 @@ let make_tag_entry id start act a r = match a with
   | _ -> r
 
 let extract_tags l =
-  let envs = Array.create (List.length l) _TagMap_empty in
+  let envs = Array.create (List.length l) (_TagMap_empty()) in
   List.iter
     (fun (act,m,_) ->
       envs.(act) <-
@@ -1206,7 +1205,7 @@ let extract_tags l =
            | Ident_string (_,t1,t2) ->
                make_tag_entry name true act t1
                (make_tag_entry name false act t2 r))
-           m _TagMap_empty)
+           m (_TagMap_empty()))
     l ;
   envs
 

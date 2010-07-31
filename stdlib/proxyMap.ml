@@ -1,9 +1,0 @@
-type ('proxy, 'a, 'b) t = ('proxy, 'a * 'b) BasicMap.t * ('a -> 'proxy)
-let empty g = (BasicMap.empty, g)
-let is_empty (m, g) = BasicMap.is_empty m
-let mem x (m, g) = BasicMap.mem (g x) m
-let add x y (m, g) = (BasicMap.add (g x) (x, y) m, g)
-let remove x (m, g) = (BasicMap.remove (g x) m, g)
-let iter f (m, g) = BasicMap.iter (fun _ (x, y) -> f x y) m
-let fold f (m, g) z = BasicMap.fold (fun _ (x, y) z -> f x y z) m z
-let find x (m, g) = snd (BasicMap.find (g x) m)
