@@ -1,13 +1,13 @@
 include ../config/Makefile
 LLAMAC=../boot/llamac -nostdlib -I .
-LLAMADEP=ocamldep.opt
+LLAMADEP=../boot/llamadep
 
 OBJS=pervasives.cmo $(OTHERS)
 OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   hashtbl.cmo sort.cmo marshal.cmo obj.cmo \
   int32.cmo int64.cmo nativeint.cmo \
   lexing.cmo parsing.cmo \
-  set.cmo map.cmo stack.cmo queue.cmo \
+  basicSet.cmo basicMap.cmo stack.cmo queue.cmo \
   lazy.cmo stream.cmo \
   buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
   arg.cmo printexc.cmo gc.cmo \
