@@ -39,6 +39,7 @@ and import_desc = function
   | Typedtree.Tpat_tuple lp -> Tpat_tuple (List.map import lp)
   | Typedtree.Tpat_construct (cs, lp) -> Tpat_construct (cs, List.map import lp)
   | Typedtree.Tpat_record l -> Tpat_record (List.map (fun (lbl, p) -> (lbl, import p)) l)
+  | Typedtree.Tpat_array lp -> Tpat_array (List.map import lp)
   | Typedtree.Tpat_or (p1, p2) -> Tpat_or (import p1, import p2, None)
   | Typedtree.Tpat_constraint (p, _) -> assert false
 

@@ -220,6 +220,22 @@ let rec filter_product arity ty =
       raise OldUnify
 ;;
 
+let rec filter_array ty =
+  let ty = repr ty in
+  match ty with
+      Tvar tv ->
+        let level = nongeneric_level tv in
+        let ty = Tvar(new_nongeneric_gen level) in
+        tv.tv_kind <- Forward(Tconstruct(ref_type_constr Predef.tcs_array, [ty]));
+        ty
+    | Tconstruct(tcs,[arg]) when Get.type_constructor tcs == Predef.tcs_array ->
+        arg
+    | Tconstruct(tcs, args) when has_abbrev tcs ->
+        let params, body = get_abbrev tcs in
+        filter_array (expand_abbrev_aux params body args)
+    | _ ->
+        raise OldUnify
+
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
 

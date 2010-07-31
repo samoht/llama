@@ -42,7 +42,7 @@ PUBLIC_INCLUDES=\
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
 
-all:: ocamlrun$(EXE) libcamlrun.$(A) # ld.conf 
+all:: llamarun$(EXE) libcamlrun.$(A) # ld.conf 
 .PHONY: all
 
 #ld.conf: ../config/Makefile
@@ -50,7 +50,7 @@ all:: ocamlrun$(EXE) libcamlrun.$(A) # ld.conf
 #	echo "$(LIBDIR)" >> ld.conf
 
 install::
-	cp ocamlrun$(EXE) $(BINDIR)/ocamlrun$(EXE)
+	cp llamarun$(EXE) $(BINDIR)/llamarun$(EXE)
 	cp libcamlrun.$(A) $(LIBDIR)/libcamlrun.$(A)
 	cd $(LIBDIR); $(RANLIB) libcamlrun.$(A)
 	if test -d $(LIBDIR)/caml; then : ; else mkdir $(LIBDIR)/caml; fi
@@ -92,7 +92,7 @@ version.h : ../VERSION
 	echo "#define OCAML_VERSION \"`sed -e 1q ../VERSION`\"" > version.h
 
 clean ::
-	rm -f ocamlrun$(EXE) ocamlrund$(EXE) *.$(O) *.$(A) *.$(SO)
+	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO)
 	rm -f primitives prims.c opnames.h jumptbl.h # ld.conf
 	rm -f version.h
 .PHONY: clean
@@ -109,12 +109,12 @@ SHARED_LIBS_DEPS=$(SHARED_LIBS_TMP:%true=libcamlrun_shared.so)
 
 all:: $(SHARED_LIBS_DEPS)
 
-ocamlrun$(EXE): libcamlrun.a prims.o
-	$(MKEXE) $(BYTECCLINKOPTS) -o ocamlrun$(EXE) \
+llamarun$(EXE): libcamlrun.a prims.o
+	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun$(EXE) \
 		  prims.o libcamlrun.a $(BYTECCLIBS)
 
-ocamlrund$(EXE): libcamlrund.a prims.o
-	$(MKEXE) -g $(BYTECCLINKOPTS) -o ocamlrund$(EXE) \
+llamarund$(EXE): libcamlrund.a prims.o
+	$(MKEXE) -g $(BYTECCLINKOPTS) -o llamarund$(EXE) \
 		  prims.o libcamlrund.a $(BYTECCLIBS)
 
 libcamlrun.a: $(OBJS)

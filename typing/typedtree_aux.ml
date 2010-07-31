@@ -12,10 +12,11 @@ let rec free_vars_of_pat pat =
   | Tpat_constant _ -> []
   | Tpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
   | Tpat_construct(_, pats) -> List.flatten (List.map free_vars_of_pat pats)
-  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1
-  | Tpat_constraint(pat, _) -> free_vars_of_pat pat
   | Tpat_record lbl_pat_list ->
       List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
+  | Tpat_array patl -> List.flatten (List.map free_vars_of_pat patl)
+  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1
+  | Tpat_constraint(pat, _) -> free_vars_of_pat pat
 ;;    
 
 let rec expr_is_pure expr =
@@ -51,10 +52,11 @@ let rec pat_irrefutable pat =
   | Tpat_constant _ -> false
   | Tpat_tuple patl -> List.for_all pat_irrefutable patl
   | Tpat_construct(cstr, pats) -> single_constructor cstr && List.for_all pat_irrefutable pats
-  | Tpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
-  | Tpat_constraint(pat, _) -> pat_irrefutable pat
   | Tpat_record lbl_pat_list ->
       List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
+  | Tpat_array patl -> false
+  | Tpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
+  | Tpat_constraint(pat, _) -> pat_irrefutable pat
 ;;
 
 let let_bound_values pat_expr_list =

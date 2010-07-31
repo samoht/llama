@@ -75,13 +75,13 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  cl_comp/cl_opcodes.ml cl_comp/prim_c.ml cl_comp/more_predef.ml parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: llamac-new llama-new
+all: llamac llama
 .PHONY: all
 promote:
-	cp llamac-new boot/llamac
+	cp llamac boot/llamac
 .PHONY: promote
 
-old: runtime_dir llama llamac llamadep testprog cl_stdlib_dir
+old: runtime_dir llama-old llamac-old llamadep testprog cl_stdlib_dir
 .PHONY: old
 
 testprog: testprog.ml runtime_dir cl_stdlib_dir
@@ -90,13 +90,13 @@ testprog: testprog.ml runtime_dir cl_stdlib_dir
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Llama system is up and running."
 
-llama: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
+llama-old: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) $(CL_TOPLEVEL)
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
-llama-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(TOPLEVEL)
+llama: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(TOPLEVEL)
 	$(OCAMLC) $(FLAGS) -linkall -o $@ $^
 
-llamac: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
+llamac-old: $(UTILS) $(PARSING) $(TYPING) $(CL_COMP) cl_comp/librarian.cmx cl_comp/driver.cmx
 	$(OCAMLOPT) $(FLAGS) -o $@ $^
 
 llamac.byte: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(CL_COMP:.cmx=.cmo) cl_comp/librarian.cmo cl_comp/driver.cmo
@@ -197,6 +197,6 @@ configure-in-situ:
 	./configure -bindir ${PWD}/byterun -libdir ${PWD}/stdlib
 .PHONY: configure-in-situ
 
-llamac-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
+llamac: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
 	$(OCAMLC) $(FLAGS) -o $@ $^
 

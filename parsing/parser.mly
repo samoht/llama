@@ -654,14 +654,12 @@ simple_pattern:
       { reloc_pat (mktailpat (List.rev $2)) }
   | LBRACKET pattern_semi_list opt_semi error
       { unclosed "[" 1 "]" 4 }
-/*
   | LBRACKETBAR pattern_semi_list opt_semi BARRBRACKET
       { mkpat(Ppat_array(List.rev $2)) }
   | LBRACKETBAR BARRBRACKET
       { mkpat(Ppat_array []) }
   | LBRACKETBAR pattern_semi_list opt_semi error
       { unclosed "[|" 1 "|]" 4 }
-*/
   | LPAREN pattern RPAREN
       { reloc_pat $2 }
   | LPAREN pattern error

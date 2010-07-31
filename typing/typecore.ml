@@ -101,13 +101,6 @@ let rec tpat (pat, ty) =
         (fun arg ty_arg ->
            tpat (arg, ty_arg))
         args ty_args
-  | Tpat_or(pat1, pat2) ->
-      tpat (pat1, ty);
-      tpat (pat2, ty)
-  | Tpat_constraint(pat, ty_expr) ->
-      let ty' = type_of_type_expression (Level 1) ty_expr in
-       tpat  (pat, ty');
-        unify_pat pat ty ty'
   | Tpat_record lbl_pat_list ->
       let rec tpat_lbl = function
         [] -> ()
@@ -118,6 +111,16 @@ let rec tpat (pat, ty) =
           tpat_lbl rest
       in
         tpat_lbl lbl_pat_list
+  | Tpat_array patl ->
+      let ty_arg = filter_array ty in
+      List.iter (fun p -> tpat (p, ty_arg)) patl
+  | Tpat_or(pat1, pat2) ->
+      tpat (pat1, ty);
+      tpat (pat2, ty)
+  | Tpat_constraint(pat, ty_expr) ->
+      let ty' = type_of_type_expression (Level 1) ty_expr in
+       tpat  (pat, ty');
+        unify_pat pat ty ty'
 
 and tpat_list pats tys = match pats, tys with
     [], [] ->

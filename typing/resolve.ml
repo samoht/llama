@@ -40,6 +40,7 @@ let rec var_names_of_pat pat =
   | Ppat_tuple patl -> List.flatten (List.map var_names_of_pat patl)
   | Ppat_construct (_, None) -> []
   | Ppat_construct(_, Some pat) -> var_names_of_pat pat
+  | Ppat_array patl -> List.flatten (List.map var_names_of_pat patl)
   | Ppat_or(pat1, pat2) ->
       let l1 = List.sort compare (var_names_of_pat pat1) in
       let l2 = List.sort compare (var_names_of_pat pat2) in
@@ -135,10 +136,11 @@ let pattern env p =
                   | Some sp -> [sp]
               in
               Tpat_construct (cs, List.map aux sargs)
+          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
+          | Ppat_array l -> Tpat_array (List.map aux l)
           | Ppat_or (p1, p2) ->
               Tpat_or (aux p1, aux p2)
           | Ppat_constraint (p, te) -> Tpat_constraint (aux p, type_expression false env te)
-          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
         end;
       pat_loc = p.ppat_loc;
       pat_env = env;

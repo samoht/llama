@@ -59,8 +59,9 @@ stdlib/std_exit.cmo
 stdlib/sys.ml
 bytecomp/runtimedef.ml
 byterun/jumptbl.h
-byterun/ocamlrun
+byterun/llamarun
 byterun/primitives
 byterun/prims.c
 byterun/version.h
 stdlib/camlheader
+boot/llamarun

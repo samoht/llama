@@ -32,9 +32,10 @@ and pattern_desc =
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor * pattern list
+  | Tpat_record of (label * pattern) list
+  | Tpat_array of pattern list
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
-  | Tpat_record of (label * pattern) list
 
 type partial = Partial | Total
 

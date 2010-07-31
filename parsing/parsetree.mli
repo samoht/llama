@@ -26,6 +26,7 @@ and pattern_desc =
   | Ppat_tuple of pattern list
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
+  | Ppat_array of pattern list
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * type_expression
 

@@ -13,15 +13,12 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random_state.cmo random.cmo callback.cmo \
   genlex.cmo weak.cmo \
-  filename.cmo complex.cmo # scanf.cmo
+  filename.cmo complex.cmo scanning.cmo scanf.cmo
 
 all: std_exit.cmo stdlib.cma camlheader
 
 stdlib.cma: $(OBJS)
 	$(LLAMAC) -a -o stdlib.cma $^
-
-test2: test2.ml
-	../llamac-new $^ && ocamlrun a.out
 
 sys.ml: sys.mlp ../VERSION
 	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
@@ -38,7 +35,7 @@ pervasives.cmo: pervasives.ml
 std_exit.cmo: pervasives.cmo
 
 camlheader: ../config/Makefile
-	echo '#!$(BINDIR)/ocamlrun' > $@
+	echo '#!$(BINDIR)/llamarun' > $@
 
 clean:
 	rm -f *.lli *.cmo
