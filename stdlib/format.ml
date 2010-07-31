@@ -24,9 +24,9 @@
 
 type size;;
 
-external size_of_int : int -> size = "identity"
+external size_of_int : int -> size = "%identity"
 ;;
-external int_of_size : size -> int = "identity"
+external int_of_size : size -> int = "%identity"
 ;;
 
 (* Tokens are one of the following : *)

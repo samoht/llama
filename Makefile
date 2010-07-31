@@ -194,5 +194,5 @@ configure-in-situ:
 .PHONY: configure-in-situ
 
 llamac-new: $(UTILS:.cmx=.cmo) $(PARSING:.cmx=.cmo) $(TYPING:.cmx=.cmo) $(BYTECOMP:.cmx=.cmo) $(DRIVER:.cmx=.cmo)
-	$(OCAMLC) -custom $(FLAGS) -o $@ $^
+	$(OCAMLC) $(FLAGS) -o $@ $^
 

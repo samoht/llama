@@ -371,403 +371,394 @@ let mk__ f =
   "<file>  Treat <file> as a file name (even if it starts with `-')"
 ;;
 
-module type Bytecomp_options = sig
-  val _a : unit -> unit
-  val _annot : unit -> unit
-  val _c : unit -> unit
-  val _cc : string -> unit
-  val _cclib : string -> unit
-  val _ccopt : string -> unit
-  val _config : unit -> unit
-  val _custom : unit -> unit
-  val _dllib : string -> unit
-  val _dllpath : string -> unit
-  val _g : unit -> unit
-  val _i : unit -> unit
-  val _I : string -> unit
-  val _impl : string -> unit
-  val _intf : string -> unit
-  val _intf_suffix : string -> unit
-  val _labels : unit -> unit
-  val _linkall : unit -> unit
-  val _make_runtime : unit -> unit
-  val _no_app_funct : unit -> unit
-  val _noassert : unit -> unit
-  val _noautolink : unit -> unit
-  val _nolabels : unit -> unit
-  val _nostdlib : unit -> unit
-  val _o : string -> unit
-  val _output_obj : unit -> unit
-  val _pack : unit -> unit
-  val _pp : string -> unit
-  val _principal : unit -> unit
-  val _rectypes : unit -> unit
-  val _strict_sequence : unit -> unit
-  val _thread : unit -> unit
-  val _vmthread : unit -> unit
-  val _unsafe : unit -> unit
-  val _use_runtime : string -> unit
-  val _v : unit -> unit
-  val _version : unit -> unit
-  val _vnum : unit -> unit
-  val _verbose : unit -> unit
-  val _w : string -> unit
-  val _warn_error : string -> unit
-  val _warn_help : unit -> unit
-  val _where : unit -> unit
+type bytecomp_options = {
+    bc_a : unit -> unit;
+    bc_annot : unit -> unit;
+    bc_c : unit -> unit;
+    bc_cc : string -> unit;
+    bc_cclib : string -> unit;
+    bc_ccopt : string -> unit;
+    bc_config : unit -> unit;
+    bc_custom : unit -> unit;
+    bc_dllib : string -> unit;
+    bc_dllpath : string -> unit;
+    bc_g : unit -> unit;
+    bc_i : unit -> unit;
+    bc_I : string -> unit;
+    bc_impl : string -> unit;
+    bc_intf : string -> unit;
+    bc_intf_suffix : string -> unit;
+    bc_labels : unit -> unit;
+    bc_linkall : unit -> unit;
+    bc_make_runtime : unit -> unit;
+    bc_no_app_funct : unit -> unit;
+    bc_noassert : unit -> unit;
+    bc_noautolink : unit -> unit;
+    bc_nolabels : unit -> unit;
+    bc_nostdlib : unit -> unit;
+    bc_o : string -> unit;
+    bc_output_obj : unit -> unit;
+    bc_pack : unit -> unit;
+    bc_pp : string -> unit;
+    bc_principal : unit -> unit;
+    bc_rectypes : unit -> unit;
+    bc_strict_sequence : unit -> unit;
+    bc_thread : unit -> unit;
+    bc_vmthread : unit -> unit;
+    bc_unsafe : unit -> unit;
+    bc_use_runtime : string -> unit;
+    bc_v : unit -> unit;
+    bc_version : unit -> unit;
+    bc_vnum : unit -> unit;
+    bc_verbose : unit -> unit;
+    bc_w : string -> unit;
+    bc_warn_error : string -> unit;
+    bc_warn_help : unit -> unit;
+    bc_where : unit -> unit;
 
-  val _nopervasives : unit -> unit
-  val _use_prims : string -> unit
-  val _dparsetree : unit -> unit
-  val _drawlambda : unit -> unit
-  val _dlambda : unit -> unit
-  val _dinstr : unit -> unit
+    bc_nopervasives : unit -> unit;
+    bc_use_prims : string -> unit;
+    bc_dparsetree : unit -> unit;
+    bc_drawlambda : unit -> unit;
+    bc_dlambda : unit -> unit;
+    bc_dinstr : unit -> unit;
 
-  val anonymous : string -> unit
-end;;
+    bc_anonymous : string -> unit;
+}
 
-module type Bytetop_options = sig
-  val _I : string -> unit
-  val _init : string -> unit
-  val _labels : unit -> unit
-  val _no_app_funct : unit -> unit
-  val _noassert : unit -> unit
-  val _nolabels : unit -> unit
-  val _noprompt : unit -> unit
-  val _nostdlib : unit -> unit
-  val _principal : unit -> unit
-  val _rectypes : unit -> unit
-  val _strict_sequence : unit -> unit
-  val _unsafe : unit -> unit
-  val _version : unit -> unit
-  val _vnum : unit -> unit
-  val _w : string -> unit
-  val _warn_error : string -> unit
-  val _warn_help : unit -> unit
+type bytetop_options = {
+  bt_I : string -> unit;
+  bt_init : string -> unit;
+  bt_labels : unit -> unit;
+  bt_no_app_funct : unit -> unit;
+  bt_noassert : unit -> unit;
+  bt_nolabels : unit -> unit;
+  bt_noprompt : unit -> unit;
+  bt_nostdlib : unit -> unit;
+  bt_principal : unit -> unit;
+  bt_rectypes : unit -> unit;
+  bt_strict_sequence : unit -> unit;
+  bt_unsafe : unit -> unit;
+  bt_version : unit -> unit;
+  bt_vnum : unit -> unit;
+  bt_w : string -> unit;
+  bt_warn_error : string -> unit;
+  bt_warn_help : unit -> unit;
 
-  val _dparsetree : unit -> unit
-  val _drawlambda : unit -> unit
-  val _dlambda : unit -> unit
-  val _dinstr : unit -> unit
+  bt_dparsetree : unit -> unit;
+  bt_drawlambda : unit -> unit;
+  bt_dlambda : unit -> unit;
+  bt_dinstr : unit -> unit;
 
-  val anonymous : string -> unit
-end;;
+  bt_anonymous : string -> unit;
+}
 
-module type Optcomp_options = sig
-  val _a : unit -> unit
-  val _annot : unit -> unit
-  val _c : unit -> unit
-  val _cc : string -> unit
-  val _cclib : string -> unit
-  val _ccopt : string -> unit
-  val _compact : unit -> unit
-  val _config : unit -> unit
-  val _for_pack : string -> unit
-  val _g : unit -> unit
-  val _i : unit -> unit
-  val _I : string -> unit
-  val _impl : string -> unit
-  val _inline : int -> unit
-  val _intf : string -> unit
-  val _intf_suffix : string -> unit
-  val _labels : unit -> unit
-  val _linkall : unit -> unit
-  val _no_app_funct : unit -> unit
-  val _noassert : unit -> unit
-  val _noautolink : unit -> unit
-  val _nodynlink : unit -> unit
-  val _nolabels : unit -> unit
-  val _nostdlib : unit -> unit
-  val _o : string -> unit
-  val _output_obj : unit -> unit
-  val _p : unit -> unit
-  val _pack : unit -> unit
-  val _pp : string -> unit
-  val _principal : unit -> unit
-  val _rectypes : unit -> unit
-  val _strict_sequence : unit -> unit
-  val _shared : unit -> unit
-  val _S : unit -> unit
-  val _thread : unit -> unit
-  val _unsafe : unit -> unit
-  val _v : unit -> unit
-  val _version : unit -> unit
-  val _vnum : unit -> unit
-  val _verbose : unit -> unit
-  val _w : string -> unit
-  val _warn_error : string -> unit
-  val _warn_help : unit -> unit
-  val _where : unit -> unit
+type optcomp_options = {
+  oc_a : unit -> unit;
+  oc_annot : unit -> unit;
+  oc_c : unit -> unit;
+  oc_cc : string -> unit;
+  oc_cclib : string -> unit;
+  oc_ccopt : string -> unit;
+  oc_compact : unit -> unit;
+  oc_config : unit -> unit;
+  oc_for_pack : string -> unit;
+  oc_g : unit -> unit;
+  oc_i : unit -> unit;
+  oc_I : string -> unit;
+  oc_impl : string -> unit;
+  oc_inline : int -> unit;
+  oc_intf : string -> unit;
+  oc_intf_suffix : string -> unit;
+  oc_labels : unit -> unit;
+  oc_linkall : unit -> unit;
+  oc_no_app_funct : unit -> unit;
+  oc_noassert : unit -> unit;
+  oc_noautolink : unit -> unit;
+  oc_nodynlink : unit -> unit;
+  oc_nolabels : unit -> unit;
+  oc_nostdlib : unit -> unit;
+  oc_o : string -> unit;
+  oc_output_obj : unit -> unit;
+  oc_p : unit -> unit;
+  oc_pack : unit -> unit;
+  oc_pp : string -> unit;
+  oc_principal : unit -> unit;
+  oc_rectypes : unit -> unit;
+  oc_strict_sequence : unit -> unit;
+  oc_shared : unit -> unit;
+  oc_S : unit -> unit;
+  oc_thread : unit -> unit;
+  oc_unsafe : unit -> unit;
+  oc_v : unit -> unit;
+  oc_version : unit -> unit;
+  oc_vnum : unit -> unit;
+  oc_verbose : unit -> unit;
+  oc_w : string -> unit;
+  oc_warn_error : string -> unit;
+  oc_warn_help : unit -> unit;
+  oc_where : unit -> unit;
 
-  val _nopervasives : unit -> unit
-  val _dparsetree : unit -> unit
-  val _drawlambda : unit -> unit
-  val _dlambda : unit -> unit
-  val _dcmm : unit -> unit
-  val _dsel : unit -> unit
-  val _dcombine : unit -> unit
-  val _dlive : unit -> unit
-  val _dspill : unit -> unit
-  val _dsplit : unit -> unit
-  val _dinterf : unit -> unit
-  val _dprefer : unit -> unit
-  val _dalloc : unit -> unit
-  val _dreload : unit -> unit
-  val _dscheduling :  unit -> unit
-  val _dlinear :  unit -> unit
-  val _dstartup :  unit -> unit
+  oc_nopervasives : unit -> unit;
+  oc_dparsetree : unit -> unit;
+  oc_drawlambda : unit -> unit;
+  oc_dlambda : unit -> unit;
+  oc_dcmm : unit -> unit;
+  oc_dsel : unit -> unit;
+  oc_dcombine : unit -> unit;
+  oc_dlive : unit -> unit;
+  oc_dspill : unit -> unit;
+  oc_dsplit : unit -> unit;
+  oc_dinterf : unit -> unit;
+  oc_dprefer : unit -> unit;
+  oc_dalloc : unit -> unit;
+  oc_dreload : unit -> unit;
+  oc_dscheduling :  unit -> unit;
+  oc_dlinear :  unit -> unit;
+  oc_dstartup :  unit -> unit;
 
-  val anonymous : string -> unit
-end;;
+  oc_anonymous : string -> unit;
+}
 
-module type Opttop_options = sig
-  val _compact : unit -> unit
-  val _I : string -> unit
-  val _init : string -> unit
-  val _inline : int -> unit
-  val _labels : unit -> unit
-  val _no_app_funct : unit -> unit
-  val _noassert : unit -> unit
-  val _nolabels : unit -> unit
-  val _noprompt : unit -> unit
-  val _nostdlib : unit -> unit
-  val _principal : unit -> unit
-  val _rectypes : unit -> unit
-  val _strict_sequence : unit -> unit
-  val _S : unit -> unit
-  val _unsafe : unit -> unit
-  val _version : unit -> unit
-  val _vnum : unit -> unit
-  val _w : string -> unit
-  val _warn_error : string -> unit
-  val _warn_help : unit -> unit
+type opttop_options = {
+  ot_compact : unit -> unit;
+  ot_I : string -> unit;
+  ot_init : string -> unit;
+  ot_inline : int -> unit;
+  ot_labels : unit -> unit;
+  ot_no_app_funct : unit -> unit;
+  ot_noassert : unit -> unit;
+  ot_nolabels : unit -> unit;
+  ot_noprompt : unit -> unit;
+  ot_nostdlib : unit -> unit;
+  ot_principal : unit -> unit;
+  ot_rectypes : unit -> unit;
+  ot_strict_sequence : unit -> unit;
+  ot_S : unit -> unit;
+  ot_unsafe : unit -> unit;
+  ot_version : unit -> unit;
+  ot_vnum : unit -> unit;
+  ot_w : string -> unit;
+  ot_warn_error : string -> unit;
+  ot_warn_help : unit -> unit;
 
-  val _dparsetree : unit -> unit
-  val _drawlambda : unit -> unit
-  val _dlambda : unit -> unit
-  val _dcmm : unit -> unit
-  val _dsel : unit -> unit
-  val _dcombine : unit -> unit
-  val _dlive : unit -> unit
-  val _dspill : unit -> unit
-  val _dsplit : unit -> unit
-  val _dinterf : unit -> unit
-  val _dprefer : unit -> unit
-  val _dalloc : unit -> unit
-  val _dreload : unit -> unit
-  val _dscheduling :  unit -> unit
-  val _dlinear :  unit -> unit
-  val _dstartup :  unit -> unit
+  ot_dparsetree : unit -> unit;
+  ot_drawlambda : unit -> unit;
+  ot_dlambda : unit -> unit;
+  ot_dcmm : unit -> unit;
+  ot_dsel : unit -> unit;
+  ot_dcombine : unit -> unit;
+  ot_dlive : unit -> unit;
+  ot_dspill : unit -> unit;
+  ot_dsplit : unit -> unit;
+  ot_dinterf : unit -> unit;
+  ot_dprefer : unit -> unit;
+  ot_dalloc : unit -> unit;
+  ot_dreload : unit -> unit;
+  ot_dscheduling :  unit -> unit;
+  ot_dlinear :  unit -> unit;
+  ot_dstartup :  unit -> unit;
 
-  val anonymous : string -> unit
-end;;
+  ot_anonymous : string -> unit;
+}
 
-module type Arg_list = sig
-    val list : (string * Arg.spec * string) list
-end;;
+type arg_list = (string * Arg.spec * string) list;;
 
-module Make_bytecomp_options (F : Bytecomp_options) =
-struct
-  let list = [
-    mk_a F._a;
-    mk_annot F._annot;
-    mk_c F._c;
-    mk_cc F._cc;
-    mk_cclib F._cclib;
-    mk_ccopt F._ccopt;
-    mk_config F._config;
-    mk_custom F._custom;
-    mk_dllib F._dllib;
-    mk_dllpath F._dllpath;
-    mk_dtypes F._annot;
+let make_bytecomp_options (f : bytecomp_options) =
+  [
+    mk_a f.bc_a;
+    mk_annot f.bc_annot;
+    mk_c f.bc_c;
+    mk_cc f.bc_cc;
+    mk_cclib f.bc_cclib;
+    mk_ccopt f.bc_ccopt;
+    mk_config f.bc_config;
+    mk_custom f.bc_custom;
+    mk_dllib f.bc_dllib;
+    mk_dllpath f.bc_dllpath;
+    mk_dtypes f.bc_annot;
     mk_for_pack_byt ();
-    mk_g_byt F._g;
-    mk_i F._i;
-    mk_I F._I;
-    mk_impl F._impl;
-    mk_intf F._intf;
-    mk_intf_suffix F._intf_suffix;
-    mk_intf_suffix_2 F._intf_suffix;
-    mk_labels F._labels;
-    mk_linkall F._linkall;
-    mk_make_runtime F._make_runtime;
-    mk_make_runtime_2 F._make_runtime;
-    mk_modern F._labels;
-    mk_no_app_funct F._no_app_funct;
-    mk_noassert F._noassert;
-    mk_noautolink_byt F._noautolink;
-    mk_nolabels F._nolabels;
-    mk_nostdlib F._nostdlib;
-    mk_o F._o;
-    mk_output_obj F._output_obj;
-    mk_pack_byt F._pack;
-    mk_pp F._pp;
-    mk_principal F._principal;
-    mk_rectypes F._rectypes;
-    mk_strict_sequence F._strict_sequence;
-    mk_thread F._thread;
-    mk_unsafe F._unsafe;
-    mk_use_runtime F._use_runtime;
-    mk_use_runtime_2 F._use_runtime;
-    mk_v F._v;
-    mk_version F._version;
-    mk_vnum F._vnum;
-    mk_verbose F._verbose;
-    mk_vmthread F._vmthread;
-    mk_w F._w;
-    mk_warn_error F._warn_error;
-    mk_warn_help F._warn_help;
-    mk_where F._where;
+    mk_g_byt f.bc_g;
+    mk_i f.bc_i;
+    mk_I f.bc_I;
+    mk_impl f.bc_impl;
+    mk_intf f.bc_intf;
+    mk_intf_suffix f.bc_intf_suffix;
+    mk_intf_suffix_2 f.bc_intf_suffix;
+    mk_labels f.bc_labels;
+    mk_linkall f.bc_linkall;
+    mk_make_runtime f.bc_make_runtime;
+    mk_make_runtime_2 f.bc_make_runtime;
+    mk_modern f.bc_labels;
+    mk_no_app_funct f.bc_no_app_funct;
+    mk_noassert f.bc_noassert;
+    mk_noautolink_byt f.bc_noautolink;
+    mk_nolabels f.bc_nolabels;
+    mk_nostdlib f.bc_nostdlib;
+    mk_o f.bc_o;
+    mk_output_obj f.bc_output_obj;
+    mk_pack_byt f.bc_pack;
+    mk_pp f.bc_pp;
+    mk_principal f.bc_principal;
+    mk_rectypes f.bc_rectypes;
+    mk_strict_sequence f.bc_strict_sequence;
+    mk_thread f.bc_thread;
+    mk_unsafe f.bc_unsafe;
+    mk_use_runtime f.bc_use_runtime;
+    mk_use_runtime_2 f.bc_use_runtime;
+    mk_v f.bc_v;
+    mk_version f.bc_version;
+    mk_vnum f.bc_vnum;
+    mk_verbose f.bc_verbose;
+    mk_vmthread f.bc_vmthread;
+    mk_w f.bc_w;
+    mk_warn_error f.bc_warn_error;
+    mk_warn_help f.bc_warn_help;
+    mk_where f.bc_where;
 
-    mk_nopervasives F._nopervasives;
-    mk_use_prims F._use_prims;
-    mk_dparsetree F._dparsetree;
-    mk_drawlambda F._drawlambda;
-    mk_dlambda F._dlambda;
-    mk_dinstr F._dinstr;
+    mk_nopervasives f.bc_nopervasives;
+    mk_use_prims f.bc_use_prims;
+    mk_dparsetree f.bc_dparsetree;
+    mk_drawlambda f.bc_drawlambda;
+    mk_dlambda f.bc_dlambda;
+    mk_dinstr f.bc_dinstr;
 
-    mk__ F.anonymous;
+    mk__ f.bc_anonymous;
   ]
-end;;
 
-module Make_bytetop_options (F : Bytetop_options) =
-struct
-  let list = [
-    mk_I F._I;
-    mk_init F._init;
-    mk_labels F._labels;
-    mk_no_app_funct F._no_app_funct;
-    mk_noassert F._noassert;
-    mk_nolabels F._nolabels;
-    mk_noprompt F._noprompt;
-    mk_nostdlib F._nostdlib;
-    mk_principal F._principal;
-    mk_rectypes F._rectypes;
-    mk_strict_sequence F._strict_sequence;
-    mk_unsafe F._unsafe;
-    mk_version F._version;
-    mk_vnum F._vnum;
-    mk_w F._w;
-    mk_warn_error F._warn_error;
-    mk_warn_help F._warn_help;
+let make_bytetop_options (f : bytetop_options) =
+  [
+    mk_I f.bt_I;
+    mk_init f.bt_init;
+    mk_labels f.bt_labels;
+    mk_no_app_funct f.bt_no_app_funct;
+    mk_noassert f.bt_noassert;
+    mk_nolabels f.bt_nolabels;
+    mk_noprompt f.bt_noprompt;
+    mk_nostdlib f.bt_nostdlib;
+    mk_principal f.bt_principal;
+    mk_rectypes f.bt_rectypes;
+    mk_strict_sequence f.bt_strict_sequence;
+    mk_unsafe f.bt_unsafe;
+    mk_version f.bt_version;
+    mk_vnum f.bt_vnum;
+    mk_w f.bt_w;
+    mk_warn_error f.bt_warn_error;
+    mk_warn_help f.bt_warn_help;
 
-    mk_dparsetree F._dparsetree;
-    mk_drawlambda F._drawlambda;
-    mk_dlambda F._dlambda;
-    mk_dinstr F._dinstr;
+    mk_dparsetree f.bt_dparsetree;
+    mk_drawlambda f.bt_drawlambda;
+    mk_dlambda f.bt_dlambda;
+    mk_dinstr f.bt_dinstr;
 
-    mk__ F.anonymous;
+    mk__ f.bt_anonymous;
   ]
-end;;
 
-module Make_optcomp_options (F : Optcomp_options) =
-struct
-  let list = [
-    mk_a F._a;
-    mk_annot F._annot;
-    mk_c F._c;
-    mk_cc F._cc;
-    mk_cclib F._cclib;
-    mk_ccopt F._ccopt;
-    mk_compact F._compact;
-    mk_config F._config;
-    mk_dtypes F._annot;
-    mk_for_pack_opt F._for_pack;
-    mk_g_opt F._g;
-    mk_i F._i;
-    mk_I F._I;
-    mk_impl F._impl;
-    mk_inline F._inline;
-    mk_intf F._intf;
-    mk_intf_suffix F._intf_suffix;
-    mk_labels F._labels;
-    mk_linkall F._linkall;
-    mk_no_app_funct F._no_app_funct;
-    mk_noassert F._noassert;
-    mk_noautolink_opt F._noautolink;
-    mk_nodynlink F._nodynlink;
-    mk_nolabels F._nolabels;
-    mk_nostdlib F._nostdlib;
-    mk_o F._o;
-    mk_output_obj F._output_obj;
-    mk_p F._p;
-    mk_pack_opt F._pack;
-    mk_pp F._pp;
-    mk_principal F._principal;
-    mk_rectypes F._rectypes;
-    mk_S F._S;
-    mk_strict_sequence F._strict_sequence;
-    mk_shared F._shared;
-    mk_thread F._thread;
-    mk_unsafe F._unsafe;
-    mk_v F._v;
-    mk_version F._version;
-    mk_vnum F._vnum;
-    mk_verbose F._verbose;
-    mk_w F._w;
-    mk_warn_error F._warn_error;
-    mk_warn_help F._warn_help;
-    mk_where F._where;
+let make_optcomp_options (f : optcomp_options) =
+  [
+    mk_a f.oc_a;
+    mk_annot f.oc_annot;
+    mk_c f.oc_c;
+    mk_cc f.oc_cc;
+    mk_cclib f.oc_cclib;
+    mk_ccopt f.oc_ccopt;
+    mk_compact f.oc_compact;
+    mk_config f.oc_config;
+    mk_dtypes f.oc_annot;
+    mk_for_pack_opt f.oc_for_pack;
+    mk_g_opt f.oc_g;
+    mk_i f.oc_i;
+    mk_I f.oc_I;
+    mk_impl f.oc_impl;
+    mk_inline f.oc_inline;
+    mk_intf f.oc_intf;
+    mk_intf_suffix f.oc_intf_suffix;
+    mk_labels f.oc_labels;
+    mk_linkall f.oc_linkall;
+    mk_no_app_funct f.oc_no_app_funct;
+    mk_noassert f.oc_noassert;
+    mk_noautolink_opt f.oc_noautolink;
+    mk_nodynlink f.oc_nodynlink;
+    mk_nolabels f.oc_nolabels;
+    mk_nostdlib f.oc_nostdlib;
+    mk_o f.oc_o;
+    mk_output_obj f.oc_output_obj;
+    mk_p f.oc_p;
+    mk_pack_opt f.oc_pack;
+    mk_pp f.oc_pp;
+    mk_principal f.oc_principal;
+    mk_rectypes f.oc_rectypes;
+    mk_S f.oc_S;
+    mk_strict_sequence f.oc_strict_sequence;
+    mk_shared f.oc_shared;
+    mk_thread f.oc_thread;
+    mk_unsafe f.oc_unsafe;
+    mk_v f.oc_v;
+    mk_version f.oc_version;
+    mk_vnum f.oc_vnum;
+    mk_verbose f.oc_verbose;
+    mk_w f.oc_w;
+    mk_warn_error f.oc_warn_error;
+    mk_warn_help f.oc_warn_help;
+    mk_where f.oc_where;
 
-    mk_nopervasives F._nopervasives;
-    mk_dparsetree F._dparsetree;
-    mk_drawlambda F._drawlambda;
-    mk_dlambda F._dlambda;
-    mk_dcmm F._dcmm;
-    mk_dsel F._dsel;
-    mk_dcombine F._dcombine;
-    mk_dlive F._dlive;
-    mk_dspill F._dspill;
-    mk_dinterf F._dinterf;
-    mk_dprefer F._dprefer;
-    mk_dalloc F._dalloc;
-    mk_dreload F._dreload;
-    mk_dscheduling F._dscheduling;
-    mk_dlinear F._dlinear;
-    mk_dstartup F._dstartup;
+    mk_nopervasives f.oc_nopervasives;
+    mk_dparsetree f.oc_dparsetree;
+    mk_drawlambda f.oc_drawlambda;
+    mk_dlambda f.oc_dlambda;
+    mk_dcmm f.oc_dcmm;
+    mk_dsel f.oc_dsel;
+    mk_dcombine f.oc_dcombine;
+    mk_dlive f.oc_dlive;
+    mk_dspill f.oc_dspill;
+    mk_dinterf f.oc_dinterf;
+    mk_dprefer f.oc_dprefer;
+    mk_dalloc f.oc_dalloc;
+    mk_dreload f.oc_dreload;
+    mk_dscheduling f.oc_dscheduling;
+    mk_dlinear f.oc_dlinear;
+    mk_dstartup f.oc_dstartup;
 
-    mk__ F.anonymous;
+    mk__ f.oc_anonymous;
   ]
-end;;
 
-module Make_opttop_options (F : Opttop_options) = struct
-  let list = [
-    mk_compact F._compact;
-    mk_I F._I;
-    mk_init F._init;
-    mk_inline F._inline;
-    mk_labels F._labels;
-    mk_no_app_funct F._no_app_funct;
-    mk_noassert F._noassert;
-    mk_nolabels F._nolabels;
-    mk_noprompt F._noprompt;
-    mk_nostdlib F._nostdlib;
-    mk_principal F._principal;
-    mk_rectypes F._rectypes;
-    mk_S F._S;
-    mk_strict_sequence F._strict_sequence;
-    mk_unsafe F._unsafe;
-    mk_version F._version;
-    mk_vnum F._vnum;
-    mk_w F._w;
-    mk_warn_error F._warn_error;
-    mk_warn_help F._warn_help;
+let make_opttop_options (f : opttop_options) =
+  [
+    mk_compact f.ot_compact;
+    mk_I f.ot_I;
+    mk_init f.ot_init;
+    mk_inline f.ot_inline;
+    mk_labels f.ot_labels;
+    mk_no_app_funct f.ot_no_app_funct;
+    mk_noassert f.ot_noassert;
+    mk_nolabels f.ot_nolabels;
+    mk_noprompt f.ot_noprompt;
+    mk_nostdlib f.ot_nostdlib;
+    mk_principal f.ot_principal;
+    mk_rectypes f.ot_rectypes;
+    mk_S f.ot_S;
+    mk_strict_sequence f.ot_strict_sequence;
+    mk_unsafe f.ot_unsafe;
+    mk_version f.ot_version;
+    mk_vnum f.ot_vnum;
+    mk_w f.ot_w;
+    mk_warn_error f.ot_warn_error;
+    mk_warn_help f.ot_warn_help;
 
-    mk_dparsetree F._dparsetree;
-    mk_drawlambda F._drawlambda;
-    mk_dcmm F._dcmm;
-    mk_dsel F._dsel;
-    mk_dcombine F._dcombine;
-    mk_dlive F._dlive;
-    mk_dspill F._dspill;
-    mk_dinterf F._dinterf;
-    mk_dprefer F._dprefer;
-    mk_dalloc F._dalloc;
-    mk_dreload F._dreload;
-    mk_dscheduling F._dscheduling;
-    mk_dlinear F._dlinear;
-    mk_dstartup F._dstartup;
+    mk_dparsetree f.ot_dparsetree;
+    mk_drawlambda f.ot_drawlambda;
+    mk_dcmm f.ot_dcmm;
+    mk_dsel f.ot_dsel;
+    mk_dcombine f.ot_dcombine;
+    mk_dlive f.ot_dlive;
+    mk_dspill f.ot_dspill;
+    mk_dinterf f.ot_dinterf;
+    mk_dprefer f.ot_dprefer;
+    mk_dalloc f.ot_dalloc;
+    mk_dreload f.ot_dreload;
+    mk_dscheduling f.ot_dscheduling;
+    mk_dlinear f.ot_dlinear;
+    mk_dstartup f.ot_dstartup;
 
-    mk__ F.anonymous;
+    mk__ f.ot_anonymous;
   ]
-end;;

@@ -85,61 +85,63 @@ let show_config () =
   exit 0;
 ;;
 
-module Options = Main_args.Make_bytecomp_options (struct
-  let set r () = r := true
-  let unset r () = r := false
-  let _a = set make_archive
-  let _annot = set annotations
-  let _c = set compile_only
-  let _cc s = c_compiler := Some s
-  let _cclib s = ccobjs := Misc.rev_split_words s @ !ccobjs
-  let _ccopt s = ccopts := s :: !ccopts
-  let _config = show_config
-  let _custom = set custom_runtime
-  let _dllib s = dllibs := Misc.rev_split_words s @ !dllibs
-  let _dllpath s = dllpaths := !dllpaths @ [s]
-  let _g = set debug
-  let _i () = print_types := true; compile_only := true
-  let _I s = include_dirs := s :: !include_dirs
-  let _impl = impl
-  let _intf = intf
-  let _intf_suffix s = Config.interface_suffix := s
-  let _labels = unset classic
-  let _linkall = set link_everything
-  let _make_runtime () =
-    custom_runtime := true; make_runtime := true; link_everything := true
-  let _no_app_funct = unset applicative_functors
-  let _noassert = set noassert
-  let _nolabels = set classic
-  let _noautolink = set no_auto_link
-  let _nostdlib = set no_std_include
-  let _o s = output_name := Some s
-  let _output_obj () = output_c_object := true; custom_runtime := true
-  let _pack = set make_package
-  let _pp s = preprocessor := Some s
-  let _principal = set principal
-  let _rectypes = set recursive_types
-  let _strict_sequence = set strict_sequence
-  let _thread = set use_threads
-  let _vmthread = set use_vmthreads
-  let _unsafe = set fast
-  let _use_prims s = use_prims := s
-  let _use_runtime s = use_runtime := s
-  let _v = print_version_and_library
-  let _version = print_version_string
-  let _vnum = print_version_string
-  let _w = (Warnings.parse_options false)
-  let _warn_error = (Warnings.parse_options true)
-  let _warn_help = (fun () -> ()) (* Warnings.help_warnings xxx *)
-  let _where = print_standard_library
-  let _verbose = set verbose
-  let _nopervasives = set nopervasives
-  let _dparsetree = set dump_parsetree
-  let _drawlambda = set dump_rawlambda
-  let _dlambda = set dump_lambda
-  let _dinstr = set dump_instr
-  let anonymous = anonymous
-end)
+let set r () = r := true
+let unset r () = r := false
+
+open Main_args
+let options = make_bytecomp_options {
+  bc_a = set make_archive;
+  bc_annot = set annotations;
+  bc_c = set compile_only;
+  bc_cc = (fun s -> c_compiler := Some s);
+  bc_cclib = (fun s -> ccobjs := Misc.rev_split_words s @ !ccobjs);
+  bc_ccopt = (fun s -> ccopts := s :: !ccopts);
+  bc_config = show_config;
+  bc_custom = set custom_runtime;
+  bc_dllib = (fun s -> dllibs := Misc.rev_split_words s @ !dllibs);
+  bc_dllpath = (fun s -> dllpaths := !dllpaths @ [s]);
+  bc_g = set debug;
+  bc_i = (fun () -> print_types := true; compile_only := true);
+  bc_I = (fun s -> include_dirs := s :: !include_dirs);
+  bc_impl = impl;
+  bc_intf = intf;
+  bc_intf_suffix = (fun s -> Config.interface_suffix := s);
+  bc_labels = unset classic;
+  bc_linkall = set link_everything;
+  bc_make_runtime = (fun () ->
+    custom_runtime := true; make_runtime := true; link_everything := true);
+  bc_no_app_funct = unset applicative_functors;
+  bc_noassert = set noassert;
+  bc_nolabels = set classic;
+  bc_noautolink = set no_auto_link;
+  bc_nostdlib = set no_std_include;
+  bc_o = (fun s -> output_name := Some s);
+  bc_output_obj = (fun () -> output_c_object := true; custom_runtime := true);
+  bc_pack = set make_package;
+  bc_pp = (fun s -> preprocessor := Some s);
+  bc_principal = set principal;
+  bc_rectypes = set recursive_types;
+  bc_strict_sequence = set strict_sequence;
+  bc_thread = set use_threads;
+  bc_vmthread = set use_vmthreads;
+  bc_unsafe = set fast;
+  bc_use_prims = (fun s -> use_prims := s);
+  bc_use_runtime = (fun s -> use_runtime := s);
+  bc_v = print_version_and_library;
+  bc_version = print_version_string;
+  bc_vnum = print_version_string;
+  bc_w = (Warnings.parse_options false);
+  bc_warn_error = (Warnings.parse_options true);
+  bc_warn_help = Warnings.help_warnings;
+  bc_where = print_standard_library;
+  bc_verbose = set verbose;
+  bc_nopervasives = set nopervasives;
+  bc_dparsetree = set dump_parsetree;
+  bc_drawlambda = set dump_rawlambda;
+  bc_dlambda = set dump_lambda;
+  bc_dinstr = set dump_instr;
+  bc_anonymous = anonymous;
+}
 
 let fatal err =
   prerr_endline err;
@@ -155,7 +157,7 @@ let default_output = function
 
 let main () =
   try
-    Arg.parse Options.list anonymous usage;
+    Arg.parse options anonymous usage;
     if
       List.length (List.filter (fun x -> !x)
                       [make_archive;make_package;compile_only;output_c_object])
