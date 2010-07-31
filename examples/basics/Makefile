@@ -1,20 +1,22 @@
+LLAMAC=../../llamac
+
 all: fib wc sieve
 .PHONY: all
 
 fib: fib.cmo
-	llamac -o $@ $^
+	$(LLAMAC) -o $@ $^
 
 wc: wc.cmo
-	llamac -o $@ $^
+	$(LLAMAC) -o $@ $^
 
 sieve: sieve.cmo
-	llamac -o $@ $^
+	$(LLAMAC) -o $@ $^
 
 %.cmi: %.mli
-	llamac -c $<
+	$(LLAMAC) -c $<
 
 %.cmo: %.ml
-	llamac -c $<
+	$(LLAMAC) -c $<
 
 clean:
 	rm -f fib wc sieve

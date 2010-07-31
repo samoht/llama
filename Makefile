@@ -1,10 +1,10 @@
 include config/Makefile
 
 OCAMLC=boot/llamac
-OCAMLOPT=ocamlopt.opt
-OCAMLDEP=ocamldep.opt
-OCAMLLEX=ocamllex.opt
-OCAMLYACC=ocamlyacc
+OCAMLOPT=ocamlopt
+OCAMLDEP=boot/llamadep
+OCAMLLEX=boot/llamalex
+OCAMLYACC=boot/llamayacc
 INCLUDES=-I utils -I parsing -I typing -I bytecomp -I driver -I toplevel
 FLAGS=-g $(INCLUDES)
 

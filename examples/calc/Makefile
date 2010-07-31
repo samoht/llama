@@ -1,19 +1,23 @@
+LLAMAC=../../llamac
+LLAMALEX=../../boot/llamalex
+LLAMAYACC=../../boot/llamayacc
+
 all: calc
 
 lexer.ml: lexer.mll
-	ocamllex $<
+	$(LLAMALEX) $<
 
 parser.ml parser.mli: parser.mly
-	ocamlyacc $<
+	$(LLAMAYACC) $<
 
 parser.cmi: parser.mli
-	llamac -c $<
+	$(LLAMAC) -c $<
 
 %.cmo: %.ml
-	llamac -c $<
+	$(LLAMAC) -c $<
 
 calc: lexer.cmo parser.cmo calc.cmo
-	llamac -o $@ $^
+	$(LLAMAC) -o $@ $^
 
 parser.cmo: parser.cmi
 lexer.cmo: parser.cmi
@@ -24,5 +28,6 @@ lexer.cmo: parser.cmi
 calc.cmo: parser.cmi lexer.cmo
 
 clean:
-	rm -f lexer.ml parser.ml{,i} *.{cmi,cmo} calc
+	rm -f calc
+	rm -f lexer.ml parser.ml{,i} *.{cmi,cmo}
 .PHONY: clean
