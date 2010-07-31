@@ -56,7 +56,7 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: stdlib_dir llamac llama runtime_dir testprog
+all: stdlib_dir llamac llama testprog
 .PHONY: all
 promote:
 	cp llamac boot/llamac
@@ -109,19 +109,11 @@ bytecomp/runtimedef.ml: byterun/primitives byterun/fail.h
 	 sed -e 's/.*/  "&";/' -e '$$s/;$$//' byterun/primitives; \
 	 echo '|]') > bytecomp/runtimedef.ml
 
-runtime/primitives:
-	cd runtime && make primitives
-runtime/libcaml.a:
-	cd runtime && make libcaml.a
-runtime/libcamld.a:
-	cd runtime && make libcamld.a
-runtime_dir:
-	cd runtime && make
 byterun_dir:
 	cd byterun && make
 stdlib_dir:
 	cd stdlib && make
-.PHONY: runtime_dir stdlib_dir byterun_dir
+.PHONY: stdlib_dir byterun_dir
 
 semiclean:
 	rm -f llama llamac
@@ -131,7 +123,6 @@ semiclean:
 	cd stdlib && make clean
 .PHONY: semiclean
 clean: semiclean
-	cd runtime && make clean
 	cd byterun && make clean
 .PHONY: clean
 
