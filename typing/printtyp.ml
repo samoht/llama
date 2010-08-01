@@ -52,7 +52,7 @@ let int_to_alpha i =
 let type_var_names = ref ([] : (type_variable * string) list)
 let type_var_name_counter = ref 0
 
-let reset_type_var_names () =
+let reset_names () =
   type_var_names := []; type_var_name_counter := 0
 
 let new_type_var_name () =
@@ -77,7 +77,7 @@ let rec tree_of_typexp sch ty =
           | Generic ->
               Otyp_var (false, name_of_type tv)
           | Level _ ->
-              Otyp_var (true, name_of_type tv)
+              Otyp_var (not sch, name_of_type tv)
           | Forward ty ->
               tree_of_typexp sch ty
         end
@@ -94,10 +94,16 @@ and tree_of_typlist sch tyl =
   List.map (tree_of_typexp sch) tyl
 
 let tree_of_type_scheme = tree_of_typexp true
-(*
-and is_non_gen sch ty =
-  sch && ty.desc = Tvar && ty.level <> generic
-*)
+
+let typexp sch ppf ty =
+  !Oprint.out_type ppf (tree_of_typexp sch ty)
+
+let type_expr ppf ty = typexp false ppf ty
+
+let type_sch ppf ty = typexp true ppf ty
+
+let type_scheme ppf ty = reset_names (); type_sch ppf ty
+
 (* ---------------------------------------------------------------------- *)
 (* Printing of types.                                                     *)
 (* ---------------------------------------------------------------------- *)
@@ -106,11 +112,11 @@ let core_type ppf ty =
   !out_type ppf (tree_of_typexp false ty)
 
 let one_type ppf ty =
-  reset_type_var_names ();
+  reset_names ();
   !out_type ppf (tree_of_typexp false ty)
 
 let schema ppf ty =
-  reset_type_var_names ();
+  reset_names ();
   !out_type ppf (tree_of_typexp true ty)
 
 (* ---------------------------------------------------------------------- *)
@@ -147,7 +153,7 @@ let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 (* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =
-  reset_type_var_names ();
+  reset_names ();
   let params =
     List.map (fun tv -> name_of_type tv, (true, true))
       tcs.tcs_params
@@ -239,4 +245,4 @@ let output_schema = convert schema
 let output_type_constr = convert type_constructor
 let output_constr = convert constructor
 let output_label = convert label
-let reset_type_var_name = reset_type_var_names
+let reset_type_var_name = reset_names

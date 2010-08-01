@@ -1,0 +1,91 @@
+odoc_args.cmo: odoc_types.cmi odoc_module.cmo odoc_messages.cmo \
+    odoc_global.cmi odoc_config.cmi ../utils/misc.cmi ../utils/config.cmi \
+    ../utils/clflags.cmi odoc_args.cmi
+odoc_args.cmx: odoc_types.cmx odoc_module.cmx odoc_messages.cmx \
+    odoc_global.cmx odoc_config.cmx ../utils/misc.cmx ../utils/config.cmx \
+    ../utils/clflags.cmx odoc_args.cmi
+odoc_comments_global.cmo: odoc_comments_global.cmi
+odoc_comments_global.cmx: odoc_comments_global.cmi
+odoc_config.cmo: ../utils/config.cmi odoc_config.cmi
+odoc_config.cmx: ../utils/config.cmx odoc_config.cmi
+odoc_control.cmo:
+odoc_control.cmx:
+odoc_env.cmo: ../typing/types.cmo odoc_name.cmi odoc_env.cmi
+odoc_env.cmx: ../typing/types.cmx odoc_name.cmx odoc_env.cmi
+odoc_exception.cmo: ../typing/types.cmo odoc_types.cmi odoc_name.cmi
+odoc_exception.cmx: ../typing/types.cmx odoc_types.cmx odoc_name.cmx
+odoc_global.cmo: ../utils/clflags.cmi odoc_global.cmi
+odoc_global.cmx: ../utils/clflags.cmx odoc_global.cmi
+odoc_inherit.cmo:
+odoc_inherit.cmx:
+odoc_latex_style.cmo:
+odoc_latex_style.cmx:
+odoc_lexer.cmo: odoc_parser.cmi odoc_messages.cmo odoc_comments_global.cmi \
+    odoc_args.cmi
+odoc_lexer.cmx: odoc_parser.cmx odoc_messages.cmx odoc_comments_global.cmx \
+    odoc_args.cmx
+odoc_merge.cmo: odoc_value.cmo odoc_types.cmi odoc_type.cmo \
+    odoc_parameter.cmo odoc_module.cmo odoc_messages.cmo odoc_exception.cmo \
+    odoc_args.cmi odoc_merge.cmi
+odoc_merge.cmx: odoc_value.cmx odoc_types.cmx odoc_type.cmx \
+    odoc_parameter.cmx odoc_module.cmx odoc_messages.cmx odoc_exception.cmx \
+    odoc_args.cmx odoc_merge.cmi
+odoc_messages.cmo: odoc_global.cmi odoc_config.cmi ../utils/config.cmi
+odoc_messages.cmx: odoc_global.cmx odoc_config.cmx ../utils/config.cmx
+odoc_misc.cmo: odoc_types.cmi odoc_messages.cmo ../parsing/longident.cmi \
+    odoc_misc.cmi
+odoc_misc.cmx: odoc_types.cmx odoc_messages.cmx ../parsing/longident.cmx \
+    odoc_misc.cmi
+odoc_module.cmo: odoc_value.cmo odoc_types.cmi odoc_type.cmo odoc_name.cmi \
+    odoc_exception.cmo
+odoc_module.cmx: odoc_value.cmx odoc_types.cmx odoc_type.cmx odoc_name.cmx \
+    odoc_exception.cmx
+odoc_name.cmo: odoc_misc.cmi odoc_name.cmi
+odoc_name.cmx: odoc_misc.cmx odoc_name.cmi
+odoc_parameter.cmo: ../typing/types.cmo odoc_types.cmi
+odoc_parameter.cmx: ../typing/types.cmx odoc_types.cmx
+odoc_parser.cmo: odoc_types.cmi odoc_comments_global.cmi odoc_parser.cmi
+odoc_parser.cmx: odoc_types.cmx odoc_comments_global.cmx odoc_parser.cmi
+odoc_print.cmo: ../typing/printtyp.cmo odoc_print.cmi
+odoc_print.cmx: ../typing/printtyp.cmx odoc_print.cmi
+odoc_see_lexer.cmo: odoc_parser.cmi
+odoc_see_lexer.cmx: odoc_parser.cmx
+odoc_str.cmo: ../typing/types.cmo ../typing/printtyp.cmo odoc_value.cmo \
+    odoc_type.cmo odoc_print.cmi odoc_name.cmi odoc_misc.cmi \
+    odoc_messages.cmo odoc_exception.cmo odoc_str.cmi
+odoc_str.cmx: ../typing/types.cmx ../typing/printtyp.cmx odoc_value.cmx \
+    odoc_type.cmx odoc_print.cmx odoc_name.cmx odoc_misc.cmx \
+    odoc_messages.cmx odoc_exception.cmx odoc_str.cmi
+odoc_text.cmo: odoc_types.cmi odoc_text_parser.cmi odoc_text_lexer.cmo \
+    odoc_text.cmi
+odoc_text.cmx: odoc_types.cmx odoc_text_parser.cmx odoc_text_lexer.cmx \
+    odoc_text.cmi
+odoc_text_lexer.cmo: odoc_text_parser.cmi odoc_misc.cmi
+odoc_text_lexer.cmx: odoc_text_parser.cmx odoc_misc.cmx
+odoc_text_parser.cmo: odoc_types.cmi odoc_misc.cmi odoc_text_parser.cmi
+odoc_text_parser.cmx: odoc_types.cmx odoc_misc.cmx odoc_text_parser.cmi
+odoc_type.cmo: ../typing/types.cmo odoc_types.cmi odoc_name.cmi
+odoc_type.cmx: ../typing/types.cmx odoc_types.cmx odoc_name.cmx
+odoc_types.cmo: odoc_messages.cmo odoc_types.cmi
+odoc_types.cmx: odoc_messages.cmx odoc_types.cmi
+odoc_value.cmo: ../typing/types.cmo odoc_types.cmi odoc_parameter.cmo \
+    odoc_name.cmi
+odoc_value.cmx: ../typing/types.cmx odoc_types.cmx odoc_parameter.cmx \
+    odoc_name.cmx
+odoc_args.cmi: odoc_types.cmi odoc_module.cmo
+odoc_comments_global.cmi:
+odoc_config.cmi:
+odoc_cross.cmi: odoc_types.cmi odoc_module.cmo
+odoc_dag2html.cmi: odoc_info.cmi
+odoc_env.cmi: ../typing/types.cmo odoc_name.cmi
+odoc_global.cmi:
+odoc_merge.cmi: odoc_types.cmi odoc_module.cmo
+odoc_misc.cmi: odoc_types.cmi ../parsing/longident.cmi
+odoc_name.cmi: ../parsing/longident.cmi
+odoc_parser.cmi: odoc_types.cmi
+odoc_print.cmi: ../typing/types.cmo
+odoc_str.cmi: ../typing/types.cmo odoc_value.cmo odoc_type.cmo \
+    odoc_exception.cmo
+odoc_text.cmi: odoc_types.cmi
+odoc_text_parser.cmi: odoc_types.cmi
+odoc_types.cmi:
