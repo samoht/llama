@@ -21,6 +21,7 @@ type t = {
   loc_end: Lexing.position;
   loc_ghost: bool;
 }
+(** A source code location. *)
 
 (* Note on the use of Lexing.position in this module.
    If [pos_fname = ""], then use [!input_name] instead.

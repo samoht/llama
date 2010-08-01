@@ -53,3 +53,5 @@ examples/picomach/exec
 testsuite/_log
 doc/*.html
 doc/style.css
+doc/manual.haux
+doc/manual.htoc
