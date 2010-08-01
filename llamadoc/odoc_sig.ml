@@ -108,7 +108,7 @@ open Odoc_types
 
     let name_comment_from_type_kind pos_end pos_limit tk =
       match tk with
-        Parsetree.Ptype_abstract ->
+        Parsetree.Ptype_abstract | Parsetree.Ptype_abbrev _ ->
           (0, [])
       | Parsetree.Ptype_variant cons_core_type_list_list ->
           let rec f acc cons_core_type_list_list =
@@ -153,7 +153,7 @@ open Odoc_types
 
     let get_type_kind env name_comment_list type_kind =
       match type_kind with
-        Types.Type_abstract ->
+        Types.Type_abstract | Types.Type_abbrev _ ->
           Odoc_type.Type_abstract
 
       | Types.Type_variant l ->

@@ -123,8 +123,6 @@ open Odoc_types
                    match k with
                      RK_module -> "module"
                    | RK_module_type -> "modtype"
-                   | RK_class -> "class"
-                   | RK_class_type -> "classtype"
                    | RK_value -> "val"
                    | RK_type -> "type"
                    | RK_exception -> "exception"

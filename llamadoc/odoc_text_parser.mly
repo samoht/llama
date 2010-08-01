@@ -105,8 +105,6 @@ ele_ref_kind:
 | EXC_REF { Some RK_exception }
 | MOD_REF { Some RK_module }
 | MODT_REF { Some RK_module_type }
-| CLA_REF { Some RK_class }
-| CLT_REF { Some RK_class_type }
 | ATT_REF { Some RK_attribute }
 | MET_REF { Some RK_method }
 | SEC_REF { Some (RK_section [])}

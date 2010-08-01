@@ -162,8 +162,6 @@ let kind_name_exists kind =
 
 let module_exists = kind_name_exists RK_module
 let module_type_exists = kind_name_exists RK_module_type
-let class_exists = kind_name_exists RK_class
-let class_type_exists = kind_name_exists RK_class_type
 let value_exists = kind_name_exists RK_value
 let type_exists = kind_name_exists RK_type
 let exception_exists = kind_name_exists RK_exception
@@ -365,8 +363,6 @@ let not_found_of_kind kind name =
   (match kind with
     RK_module -> Odoc_messages.cross_module_not_found
   | RK_module_type -> Odoc_messages.cross_module_type_not_found
-  | RK_class -> Odoc_messages.cross_class_not_found
-  | RK_class_type -> Odoc_messages.cross_class_type_not_found
   | RK_value -> Odoc_messages.cross_value_not_found
   | RK_type -> Odoc_messages.cross_type_not_found
   | RK_exception -> Odoc_messages.cross_exception_not_found
@@ -474,8 +470,6 @@ let rec assoc_comments_text_elements parent_name module_list t_ele =
                    match kind with
                      RK_module -> module_exists
                    | RK_module_type -> module_type_exists
-                   | RK_class -> class_exists
-                   | RK_class_type -> class_type_exists
                    | RK_value -> value_exists
                    | RK_type -> type_exists
                    | RK_exception -> exception_exists

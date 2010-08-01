@@ -445,10 +445,6 @@ let bs = Buffer.add_string
             match kind with
               Odoc_types.RK_module
             | Odoc_types.RK_module_type
-            | Odoc_types.RK_class
-            | Odoc_types.RK_class_type ->
-                let (html_file, _) = naming_html_files name in
-                (html_file, h name)
             | Odoc_types.RK_value -> (naming_complete_target naming_mark_value name, h name)
             | Odoc_types.RK_type -> (naming_complete_target naming_mark_type name, h name)
             | Odoc_types.RK_exception -> (naming_complete_target naming_mark_exception name, h name)

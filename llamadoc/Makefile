@@ -16,7 +16,7 @@ include ../config/Makefile
 # Various commands and dir
 ##########################
 CAMLRUN=../boot/llamarun
-LLAMAC   = ../llamac
+LLAMAC   = ../llamac -g
 LLAMAOPT = ../llamacompopt.sh
 LLAMADEP = $(CAMLRUN) ../tools/llamadep
 LLAMALEX = $(CAMLRUN) ../boot/llamalex
@@ -24,8 +24,7 @@ LLAMAYACC= ../boot/llamayacc
 LLAMALIB = $(LIBDIR)
 LLAMABIN = $(BINDIR)
 
-#LLAMAPP=-pp './remove_DEBUG'
-LLAMAPP=
+LLAMAPP=-pp './remove_DEBUG'
 
 # For installation
 ##############

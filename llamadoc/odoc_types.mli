@@ -17,8 +17,6 @@
 type ref_kind =
     RK_module
   | RK_module_type
-  | RK_class
-  | RK_class_type
   | RK_value
   | RK_type
   | RK_exception

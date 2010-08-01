@@ -776,3 +776,24 @@ distclean:
 .PHONY: restore runtime runtimeopt makeruntimeopt world world.opt
 
 include .depend
+
+
+
+PUBLIC=stdlib/pervasives.mli \
+  stdlib/array.mli stdlib/list.mli stdlib/char.mli stdlib/string.mli stdlib/sys.mli \
+  stdlib/hashtbl.mli stdlib/sort.mli stdlib/marshal.mli \
+  stdlib/int32.mli stdlib/int64.mli stdlib/nativeint.mli \
+  stdlib/obj.mli stdlib/lexing.mli stdlib/parsing.mli \
+  stdlib/set.mli stdlib/map.mli \
+  stdlib/stack.mli stdlib/queue.mli \
+  stdlib/stream.mli \
+  stdlib/buffer.mli stdlib/printf.mli stdlib/format.mli \
+  stdlib/arg.mli stdlib/printexc.mli stdlib/gc.mli \
+  stdlib/digest.mli stdlib/random_state.mli stdlib/random.mli stdlib/callback.mli \
+  stdlib/genlex.mli stdlib/weak.mli \
+  stdlib/filename.mli stdlib/complex.mli stdlib/scanning.mli stdlib/scanf.mli \
+  parsing/location.mli parsing/parsetree.mli parsing/parse.mli
+
+docs: library llamac llamadoc/llamadoc
+	llamadoc/llamadoc -html $(INCLUDES) -I stdlib -d doc/libref $(PUBLIC)
+.PHONY: docs
