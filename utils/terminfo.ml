@@ -2,16 +2,24 @@
 (*                                                                     *)
 (*                           Objective Caml                            *)
 (*                                                                     *)
-(*          Damien Doligez, projet Moscova, INRIA Rocquencourt         *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 2000 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
 (*  en Automatique.  All rights reserved.  This file is distributed    *)
 (*  under the terms of the Q Public License version 1.0.               *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: optmain.mli 2740 2000-01-07 16:03:04Z doligez $ *)
+(* $Id: terminfo.ml 6045 2004-01-01 16:42:43Z doligez $ *)
 
-(*
-  this "empty" file is here to speed up garbage collection in ocamlopt.opt
-*)
+(* Basic interface to the terminfo database *)
+
+type status =
+  | Uninitialised
+  | Bad_term
+  | Good_term of int
+;;
+external setup : out_channel -> status = "caml_terminfo_setup";;
+external backup : int -> unit = "caml_terminfo_backup";;
+external standout : bool -> unit = "caml_terminfo_standout";;
+external resume : int -> unit = "caml_terminfo_resume";;

@@ -10,15 +10,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: optcompile.mli 6395 2004-06-13 12:46:41Z xleroy $ *)
+(* $Id: terminfo.mli 6045 2004-01-01 16:42:43Z doligez $ *)
 
-(* Compile a .ml or .mli file *)
+(* Basic interface to the terminfo database *)
 
-open Format
-
-val interface: formatter -> string -> string -> unit
-val implementation: formatter -> string -> string -> unit
-val c_file: string -> unit
-
-val initial_env: unit -> Env.t
-val init_path: unit -> unit
+type status =
+  | Uninitialised
+  | Bad_term
+  | Good_term of int  (* number of lines of the terminal *)
+;;
+external setup : out_channel -> status = "caml_terminfo_setup";;
+external backup : int -> unit = "caml_terminfo_backup";;
+external standout : bool -> unit = "caml_terminfo_standout";;
+external resume : int -> unit = "caml_terminfo_resume";;

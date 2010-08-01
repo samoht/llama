@@ -31,12 +31,12 @@ CAMLRUN=byterun/llamarun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver \
+INCLUDES=-I utils -I parsing -I typing -I bytecomp -I driver \
 	 -I toplevel
 
-UTILS=utils/config.cmo utils/clflags.cmo utils/misc.cmo utils/tbl.cmo utils/warnings.cmo utils/consistbl.cmo utils/ccomp.cmo
+UTILS=utils/config.cmo utils/clflags.cmo utils/misc.cmo utils/tbl.cmo utils/warnings.cmo utils/consistbl.cmo utils/ccomp.cmo utils/terminfo.cmo
 
-PARSING=parsing/location.cmo parsing/syntaxerr.cmo \
+PARSING=parsing/linenum.cmo parsing/location.cmo parsing/syntaxerr.cmo \
  parsing/longident.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
 
 TYPING=typing/unused_var.cmo typing/primitive.cmo \
@@ -500,7 +500,7 @@ asmcomp/arch.ml: asmcomp/$(ARCH)/arch.ml
 partialclean::
 	rm -f asmcomp/arch.ml
 
-beforedepend:: asmcomp/arch.ml
+#beforedepend:: asmcomp/arch.ml
 
 asmcomp/proc.ml: asmcomp/$(ARCH)/proc.ml
 	ln -s $(ARCH)/proc.ml asmcomp/proc.ml
@@ -508,7 +508,7 @@ asmcomp/proc.ml: asmcomp/$(ARCH)/proc.ml
 partialclean::
 	rm -f asmcomp/proc.ml
 
-beforedepend:: asmcomp/proc.ml
+#beforedepend:: asmcomp/proc.ml
 
 asmcomp/selection.ml: asmcomp/$(ARCH)/selection.ml
 	ln -s $(ARCH)/selection.ml asmcomp/selection.ml
@@ -516,7 +516,7 @@ asmcomp/selection.ml: asmcomp/$(ARCH)/selection.ml
 partialclean::
 	rm -f asmcomp/selection.ml
 
-beforedepend:: asmcomp/selection.ml
+#beforedepend:: asmcomp/selection.ml
 
 asmcomp/reload.ml: asmcomp/$(ARCH)/reload.ml
 	ln -s $(ARCH)/reload.ml asmcomp/reload.ml
@@ -524,7 +524,7 @@ asmcomp/reload.ml: asmcomp/$(ARCH)/reload.ml
 partialclean::
 	rm -f asmcomp/reload.ml
 
-beforedepend:: asmcomp/reload.ml
+#beforedepend:: asmcomp/reload.ml
 
 asmcomp/scheduling.ml: asmcomp/$(ARCH)/scheduling.ml
 	ln -s $(ARCH)/scheduling.ml asmcomp/scheduling.ml
@@ -532,7 +532,7 @@ asmcomp/scheduling.ml: asmcomp/$(ARCH)/scheduling.ml
 partialclean::
 	rm -f asmcomp/scheduling.ml
 
-beforedepend:: asmcomp/scheduling.ml
+#beforedepend:: asmcomp/scheduling.ml
 
 # Preprocess the code emitters
 
@@ -543,7 +543,7 @@ asmcomp/emit.ml: asmcomp/$(ARCH)/emit.mlp tools/cvt_emit
 partialclean::
 	rm -f asmcomp/emit.ml
 
-beforedepend:: asmcomp/emit.ml
+#beforedepend:: asmcomp/emit.ml
 
 tools/cvt_emit: tools/cvt_emit.mll
 	cd tools; \
@@ -749,7 +749,7 @@ partialclean::
 	rm -f *~
 
 depend: beforedepend
-	(for d in utils parsing typing bytecomp asmcomp driver toplevel; \
+	(for d in utils parsing typing bytecomp driver toplevel; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 

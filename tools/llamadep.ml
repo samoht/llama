@@ -128,7 +128,7 @@ let print_dependencies target_file deps =
 
 let print_raw_dependencies source_file deps =
   print_filename source_file; print_string ":";
-  Depend.StringSet.iter
+  Set.iter
     (fun dep -> print_char ' '; print_string dep)
     deps;
   print_char '\n'
@@ -171,8 +171,11 @@ let is_ast_file ic ast_magic =
 
 let parse_use_file ic =
   if is_ast_file ic Config.ast_impl_magic_number then
+    assert false (* xxx *)
+(*
     let _source_file = input_value ic in
     [Ptop_def (input_value ic : Parsetree.structure)]
+*)
   else begin
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
@@ -192,12 +195,12 @@ let parse_interface ic =
 (* Process one file *)
 
 let ml_file_dependencies source_file =
-  Depend.free_structure_names := Depend.StringSet.empty;
+  Depend.free_structure_names := Set.empty_generic;
   let input_file = preprocess source_file in
   let ic = open_in_bin input_file in
   try
     let ast = parse_use_file ic in
-    Depend.add_use_file Depend.StringSet.empty ast;
+    Depend.add_use_file Set.empty_generic ast;
     if !raw_dependencies then begin
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin
@@ -207,7 +210,7 @@ let ml_file_dependencies source_file =
         then let cmi_name = basename ^ ".cmi" in ([cmi_name], [cmi_name])
         else ([], []) in
       let (byt_deps, opt_deps) =
-        Depend.StringSet.fold find_dependency
+        Set.fold find_dependency
                               !Depend.free_structure_names init_deps in
       print_dependencies (basename ^ ".cmo") byt_deps;
       print_dependencies (basename ^ ".cmx") opt_deps
@@ -217,18 +220,18 @@ let ml_file_dependencies source_file =
     close_in ic; remove_preprocessed input_file; raise x
 
 let mli_file_dependencies source_file =
-  Depend.free_structure_names := Depend.StringSet.empty;
+  Depend.free_structure_names := Set.empty_generic;
   let input_file = preprocess source_file in
   let ic = open_in_bin input_file in
   try
     let ast = parse_interface ic in
-    Depend.add_signature Depend.StringSet.empty ast;
+    Depend.add_signature Set.empty_generic ast;
     if !raw_dependencies then begin
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin
       let basename = Filename.chop_extension source_file in
       let (byt_deps, opt_deps) =
-        Depend.StringSet.fold find_dependency
+        Set.fold find_dependency
                               !Depend.free_structure_names ([], []) in
       print_dependencies (basename ^ ".cmi") byt_deps
     end;
