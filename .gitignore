@@ -2,6 +2,7 @@
 *.cmo
 /llama
 /llamac
+/llamacomp.sh
 /testprog
 boot/llamadep
 boot/llamalex
