@@ -40,6 +40,11 @@ stdlib/std_exit.cmo
 stdlib/sys.ml
 stdlib/camlheader
 stdlib/libcamlrun.a
+otherlibs/num/*.o
+otherlibs/num/dllnums.so
+otherlibs/num/libnums.a
+otherlibs/num/nums.cma
+otherlibs/str/str.cma
 lex/lexer.ml
 lex/parser.ml
 lex/parser.mli

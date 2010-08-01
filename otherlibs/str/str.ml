@@ -23,74 +23,6 @@ let first_chars s n = String.sub s 0 n
 
 let last_chars s n = String.sub s (String.length s - n) n
 
-(** Representation of character sets **)
-
-module Charset =
-  struct
-    type t = string (* of length 32 *)
-
-    (*let empty = String.make 32 '\000'*)
-    let full = String.make 32 '\255'
-
-    let make_empty () = String.make 32 '\000'
-
-    let add s c =
-      let i = Char.code c in
-      s.[i lsr 3] <- Char.chr(Char.code s.[i lsr 3] lor (1 lsl (i land 7)))
-
-    let add_range s c1 c2 =
-      for i = Char.code c1 to Char.code c2 do add s (Char.chr i) done
-
-    let singleton c =
-      let s = make_empty () in add s c; s
-
-    (*let range c1 c2 =
-      let s = make_empty () in add_range s c1 c2; s
-    *)
-    let complement s =
-      let r = String.create 32 in
-      for i = 0 to 31 do
-        r.[i] <- Char.chr(Char.code s.[i] lxor 0xFF)
-      done;
-      r
-
-    let union s1 s2 =
-      let r = String.create 32 in
-      for i = 0 to 31 do
-        r.[i] <- Char.chr(Char.code s1.[i] lor Char.code s2.[i])
-      done;
-      r
-
-    let disjoint s1 s2 =
-      try
-        for i = 0 to 31 do
-          if Char.code s1.[i] land Char.code s2.[i] <> 0 then raise Exit
-        done;
-        true
-      with Exit ->
-        false
-
-    let iter fn s =
-      for i = 0 to 31 do
-        let c = Char.code s.[i] in
-        if c <> 0 then
-          for j = 0 to 7 do
-            if c land (1 lsl j) <> 0 then fn (Char.chr ((i lsl 3) + j))
-          done
-      done
-
-    let expand s =
-      let r = String.make 256 '\000' in
-      iter (fun c -> r.[Char.code c] <- '\001') s;
-      r
-
-    let fold_case s =
-      let r = make_empty() in
-      iter (fun c -> add r (Char.lowercase c); add r (Char.uppercase c)) s;
-      r
-
-  end
-
 (** Abstract syntax tree for regular expressions *)
 
 type re_syntax =
@@ -212,8 +144,6 @@ let fold_case_table =
   for i = 0 to 255 do t.[i] <- Char.lowercase(Char.chr i) done;
   t
 
-module StringMap = Map.Make(struct type t = string let compare = compare end)
-
 (* Compilation of a regular expression *)
 
 let compile fold_case re =
@@ -221,7 +151,7 @@ let compile fold_case re =
   (* Instruction buffering *)
   let prog = ref (Array.make 32 0)
   and progpos = ref 0
-  and cpool = ref StringMap.empty
+  and cpool = ref Map.empty_generic
   and cpoolpos = ref 0
   and numgroups = ref 1
   and numregs = ref 0 in
@@ -246,10 +176,10 @@ let compile fold_case re =
      already there *)
   let cpool_index s =
     try
-      StringMap.find s !cpool
+      Map.find s !cpool
     with Not_found ->
       let p = !cpoolpos in
-      cpool := StringMap.add s p !cpool;
+      cpool := Map.add s p !cpool;
       incr cpoolpos;
       p in
   (* Allocate fresh register if regexp is nullable *)
@@ -415,7 +345,7 @@ let compile fold_case re =
     then -1
     else cpool_index (Charset.expand start') in
   let constantpool = Array.make !cpoolpos "" in
-  StringMap.iter (fun str idx -> constantpool.(idx) <- str) !cpool;
+  Map.iter (fun str idx -> constantpool.(idx) <- str) !cpool;
   { prog = Array.sub !prog 0 !progpos;
     cpool = constantpool;
     normtable = if fold_case then fold_case_table else "";
@@ -427,13 +357,13 @@ let compile fold_case re =
 
 (* Efficient buffering of sequences *)
 
-module SeqBuffer = struct
+(* module SeqBuffer = struct *)
 
-  type t = { sb_chars: Buffer.t; mutable sb_next: re_syntax list }
+  type seqbuffer_t = { sb_chars: Buffer.t; mutable sb_next: re_syntax list }
 
-  let create() = { sb_chars = Buffer.create 16; sb_next = [] }
+  let seqbuffer_create() = { sb_chars = Buffer.create 16; sb_next = [] }
 
-  let flush buf =
+  let seqbuffer_flush buf =
     let s = Buffer.contents buf.sb_chars in
     Buffer.clear buf.sb_chars;
     match String.length s with
@@ -441,15 +371,15 @@ module SeqBuffer = struct
     | 1 -> buf.sb_next <- Char s.[0] :: buf.sb_next
     | _ -> buf.sb_next <- String s :: buf.sb_next
 
-  let add buf re =
+  let seqbuffer_add buf re =
     match re with
       Char c -> Buffer.add_char buf.sb_chars c
-    | _ -> flush buf; buf.sb_next <- re :: buf.sb_next
+    | _ -> seqbuffer_flush buf; buf.sb_next <- re :: buf.sb_next
 
-  let extract buf =
-    flush buf; Seq(List.rev buf.sb_next)
+  let seqbuffer_extract buf =
+    seqbuffer_flush buf; Seq(List.rev buf.sb_next)
 
-end
+(* end *)
 
 (* The character class corresponding to `.' *)
 
@@ -471,15 +401,15 @@ let parse s =
     else
       (r1, i)
   and regexp1 i =
-    regexp1cont (SeqBuffer.create()) i
+    regexp1cont (seqbuffer_create()) i
   and regexp1cont sb i =
     if i >= len
     || i + 2 <= len && s.[i] = '\\' && (let c = s.[i+1] in c = '|' || c = ')')
     then
-      (SeqBuffer.extract sb, i)
+      (seqbuffer_extract sb, i)
     else
       let (r, j) = regexp2 i in
-      SeqBuffer.add sb r;
+      seqbuffer_add sb r;
       regexp1cont sb j
   and regexp2 i =
     let (r, j) = regexp3 i in
