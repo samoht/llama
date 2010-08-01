@@ -25,34 +25,32 @@ open Module
 
 
 (** The functions used for naming files and html marks.*)
-module Naming =
-  struct
     (** The prefix for types marks. *)
-    let mark_type = "TYPE"
+    let naming_mark_type = "TYPE"
 
     (** The prefix for functions marks. *)
-    let mark_function = "FUN"
+    let naming_mark_function = "FUN"
 
     (** The prefix for exceptions marks. *)
-    let mark_exception = "EXCEPTION"
+    let naming_mark_exception = "EXCEPTION"
 
     (** The prefix for values marks. *)
-    let mark_value = "VAL"
+    let naming_mark_value = "VAL"
 
     (** The prefix for attributes marks. *)
-    let mark_attribute = "ATT"
+    let naming_mark_attribute = "ATT"
 
     (** The prefix for methods marks. *)
-    let mark_method = "METHOD"
+    let naming_mark_method = "METHOD"
 
     (** The prefix for code files.. *)
-    let code_prefix = "code_"
+    let naming_code_prefix = "code_"
 
     (** The prefix for type files.. *)
-    let type_prefix = "type_"
+    let naming_type_prefix = "type_"
 
     (** Return the two html files names for the given module or class name.*)
-    let html_files name =
+    let naming_html_files name =
       let qual =
         try
           let i = String.rindex name '.' in
@@ -67,10 +65,10 @@ module Naming =
       (html_file, html_frame_file)
 
     (** Return the target for the given prefix and simple name. *)
-    let target pref simple_name = pref^simple_name
+    let naming_target pref simple_name = pref^simple_name
 
     (** Return the complete link target (file#target) for the given prefix string and complete name.*)
-    let complete_target pref complete_name =
+    let naming_complete_target pref complete_name =
       let simple_name = Name.simple complete_name in
       let module_name =
         let s = Name.father complete_name in
@@ -80,23 +78,23 @@ module Naming =
       html_file^"#"^(target pref simple_name)
 
     (** Return the link target for the given type. *)
-    let type_target t = target mark_type (Name.simple t.ty_name)
+    let naming_type_target t = target mark_type (Name.simple t.ty_name)
 
     (** Return the complete link target for the given type. *)
-    let complete_type_target t = complete_target mark_type t.ty_name
+    let naming_complete_type_target t = complete_target mark_type t.ty_name
 
     (** Return the link target for the given exception. *)
-    let exception_target e = target mark_exception (Name.simple e.ex_name)
+    let naming_exception_target e = target mark_exception (Name.simple e.ex_name)
 
     (** Return the complete link target for the given exception. *)
-    let complete_exception_target e = complete_target mark_exception e.ex_name
+    let naming_complete_exception_target e = complete_target mark_exception e.ex_name
 
     (** Return the link target for the given value. *)
-    let value_target v = target mark_value (Name.simple v.val_name)
+    let naming_value_target v = target mark_value (Name.simple v.val_name)
 
     (** Return the given value name where symbols accepted in infix values
        are replaced by strings, to avoid clashes with the filesystem.*)
-    let subst_infix_symbols name =
+    let naming_subst_infix_symbols name =
       let len = String.length name in
       let buf = Buffer.create len in
       let ch c = Buffer.add_char buf c in
@@ -125,61 +123,58 @@ module Naming =
       Buffer.contents buf
 
     (** Return the complete link target for the given value. *)
-    let complete_value_target v = complete_target mark_value v.val_name
+    let naming_complete_value_target v = complete_target mark_value v.val_name
 
     (** Return the complete filename for the code of the given value. *)
-    let file_code_value_complete_target v =
+    let naming_file_code_value_complete_target v =
       let f = code_prefix^mark_value^(subst_infix_symbols v.val_name)^".html" in
       f
 
     (** Return the link target for the given attribute. *)
-    let attribute_target a = target mark_attribute (Name.simple a.att_value.val_name)
+    let naming_attribute_target a = target mark_attribute (Name.simple a.att_value.val_name)
 
     (** Return the complete link target for the given attribute. *)
-    let complete_attribute_target a = complete_target mark_attribute a.att_value.val_name
+    let naming_complete_attribute_target a = complete_target mark_attribute a.att_value.val_name
 
     (** Return the complete filename for the code of the given attribute. *)
-    let file_code_attribute_complete_target a =
+    let naming_file_code_attribute_complete_target a =
       let f = code_prefix^mark_attribute^a.att_value.val_name^".html" in
       f
 
     (** Return the link target for the given method. *)
-    let method_target m = target mark_method (Name.simple m.met_value.val_name)
+    let naming_method_target m = target mark_method (Name.simple m.met_value.val_name)
 
     (** Return the complete link target for the given method. *)
-    let complete_method_target m = complete_target mark_method m.met_value.val_name
+    let naming_complete_method_target m = complete_target mark_method m.met_value.val_name
 
     (** Return the complete filename for the code of the given method. *)
-    let file_code_method_complete_target m =
+    let naming_file_code_method_complete_target m =
       let f = code_prefix^mark_method^m.met_value.val_name^".html" in
       f
 
     (** Return the link target for the given label section. *)
-    let label_target l = target "" l
+    let naming_label_target l = target "" l
 
     (** Return the complete link target for the given section label. *)
-    let complete_label_target l = complete_target "" l
+    let naming_complete_label_target l = complete_target "" l
 
     (** Return the complete filename for the code of the type of the
        given module or module type name. *)
-    let file_type_module_complete_target name =
+    let naming_file_type_module_complete_target name =
       let f = type_prefix^name^".html" in
       f
 
     (** Return the complete filename for the code of the
        given module name. *)
-    let file_code_module_complete_target name =
+    let naming_file_code_module_complete_target name =
       let f = code_prefix^name^".html" in
       f
 
     (** Return the complete filename for the code of the type of the
        given class or class type name. *)
-    let file_type_class_complete_target name =
+    let naming_file_type_class_complete_target name =
       let f = type_prefix^name^".html" in
       f
-  end
-
-module StringSet = Set.Make (struct type t = string let compare = compare end)
 
 (** A class with a method to colorize a string which represents OCaml code. *)
 class ocaml_code =
@@ -381,7 +376,7 @@ class virtual text =
 
     method html_of_Title b n label_opt t =
       let label1 = self#create_title_label (n, label_opt, t) in
-      bp b "<span id=\"%s\">" (Naming.label_target label1);
+      bp b "<span id=\"%s\">" (naming_label_target label1);
       let (tag_o, tag_c) =
         if n > 6 then
           (Printf.sprintf "div class=\"h%d\"" n, "div")
@@ -424,14 +419,14 @@ class virtual text =
             | Odoc_info.RK_module_type
             | Odoc_info.RK_class
             | Odoc_info.RK_class_type ->
-                let (html_file, _) = Naming.html_files name in
+                let (html_file, _) = naming_html_files name in
                 (html_file, h name)
-            | Odoc_info.RK_value -> (Naming.complete_target Naming.mark_value name, h name)
-            | Odoc_info.RK_type -> (Naming.complete_target Naming.mark_type name, h name)
-            | Odoc_info.RK_exception -> (Naming.complete_target Naming.mark_exception name, h name)
-            | Odoc_info.RK_attribute -> (Naming.complete_target Naming.mark_attribute name, h name)
-            | Odoc_info.RK_method -> (Naming.complete_target Naming.mark_method name, h name)
-            | Odoc_info.RK_section t -> (Naming.complete_label_target name,
+            | Odoc_info.RK_value -> (naming_complete_target naming_mark_value name, h name)
+            | Odoc_info.RK_type -> (naming_complete_target naming_mark_type name, h name)
+            | Odoc_info.RK_exception -> (naming_complete_target naming_mark_exception name, h name)
+            | Odoc_info.RK_attribute -> (naming_complete_target naming_mark_attribute name, h name)
+            | Odoc_info.RK_method -> (naming_complete_target naming_mark_method name, h name)
+            | Odoc_info.RK_section t -> (naming_complete_label_target name,
                                          Odoc_info.Italic [Raw (Odoc_info.string_of_text t)])
           in
           let text =
@@ -465,7 +460,7 @@ class virtual text =
              let m =
                List.find (fun m -> m.m_name = name) self#list_modules
              in
-             let (html, _) = Naming.html_files m.m_name in
+             let (html, _) = naming_html_files m.m_name in
              bp b "<a href=\"%s\">%s</a></td>" html m.m_name;
              bs b "<td>";
              self#html_of_info_first_sentence b m.m_info;
@@ -811,17 +806,17 @@ class html =
     (** The known types names.
        Used to know if we must create a link to a type
        when printing a type. *)
-    val mutable known_types_names = StringSet.empty
+    val mutable known_types_names = Set.empty_generic
 
     (** The known class and class type names.
        Used to know if we must create a link to a class
        or class type or not when printing a type. *)
-    val mutable known_classes_names = StringSet.empty
+    val mutable known_classes_names = Set.empty_generic
 
     (** The known modules and module types names.
        Used to know if we must create a link to a type or not
        when printing a module type. *)
-    val mutable known_modules_names = StringSet.empty
+    val mutable known_modules_names = Set.empty_generic
 
     method index_prefix =
       if !Odoc_args.out_file = Odoc_messages.default_out_file then
@@ -947,17 +942,17 @@ class html =
                None -> ()
              | Some name ->
                  bp b "<link rel=\"previous\" href=\"%s\">\n"
-                   (fst (Naming.html_files name));
+                   (fst (naming_html_files name));
              );
              (match post_opt with
                None -> ()
              | Some name ->
                  bp b "<link rel=\"next\" href=\"%s\">\n"
-                   (fst (Naming.html_files name));
+                   (fst (naming_html_files name));
              );
              (
               let father = Name.father name in
-              let href = if father = "" then self#index else fst (Naming.html_files father) in
+              let href = if father = "" then self#index else fst (naming_html_files father) in
               bp b "<link rel=\"Up\" href=\"%s\">\n" href
              )
         );
@@ -971,7 +966,7 @@ class html =
         link_if_not_empty self#list_modules Odoc_messages.index_of_modules self#index_modules;
         link_if_not_empty self#list_module_types Odoc_messages.index_of_module_types self#index_module_types;
         let print_one m =
-          let html_file = fst (Naming.html_files m.m_name) in
+          let html_file = fst (naming_html_files m.m_name) in
           bp b "<link title=\"%s\" rel=\"Chapter\" href=\"%s\">"
             m.m_name html_file
         in
@@ -1036,12 +1031,12 @@ class html =
          None -> ()
        | Some name ->
            bp b "<a href=\"%s\">%s</a>\n"
-             (fst (Naming.html_files name))
+             (fst (naming_html_files name))
              Odoc_messages.previous
       );
       bs b "&nbsp;";
       let father = Name.father name in
-      let href = if father = "" then self#index else fst (Naming.html_files father) in
+      let href = if father = "" then self#index else fst (naming_html_files father) in
       bp b "<a href=\"%s\">%s</a>\n" href Odoc_messages.up;
       bs b "&nbsp;";
       (
@@ -1049,7 +1044,7 @@ class html =
          None -> ()
        | Some name ->
            bp b "<a href=\"%s\">%s</a>\n"
-             (fst (Naming.html_files name))
+             (fst (naming_html_files name))
              Odoc_messages.next
       );
       bs b "</div>\n"
@@ -1090,13 +1085,13 @@ class html =
             match_s
             rel
         in
-        if StringSet.mem match_s known_types_names then
-           "<a href=\""^(Naming.complete_target Naming.mark_type match_s)^"\">"^
+        if Set.mem match_s known_types_names then
+           "<a href=\""^(naming_complete_target naming_mark_type match_s)^"\">"^
            s_final^
            "</a>"
         else
-          if StringSet.mem match_s known_classes_names then
-            let (html_file, _) = Naming.html_files match_s in
+          if Set.mem match_s known_classes_names then
+            let (html_file, _) = naming_html_files match_s in
             "<a href=\""^html_file^"\">"^s_final^"</a>"
           else
             s_final
@@ -1119,8 +1114,8 @@ class html =
             match_s
             rel
         in
-        if StringSet.mem match_s known_modules_names then
-          let (html_file, _) = Naming.html_files match_s in
+        if Set.mem match_s known_modules_names then
+          let (html_file, _) = naming_html_files match_s in
           "<a href=\""^html_file^"\">"^s_final^"</a>"
         else
           s_final
@@ -1195,7 +1190,7 @@ class html =
                List.iter (self#html_of_module_element b father) eles;
                bs b "</div>"
            | Some m ->
-               let (html_file, _) = Naming.html_files m.m_name in
+               let (html_file, _) = naming_html_files m.m_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
           self#html_of_text b [Code "end"]
@@ -1246,7 +1241,7 @@ class html =
               None ->
                 bs b (self#create_fully_qualified_module_idents_links father (self#escape code))
             | Some mt ->
-                let (html_file, _) = Naming.html_files mt.mt_name in
+                let (html_file, _) = naming_html_files mt.mt_name in
                 bp b " <a href=\"%s\">%s</a> " html_file (self#escape code)
           end;
           bs b "</code>"
@@ -1304,11 +1299,11 @@ class html =
                     List.iter (self#html_of_module_element b father) eles;
                     bs b "</div>"
                 | Some m ->
-                    let (html_file, _) = Naming.html_files m.m_name in
+                    let (html_file, _) = naming_html_files m.m_name in
                     bp b " <a href=\"%s\">..</a> " html_file
                )
            | Some mt ->
-               let (html_file, _) = Naming.html_files mt.mt_name in
+               let (html_file, _) = naming_html_files mt.mt_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
           self#html_of_text b [Code "end"]
@@ -1347,14 +1342,14 @@ class html =
     method html_of_value b v =
       Odoc_info.reset_type_names ();
       bs b "<pre>" ;
-      bp b "<span id=\"%s\">" (Naming.value_target v);
+      bp b "<span id=\"%s\">" (naming_value_target v);
       bs b (self#keyword "val");
       bs b " ";
       (
        match v.val_code with
          None -> bs b (self#escape (Name.simple v.val_name))
        | Some c ->
-           let file = Naming.file_code_value_complete_target v in
+           let file = naming_file_code_value_complete_target v in
            self#output_code v.val_name (Filename.concat !Args.target_dir file) c;
            bp b "<a href=\"%s\">%s</a>" file (self#escape (Name.simple v.val_name))
       );
@@ -1374,7 +1369,7 @@ class html =
     method html_of_exception b e =
       Odoc_info.reset_type_names ();
       bs b "<pre>";
-      bp b "<span id=\"%s\">" (Naming.exception_target e);
+      bp b "<span id=\"%s\">" (naming_exception_target e);
       bs b (self#keyword "exception");
       bs b " ";
       bs b (Name.simple e.ex_name);
@@ -1396,7 +1391,7 @@ class html =
             match ea.ea_ex with
               None -> bs b ea.ea_name
             | Some e ->
-                bp b "<a href=\"%s\">%s</a>" (Naming.complete_exception_target e) e.ex_name
+                bp b "<a href=\"%s\">%s</a>" (naming_complete_exception_target e) e.ex_name
            )
       );
       bs b "</pre>\n";
@@ -1415,7 +1410,7 @@ class html =
         | Some _, Type_variant _
         | Some _, Type_record _ -> "<pre>"
         );
-      bp b "<span id=\"%s\">" (Naming.type_target t);
+      bp b "<span id=\"%s\">" (naming_type_target t);
       bs b ((self#keyword "type")^" ");
       self#html_of_type_expr_param_list b father t;
       (match t.ty_parameters with [] -> () | _ -> bs b " ");
@@ -1525,7 +1520,7 @@ class html =
     method html_of_attribute b a =
       let module_name = Name.father (Name.father a.att_value.val_name) in
       bs b "<pre>" ;
-      bp b "<span id=\"%s\">" (Naming.attribute_target a);
+      bp b "<span id=\"%s\">" (naming_attribute_target a);
       bs b (self#keyword "val");
       bs b " ";
       (
@@ -1543,7 +1538,7 @@ class html =
        match a.att_value.val_code with
          None -> bs b (Name.simple a.att_value.val_name)
        | Some c ->
-           let file = Naming.file_code_attribute_complete_target a in
+           let file = naming_file_code_attribute_complete_target a in
            self#output_code a.att_value.val_name (Filename.concat !Args.target_dir file) c;
            bp b "<a href=\"%s\">%s</a>" file (Name.simple a.att_value.val_name);
       );
@@ -1558,7 +1553,7 @@ class html =
       let module_name = Name.father (Name.father m.met_value.val_name) in
       bs b "<pre>";
       (* html mark *)
-      bp b "<span id=\"%s\">" (Naming.method_target m);
+      bp b "<span id=\"%s\">" (naming_method_target m);
      bs b ((self#keyword "method")^" ");
        if m.met_private then bs b ((self#keyword "private")^" ");
       if m.met_virtual then bs b ((self#keyword "virtual")^" ");
@@ -1566,7 +1561,7 @@ class html =
        match m.met_value.val_code with
          None -> bs b  (Name.simple m.met_value.val_name)
        | Some c ->
-           let file = Naming.file_code_method_complete_target m in
+           let file = naming_file_code_method_complete_target m in
            self#output_code m.met_value.val_name (Filename.concat !Args.target_dir file) c;
            bp b "<a href=\"%s\">%s</a>" file (Name.simple m.met_value.val_name);
       );
@@ -1698,7 +1693,7 @@ class html =
 
     (** Print html code for a module. *)
     method html_of_module b ?(info=true) ?(complete=true) ?(with_link=true) m =
-      let (html_file, _) = Naming.html_files m.m_name in
+      let (html_file, _) = naming_html_files m.m_name in
       let father = Name.father m.m_name in
       bs b "<pre>";
       bs b ((self#keyword "module")^" ");
@@ -1728,7 +1723,7 @@ class html =
 
     (** Print html code for a module type. *)
     method html_of_modtype b ?(info=true) ?(complete=true) ?(with_link=true) mt =
-      let (html_file, _) = Naming.html_files mt.mt_name in
+      let (html_file, _) = naming_html_files mt.mt_name in
       let father = Name.father mt.mt_name in
       bs b "<pre>";
       bs b ((self#keyword "module type")^" ");
@@ -1767,10 +1762,10 @@ class html =
            let (file, name) =
              match mmt with
                Mod m ->
-                 let (html_file, _) = Naming.html_files m.m_name in
+                 let (html_file, _) = naming_html_files m.m_name in
                  (html_file, m.m_name)
              | Modtype mt ->
-                 let (html_file, _) = Naming.html_files mt.mt_name in
+                 let (html_file, _) = naming_html_files mt.mt_name in
                  (html_file, mt.mt_name)
            in
            bp b "<a href=\"%s\">%s</a>" file name
@@ -1803,7 +1798,7 @@ class html =
                );
                List.iter (self#html_of_class_element b) eles;
            | Some cl ->
-               let (html_file, _) = Naming.html_files cl.cl_name in
+               let (html_file, _) = naming_html_files cl.cl_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
           self#html_of_text b [Code "end"]
@@ -1858,7 +1853,7 @@ class html =
                );
                List.iter (self#html_of_class_element b) eles
            | Some ct ->
-               let (html_file, _) = Naming.html_files ct.clt_name in
+               let (html_file, _) = naming_html_files ct.clt_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
           self#html_of_text b [Code "end"]
@@ -1867,12 +1862,12 @@ class html =
     method html_of_class b ?(complete=true) ?(with_link=true) c =
       let father = Name.father c.cl_name in
       Odoc_info.reset_type_names ();
-      let (html_file, _) = Naming.html_files c.cl_name in
+      let (html_file, _) = naming_html_files c.cl_name in
       bs b "<pre>";
       (* we add a html id, the same as for a type so we can
          go directly here when the class name is used as a type name *)
       bp b "<span name=\"%s\">"
-        (Naming.type_target
+        (naming_type_target
            { ty_name = c.cl_name ;
              ty_info = None ; ty_parameters = [] ;
              ty_kind = Type_abstract ; ty_private = Asttypes.Public; ty_manifest = None ;
@@ -1914,12 +1909,12 @@ class html =
     method html_of_class_type b ?(complete=true) ?(with_link=true) ct =
       Odoc_info.reset_type_names ();
       let father = Name.father ct.clt_name in
-      let (html_file, _) = Naming.html_files ct.clt_name in
+      let (html_file, _) = naming_html_files ct.clt_name in
       bs b "<pre>";
       (* we add a html id, the same as for a type so we can
          go directly here when the class type name is used as a type name *)
       bp b "<span id=\"%s\">"
-        (Naming.type_target
+        (naming_type_target
            { ty_name = ct.clt_name ;
              ty_info = None ; ty_parameters = [] ;
              ty_kind = Type_abstract ; ty_private = Asttypes.Public; ty_manifest = None ;
@@ -1961,9 +1956,9 @@ class html =
            because we are sure the name is complete. *)
         let (name2, html_file) =
           match cct_opt with
-            None -> (name, fst (Naming.html_files name))
-          | Some (Cl c) -> (c.cl_name, fst (Naming.html_files c.cl_name))
-          | Some (Cltype (ct, _)) -> (ct.clt_name, fst (Naming.html_files ct.clt_name))
+            None -> (name, fst (naming_html_files name))
+          | Some (Cl c) -> (c.cl_name, fst (naming_html_files c.cl_name))
+          | Some (Cltype (ct, _)) -> (ct.clt_name, fst (naming_html_files ct.clt_name))
         in
         let new_v =
           "<table border=1>\n<tr><td>"^
@@ -2008,7 +2003,7 @@ class html =
                 Cl c -> c.cl_name
               | Cltype (ct, _) -> ct.clt_name
             in
-            let (class_file, _) = Naming.html_files real_name in
+            let (class_file, _) = naming_html_files real_name in
             (Odoc_info.Link (class_file, [Odoc_info.Code real_name])) ::
             (match inh.ic_text with
               None -> []
@@ -2074,7 +2069,7 @@ class html =
           let father_name = Name.father (name e) in
           bp b "<tr><td><a href=\"%s\">%s</a> " (target e) (self#escape simple_name);
           if simple_name <> father_name && father_name <> "" then
-            bp b "[<a href=\"%s\">%s</a>]" (fst (Naming.html_files father_name)) father_name;
+            bp b "[<a href=\"%s\">%s</a>]" (fst (naming_html_files father_name)) father_name;
           bs b "</td>\n<td>";
           self#html_of_info_first_sentence b (info e);
           bs b "</td></tr>\n";
@@ -2119,8 +2114,8 @@ class html =
     (** Generate the code of the html page for the given class.*)
     method generate_for_class pre post cl =
       Odoc_info.reset_type_names ();
-      let (html_file, _) = Naming.html_files cl.cl_name in
-      let type_file = Naming.file_type_class_complete_target cl.cl_name in
+      let (html_file, _) = naming_html_files cl.cl_name in
+      let type_file = naming_file_type_class_complete_target cl.cl_name in
       try
         let chanout = open_out (Filename.concat !Args.target_dir html_file) in
         let b = new_buf () in
@@ -2166,8 +2161,8 @@ class html =
     (** Generate the code of the html page for the given class type.*)
     method generate_for_class_type pre post clt =
       Odoc_info.reset_type_names ();
-      let (html_file, _) = Naming.html_files clt.clt_name in
-      let type_file = Naming.file_type_class_complete_target clt.clt_name in
+      let (html_file, _) = naming_html_files clt.clt_name in
+      let type_file = naming_file_type_class_complete_target clt.clt_name in
       try
         let chanout = open_out (Filename.concat !Args.target_dir html_file) in
         let b = new_buf () in
@@ -2213,8 +2208,8 @@ class html =
        @raise Failure if an error occurs.*)
     method generate_for_module_type pre post mt =
       try
-        let (html_file, _) = Naming.html_files mt.mt_name in
-        let type_file = Naming.file_type_module_complete_target mt.mt_name in
+        let (html_file, _) = naming_html_files mt.mt_name in
+        let type_file = naming_file_type_module_complete_target mt.mt_name in
         let chanout = open_out (Filename.concat !Args.target_dir html_file) in
         let b = new_buf () in
         let pre_name = opt (fun mt -> mt.mt_name) pre in
@@ -2280,9 +2275,9 @@ class html =
     method generate_for_module pre post modu =
       try
         Odoc_info.verbose ("Generate for module "^modu.m_name);
-        let (html_file, _) = Naming.html_files modu.m_name in
-        let type_file = Naming.file_type_module_complete_target modu.m_name in
-        let code_file = Naming.file_code_module_complete_target modu.m_name in
+        let (html_file, _) = naming_html_files modu.m_name in
+        let type_file = naming_file_type_module_complete_target modu.m_name in
+        let code_file = naming_file_code_module_complete_target modu.m_name in
         let chanout = open_out (Filename.concat !Args.target_dir html_file) in
         let b = new_buf () in
         let pre_name = opt (fun m -> m.m_name) pre in
@@ -2401,7 +2396,7 @@ class html =
         self#list_values
         (fun v -> v.val_name)
         (fun v -> v.val_info)
-        Naming.complete_value_target
+        naming_complete_value_target
         Odoc_messages.index_of_values
         self#index_values
 
@@ -2411,7 +2406,7 @@ class html =
         self#list_exceptions
         (fun e -> e.ex_name)
         (fun e -> e.ex_info)
-        Naming.complete_exception_target
+        naming_complete_exception_target
         Odoc_messages.index_of_exceptions
         self#index_exceptions
 
@@ -2421,7 +2416,7 @@ class html =
         self#list_types
         (fun t -> t.ty_name)
         (fun t -> t.ty_info)
-        Naming.complete_type_target
+        naming_complete_type_target
         Odoc_messages.index_of_types
         self#index_types
 
@@ -2431,7 +2426,7 @@ class html =
         self#list_attributes
         (fun a -> a.att_value.val_name)
         (fun a -> a.att_value.val_info)
-        Naming.complete_attribute_target
+        naming_complete_attribute_target
         Odoc_messages.index_of_attributes
         self#index_attributes
 
@@ -2441,7 +2436,7 @@ class html =
         self#list_methods
         (fun m -> m.met_value.val_name)
         (fun m -> m.met_value.val_info)
-        Naming.complete_method_target
+        naming_complete_method_target
         Odoc_messages.index_of_methods
         self#index_methods
 
@@ -2451,7 +2446,7 @@ class html =
         self#list_classes
         (fun c -> c.cl_name)
         (fun c -> c.cl_info)
-        (fun c -> fst (Naming.html_files c.cl_name))
+        (fun c -> fst (naming_html_files c.cl_name))
         Odoc_messages.index_of_classes
         self#index_classes
 
@@ -2461,7 +2456,7 @@ class html =
         self#list_class_types
         (fun ct -> ct.clt_name)
         (fun ct -> ct.clt_info)
-        (fun ct -> fst (Naming.html_files ct.clt_name))
+        (fun ct -> fst (naming_html_files ct.clt_name))
         Odoc_messages.index_of_class_types
         self#index_class_types
 
@@ -2471,7 +2466,7 @@ class html =
         self#list_modules
         (fun m -> m.m_name)
         (fun m -> m.m_info)
-        (fun m -> fst (Naming.html_files m.m_name))
+        (fun m -> fst (naming_html_files m.m_name))
         Odoc_messages.index_of_modules
         self#index_modules
 
@@ -2481,7 +2476,7 @@ class html =
         self#list_module_types
         (fun mt -> mt.mt_name)
         (fun mt -> mt.mt_info)
-        (fun mt -> fst (Naming.html_files mt.mt_name))
+        (fun mt -> fst (naming_html_files mt.mt_name))
         Odoc_messages.index_of_module_types
         self#index_module_types
 
@@ -2507,7 +2502,7 @@ class html =
       let types = Odoc_info.Search.types module_list in
       known_types_names <-
         List.fold_left
-          (fun acc t -> StringSet.add t.ty_name acc)
+          (fun acc t -> Set.add t.ty_name acc)
           known_types_names
           types ;
       (* Get the names of all class and class types. *)
@@ -2515,12 +2510,12 @@ class html =
       let class_types = Odoc_info.Search.class_types module_list in
       known_classes_names <-
         List.fold_left
-          (fun acc c -> StringSet.add c.cl_name acc)
+          (fun acc c -> Set.add c.cl_name acc)
           known_classes_names
           classes ;
       known_classes_names <-
         List.fold_left
-          (fun acc ct -> StringSet.add ct.clt_name acc)
+          (fun acc ct -> Set.add ct.clt_name acc)
           known_classes_names
           class_types ;
       (* Get the names of all known modules and module types. *)
@@ -2528,12 +2523,12 @@ class html =
       let modules = Odoc_info.Search.modules module_list in
       known_modules_names <-
         List.fold_left
-          (fun acc m -> StringSet.add m.m_name acc)
+          (fun acc m -> Set.add m.m_name acc)
           known_modules_names
           modules ;
       known_modules_names <-
         List.fold_left
-          (fun acc mt -> StringSet.add mt.mt_name acc)
+          (fun acc mt -> Set.add mt.mt_name acc)
           known_modules_names
           module_types ;
       (* generate html for each module *)
