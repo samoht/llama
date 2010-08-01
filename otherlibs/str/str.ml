@@ -23,12 +23,76 @@ let first_chars s n = String.sub s 0 n
 
 let last_chars s n = String.sub s (String.length s - n) n
 
+(** Representation of character sets **)
+
+    type charset_t = string (* of length 32 *)
+
+    (*let empty = String.make 32 '\000'*)
+    let charset_full = String.make 32 '\255'
+
+    let charset_make_empty () = String.make 32 '\000'
+
+    let charset_add s c =
+      let i = Char.code c in
+      s.[i lsr 3] <- Char.chr(Char.code s.[i lsr 3] lor (1 lsl (i land 7)))
+
+    let charset_add_range s c1 c2 =
+      for i = Char.code c1 to Char.code c2 do charset_add s (Char.chr i) done
+
+    let charset_singleton c =
+      let s = charset_make_empty () in charset_add s c; s
+
+    (*let range c1 c2 =
+      let s = make_empty () in add_range s c1 c2; s
+    *)
+    let charset_complement s =
+      let r = String.create 32 in
+      for i = 0 to 31 do
+        r.[i] <- Char.chr(Char.code s.[i] lxor 0xFF)
+      done;
+      r
+
+    let charset_union s1 s2 =
+      let r = String.create 32 in
+      for i = 0 to 31 do
+        r.[i] <- Char.chr(Char.code s1.[i] lor Char.code s2.[i])
+      done;
+      r
+
+    let charset_disjoint s1 s2 =
+      try
+        for i = 0 to 31 do
+          if Char.code s1.[i] land Char.code s2.[i] <> 0 then raise Exit
+        done;
+        true
+      with Exit ->
+        false
+
+    let charset_iter fn s =
+      for i = 0 to 31 do
+        let c = Char.code s.[i] in
+        if c <> 0 then
+          for j = 0 to 7 do
+            if c land (1 lsl j) <> 0 then fn (Char.chr ((i lsl 3) + j))
+          done
+      done
+
+    let charset_expand s =
+      let r = String.make 256 '\000' in
+      charset_iter (fun c -> r.[Char.code c] <- '\001') s;
+      r
+
+    let charset_fold_case s =
+      let r = charset_make_empty() in
+      charset_iter (fun c -> charset_add r (Char.lowercase c); charset_add r (Char.uppercase c)) s;
+      r
+
 (** Abstract syntax tree for regular expressions *)
 
 type re_syntax =
     Char of char
   | String of string
-  | CharClass of Charset.t * bool  (* true = complemented, false = normal *)
+  | CharClass of charset_t * bool  (* true = complemented, false = normal *)
   | Seq of re_syntax list
   | Alt of re_syntax * re_syntax
   | Star of re_syntax
@@ -102,28 +166,28 @@ let rec is_nullable = function
 
 (* first r returns a set of characters C such that:
      for all string s, s matches r => the first character of s is in C.
-   For convenience, return Charset.full if r is nullable. *)
+   For convenience, return charset_full if r is nullable. *)
 
 let rec first = function
-    Char c -> Charset.singleton c
-  | String s -> if s = "" then Charset.full else Charset.singleton s.[0]
-  | CharClass(cl, cmpl) -> if cmpl then Charset.complement cl else cl
+    Char c -> charset_singleton c
+  | String s -> if s = "" then charset_full else charset_singleton s.[0]
+  | CharClass(cl, cmpl) -> if cmpl then charset_complement cl else cl
   | Seq rl -> first_seq rl
-  | Alt (r1, r2) -> Charset.union (first r1) (first r2)
-  | Star r -> Charset.full
+  | Alt (r1, r2) -> charset_union (first r1) (first r2)
+  | Star r -> charset_full
   | Plus r -> first r
-  | Option r -> Charset.full
+  | Option r -> charset_full
   | Group(n, r) -> first r
-  | Refgroup n -> Charset.full
-  | Bol -> Charset.full
-  | Eol -> Charset.full
-  | Wordboundary -> Charset.full
+  | Refgroup n -> charset_full
+  | Bol -> charset_full
+  | Eol -> charset_full
+  | Wordboundary -> charset_full
 
 and first_seq = function
-    [] -> Charset.full
+    [] -> charset_full
   | (Bol | Eol | Wordboundary) :: rl -> first_seq rl
-  | Star r :: rl -> Charset.union (first r) (first_seq rl)
-  | Option r :: rl -> Charset.union (first r) (first_seq rl)
+  | Star r :: rl -> charset_union (first r) (first_seq rl)
+  | Option r :: rl -> charset_union (first r) (first_seq rl)
   | r :: rl -> first r
 
 (* Transform a Char or CharClass regexp into a character class *)
@@ -131,11 +195,11 @@ and first_seq = function
 let charclass_of_regexp fold_case re =
   let (cl1, compl) =
     match re with
-    | Char c -> (Charset.singleton c, false)
+    | Char c -> (charset_singleton c, false)
     | CharClass(cl, compl) -> (cl, compl)
     | _ -> assert false in
-  let cl2 = if fold_case then Charset.fold_case cl1 else cl1 in
-  if compl then Charset.complement cl2 else cl2
+  let cl2 = if fold_case then charset_fold_case cl1 else cl1 in
+  if compl then charset_complement cl2 else cl2
 
 (* The case fold table: maps characters to their lowercase equivalent *)
 
@@ -221,8 +285,8 @@ let compile fold_case re =
             emit_instr op_STRING (cpool_index s)
       end
   | CharClass(cl, compl) ->
-      let cl1 = if fold_case then Charset.fold_case cl else cl in
-      let cl2 = if compl then Charset.complement cl1 else cl1 in
+      let cl1 = if fold_case then charset_fold_case cl else cl in
+      let cl2 = if compl then charset_complement cl1 else cl1 in
       emit_instr op_CHARCLASS (cpool_index cl2)
   | Seq rl ->
       emit_seq_code rl
@@ -332,18 +396,18 @@ let compile fold_case re =
 
   and disjoint_modulo_case c1 c2 =
     if fold_case
-    then Charset.disjoint (Charset.fold_case c1) (Charset.fold_case c2)
-    else Charset.disjoint c1 c2
+    then charset_disjoint (charset_fold_case c1) (charset_fold_case c2)
+    else charset_disjoint c1 c2
   in
 
   emit_code re;
   emit_instr op_ACCEPT 0;
   let start = first re in
-  let start' = if fold_case then Charset.fold_case start else start in
+  let start' = if fold_case then charset_fold_case start else start in
   let start_pos =
-    if start = Charset.full
+    if start = charset_full
     then -1
-    else cpool_index (Charset.expand start') in
+    else cpool_index (charset_expand start') in
   let constantpool = Array.make !cpoolpos "" in
   Map.iter (fun str idx -> constantpool.(idx) <- str) !cpool;
   { prog = Array.sub !prog 0 !progpos;
@@ -383,7 +447,7 @@ let compile fold_case re =
 
 (* The character class corresponding to `.' *)
 
-let dotclass = Charset.complement (Charset.singleton '\n')
+let dotclass = charset_complement (charset_singleton '\n')
 
 (* Parse a regular expression *)
 
@@ -456,7 +520,7 @@ let parse s =
     then let (c, j) = regexpclass1 (i+1) in (c, true, j)
     else let (c, j) = regexpclass1 i in (c, false, j)
   and regexpclass1 i =
-    let c = Charset.make_empty() in
+    let c = charset_make_empty() in
     let j = regexpclass2 c i i in
     (c, j)
   and regexpclass2 c start i =
@@ -465,10 +529,10 @@ let parse s =
       let c1 = s.[i] in
       if i+2 < len && s.[i+1] = '-' && s.[i+2] <> ']' then begin
         let c2 = s.[i+2] in
-        Charset.add_range c c1 c2;
+        charset_add_range c c1 c2;
         regexpclass2 c start (i+3)
       end else begin
-        Charset.add c c1;
+        charset_add c c1;
         regexpclass2 c start (i+1)
       end
     end in
