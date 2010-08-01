@@ -349,15 +349,11 @@ let rec get_block t i j =
 ;;
 
 let group_by_common_children d list =
-  let module O = struct type t = idag;; let compare = compare;; end
-  in
-  let module S = Set.Make (O)
-  in
   let nlcsl =
     List.map
       (fun id ->
          let n = d.dag.(int_of_idag id) in
-         let cs = List.fold_right S.add n.chil S.empty in [id], cs)
+         let cs = List.fold_right Set.add n.chil Set.empty_generic in [id], cs)
       list
   in
   let nlcsl =
@@ -368,10 +364,10 @@ let group_by_common_children d list =
           let rec loop1 beg =
             function
               (nl1, cs1) :: rest1 ->
-                if S.is_empty (S.inter cs cs1) then
+                if Set.is_empty (Set.inter cs cs1) then
                   loop1 ((nl1, cs1) :: beg) rest1
                 else
-                  loop ((nl @ nl1, S.union cs cs1) :: (List.rev beg @ rest1))
+                  loop ((nl @ nl1, Set.union cs cs1) :: (List.rev beg @ rest1))
             | [] -> (nl, cs) :: loop rest
           in
           loop1 [] rest
@@ -605,10 +601,6 @@ let group_children t =
    if A and B have common children *)
 
 let group_span_by_common_children d t =
-  let module O = struct type t = idag;; let compare = compare;; end
-  in
-  let module S = Set.Make (O)
-  in
   let i = Array.length t.table - 1 in
   let line = t.table.(i) in
   let rec loop j cs =
@@ -617,16 +609,16 @@ let group_span_by_common_children d t =
       match line.(j).elem with
         Elem id ->
           let n = d.dag.(int_of_idag id) in
-          let curr_cs = List.fold_right S.add n.chil S.empty in
-          if S.is_empty (S.inter cs curr_cs) then loop (j + 1) curr_cs
+          let curr_cs = List.fold_right Set.add n.chil Set.empty_generic in
+          if Set.is_empty (Set.inter cs curr_cs) then loop (j + 1) curr_cs
           else
             begin
               line.(j).span <- line.(j - 1).span;
-              loop (j + 1) (S.union cs curr_cs)
+              loop (j + 1) (Set.union cs curr_cs)
             end
-      | _ -> loop (j + 1) S.empty
+      | _ -> loop (j + 1) Set.empty_generic
   in
-  loop 0 S.empty
+  loop 0 Set.empty_generic
 ;;
 
 let find_same_parents t i j1 j2 j3 j4 =
@@ -1646,105 +1638,3 @@ let html_of_dag d =
   let hts = html_table_struct indi_txt phony d t in
   string_table !border hts
 ;;
-
-
-(********************************* Max's code **********************************)
-(** This function takes a list of classes and a list of class types
-   and create the associate dag. *)
-let create_class_dag cl_list clt_list =
-  let module M = Odoc_info.Class in
-  (* the list of all the classes concerned *)
-  let cl_list2 = List.map (fun c -> (c.M.cl_name, Some (M.Cl c))) cl_list in
-  let clt_list2 = List.map (fun ct -> (ct.M.clt_name, Some (M.Cltype (ct, [])))) clt_list in
-  let list = cl_list2 @ clt_list2 in
-  let all_classes =
-    let rec iter list2 =
-      List.fold_left
-        (fun acc -> fun (name, cct_opt) ->
-          let l =
-            match cct_opt with
-              None -> []
-            | Some (M.Cl c) ->
-                iter
-                  (List.map
-                     (fun inh ->(inh.M.ic_name, inh.M.ic_class))
-                     (match c.M.cl_kind with
-                       M.Class_structure (inher_l, _) ->
-                         inher_l
-                     | _ ->
-                         []
-                     )
-                  )
-            | Some (M.Cltype (ct, _)) ->
-                iter
-                  (List.map
-                     (fun inh ->(inh.M.ic_name, inh.M.ic_class))
-                     (match ct.M.clt_kind with
-                       M.Class_signature (inher_l, _) ->
-                         inher_l
-                     | _ ->
-                         []
-                     )
-                  )
-          in
-          (name, cct_opt) :: (acc @ l)
-        )
-        []
-        list2
-    in
-    iter list
-  in
-  let rec distinct acc = function
-    [] ->
-      acc
-    |   (name, cct_opt) :: q ->
-        if List.exists (fun (name2, _) -> name = name2) acc then
-          distinct acc q
-        else
-          distinct ((name, cct_opt) :: acc) q
-  in
-  let distinct_classes = distinct [] all_classes in
-  let liste_index =
-    let rec f n = function
-        [] -> []
-      | (name, _) :: q -> (name, n) :: (f (n+1) q)
-    in
-    f 0 distinct_classes
-  in
-  let array1 = Array.of_list distinct_classes in
-  (* create the dag array, filling parents and values *)
-  let fmap (name, cct_opt) =
-    { pare = List.map
-        (fun inh -> List.assoc inh.M.ic_name liste_index )
-        (match cct_opt with
-          None -> []
-        | Some (M.Cl c) ->
-            (match c.M.cl_kind with
-              M.Class_structure (inher_l, _) ->
-                inher_l
-            | _ ->
-                []
-            )
-        | Some (M.Cltype (ct, _)) ->
-            (match ct.M.clt_kind with
-              M.Class_signature (inher_l, _) ->
-                inher_l
-            | _ ->
-                []
-            )
-        );
-      valu = (name, cct_opt) ;
-      chil = []
-    }
-  in
-  let dag = { dag = Array.map fmap array1 } in
-  (* fill the children *)
-  let fiter i node =
-    let l = Array.to_list dag.dag in
-    let l2 = List.map (fun n -> n.valu)
-        (List.filter (fun n -> List.mem i n.pare) l)
-    in
-    node.chil <- List.map (fun (name,_) -> List.assoc name liste_index) l2
-  in
-  Array.iteri fiter dag.dag;
-  dag

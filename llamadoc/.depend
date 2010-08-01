@@ -138,6 +138,7 @@ odoc_value.cmo: ../typing/types.cmo odoc_types.cmi odoc_parameter.cmo \
     odoc_name.cmi
 odoc_value.cmx: ../typing/types.cmx odoc_types.cmx odoc_parameter.cmx \
     odoc_name.cmx
+odoc_analyse.cmi: odoc_module.cmo odoc_args.cmi
 odoc_args.cmi: odoc_types.cmi odoc_module.cmo
 odoc_ast.cmi: ../typing/types.cmo ../typing/typedtree.cmi \
     ../parsing/parsetree.cmi odoc_name.cmi odoc_module.cmo
@@ -145,7 +146,7 @@ odoc_comments.cmi: odoc_types.cmi
 odoc_comments_global.cmi:
 odoc_config.cmi:
 odoc_cross.cmi: odoc_types.cmi odoc_module.cmo
-odoc_dag2html.cmi: odoc_info.cmi
+odoc_dag2html.cmi:
 odoc_env.cmi: ../typing/types.cmo odoc_name.cmi
 odoc_global.cmi:
 odoc_merge.cmi: odoc_types.cmi odoc_module.cmo

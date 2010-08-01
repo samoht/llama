@@ -102,8 +102,7 @@ CMOFILES= odoc_config.cmo \
 	odoc_cross.cmo\
 	odoc_comments.cmo\
 	odoc_dep.cmo\
-	odoc_analyse.cmo\
-	odoc_info.cmo
+	odoc_analyse.cmo
 
 
 CMXFILES= $(CMOFILES:.cmo=.cmx)

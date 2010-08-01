@@ -64,14 +64,16 @@ let escape_base s =
 
 (** The output functions *)
 
-let print ?(esc=true) s =
-  Format.pp_print_string !fmt (if esc then escape s else s)
+let print_raw s =
+  Format.pp_print_string !fmt s
 ;;
-
-let print_class ?(esc=true) cl s =
-  print ~esc: false ("<span class=\""^cl^"\">"^
-                     (if esc then escape s else s)^
-                     "</span>")
+let print s =
+  Format.pp_print_string !fmt (escape s)
+;;
+let print_class cl s = 
+  print_raw ("<span class=\""^cl^"\">"^
+               escape s^
+               "</span>")
 ;;
 
 (** The table of keywords with colors *)
@@ -193,7 +195,7 @@ let print_comment () =
       | _ ->
           "<span class=\""^comment_class^"\">(*"^(escape s)^"*)</span>"
   in
-  print ~esc: false code
+  Format.pp_print_string !fmt code
 
 (** To buffer string literals *)
 
@@ -502,7 +504,7 @@ and string = parse
         string lexbuf }
 {
 
-let html_of_code b ?(with_pre=true) code =
+let html_of_code b with_pre code = (* ?(with_pre=true) *)
   let old_pre = !pre in
   let old_margin = !margin in
   let old_comment_buffer = Buffer.contents comment_buffer in
@@ -518,10 +520,10 @@ let html_of_code b ?(with_pre=true) code =
   let html =
     (
      try
-       print ~esc: false start ;
+       print_raw start ;
        let lexbuf = Lexing.from_string code in
        let _ = token lexbuf  in
-       print ~esc: false ending ;
+       print_raw ending ;
        Format.pp_print_flush !fmt () ;
        Buffer.contents buf
      with

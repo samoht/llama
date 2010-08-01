@@ -21,9 +21,3 @@ and idag = int
 
 (** This function returns the html code to represent the given dag. *)
 val html_of_dag : string dag -> string
-
-(** This function takes a list of classes and a list of class types and creates the associate dag. *)
-val create_class_dag :
-    Odoc_info.Class.t_class list ->
-      Odoc_info.Class.t_class_type list ->
-        (Odoc_info.Name.t * Odoc_info.Class.cct option) dag
