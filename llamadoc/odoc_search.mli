@@ -76,6 +76,7 @@ type 'a predicates = {
 
 (** A module of predicates to search elements by name (and accepting regexps).*)
 val p_name : Str.regexp predicates
+val p_base : 'a predicates
 
 (** A module to search elements by name. *)
     val search_section : Odoc_types.text -> string -> Str.regexp -> result_element list

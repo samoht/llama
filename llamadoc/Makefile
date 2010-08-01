@@ -99,7 +99,6 @@ CMOFILES= odoc_config.cmo \
 	odoc_control.cmo\
 	odoc_inherit.cmo\
 	odoc_search.cmo\
-	odoc_scan.cmo\
 	odoc_cross.cmo\
 	odoc_comments.cmo\
 	odoc_dep.cmo\
