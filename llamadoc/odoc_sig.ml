@@ -289,7 +289,7 @@ open Odoc_types
               {
                 ex_name = Odoc_name.concat current_module_name name ;
                 ex_info = comment_opt ;
-                ex_args = List.map (Odoc_env.subst_type env) types_excep_decl ;
+                ex_args = types_excep_decl ; (* List.map (Odoc_env.subst_type env) types_excep_decl ; *)
                 ex_alias = None ;
                 ex_loc = { loc_impl = None ; loc_inter = Some (!file_name, pos_start_ele) } ;
                 ex_code =

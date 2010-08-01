@@ -336,17 +336,17 @@ let value_declaration env name typexp primstuff =
   let typexp = type_expression false env typexp in
   v, typexp, Env.add_value v env
 
-let type_declaration env decl loc =
+let type_declaration env pdecls loc =
   let tcs_list =
     List.map
-      begin fun (name, params, body) ->
-        let nparams = List.length params in
-        { tcs_id = Env.qualified_id name;
+      begin fun pdecl ->
+        let nparams = List.length pdecl.ptype_params in
+        { tcs_id = Env.qualified_id pdecl.ptype_name;
           tcs_arity = nparams;
           tcs_params = new_generics nparams; (* bending the rules *)
           tcs_kind = Type_abstract }
       end
-      decl
+      pdecls
   in
   let temp_env =
     List.fold_left
@@ -355,12 +355,12 @@ let type_declaration env decl loc =
   in
   let decl =
     List.map2
-      begin fun tcs (_, sparams, body) ->
-        let params = bind_type_expression_vars sparams loc in
-        let body = type_constructor_body temp_env tcs body in
+      begin fun tcs pdecl ->
+        let params = bind_type_expression_vars pdecl.ptype_params loc in
+        let body = type_constructor_body temp_env tcs pdecl.ptype_kind in
         (tcs, params, body)
       end
-      tcs_list decl
+      tcs_list pdecls
   in
   List.iter
     begin fun (tcs, params, body) ->

@@ -45,7 +45,7 @@ let add_opt add_fn bv = function
     None -> ()
   | Some x -> add_fn bv x
 
-let add_type_declaration bv (_, _, tk) =
+let add_type_declaration bv pdecl =
   let rec add_tkind = function
     Ptype_abstract -> ()
   | Ptype_variant cstrs ->
@@ -54,7 +54,7 @@ let add_type_declaration bv (_, _, tk) =
       List.iter (fun (l, ty, mut) -> add_type bv ty) lbls
   | Ptype_abbrev ty ->
       add_type bv ty in
-  add_tkind tk
+  add_tkind pdecl.ptype_kind
 
 let rec add_pattern bv pat =
   match pat.ppat_desc with

@@ -703,7 +703,10 @@ type_declarations:
 
 type_declaration:
     type_parameters LIDENT type_kind
-      { ($2, $1, $3) }
+      { {ptype_name = $2;
+         ptype_params = $1;
+         ptype_kind = $3;
+         ptype_loc = symbol_rloc()} }
 ;
 type_kind:
     /*empty*/
