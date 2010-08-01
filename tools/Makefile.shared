@@ -23,7 +23,7 @@ INCLUDES=-I ../utils -I ../parsing -I ../typing -I ../bytecomp -I ../asmcomp \
 COMPFLAGS= -warn-error A $(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 
-all: # llamadep llamaprof llamacp llamamktop llamamklib dumpobj objinfo
+all: llamadep llamamklib # llamadep llamaprof llamacp llamamktop llamamklib dumpobj objinfo
 # scrapelabels addlabels
 
 .PHONY: all
@@ -93,9 +93,8 @@ llamamklib.cmo: myllamabuild_config.cmi
 
 myllamabuild_config.cmi: myllamabuild_config.cmo
 
-myllamabuild_config.ml: ../config/Makefile ../build/mkmyllamabuild_config.sh
-	../build/mkmyllamabuild_config.sh
-	cp ../myllamabuild_config.ml .
+myllamabuild_config.ml: ../config/Makefile mkmyllamabuild_config.sh
+	./mkmyllamabuild_config.sh
 
 install::
 	cp llamamklib $(BINDIR)/llamamklib$(EXE)

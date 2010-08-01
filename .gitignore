@@ -10,6 +10,9 @@ boot/llamayacc
 boot/stdlib.cma
 boot/libcamlrun.a
 boot/camlheader
+tools/llamadep
+tools/llamamklib
+tools/llamamklib.ml
 config/m.h
 config/s.h
 config/Makefile
@@ -19,6 +22,7 @@ parsing/parser.mli
 parsing/parser.output
 parsing/lexer.ml
 parsing/lexer.mll
+parsing/linenum.ml
 typing/location.ml
 bytecomp/runtimedef.ml
 byterun/jumptbl.h
