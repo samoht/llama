@@ -7,6 +7,14 @@ open Printf
 open Longident
 open Module
 
+type error =
+    Not_an_interface of string
+  | Corrupted_interface of string
+  | Illegal_renaming of string * string
+  | Inconsistent_import of string * string * string
+
+exception Error of error
+
 (* ---------------------------------------------------------------------- *)
 (* Persistent structures.                                                 *)
 (* ---------------------------------------------------------------------- *)
@@ -45,11 +53,7 @@ let check_consistency filename crcs =
       (fun (name, crc) -> Consistbl.check crc_units name crc filename)
       crcs
   with Consistbl.Inconsistency(name, source, auth) ->
-    print_endline name;
-    print_endline auth;
-    print_endline source;
-    assert false
-    (* raise(Error(Inconsistent_import(name, auth, source))) *)
+    raise(Error(Inconsistent_import(name, auth, source)))
 
 (* Reading persistent structures from .cmi files *)
 
@@ -186,7 +190,7 @@ let lookup proj1 get_fun lid env =
       let myref = { ref_id = qualid; ref_contents = None } in
       get_fun myref
   | _ ->
-      assert false
+      failwith (Longident.name lid)
 
 let lookup_value =
   lookup (fun env -> env.values) get_value
@@ -318,3 +322,20 @@ let imported_units () = Consistbl.extract crc_units
 
 let save_signature sg modname filename =
   save_signature_with_imports sg modname filename (imported_units())
+
+(* Error report *)
+
+open Format
+
+let report_error ppf = function
+  | Not_an_interface filename -> fprintf ppf
+      "%s@ is not a compiled interface" filename
+  | Corrupted_interface filename -> fprintf ppf
+      "Corrupted compiled interface@ %s" filename
+  | Illegal_renaming(modname, filename) -> fprintf ppf
+      "Wrong file naming: %s@ contains the compiled interface for@ %s"
+      filename modname
+  | Inconsistent_import(name, source1, source2) -> fprintf ppf
+      "@[<hov>The files %s@ and %s@ \
+              make inconsistent assumptions@ over interface %s@]"
+      source1 source2 name

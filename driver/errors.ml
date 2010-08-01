@@ -31,10 +31,10 @@ let report_error ppf exn =
   | Pparse.Error ->
       Location.print_error_cur_file ppf;
       fprintf ppf "Preprocessor error"
-(*
   | Env.Error err ->
       Location.print_error_cur_file ppf;
       Env.report_error ppf err
+(*
   | Ctype.Tags(l, l') ->
       Location.print_error_cur_file ppf;
       fprintf ppf

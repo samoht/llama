@@ -63,3 +63,18 @@ val save_signature_with_imports:
            imported units with their CRCs. *)
 
 val crc_units : Consistbl.t
+
+
+(* Error report *)
+
+type error =
+    Not_an_interface of string
+  | Corrupted_interface of string
+  | Illegal_renaming of string * string
+  | Inconsistent_import of string * string * string
+
+exception Error of error
+
+open Format
+
+val report_error: formatter -> error -> unit

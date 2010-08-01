@@ -96,7 +96,6 @@ CMOFILES= odoc_config.cmo \
 	odoc_env.cmo\
 	odoc_merge.cmo\
 	odoc_sig.cmo\
-	odoc_ast.cmo\
 	odoc_control.cmo\
 	odoc_inherit.cmo\
 	odoc_search.cmo\

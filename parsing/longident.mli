@@ -3,4 +3,4 @@ type t =
   | Ldot of t * string
 
 val parse : string -> t
-
+val name : t -> string
