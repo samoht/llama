@@ -176,29 +176,16 @@ open Module
       let f = type_prefix^name^".html" in
       f
 
-(** A class with a method to colorize a string which represents OCaml code. *)
-class ocaml_code =
-  object(self)
-    method html_of_code b ?(with_pre=true) code =
-      Odoc_ocamlhtml.html_of_code b ~with_pre: with_pre code
-  end
-
 let new_buf () = Buffer.create 1024
 let bp = Printf.bprintf
 let bs = Buffer.add_string
 
 
-(** Generation of html code from text structures. *)
-class virtual text =
-  object (self)
-    (** We want to display colorized code. *)
-    inherit ocaml_code
-
     (** Escape the strings which would clash with html syntax, and
        make some replacements (double newlines replaced by <br>). *)
-    method escape s = Odoc_ocamlhtml.escape_base s
+    let escape s = Odoc_ocamlhtml.escape_base s
 
-    method keep_alpha_num s =
+    let keep_alpha_num s =
       let len = String.length s in
       let buf = Buffer.create len in
       for i = 0 to len - 1 do
@@ -209,74 +196,74 @@ class virtual text =
       Buffer.contents buf
 
     (** Return a label created from the first sentence of a text. *)
-    method label_of_text t=
+    let label_of_text t=
       let t2 = Odoc_info.first_sentence_of_text t in
       let s = Odoc_info.string_of_text t2 in
-      let s2 = self#keep_alpha_num s in
+      let s2 = keep_alpha_num s in
       s2
 
     (** Create a label for the associated title.
        Return the label specified by the user or a label created
        from the title level and the first sentence of the title. *)
-    method create_title_label (n,label_opt,t) =
+    let create_title_label (n,label_opt,t) =
       match label_opt with
         Some s -> s
-      | None -> Printf.sprintf "%d_%s" n (self#label_of_text t)
+      | None -> Printf.sprintf "%d_%s" n (label_of_text t)
 
     (** Print the html code corresponding to the [text] parameter. *)
-    method html_of_text b t =
-      List.iter (self#html_of_text_element b) t
+    let rec html_of_text b t =
+      List.iter (html_of_text_element b) t
 
     (** Print the html code for the [text_element] in parameter. *)
-    method html_of_text_element b te =
+    let html_of_text_element b te =
       print_DEBUG "text::html_of_text_element";
       match te with
-      | Odoc_info.Raw s -> self#html_of_Raw b s
-      | Odoc_info.Code s -> self#html_of_Code b s
-      | Odoc_info.CodePre s -> self#html_of_CodePre b s
-      | Odoc_info.Verbatim s -> self#html_of_Verbatim b s
-      | Odoc_info.Bold t -> self#html_of_Bold b t
-      | Odoc_info.Italic t -> self#html_of_Italic b t
-      | Odoc_info.Emphasize t -> self#html_of_Emphasize b t
-      | Odoc_info.Center t -> self#html_of_Center b t
-      | Odoc_info.Left t -> self#html_of_Left b t
-      | Odoc_info.Right t -> self#html_of_Right b t
-      | Odoc_info.List tl -> self#html_of_List b tl
-      | Odoc_info.Enum tl -> self#html_of_Enum b tl
-      | Odoc_info.Newline -> self#html_of_Newline b
-      | Odoc_info.Block t -> self#html_of_Block b t
-      | Odoc_info.Title (n, l_opt, t) -> self#html_of_Title b n l_opt t
-      | Odoc_info.Latex s -> self#html_of_Latex b s
-      | Odoc_info.Link (s, t) -> self#html_of_Link b s t
+      | Odoc_info.Raw s -> html_of_Raw b s
+      | Odoc_info.Code s -> html_of_Code b s
+      | Odoc_info.CodePre s -> html_of_CodePre b s
+      | Odoc_info.Verbatim s -> html_of_Verbatim b s
+      | Odoc_info.Bold t -> html_of_Bold b t
+      | Odoc_info.Italic t -> html_of_Italic b t
+      | Odoc_info.Emphasize t -> html_of_Emphasize b t
+      | Odoc_info.Center t -> html_of_Center b t
+      | Odoc_info.Left t -> html_of_Left b t
+      | Odoc_info.Right t -> html_of_Right b t
+      | Odoc_info.List tl -> html_of_List b tl
+      | Odoc_info.Enum tl -> html_of_Enum b tl
+      | Odoc_info.Newline -> html_of_Newline b
+      | Odoc_info.Block t -> html_of_Block b t
+      | Odoc_info.Title (n, l_opt, t) -> html_of_Title b n l_opt t
+      | Odoc_info.Latex s -> html_of_Latex b s
+      | Odoc_info.Link (s, t) -> html_of_Link b s t
       | Odoc_info.Ref (name, ref_opt, text_opt) ->
-          self#html_of_Ref b name ref_opt text_opt
-      | Odoc_info.Superscript t -> self#html_of_Superscript b t
-      | Odoc_info.Subscript t -> self#html_of_Subscript b t
-      | Odoc_info.Module_list l -> self#html_of_Module_list b l
-      | Odoc_info.Index_list -> self#html_of_Index_list b
-      | Odoc_info.Custom (s,t) -> self#html_of_custom_text b s t
-      | Odoc_info.Target (target, code) -> self#html_of_Target b ~target ~code
+          html_of_Ref b name ref_opt text_opt
+      | Odoc_info.Superscript t -> html_of_Superscript b t
+      | Odoc_info.Subscript t -> html_of_Subscript b t
+      | Odoc_info.Module_list l -> html_of_Module_list b l
+      | Odoc_info.Index_list -> html_of_Index_list b
+      | Odoc_info.Custom (s,t) -> html_of_custom_text b s t
+      | Odoc_info.Target (target, code) -> html_of_Target b target code
 
-    method html_of_custom_text b s t = ()
+    let html_of_custom_text b s t = ()
 
-    method html_of_Target b ~target ~code =
+    let html_of_Target b target code =
       if String.lowercase target = "html" then bs b code else ()
 
-    method html_of_Raw b s = bs b (self#escape s)
+    let html_of_Raw b s = bs b (escape s)
 
-    method html_of_Code b s =
+    let html_of_Code b s =
       if !Args.colorize_code then
-        self#html_of_code b ~with_pre: false s
+        html_of_code b false s
       else
         (
          bs b "<code class=\"";
          bs b Odoc_ocamlhtml.code_class ;
          bs b "\">";
-         bs b (self#escape s);
+         bs b (escape s);
          bs b "</code>"
         )
 
-    method html_of_CodePre =
+    let html_of_CodePre =
         let remove_useless_newlines s =
           let len = String.length s in
           let rec iter_first n =
@@ -306,7 +293,7 @@ class virtual text =
       if !Args.colorize_code then
         (
          bs b "<pre></pre>";
-         self#html_of_code b (remove_useless_newlines s);
+         html_of_code b (remove_useless_newlines s);
          bs b "<pre></pre>"
         )
       else
@@ -314,68 +301,68 @@ class virtual text =
          bs b "<pre><code class=\"";
          bs b Odoc_ocamlhtml.code_class;
          bs b "\">" ;
-         bs b (self#escape (remove_useless_newlines s));
+         bs b (escape (remove_useless_newlines s));
          bs b "</code></pre>"
         )
 
-    method html_of_Verbatim b s =
+    let html_of_Verbatim b s =
       bs b "<pre>";
-      bs b (self#escape s);
+      bs b (escape s);
       bs b "</pre>"
 
-    method html_of_Bold b t =
+    let html_of_Bold b t =
       bs b "<b>";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</b>"
 
-    method html_of_Italic b t =
+    let html_of_Italic b t =
       bs b "<i>" ;
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</i>"
 
-    method html_of_Emphasize b t =
+    let html_of_Emphasize b t =
       bs b "<em>" ;
-      self#html_of_text b t ;
+      html_of_text b t ;
       bs b "</em>"
 
-    method html_of_Center b t =
+    let html_of_Center b t =
       bs b "<center>";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</center>"
 
-    method html_of_Left b t =
+    let html_of_Left b t =
       bs b "<div align=left>";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</div>"
 
-    method html_of_Right b t =
+    let html_of_Right b t =
       bs b "<div align=right>";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</div>"
 
-    method html_of_List b tl =
+    let html_of_List b tl =
       bs b "<ul>\n";
       List.iter
-        (fun t -> bs b "<li>"; self#html_of_text b t; bs b "</li>\n")
+        (fun t -> bs b "<li>"; html_of_text b t; bs b "</li>\n")
         tl;
       bs b "</ul>\n"
 
-    method html_of_Enum b tl =
+    let html_of_Enum b tl =
       bs b "<OL>\n";
       List.iter
-        (fun t -> bs b "<li>"; self#html_of_text b t; bs b"</li>\n")
+        (fun t -> bs b "<li>"; html_of_text b t; bs b"</li>\n")
         tl;
       bs b "</OL>\n"
 
-    method html_of_Newline b = bs b "\n<p>\n"
+    let html_of_Newline b = bs b "\n<p>\n"
 
-    method html_of_Block b t =
+    let html_of_Block b t =
       bs b "<blockquote>\n";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</blockquote>\n"
 
-    method html_of_Title b n label_opt t =
-      let label1 = self#create_title_label (n, label_opt, t) in
+    let html_of_Title b n label_opt t =
+      let label1 = create_title_label (n, label_opt, t) in
       bp b "<span id=\"%s\">" (naming_label_target label1);
       let (tag_o, tag_c) =
         if n > 6 then
@@ -386,23 +373,23 @@ class virtual text =
       bs b "<";
       bs b tag_o;
       bs b ">";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</";
       bs b tag_c;
       bs b ">";
       bs b "</span>"
 
-    method html_of_Latex b _ = ()
+    let html_of_Latex b _ = ()
       (* don't care about LaTeX stuff in HTML. *)
 
-    method html_of_Link b s t =
+    let html_of_Link b s t =
       bs b "<a href=\"";
       bs b s ;
       bs b "\">";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</a>"
 
-    method html_of_Ref b name ref_opt text_opt =
+    let html_of_Ref b name ref_opt text_opt =
       match ref_opt with
         None ->
           let text =
@@ -410,7 +397,7 @@ class virtual text =
               None -> [Odoc_info.Code name]
             | Some t -> t
           in
-          self#html_of_text b text
+          html_of_text b text
       | Some kind ->
           let h name = Odoc_info.Code (Odoc_info.use_hidden_modules name) in
           let (target, text) =
@@ -425,7 +412,7 @@ class virtual text =
             | Odoc_info.RK_type -> (naming_complete_target naming_mark_type name, h name)
             | Odoc_info.RK_exception -> (naming_complete_target naming_mark_exception name, h name)
             | Odoc_info.RK_attribute -> (naming_complete_target naming_mark_attribute name, h name)
-            | Odoc_info.RK_method -> (naming_complete_target naming_mark_method name, h name)
+            | Odoc_info.RK_let -> (naming_complete_target naming_mark_let name, h name)
             | Odoc_info.RK_section t -> (naming_complete_label_target name,
                                          Odoc_info.Italic [Raw (Odoc_info.string_of_text t)])
           in
@@ -435,22 +422,22 @@ class virtual text =
             | Some text -> text
           in
           bs b ("<a href=\""^target^"\">");
-          self#html_of_text b text;
+          html_of_text b text;
           bs b "</a>"
 
-    method html_of_Superscript b t =
+    let html_of_Superscript b t =
       bs b "<sup class=\"superscript\">";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</sup>"
 
-    method html_of_Subscript b t =
+    let html_of_Subscript b t =
       bs b "<sub class=\"subscript\">";
-      self#html_of_text b t;
+      html_of_text b t;
       bs b "</sub>"
 
-    method virtual html_of_info_first_sentence : _
+(*    let virtual html_of_info_first_sentence : _*)
 
-    method html_of_Module_list b l =
+    let html_of_Module_list b l =
       bs b "<br>\n<table class=\"indextable\">\n";
       List.iter
         (fun name ->
@@ -458,12 +445,12 @@ class virtual text =
           (
            try
              let m =
-               List.find (fun m -> m.m_name = name) self#list_modules
+               List.find (fun m -> m.m_name = name) list_modules
              in
              let (html, _) = naming_html_files m.m_name in
              bp b "<a href=\"%s\">%s</a></td>" html m.m_name;
              bs b "<td>";
-             self#html_of_info_first_sentence b m.m_info;
+             html_of_info_first_sentence b m.m_info;
            with
              Not_found ->
                Odoc_messages.pwarning (Odoc_messages.cross_module_not_found name);
@@ -474,56 +461,52 @@ class virtual text =
         l;
       bs b "</table>\n"
 
-    method html_of_Index_list b =
+    let html_of_Index_list b =
       let index_if_not_empty l url m =
         match l with
           [] -> ()
         | _ -> bp b "<a href=\"%s\">%s</a><br>\n" url m
       in
-      index_if_not_empty self#list_types self#index_types Odoc_messages.index_of_types;
-      index_if_not_empty self#list_exceptions self#index_exceptions Odoc_messages.index_of_exceptions;
-      index_if_not_empty self#list_values self#index_values Odoc_messages.index_of_values;
-      index_if_not_empty self#list_attributes self#index_attributes Odoc_messages.index_of_attributes;
-      index_if_not_empty self#list_methods self#index_methods Odoc_messages.index_of_methods;
-      index_if_not_empty self#list_classes self#index_classes Odoc_messages.index_of_classes;
-      index_if_not_empty self#list_class_types self#index_class_types Odoc_messages.index_of_class_types;
-      index_if_not_empty self#list_modules self#index_modules Odoc_messages.index_of_modules;
-      index_if_not_empty self#list_module_types self#index_module_types Odoc_messages.index_of_module_types
+      index_if_not_empty list_types index_types Odoc_messages.index_of_types;
+      index_if_not_empty list_exceptions index_exceptions Odoc_messages.index_of_exceptions;
+      index_if_not_empty list_values index_values Odoc_messages.index_of_values;
+      index_if_not_empty list_attributes index_attributes Odoc_messages.index_of_attributes;
+      index_if_not_empty list_lets index_lets Odoc_messages.index_of_lets;
+      index_if_not_empty list_classes index_classes Odoc_messages.index_of_classes;
+      index_if_not_empty list_class_types index_class_types Odoc_messages.index_of_class_types;
+      index_if_not_empty list_modules index_modules Odoc_messages.index_of_modules;
+      index_if_not_empty list_module_types index_module_types Odoc_messages.index_of_module_types
+(*
+    let virtual list_types : Odoc_info.Type.t_type list
+    let virtual index_types : string
+    let virtual list_exceptions : Odoc_info.Exception.t_exception list
+    let virtual index_exceptions : string
+    let virtual list_values : Odoc_info.Value.t_value list
+    let virtual index_values : string
+    let virtual list_attributes : Odoc_info.Value.t_attribute list
+    let virtual index_attributes : string
+    let virtual list_lets : Odoc_info.Value.t_let list
+    let virtual index_lets : string
+    let virtual list_classes : Odoc_info.Class.t_class list
+    let virtual index_classes : string
+    let virtual list_class_types : Odoc_info.Class.t_class_type list
+    let virtual index_class_types : string
+    let virtual list_modules : Odoc_info.Module.t_module list
+    let virtual index_modules : string
+    let virtual list_module_types : Odoc_info.Module.t_module_type list
+    let virtual index_module_types : string
+*)
 
-    method virtual list_types : Odoc_info.Type.t_type list
-    method virtual index_types : string
-    method virtual list_exceptions : Odoc_info.Exception.t_exception list
-    method virtual index_exceptions : string
-    method virtual list_values : Odoc_info.Value.t_value list
-    method virtual index_values : string
-    method virtual list_attributes : Odoc_info.Value.t_attribute list
-    method virtual index_attributes : string
-    method virtual list_methods : Odoc_info.Value.t_method list
-    method virtual index_methods : string
-    method virtual list_classes : Odoc_info.Class.t_class list
-    method virtual index_classes : string
-    method virtual list_class_types : Odoc_info.Class.t_class_type list
-    method virtual index_class_types : string
-    method virtual list_modules : Odoc_info.Module.t_module list
-    method virtual index_modules : string
-    method virtual list_module_types : Odoc_info.Module.t_module_type list
-    method virtual index_module_types : string
-
-  end
-
-(** A class used to generate html code for info structures. *)
-class virtual info =
-  object (self)
     (** The list of pairs [(tag, f)] where [f] is a function taking
        the [text] associated to [tag] and returning html code.
        Add a pair here to handle a tag.*)
-    val mutable tag_functions = ([] : (string * (Odoc_info.text -> string)) list)
+    let tag_functions = ref ([] : (string * (Odoc_info.text -> string)) list)
 
-    (** The method used to get html code from a [text]. *)
-    method virtual html_of_text : Buffer.t -> Odoc_info.text -> unit
+    (** The let used to get html code from a [text]. *)
+(*    let virtual html_of_text : Buffer.t -> Odoc_info.text -> unit *)
 
     (** Print html for an author list. *)
-    method html_of_author_list b l =
+    let html_of_author_list b l =
       match l with
         [] -> ()
       | _ ->
@@ -532,89 +515,89 @@ class virtual info =
             (String.concat ", " l)
 
     (** Print html code for the given optional version information.*)
-    method html_of_version_opt b v_opt =
+    let html_of_version_opt b v_opt =
       match v_opt with
         None -> ()
       | Some v ->
            bp b "<b>%s:</b> %s<br>\n" Odoc_messages.version v
 
     (** Print html code for the given optional since information.*)
-    method html_of_since_opt b s_opt =
+    let html_of_since_opt b s_opt =
       match s_opt with
         None -> ()
       | Some s ->
           bp b "<b>%s</b> %s<br>\n" Odoc_messages.since s
 
     (** Print html code for the given "before" information.*)
-    method html_of_before b l =
+    let html_of_before b l =
       let f (v, text) =
         bp b "<b>%s %s </b> " Odoc_messages.before v;
-        self#html_of_text b text;
+        html_of_text b text;
         bs b "<br>\n"
       in
       List.iter f l
 
     (** Print html code for the given list of raised exceptions.*)
-    method html_of_raised_exceptions b l =
+    let html_of_raised_exceptions b l =
       match l with
         [] -> ()
       | (s, t) :: [] ->
           bp b "<b>%s</b> <code>%s</code> "
             Odoc_messages.raises
             s;
-          self#html_of_text b t;
+          html_of_text b t;
           bs b "<br>\n"
       | _ ->
           bp b "<b>%s</b><ul>" Odoc_messages.raises;
           List.iter
             (fun (ex, desc) ->
               bp b "<li><code>%s</code> " ex ;
-              self#html_of_text b desc;
+              html_of_text b desc;
               bs b "</li>\n"
             )
             l;
           bs b "</ul>\n"
 
     (** Print html code for the given "see also" reference. *)
-    method html_of_see b (see_ref, t)  =
+    let html_of_see b (see_ref, t)  =
       let t_ref =
         match see_ref with
           Odoc_info.See_url s -> [ Odoc_info.Link (s, t) ]
         | Odoc_info.See_file s -> (Odoc_info.Code s) :: (Odoc_info.Raw " ") :: t
         | Odoc_info.See_doc s -> (Odoc_info.Italic [Odoc_info.Raw s]) :: (Odoc_info.Raw " ") :: t
       in
-      self#html_of_text b t_ref
+      html_of_text b t_ref
 
     (** Print html code for the given list of "see also" references.*)
-    method html_of_sees b l =
+    let html_of_sees b l =
       match l with
         [] -> ()
       | see :: [] ->
           bp b "<b>%s</b> " Odoc_messages.see_also;
-          self#html_of_see b see;
+          html_of_see b see;
           bs b "<br>\n"
       | _ ->
           bp b "<b>%s</b><ul>" Odoc_messages.see_also;
           List.iter
             (fun see ->
               bs b "<li>" ;
-              self#html_of_see b see;
+              html_of_see b see;
               bs b "</li>\n"
             )
             l;
           bs b "</ul>\n"
 
     (** Print html code for the given optional return information.*)
-    method html_of_return_opt b return_opt =
+    let html_of_return_opt b return_opt =
       match return_opt with
         None -> ()
       | Some s ->
           bp b "<b>%s</b> " Odoc_messages.returns;
-          self#html_of_text b s;
+          html_of_text b s;
           bs b "<br>\n"
 
     (** Print html code for the given list of custom tagged texts. *)
-    method html_of_custom b l =
+    let html_of_custom b l =
       List.iter
         (fun (tag, text) ->
           try
@@ -630,7 +613,7 @@ class virtual info =
        @param indent can be specified not to use the style of info comments;
        default is [true].
     *)
-    method html_of_info ?(indent=true) b info_opt =
+    let html_of_info indent b info_opt = (* ?(indent=true) *)
       match info_opt with
         None ->
           ()
@@ -644,28 +627,28 @@ class virtual info =
                bs b "<span class=\"warning\">";
                bs b Odoc_messages.deprecated ;
                bs b "</span>" ;
-               self#html_of_text b d;
+               html_of_text b d;
                bs b "<br>\n"
           );
           (
            match info.M.i_desc with
              None -> ()
            | Some d when d = [Odoc_info.Raw ""] -> ()
-           | Some d -> self#html_of_text b d; bs b "<br>\n"
+           | Some d -> html_of_text b d; bs b "<br>\n"
           );
-          self#html_of_author_list b info.M.i_authors;
-          self#html_of_version_opt b info.M.i_version;
-          self#html_of_before b info.M.i_before;
-          self#html_of_since_opt b info.M.i_since;
-          self#html_of_raised_exceptions b info.M.i_raised_exceptions;
-          self#html_of_return_opt b info.M.i_return_value;
-          self#html_of_sees b info.M.i_sees;
-          self#html_of_custom b info.M.i_custom;
+          html_of_author_list b info.M.i_authors;
+          html_of_version_opt b info.M.i_version;
+          html_of_before b info.M.i_before;
+          html_of_since_opt b info.M.i_since;
+          html_of_raised_exceptions b info.M.i_raised_exceptions;
+          html_of_return_opt b info.M.i_return_value;
+          html_of_sees b info.M.i_sees;
+          html_of_custom b info.M.i_custom;
           if indent then bs b "</div>\n"
 
     (** Print html code for the first sentence of a description.
        The titles and lists in this first sentence has been removed.*)
-    method html_of_info_first_sentence b info_opt =
+    let html_of_info_first_sentence b info_opt =
       match info_opt with
         None -> ()
       | Some info ->
@@ -678,15 +661,13 @@ class virtual info =
              None -> ()
            | Some d when d = [Odoc_info.Raw ""] -> ()
            | Some d ->
-               self#html_of_text b
+               html_of_text b
                  (Odoc_info.text_no_title_no_list
                     (Odoc_info.first_sentence_of_text d));
                bs b "\n"
           );
           if dep then bs b "</font>";
           bs b "</div>\n"
-
-  end
 
 
 
@@ -714,18 +695,13 @@ let newline_to_indented_br s =
   Buffer.contents b
 
 (** This class is used to create objects which can generate a simple html documentation. *)
-class html =
-  object (self)
-    inherit text
-    inherit info
-
-    val mutable doctype =
+    let doctype =
       "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
-    val mutable character_encoding =
+    let character_encoding =
       "<meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"Content-Type\">\n"
 
     (** The default style options. *)
-    val mutable default_style_options =
+    let default_style_options =
       ["a:visited {color : #416DFF; text-decoration : none; }" ;
         "a:link {color : #416DFF; text-decoration : none;}" ;
         "a:hover {color : Red; text-decoration : none; background-color: #5FFF88}" ;
@@ -798,90 +774,91 @@ class html =
       ]
 
     (** The style file for all pages. *)
-    val mutable style_file = "style.css"
+    let style_file = "style.css"
 
     (** The code to import the style. Initialized in [init_style]. *)
-    val mutable style = ""
+    let style = ""
 
     (** The known types names.
        Used to know if we must create a link to a type
        when printing a type. *)
-    val mutable known_types_names = Set.empty_generic
+    let known_types_names = Set.empty_generic
 
     (** The known class and class type names.
        Used to know if we must create a link to a class
        or class type or not when printing a type. *)
-    val mutable known_classes_names = Set.empty_generic
+    let known_classes_names = Set.empty_generic
 
     (** The known modules and module types names.
        Used to know if we must create a link to a type or not
        when printing a module type. *)
-    val mutable known_modules_names = Set.empty_generic
+    let known_modules_names = Set.empty_generic
 
-    method index_prefix =
+    let index_prefix =
       if !Odoc_args.out_file = Odoc_messages.default_out_file then
         "index"
       else
         Filename.basename !Odoc_args.out_file
 
     (** The main file. *)
-    method index =
-      let p = self#index_prefix in
+    let index =
+      let p = index_prefix in
       Printf.sprintf "%s.html" p
 
     (** The file for the index of values. *)
-    method index_values = Printf.sprintf "%s_values.html" self#index_prefix
+    let index_values = Printf.sprintf "%s_values.html" index_prefix
     (** The file for the index of types. *)
-    method index_types = Printf.sprintf "%s_types.html" self#index_prefix
+    let index_types = Printf.sprintf "%s_types.html" index_prefix
     (** The file for the index of exceptions. *)
-    method index_exceptions = Printf.sprintf "%s_exceptions.html" self#index_prefix
+    let index_exceptions = Printf.sprintf "%s_exceptions.html" index_prefix
     (** The file for the index of attributes. *)
-    method index_attributes = Printf.sprintf "%s_attributes.html" self#index_prefix
-    (** The file for the index of methods. *)
-    method index_methods = Printf.sprintf "%s_methods.html" self#index_prefix
+    let index_attributes = Printf.sprintf "%s_attributes.html" index_prefix
+    (** The file for the index of lets. *)
+    let index_lets = Printf.sprintf "%s_lets.html" index_prefix
     (** The file for the index of classes. *)
-    method index_classes = Printf.sprintf "%s_classes.html" self#index_prefix
+    let index_classes = Printf.sprintf "%s_classes.html" index_prefix
     (** The file for the index of class types. *)
-    method index_class_types = Printf.sprintf "%s_class_types.html" self#index_prefix
+    let index_class_types = Printf.sprintf "%s_class_types.html" index_prefix
     (** The file for the index of modules. *)
-    method index_modules = Printf.sprintf "%s_modules.html" self#index_prefix
+    let index_modules = Printf.sprintf "%s_modules.html" index_prefix
     (** The file for the index of module types. *)
-    method index_module_types = Printf.sprintf "%s_module_types.html" self#index_prefix
+    let index_module_types = Printf.sprintf "%s_module_types.html" index_prefix
 
 
-    (** The list of attributes. Filled in the [generate] method. *)
-    val mutable list_attributes = []
-    method list_attributes = list_attributes
-    (** The list of methods. Filled in the [generate] method. *)
-    val mutable list_methods = []
-    method list_methods = list_methods
-    (** The list of values. Filled in the [generate] method. *)
-    val mutable list_values = []
-    method list_values = list_values
-    (** The list of exceptions. Filled in the [generate] method. *)
-    val mutable list_exceptions = []
-    method list_exceptions = list_exceptions
-    (** The list of types. Filled in the [generate] method. *)
-    val mutable list_types = []
-    method list_types = list_types
-    (** The list of modules. Filled in the [generate] method. *)
-    val mutable list_modules = []
-    method list_modules = list_modules
-    (** The list of module types. Filled in the [generate] method. *)
-    val mutable list_module_types = []
-    method list_module_types = list_module_types
-    (** The list of classes. Filled in the [generate] method. *)
-    val mutable list_classes = []
-    method list_classes = list_classes
-    (** The list of class types. Filled in the [generate] method. *)
-    val mutable list_class_types = []
-    method list_class_types = list_class_types
+    (** The list of attributes. Filled in the [generate] let. *)
+    let list_attributes = []
+    let list_attributes = list_attributes
+    (** The list of lets. Filled in the [generate] let. *)
+    let list_lets = []
+    let list_lets = list_lets
+    (** The list of values. Filled in the [generate] let. *)
+    let list_values = []
+    let list_values = list_values
+    (** The list of exceptions. Filled in the [generate] let. *)
+    let list_exceptions = []
+    let list_exceptions = list_exceptions
+    (** The list of types. Filled in the [generate] let. *)
+    let list_types = []
+    let list_types = list_types
+    (** The list of modules. Filled in the [generate] let. *)
+    let list_modules = []
+    let list_modules = list_modules
+    (** The list of module types. Filled in the [generate] let. *)
+    let list_module_types = []
+    let list_module_types = list_module_types
+    (** The list of classes. Filled in the [generate] let. *)
+    let list_classes = []
+    let list_classes = list_classes
+    (** The list of class types. Filled in the [generate] let. *)
+    let list_class_types = []
+    let list_class_types = list_class_types
 
-    (** The header of pages. Must be prepared by the [prepare_header] method.*)
-    val mutable header = fun b -> fun ?(nav=None) -> fun ?(comments=[]) -> fun _ -> ()
+    (** The header of pages. Must be prepared by the [prepare_header] let.*)
+(* ?(nav=None) ?(comments=[]) *)
+    let header = fun b nav comments _ -> ()
 
     (** Init the style. *)
-    method init_style =
+    let init_style =
       (match !Args.css_style with
         None ->
           let default_style = String.concat "\n" default_style_options in
@@ -904,24 +881,24 @@ class html =
                incr Odoc_info.errors ;
           )
       | Some f ->
-          style_file <- f
+          style_file := f
       );
-      style <- "<link rel=\"stylesheet\" href=\""^style_file^"\" type=\"text/css\">\n"
+      style := "<link rel=\"stylesheet\" href=\""^style_file^"\" type=\"text/css\">\n"
 
     (** Get the title given by the user *)
-    method title = match !Args.title with None -> "" | Some t -> self#escape t
+    let title = match !Args.title with None -> "" | Some t -> escape t
 
     (** Get the title given by the user completed with the given subtitle. *)
-    method inner_title s =
-      (match self#title with "" -> "" | t -> t^" : ")^
-      (self#escape s)
+    let inner_title s =
+      (match title with "" -> "" | t -> t^" : ")^
+      (escape s)
 
     (** Get the page header. *)
-    method print_header b ?nav ?comments title = header b ?nav ?comments title
+    let print_header b nav comments title = header b nav comments title
 
     (** A function to build the header of pages. *)
-    method prepare_header module_list =
-      let f b ?(nav=None) ?(comments=[]) t  =
+    let prepare_header module_list =
+      let f b nav comments t = (* ?(nav=None) ?(comments=[]) *)
         let link_if_not_empty l m url =
           match l with
             [] -> ()
@@ -932,7 +909,7 @@ class html =
         bs b style;
         bs b character_encoding ;
         bs b "<link rel=\"Start\" href=\"";
-        bs b self#index;
+        bs b index;
         bs b "\">\n" ;
         (
          match nav with
@@ -952,35 +929,35 @@ class html =
              );
              (
               let father = Name.father name in
-              let href = if father = "" then self#index else fst (naming_html_files father) in
+              let href = if father = "" then index else fst (naming_html_files father) in
               bp b "<link rel=\"Up\" href=\"%s\">\n" href
              )
         );
-        link_if_not_empty self#list_types Odoc_messages.index_of_types self#index_types;
-        link_if_not_empty self#list_exceptions Odoc_messages.index_of_exceptions self#index_exceptions;
-        link_if_not_empty self#list_values Odoc_messages.index_of_values self#index_values;
-        link_if_not_empty self#list_attributes Odoc_messages.index_of_attributes self#index_attributes;
-        link_if_not_empty self#list_methods Odoc_messages.index_of_methods self#index_methods;
-        link_if_not_empty self#list_classes Odoc_messages.index_of_classes self#index_classes;
-        link_if_not_empty self#list_class_types Odoc_messages.index_of_class_types self#index_class_types;
-        link_if_not_empty self#list_modules Odoc_messages.index_of_modules self#index_modules;
-        link_if_not_empty self#list_module_types Odoc_messages.index_of_module_types self#index_module_types;
+        link_if_not_empty list_types Odoc_messages.index_of_types index_types;
+        link_if_not_empty list_exceptions Odoc_messages.index_of_exceptions index_exceptions;
+        link_if_not_empty list_values Odoc_messages.index_of_values index_values;
+        link_if_not_empty list_attributes Odoc_messages.index_of_attributes index_attributes;
+        link_if_not_empty list_lets Odoc_messages.index_of_lets index_lets;
+        link_if_not_empty list_classes Odoc_messages.index_of_classes index_classes;
+        link_if_not_empty list_class_types Odoc_messages.index_of_class_types index_class_types;
+        link_if_not_empty list_modules Odoc_messages.index_of_modules index_modules;
+        link_if_not_empty list_module_types Odoc_messages.index_of_module_types index_module_types;
         let print_one m =
           let html_file = fst (naming_html_files m.m_name) in
           bp b "<link title=\"%s\" rel=\"Chapter\" href=\"%s\">"
             m.m_name html_file
         in
         print_concat b "\n" print_one module_list;
-        self#html_sections_links b comments;
+        html_sections_links b comments;
         bs b "<title>";
         bs b t ;
         bs b "</title>\n</head>\n"
       in
-      header <- f
+      header := f
 
     (** Build the html code for the link tags in the header, defining section and
        subsections for the titles found in the given comments.*)
-    method html_sections_links b comments =
+    let html_sections_links b comments =
       let titles = List.flatten (List.map Odoc_info.get_titles_in_text comments) in
       let levels =
         let rec iter acc l =
@@ -1011,7 +988,7 @@ class html =
         List.iter
           (fun (n,lopt,t) ->
             let s = Odoc_info.string_of_text t in
-            let label = self#create_title_label (n,lopt,t) in
+            let label = create_title_label (n,lopt,t) in
             bp b "<link title=\"%s\" rel=\"%s\" href=\"#%s\">\n" s s_rel label
           )
           titles
@@ -1024,7 +1001,7 @@ class html =
        @param pre optional name for optional previous module/class
        @param post optional name for optional next module/class
        @param name name of current module/class *)
-    method print_navbar b pre post name =
+    let print_navbar b pre post name =
       bs b "<div class=\"navbar\">";
       (
        match pre with
@@ -1036,7 +1013,7 @@ class html =
       );
       bs b "&nbsp;";
       let father = Name.father name in
-      let href = if father = "" then self#index else fst (naming_html_files father) in
+      let href = if father = "" then index else fst (naming_html_files father) in
       bp b "<a href=\"%s\">%s</a>\n" href Odoc_messages.up;
       bs b "&nbsp;";
       (
@@ -1050,21 +1027,21 @@ class html =
       bs b "</div>\n"
 
     (** Return html code with the given string in the keyword style.*)
-    method keyword s =
+    let keyword s =
       "<span class=\"keyword\">"^s^"</span>"
 
     (** Return html code with the given string in the constructor style. *)
-    method constructor s = "<span class=\"constructor\">"^s^"</span>"
+    let constructor s = "<span class=\"constructor\">"^s^"</span>"
 
     (** Output the given ocaml code to the given file name. *)
-    method private output_code in_title file code =
+    let private output_code in_title file code =
       try
         let chanout = open_out file in
         let b = new_buf () in
         bs b "<html>";
-        self#print_header b (self#inner_title in_title);
+        print_header b (inner_title in_title);
         bs b"<body>\n";
-        self#html_of_code b code;
+        html_of_code b code;
         bs b "</body></html>";
         Buffer.output_buffer chanout b;
         close_out chanout
@@ -1076,7 +1053,7 @@ class html =
     (** Take a string and return the string where fully qualified
        type (or class or class type) idents
        have been replaced by links to the type referenced by the ident.*)
-    method create_fully_qualified_idents_links m_name s =
+    let create_fully_qualified_idents_links m_name s =
       let f str_t =
         let match_s = Str.matched_string str_t in
         let rel = Name.get_relative m_name match_s in
@@ -1105,7 +1082,7 @@ class html =
 
     (** Take a string and return the string where fully qualified module idents
        have been replaced by links to the module referenced by the ident.*)
-    method create_fully_qualified_module_idents_links m_name s =
+    let create_fully_qualified_module_idents_links m_name s =
       let f str_t =
         let match_s = Str.matched_string str_t in
         let rel = Name.get_relative m_name match_s in
@@ -1128,82 +1105,82 @@ class html =
       s2
 
     (** Print html code to display a [Types.type_expr]. *)
-    method html_of_type_expr b m_name t =
+    let html_of_type_expr b m_name t =
       let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_type_expr t) in
       let s2 = newline_to_indented_br s in
       bs b "<code class=\"type\">";
-      bs b (self#create_fully_qualified_idents_links m_name s2);
+      bs b (create_fully_qualified_idents_links m_name s2);
       bs b "</code>"
 
     (** Print html code to display a [Types.type_expr list]. *)
-    method html_of_type_expr_list ?par b m_name sep l =
+    let html_of_type_expr_list par b m_name sep l = (* ?par *)
       print_DEBUG "html#html_of_type_expr_list";
-      let s = Odoc_info.string_of_type_list ?par sep l in
+      let s = Odoc_info.string_of_type_list par sep l in
       print_DEBUG "html#html_of_type_expr_list: 1";
       let s2 = newline_to_indented_br s in
       print_DEBUG "html#html_of_type_expr_list: 2";
       bs b "<code class=\"type\">";
-      bs b (self#create_fully_qualified_idents_links m_name s2);
+      bs b (create_fully_qualified_idents_links m_name s2);
       bs b "</code>"
 
     (** Print html code to display a [Types.type_expr list] as type parameters
        of a class of class type. *)
-    method html_of_class_type_param_expr_list b m_name l =
+    let html_of_class_type_param_expr_list b m_name l =
       let s = Odoc_info.string_of_class_type_param_list l in
       let s2 = newline_to_indented_br s in
       bs b "<code class=\"type\">[";
-      bs b (self#create_fully_qualified_idents_links m_name s2);
+      bs b (create_fully_qualified_idents_links m_name s2);
       bs b "]</code>"
 
-    method html_of_class_parameter_list b father c =
+    let html_of_class_parameter_list b father c =
       let s = Odoc_info.string_of_class_params c in
       let s = Odoc_info.remove_ending_newline s in
       let s2 = newline_to_indented_br s in
       bs b "<code class=\"type\">";
-      bs b (self#create_fully_qualified_idents_links father s2);
+      bs b (create_fully_qualified_idents_links father s2);
       bs b "</code>"
 
     (** Print html code to display a list of type parameters for the given type.*)
-    method html_of_type_expr_param_list b m_name t =
+    let html_of_type_expr_param_list b m_name t =
       let s = Odoc_info.string_of_type_param_list t in
       let s2 = newline_to_indented_br s in
       bs b "<code class=\"type\">";
-      bs b (self#create_fully_qualified_idents_links m_name s2);
+      bs b (create_fully_qualified_idents_links m_name s2);
       bs b "</code>"
 
     (** Print html code to display a [Types.module_type]. *)
-    method html_of_module_type b ?code m_name t =
-      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_module_type ?code t) in
+    let html_of_module_type b code m_name t = (* ?code *)
+      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_module_type code t) in
       bs b "<code class=\"type\">";
-      bs b (self#create_fully_qualified_module_idents_links m_name s);
+      bs b (create_fully_qualified_module_idents_links m_name s);
       bs b "</code>"
 
     (** Print html code to display the given module kind. *)
-    method html_of_module_kind b father ?modu kind =
+    let html_of_module_kind b father modu kind = (* ?modu *)
       match kind with
         Module_struct eles ->
-          self#html_of_text b [Code "sig"];
+          html_of_text b [Code "sig"];
           (
            match modu with
              None ->
                bs b "<div class=\"sig_block\">";
-               List.iter (self#html_of_module_element b father) eles;
+               List.iter (html_of_module_element b father) eles;
                bs b "</div>"
            | Some m ->
                let (html_file, _) = naming_html_files m.m_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
-          self#html_of_text b [Code "end"]
+          html_of_text b [Code "end"]
       | Module_alias a ->
           bs b "<code class=\"type\">";
-          bs b (self#create_fully_qualified_module_idents_links father a.ma_name);
+          bs b (create_fully_qualified_module_idents_links father a.ma_name);
           bs b "</code>"
       | Module_functor (p, k) ->
           if !Odoc_info.Args.html_short_functors then
             bs b " "
           else
             bs b "<div class=\"sig_block\">";
-          self#html_of_module_parameter b father p;
+          html_of_module_parameter b father p;
           (
            match k with
              Module_functor _ -> ()
@@ -1211,84 +1188,84 @@ class html =
                bs b ": "
            | _ -> ()
           );
-          self#html_of_module_kind b father ?modu k;
+          html_of_module_kind b father modu k;
           if not !Odoc_info.Args.html_short_functors then
             bs b "</div>"
       | Module_apply (k1, k2) ->
           (* TODO: l'application n'est pas correcte dans un .mli.
              Que faire ? -> afficher le module_type du typedtree  *)
-          self#html_of_module_kind b father k1;
-          self#html_of_text b [Code "("];
-          self#html_of_module_kind b father k2;
-          self#html_of_text b [Code ")"]
+          html_of_module_kind b father k1;
+          html_of_text b [Code "("];
+          html_of_module_kind b father k2;
+          html_of_text b [Code ")"]
       | Module_with (k, s) ->
           (* TODO: à modifier quand Module_with sera plus détaillé *)
-          self#html_of_module_type_kind b father ?modu k;
+          html_of_module_type_kind b father modu k;
           bs b "<code class=\"type\"> ";
-          bs b (self#create_fully_qualified_module_idents_links father s);
+          bs b (create_fully_qualified_module_idents_links father s);
           bs b "</code>"
       | Module_constraint (k, tk) ->
           (* TODO: on affiche quoi ? *)
-          self#html_of_module_kind b father ?modu k
+          html_of_module_kind b father modu k
       | Module_typeof s ->
           bs b "<code class=\"type\">module type of ";
-          bs b (self#create_fully_qualified_module_idents_links father s);
+          bs b (create_fully_qualified_module_idents_links father s);
           bs b "</code>"
       | Module_unpack (code, mta) ->
           bs b "<code class=\"type\">";
           begin
             match mta.mta_module with
               None ->
-                bs b (self#create_fully_qualified_module_idents_links father (self#escape code))
+                bs b (create_fully_qualified_module_idents_links father (escape code))
             | Some mt ->
                 let (html_file, _) = naming_html_files mt.mt_name in
-                bp b " <a href=\"%s\">%s</a> " html_file (self#escape code)
+                bp b " <a href=\"%s\">%s</a> " html_file (escape code)
           end;
           bs b "</code>"
 
 
-    method html_of_module_parameter b father p =
+    let html_of_module_parameter b father p =
       let (s_functor,s_arrow) =
         if !Odoc_info.Args.html_short_functors then
           "", ""
         else
           "functor ", "-> "
       in
-      self#html_of_text b
+      html_of_text b
         [
           Code (s_functor^"(");
           Code p.mp_name ;
           Code " : ";
         ] ;
-      self#html_of_module_type_kind b father p.mp_kind;
-      self#html_of_text b [ Code (") "^s_arrow)]
+      html_of_module_type_kind b father p.mp_kind;
+      html_of_text b [ Code (") "^s_arrow)]
 
-    method html_of_module_element b father ele =
+    let html_of_module_element b father ele =
       match ele with
         Element_module m ->
-          self#html_of_module b ~complete: false m
+          html_of_module b false m
       | Element_module_type mt ->
-          self#html_of_modtype b ~complete: false mt
+          html_of_modtype b false mt
       | Element_included_module im ->
-          self#html_of_included_module b im
+          html_of_included_module b im
       | Element_class c ->
-          self#html_of_class b ~complete: false c
+          html_of_class b false c
       | Element_class_type ct ->
-          self#html_of_class_type b ~complete: false ct
+          html_of_class_type b false ct
       | Element_value v ->
-          self#html_of_value b v
+          html_of_value b v
       | Element_exception e ->
-          self#html_of_exception b e
+          html_of_exception b e
       | Element_type t ->
-          self#html_of_type b t
+          html_of_type b t
       | Element_module_comment text ->
-          self#html_of_module_comment b text
+          html_of_module_comment b text
 
     (** Print html code to display the given module type kind. *)
-    method html_of_module_type_kind b father ?modu ?mt kind =
+    let html_of_module_type_kind b father modu mt kind = (* ?mt *)
       match kind with
         Module_type_struct eles ->
-          self#html_of_text b [Code "sig"];
+          html_of_text b [Code "sig"];
           (
            match mt with
              None ->
@@ -1296,7 +1273,7 @@ class html =
                 match modu with
                   None ->
                     bs b "<div class=\"sig_block\">";
-                    List.iter (self#html_of_module_element b father) eles;
+                    List.iter (html_of_module_element b father) eles;
                     bs b "</div>"
                 | Some m ->
                     let (html_file, _) = naming_html_files m.m_name in
@@ -1306,71 +1283,71 @@ class html =
                let (html_file, _) = naming_html_files mt.mt_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
-          self#html_of_text b [Code "end"]
+          html_of_text b [Code "end"]
       | Module_type_functor (p, k) ->
-          self#html_of_module_parameter b father p;
-          self#html_of_module_type_kind b father ?modu ?mt k
+          html_of_module_parameter b father p;
+          html_of_module_type_kind b father modu mt k
       | Module_type_alias a ->
           bs b "<code class=\"type\">";
-          bs b (self#create_fully_qualified_module_idents_links father a.mta_name);
+          bs b (create_fully_qualified_module_idents_links father a.mta_name);
           bs b "</code>"
       | Module_type_with (k, s) ->
-          self#html_of_module_type_kind b father ?modu ?mt k;
+          html_of_module_type_kind b father modu mt k;
           bs b "<code class=\"type\"> ";
-          bs b (self#create_fully_qualified_module_idents_links father s);
+          bs b (create_fully_qualified_module_idents_links father s);
           bs b "</code>"
       | Module_type_typeof s ->
           bs b "<code class=\"type\">module type of ";
-          bs b (self#create_fully_qualified_module_idents_links father s);
+          bs b (create_fully_qualified_module_idents_links father s);
           bs b "</code>"
 
     (** Print html code to display the type of a module parameter.. *)
-    method html_of_module_parameter_type b m_name p =
-      self#html_of_module_type b m_name ~code: p.mp_type_code p.mp_type
+    let html_of_module_parameter_type b m_name p =
+      html_of_module_type b m_name p.mp_type_code p.mp_type
 
     (** Generate a file containing the module type in the given file name. *)
-    method output_module_type in_title file mtyp =
-      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_module_type ~complete: true mtyp) in
-      self#output_code in_title file s
+    let output_module_type in_title file mtyp =
+      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_module_type true mtyp) in
+      output_code in_title file s
 
     (** Generate a file containing the class type in the given file name. *)
-    method output_class_type in_title file ctyp =
-      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_class_type ~complete: true ctyp) in
-      self#output_code in_title file s
+    let output_class_type in_title file ctyp =
+      let s = Odoc_info.remove_ending_newline (Odoc_info.string_of_class_type true ctyp) in
+      output_code in_title file s
 
     (** Print html code for a value. *)
-    method html_of_value b v =
+    let html_of_value b v =
       Odoc_info.reset_type_names ();
       bs b "<pre>" ;
       bp b "<span id=\"%s\">" (naming_value_target v);
-      bs b (self#keyword "val");
+      bs b (keyword "val");
       bs b " ";
       (
        match v.val_code with
-         None -> bs b (self#escape (Name.simple v.val_name))
+         None -> bs b (escape (Name.simple v.val_name))
        | Some c ->
            let file = naming_file_code_value_complete_target v in
-           self#output_code v.val_name (Filename.concat !Args.target_dir file) c;
-           bp b "<a href=\"%s\">%s</a>" file (self#escape (Name.simple v.val_name))
+           output_code v.val_name (Filename.concat !Args.target_dir file) c;
+           bp b "<a href=\"%s\">%s</a>" file (escape (Name.simple v.val_name))
       );
       bs b "</span>";
       bs b " : ";
-      self#html_of_type_expr b (Name.father v.val_name) v.val_type;
+      html_of_type_expr b (Name.father v.val_name) v.val_type;
       bs b "</pre>";
-      self#html_of_info b v.val_info;
+      html_of_info b v.val_info;
       (
        if !Args.with_parameter_list then
-         self#html_of_parameter_list b (Name.father v.val_name) v.val_parameters
+         html_of_parameter_list b (Name.father v.val_name) v.val_parameters
        else
-         self#html_of_described_parameter_list b (Name.father v.val_name) v.val_parameters
+         html_of_described_parameter_list b (Name.father v.val_name) v.val_parameters
       )
 
     (** Print html code for an exception. *)
-    method html_of_exception b e =
+    let html_of_exception b e =
       Odoc_info.reset_type_names ();
       bs b "<pre>";
       bp b "<span id=\"%s\">" (naming_exception_target e);
-      bs b (self#keyword "exception");
+      bs b (keyword "exception");
       bs b " ";
       bs b (Name.simple e.ex_name);
       bs b "</span>";
@@ -1378,9 +1355,9 @@ class html =
        match e.ex_args with
          [] -> ()
        | _ ->
-           bs b (" "^(self#keyword "of")^" ");
-           self#html_of_type_expr_list
-             ~par: false b (Name.father e.ex_name) " * " e.ex_args
+           bs b (" "^(keyword "of")^" ");
+           html_of_type_expr_list
+             false b (Name.father e.ex_name) " * " e.ex_args
       );
       (
        match e.ex_alias with
@@ -1395,10 +1372,10 @@ class html =
            )
       );
       bs b "</pre>\n";
-      self#html_of_info b e.ex_info
+      html_of_info b e.ex_info
 
     (** Print html code for a type. *)
-    method html_of_type b t =
+    let html_of_type b t =
       Odoc_info.reset_type_names ();
       let father = Name.father t.ty_name in
       bs b
@@ -1411,8 +1388,8 @@ class html =
         | Some _, Type_record _ -> "<pre>"
         );
       bp b "<span id=\"%s\">" (naming_type_target t);
-      bs b ((self#keyword "type")^" ");
-      self#html_of_type_expr_param_list b father t;
+      bs b ((keyword "type")^" ");
+      html_of_type_expr_param_list b father t;
       (match t.ty_parameters with [] -> () | _ -> bs b " ");
       bs b (Name.simple t.ty_name);
       bs b "</span> ";
@@ -1423,7 +1400,7 @@ class html =
        | Some typ ->
            bs b "= ";
            if priv then bs b "private ";
-           self#html_of_type_expr b father typ;
+           html_of_type_expr b father typ;
            bs b " "
       );
       (match t.ty_kind with
@@ -1441,16 +1418,16 @@ class html =
           let print_one constr =
             bs b "<tr>\n<td align=\"left\" valign=\"top\" >\n";
             bs b "<code>";
-            bs b (self#keyword "|");
+            bs b (keyword "|");
             bs b "</code></td>\n<td align=\"left\" valign=\"top\" >\n";
             bs b "<code>";
-            bs b (self#constructor constr.vc_name);
+            bs b (constructor constr.vc_name);
             (
              match constr.vc_args with
                [] -> ()
              | l ->
-                 bs b (" " ^ (self#keyword "of") ^ " ");
-                 self#html_of_type_expr_list ~par: false b father " * " l;
+                 bs b (" " ^ (keyword "of") ^ " ");
+                 html_of_type_expr_list false b father " * " l;
             );
             bs b "</code></td>\n";
             (
@@ -1462,7 +1439,7 @@ class html =
                  bs b "(*";
                  bs b "</code></td>";
                  bs b "<td class=\"typefieldcomment\" align=\"left\" valign=\"top\" >";
-                 self#html_of_text b t;
+                 html_of_text b t;
                  bs b "</td>";
                  bs b "<td class=\"typefieldcomment\" align=\"left\" valign=\"bottom\" >";
                  bs b "<code>";
@@ -1490,9 +1467,9 @@ class html =
             bs b "<code>&nbsp;&nbsp;</code>";
             bs b "</td>\n<td align=\"left\" valign=\"top\" >\n";
             bs b "<code>";
-            if r.rf_mutable then bs b (self#keyword "mutable&nbsp;") ;
+            if r.rf_mutable then bs b (keyword "mutable&nbsp;") ;
             bs b (r.rf_name ^ "&nbsp;: ") ;
-            self#html_of_type_expr b father r.rf_type;
+            html_of_type_expr b father r.rf_type;
             bs b ";</code></td>\n";
             (
              match r.rf_text with
@@ -1503,7 +1480,7 @@ class html =
                  bs b "(*";
                  bs b "</code></td>";
                  bs b "<td class=\"typefieldcomment\" align=\"left\" valign=\"top\" >";
-                 self#html_of_text b t;
+                 html_of_text b t;
                  bs b "</td><td class=\"typefieldcomment\" align=\"left\" valign=\"bottom\" >";
                  bs b "<code>*)</code></td>";
             );
@@ -1513,25 +1490,25 @@ class html =
           bs b "</table>\n}\n"
       );
       bs b "\n";
-      self#html_of_info b t.ty_info;
+      html_of_info b t.ty_info;
       bs b "\n"
 
     (** Print html code for a class attribute. *)
-    method html_of_attribute b a =
+    let html_of_attribute b a =
       let module_name = Name.father (Name.father a.att_value.val_name) in
       bs b "<pre>" ;
       bp b "<span id=\"%s\">" (naming_attribute_target a);
-      bs b (self#keyword "val");
+      bs b (keyword "val");
       bs b " ";
       (
        if a.att_virtual then
-         bs b ((self#keyword "virtual")^ " ")
+         bs b ((keyword "virtual")^ " ")
        else
          ()
       );
       (
        if a.att_mutable then
-         bs b ((self#keyword Odoc_messages.mutab)^ " ")
+         bs b ((keyword Odoc_messages.mutab)^ " ")
        else
          ()
       );(
@@ -1539,48 +1516,48 @@ class html =
          None -> bs b (Name.simple a.att_value.val_name)
        | Some c ->
            let file = naming_file_code_attribute_complete_target a in
-           self#output_code a.att_value.val_name (Filename.concat !Args.target_dir file) c;
+           output_code a.att_value.val_name (Filename.concat !Args.target_dir file) c;
            bp b "<a href=\"%s\">%s</a>" file (Name.simple a.att_value.val_name);
       );
       bs b "</span>";
       bs b " : ";
-      self#html_of_type_expr b module_name a.att_value.val_type;
+      html_of_type_expr b module_name a.att_value.val_type;
       bs b "</pre>";
-      self#html_of_info b a.att_value.val_info
+      html_of_info b a.att_value.val_info
 
-    (** Print html code for a class method. *)
-    method html_of_method b m =
+    (** Print html code for a class let. *)
+    let html_of_let b m =
       let module_name = Name.father (Name.father m.met_value.val_name) in
       bs b "<pre>";
       (* html mark *)
-      bp b "<span id=\"%s\">" (naming_method_target m);
-     bs b ((self#keyword "method")^" ");
-       if m.met_private then bs b ((self#keyword "private")^" ");
-      if m.met_virtual then bs b ((self#keyword "virtual")^" ");
+      bp b "<span id=\"%s\">" (naming_let_target m);
+     bs b ((keyword "let")^" ");
+       if m.met_private then bs b ((keyword "private")^" ");
+      if m.met_virtual then bs b ((keyword "virtual")^" ");
       (
        match m.met_value.val_code with
          None -> bs b  (Name.simple m.met_value.val_name)
        | Some c ->
-           let file = naming_file_code_method_complete_target m in
-           self#output_code m.met_value.val_name (Filename.concat !Args.target_dir file) c;
+           let file = naming_file_code_let_complete_target m in
+           output_code m.met_value.val_name (Filename.concat !Args.target_dir file) c;
            bp b "<a href=\"%s\">%s</a>" file (Name.simple m.met_value.val_name);
       );
       bs b "</span>";
       bs b " : ";
-      self#html_of_type_expr b module_name m.met_value.val_type;
+      html_of_type_expr b module_name m.met_value.val_type;
       bs b "</pre>";
-      self#html_of_info b m.met_value.val_info;
+      html_of_info b m.met_value.val_info;
       (
        if !Args.with_parameter_list then
-         self#html_of_parameter_list b
+         html_of_parameter_list b
            module_name m.met_value.val_parameters
        else
-         self#html_of_described_parameter_list b
+         html_of_described_parameter_list b
            module_name m.met_value.val_parameters
       )
 
     (** Print html code for the description of a function parameter. *)
-    method html_of_parameter_description b p =
+    let html_of_parameter_description b p =
       match Parameter.names p with
         [] ->
           ()
@@ -1589,7 +1566,7 @@ class html =
            (* Only one name, no need for label for the description. *)
            match Parameter.desc_by_name p name with
              None -> ()
-           | Some t -> self#html_of_text b t
+           | Some t -> html_of_text b t
           )
       | l ->
           (*  A list of names, we display those with a description. *)
@@ -1604,12 +1581,12 @@ class html =
                 bs b "<code>";
                 bs b n;
                 bs b "</code> : ";
-                self#html_of_text b t
+                html_of_text b t
           in
           print_concat b "<br>\n" print_one l2
 
     (** Print html code for a list of parameters. *)
-    method html_of_parameter_list b m_name l =
+    let html_of_parameter_list b m_name l =
       match l with
         [] -> ()
       | _ ->
@@ -1630,16 +1607,16 @@ class html =
               );
             bs b "</td>\n<td align=\"center\" valign=\"top\">:</td>\n";
             bs b "<td>";
-            self#html_of_type_expr b m_name (Parameter.typ p);
+            html_of_type_expr b m_name (Parameter.typ p);
             bs b "<br>\n";
-            self#html_of_parameter_description b p;
+            html_of_parameter_description b p;
             bs b "\n</tr>\n";
           in
           List.iter print_one l;
           bs b "</table>\n</td>\n</tr>\n</table></div>\n"
 
     (** Print html code for the parameters which have a name and description. *)
-    method html_of_described_parameter_list b m_name l =
+    let html_of_described_parameter_list b m_name l =
       (* get the params which have a name, and at least one name described. *)
       let l2 = List.filter
           (fun p ->
@@ -1652,13 +1629,13 @@ class html =
         bs b "<div class=\"param_info\"><code class=\"code\">";
         bs b (Parameter.complete_name p);
         bs b "</code> : " ;
-        self#html_of_parameter_description b p;
+        html_of_parameter_description b p;
         bs b "</div>\n"
       in
       List.iter f l2
 
     (** Print html code for a list of module parameters. *)
-    method html_of_module_parameter_list b m_name l =
+    let html_of_module_parameter_list b m_name l =
       match l with
         [] ->
           ()
@@ -1677,14 +1654,14 @@ class html =
               bs b "</code></td>\n" ;
               bs b "<td align=\"center\" valign=\"top\">:</td>\n";
               bs b "<td>" ;
-              self#html_of_module_parameter_type b m_name p;
+              html_of_module_parameter_type b m_name p;
               bs b "\n";
               (
                match desc_opt with
                  None -> ()
                | Some t ->
                    bs b "<br>";
-                   self#html_of_text b t;
+                   html_of_text b t;
                    bs b "\n</tr>\n" ;
               )
             )
@@ -1692,11 +1669,11 @@ class html =
           bs b "</table>\n</td>\n</tr>\n</table>\n"
 
     (** Print html code for a module. *)
-    method html_of_module b ?(info=true) ?(complete=true) ?(with_link=true) m =
+    let html_of_module b info complete with_link m = (* ?(info=true) ?(complete=true) ?(with_link=true) *)
       let (html_file, _) = naming_html_files m.m_name in
       let father = Name.father m.m_name in
       bs b "<pre>";
-      bs b ((self#keyword "module")^" ");
+      bs b ((keyword "module")^" ");
       (
        if with_link then
          bp b "<a href=\"%s\">%s</a>" html_file (Name.simple m.m_name)
@@ -1709,24 +1686,24 @@ class html =
            ()
        | _ -> bs b ": "
       );
-      self#html_of_module_kind b father ~modu: m m.m_kind;
+      html_of_module_kind b father  m m.m_kind;
       bs b "</pre>";
       if info then
         (
          if complete then
-           self#html_of_info ~indent: false
+           html_of_info false
          else
-           self#html_of_info_first_sentence
+           html_of_info_first_sentence
         ) b m.m_info
       else
         ()
 
     (** Print html code for a module type. *)
-    method html_of_modtype b ?(info=true) ?(complete=true) ?(with_link=true) mt =
+    let html_of_modtype b info complete with_link mt = (* ?(info=true) ?(complete=true) ?(with_link=true) *)
       let (html_file, _) = naming_html_files mt.mt_name in
       let father = Name.father mt.mt_name in
       bs b "<pre>";
-      bs b ((self#keyword "module type")^" ");
+      bs b ((keyword "module type")^" ");
       (
        if with_link then
          bp b "<a href=\"%s\">%s</a>" html_file (Name.simple mt.mt_name)
@@ -1737,23 +1714,23 @@ class html =
         None -> ()
       | Some k ->
           bs b " = ";
-          self#html_of_module_type_kind b father ~mt k
+          html_of_module_type_kind b father mt k
       );
       bs b "</pre>";
       if info then
         (
          if complete then
-           self#html_of_info ~indent: false
+           html_of_info false
          else
-           self#html_of_info_first_sentence
+           html_of_info_first_sentence
         ) b mt.mt_info
       else
         ()
 
     (** Print html code for an included module. *)
-    method html_of_included_module b im =
+    let html_of_included_module b im =
       bs b "<pre>";
-      bs b ((self#keyword "include")^" ");
+      bs b ((keyword "include")^" ");
       (
        match im.im_module with
          None ->
@@ -1771,21 +1748,21 @@ class html =
            bp b "<a href=\"%s\">%s</a>" file name
       );
       bs b "</pre>\n";
-      self#html_of_info b im.im_info
+      html_of_info b im.im_info
 
-    method html_of_class_element b element =
+    let html_of_class_element b element =
       match element with
         Class_attribute a ->
-          self#html_of_attribute b a
-      | Class_method m ->
-          self#html_of_method b m
+          html_of_attribute b a
+      | Class_let m ->
+          html_of_let b m
       | Class_comment t ->
-          self#html_of_class_comment b t
+          html_of_class_comment b t
 
-    method html_of_class_kind b father ?cl kind =
+    let html_of_class_kind b father cl kind = (* ?cl *)
       match kind with
         Class_structure (inh, eles) ->
-          self#html_of_text b [Code "object"];
+          html_of_text b [Code "object"];
           (
            match cl with
              None ->
@@ -1794,54 +1771,54 @@ class html =
                 match inh with
                   [] -> ()
                 | _ ->
-                    self#generate_inheritance_info b inh
+                    generate_inheritance_info b inh
                );
-               List.iter (self#html_of_class_element b) eles;
+               List.iter (html_of_class_element b) eles;
            | Some cl ->
                let (html_file, _) = naming_html_files cl.cl_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
-          self#html_of_text b [Code "end"]
+          html_of_text b [Code "end"]
 
       | Class_apply capp ->
           (* TODO: afficher le type final à partir du typedtree *)
-          self#html_of_text b [Raw "class application not handled yet"]
+          html_of_text b [Raw "class application not handled yet"]
 
       | Class_constr cco ->
           (
            match cco.cco_type_parameters with
              [] -> ()
            | l ->
-               self#html_of_class_type_param_expr_list b father l;
+               html_of_class_type_param_expr_list b father l;
                bs b " "
           );
           bs b "<code class=\"type\">";
-          bs b (self#create_fully_qualified_idents_links father cco.cco_name);
+          bs b (create_fully_qualified_idents_links father cco.cco_name);
           bs b "</code>"
 
       | Class_constraint (ck, ctk) ->
-          self#html_of_text b [Code "( "] ;
-          self#html_of_class_kind b father ck;
-          self#html_of_text b [Code " : "] ;
-          self#html_of_class_type_kind b father ctk;
-          self#html_of_text b [Code " )"]
+          html_of_text b [Code "( "] ;
+          html_of_class_kind b father ck;
+          html_of_text b [Code " : "] ;
+          html_of_class_type_kind b father ctk;
+          html_of_text b [Code " )"]
 
-    method html_of_class_type_kind b father ?ct kind =
+    let html_of_class_type_kind b father ct kind = (* ?cl *)
       match kind with
         Class_type cta ->
           (
            match cta.cta_type_parameters with
              [] -> ()
            | l ->
-               self#html_of_class_type_param_expr_list b father l;
+               html_of_class_type_param_expr_list b father l;
                bs b " "
           );
           bs b "<code class=\"type\">";
-          bs b (self#create_fully_qualified_idents_links father cta.cta_name);
+          bs b (create_fully_qualified_idents_links father cta.cta_name);
           bs b "</code>"
 
       | Class_signature (inh, eles) ->
-          self#html_of_text b [Code "object"];
+          html_of_text b [Code "object"];
           (
            match ct with
              None ->
@@ -1849,17 +1826,17 @@ class html =
                (
                 match inh with
                   [] -> ()
-                | _ -> self#generate_inheritance_info b inh
+                | _ -> generate_inheritance_info b inh
                );
-               List.iter (self#html_of_class_element b) eles
+               List.iter (html_of_class_element b) eles
            | Some ct ->
                let (html_file, _) = naming_html_files ct.clt_name in
                bp b " <a href=\"%s\">..</a> " html_file
           );
-          self#html_of_text b [Code "end"]
+          html_of_text b [Code "end"]
 
     (** Print html code for a class. *)
-    method html_of_class b ?(complete=true) ?(with_link=true) c =
+    let html_of_class b complete with_link c = (* ?(complete=true) ?(with_link=true) *)
       let father = Name.father c.cl_name in
       Odoc_info.reset_type_names ();
       let (html_file, _) = naming_html_files c.cl_name in
@@ -1875,14 +1852,14 @@ class html =
              ty_code = None ;
            }
         );
-      bs b ((self#keyword "class")^" ");
+      bs b ((keyword "class")^" ");
       print_DEBUG "html#html_of_class : virtual or not" ;
-      if c.cl_virtual then bs b ((self#keyword "virtual")^" ");
+      if c.cl_virtual then bs b ((keyword "virtual")^" ");
       (
        match c.cl_type_parameters with
          [] -> ()
        | l ->
-           self#html_of_class_type_param_expr_list b father l;
+           html_of_class_type_param_expr_list b father l;
            bs b " "
       );
       print_DEBUG "html#html_of_class : with link or not" ;
@@ -1894,19 +1871,19 @@ class html =
       );
       bs b "</span>";
       bs b " : " ;
-      self#html_of_class_parameter_list b father c ;
-      self#html_of_class_kind b father ~cl: c c.cl_kind;
+      html_of_class_parameter_list b father c ;
+      html_of_class_kind b father c c.cl_kind;
       bs b "</pre>" ;
       print_DEBUG "html#html_of_class : info" ;
       (
        if complete then
-         self#html_of_info ~indent: false
+         html_of_info false
        else
-         self#html_of_info_first_sentence
+         html_of_info_first_sentence
       ) b c.cl_info
 
     (** Print html code for a class type. *)
-    method html_of_class_type b ?(complete=true) ?(with_link=true) ct =
+    let html_of_class_type b complete with_link ct = (* ?(complete=true) ?(with_link=true) *)
       Odoc_info.reset_type_names ();
       let father = Name.father ct.clt_name in
       let (html_file, _) = naming_html_files ct.clt_name in
@@ -1922,13 +1899,13 @@ class html =
              ty_code = None ;
            }
         );
-      bs b ((self#keyword "class type")^" ");
-      if ct.clt_virtual then bs b ((self#keyword "virtual")^" ");
+      bs b ((keyword "class type")^" ");
+      if ct.clt_virtual then bs b ((keyword "virtual")^" ");
       (
        match ct.clt_type_parameters with
         [] -> ()
       | l ->
-          self#html_of_class_type_param_expr_list b father l;
+          html_of_class_type_param_expr_list b father l;
           bs b " "
       );
 
@@ -1939,17 +1916,17 @@ class html =
 
       bs b "</span>";
       bs b " = ";
-      self#html_of_class_type_kind b father ~ct ct.clt_kind;
+      html_of_class_type_kind b father ct ct.clt_kind;
       bs b "</pre>";
       (
        if complete then
-         self#html_of_info ~indent: false
+         html_of_info false
        else
-         self#html_of_info_first_sentence
+         html_of_info_first_sentence
       ) b ct.clt_info
 
     (** Return html code to represent a dag, represented as in Odoc_dag2html. *)
-    method html_of_dag dag =
+    let html_of_dag dag =
       let f n =
         let (name, cct_opt) = n.Odoc_dag2html.valu in
         (* if we have a c_opt = Some class then we take its information
@@ -1971,13 +1948,13 @@ class html =
       Odoc_dag2html.html_of_dag { Odoc_dag2html.dag = a }
 
     (** Print html code for a module comment.*)
-    method html_of_module_comment b text =
+    let html_of_module_comment b text =
       bs b "<br>\n";
-      self#html_of_text b text;
+      html_of_text b text;
       bs b "<br>\n"
 
     (** Print html code for a class comment.*)
-    method html_of_class_comment b text =
+    let html_of_class_comment b text =
       (* Add some style if there is no style for the first part of the text. *)
       let text2 =
         match text with
@@ -1985,10 +1962,10 @@ class html =
             (Odoc_info.Title (2, None, [Odoc_info.Raw s])) :: q
         | _ -> text
       in
-      self#html_of_text b text2
+      html_of_text b text2
 
     (** Generate html code for the given list of inherited classes.*)
-    method generate_inheritance_info b inher_l =
+    let generate_inheritance_info b inher_l =
       let f inh =
         match inh.ic_class with
           None -> (* we can't make the link. *)
@@ -2014,16 +1991,16 @@ class html =
         Odoc_info.List (List.map f inher_l)
       ]
       in
-      self#html_of_text b text
+      html_of_text b text
 
     (** Generate html code for the inherited classes of the given class. *)
-    method generate_class_inheritance_info b cl =
+    let generate_class_inheritance_info b cl =
       let rec iter_kind k =
         match k with
           Class_structure ([], _) ->
             ()
         | Class_structure (l, _) ->
-            self#generate_inheritance_info b l
+            generate_inheritance_info b l
         | Class_constraint (k, ct) ->
             iter_kind k
         | Class_apply _
@@ -2033,18 +2010,17 @@ class html =
       iter_kind cl.cl_kind
 
     (** Generate html code for the inherited classes of the given class type. *)
-    method generate_class_type_inheritance_info b clt =
+    let generate_class_type_inheritance_info b clt =
       match clt.clt_kind with
         Class_signature ([], _) ->
           ()
       | Class_signature (l, _) ->
-          self#generate_inheritance_info b l
+          generate_inheritance_info b l
       | Class_type _ ->
           ()
 
-    (** A method to create index files. *)
-    method generate_elements_index :
-        'a.
+    (** A let to create index files. *)
+    let generate_elements_index :
         'a list ->
           ('a -> Odoc_info.Name.t) ->
             ('a -> Odoc_info.info option) ->
@@ -2054,7 +2030,7 @@ class html =
         let chanout = open_out (Filename.concat !Args.target_dir simple_file) in
         let b = new_buf () in
         bs b "<html>\n";
-        self#print_header b (self#inner_title title);
+        print_header b (inner_title title);
         bs b "<body>\n<center><h1>";
         bs b title;
         bs b "</h1></center>\n" ;
@@ -2067,11 +2043,11 @@ class html =
         let f_ele e =
           let simple_name = Name.simple (name e) in
           let father_name = Name.father (name e) in
-          bp b "<tr><td><a href=\"%s\">%s</a> " (target e) (self#escape simple_name);
+          bp b "<tr><td><a href=\"%s\">%s</a> " (target e) (escape simple_name);
           if simple_name <> father_name && father_name <> "" then
             bp b "[<a href=\"%s\">%s</a>]" (fst (naming_html_files father_name)) father_name;
           bs b "</td>\n<td>";
-          self#html_of_info_first_sentence b (info e);
+          html_of_info_first_sentence b (info e);
           bs b "</td></tr>\n";
         in
         let f_group l =
@@ -2098,9 +2074,9 @@ class html =
         Sys_error s ->
           raise (Failure s)
 
-    (** A method to generate a list of module/class files. *)
-    method generate_elements :
-        'a. ('a option -> 'a option -> 'a -> unit) -> 'a list -> unit =
+    (** A let to generate a list of module/class files. *)
+    let generate_elements :
+        ('a option -> 'a option -> 'a -> unit) -> 'a list -> unit =
       fun f_generate l ->
         let rec iter pre_opt = function
             [] -> ()
@@ -2111,102 +2087,9 @@ class html =
         in
         iter None l
 
-    (** Generate the code of the html page for the given class.*)
-    method generate_for_class pre post cl =
-      Odoc_info.reset_type_names ();
-      let (html_file, _) = naming_html_files cl.cl_name in
-      let type_file = naming_file_type_class_complete_target cl.cl_name in
-      try
-        let chanout = open_out (Filename.concat !Args.target_dir html_file) in
-        let b = new_buf () in
-        let pre_name = opt (fun c -> c.cl_name) pre in
-        let post_name = opt (fun c -> c.cl_name) post in
-        bs b doctype ;
-        bs b "<html>\n";
-        self#print_header b
-          ~nav: (Some (pre_name, post_name, cl.cl_name))
-          ~comments: (Class.class_comments cl)
-          (self#inner_title cl.cl_name);
-        bs b "<body>\n";
-        self#print_navbar b pre_name post_name cl.cl_name;
-        bs b "<center><h1>";
-        bs b (Odoc_messages.clas^" ");
-        if cl.cl_virtual then bs b "virtual " ;
-        bp b "<a href=\"%s\">%s</a>" type_file cl.cl_name;
-        bs b "</h1></center>\n<br>\n";
-        self#html_of_class b ~with_link: false cl;
-        (* parameters *)
-        self#html_of_described_parameter_list b
-          (Name.father cl.cl_name) cl.cl_parameters;
-        (* class inheritance *)
-        self#generate_class_inheritance_info b cl;
-        (* a horizontal line *)
-        bs b "<hr width=\"100%\">\n";
-        (* the various elements *)
-        List.iter (self#html_of_class_element b)
-          (Class.class_elements ~trans:false cl);
-        bs b "</body></html>";
-        Buffer.output_buffer chanout b;
-        close_out chanout;
-
-        (* generate the file with the complete class type *)
-        self#output_class_type
-          cl.cl_name
-          (Filename.concat !Args.target_dir type_file)
-          cl.cl_type
-      with
-        Sys_error s ->
-          raise (Failure s)
-
-    (** Generate the code of the html page for the given class type.*)
-    method generate_for_class_type pre post clt =
-      Odoc_info.reset_type_names ();
-      let (html_file, _) = naming_html_files clt.clt_name in
-      let type_file = naming_file_type_class_complete_target clt.clt_name in
-      try
-        let chanout = open_out (Filename.concat !Args.target_dir html_file) in
-        let b = new_buf () in
-        let pre_name = opt (fun ct -> ct.clt_name) pre in
-        let post_name = opt (fun ct -> ct.clt_name) post in
-        bs b doctype ;
-        bs b "<html>\n";
-        self#print_header b
-          ~nav: (Some (pre_name, post_name, clt.clt_name))
-          ~comments: (Class.class_type_comments clt)
-          (self#inner_title clt.clt_name);
-
-        bs b "<body>\n";
-        self#print_navbar b pre_name post_name clt.clt_name;
-        bs b "<center><h1>";
-        bs b (Odoc_messages.class_type^" ");
-        if clt.clt_virtual then bs b "virtual ";
-        bp b "<a href=\"%s\">%s</a>" type_file clt.clt_name;
-        bs b "</h1></center>\n<br>\n";
-        self#html_of_class_type b ~with_link: false clt;
-
-        (* class inheritance *)
-        self#generate_class_type_inheritance_info b clt;
-        (* a horizontal line *)
-        bs b "<hr width=\"100%\">\n";
-        (* the various elements *)
-        List.iter (self#html_of_class_element b)
-          (Class.class_type_elements ~trans: false clt);
-        bs b "</body></html>";
-        Buffer.output_buffer chanout b;
-        close_out chanout;
-
-        (* generate the file with the complete class type *)
-        self#output_class_type
-          clt.clt_name
-          (Filename.concat !Args.target_dir type_file)
-          clt.clt_type
-      with
-        Sys_error s ->
-          raise (Failure s)
-
     (** Generate the html file for the given module type.
        @raise Failure if an error occurs.*)
-    method generate_for_module_type pre post mt =
+    let generate_for_module_type pre post mt =
       try
         let (html_file, _) = naming_html_files mt.mt_name in
         let type_file = naming_file_type_module_complete_target mt.mt_name in
@@ -2216,12 +2099,12 @@ class html =
         let post_name = opt (fun mt -> mt.mt_name) post in
         bs b doctype ;
         bs b "<html>\n";
-        self#print_header b
-          ~nav: (Some (pre_name, post_name, mt.mt_name))
-          ~comments: (Module.module_type_comments mt)
-          (self#inner_title mt.mt_name);
+        print_header b
+          (Some (pre_name, post_name, mt.mt_name))
+           (Module.module_type_comments mt)
+          (inner_title mt.mt_name);
         bs b "<body>\n";
-        self#print_navbar b pre_name post_name mt.mt_name;
+        print_navbar b pre_name post_name mt.mt_name;
         bp b "<center><h1>";
         bs b (Odoc_messages.module_type^" ");
         (
@@ -2230,17 +2113,17 @@ class html =
          | None-> bs b mt.mt_name
         );
         bs b "</h1></center>\n<br>\n" ;
-        self#html_of_modtype b ~with_link: false mt;
+        html_of_modtype b false mt;
 
         (* parameters for functors *)
-        self#html_of_module_parameter_list b
+        html_of_module_parameter_list b
           (Name.father mt.mt_name)
           (Module.module_type_parameters mt);
         (* a horizontal line *)
         bs b "<hr width=\"100%\">\n";
         (* module elements *)
         List.iter
-          (self#html_of_module_element b (Name.father mt.mt_name))
+          (html_of_module_element b (Name.father mt.mt_name))
           (Module.module_type_elements mt);
 
         bs b "</body></html>";
@@ -2248,20 +2131,20 @@ class html =
         close_out chanout;
 
         (* generate html files for submodules *)
-        self#generate_elements self#generate_for_module (Module.module_type_modules mt);
+        generate_elements generate_for_module (Module.module_type_modules mt);
         (* generate html files for module types *)
-        self#generate_elements self#generate_for_module_type (Module.module_type_module_types mt);
+        generate_elements generate_for_module_type (Module.module_type_module_types mt);
         (* generate html files for classes *)
-        self#generate_elements self#generate_for_class (Module.module_type_classes mt);
+        generate_elements generate_for_class (Module.module_type_classes mt);
         (* generate html files for class types *)
-        self#generate_elements self#generate_for_class_type (Module.module_type_class_types mt);
+        generate_elements generate_for_class_type (Module.module_type_class_types mt);
 
         (* generate the file with the complete module type *)
         (
          match mt.mt_type with
            None -> ()
          | Some mty ->
-             self#output_module_type
+             output_module_type
                mt.mt_name
                (Filename.concat !Args.target_dir type_file)
                mty
@@ -2272,7 +2155,7 @@ class html =
 
     (** Generate the html file for the given module.
        @raise Failure if an error occurs.*)
-    method generate_for_module pre post modu =
+    let generate_for_module pre post modu =
       try
         Odoc_info.verbose ("Generate for module "^modu.m_name);
         let (html_file, _) = naming_html_files modu.m_name in
@@ -2284,12 +2167,12 @@ class html =
         let post_name = opt (fun m -> m.m_name) post in
         bs b doctype ;
         bs b "<html>\n";
-        self#print_header b
-          ~nav: (Some (pre_name, post_name, modu.m_name))
-          ~comments: (Module.module_comments modu)
-          (self#inner_title modu.m_name);
+        print_header b
+           (Some (pre_name, post_name, modu.m_name))
+           (Module.module_comments modu)
+          (inner_title modu.m_name);
         bs b "<body>\n" ;
-        self#print_navbar b pre_name post_name modu.m_name ;
+        print_navbar b pre_name post_name modu.m_name ;
         bs b "<center><h1>";
         if modu.m_text_only then
           bs b modu.m_name
@@ -2311,10 +2194,10 @@ class html =
           );
         bs b "</h1></center>\n<br>\n";
 
-        if not modu.m_text_only then self#html_of_module b ~with_link: false modu;
+        if not modu.m_text_only then html_of_module b false modu;
 
         (* parameters for functors *)
-        self#html_of_module_parameter_list b
+        html_of_module_parameter_list b
           (Name.father modu.m_name)
           (Module.module_parameters modu);
 
@@ -2323,7 +2206,7 @@ class html =
 
         (* module elements *)
         List.iter
-          (self#html_of_module_element b (Name.father modu.m_name))
+          (html_of_module_element b (Name.father modu.m_name))
           (Module.module_elements modu);
 
         bs b "</body></html>";
@@ -2331,16 +2214,16 @@ class html =
         close_out chanout;
 
         (* generate html files for submodules *)
-        self#generate_elements  self#generate_for_module (Module.module_modules modu);
+        generate_elements  generate_for_module (Module.module_modules modu);
         (* generate html files for module types *)
-        self#generate_elements  self#generate_for_module_type (Module.module_module_types modu);
+        generate_elements  generate_for_module_type (Module.module_module_types modu);
         (* generate html files for classes *)
-        self#generate_elements  self#generate_for_class (Module.module_classes modu);
+        generate_elements  generate_for_class (Module.module_classes modu);
         (* generate html files for class types *)
-        self#generate_elements  self#generate_for_class_type (Module.module_class_types modu);
+        generate_elements  generate_for_class_type (Module.module_class_types modu);
 
         (* generate the file with the complete module type *)
-        self#output_module_type
+        output_module_type
           modu.m_name
           (Filename.concat !Args.target_dir type_file)
           modu.m_type;
@@ -2348,7 +2231,7 @@ class html =
         match modu.m_code with
           None -> ()
         | Some code ->
-            self#output_code
+            output_code
               modu.m_name
               (Filename.concat !Args.target_dir code_file)
               code
@@ -2358,14 +2241,14 @@ class html =
 
     (** Generate the [<index_prefix>.html] file corresponding to the given module list.
        @raise Failure if an error occurs.*)
-    method generate_index module_list =
+    let generate_index module_list =
       try
-        let chanout = open_out (Filename.concat !Args.target_dir self#index) in
+        let chanout = open_out (Filename.concat !Args.target_dir index) in
         let b = new_buf () in
-        let title = match !Args.title with None -> "" | Some t -> self#escape t in
+        let title = match !Args.title with None -> "" | Some t -> escape t in
         bs b doctype ;
         bs b "<html>\n";
-        self#print_header b self#title;
+        print_header b title;
         bs b "<body>\n";
         bs b "<center><h1>";
         bs b title;
@@ -2377,11 +2260,11 @@ class html =
         (
          match info with
            None ->
-             self#html_of_Index_list b;
+             html_of_Index_list b;
              bs b "<br/>";
-             self#html_of_Module_list b
+             html_of_Module_list b
                (List.map (fun m -> m.m_name) module_list);
-         | Some i -> self#html_of_info ~indent: false b info
+         | Some i -> html_of_info false b info
         );
         bs b "</body>\n</html>";
         Buffer.output_buffer chanout b;
@@ -2391,116 +2274,116 @@ class html =
           raise (Failure s)
 
     (** Generate the values index in the file [index_values.html]. *)
-    method generate_values_index module_list =
-      self#generate_elements_index
-        self#list_values
+    let generate_values_index module_list =
+      generate_elements_index
+        list_values
         (fun v -> v.val_name)
         (fun v -> v.val_info)
         naming_complete_value_target
         Odoc_messages.index_of_values
-        self#index_values
+        index_values
 
     (** Generate the exceptions index in the file [index_exceptions.html]. *)
-    method generate_exceptions_index module_list =
-      self#generate_elements_index
-        self#list_exceptions
+    let generate_exceptions_index module_list =
+      generate_elements_index
+        list_exceptions
         (fun e -> e.ex_name)
         (fun e -> e.ex_info)
         naming_complete_exception_target
         Odoc_messages.index_of_exceptions
-        self#index_exceptions
+        index_exceptions
 
     (** Generate the types index in the file [index_types.html]. *)
-    method generate_types_index module_list =
-      self#generate_elements_index
-        self#list_types
+    let generate_types_index module_list =
+      generate_elements_index
+        list_types
         (fun t -> t.ty_name)
         (fun t -> t.ty_info)
         naming_complete_type_target
         Odoc_messages.index_of_types
-        self#index_types
+        index_types
 
     (** Generate the attributes index in the file [index_attributes.html]. *)
-    method generate_attributes_index module_list =
-      self#generate_elements_index
-        self#list_attributes
+    let generate_attributes_index module_list =
+      generate_elements_index
+        list_attributes
         (fun a -> a.att_value.val_name)
         (fun a -> a.att_value.val_info)
         naming_complete_attribute_target
         Odoc_messages.index_of_attributes
-        self#index_attributes
+        index_attributes
 
-    (** Generate the methods index in the file [index_methods.html]. *)
-    method generate_methods_index module_list =
-      self#generate_elements_index
-        self#list_methods
+    (** Generate the lets index in the file [index_lets.html]. *)
+    let generate_lets_index module_list =
+      generate_elements_index
+        list_lets
         (fun m -> m.met_value.val_name)
         (fun m -> m.met_value.val_info)
-        naming_complete_method_target
-        Odoc_messages.index_of_methods
-        self#index_methods
+        naming_complete_let_target
+        Odoc_messages.index_of_lets
+        index_lets
 
     (** Generate the classes index in the file [index_classes.html]. *)
-    method generate_classes_index module_list =
-      self#generate_elements_index
-        self#list_classes
+    let generate_classes_index module_list =
+      generate_elements_index
+        list_classes
         (fun c -> c.cl_name)
         (fun c -> c.cl_info)
         (fun c -> fst (naming_html_files c.cl_name))
         Odoc_messages.index_of_classes
-        self#index_classes
+        index_classes
 
     (** Generate the class types index in the file [index_class_types.html]. *)
-    method generate_class_types_index module_list =
-      self#generate_elements_index
-        self#list_class_types
+    let generate_class_types_index module_list =
+      generate_elements_index
+        list_class_types
         (fun ct -> ct.clt_name)
         (fun ct -> ct.clt_info)
         (fun ct -> fst (naming_html_files ct.clt_name))
         Odoc_messages.index_of_class_types
-        self#index_class_types
+        index_class_types
 
     (** Generate the modules index in the file [index_modules.html]. *)
-    method generate_modules_index module_list =
-      self#generate_elements_index
-        self#list_modules
+    let generate_modules_index module_list =
+      generate_elements_index
+        list_modules
         (fun m -> m.m_name)
         (fun m -> m.m_info)
         (fun m -> fst (naming_html_files m.m_name))
         Odoc_messages.index_of_modules
-        self#index_modules
+        index_modules
 
     (** Generate the module types index in the file [index_module_types.html]. *)
-    method generate_module_types_index module_list =
-      self#generate_elements_index
-        self#list_module_types
+    let generate_module_types_index module_list =
+      generate_elements_index
+        list_module_types
         (fun mt -> mt.mt_name)
         (fun mt -> mt.mt_info)
         (fun mt -> fst (naming_html_files mt.mt_name))
         Odoc_messages.index_of_module_types
-        self#index_module_types
+        index_module_types
 
     (** Generate all the html files from a module list. The main
        file is [<index_prefix>.html]. *)
-    method generate module_list =
+    let generate module_list =
       (* init the style *)
-      self#init_style ;
+      init_style ;
       (* init the lists of elements *)
-      list_values <- Odoc_info.Search.values module_list ;
-      list_exceptions <- Odoc_info.Search.exceptions module_list ;
-      list_types <- Odoc_info.Search.types module_list ;
-      list_attributes <- Odoc_info.Search.attributes module_list ;
-      list_methods <- Odoc_info.Search.methods module_list ;
-      list_classes <- Odoc_info.Search.classes module_list ;
-      list_class_types <- Odoc_info.Search.class_types module_list ;
-      list_modules <- Odoc_info.Search.modules module_list ;
-      list_module_types <- Odoc_info.Search.module_types module_list ;
+      list_values := Odoc_info.Search.values module_list ;
+      list_exceptions := Odoc_info.Search.exceptions module_list ;
+      list_types := Odoc_info.Search.types module_list ;
+      list_attributes := Odoc_info.Search.attributes module_list ;
+      list_lets := Odoc_info.Search.lets module_list ;
+      list_classes := Odoc_info.Search.classes module_list ;
+      list_class_types := Odoc_info.Search.class_types module_list ;
+      list_modules := Odoc_info.Search.modules module_list ;
+      list_module_types := Odoc_info.Search.module_types module_list ;
 
       (* prepare the page header *)
-      self#prepare_header module_list ;
+      prepare_header module_list ;
       (* Get the names of all known types. *)
       let types = Odoc_info.Search.types module_list in
-      known_types_names <-
+      known_types_names :=
         List.fold_left
           (fun acc t -> Set.add t.ty_name acc)
           known_types_names
@@ -2508,12 +2391,12 @@ class html =
       (* Get the names of all class and class types. *)
       let classes = Odoc_info.Search.classes module_list in
       let class_types = Odoc_info.Search.class_types module_list in
-      known_classes_names <-
+      known_classes_names :=
         List.fold_left
           (fun acc c -> Set.add c.cl_name acc)
           known_classes_names
           classes ;
-      known_classes_names <-
+      known_classes_names :=
         List.fold_left
           (fun acc ct -> Set.add ct.clt_name acc)
           known_classes_names
@@ -2521,41 +2404,40 @@ class html =
       (* Get the names of all known modules and module types. *)
       let module_types = Odoc_info.Search.module_types module_list in
       let modules = Odoc_info.Search.modules module_list in
-      known_modules_names <-
+      known_modules_names :=
         List.fold_left
           (fun acc m -> Set.add m.m_name acc)
           known_modules_names
           modules ;
-      known_modules_names <-
+      known_modules_names :=
         List.fold_left
           (fun acc mt -> Set.add mt.mt_name acc)
           known_modules_names
           module_types ;
       (* generate html for each module *)
       if not !Args.index_only then
-        self#generate_elements self#generate_for_module module_list ;
+        generate_elements generate_for_module module_list ;
 
       try
-        self#generate_index module_list;
-        self#generate_values_index module_list ;
-        self#generate_exceptions_index module_list ;
-        self#generate_types_index module_list ;
-        self#generate_attributes_index module_list ;
-        self#generate_methods_index module_list ;
-        self#generate_classes_index module_list ;
-        self#generate_class_types_index module_list ;
-        self#generate_modules_index module_list ;
-        self#generate_module_types_index module_list ;
+        generate_index module_list;
+        generate_values_index module_list ;
+        generate_exceptions_index module_list ;
+        generate_types_index module_list ;
+        generate_attributes_index module_list ;
+        generate_lets_index module_list ;
+        generate_classes_index module_list ;
+        generate_class_types_index module_list ;
+        generate_modules_index module_list ;
+        generate_module_types_index module_list ;
       with
         Failure s ->
           prerr_endline s ;
           incr Odoc_info.errors
 
-    initializer
+    let _ =
       Odoc_ocamlhtml.html_of_comment :=
         (fun s ->
-          let b = new_buf () in
-          self#html_of_text b (Odoc_text.Texter.text_of_string s);
-          Buffer.contents b
+           let b = new_buf () in
+          html_of_text b (Odoc_text.text_of_string s);
+           Buffer.contents b
         )
-  end
