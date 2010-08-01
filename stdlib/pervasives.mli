@@ -803,10 +803,10 @@ val set_binary_mode_in : in_channel -> bool -> unit
 
 (** {7 Operations on large files} *)
 
-(** These functions are 64-bit variants of the channel functions
+(** This section provides 64-bit variants of the channel functions
   that manipulate file positions and file sizes.  By representing
   positions and sizes by 64-bit integers (type [int64]) instead of
-  regular integers (type [int]), they allow
+  regular integers (type [int]), these alternate functions allow
   operating on files whose sizes are greater than [max_int]. *)
 
     val largefile_seek_out : out_channel -> int64 -> unit

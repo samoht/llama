@@ -7,7 +7,9 @@ type error =
     Missing_field of string
   | Value_descriptions of value * value
   | Type_declarations of type_constructor * type_constructor
+      * Includecore.type_mismatch list
   | Exception_declarations of constructor * constructor
+  | Interface_mismatch of string * string
 
 exception Error of error list
 
@@ -27,9 +29,8 @@ let values s vd1 vd2 =
 (* Inclusion between type declarations *)
 
 let type_constructors s decl1 decl2 =
-  if Includecore.type_constructors s decl1 decl2
-  then ()
-  else raise(Error[Type_declarations(decl1, decl2)])
+  let err = Includecore.type_constructors s decl1 decl2 in
+  if err <> [] then raise(Error[Type_declarations(decl1, decl2, err)])
 
 (* Inclusion between exception declarations *)
 
@@ -131,7 +132,42 @@ let compunit modulename impl_name impl_sig intf_name intf_sig =
   try
     signatures (Subst.identity modulename) impl_sig intf_sig
   with Error reasons ->
-    assert false
-(*
     raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
-*)
+
+(* Error report *)
+
+open Format
+open Printtyp
+
+let include_err ppf = function
+  | Missing_field id ->
+      fprintf ppf "The field `%s' is required but not provided" id
+  | Value_descriptions(d1, d2) ->
+      fprintf ppf
+       "@[<hv 2>Values do not match:@ \
+        %a@;<1 -2>is not included in@ %a@]"
+        value_description d1 value_description d2
+  | Type_declarations(d1, d2, errs) ->
+      fprintf ppf "@[@[<hv>%s:@;<1 2>%a@ %s@;<1 2>%a@]%a@]"
+        "Type declarations do not match"
+        type_declaration d1
+        "is not included in"
+        type_declaration d2
+        (Includecore.report_type_mismatch
+           "the first" "the second" "declaration") errs
+  | Exception_declarations(d1, d2) ->
+      fprintf ppf
+       "@[<hv 2>Exception declarations do not match:@ \
+        %a@;<1 -2>is not included in@ %a@]"
+      exception_declaration d1
+      exception_declaration d2
+  | Interface_mismatch(impl_name, intf_name) ->
+      fprintf ppf "@[The implementation %s@ does not match the interface %s:"
+       impl_name intf_name
+
+let report_error ppf = function
+  |  [] -> ()
+  | err :: errs ->
+      let print_errs ppf errs =
+         List.iter (fun err -> fprintf ppf "@ %a" include_err err) errs in
+      fprintf ppf "@[<v>%a%a@]" include_err err print_errs errs

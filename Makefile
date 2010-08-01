@@ -300,7 +300,7 @@ install:
 #	for i in $(OTHERLIBRARIES); do \
 #	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 #	done
-	for i in num str graph; do \
+	for i in num str graph unix; do \
 	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 	done
 #	cd llamadoc; $(MAKE) install
@@ -661,7 +661,7 @@ otherlibraries: llamatools
 #	for i in num graph str; do \
 #	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
 #	done
-	for i in num str graph; do \
+	for i in num str graph unix; do \
 	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 	done
 

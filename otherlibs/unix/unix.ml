@@ -228,29 +228,26 @@ external unlink : string -> unit = "unix_unlink"
 external rename : string -> string -> unit = "unix_rename"
 external link : string -> string -> unit = "unix_link"
 
-module LargeFile =
-  struct
-    external lseek : file_descr -> int64 -> seek_command -> int64 = "unix_lseek_64"
-    external truncate : string -> int64 -> unit = "unix_truncate_64"
-    external ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
-    type stats =
-      { st_dev : int;
-        st_ino : int;
-        st_kind : file_kind;
-        st_perm : file_perm;
-        st_nlink : int;
-        st_uid : int;
-        st_gid : int;
-        st_rdev : int;
-        st_size : int64;
-        st_atime : float;
-        st_mtime : float;
-        st_ctime : float;
+    external largefile_lseek : file_descr -> int64 -> seek_command -> int64 = "unix_lseek_64"
+    external largefile_truncate : string -> int64 -> unit = "unix_truncate_64"
+    external largefile_ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
+    type largefile_stats =
+      { largefile_st_dev : int;
+        largefile_st_ino : int;
+        largefile_st_kind : file_kind;
+        largefile_st_perm : file_perm;
+        largefile_st_nlink : int;
+        largefile_st_uid : int;
+        largefile_st_gid : int;
+        largefile_st_rdev : int;
+        largefile_st_size : int64;
+        largefile_st_atime : float;
+        largefile_st_mtime : float;
+        largefile_st_ctime : float;
       }
-    external stat : string -> stats = "unix_stat_64"
-    external lstat : string -> stats = "unix_lstat_64"
-    external fstat : file_descr -> stats = "unix_fstat_64"
-  end
+    external largefile_stat : string -> largefile_stats = "unix_stat_64"
+    external largefile_lstat : string -> largefile_stats = "unix_lstat_64"
+    external largefile_fstat : file_descr -> largefile_stats = "unix_fstat_64"
 
 type access_permission =
     R_OK
@@ -505,41 +502,30 @@ type socket_float_option =
 
 type socket_error_option = SO_ERROR
 
-module SO: sig
-  type ('opt, 'v) t
-  val bool: (socket_bool_option, bool) t
-  val int: (socket_int_option, int) t
-  val optint: (socket_optint_option, int option) t
-  val float: (socket_float_option, float) t
-  val error: (socket_error_option, error option) t
-  val get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
-  val set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
-end = struct
-  type ('opt, 'v) t = int
-  let bool = 0
-  let int = 1
-  let optint = 2
-  let float = 3
-  let error = 4
-  external get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
+  type ('opt, 'v) sockopt_t = int
+  let sockopt_bool : (socket_bool_option, bool) sockopt_t = 0
+  let sockopt_int : (socket_int_option, int) sockopt_t = 1
+  let sockopt_optint : (socket_optint_option, int option) sockopt_t = 2
+  let sockopt_float : (socket_float_option, float) sockopt_t = 3
+  let sockopt_error : (socket_error_option, error option) sockopt_t = 4
+  external sockopt_get: ('opt, 'v) sockopt_t -> file_descr -> 'opt -> 'v
               = "unix_getsockopt"
-  external set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
+  external sockopt_set: ('opt, 'v) sockopt_t -> file_descr -> 'opt -> 'v -> unit
               = "unix_setsockopt"
-end
 
-let getsockopt fd opt = SO.get SO.bool fd opt
-let setsockopt fd opt v = SO.set SO.bool fd opt v
+let getsockopt fd opt = sockopt_get sockopt_bool fd opt
+let setsockopt fd opt v = sockopt_set sockopt_bool fd opt v
 
-let getsockopt_int fd opt = SO.get SO.int fd opt
-let setsockopt_int fd opt v = SO.set SO.int fd opt v
+let getsockopt_int fd opt = sockopt_get sockopt_int fd opt
+let setsockopt_int fd opt v = sockopt_set sockopt_int fd opt v
 
-let getsockopt_optint fd opt = SO.get SO.optint fd opt
-let setsockopt_optint fd opt v = SO.set SO.optint fd opt v
+let getsockopt_optint fd opt = sockopt_get sockopt_optint fd opt
+let setsockopt_optint fd opt v = sockopt_set sockopt_optint fd opt v
 
-let getsockopt_float fd opt = SO.get SO.float fd opt
-let setsockopt_float fd opt v = SO.set SO.float fd opt v
+let getsockopt_float fd opt = sockopt_get sockopt_float fd opt
+let setsockopt_float fd opt v = sockopt_set sockopt_float fd opt v
 
-let getsockopt_error fd = SO.get SO.error fd SO_ERROR
+let getsockopt_error fd = sockopt_get sockopt_error fd SO_ERROR
 
 type host_entry =
   { h_name : string;

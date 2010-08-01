@@ -144,15 +144,7 @@ let rec print_list pr sep ppf =
 
 let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 
-let tree_of_value_description v =
-  let id = val_name v in
-  let ty = tree_of_typexp true v.val_type in
-  let prims =
-    match v.val_kind with
-    | Val_prim p -> Primitive.description_list p
-    | _ -> []
-  in
-  Osig_value (id, ty, prims)
+(* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =
   reset_type_var_names ();
@@ -188,9 +180,34 @@ let tree_of_rec = function
 let tree_of_type_declaration tcs rs =
   Osig_type (tree_of_type_decl tcs, tree_of_rec rs)
 
+let type_declaration ppf decl =
+  !Oprint.out_sig_item ppf (tree_of_type_declaration decl Rec_first)
+
+(* Print an exception declaration *)
+
 let tree_of_exception_declaration cs =
   let tyl = tree_of_typlist false cs.cs_args in
   Osig_exception (cs.cs_name, tyl)
+
+let exception_declaration ppf decl =
+  !Oprint.out_sig_item ppf (tree_of_exception_declaration decl)
+
+(* Print a value declaration *)
+
+let tree_of_value_description v =
+  let id = val_name v in
+  let ty = tree_of_typexp true v.val_type in
+  let prims =
+    match v.val_kind with
+    | Val_prim p -> Primitive.description_list p
+    | _ -> []
+  in
+  Osig_value (id, ty, prims)
+
+let value_description ppf decl =
+  !Oprint.out_sig_item ppf (tree_of_value_description decl)
+
+(* Print a signature body (used by -i when compiling a .ml) *)
 
 let tree_of_signature_item = function
     Sig_value v ->

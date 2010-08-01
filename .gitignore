@@ -50,6 +50,10 @@ otherlibs/graph/*.o
 otherlibs/graph/dllgraphics.so
 otherlibs/graph/graphics.cma
 otherlibs/graph/libgraphics.a
+otherlibs/unix/*.o
+otherlibs/unix/dllunix.so
+otherlibs/unix/libunix.a
+otherlibs/unix/unix.cma
 lex/lexer.ml
 lex/parser.ml
 lex/parser.mli

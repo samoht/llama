@@ -357,31 +357,8 @@ val isatty : file_descr -> bool
 
 (** {6 File operations on large files} *)
 
-module LargeFile :
-  sig
-    val lseek : file_descr -> int64 -> seek_command -> int64
-    val truncate : string -> int64 -> unit
-    val ftruncate : file_descr -> int64 -> unit
-    type stats =
-      { st_dev : int;               (** Device number *)
-        st_ino : int;               (** Inode number *)
-        st_kind : file_kind;        (** Kind of the file *)
-        st_perm : file_perm;        (** Access rights *)
-        st_nlink : int;             (** Number of links *)
-        st_uid : int;               (** User id of the owner *)
-        st_gid : int;               (** Group ID of the file's group *)
-        st_rdev : int;              (** Device minor number *)
-        st_size : int64;            (** Size in bytes *)
-        st_atime : float;           (** Last access time *)
-        st_mtime : float;           (** Last modification time *)
-        st_ctime : float;           (** Last status change time *)
-      }
-    val stat : string -> stats
-    val lstat : string -> stats
-    val fstat : file_descr -> stats
-  end
 (** File operations on large files.
-  This sub-module provides 64-bit variants of the functions
+  This section provides 64-bit variants of the functions
   {!Unix.lseek} (for positioning a file descriptor),
   {!Unix.truncate} and {!Unix.ftruncate} (for changing the size of a file),
   and {!Unix.stat}, {!Unix.lstat} and {!Unix.fstat} (for obtaining
@@ -390,6 +367,26 @@ module LargeFile :
   regular integers (type [int]), thus allowing operating on files
   whose sizes are greater than [max_int]. *)
 
+    val largefile_lseek : file_descr -> int64 -> seek_command -> int64
+    val largefile_truncate : string -> int64 -> unit
+    val largefile_ftruncate : file_descr -> int64 -> unit
+    type largefile_stats =
+      { largefile_st_dev : int;               (** Device number *)
+        largefile_st_ino : int;               (** Inode number *)
+        largefile_st_kind : file_kind;        (** Kind of the file *)
+        largefile_st_perm : file_perm;        (** Access rights *)
+        largefile_st_nlink : int;             (** Number of links *)
+        largefile_st_uid : int;               (** User id of the owner *)
+        largefile_st_gid : int;               (** Group ID of the file's group *)
+        largefile_st_rdev : int;              (** Device minor number *)
+        largefile_st_size : int64;            (** Size in bytes *)
+        largefile_st_atime : float;           (** Last access time *)
+        largefile_st_mtime : float;           (** Last modification time *)
+        largefile_st_ctime : float;           (** Last status change time *)
+      }
+    val largefile_stat : string -> largefile_stats
+    val largefile_lstat : string -> largefile_stats
+    val largefile_fstat : file_descr -> largefile_stats
 
 (** {6 Operations on file names} *)
 

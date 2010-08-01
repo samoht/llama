@@ -36,7 +36,7 @@ COBJS=accept.o access.o addrofstr.o alarm.o bind.o chdir.o chmod.o \
   time.o times.o truncate.o umask.o unixsupport.o unlink.o \
   utimes.o wait.o write.o
 
-CAMLOBJS=unix.cmo unixLabels.cmo
+CAMLOBJS=unix.cmo
 
 HEADERS=unixsupport.h socketaddr.h
 
