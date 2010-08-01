@@ -10,12 +10,14 @@
 #                                                                       #
 #########################################################################
 
-# $Id: Makefile 8616 2007-11-22 22:14:43Z doligez $
+# $Id: Makefile.nt 8485 2007-11-07 10:14:21Z frisch $
 
 include Makefile.shared
 
 # To make custom toplevels
 
-llamamktop: llamamktop.tpl ../config/Makefile
-	sed -e 's|%%BINDIR%%|$(BINDIR)|' llamamktop.tpl > llamamktop
-	chmod +x llamamktop
+OCAMLMKTOP=ocamlmktop.cmo
+OCAMLMKTOP_IMPORTS=misc.cmo config.cmo clflags.cmo ccomp.cmo
+
+ocamlmktop: $(OCAMLMKTOP)
+	$(CAMLC) $(LINKFLAGS) -o ocamlmktop $(OCAMLMKTOP_IMPORTS) $(OCAMLMKTOP)

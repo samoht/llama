@@ -1,8 +1,9 @@
+#!/bin/sh
 #########################################################################
 #                                                                       #
 #                            Objective Caml                             #
 #                                                                       #
-#            Xavier Leroy, projet Cristal, INRIA Rocquencourt           #
+#            Damien Doligez, projet Para, INRIA Rocquencourt            #
 #                                                                       #
 #   Copyright 1999 Institut National de Recherche en Informatique et    #
 #   en Automatique.  All rights reserved.  This file is distributed     #
@@ -10,12 +11,6 @@
 #                                                                       #
 #########################################################################
 
-# $Id: Makefile 8616 2007-11-22 22:14:43Z doligez $
+# $Id: ocamlmktop.tpl 10443 2010-05-20 09:44:25Z doligez $
 
-include Makefile.shared
-
-# To make custom toplevels
-
-llamamktop: llamamktop.tpl ../config/Makefile
-	sed -e 's|%%BINDIR%%|$(BINDIR)|' llamamktop.tpl > llamamktop
-	chmod +x llamamktop
+exec %%BINDIR%%/ocamlc -linkall toplevellib.cma "$@" topstart.cmo
