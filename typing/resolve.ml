@@ -9,6 +9,11 @@ open Typedtree_aux
 open Primitive
 open Module
 
+type error =
+    Unbound_module of string
+
+exception Error of Location.t * error
+
 exception Multiply_bound_variable of string
 exception Duplicate_constructor of string
 exception Duplicate_label of string
@@ -67,6 +72,10 @@ let lookup_label env li loc =
 let lookup_value env li loc =
   try Env.lookup_value li env
   with Not_found -> Error.unbound_value_err li loc
+
+let lookup_module s loc =
+  try Get.signature s
+  with Not_found -> raise (Error (loc, Unbound_module s))
 
 (* ---------------------------------------------------------------------- *)
 
@@ -426,7 +435,7 @@ let structure_item env pstr =
         mk (Tstr_exception (cs, args)), [Sig_exception cs], env
     | Pstr_open mn ->
         let phr = mk (Tstr_open (Module mn)) in
-        let env = Env.add_signature (Get.signature mn) env in
+        let env = Env.add_signature (lookup_module mn pstr.pstr_loc) env in
         phr, [], env
   end
 
@@ -445,7 +454,7 @@ let signature_item env psig =
         mk (Tsig_exception (cs, args)), [Sig_exception cs], env
     | Psig_open mn ->
         let phr = mk (Tsig_open (Module mn)) in
-        let env = Env.add_signature (Get.signature mn) env in
+        let env = Env.add_signature (lookup_module mn psig.psig_loc) env in
         phr, [], env
   end
 
@@ -466,3 +475,12 @@ let rec signature env l =
         let hd, hd_gens, env = signature_item env hd in
         let tl, tl_gens, env = signature env tl in
         hd :: tl, hd_gens @ tl_gens, env
+
+(* Error report *)
+
+open Format
+open Printtyp
+
+let report_error ppf = function
+  | Unbound_module lid ->
+      fprintf ppf "Unbound module %s" lid

@@ -142,6 +142,7 @@ let ref_label lbl = { ref_id = label_id lbl; ref_contents = Some lbl }
 let ref_value v = { ref_id = v.val_id; ref_contents = Some v }
 
 let val_name v = v.val_id.id_name
+let tcs_name tcs = tcs.tcs_id.id_name
 
 type tag =
   | Tag_block of int

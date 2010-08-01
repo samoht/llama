@@ -9,6 +9,11 @@ open Types
 open Format
 open Misc
 
+type error =
+  | Interface_not_compiled of string
+
+exception Error of Location.t * error
+
 let gen_value x = Sig_value x
 let gen_type x = Sig_type x
 let gen_exception x = Sig_exception x
@@ -111,8 +116,7 @@ let type_implementation sourcefile outputprefix modulename env str =
         try
           find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
         with Not_found ->
-          assert false in
-            (* raise(Error(Location.none, Interface_not_compiled sourceintf)) in *)
+          raise(Error(Location.none, Interface_not_compiled sourceintf)) in
       let dclsig = Env.read_signature modulename intf_file in
       let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
       (str, coercion)
@@ -128,3 +132,12 @@ let type_implementation sourcefile outputprefix modulename env str =
       (str, coercion)
     end
   end
+
+(* Error report *)
+
+open Printtyp
+
+let report_error ppf = function
+  | Interface_not_compiled intf_name ->
+      fprintf ppf
+        "@[Could not find the .cmi file for interface@ %s.@]" intf_name

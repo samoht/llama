@@ -46,22 +46,16 @@ let report_error ppf exn =
       Location.print_error ppf loc; Typetexp.report_error ppf err
   | Typedecl.Error(loc, err) ->
       Location.print_error ppf loc; Typedecl.report_error ppf err
-  | Typeclass.Error(loc, err) ->
-      Location.print_error ppf loc; Typeclass.report_error ppf err
 *)
+  | Resolve.Error(loc, err) ->
+      Location.print_error ppf loc; Resolve.report_error ppf err
   | Includemod.Error err ->
       Location.print_error_cur_file ppf;
       Includemod.report_error ppf err
-(*
   | Typemod.Error(loc, err) ->
       Location.print_error ppf loc; Typemod.report_error ppf err
-*)
   | Translcore.Error(loc, err) ->
       Location.print_error ppf loc; Translcore.report_error ppf err
-(*
-  | Translclass.Error(loc, err) ->
-      Location.print_error ppf loc; Translclass.report_error ppf err
-*)
   | Translmod.Error(loc, err) ->
       Location.print_error ppf loc; Translmod.report_error ppf err
   | Symtable.Error code ->

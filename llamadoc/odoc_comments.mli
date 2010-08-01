@@ -15,16 +15,6 @@
 
 val simple_blank : string
 
-(** The type of modules in argument to Info_retriever *)
-module type Texter =
-  sig
-    (** Return a text structure from a string. *)
-    val text_of_string : string -> Odoc_types.text
-  end
-
-(** The basic module for special comments analysis.*)
-module Basic_info_retriever :
-  sig
     (** Return true if the given string contains a blank line. *)
     val blank_line_outside_simple :
         string -> string -> bool
@@ -54,8 +44,6 @@ module Basic_info_retriever :
         (Odoc_types.text -> 'a) ->
           string -> string -> Odoc_types.info option * 'a list
 
-  end
-
 (** [info_of_string s] parses the given string
    like a regular ocamldoc comment and return an
    {!Odoc_types.info} structure.
@@ -70,5 +58,7 @@ val info_of_string : string -> Odoc_types.info
    @raise Failure is the file could not be opened or there is a
    syntax error.
 *)
+(*
 val info_of_comment_file :
     Odoc_module.t_module list -> string -> Odoc_types.info
+*)

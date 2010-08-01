@@ -14,8 +14,6 @@
 (** The module for analysing a signature and source code and creating modules, classes, ..., elements.*)
 
 (** The functions used to retrieve information from a signature. *)
-module Signature_search :
-    sig
       type ele
       type tab = (ele, Types.signature_item) Hashtbl.t
 
@@ -31,49 +29,14 @@ module Signature_search :
       (** This function returns the type expression list for the exception whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_exception : tab -> string -> Types.exception_declaration
+      val search_exception : tab -> string -> Types.constructor
 
       (** This function returns the Types.type_declaration  for the type whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_type : tab -> string -> Types.type_declaration
-
-      (** This function returns the Types.class_declaration  for the class whose name is given,
-         in the given table.
-         @raise Not_found if error.*)
-      val search_class : tab -> string -> Types.class_declaration
-
-      (** This function returns the Types.cltype_declaration  for the class type whose name is given,
-         in the given table.
-         @raise Not_found if error.*)
-      val search_class_type : tab -> string -> Types.cltype_declaration
-
-      (** This function returns the Types.module_type  for the module whose name is given,
-         in the given table.
-         @raise Not_found if error.*)
-      val search_module : tab -> string -> Types.module_type
-
-      (** This function returns the optional Types.module_type  for the module type whose name is given,
-         in the given table.
-         @raise Not_found if error.*)
-      val search_module_type : tab -> string -> Types.module_type option
-
-      (** This function returns the Types.type_expr  for the given val name
-         in the given class signature.
-         @raise Not_found if error.*)
-      val search_attribute_type :
-          Types.Vars.key -> Types.class_signature -> Types.type_expr
-
-     (** This function returns the Types.type_expr  for the given method name
-        in the given class signature.
-        @raise Not_found if error.*)
-      val search_method_type :
-          string -> Types.class_signature -> Types.type_expr
-    end
+      val search_type : tab -> string -> Types.type_constructor
 
 (** Functions to retrieve simple and special comments from strings. *)
-module type Info_retriever =
-  sig
     (** Return the couple [(n, list)] where [n] is the number of
        characters read to retrieve [list], which is the list
        of special comments found in the string. *)
@@ -105,11 +68,6 @@ module type Info_retriever =
     val get_comments :
         (Odoc_types.text -> 'a) -> string -> string -> (Odoc_types.info option * 'a list)
 
-  end
-
-module Analyser :
-  functor (My_ir : Info_retriever) ->
-    sig
       (** This variable is used to load a file as a string and retrieve characters from it.*)
       val file : string ref
 
@@ -125,10 +83,6 @@ module Analyser :
          [input_f] into [file].*)
       val prepare_file : string -> string -> unit
 
-      (** The function used to get the comments in a class. *)
-      val get_comments_in_class : int -> int ->
-        (Odoc_types.info option * Odoc_class.class_element list)
-
       (** The function used to get the comments in a module. *)
       val get_comments_in_module : int -> int ->
         (Odoc_types.info option * Odoc_module.module_element list)
@@ -141,30 +95,18 @@ module Analyser :
          [pos_limit] is the position of the last char we could use to look for a comment,
          i.e. usually the beginning on the next element.*)
       val name_comment_from_type_kind :
-          int -> int -> Parsetree.type_kind -> int * (string * Odoc_types.info option) list
+          int -> int -> Parsetree.tcs_kind -> int * (string * Odoc_types.info option) list
 
       (** This function converts a [Types.type_kind] into a [Odoc_type.type_kind],
          by associating the comment found in the parsetree of each constructor/field, if any.*)
       val get_type_kind :
           Odoc_env.env -> (string * Odoc_types.info option) list ->
-            Types.type_kind -> Odoc_type.type_kind
+            Types.type_constructor_kind -> Odoc_type.type_kind
 
       (** This function merge two optional info structures. *)
       val merge_infos :
           Odoc_types.info option -> Odoc_types.info option ->
             Odoc_types.info option
-
-      (** Return a module_type_kind from a Parsetree.module_type and a Types.module_type *)
-      val analyse_module_type_kind :
-          Odoc_env.env -> Odoc_name.t ->
-            Parsetree.module_type -> Types.module_type ->
-              Odoc_module.module_type_kind
-
-      (** Analysis of a Parsetree.class_type and a Types.class_type to
-         return a class_type_kind.*)
-      val analyse_class_type_kind : Odoc_env.env ->
-        Odoc_name.t -> int -> Parsetree.class_type -> Types.class_type ->
-          Odoc_class.class_type_kind
 
       (** This function takes an interface file name, a file containg the code, a parse tree
          and the signature obtained from the compiler.
@@ -174,4 +116,3 @@ module Analyser :
       val analyse_signature :
         string -> string ->
         Parsetree.signature -> Types.signature -> Odoc_module.t_module
-    end

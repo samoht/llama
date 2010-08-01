@@ -20,20 +20,11 @@ let print_DEBUG s = print_string s ; print_newline ();;
 (** This variable contains the regular expression representing a blank but not a '\n'.*)
 let simple_blank = "[ \013\009\012]"
 
-module type Texter =
-    sig
-      (** Return a text structure from a string. *)
-      val text_of_string : string -> text
-    end
-
-module Info_retriever =
-  functor (MyTexter : Texter) ->
-  struct
     let create_see s =
       try
         let lexbuf = Lexing.from_string s in
         let (see_ref, s) = Odoc_parser.see_info Odoc_see_lexer.main lexbuf in
-        (see_ref, MyTexter.text_of_string s)
+        (see_ref, Odoc_text.text_of_string s)
       with
       | Odoc_text.Text_syntax (l, c, s) ->
           raise (Failure (Odoc_messages.text_parse_error l c s))
@@ -62,29 +53,29 @@ module Info_retriever =
             (mem_nb_chars,
              Some
                {
-                 i_desc = (match desc with "" -> None | _ -> Some (MyTexter.text_of_string desc));
+                 i_desc = (match desc with "" -> None | _ -> Some (Odoc_text.text_of_string desc));
                  i_authors = !Odoc_comments_global.authors;
                  i_version = !Odoc_comments_global.version;
                  i_sees = (List.map create_see !Odoc_comments_global.sees) ;
                  i_since = !Odoc_comments_global.since;
                  i_before = Odoc_merge.merge_before_tags
                      (List.map (fun (n, s) ->
-                         (n, MyTexter.text_of_string s)) !Odoc_comments_global.before)
+                         (n, Odoc_text.text_of_string s)) !Odoc_comments_global.before)
                    ;
                  i_deprecated =
                  (match !Odoc_comments_global.deprecated with
-                   None -> None | Some s -> Some (MyTexter.text_of_string s));
+                   None -> None | Some s -> Some (Odoc_text.text_of_string s));
                  i_params =
                  (List.map (fun (n, s) ->
-                   (n, MyTexter.text_of_string s)) !Odoc_comments_global.params);
+                   (n, Odoc_text.text_of_string s)) !Odoc_comments_global.params);
                  i_raised_exceptions =
                  (List.map (fun (n, s) ->
-                   (n, MyTexter.text_of_string s)) !Odoc_comments_global.raised_exceptions);
+                   (n, Odoc_text.text_of_string s)) !Odoc_comments_global.raised_exceptions);
                  i_return_value =
                  (match !Odoc_comments_global.return_value with
-                   None -> None | Some s -> Some (MyTexter.text_of_string s)) ;
+                   None -> None | Some s -> Some (Odoc_text.text_of_string s)) ;
                  i_custom = (List.map
-                               (fun (tag, s) -> (tag, MyTexter.text_of_string s))
+                               (fun (tag, s) -> (tag, Odoc_text.text_of_string s))
                                !Odoc_comments_global.customs)
                }
             )
@@ -174,7 +165,7 @@ module Info_retriever =
        the given string. If strict is [true] then no
        comment is returned if a blank line or a special
        comment is found before the simple comment. *)
-    let retrieve_first_info_simple ?(strict=true) file (s : string) =
+    let retrieve_first_info_simple strict file (s : string) = (* ?(strict=true) *)
       match retrieve_info_simple file s with
         (_, None) ->
           (0, None)
@@ -312,9 +303,6 @@ module Info_retriever =
           ele_coms
       in
       (assoc_com, ele_comments)
-  end
-
-module Basic_info_retriever = Info_retriever (Odoc_text.Texter)
 
 let info_of_string s =
   let dummy =
@@ -333,11 +321,11 @@ let info_of_string s =
     }
   in
   let s2 = Printf.sprintf "(** %s *)" s in
-  let (_, i_opt) = Basic_info_retriever.first_special "-" s2 in
+  let (_, i_opt) = first_special "-" s2 in
   match i_opt with
     None -> dummy
   | Some i -> i
-
+(*
 let info_of_comment_file modlist f =
   try
     let s = Odoc_misc.input_file_as_string f in
@@ -346,3 +334,4 @@ let info_of_comment_file modlist f =
   with
     Sys_error s ->
       failwith s
+*)
