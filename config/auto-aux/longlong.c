@@ -11,50 +11,33 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: async_io.c 5393 2003-02-11 14:05:36Z xleroy $ */
+/* $Id: longlong.c 4833 2002-05-25 08:33:26Z xleroy $ */
 
 #include <stdio.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include "s.h"
+#include <string.h>
 
-int signalled;
+/* Check for the availability of "long long" type as per ISO C9X */
 
-void sigio_handler(int arg)
+/* Meaning of return code:
+     0   long long OK, printf with %ll
+     1   long long OK, printf with %q
+     2   long long OK, no printf
+     3   long long not suitable */
+
+int main(int argc, char **argv)
 {
-  signalled = 1;
-}
+  long long l;
+  unsigned long long u;
+  char buffer[64];
 
-int main(void)
-{
-#if defined(SIGIO) && defined(FASYNC) && defined(F_SETFL) && defined(F_SETOWN)
-  int p[2];
-  int ret;
-#define OUT 0
-#define IN 1
-  if (socketpair(PF_UNIX, SOCK_STREAM, 0, p) == -1) return 1;
-  signalled = 0;
-  signal(SIGIO, sigio_handler);
-  ret = fcntl(p[OUT], F_GETFL, 0);
-  fcntl(p[OUT], F_SETFL, ret | FASYNC);
-  fcntl(p[OUT], F_SETOWN, getpid());
-  switch(fork()) {
-  case -1:
-    return 1;
-  case 0:
-    close(p[OUT]);
-    write(p[IN], "x", 1);
-    sleep(1);
-    exit(0);
-  default:
-    close(p[IN]);
-    while(wait(NULL) == -1 && errno == EINTR) /*nothing*/;
-  }
-  if (signalled) return 0; else return 1;
-#else
-  return 1;
-#endif
+  if (sizeof(long long) != 8) return 3;
+  l = 123456789123456789LL;
+  buffer[0] = '\0';
+  sprintf(buffer, "%lld", l);
+  if (strcmp(buffer, "123456789123456789") == 0) return 0;
+  /* the MacOS X library uses qd to format long longs */
+  buffer[0] = '\0';
+  sprintf (buffer, "%qd", l);
+  if (strcmp (buffer, "123456789123456789") == 0) return 1;
+  return 2;
 }

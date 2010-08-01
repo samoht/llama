@@ -4,20 +4,23 @@
 /*                                                                     */
 /*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
 /*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Copyright 1999 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
 /*  the special exception on linking described in file ../../LICENSE.  */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: schar.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: elf.c 4144 2001-12-07 13:41:02Z xleroy $ */
 
-char foo[]="\377";
+#include <stdio.h>
 
 int main(int argc, char ** argv)
 {
-  int i;
-  i = foo[0];
-  exit(i != -1);
+#ifdef __ELF__
+  printf("elf\n");
+#else
+  printf("aout\n");
+#endif
+  return 0;
 }

@@ -26,6 +26,7 @@ byterun/prims.c
 byterun/version.h
 byterun/*.o
 byterun/libcamlrun.a
+byterun/libcamlrun_shared.so
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml
@@ -35,6 +36,9 @@ lex/parser.ml
 lex/parser.mli
 lex/parser.output
 lex/llamalex
+yacc/version.h
+yacc/*.o
+yacc/llamayacc
 examples/asl/asl
 examples/basics/fib
 examples/basics/sieve

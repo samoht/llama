@@ -56,14 +56,14 @@ GENSOURCES=utils/config.ml parsing/lexer.ml \
  parsing/parser.ml \
  bytecomp/runtimedef.ml
 
-all: stdlib_dir llamac llama testprog
+all: byterun_dir stdlib_dir llamac llama testprog
 .PHONY: all
 promote:
 	cp llamac boot/llamac
 .PHONY: promote
 
-testprog: testprog.ml byterun_dir stdlib_dir
-	./llamac -I stdlib $< -o $@
+testprog: testprog.ml
+	byterun/llamarun ./llamac -I stdlib $< -o $@
 	byterun/llamarun testprog
 	@ echo "Is that 10946 on the line above? Good."
 	@ echo "The Llama system is up and running."

@@ -2,22 +2,27 @@
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Copyright 2009 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
 /*  the special exception on linking described in file ../../LICENSE.  */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: schar.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* Contributed by Stephane Glondu <steph@glondu.net> */
 
-char foo[]="\377";
+/* $Id: setgroups.c 9220 2009-04-01 16:50:10Z xleroy $ */
 
-int main(int argc, char ** argv)
+#include <errno.h>
+
+#include <sys/types.h>
+#include <limits.h>
+#include <grp.h>
+
+int main(void)
 {
-  int i;
-  i = foo[0];
-  exit(i != -1);
+  gid_t gidset[1];
+  gidset[0] = 0;
+  if (setgroups(1, gidset) == -1 && errno != EPERM) return 1;
+  return 0;
 }

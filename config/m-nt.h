@@ -7,17 +7,39 @@
 /*  Copyright 1996 Institut National de Recherche en Informatique et   */
 /*  en Automatique.  All rights reserved.  This file is distributed    */
 /*  under the terms of the GNU Library General Public License, with    */
-/*  the special exception on linking described in file ../../LICENSE.  */
+/*  the special exception on linking described in file ../LICENSE.     */
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: schar.c 4144 2001-12-07 13:41:02Z xleroy $ */
+/* $Id: m-nt.h 9547 2010-01-22 12:48:24Z doligez $ */
 
-char foo[]="\377";
+/* Machine configuration, Intel x86 processors, Win32,
+   Visual C++ or Mingw compiler */
 
-int main(int argc, char ** argv)
-{
-  int i;
-  i = foo[0];
-  exit(i != -1);
-}
+#ifdef _WIN64
+#define ARCH_SIXTYFOUR
+#else
+#undef ARCH_SIXTYFOUR
+#endif
+#undef ARCH_BIG_ENDIAN
+#undef ARCH_ALIGN_DOUBLE
+
+#define SIZEOF_INT 4
+#define SIZEOF_LONG 4
+#ifdef _WIN64
+#define SIZEOF_PTR 8
+#else
+#define SIZEOF_PTR 4
+#endif
+#define SIZEOF_SHORT 2
+
+#ifdef __MINGW32__
+#define ARCH_INT64_TYPE long long
+#define ARCH_UINT64_TYPE unsigned long long
+#else
+#define ARCH_INT64_TYPE __int64
+#define ARCH_UINT64_TYPE unsigned __int64
+#endif
+#define ARCH_INT64_PRINTF_FORMAT "I64"
+
+#undef NONSTANDARD_DIV_MOD

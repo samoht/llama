@@ -1,33 +1,42 @@
+/***********************************************************************/
+/*                                                                     */
+/*                           Objective Caml                            */
+/*                                                                     */
+/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
+/*                                                                     */
+/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  en Automatique.  All rights reserved.  This file is distributed    */
+/*  under the terms of the GNU Library General Public License, with    */
+/*  the special exception on linking described in file ../../LICENSE.  */
+/*                                                                     */
+/***********************************************************************/
+
+/* $Id: align.c 4144 2001-12-07 13:41:02Z xleroy $ */
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <signal.h>
 #include <setjmp.h>
 
 long foo;
 
-void access16(p)
-     short * p;
+void access16(short int *p)
 {
   foo = *p;
 }
 
-void access32(p)
-     long * p;
+void access32(long int *p)
 {
   foo = *p;
 }
 
 jmp_buf failure;
 
-void sig_handler(dummy)
-     int dummy;
+void sig_handler(int dummy)
 {
   longjmp(failure, 1);
 }
 
-int test(fct, p)
-     void (*fct)();
-     char * p;
+int test(void (*fct) (/* ??? */), char *p)
 {
   int res;
 
@@ -44,22 +53,19 @@ int test(fct, p)
   return res;
 }
 
-volatile int timeout;
+jmp_buf timer;
 
-void alarm_handler(dummy)
-     int dummy;
+void alarm_handler(int dummy)
 {
-  timeout = 1;
+  longjmp(timer, 1);
 }
 
-void use(n)
-     int n;
+void use(int n)
 {
   return;
 }
 
-int speedtest(p)
-     char * p;
+int speedtest(char *p)
 {
   int * q;
   volatile int total;
@@ -68,19 +74,21 @@ int speedtest(p)
 
   signal(SIGALRM, alarm_handler);
   sum = 0;
-  timeout = 0;
-  total = 0;
-  alarm(1);
-  while(! timeout) {
-    for (q = (int *) p, i = 1000; i > 0; q++, i--) sum += *q;
-    total++;
+  if (setjmp(timer) == 0) {
+    alarm(1);
+    total = 0;
+    while(1) {
+      for (q = (int *) p, i = 1000; i > 0; q++, i--)
+        sum += *q;
+      total++;
+    }
   }
   use(sum);
   signal(SIGALRM, SIG_DFL);
   return total;
 }
 
-main()
+main(void)
 {
   long n[1001];
   int speed_aligned, speed_unaligned;
