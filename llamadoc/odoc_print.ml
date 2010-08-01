@@ -42,5 +42,3 @@ let (modtype_fmt, flush_modtype_fmt) = new_fmt ()
 let string_of_type_expr t =
   Printtyp.type_sch type_fmt t;
   flush_type_fmt ()
-
-exception Use_code of string

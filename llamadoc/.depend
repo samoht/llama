@@ -66,18 +66,18 @@ odoc_exception.cmo: ../typing/types.cmo odoc_types.cmi odoc_name.cmi
 odoc_exception.cmx: ../typing/types.cmx odoc_types.cmx odoc_name.cmx
 odoc_global.cmo: ../utils/clflags.cmi odoc_global.cmi
 odoc_global.cmx: ../utils/clflags.cmx odoc_global.cmi
-odoc_html.cmo: odoc_value.cmo odoc_types.cmi odoc_type.cmo odoc_text.cmi \
+odoc_html.cmo: ../typing/printtyp.cmo odoc_value.cmo odoc_types.cmi \
+    odoc_type.cmo odoc_text.cmi odoc_str.cmi odoc_print.cmi \
     odoc_parameter.cmo odoc_name.cmi odoc_module.cmo odoc_misc.cmi \
-    odoc_messages.cmo odoc_llamahtml.cmo odoc_info.cmo odoc_exception.cmo \
-    odoc_dag2html.cmi odoc_args.cmi ../typing/module.cmo \
-    ../parsing/asttypes.cmi
-odoc_html.cmx: odoc_value.cmx odoc_types.cmx odoc_type.cmx odoc_text.cmx \
+    odoc_messages.cmo odoc_llamahtml.cmo odoc_info.cmo odoc_global.cmi \
+    odoc_exception.cmo odoc_args.cmi
+odoc_html.cmx: ../typing/printtyp.cmx odoc_value.cmx odoc_types.cmx \
+    odoc_type.cmx odoc_text.cmx odoc_str.cmx odoc_print.cmx \
     odoc_parameter.cmx odoc_name.cmx odoc_module.cmx odoc_misc.cmx \
-    odoc_messages.cmx odoc_llamahtml.cmx odoc_info.cmx odoc_exception.cmx \
-    odoc_dag2html.cmx odoc_args.cmx ../typing/module.cmx \
-    ../parsing/asttypes.cmi
-odoc_info.cmo: odoc_name.cmi odoc_args.cmi
-odoc_info.cmx: odoc_name.cmx odoc_args.cmx
+    odoc_messages.cmx odoc_llamahtml.cmx odoc_info.cmx odoc_global.cmx \
+    odoc_exception.cmx odoc_args.cmx
+odoc_info.cmo: odoc_types.cmi odoc_name.cmi odoc_messages.cmo odoc_args.cmi
+odoc_info.cmx: odoc_types.cmx odoc_name.cmx odoc_messages.cmx odoc_args.cmx
 odoc_inherit.cmo:
 odoc_inherit.cmx:
 odoc_latex_style.cmo:
