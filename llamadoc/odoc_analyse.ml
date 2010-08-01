@@ -144,10 +144,10 @@ let process_interface_file ppf sourcefile =
   (ast, sg, inputfile)
 
 (** The module used to analyse the parsetree and signature of an implementation file.*)
-module Ast_analyser = Odoc_ast.Analyser (Odoc_comments.Basic_info_retriever)
+(* module Ast_analyser = Odoc_ast.Analyser (Odoc_comments.Basic_info_retriever)*)
 
 (** The module used to analyse the parse tree and typed tree of an interface file.*)
-module Sig_analyser = Odoc_sig.Analyser (Odoc_comments.Basic_info_retriever)
+(* module Sig_analyser = Odoc_sig.Analyser (Odoc_comments.Basic_info_retriever)*)
 
 (** Handle an error. This is a partial copy of the compiler
    driver/error.ml file. We do this because there are
@@ -165,17 +165,14 @@ let process_error exn =
   | Env.Error err ->
       Location.print_error_cur_file ppf;
       Env.report_error ppf err
-  | Ctype.Tags(l, l') ->
-      Location.print_error_cur_file ppf;
-      fprintf ppf
-      "In this program,@ variant constructors@ `%s and `%s@ \
-       have the same hash value." l l'
   | Typecore.Error(loc, err) ->
       Location.print_error ppf loc; Typecore.report_error ppf err
+(*
   | Typetexp.Error(loc, err) ->
       Location.print_error ppf loc; Typetexp.report_error ppf err
   | Typedecl.Error(loc, err) ->
       Location.print_error ppf loc; Typedecl.report_error ppf err
+*)
   | Includemod.Error err ->
       Location.print_error_cur_file ppf;
       Includemod.report_error ppf err
@@ -186,10 +183,6 @@ let process_error exn =
   | Sys_error msg ->
       Location.print_error_cur_file ppf;
       fprintf ppf "I/O error: %s" msg
-  | Typeclass.Error(loc, err) ->
-      Location.print_error ppf loc; Typeclass.report_error ppf err
-  | Translclass.Error(loc, err) ->
-      Location.print_error ppf loc; Translclass.report_error ppf err
   | Warnings.Errors (n) ->
       Location.print_error_cur_file ppf;
       fprintf ppf "Error-enabled warnings (%d occurrences)" n
@@ -215,6 +208,8 @@ let process_file ppf sourcefile =
     );
   match sourcefile with
     Odoc_args.Impl_file file ->
+      assert false
+(*
       (
        Location.input_name := file;
        try
@@ -246,12 +241,13 @@ let process_file ppf sourcefile =
            incr Odoc_global.errors ;
            None
       )
+*)
   | Odoc_args.Intf_file file ->
       (
        Location.input_name := file;
        try
          let (ast, signat, input_file) = process_interface_file ppf file in
-         let file_module = Sig_analyser.analyse_signature file
+         let file_module = Odoc_sig.analyse_signature file
              !Location.input_name ast signat
          in
 
@@ -282,14 +278,13 @@ let process_file ppf sourcefile =
           String.capitalize (Filename.basename (Filename.chop_extension file))
         in
         let txt =
-          try Odoc_text.Texter.text_of_string (Odoc_misc.input_file_as_string file)
+          try Odoc_text.text_of_string (Odoc_misc.input_file_as_string file)
           with Odoc_text.Text_syntax (l, c, s) ->
             raise (Failure (Odoc_messages.text_parse_error l c s))
         in
         let m =
           {
             Odoc_module.m_name = mod_name ;
-            Odoc_module.m_type = Types.Tmty_signature [] ;
             Odoc_module.m_info = None ;
             Odoc_module.m_is_interface = true ;
             Odoc_module.m_file = file ;
@@ -316,41 +311,6 @@ let process_file ppf sourcefile =
            incr Odoc_global.errors ;
            None
 
-(** Remove the class elements between the stop special comments. *)
-let rec remove_class_elements_between_stop keep eles =
-  match eles with
-    [] -> []
-  | ele :: q ->
-      match ele with
-        Odoc_class.Class_comment [ Odoc_types.Raw "/*" ] ->
-          remove_class_elements_between_stop (not keep) q
-      | Odoc_class.Class_attribute _
-      | Odoc_class.Class_method _
-      | Odoc_class.Class_comment _ ->
-          if keep then
-            ele :: (remove_class_elements_between_stop keep q)
-          else
-            remove_class_elements_between_stop keep q
-
-(** Remove the class elements between the stop special comments in a class kind. *)
-let rec remove_class_elements_between_stop_in_class_kind k =
-  match k with
-    Odoc_class.Class_structure (inher, l) ->
-      Odoc_class.Class_structure (inher, remove_class_elements_between_stop true l)
-  | Odoc_class.Class_apply _ -> k
-  | Odoc_class.Class_constr _ -> k
-  | Odoc_class.Class_constraint (k1, ctk) ->
-      Odoc_class.Class_constraint (remove_class_elements_between_stop_in_class_kind k1,
-                        remove_class_elements_between_stop_in_class_type_kind ctk)
-
-(** Remove the class elements beetween the stop special comments in a class type kind. *)
-and remove_class_elements_between_stop_in_class_type_kind tk =
-  match tk with
-    Odoc_class.Class_signature (inher, l) ->
-      Odoc_class.Class_signature (inher, remove_class_elements_between_stop true l)
-  | Odoc_class.Class_type _ -> tk
-
-
 (** Remove the module elements between the stop special comments. *)
 let rec remove_module_elements_between_stop keep eles =
   let f = remove_module_elements_between_stop in
@@ -363,44 +323,6 @@ let rec remove_module_elements_between_stop keep eles =
       | Odoc_module.Element_module_comment _ ->
           if keep then
             ele :: (f keep q)
-          else
-            f keep q
-      | Odoc_module.Element_module m ->
-          if keep then
-            (
-             m.Odoc_module.m_kind <- remove_module_elements_between_stop_in_module_kind m.Odoc_module.m_kind ;
-             (Odoc_module.Element_module m) :: (f keep q)
-            )
-          else
-            f keep q
-      | Odoc_module.Element_module_type mt ->
-          if keep then
-            (
-             mt.Odoc_module.mt_kind <- Odoc_misc.apply_opt
-                 remove_module_elements_between_stop_in_module_type_kind mt.Odoc_module.mt_kind ;
-             (Odoc_module.Element_module_type mt) :: (f keep q)
-            )
-          else
-            f keep q
-      | Odoc_module.Element_included_module _ ->
-          if keep then
-            ele :: (f keep q)
-          else
-            f keep q
-      | Odoc_module.Element_class c ->
-          if keep then
-            (
-             c.Odoc_class.cl_kind <- remove_class_elements_between_stop_in_class_kind c.Odoc_class.cl_kind ;
-             (Odoc_module.Element_class c) :: (f keep q)
-            )
-          else
-            f keep q
-      | Odoc_module.Element_class_type ct ->
-          if keep then
-            (
-             ct.Odoc_class.clt_kind <- remove_class_elements_between_stop_in_class_type_kind ct.Odoc_class.clt_kind ;
-             (Odoc_module.Element_class_type ct) :: (f keep q)
-            )
           else
             f keep q
       | Odoc_module.Element_value _
@@ -417,29 +339,12 @@ and remove_module_elements_between_stop_in_module_kind k =
   match k with
   | Odoc_module.Module_struct l -> Odoc_module.Module_struct (remove_module_elements_between_stop true l)
   | Odoc_module.Module_alias _ -> k
-  | Odoc_module.Module_functor (params, k2)  ->
-      Odoc_module.Module_functor (params, remove_module_elements_between_stop_in_module_kind k2)
-  | Odoc_module.Module_apply (k1, k2) ->
-      Odoc_module.Module_apply (remove_module_elements_between_stop_in_module_kind k1,
-                    remove_module_elements_between_stop_in_module_kind k2)
-  | Odoc_module.Module_with (mtkind, s) ->
-      Odoc_module.Module_with (remove_module_elements_between_stop_in_module_type_kind mtkind, s)
-  | Odoc_module.Module_constraint (k2, mtkind) ->
-      Odoc_module.Module_constraint (remove_module_elements_between_stop_in_module_kind k2,
-                         remove_module_elements_between_stop_in_module_type_kind mtkind)
-  | Odoc_module.Module_typeof _ -> k
-  | Odoc_module.Module_unpack _ -> k
 
 (** Remove the module elements between the stop special comment, in the given module type kind. *)
 and remove_module_elements_between_stop_in_module_type_kind tk =
   match tk with
   | Odoc_module.Module_type_struct l -> Odoc_module.Module_type_struct (remove_module_elements_between_stop true l)
-  | Odoc_module.Module_type_functor (params, tk2) ->
-      Odoc_module.Module_type_functor (params, remove_module_elements_between_stop_in_module_type_kind tk2)
   | Odoc_module.Module_type_alias _ -> tk
-  | Odoc_module.Module_type_with (tk2, s) ->
-      Odoc_module.Module_type_with (remove_module_elements_between_stop_in_module_type_kind tk2, s)
-  | Odoc_module.Module_type_typeof _ -> tk
 
 (** Remove elements between the stop special comment. *)
 let remove_elements_between_stop module_list =
@@ -451,7 +356,7 @@ let remove_elements_between_stop module_list =
     module_list
 
 (** This function builds the modules from the given list of source files. *)
-let analyse_files ?(init=[]) files =
+let analyse_files init files = (* ?(init=[]) *)
   let modules_pre =
     init @
     (List.fold_left
@@ -492,13 +397,7 @@ let analyse_files ?(init=[]) files =
      print_string Odoc_messages.ok;
      print_newline ();
     );
-  let modules_list =
-    (List.fold_left
-       (fun acc -> fun m -> acc @ (Odoc_module.module_all_submodules ~trans: false m))
-       merged_modules
-       merged_modules
-    )
-  in
+  let modules_list = merged_modules in
   if !Odoc_args.verbose then
     (
      print_string Odoc_messages.cross_referencing;

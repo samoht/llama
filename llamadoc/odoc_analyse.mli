@@ -18,7 +18,7 @@
    @param init is the list of modules already known from a previous analysis.
 *)
 val analyse_files :
-    ?init: Odoc_module.t_module list ->
+    Odoc_module.t_module list ->
       Odoc_args.source_file list ->
         Odoc_module.t_module list
 

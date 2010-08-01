@@ -572,3 +572,16 @@ and type_statement expr =
   | Tvar _ -> ()
   | _ ->
       if not (Ctype.equal ty Predef.type_unit) then not_unit_type_warning expr ty
+
+(* Error report *)
+
+open Format
+open Printtyp
+
+let report_error ppf = function
+  | Incomplete_format s ->
+      fprintf ppf "Premature end of format string ``%S''" s
+  | Bad_conversion (fmt, i, c) ->
+      fprintf ppf
+        "Bad conversion %%%c, at char number %d \
+         in format string ``%s''" c i fmt
