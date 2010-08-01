@@ -398,14 +398,7 @@ CAMLexport void caml_main(char **argv)
   shared_libs = read_section(fd, &trail, "DLLS");
   req_prims = read_section(fd, &trail, "PRIM");
   if (req_prims == NULL) caml_fatal_error("Fatal error: no PRIM section\n");
-/* ---------------------------------------------------------------------- */
-#if 0
-/* ---------------------------------------------------------------------- */
   caml_build_primitive_table(shared_lib_path, shared_libs, req_prims);
-/* ---------------------------------------------------------------------- */
-#endif
-/* ---------------------------------------------------------------------- */
-  caml_build_primitive_table_builtin();
 
   caml_stat_free(shared_lib_path);
   caml_stat_free(shared_libs);

@@ -39,12 +39,17 @@ stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml
 stdlib/camlheader
+stdlib/camlheader_ur
 stdlib/libcamlrun.a
 otherlibs/num/*.o
 otherlibs/num/dllnums.so
 otherlibs/num/libnums.a
 otherlibs/num/nums.cma
 otherlibs/str/str.cma
+otherlibs/graph/*.o
+otherlibs/graph/dllgraphics.so
+otherlibs/graph/graphics.cma
+otherlibs/graph/libgraphics.a
 lex/lexer.ml
 lex/parser.ml
 lex/parser.mli

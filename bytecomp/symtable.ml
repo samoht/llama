@@ -289,10 +289,8 @@ let init_toplevel () =
       pos := i + 1
     done;
     (* DLL initialization *)
-(*
     let dllpath = try sect.read_string "DLPT" with Not_found -> "" in
     Dll.init_toplevel dllpath;
-*)
     (* Recover CRC infos for interfaces *)
     let crcintfs =
       try (Obj.magic (sect.read_struct "CRCS") : (string * Digest.t) list)

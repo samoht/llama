@@ -16,7 +16,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   genlex.cmo weak.cmo \
   filename.cmo complex.cmo scanning.cmo scanf.cmo
 
-all: std_exit.cmo stdlib.cma camlheader
+all: std_exit.cmo stdlib.cma camlheader camlheader_ur
 
 stdlib.cma: $(OBJS)
 	$(LLAMAC) -a -o stdlib.cma $^
@@ -35,8 +35,13 @@ pervasives.cmo: pervasives.ml
 
 std_exit.cmo: pervasives.cmo
 
-camlheader: ../config/Makefile
-	echo '#!$(BINDIR)/llamarun' > $@
+camlheader camlheader_ur: ../config/Makefile
+	echo '#!$(BINDIR)/llamarun' > camlheader
+	echo '#!' | tr -d '\012' > camlheader_ur
+
+install:
+	cp stdlib.cma std_exit.cmo *.cmi *.mli *.ml camlheader camlheader_ur $(LIBDIR)
+.PHONY: install
 
 clean:
 	rm -f *.cmi *.cmo
