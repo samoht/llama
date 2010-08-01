@@ -62,7 +62,6 @@ INCLUDES_DEP=-I $(LLAMASRCDIR)/parsing \
 
 INCLUDES_NODEP=	-I $(LLAMASRCDIR)/stdlib \
 	-I $(LLAMASRCDIR)/otherlibs/str \
-	-I $(LLAMASRCDIR)/otherlibs/dynlink \
 	-I $(LLAMASRCDIR)/otherlibs/unix \
 	-I $(LLAMASRCDIR)/otherlibs/num \
 	-I $(LLAMASRCDIR)/otherlibs/graph
@@ -95,29 +94,23 @@ CMOFILES= odoc_config.cmo \
 	odoc_see_lexer.cmo\
 	odoc_env.cmo\
 	odoc_merge.cmo\
+	odoc_comments.cmo\
 	odoc_sig.cmo\
 	odoc_control.cmo\
 	odoc_inherit.cmo\
 	odoc_search.cmo\
 	odoc_cross.cmo\
-	odoc_comments.cmo\
 	odoc_dep.cmo\
-	odoc_analyse.cmo
+	odoc_analyse.cmo\
+	odoc_info.cmo
 
 
 CMXFILES= $(CMOFILES:.cmo=.cmx)
 CMIFILES= $(CMOFILES:.cmo=.cmi)
 
 EXECMOFILES=$(CMOFILES) \
-	odoc_dag2html.cmo \
-	odoc_to_text.cmo \
 	odoc_llamahtml.cmo \
 	odoc_html.cmo \
-	odoc_man.cmo \
-	odoc_latex_style.cmo \
-	odoc_latex.cmo \
-	odoc_texi.cmo \
-	odoc_dot.cmo \
 	odoc.cmo
 
 EXECMXFILES= $(EXECMOFILES:.cmo=.cmx)
@@ -128,8 +121,26 @@ LIBCMXFILES= $(LIBCMOFILES:.cmo=.cmx)
 LIBCMIFILES= $(LIBCMOFILES:.cmo=.cmi)
 
 # Les cmo et cmx de la distrib LLAMA
+TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
+ $(LLAMASRCDIR)/typing/primitive.cmo \
+ $(LLAMASRCDIR)/typing/types.cmo \
+ $(LLAMASRCDIR)/typing/predef.cmo \
+ $(LLAMASRCDIR)/typing/module.cmo \
+ $(LLAMASRCDIR)/typing/env.cmo \
+ $(LLAMASRCDIR)/typing/get.cmo \
+ $(LLAMASRCDIR)/typing/btype.cmo \
+ $(LLAMASRCDIR)/typing/subst.cmo \
+ $(LLAMASRCDIR)/typing/oprint.cmo \
+ $(LLAMASRCDIR)/typing/printtyp.cmo $(LLAMASRCDIR)/typing/pr_decl.cmo \
+ $(LLAMASRCDIR)/typing/typedtree_aux.cmo $(LLAMASRCDIR)/typing/ctype.cmo \
+ $(LLAMASRCDIR)/typing/error.cmo \
+ $(LLAMASRCDIR)/typing/includecore.cmo $(LLAMASRCDIR)/typing/includemod.cmo \
+ $(LLAMASRCDIR)/typing/resolve.cmo \
+ $(LLAMASRCDIR)/typing/typecore.cmo \
+ $(LLAMASRCDIR)/typing/typedecl.cmo $(LLAMASRCDIR)/typing/typemod.cmo
+
+
 LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
-	$(LLAMASRCDIR)/typing/ident.cmo \
 	$(LLAMASRCDIR)/utils/tbl.cmo \
 	$(LLAMASRCDIR)/utils/misc.cmo \
 	$(LLAMASRCDIR)/utils/config.cmo \
@@ -144,37 +155,17 @@ LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
 	$(LLAMASRCDIR)/parsing/parser.cmo \
 	$(LLAMASRCDIR)/parsing/lexer.cmo \
 	$(LLAMASRCDIR)/parsing/parse.cmo \
-	$(LLAMASRCDIR)/typing/types.cmo \
-	$(LLAMASRCDIR)/typing/path.cmo \
-	$(LLAMASRCDIR)/typing/btype.cmo \
-	$(LLAMASRCDIR)/typing/predef.cmo \
-	$(LLAMASRCDIR)/typing/datarepr.cmo \
-	$(LLAMASRCDIR)/typing/subst.cmo \
-	$(LLAMASRCDIR)/typing/env.cmo \
-	$(LLAMASRCDIR)/typing/ctype.cmo \
-	$(LLAMASRCDIR)/typing/primitive.cmo \
-	$(LLAMASRCDIR)/typing/oprint.cmo \
-	$(LLAMASRCDIR)/typing/printtyp.cmo \
-	$(LLAMASRCDIR)/typing/includecore.cmo \
-	$(LLAMASRCDIR)/typing/typetexp.cmo \
-	$(LLAMASRCDIR)/typing/typedtree.cmo \
-	$(LLAMASRCDIR)/typing/parmatch.cmo \
-	$(LLAMASRCDIR)/typing/stypes.cmo \
-	$(LLAMASRCDIR)/typing/typecore.cmo \
-	$(LLAMASRCDIR)/typing/includeclass.cmo \
-	$(LLAMASRCDIR)/typing/typedecl.cmo \
-	$(LLAMASRCDIR)/typing/typeclass.cmo \
-	$(LLAMASRCDIR)/typing/mtype.cmo \
-	$(LLAMASRCDIR)/typing/includemod.cmo \
-	$(LLAMASRCDIR)/typing/typemod.cmo \
+        $(TYPING) \
+	$(LLAMASRCDIR)/bytecomp/ident.cmo \
+	$(LLAMASRCDIR)/bytecomp/identSet.cmo \
 	$(LLAMASRCDIR)/bytecomp/lambda.cmo \
 	$(LLAMASRCDIR)/bytecomp/typeopt.cmo \
 	$(LLAMASRCDIR)/bytecomp/printlambda.cmo \
+	$(LLAMASRCDIR)/bytecomp/pmc_pattern.cmo \
+	$(LLAMASRCDIR)/bytecomp/parmatch.cmo \
 	$(LLAMASRCDIR)/bytecomp/switch.cmo \
 	$(LLAMASRCDIR)/bytecomp/matching.cmo \
-	$(LLAMASRCDIR)/bytecomp/translobj.cmo \
 	$(LLAMASRCDIR)/bytecomp/translcore.cmo \
-	$(LLAMASRCDIR)/bytecomp/translclass.cmo \
 	$(LLAMASRCDIR)/tools/depend.cmo
 
 LLAMACMXFILES=$(LLAMACMOFILES:.cmo=.cmx)
@@ -188,7 +179,7 @@ STDLIB_MLIS=../stdlib/*.mli \
 all: exe lib
 
 exe: $(LLAMADOC)
-lib: $(LLAMADOC_LIBCMA) $(LLAMADOC_LIBCMI) $(ODOC_TEST)
+lib: $(LLAMADOC_LIBCMA) $(LLAMADOC_LIBCMI) # $(ODOC_TEST)
 
 opt.opt: exeopt libopt
 	$(MAKE) manpages
@@ -198,9 +189,9 @@ debug:
 	make LLAMAPP=""
 
 $(LLAMADOC): $(EXECMOFILES)
-	$(LLAMAC) -o $@ -linkall unix.cma str.cma dynlink.cma $(LINKFLAGS) $(LLAMACMOFILES) $(EXECMOFILES)
+	$(LLAMAC) -o $@ -linkall unix.cma str.cma $(LINKFLAGS) $(LLAMACMOFILES) $(EXECMOFILES)
 $(LLAMADOC_OPT): $(EXECMXFILES)
-	$(LLAMAOPT) -o $@ unix.cmxa str.cmxa dynlink.cmxa $(LINKFLAGS) $(LLAMACMXFILES) $(EXECMXFILES)
+	$(LLAMAOPT) -o $@ unix.cmxa str.cmxa $(LINKFLAGS) $(LLAMACMXFILES) $(EXECMXFILES)
 
 $(LLAMADOC_LIBCMA): $(LIBCMOFILES)
 	$(LLAMAC) -a -o $@ $(LINKFLAGS) $(LLAMACMOFILES) $(LIBCMOFILES)
@@ -257,13 +248,13 @@ odoc_see_lexer.ml: odoc_see_lexer.mll
 ######################
 install: dummy
 	if test -d $(INSTALL_BINDIR); then : ; else $(MKDIR) $(INSTALL_BINDIR); fi
-	if test -d $(INSTALL_LIBDIR); then : ; else $(MKDIR) $(INSTALL_LIBDIR); fi
-	if test -d $(INSTALL_CUSTOMDIR); then : ; else $(MKDIR) $(INSTALL_CUSTOMDIR); fi
+#	if test -d $(INSTALL_LIBDIR); then : ; else $(MKDIR) $(INSTALL_LIBDIR); fi
+#	if test -d $(INSTALL_CUSTOMDIR); then : ; else $(MKDIR) $(INSTALL_CUSTOMDIR); fi
 	$(CP) $(LLAMADOC) $(INSTALL_BINDIR)/$(LLAMADOC)$(EXE)
-	$(CP) llamadoc.hva *.cmi $(LLAMADOC_LIBCMA) $(INSTALL_LIBDIR)
-	$(CP) $(INSTALL_MLIS) $(INSTALL_CMIS) $(INSTALL_LIBDIR)
-	if test -d $(INSTALL_MANODIR); then : ; else $(MKDIR) $(INSTALL_MANODIR); fi
-	if test -d stdlib_man; then $(CP) stdlib_man/* $(INSTALL_MANODIR); else : ; fi
+#	$(CP) llamadoc.hva *.cmi $(LLAMADOC_LIBCMA) $(INSTALL_LIBDIR)
+#	$(CP) $(INSTALL_MLIS) $(INSTALL_CMIS) $(INSTALL_LIBDIR)
+#	if test -d $(INSTALL_MANODIR); then : ; else $(MKDIR) $(INSTALL_MANODIR); fi
+#	if test -d stdlib_man; then $(CP) stdlib_man/* $(INSTALL_MANODIR); else : ; fi
 
 installopt:
 	if test -f $(LLAMADOC_OPT) ; then $(MAKE) installopt_really ; fi

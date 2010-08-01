@@ -19,8 +19,6 @@ open Misc
 open Format
 open Typedtree
 
-module M = Odoc_messages
-
 let print_DEBUG s = print_string s ; print_newline ()
 
 (* we check if we must load a module given on the command line *)
@@ -60,9 +58,9 @@ let get_real_filename name =
         Filename.concat d name
       with
         Not_found ->
-          failwith (M.file_not_found_in_paths paths name)
+          failwith (Odoc_messages.file_not_found_in_paths paths name)
      )
-
+(*
 let _ =
   match cm_opt with
     None ->
@@ -84,20 +82,20 @@ let _ =
       | Failure s ->
           prerr_endline (Odoc_messages.load_file_error file s);
           exit 1
-
+*)
 let _ = print_DEBUG "Fin du chargement dynamique eventuel"
 
-let default_html_generator = new Odoc_html.html
-let default_latex_generator = new Odoc_latex.latex
-let default_texi_generator = new Odoc_texi.texi
-let default_man_generator = new Odoc_man.man
-let default_dot_generator = new Odoc_dot.dot
+let default_html_generator = Odoc_html.generate
+let default_latex_generator _ = assert false
+let default_texi_generator _ = assert false
+let default_man_generator _ = assert false
+let default_dot_generator _ = assert false
 let _ = Odoc_args.parse
-    (default_html_generator :> Odoc_args.doc_generator)
-    (default_latex_generator :> Odoc_args.doc_generator)
-    (default_texi_generator :> Odoc_args.doc_generator)
-    (default_man_generator :> Odoc_args.doc_generator)
-    (default_dot_generator :> Odoc_args.doc_generator)
+    (default_html_generator)
+    (default_latex_generator)
+    (default_texi_generator)
+    (default_man_generator)
+    (default_dot_generator)
 
 
 let loaded_modules =
@@ -117,7 +115,7 @@ let loaded_modules =
        !Odoc_args.load
     )
 
-let modules = Odoc_analyse.analyse_files ~init: loaded_modules !Odoc_args.files
+let modules = Odoc_analyse.analyse_files loaded_modules !Odoc_args.files
 
 let _ =
   match !Odoc_args.dump with
@@ -134,7 +132,7 @@ let _ =
       ()
   | Some gen ->
       Odoc_info.verbose Odoc_messages.generating_doc;
-      gen#generate modules;
+      gen modules;
       Odoc_info.verbose Odoc_messages.ok
 
 let _ =

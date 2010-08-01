@@ -82,3 +82,15 @@ doc/*.html
 doc/style.css
 doc/manual.haux
 doc/manual.htoc
+llamadoc/odoc_lexer.ml
+llamadoc/odoc_llamahtml.ml
+llamadoc/odoc_parser.ml
+llamadoc/odoc_parser.mli
+llamadoc/odoc_parser.output
+llamadoc/odoc_see_lexer.ml
+llamadoc/odoc_text_lexer.ml
+llamadoc/odoc_text_parser.ml
+llamadoc/odoc_text_parser.mli
+llamadoc/odoc_text_parser.output
+llamadoc/llamadoc
+llamadoc/odoc_info.cma

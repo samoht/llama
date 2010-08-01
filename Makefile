@@ -132,7 +132,7 @@ defaultentry:
 
 # Recompile the system using the bootstrap compiler
 all: runtime llamac llamalex llamayacc llamatools library llama \
-  otherlibraries # llamabuild.byte camlp4out $(DEBUGGER) llamadoc
+  otherlibraries llamadoc # llamabuild.byte camlp4out $(DEBUGGER)
 
 # Compile everything the first time
 world:
@@ -303,7 +303,7 @@ install:
 	for i in num str graph unix; do \
 	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 	done
-#	cd llamadoc; $(MAKE) install
+	cd llamadoc; $(MAKE) install
 	if test -f llamaopt; then $(MAKE) installopt; else :; fi
 	if test -f debugger/llamadebug; then (cd debugger; $(MAKE) install); \
 	   else :; fi
