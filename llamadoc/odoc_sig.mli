@@ -29,44 +29,12 @@
       (** This function returns the type expression list for the exception whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_exception : tab -> string -> Types.constructor
+      val search_exception : tab -> string -> Types.type_expr list
 
       (** This function returns the Types.type_declaration  for the type whose name is given,
          in the given table.
          @raise Not_found if error.*)
       val search_type : tab -> string -> Types.type_constructor
-
-(** Functions to retrieve simple and special comments from strings. *)
-    (** Return the couple [(n, list)] where [n] is the number of
-       characters read to retrieve [list], which is the list
-       of special comments found in the string. *)
-    val all_special :
-        string -> string -> int * Odoc_types.info list
-
-    (** Return true if the given string contains a blank line. *)
-    val blank_line_outside_simple :
-        string -> string -> bool
-
-   (** [just_after_special file str] return the pair ([length], [info_opt])
-      where [info_opt] is the first optional special comment found
-      in [str], without any blank line before. [length] is the number
-      of chars from the beginning of [str] to the end of the special comment. *)
-    val just_after_special :
-        string -> string -> (int * Odoc_types.info option)
-
-   (** [first_special file str] return the pair ([length], [info_opt])
-      where [info_opt] is the first optional special comment found
-      in [str]. [length] is the number of chars from the beginning of [str]
-      to the end of the special comment. *)
-    val first_special :
-        string -> string -> (int * Odoc_types.info option)
-
-    (** Return a pair [(comment_opt, element_comment_list)], where [comment_opt] is the last special
-       comment found in the given string and not followed by a blank line,
-       and [element_comment_list] the list of values built from the other
-       special comments found and the given function. *)
-    val get_comments :
-        (Odoc_types.text -> 'a) -> string -> string -> (Odoc_types.info option * 'a list)
 
       (** This variable is used to load a file as a string and retrieve characters from it.*)
       val file : string ref

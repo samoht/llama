@@ -40,7 +40,7 @@ type type_kind =
 type t_type = {
     ty_name : Odoc_name.t ;
     mutable ty_info : Odoc_types.info option ; (** optional user information *)
-    ty_parameters : (Types.type_expr * bool * bool) list ;
+    ty_parameters : Types.type_expr list ;
                     (** type parameters: (type, covariant, contravariant) *)
     ty_kind : type_kind ;
     ty_manifest : Types.type_expr option; (** type manifest *)

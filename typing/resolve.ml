@@ -259,7 +259,7 @@ let rec expr env ex =
 let constr_decl env (s,tys) =
   (s, List.map (type_expression true env) tys)
    
-let constructor env tcs n idx_const idx_block idx (name, typexps) =
+let constructor env tcs n idx_const idx_block idx (name, typexps, _) =
   let postincr idx = let n = !idx in incr idx; n in
   let arity = List.length typexps in
   let cs =
@@ -277,7 +277,7 @@ let constructor env tcs n idx_const idx_block idx (name, typexps) =
   in
   (cs, List.map (type_expression true env) typexps)
 
-let label env tcs pos (name, typexp, mut) =
+let label env tcs pos (name, mut, typexp, _) =
   let lbl =
     { lbl_parent = tcs;
       lbl_name = name;

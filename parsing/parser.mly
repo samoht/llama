@@ -737,7 +737,7 @@ constructor_declarations:
   | constructor_declarations BAR constructor_declaration { $3 :: $1 }
 ;
 constructor_declaration:
-    constr_ident constructor_arguments          { ($1, $2) }
+    constr_ident constructor_arguments          { ($1, $2, symbol_rloc()) }
 ;
 constructor_arguments:
     /*empty*/                                   { [] }
@@ -748,7 +748,7 @@ label_declarations:
   | label_declarations SEMI label_declaration   { $3 :: $1 }
 ;
 label_declaration:
-    mutable_flag label COLON core_type          { ($2, $4, $1) }
+    mutable_flag label COLON core_type          { ($2, $1, $4, symbol_rloc()) }
 ;
 
 /* ---------------------------------------------------------------------- */

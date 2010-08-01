@@ -49,9 +49,9 @@ let add_type_declaration bv pdecl =
   let rec add_tkind = function
     Ptype_abstract -> ()
   | Ptype_variant cstrs ->
-      List.iter (fun (c, args) -> List.iter (add_type bv) args) cstrs
+      List.iter (fun (c, args, _) -> List.iter (add_type bv) args) cstrs
   | Ptype_record lbls ->
-      List.iter (fun (l, ty, mut) -> add_type bv ty) lbls
+      List.iter (fun (l, mut, ty, _) -> add_type bv ty) lbls
   | Ptype_abbrev ty ->
       add_type bv ty in
   add_tkind pdecl.ptype_kind

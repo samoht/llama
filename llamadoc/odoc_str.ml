@@ -96,7 +96,7 @@ let string_of_type_param_list t =
     (if par then "(" else "")
     (raw_string_of_type_list ", "
        (List.map
-          (fun (typ, co, cn) -> (string_of_variance t (co, cn), typ))
+          (fun typ -> ("", typ))
           t.Odoc_type.ty_parameters
        )
     )
@@ -106,8 +106,7 @@ let string_of_type t =
   "type "^
   (String.concat ""
      (List.map
-        (fun (p, co, cn) ->
-          (string_of_variance t (co, cn))^
+        (fun p ->
           (Odoc_print.string_of_type_expr p)^" "
         )
         t.Odoc_type.ty_parameters

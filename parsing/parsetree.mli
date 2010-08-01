@@ -68,8 +68,6 @@ and stream_pattern =
   | Pnontermpat of expression * pattern
   | Pexp_streampat of string
 
-type constr_decl = string * type_expression list
-
 type type_declaration =
   { ptype_name : string;
     ptype_params : string list;
@@ -78,8 +76,8 @@ type type_declaration =
 
 and tcs_kind =
     Ptype_abstract
-  | Ptype_variant of constr_decl list
-  | Ptype_record of (string * type_expression * mutable_flag) list
+  | Ptype_variant of (string * type_expression list * Location.t) list
+  | Ptype_record of (string * mutable_flag * type_expression * Location.t) list
   | Ptype_abbrev of type_expression
 
 type signature_item =
@@ -89,7 +87,7 @@ type signature_item =
 and signature_item_desc =
     Psig_value of string * type_expression * string list option
   | Psig_type of type_declaration list
-  | Psig_exception of constr_decl
+  | Psig_exception of string * type_expression list
   | Psig_open of module_name
 
 type structure_item =
@@ -101,7 +99,7 @@ and structure_item_desc =
   | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * type_expression * string list
   | Pstr_type of type_declaration list
-  | Pstr_exception of constr_decl
+  | Pstr_exception of string * type_expression list
   | Pstr_open of module_name
 
 (* Toplevel phrases *)
