@@ -8,6 +8,7 @@ boot/llamalex
 boot/llamarun
 boot/llamayacc
 boot/stdlib.cma
+boot/libcamlrun.a
 boot/camlheader
 config/m.h
 config/s.h
@@ -15,6 +16,7 @@ config/Makefile
 utils/config.ml
 parsing/parser.ml
 parsing/parser.mli
+parsing/parser.output
 parsing/lexer.ml
 parsing/lexer.mll
 typing/location.ml
@@ -27,10 +29,12 @@ byterun/version.h
 byterun/*.o
 byterun/libcamlrun.a
 byterun/libcamlrun_shared.so
+toplevel/toplevellib.cma
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
 stdlib/sys.ml
 stdlib/camlheader
+stdlib/libcamlrun.a
 lex/lexer.ml
 lex/parser.ml
 lex/parser.mli
