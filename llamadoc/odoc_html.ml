@@ -215,8 +215,6 @@ let bs = Buffer.add_string
     let list_types = ref []
     let list_modules = ref []
     let list_module_types = ref []
-    let list_classes = ref []
-    let list_class_types = ref []
 
 
     let index_prefix =
@@ -486,7 +484,7 @@ let bs = Buffer.add_string
           (
            try
              let m =
-               List.find (fun m -> m.m_name = name) list_modules
+               List.find (fun m -> m.m_name = name) !list_modules
              in
              let (html, _) = naming_html_files m.m_name in
              bp b "<a href=\"%s\">%s</a></td>" html m.m_name;
@@ -508,15 +506,13 @@ let bs = Buffer.add_string
           [] -> ()
         | _ -> bp b "<a href=\"%s\">%s</a><br>\n" url m
       in
-      index_if_not_empty list_types index_types Odoc_messages.index_of_types;
-      index_if_not_empty list_exceptions index_exceptions Odoc_messages.index_of_exceptions;
-      index_if_not_empty list_values index_values Odoc_messages.index_of_values;
-      index_if_not_empty list_attributes index_attributes Odoc_messages.index_of_attributes;
-      index_if_not_empty list_methods index_methods Odoc_messages.index_of_methods;
-      index_if_not_empty list_classes index_classes Odoc_messages.index_of_classes;
-      index_if_not_empty list_class_types index_class_types Odoc_messages.index_of_class_types;
-      index_if_not_empty list_modules index_modules Odoc_messages.index_of_modules;
-      index_if_not_empty list_module_types index_module_types Odoc_messages.index_of_module_types
+      index_if_not_empty !list_types index_types Odoc_messages.index_of_types;
+      index_if_not_empty !list_exceptions index_exceptions Odoc_messages.index_of_exceptions;
+      index_if_not_empty !list_values index_values Odoc_messages.index_of_values;
+      index_if_not_empty !list_attributes index_attributes Odoc_messages.index_of_attributes;
+      index_if_not_empty !list_methods index_methods Odoc_messages.index_of_methods;
+      index_if_not_empty !list_modules index_modules Odoc_messages.index_of_modules;
+      index_if_not_empty !list_module_types index_module_types Odoc_messages.index_of_module_types
     (** Print html code for the first sentence of a description.
        The titles and lists in this first sentence has been removed.*)
     and html_of_info_first_sentence b info_opt =
@@ -640,7 +636,7 @@ let bs = Buffer.add_string
       List.iter
         (fun (tag, text) ->
           try
-            let f = List.assoc tag tag_functions in
+            let f = List.assoc tag !tag_functions in
             Buffer.add_string b (f text)
           with
             Not_found ->
@@ -789,51 +785,31 @@ let newline_to_indented_br s =
       ]
 
     (** The style file for all pages. *)
-    let style_file = "style.css"
+    let style_file = ref "style.css"
 
     (** The code to import the style. Initialized in [init_style]. *)
-    let style = ""
+    let style = ref ""
 
     (** The known types names.
        Used to know if we must create a link to a type
        when printing a type. *)
-    let known_types_names = Set.empty_generic
+    let known_types_names = ref Set.empty_generic
 
     (** The known class and class type names.
        Used to know if we must create a link to a class
        or class type or not when printing a type. *)
-    let known_classes_names = Set.empty_generic
+    let known_classes_names = ref Set.empty_generic
 
     (** The known modules and module types names.
        Used to know if we must create a link to a type or not
        when printing a module type. *)
-    let known_modules_names = Set.empty_generic
+    let known_modules_names = ref Set.empty_generic
 
 
-    (** The list of attributes. Filled in the [generate] let. *)
-    let list_attributes = list_attributes
-    (** The list of methods. Filled in the [generate] let. *)
-
-    let list_methods = list_methods
-    (** The list of values. Filled in the [generate] let. *)
-
-    let list_values = list_values
-    (** The list of exceptions. Filled in the [generate] let. *)
-    let list_exceptions = list_exceptions
-    (** The list of types. Filled in the [generate] let. *)
-    let list_types = list_types
-    (** The list of modules. Filled in the [generate] let. *)
-    let list_modules = list_modules
-    (** The list of module types. Filled in the [generate] let. *)
-    let list_module_types = list_module_types
-    (** The list of classes. Filled in the [generate] let. *)
-    let list_classes = list_classes
-    (** The list of class types. Filled in the [generate] let. *)
-    let list_class_types = list_class_types
 
     (** The header of pages. Must be prepared by the [prepare_header] let.*)
 (* ?(nav=None) ?(comments=[]) *)
-    let header = fun b nav comments _ -> ()
+    let header = ref (fun b nav comments _ -> ())
 
     (** Init the style. *)
     let init_style =
@@ -842,7 +818,7 @@ let newline_to_indented_br s =
           let default_style = String.concat "\n" default_style_options in
           (
            try
-             let file = Filename.concat !Odoc_args.target_dir style_file in
+             let file = Filename.concat !Odoc_args.target_dir !style_file in
              if Sys.file_exists file then
                Odoc_info.verbose (Odoc_messages.file_exists_dont_generate file)
              else
@@ -861,7 +837,7 @@ let newline_to_indented_br s =
       | Some f ->
           style_file := f
       );
-      style := "<link rel=\"stylesheet\" href=\""^style_file^"\" type=\"text/css\">\n"
+      style := "<link rel=\"stylesheet\" href=\""^ !style_file^"\" type=\"text/css\">\n"
 
     (** Get the title given by the user *)
     let title = match !Odoc_args.title with None -> "" | Some t -> escape t
@@ -872,7 +848,7 @@ let newline_to_indented_br s =
       (escape s)
 
     (** Get the page header. *)
-    let print_header b nav comments title = header b nav comments title
+    let print_header b nav comments title = !header b nav comments title
 
     (** Build the html code for the link tags in the header, defining section and
        subsections for the titles found in the given comments.*)
@@ -925,7 +901,7 @@ let newline_to_indented_br s =
               bp b "<link title=\"%s\" rel=Appendix href=\"%s\">\n" m url
         in
         bs b "<head>\n";
-        bs b style;
+        bs b !style;
         bs b character_encoding ;
         bs b "<link rel=\"Start\" href=\"";
         bs b index;
@@ -952,15 +928,13 @@ let newline_to_indented_br s =
               bp b "<link rel=\"Up\" href=\"%s\">\n" href
              )
         );
-        link_if_not_empty list_types Odoc_messages.index_of_types index_types;
-        link_if_not_empty list_exceptions Odoc_messages.index_of_exceptions index_exceptions;
-        link_if_not_empty list_values Odoc_messages.index_of_values index_values;
-        link_if_not_empty list_attributes Odoc_messages.index_of_attributes index_attributes;
-        link_if_not_empty list_methods Odoc_messages.index_of_methods index_methods;
-        link_if_not_empty list_classes Odoc_messages.index_of_classes index_classes;
-        link_if_not_empty list_class_types Odoc_messages.index_of_class_types index_class_types;
-        link_if_not_empty list_modules Odoc_messages.index_of_modules index_modules;
-        link_if_not_empty list_module_types Odoc_messages.index_of_module_types index_module_types;
+        link_if_not_empty !list_types Odoc_messages.index_of_types index_types;
+        link_if_not_empty !list_exceptions Odoc_messages.index_of_exceptions index_exceptions;
+        link_if_not_empty !list_values Odoc_messages.index_of_values index_values;
+        link_if_not_empty !list_attributes Odoc_messages.index_of_attributes index_attributes;
+        link_if_not_empty !list_methods Odoc_messages.index_of_methods index_methods;
+        link_if_not_empty !list_modules Odoc_messages.index_of_modules index_modules;
+        link_if_not_empty !list_module_types Odoc_messages.index_of_module_types index_module_types;
         let print_one m =
           let html_file = fst (naming_html_files m.m_name) in
           bp b "<link title=\"%s\" rel=\"Chapter\" href=\"%s\">"
@@ -1016,7 +990,7 @@ let newline_to_indented_br s =
         let chanout = open_out file in
         let b = new_buf () in
         bs b "<html>";
-        print_header b (inner_title in_title);
+        print_header b None [] (inner_title in_title);
         bs b"<body>\n";
         html_of_code b true code;
         bs b "</body></html>";
@@ -1039,12 +1013,12 @@ let newline_to_indented_br s =
             match_s
             rel
         in
-        if Set.mem match_s known_types_names then
+        if Set.mem match_s !known_types_names then
            "<a href=\""^(naming_complete_target naming_mark_type match_s)^"\">"^
            s_final^
            "</a>"
         else
-          if Set.mem match_s known_classes_names then
+          if Set.mem match_s !known_classes_names then
             let (html_file, _) = naming_html_files match_s in
             "<a href=\""^html_file^"\">"^s_final^"</a>"
           else
@@ -1068,7 +1042,7 @@ let newline_to_indented_br s =
             match_s
             rel
         in
-        if Set.mem match_s known_modules_names then
+        if Set.mem match_s !known_modules_names then
           let (html_file, _) = naming_html_files match_s in
           "<a href=\""^html_file^"\">"^s_final^"</a>"
         else
@@ -1215,7 +1189,7 @@ let newline_to_indented_br s =
       bs b " : ";
       html_of_type_expr b (Odoc_name.father v.val_name) v.val_type;
       bs b "</pre>";
-      html_of_info b v.val_info;
+      html_of_info true b v.val_info;
       (
        if !Odoc_args.with_parameter_list then
          html_of_parameter_list b (Odoc_name.father v.val_name) v.val_parameters
@@ -1238,7 +1212,7 @@ let newline_to_indented_br s =
        | _ ->
            bs b (" "^(keyword "of")^" ");
            html_of_type_expr_list
-             false b (Odoc_name.father e.ex_name) " * " e.ex_args
+             (Some false) b (Odoc_name.father e.ex_name) " * " e.ex_args
       );
       (
        match e.ex_alias with
@@ -1253,7 +1227,7 @@ let newline_to_indented_br s =
            )
       );
       bs b "</pre>\n";
-      html_of_info b e.ex_info
+      html_of_info true b e.ex_info
 
     (** Print html code for a type. *)
     let html_of_type b t =
@@ -1305,7 +1279,7 @@ let newline_to_indented_br s =
                [] -> ()
              | l ->
                  bs b (" " ^ (keyword "of") ^ " ");
-                 html_of_type_expr_list false b father " * " l;
+                 html_of_type_expr_list (Some false) b father " * " l;
             );
             bs b "</code></td>\n";
             (
@@ -1367,7 +1341,7 @@ let newline_to_indented_br s =
           bs b "</table>\n}\n"
       );
       bs b "\n";
-      html_of_info b t.ty_info;
+      html_of_info true b t.ty_info;
       bs b "\n"
 
     (** Print html code for a module comment.*)
@@ -1409,7 +1383,7 @@ let newline_to_indented_br s =
           bs b "</code>"
 
     (** Print html code to display the given module type kind. *)
-    let html_of_module_type_kind b father modu mt kind = (* ?mt *)
+    let html_of_module_type_kind b father modu mt kind = (* ?modu ?mt *)
       match kind with
         Module_type_struct eles ->
           html_of_text b [Odoc_types.Code "sig"];
@@ -1457,7 +1431,7 @@ let newline_to_indented_br s =
          bs b (Odoc_name.simple m.m_name)
       );
       bs b ": ";
-      html_of_module_kind b father  m m.m_kind;
+      html_of_module_kind b father (Some m) m.m_kind;
       bs b "</pre>";
       if info then
         (
@@ -1485,7 +1459,7 @@ let newline_to_indented_br s =
         None -> ()
       | Some k ->
           bs b " = ";
-          html_of_module_type_kind b father mt k
+          html_of_module_type_kind b father None (Some mt) k
       );
       bs b "</pre>";
       if info then
@@ -1519,7 +1493,7 @@ let newline_to_indented_br s =
            bp b "<a href=\"%s\">%s</a>" file name
       );
       bs b "</pre>\n";
-      html_of_info b im.im_info
+      html_of_info true b im.im_info
 
     (** A method to create index files. *)
     let generate_elements_index :
@@ -1532,7 +1506,7 @@ let newline_to_indented_br s =
         let chanout = open_out (Filename.concat !Odoc_args.target_dir simple_file) in
         let b = new_buf () in
         bs b "<html>\n";
-        print_header b (inner_title title);
+        print_header b None [] (inner_title title);
         bs b "<body>\n<center><h1>";
         bs b title;
         bs b "</h1></center>\n" ;
@@ -1603,7 +1577,7 @@ let newline_to_indented_br s =
         bs b "<html>\n";
         print_header b
           (Some (pre_name, post_name, mt.mt_name))
-           (Odoc_module.module_type_comments mt)
+           (Odoc_module.module_type_comments true mt)
           (inner_title mt.mt_name);
         bs b "<body>\n";
         print_navbar b pre_name post_name mt.mt_name;
@@ -1611,7 +1585,7 @@ let newline_to_indented_br s =
         bs b (Odoc_messages.module_type^" ");
         bs b mt.mt_name;
         bs b "</h1></center>\n<br>\n" ;
-        html_of_modtype b false mt;
+        html_of_modtype b false true true mt;
 
         (* a horizontal line *)
         bs b "<hr width=\"100%\">\n";
@@ -1653,7 +1627,7 @@ let newline_to_indented_br s =
         bs b "<html>\n";
         print_header b
            (Some (pre_name, post_name, modu.m_name))
-           (Odoc_module.module_comments modu)
+           (Odoc_module.module_comments true modu)
           (inner_title modu.m_name);
         bs b "<body>\n" ;
         print_navbar b pre_name post_name modu.m_name ;
@@ -1678,7 +1652,7 @@ let newline_to_indented_br s =
           );
         bs b "</h1></center>\n<br>\n";
 
-        if not modu.m_text_only then html_of_module b false modu;
+        if not modu.m_text_only then html_of_module b false true true modu;
 
         (* a horizontal line *)
         if not modu.m_text_only then bs b "<hr width=\"100%\">\n";
@@ -1686,7 +1660,7 @@ let newline_to_indented_br s =
         (* module elements *)
         List.iter
           (html_of_module_element b (Odoc_name.father modu.m_name))
-          (Odoc_module.module_elements modu);
+          (Odoc_module.module_elements true modu);
 
         bs b "</body></html>";
         Buffer.output_buffer chanout b;
@@ -1720,7 +1694,7 @@ let newline_to_indented_br s =
         let title = match !Odoc_args.title with None -> "" | Some t -> escape t in
         bs b doctype ;
         bs b "<html>\n";
-        print_header b title;
+        print_header b None [] title;
         bs b "<body>\n";
         bs b "<center><h1>";
         bs b title;
@@ -1748,7 +1722,7 @@ let newline_to_indented_br s =
     (** Generate the values index in the file [index_values.html]. *)
     let generate_values_index module_list =
       generate_elements_index
-        list_values
+        !list_values
         (fun v -> v.val_name)
         (fun v -> v.val_info)
         naming_complete_value_target
@@ -1758,7 +1732,7 @@ let newline_to_indented_br s =
     (** Generate the exceptions index in the file [index_exceptions.html]. *)
     let generate_exceptions_index module_list =
       generate_elements_index
-        list_exceptions
+        !list_exceptions
         (fun e -> e.ex_name)
         (fun e -> e.ex_info)
         naming_complete_exception_target
@@ -1768,7 +1742,7 @@ let newline_to_indented_br s =
     (** Generate the types index in the file [index_types.html]. *)
     let generate_types_index module_list =
       generate_elements_index
-        list_types
+        !list_types
         (fun t -> t.ty_name)
         (fun t -> t.ty_info)
         naming_complete_type_target
@@ -1778,7 +1752,7 @@ let newline_to_indented_br s =
     (** Generate the attributes index in the file [index_attributes.html]. *)
     let generate_attributes_index module_list =
       generate_elements_index
-        list_attributes
+        !list_attributes
         (fun a -> a.att_value.val_name)
         (fun a -> a.att_value.val_info)
         naming_complete_attribute_target
@@ -1788,7 +1762,7 @@ let newline_to_indented_br s =
     (** Generate the methods index in the file [index_methods.html]. *)
     let generate_methods_index module_list =
       generate_elements_index
-        list_methods
+        !list_methods
         (fun m -> m.met_value.val_name)
         (fun m -> m.met_value.val_info)
         naming_complete_method_target
@@ -1798,7 +1772,7 @@ let newline_to_indented_br s =
     (** Generate the modules index in the file [index_modules.html]. *)
     let generate_modules_index module_list =
       generate_elements_index
-        list_modules
+        !list_modules
         (fun m -> m.m_name)
         (fun m -> m.m_info)
         (fun m -> fst (naming_html_files m.m_name))
@@ -1808,7 +1782,7 @@ let newline_to_indented_br s =
     (** Generate the module types index in the file [index_module_types.html]. *)
     let generate_module_types_index module_list =
       generate_elements_index
-        list_module_types
+        !list_module_types
         (fun mt -> mt.mt_name)
         (fun mt -> mt.mt_info)
         (fun mt -> fst (naming_html_files mt.mt_name))
@@ -1836,7 +1810,7 @@ let newline_to_indented_br s =
       known_types_names :=
         List.fold_left
           (fun acc t -> Set.add t.ty_name acc)
-          known_types_names
+          !known_types_names
           types ;
       (* Get the names of all known modules and module types. *)
       let module_types = Odoc_search.module_types module_list in
@@ -1844,12 +1818,12 @@ let newline_to_indented_br s =
       known_modules_names :=
         List.fold_left
           (fun acc m -> Set.add m.m_name acc)
-          known_modules_names
+          !known_modules_names
           modules ;
       known_modules_names :=
         List.fold_left
           (fun acc mt -> Set.add mt.mt_name acc)
-          known_modules_names
+          !known_modules_names
           module_types ;
       (* generate html for each module *)
       if not !Odoc_args.index_only then
