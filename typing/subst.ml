@@ -24,7 +24,11 @@ let type_constructor s r =
 let rec core_type s ty =
   let ty = Btype.repr ty in
   begin match ty with
-    | Tvar _ -> ty
+    | Tvar tv ->
+        begin match tv.tv_kind with
+          | Generic -> ty
+          | Level _ | Forward _ -> assert false
+        end
     | Tarrow (tyl, tyr) -> Tarrow (core_type s tyl, core_type s tyr)
     | Ttuple l -> Ttuple (List.map (core_type s) l)
     | Tconstruct (c, l) -> Tconstruct (type_constructor s c, List.map (core_type s)l)
