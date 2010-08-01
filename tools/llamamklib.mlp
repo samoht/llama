@@ -10,28 +10,28 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ocamlmklib.mlp 10444 2010-05-20 14:06:29Z doligez $ *)
+(* $Id: llamamklib.mlp 10444 2010-05-20 14:06:29Z doligez $ *)
 
 open Printf
-open Myocamlbuild_config
+open Myllamabuild_config
 
 (* PR#4783: under Windows, don't use absolute paths because we do
    not know where the binary distribution will be installed. *)
 let compiler_path name =
   if Sys.os_type = "Win32" then name else Filename.concat bindir name
 
-let bytecode_objs = ref []  (* .cmo,.cma,.ml,.mli files to pass to ocamlc *)
-and native_objs = ref []    (* .cmx,.cmxa,.ml,.mli files to pass to ocamlopt *)
+let bytecode_objs = ref []  (* .cmo,.cma,.ml,.mli files to pass to llamac *)
+and native_objs = ref []    (* .cmx,.cmxa,.ml,.mli files to pass to llamaopt *)
 and c_objs = ref []         (* .o, .a, .obj, .lib, .dll files to pass to mksharedlib and ar *)
-and caml_libs = ref []      (* -cclib to pass to ocamlc, ocamlopt *)
-and caml_opts = ref []      (* -ccopt to pass to ocamlc, ocamlopt *)
+and caml_libs = ref []      (* -cclib to pass to llamac, llamaopt *)
+and caml_opts = ref []      (* -ccopt to pass to llamac, llamaopt *)
 and dynlink = ref supports_shared_libraries
 and failsafe = ref false    (* whether to fall back on static build only *)
-and c_libs = ref []         (* libs to pass to mksharedlib and ocamlc -cclib *)
-and c_opts = ref []      (* options to pass to mksharedlib and ocamlc -ccopt *)
+and c_libs = ref []         (* libs to pass to mksharedlib and llamac -cclib *)
+and c_opts = ref []      (* options to pass to mksharedlib and llamac -ccopt *)
 and ld_opts = ref []        (* options to pass only to the linker *)
-and ocamlc = ref (compiler_path "ocamlc")
-and ocamlopt = ref (compiler_path "ocamlopt")
+and llamac = ref (compiler_path "llamac")
+and llamaopt = ref (compiler_path "llamaopt")
 and output = ref "a"        (* Output name for Caml part of library *)
 and output_c = ref ""       (* Output name for C part of library *)
 and rpath = ref []          (* rpath options *)
@@ -48,7 +48,7 @@ let chop_suffix = Filename.chop_suffix
 exception Bad_argument of string
 
 let print_version () =
-  printf "ocamlmklib, version %s\n" Sys.ocaml_version;
+  printf "llamamklib, version %s\n" Sys.ocaml_version;
   exit 0;
 ;;
 
@@ -90,16 +90,16 @@ let parse_arguments argv =
       ld_opts := next_arg () :: !ld_opts
     else if s = "-linkall" then
       caml_opts := s :: !caml_opts
+    else if s = "-llamac" then
+      llamac := next_arg ()
+    else if s = "-llamaopt" then
+      llamaopt := next_arg ()
     else if starts_with s "-l" then
       c_libs := s :: !c_libs
     else if starts_with s "-L" then
      (c_opts := s :: !c_opts;
       let l = chop_prefix s "-L" in
       if not (Filename.is_relative l) then rpath := l :: !rpath)
-    else if s = "-ocamlc" then
-      ocamlc := next_arg ()
-    else if s = "-ocamlopt" then
-      ocamlopt := next_arg ()
     else if s = "-o" then
       output := next_arg()
     else if s = "-oc" then
@@ -141,10 +141,10 @@ let parse_arguments argv =
   if !output_c = "" then output_c := !output
 
 let usage = "\
-Usage: ocamlmklib [options] <.cmo|.cma|.cmx|.cmxa|.ml|.mli|.o|.a|.obj|.lib|.dll files>\n\
+Usage: llamamklib [options] <.cmo|.cma|.cmx|.cmxa|.ml|.mli|.o|.a|.obj|.lib|.dll files>\n\
 Options are:\n\
-  -cclib <lib>   C library passed to ocamlc -a or ocamlopt -a only\n\
-  -ccopt <opt>   C option passed to ocamlc -a or ocamlopt -a only\n\
+  -cclib <lib>   C library passed to llamac -a or llamaopt -a only\n\
+  -ccopt <opt>   C option passed to llamac -a or llamaopt -a only\n\
   -custom        disable dynamic loading\n\
   -dllpath <dir> Add <dir> to the run-time search path for DLLs\n\
   -F<dir>        Specify a framework directory (MacOSX)\n\
@@ -158,8 +158,8 @@ Options are:\n\
   -linkall       Build Caml archive with link-all behavior\n\
   -l<lib>        Specify a dependent C library\n\
   -L<dir>        Add <dir> to the path searched for C libraries\n\
-  -ocamlc <cmd>  Use <cmd> in place of \"ocamlc\"\n\
-  -ocamlopt <cmd> Use <cmd> in place of \"ocamlopt\"\n\
+  -llamac <cmd>  Use <cmd> in place of \"llamac\"\n\
+  -llamaopt <cmd> Use <cmd> in place of \"llamaopt\"\n\
   -o <name>      Generated Caml library is named <name>.cma or <name>.cmxa\n\
   -oc <name>     Generated C library is named dll<name>.so or lib<name>.a\n\
   -rpath <dir>   Same as -dllpath <dir>\n\
@@ -242,7 +242,7 @@ let build_libs () =
   if !bytecode_objs <> [] then
     scommand
       (sprintf "%s -a %s -o %s.cma %s %s -dllib -l%s -cclib -l%s %s %s %s %s"
-                  (transl_path !ocamlc)
+                  (transl_path !llamac)
                   (if !dynlink then "" else "-custom")
                   !output
                   (String.concat " " !caml_opts)
@@ -256,7 +256,7 @@ let build_libs () =
   if !native_objs <> [] then
     scommand
       (sprintf "%s -a -o %s.cmxa %s %s -cclib -l%s %s %s %s %s"
-                  (transl_path !ocamlopt)
+                  (transl_path !llamaopt)
                   !output
                   (String.concat " " !caml_opts)
                   (String.concat " " !native_objs)
