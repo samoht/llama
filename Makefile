@@ -28,15 +28,13 @@ TYPING=typing/unused_var.cmx typing/primitive.cmx \
  typing/includecore.cmx typing/includemod.cmx \
  typing/resolve.cmx \
  typing/typecore.cmx \
- typing/typedecl.cmx typing/typemod.cmx \
- typing/parmatch.cmx
+ typing/typedecl.cmx typing/typemod.cmx
 
 BYTECOMP=bytecomp/ident.cmx bytecomp/identSet.cmx \
   bytecomp/lambda.cmx bytecomp/printlambda.cmx \
   bytecomp/typeopt.cmx \
-  bytecomp/mpattern.cmx \
-  bytecomp/optparmatch.cmx \
-  bytecomp/switch.cmx bytecomp/optmatching.cmx \
+  bytecomp/pmc_pattern.cmx bytecomp/parmatch.cmx \
+  bytecomp/switch.cmx bytecomp/matching.cmx \
   bytecomp/translcore.cmx \
   bytecomp/translmod.cmx \
   bytecomp/simplif.cmx bytecomp/runtimedef.cmx \

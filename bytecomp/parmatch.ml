@@ -17,7 +17,7 @@
 open Misc
 open Asttypes
 open Types
-open Mpattern
+open Pmc_pattern
 
 (*************************************)
 (* Utilities for building patterns   *)
@@ -281,7 +281,7 @@ let sort_record p = match p.pat_desc with
 
 let all_record_args lbls = match lbls with
 | (lbl1,_)::_ ->
-    let lbl_all = Mpattern.calc_lbl_all lbl1 in
+    let lbl_all = Pmc_pattern.calc_lbl_all lbl1 in
     let t =
       Array.map
         (fun lbl -> lbl,omega) lbl_all in

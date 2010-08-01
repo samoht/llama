@@ -14,7 +14,7 @@
 
 (* Detection of partial matches and unused match cases. *)
 open Types
-open Mpattern
+open Pmc_pattern
 
 val top_pretty : Format.formatter -> pattern -> unit
 val pretty_pat : pattern -> unit
