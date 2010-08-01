@@ -15,9 +15,9 @@
 
 (* Sets over ordered types *)
 
-type 'a cmp = 'a -> 'a -> int
+type 'a ord = 'a -> 'a -> int
 
-type 'a t = Empty of 'a cmp | Node of 'a cmp * 'a t * 'a * 'a t * int
+type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
 
     (* Sets are represented by balanced binary trees (the heights of the
        children differ by at most 2 *)
@@ -155,6 +155,8 @@ type 'a t = Empty of 'a cmp | Node of 'a cmp * 'a t * 'a * 'a t * int
     (* Implementation of the set operations *)
 
     let empty cmp = Empty cmp
+
+    let empty_generic = Empty Pervasives.compare
 
     let is_empty = function Empty _ -> true | _ -> false
 

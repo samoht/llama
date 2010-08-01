@@ -22,11 +22,22 @@
    logarithmic in the size of the set, for instance.
 *)
 
+type 'a ord = 'a -> 'a -> int
+      (** A total ordering function over the set elements.
+          This is a two-argument function [f] such that
+          [f e1 e2] is zero if the elements [e1] and [e2] are equal,
+          [f e1 e2] is strictly negative if [e1] is smaller than [e2],
+          and [f e1 e2] is strictly positive if [e1] is greater than [e2]. *)
+
     type 'elt t
     (** The type of sets. *)
 
-    val empty: ('elt -> 'elt -> int) -> 'elt t
-    (** The empty set. *)
+    val empty: 'elt ord -> 'elt t
+    (** The empty set, ordered by the specified comparison function. *)
+
+    val empty_generic: 'elt t
+      (** The empty set, ordered by the generic structural
+          comparison function {!Pervasives.compare}. *)
 
     val is_empty: 'elt t -> bool
     (** Test whether a set is empty or not. *)
@@ -96,16 +107,15 @@
     val elements: 'elt t -> 'elt list
     (** Return the list of all elements of the given set.
        The returned list is sorted in increasing order with respect
-       to the ordering [Ord.compare], where [Ord] is the argument
-       given to {!Set.Make}. *)
+       to the element ordering. *)
 
     val min_elt: 'elt t -> 'elt
     (** Return the smallest element of the given set
-       (with respect to the [Ord.compare] ordering), or raise
+       (with respect to the element ordering), or raise
        [Not_found] if the set is empty. *)
 
     val max_elt: 'elt t -> 'elt
-    (** Same as {!Set.S.min_elt}, but returns the largest element of the
+    (** Same as {!Set.min_elt}, but returns the largest element of the
        given set. *)
 
     val choose: 'elt t -> 'elt

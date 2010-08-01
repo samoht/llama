@@ -1,0 +1,16 @@
+# make -f Makefile.doc
+
+PUBLIC=pervasives.mli set.mli map.mli
+
+all: clean $(PUBLIC:.mli=.cmi)
+	ocamldoc -html -d ../doc $(PUBLIC)
+.PHONY: all
+
+clean:
+	rm -f *.cmi *.cmo
+.PHONY: clean
+
+%.cmi: %.mli
+	ocamlc -nopervasives -nostdlib -c $<
+
+include .depend

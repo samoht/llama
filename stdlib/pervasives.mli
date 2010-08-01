@@ -642,7 +642,7 @@ val output_binary_int : out_channel -> int -> unit
    The given integer is taken modulo 2{^32}.
    The only reliable way to read it back is through the
    {!Pervasives.input_binary_int} function. The format is compatible across
-   all machines for a given version of Objective Caml. *)
+   all machines for a given version of Llama Light. *)
 
 val output_value : out_channel -> 'a -> unit
 (** Write the representation of a structured value of any type
@@ -803,19 +803,18 @@ val set_binary_mode_in : in_channel -> bool -> unit
 
 (** {7 Operations on large files} *)
 
+(** These functions are 64-bit variants of the channel functions
+  that manipulate file positions and file sizes.  By representing
+  positions and sizes by 64-bit integers (type [int64]) instead of
+  regular integers (type [int]), they allow
+  operating on files whose sizes are greater than [max_int]. *)
+
     val largefile_seek_out : out_channel -> int64 -> unit
     val largefile_pos_out : out_channel -> int64
     val largefile_out_channel_length : out_channel -> int64
     val largefile_seek_in : in_channel -> int64 -> unit
     val largefile_pos_in : in_channel -> int64
     val largefile_in_channel_length : in_channel -> int64
-(** Operations on large files.
-  This sub-module provides 64-bit variants of the channel functions
-  that manipulate file positions and file sizes.  By representing
-  positions and sizes by 64-bit integers (type [int64]) instead of
-  regular integers (type [int]), these alternate functions allow
-  operating on files whose sizes are greater than [max_int]. *)
-
 
 (** {6 References} *)
 
@@ -852,8 +851,7 @@ external decr : int ref -> unit = "%decr"
 (** Format strings have a general and highly polymorphic type
     [('a, 'b, 'c, 'd, 'e, 'f) format6]. Type [format6] is built in.
     The two simplified types, [format] and [format4] below are
-    included for backward compatibility with earlier releases of Objective
-    Caml.
+    included for backward compatibility with other dialects of Caml.
     ['a] is the type of the parameters of the format,
     ['c] is the result type for the "printf"-style function,
     and ['b] is the type of the first argument given to
