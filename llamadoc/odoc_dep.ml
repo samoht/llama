@@ -13,41 +13,26 @@
 
 (** Top modules dependencies. *)
 
-module StrS = Depend.StringSet
-module Module = Odoc_module
-module Type = Odoc_type
-
 let set_to_list s =
   let l = ref [] in
-  StrS.iter (fun e -> l := e :: !l) s;
+  Set.iter (fun e -> l := e :: !l) s;
   !l
 
 let impl_dependencies ast =
-  Depend.free_structure_names := StrS.empty;
-  Depend.add_use_file StrS.empty [Parsetree.Ptop_def ast];
+  Depend.free_structure_names := Set.empty_generic;
+  Depend.add_use_file Set.empty_generic [Parsetree.Ptop_def ast];
   set_to_list !Depend.free_structure_names
 
 let intf_dependencies ast =
-  Depend.free_structure_names := StrS.empty;
-  Depend.add_signature StrS.empty ast;
+  Depend.free_structure_names := Set.empty_generic;
+  Depend.add_signature Set.empty_generic ast;
   set_to_list !Depend.free_structure_names
 
 
-module Dep =
-  struct
-    type id = string
-
-    module S = Set.Make (struct type t = string let compare = compare end)
-
-    let set_to_list s =
-      let l = ref [] in
-      S.iter (fun e -> l := e :: !l) s;
-      !l
-
     type node = {
-        id : id ;
-        mutable near : S.t ; (** fils directs *)
-        mutable far : (id * S.t) list ; (** fils indirects, par quel fils *)
+        id : string ;
+        mutable near : string Set.t ; (** fils directs *)
+        mutable far : (string * string Set.t) list ; (** fils indirects, par quel fils *)
         reflex : bool ; (** reflexive or not, we keep
                            information here to remove the node itself from its direct children *)
       }
@@ -56,12 +41,12 @@ module Dep =
 
     let make_node s children =
       let set = List.fold_right
-          S.add
+          Set.add
           children
-          S.empty
+          Set.empty_generic
       in
       { id = s;
-        near = S.remove s set ;
+        near = Set.remove s set ;
         far = [] ;
         reflex = List.mem s children ;
       }
@@ -72,20 +57,20 @@ module Dep =
         make_node s []
 
     let rec trans_closure graph acc n =
-      if S.mem n.id acc then
+      if Set.mem n.id acc then
         acc
       else
         (* optimisation plus tard : utiliser le champ far si non vide ? *)
-        S.fold
+        Set.fold
           (fun child -> fun acc2 ->
             trans_closure graph acc2 (get_node graph child))
           n.near
-          (S.add n.id acc)
+          (Set.add n.id acc)
 
     let node_trans_closure graph n =
       let far = List.map
           (fun child ->
-            let set = trans_closure graph S.empty (get_node graph child) in
+            let set = trans_closure graph Set.empty_generic (get_node graph child) in
             (child, set)
           )
           (set_to_list n.near)
@@ -96,22 +81,22 @@ module Dep =
       List.iter (node_trans_closure graph) graph
 
     let prune_node graph node =
-      S.iter
+      Set.iter
         (fun child ->
           let set_reachables = List.fold_left
               (fun acc -> fun (ch, reachables) ->
                 if child = ch then
                   acc
                 else
-                  S.union acc reachables
+                  Set.union acc reachables
               )
-              S.empty
+              Set.empty_generic
               node.far
           in
-          let set = S.remove node.id set_reachables in
-          if S.exists (fun n2 -> S.mem child (get_node graph n2).near) set then
+          let set = Set.remove node.id set_reachables in
+          if Set.exists (fun n2 -> Set.mem child (get_node graph n2).near) set then
             (
-             node.near <- S.remove child node.near ;
+             node.near <- Set.remove child node.near ;
              node.far <- List.filter (fun (ch,_) -> ch <> child) node.far
             )
           else
@@ -119,11 +104,11 @@ module Dep =
         )
         node.near;
       if node.reflex then
-        node.near <- S.add node.id node.near
+        node.near <- Set.add node.id node.near
       else
         ()
 
-    let kernel graph =
+    let compute_kernel graph =
       (* compute transitive closure *)
       compute_trans_closure graph ;
 
@@ -132,12 +117,10 @@ module Dep =
 
       graph
 
-  end
 
 (** [type_deps t] returns the list of fully qualified type names
    [t] depends on. *)
 let type_deps t =
-  let module T = Odoc_type in
   let l = ref [] in
   let re = Str.regexp "\\([A-Z]\\([a-zA-Z_'0-9]\\)*\\.\\)+\\([a-z][a-zA-Z_'0-9]*\\)" in
   let f s =
@@ -145,9 +128,9 @@ let type_deps t =
     l := s2 :: !l ;
     s2
   in
-  (match t.T.ty_kind with
-    T.Type_abstract -> ()
-  | T.Type_variant cl ->
+  (match t.Odoc_type.ty_kind with
+    Odoc_type.Type_abstract -> ()
+  | Odoc_type.Type_variant cl ->
       List.iter
         (fun c ->
           List.iter
@@ -155,19 +138,19 @@ let type_deps t =
               let s = Odoc_print.string_of_type_expr e in
               ignore (Str.global_substitute re f s)
             )
-            c.T.vc_args
+            c.Odoc_type.vc_args
         )
         cl
-  | T.Type_record rl ->
+  | Odoc_type.Type_record rl ->
       List.iter
         (fun r ->
-          let s = Odoc_print.string_of_type_expr r.T.rf_type in
+          let s = Odoc_print.string_of_type_expr r.Odoc_type.rf_type in
           ignore (Str.global_substitute re f s)
         )
         rl
   );
 
-  (match t.T.ty_manifest with
+  (match t.Odoc_type.ty_manifest with
     None -> ()
   | Some e ->
       let s = Odoc_print.string_of_type_expr e in
@@ -180,15 +163,15 @@ let type_deps t =
    to get the minimum transitivity kernel. *)
 let kernel_deps_of_modules modules =
   let graph = List.map
-      (fun m -> Dep.make_node m.Module.m_name m.Module.m_top_deps)
+      (fun m -> (* Dep. *)make_node m.Odoc_module.m_name m.Odoc_module.m_top_deps)
       modules
   in
-  let k = Dep.kernel graph in
+  let k = (* Dep. *)compute_kernel graph in
   List.iter
     (fun m ->
-      let node = Dep.get_node k m.Module.m_name in
-      m.Module.m_top_deps <-
-        List.filter (fun m2 -> Dep.S.mem m2 node.Dep.near) m.Module.m_top_deps)
+      let node = (* Dep. *)get_node k m.Odoc_module.m_name in
+      m.Odoc_module.m_top_deps <-
+        List.filter (fun m2 -> Set.mem m2 node.(* Dep. *)near) m.Odoc_module.m_top_deps)
     modules
 
 (** Return the list of dependencies between the given types,
@@ -196,20 +179,20 @@ let kernel_deps_of_modules modules =
    @param kernel indicates if we must keep only the transitivity kernel
    of the dependencies. Default is [false].
 *)
-let deps_of_types ?(kernel=false) types =
+let deps_of_types kernel types = (* ?(kernel=false) *)
   let deps_pre = List.map (fun t -> (t, type_deps t)) types in
   let deps =
     if kernel then
       (
        let graph = List.map
-           (fun (t, names) -> Dep.make_node t.Type.ty_name names)
+           (fun (t, names) -> (* Dep. *)make_node t.Odoc_type.ty_name names)
            deps_pre
        in
-       let k = Dep.kernel graph in
+       let k = (* Dep. *)compute_kernel graph in
        List.map
          (fun t ->
-           let node = Dep.get_node k t.Type.ty_name in
-           (t, Dep.set_to_list node.Dep.near)
+           let node = (* Dep. *)get_node k t.Odoc_type.ty_name in
+           (t, (* Dep. *)set_to_list node.(* Dep. *)near)
          )
          types
       )
