@@ -131,8 +131,8 @@ defaultentry:
 	@echo "should work.  But see the file INSTALL for more details."
 
 # Recompile the system using the bootstrap compiler
-all: runtime llamac llamalex llamayacc llamatools library llama \
-  otherlibraries llamadoc # llamabuild.byte camlp4out $(DEBUGGER)
+all: runtime llamac llamalex llamayacc llamatools library llama llamadoc
+ # llamabuild.byte camlp4out $(DEBUGGER)
 
 # Compile everything the first time
 world:
@@ -297,12 +297,6 @@ install:
 	   $(LIBDIR)
 #	cd tools; $(MAKE) install
 #	-cd man; $(MAKE) install
-#	for i in $(OTHERLIBRARIES); do \
-#	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
-#	done
-#	for i in num graph unix; do \
-#	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
-#	done
 	cd llamadoc; $(MAKE) install
 	if test -f llamaopt; then $(MAKE) installopt; else :; fi
 	if test -f debugger/llamadebug; then (cd debugger; $(MAKE) install); \
@@ -644,7 +638,7 @@ alldepend::
 
 # Llamadoc
 
-llamadoc: llamac llamayacc llamalex otherlibraries
+llamadoc: llamac llamayacc llamalex
 	cd llamadoc && $(MAKE) all
 
 llamadoc.opt: llamac.opt llamayacc llamalex
@@ -656,35 +650,9 @@ partialclean::
 alldepend::
 	cd llamadoc && $(MAKE) depend
 
-# The extra libraries
-
-otherlibraries: llamatools
-#	for i in num graph str; do \
-#	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
-#	done
-	for i in num graph unix; do \
-	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
-	done
-
-otherlibrariesopt:
-	for i in $(OTHERLIBRARIES); do \
-	  (cd otherlibs/$$i; $(MAKE) allopt) || exit $$?; \
-	done
-
-#partialclean::
-#	for i in $(OTHERLIBRARIES); do \
-#	  (cd otherlibs/$$i; $(MAKE) partialclean); \
-#	done
-
-#clean::
-#	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) clean); done
-
-alldepend::
-	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) depend); done
-
 # The replay debugger
 
-llamadebugger: llamac llamayacc llamalex otherlibraries
+llamadebugger: llamac llamayacc llamalex
 	cd debugger; $(MAKE) all
 
 #partialclean::
@@ -692,30 +660,6 @@ llamadebugger: llamac llamayacc llamalex otherlibraries
 
 alldepend::
 	cd debugger; $(MAKE) depend
-
-# Camlp4
-
-camlp4out: llamac otherlibraries llamabuild-mixed-boot llamabuild.byte
-	./build/camlp4-byte-only.sh
-
-camlp4opt: llamaopt otherlibrariesopt llamabuild-mixed-boot llamabuild.native
-	./build/camlp4-native-only.sh
-
-# Llamabuild
-
-llamabuild.byte: llamac otherlibraries llamabuild-mixed-boot
-	./build/llamabuild-byte-only.sh
-
-llamabuild.native: llamaopt otherlibrariesopt llamabuild-mixed-boot
-	./build/llamabuild-native-only.sh
-llamabuildlib.native: llamaopt otherlibrariesopt llamabuild-mixed-boot
-	./build/llamabuildlib-native-only.sh
-
-llamabuild-mixed-boot: llamac otherlibraries
-	./build/mixed-boot.sh
-
-partialclean::
-	rm -rf _build
 
 # Check that the stack limit is reasonable.
 

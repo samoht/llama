@@ -59,7 +59,7 @@ val apply_opt : ('a -> 'b) -> 'a option -> 'b option
 
 (** Return a string representing a date given as a number of seconds
    since 1970. The hour is optionally displayed. *)
-val string_of_date : bool -> float -> string
+(* val string_of_date : bool -> float -> string *)
 
 (** Return the first sentence (until the first dot) of a text.
    Don't stop in the middle of [Code], [Verbatim], [List], [Lnum],

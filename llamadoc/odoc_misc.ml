@@ -204,7 +204,7 @@ let apply_opt f v_opt =
   match v_opt with
     None -> None
   | Some v -> Some (f v)
-
+(*
 let string_of_date hour d = (* ?(hour=true) *)
   let add_0 s = if String.length s < 2 then "0"^s else s in
   let t = Unix.localtime d in
@@ -219,7 +219,7 @@ let string_of_date hour d = (* ?(hour=true) *)
    else
      ""
   )
-
+*)
 
 let rec text_list_concat sep l =
   match l with
