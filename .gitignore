@@ -1,7 +1,5 @@
 *.cmi
 *.cmo
-!boot/*.cmi
-!boot/*.cmo
 /llama
 /llamac
 /llamacomp.sh
