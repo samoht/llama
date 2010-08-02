@@ -1,53 +1,59 @@
-include ../config/Makefile
-LLAMAC=../boot/llamac -nostdlib -I .
-LLAMADEP=../boot/llamadep
+#########################################################################
+#                                                                       #
+#                            Objective Caml                             #
+#                                                                       #
+#            Xavier Leroy, projet Cristal, INRIA Rocquencourt           #
+#                                                                       #
+#   Copyright 1999 Institut National de Recherche en Informatique et    #
+#   en Automatique.  All rights reserved.  This file is distributed     #
+#   under the terms of the GNU Library General Public License, with     #
+#   the special exception on linking described in file ../LICENSE.      #
+#                                                                       #
+#########################################################################
 
-OBJS=pervasives.cmo $(OTHERS)
-OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
-  hashtbl.cmo sort.cmo marshal.cmo obj.cmo \
-  int32.cmo int64.cmo nativeint.cmo \
-  lexing.cmo parsing.cmo \
-  set.cmo map.cmo \
-  stack.cmo queue.cmo \
-  lazy.cmo stream.cmo \
-  buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
-  arg.cmo printexc.cmo gc.cmo \
-  digest.cmo random_state.cmo random.cmo callback.cmo \
-  genlex.cmo weak.cmo \
-  filename.cmo complex.cmo scanning.cmo scanf.cmo str.cmo
+# $Id: Makefile 9547 2010-01-22 12:48:24Z doligez $
 
-all: std_exit.cmo stdlib.cma camlheader camlheader_ur
+include Makefile.shared
 
-stdlib.cma: $(OBJS)
-	$(LLAMAC) -a -o stdlib.cma $^
+allopt: stdlib.cmxa std_exit.cmx allopt-$(PROFILING)
 
-sys.ml: sys.mlp ../VERSION
-	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
+allopt-noprof:
 
-%.cmi: %.mli
-	$(LLAMAC) -c $<
-%.cmo: %.ml
-	$(LLAMAC) -c $<
-pervasives.cmi: pervasives.mli
-	$(LLAMAC) -nopervasives -c $<
-pervasives.cmo: pervasives.ml
-	$(LLAMAC) -nopervasives -c $<
+allopt-prof: stdlib.p.cmxa std_exit.p.cmx
+	rm -f std_exit.p.cmi
 
-std_exit.cmo: pervasives.cmo
+installopt: installopt-default installopt-$(PROFILING)
 
-camlheader camlheader_ur: ../config/Makefile
-	echo '#!$(BINDIR)/llamarun' > camlheader
-	echo '#!' | tr -d '\012' > camlheader_ur
+installopt-default:
+	cp stdlib.cmxa stdlib.a std_exit.o *.cmx $(LIBDIR)
+	cd $(LIBDIR); $(RANLIB) stdlib.a
 
-install:
-	cp stdlib.cma std_exit.cmo *.cmi *.mli *.ml camlheader camlheader_ur $(LIBDIR)
-.PHONY: install
+installopt-noprof:
+	rm -f $(LIBDIR)/stdlib.p.cmxa; ln -s stdlib.cmxa $(LIBDIR)/stdlib.p.cmxa
+	rm -f $(LIBDIR)/stdlib.p.a; ln -s stdlib.a $(LIBDIR)/stdlib.p.a
+	rm -f $(LIBDIR)/std_exit.p.cmx; \
+	  ln -s std_exit.cmx $(LIBDIR)/std_exit.p.cmx
+	rm -f $(LIBDIR)/std_exit.p.o; ln -s std_exit.o $(LIBDIR)/std_exit.p.o
 
-clean:
-	rm -f *.cmi *.cmo
-.PHONY: clean
+installopt-prof:
+	cp stdlib.p.cmxa stdlib.p.a std_exit.p.cmx std_exit.p.o $(LIBDIR)
+	cd $(LIBDIR); $(RANLIB) stdlib.p.a
 
-depend: sys.ml
-	$(LLAMADEP) *.mli *.ml > .depend
+stdlib.p.cmxa: $(OBJS:.cmo=.p.cmx)
+	$(CAMLOPT) -a -o stdlib.p.cmxa $(OBJS:.cmo=.p.cmx)
 
-include .depend
+camlheader camlheader_ur: header.c ../config/Makefile
+	if $(SHARPBANGSCRIPTS); then \
+	  echo '#!$(BINDIR)/llamarun' > camlheader && \
+	  echo '#!' | tr -d '\012' > camlheader_ur; \
+	else \
+	  $(BYTECC) $(BYTECCCOMPOPTS) $(BYTECCLINKOPTS) \
+	            -DRUNTIME_NAME='"$(BINDIR)/llamarun"' \
+	            header.c -o tmpheader$(EXE) && \
+	  strip tmpheader$(EXE) && \
+	  mv tmpheader$(EXE) camlheader && \
+	  cp camlheader camlheader_ur; \
+	fi
+
+.PHONY: all allopt allopt-noprof allopt-prof install installopt
+.PHONY: installopt-default installopt-noprof installopt-prof clean depend
