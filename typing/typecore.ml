@@ -456,7 +456,6 @@ let rec type_expr expr =
               if not defined.(i) then label_undefined_err expr label.(i)
             done
         | Some exten ->
-            print_endline "Warning: record extensions still not supported in Caml Light backend";
             type_expect exten ty
       end;
       ty

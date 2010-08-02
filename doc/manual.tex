@@ -11,20 +11,6 @@
 \newif\ifplaintext
 \plaintextfalse
 
-% Pour hevea
-\newif\ifouthtml\outhtmltrue
-
-\ifplaintext
-\def\ttstretch{\tt}
-\else
-\def\ttstretch{\tt} %\spaceskip=5.77pt plus 1.83pt minus 1.22pt
-% La fonte cmr10 a normalement des espaces de 5.25pt non extensibles.
-% En 11 pt ca fait 5.77 pt. On lui ajoute la meme flexibilite que
-% cmr10 agrandie a 11 pt.
-\fi
-
-\def\machine{\ttstretch}
-
 %List of links with no space around items
 \newstyle{.li-links}{margin:0ex 0ex;}
 \newenvironment{links}
@@ -40,35 +26,32 @@
 \newstyle{.subsubsection}{padding:0.5ex;background:\#99FF99;}
 \newstyle{.toc}{list-style:disc;}
 
+\def\isalso{ & += & \spacefalse }
+
 \begin{document}
 
-\title{The Llama system}
-\date{\today}
-\author{Jeremy Bem\thanks{Email: jeremy1@gmail.com}\\ \\drawing on the work of Xavier Leroy and many others}
-\maketitle
+\begin{center}
+\Huge  The Llama system \\
+\large Jeremy Bem \\
+       drawing on the work of Xavier Leroy and many others \\
+\end{center}
 
-\setcounter{tocdepth}{1}
 \tableofcontents
 
-\section{The Llama Light language}
-
-\subsection{Before reading further}
+\section{Introduction}
 
 Currently this manual assumes a familiarity with
 \ahref{http://caml.inria.fr/}{Objective Caml}, which is Llama's
 immediate ancestor. Readers lacking this prerequisite (or at least
 familiarity with a similar language such as Standard ML or Haskell)
 are advised to first study that system, working through the tutorial
-and such. It will be time well spent.\footnote{Note that for our present purposes,
-the module and object systems need not be studied.
-In fact, Llama's feature set has much in common with
-Objective Caml's predecessor system, Caml Light (and some of Llama's
-source code is derived from that system). However, Llama's syntax is
-much closer to Objective Caml.}
+and such. It will be time well spent.
 
-\subsection{Introduction}
+\section{Llama Light}
 
-\section{The Llama Light library}
+\subsection{The language}
+
+\subsection{The library}
 
 \begin{links}
 \item \ahref{libref/builtin.html}{The built-in module: predefined
@@ -119,9 +102,17 @@ much closer to Objective Caml.}
 \item \ahref{libref/Location.html}{Module \texttt{Location}: source code locations}
 \end{links}
 
-\section{The Llama Light tools}
+\subsection{The tools}
 
 \section{Deductive Llama}
+
+\begin{syntax}
+\nonterm{expr}\isalso{}\nonterm{binder-op} \nonterm{pattern} \token{,} \nonterm{expr}
+\end{syntax} \begin{syntax}
+\nonterm{binder-op}\is{}\token{forall}
+ \alt{}\token{exists}
+ \alt{}\token{exists\_unique}
+\end{syntax}
 
 \section{Inductive Llama}
 
