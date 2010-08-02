@@ -93,7 +93,7 @@ and value_kind =
 (* Core signature items.                                                  *)
 (* ---------------------------------------------------------------------- *)
 
-type signature_item =
+type compiled_signature_item =
     Sig_value of value
   | Sig_type of type_constructor (*  * rec_status *)
   | Sig_exception of constructor
@@ -103,7 +103,7 @@ and rec_status =
   | Rec_first
   | Rec_next
 
-type signature = signature_item list
+type compiled_signature = compiled_signature_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)

@@ -2,7 +2,7 @@ open Types
 
 (* ------------------------------ *)
 
-val get_signature : string -> signature
+val get_signature : string -> compiled_signature
 val get_type_constructor : type_constructor reference -> type_constructor
 val get_constructor : constructor reference -> constructor
 val get_label : label reference -> label
@@ -28,7 +28,7 @@ val initial_env : unit -> t  (* incl. Pervasives unless --nopervasives *)
 val add_type_constructor : type_constructor -> t -> t
 val add_value : value -> t -> t
 val add_exception : constructor -> t -> t
-val add_signature : signature -> t -> t
+val add_signature : compiled_signature -> t -> t
 val open_pers_signature : string -> t -> t
 
 (* Using environments *)
@@ -53,12 +53,12 @@ val imported_units: unit -> (string * Digest.t) list
 
 (* Read, save a signature to/from a file *)
 
-val read_signature: string -> string -> signature
+val read_signature: string -> string -> compiled_signature
         (* Arguments: module name, file name. Results: signature. *)
-val save_signature: signature -> string -> string -> unit
+val save_signature: compiled_signature -> string -> string -> unit
         (* Arguments: signature, module name, file name. *)
 val save_signature_with_imports:
-            signature -> string -> string -> (string * Digest.t) list -> unit
+            compiled_signature -> string -> string -> (string * Digest.t) list -> unit
         (* Arguments: signature, module name, file name,
            imported units with their CRCs. *)
 

@@ -86,11 +86,11 @@ type type_body =
   | Ttype_record of (label * type_expression) list
   | Ttype_abbrev of type_expression
 
-type user_signature_item =
-  { sig_desc: user_signature_item_desc;
+type signature_item =
+  { sig_desc: signature_item_desc;
     sig_loc: Location.t }
 
-and user_signature_item_desc =
+and signature_item_desc =
     Tsig_value of value * type_expression
   | Tsig_type of (type_constructor * user_type_variable list * type_body) list
   | Tsig_exception of constructor * type_expression list

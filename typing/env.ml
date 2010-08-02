@@ -20,7 +20,7 @@ exception Error of error
 (* ---------------------------------------------------------------------- *)
 
 type cached_module =
-  { mod_sig : signature_item list;
+  { mod_sig : compiled_signature;
     mod_crcs : (string * Digest.t) list;
     mod_values: (string, value) Tbl.t;
     mod_constrs: (string, constructor) Tbl.t;
@@ -103,7 +103,7 @@ let read_cached_module modname filename =
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
-    let mod_sig = (input_value ic : signature_item list) in
+    let mod_sig = (input_value ic : compiled_signature) in
     let crcs = input_value ic in
     close_in ic;
     assert (mn = modname);
