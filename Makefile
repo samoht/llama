@@ -741,5 +741,5 @@ PUBLIC=stdlib/pervasives.mli \
   parsing/location.mli parsing/parsetree.mli parsing/parse.mli
 
 docs: library llamac llamadoc/llamadoc
-	llamadoc/llamadoc -html $(INCLUDES) -I stdlib -d doc/libref $(PUBLIC)
+	llamadoc/llamadoc -sort -html $(INCLUDES) -I stdlib -d doc/libref $(PUBLIC)
 .PHONY: docs
