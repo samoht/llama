@@ -18,8 +18,7 @@ CAMLRUN=../boot/llamarun
 CAMLC=$(CAMLRUN) ../boot/llamac -strict-sequence -nostdlib -I ../boot
 CAMLOPT=$(CAMLRUN) ../llamaopt -nostdlib -I ../stdlib
 CAMLLEX=$(CAMLRUN) ../boot/llamalex
-INCLUDES=-I ../utils -I ../parsing -I ../typing -I ../bytecomp -I ../asmcomp \
-	 -I ../driver
+INCLUDES=-I ../utils -I ../parsing -I ../typing -I ../bytecomp -I ../driver
 COMPFLAGS= -warn-error A $(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 

@@ -30,7 +30,6 @@ let rec expr_is_pure expr =
   | Texp_array el -> List.forall expr_is_pure el
   | Texp_record (lbl_expr_list,_) (*xxx*) ->
       List.forall (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
-  | Texp_parser _ -> true
   | _ -> false
 ;;
 

@@ -55,18 +55,6 @@ and expression_desc =
   | Pexp_when of expression * expression
   | Pexp_assert of expression
   | Pexp_assertfalse
-(* the rest are doomed *)
-  | Pexp_stream of stream_component list
-  | Pexp_parser of (stream_pattern list * expression) list
-
-and stream_component =
-    Pterm of expression
-  | Pnonterm of expression
-
-and stream_pattern =
-    Ptermpat of pattern
-  | Pnontermpat of expression * pattern
-  | Pexp_streampat of string
 
 type type_equation =
   { pteq_name : string;

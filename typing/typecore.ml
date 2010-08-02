@@ -162,7 +162,6 @@ let rec is_nonexpansive expr =
                   lbl.lbl_mut == Immutable && is_nonexpansive expr)
               lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e
-  | Texp_parser pat_expr_list -> true
   | Texp_when(cond, act) -> is_nonexpansive act
   | _ -> false
 ;;
@@ -474,36 +473,6 @@ let rec type_expr expr =
       Predef.type_unit
   | Texp_assertfalse ->
       new_type_var ()
-  | Texp_stream complist ->
-      let ty_comp = new_type_var() in
-      let ty_res = Predef.type_stream ty_comp in
-      List.iter
-        (function Zterm e -> type_expect e ty_comp
-                | Znonterm e -> type_expect e ty_res)
-        complist;
-      ty_res
-  | Texp_parser casel ->
-      let ty_comp = new_type_var() in
-      let ty_stream = Predef.type_stream ty_comp in
-      let ty_res = new_type_var() in
-      let rec type_stream_pat = function
-        ([], act) ->
-          type_expect  act ty_res
-      | (Ztermpat p :: rest, act) ->
-          tpat (p, ty_comp);
-          type_stream_pat  (rest,act)
-      | (Znontermpat(parsexpr, p) :: rest, act) ->
-          let ty_parser_result = new_type_var() in
-          type_expect parsexpr
-                      (Tarrow(ty_stream, ty_parser_result));
-          tpat (p, ty_parser_result);
-          type_stream_pat (rest,act)
-      | (Zstreampat s :: rest, act) ->
-          s.val_type <- ty_stream;
-          type_stream_pat  (rest,act)
-      in
-      List.iter (type_stream_pat)  casel;
-      Tarrow(ty_stream, ty_res)
   in
     expr.exp_type <- inferred_ty;
     inferred_ty

@@ -492,11 +492,6 @@ expr:
                          [$1; $4; $7])) }
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
-  | FUNCTION opt_bar Parser_match
-      { mkexp(Pexp_parser $3) }
-  | MATCH seq_expr WITH opt_bar Parser_match
-      { mkexp(Pexp_apply(mkexp(Pexp_parser $5), [$2])) }
-
 ;
 simple_expr:
     val_longident
@@ -547,9 +542,6 @@ simple_expr:
       { unclosed "[" 1 "]" 4 }
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
-  | LBRACKETLESS Stream_expr GREATERRBRACKET
-      { mkexp(Pexp_stream (List.rev $2)) }
-
 ;
 simple_expr_list:
     simple_expr
@@ -928,60 +920,6 @@ opt_semi:
 subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
-;
-
-/* ---------------------------------------------------------------------- */
-/* Streams and parsers (kept from Caml Light, may disappear).             */
-/* ---------------------------------------------------------------------- */
-
-Stream_expr :
-        Stream_expr SEMI Stream_expr_component
-          { $3 :: $1 }
-      | Stream_expr_component
-          { [$1] }
-      | Stream_expr SEMI
-          { $1 }
-      | 
-          { [] }
-;
-
-Stream_expr_component :
-        expr %prec below_WITH
-          { Pnonterm $1 }
-      | BACKQUOTE expr  %prec below_WITH
-          { Pterm $2 }
-;
-
-Stream_pattern :
-        LBRACKETLESS Stream_pattern_component_list GREATERRBRACKET
-          { $2 }
-      | LBRACKETLESS GREATERRBRACKET
-          { [] }
-;
-
-Stream_pattern_component_list :
-        LIDENT
-          { [Pexp_streampat $1] }
-      | Stream_pattern_component SEMI Stream_pattern_component_list
-          { $1 :: $3 }
-      | Stream_pattern_component
-          { [$1] }
-;
-
-Stream_pattern_component :
-        simple_expr simple_pattern
-          { Pnontermpat($1, $2) }
-      | BACKQUOTE pattern
-          { Ptermpat $2 }
-      | Stream_pattern_component SEMI
-          { $1 }
-;
-
-Parser_match :
-        Stream_pattern MINUSGREATER seq_expr BAR Parser_match
-          { ($1, $3) :: $5 }
-      | Stream_pattern MINUSGREATER seq_expr  %prec below_SEMI
-	  { [$1, $3] }
 ;
 
 %%

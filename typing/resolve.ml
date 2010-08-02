@@ -222,35 +222,6 @@ let rec expr env ex =
         | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env li ex.pexp_loc, expr env e2)
         | Pexp_assert e -> Texp_assert (expr env e)
         | Pexp_assertfalse -> Texp_assertfalse
-        | Pexp_stream l ->
-            Texp_stream (List.map
-                       (fun cmp ->
-                          begin match cmp with
-                            | Pterm e -> Zterm (expr env e)
-                            | Pnonterm e -> Znonterm(expr env e)
-                          end) l)
-        | Pexp_parser l ->
-            let rec aux env l e =
-              match l with
-                | [] -> [], expr env e
-                | sp::rest ->
-                    let sp, env = 
-                    begin match sp with
-                      | Ptermpat p ->
-                          let p = pattern env p in
-                          Ztermpat p, (extend_env env p)
-                      | Pnontermpat (e, p) ->
-                          let p = pattern env p in
-                          Znontermpat (expr env e, p), extend_env env p
-                      | Pexp_streampat s ->
-                          let s = mkpatvar s in
-                          Zstreampat s, ext env s
-                    end
-                    in
-                    let rest,e = aux env rest e in
-                    (sp::rest),e
-            in
-            Texp_parser(List.map (fun(l,e) -> aux env l e) l)
         | Pexp_when(e1,e2) -> Texp_when(expr env e1,expr env e2)
       end;
     exp_loc = ex.pexp_loc;

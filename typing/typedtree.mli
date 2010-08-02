@@ -67,18 +67,6 @@ and expression_desc =
   | Texp_assert of expression
   | Texp_assertfalse
   | Texp_constraint of expression * type_expression
-(* doomed *)
-  | Texp_stream of stream_component list
-  | Texp_parser of (stream_pattern list * expression) list
-
-and stream_component =
-    Zterm of expression
-  | Znonterm of expression
-
-and stream_pattern =
-    Ztermpat of pattern
-  | Znontermpat of expression * pattern
-  | Zstreampat of value
 
 type type_equation = {
   teq_tcs : type_constructor;
