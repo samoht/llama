@@ -326,9 +326,6 @@ clean:: partialclean
 
 llamac: $(COMPOBJS)
 	$(CAMLC) $(LINKFLAGS) -o llamac $(COMPOBJS)
-	@sed -e 's|@compiler@|$$topdir/boot/llamarun $$topdir/llamac|' \
-	  driver/llamacomp.sh.in > llamacomp.sh
-	@chmod +x llamacomp.sh
 
 partialclean::
 	rm -f llamac llamacomp.sh
@@ -337,12 +334,9 @@ partialclean::
 
 llamaopt: $(OPTOBJS)
 	$(CAMLC) $(LINKFLAGS) -o llamaopt $(OPTOBJS)
-	@sed -e 's|@compiler@|$$topdir/boot/llamarun $$topdir/llamaopt|' \
-	  driver/llamacomp.sh.in > llamacompopt.sh
-	@chmod +x llamacompopt.sh
 
 partialclean::
-	rm -f llamaopt llamacompopt.sh
+	rm -f llamaopt
 
 # The toplevel
 
@@ -451,9 +445,6 @@ partialclean::
 
 llamaopt.opt: $(OPTOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o llamaopt.opt $(OPTOBJS:.cmo=.cmx)
-	@sed -e 's|@compiler@|$$topdir/llamaopt.opt|' \
-	  driver/llamacomp.sh.in > llamacompopt.sh
-	@chmod +x llamacompopt.sh
 
 partialclean::
 	rm -f llamaopt.opt

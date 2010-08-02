@@ -2,8 +2,6 @@
 *.cmo
 /llama
 /llamac
-/llamacomp.sh
-/testprog
 boot/camlheader
 boot/libcamlrun.a
 boot/llamarun
