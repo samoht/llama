@@ -15,11 +15,11 @@
 
 (** The functions used to retrieve information from a signature. *)
       type ele
-      type tab = (ele, Types.signature_item) Hashtbl.t
+      type tab = (ele, Types.compiled_signature_item) Hashtbl.t
 
       (** Create a table from a signature. This table is used by some
          of the search functions below. *)
-      val table : Types.signature -> tab
+      val table : Types.compiled_signature -> tab
 
       (** This function returns the type expression for the value whose name is given,
          in the given signature.
@@ -63,7 +63,7 @@
          [pos_limit] is the position of the last char we could use to look for a comment,
          i.e. usually the beginning on the next element.*)
       val name_comment_from_type_kind :
-          int -> int -> Parsetree.tcs_kind -> int * (string * Odoc_types.info option) list
+          int -> int -> Parsetree.type_equation_kind -> int * (string * Odoc_types.info option) list
 
       (** This function converts a [Types.type_kind] into a [Odoc_type.type_kind],
          by associating the comment found in the parsetree of each constructor/field, if any.*)
@@ -83,4 +83,4 @@
          and in the signature for types information. *)
       val analyse_signature :
         string -> string ->
-        Parsetree.signature -> Types.signature -> Odoc_module.t_module
+        Parsetree.signature -> Types.compiled_signature -> Odoc_module.t_module

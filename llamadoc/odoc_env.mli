@@ -22,7 +22,7 @@ val empty : env
 
 (** Extending an environment *)
 
-val add_signature : env -> string -> string option -> Types.signature -> env
+val add_signature : env -> string -> string option -> Types.compiled_signature -> env
 val add_exception : env -> Odoc_name.t -> env
 val add_type : env -> Odoc_name.t -> env
 val add_value : env -> Odoc_name.t -> env

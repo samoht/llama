@@ -317,15 +317,15 @@ let mapi_careful f =
   in
   aux 0
 
-let type_constructor_body env tcs body =
-  begin match body with
-    | Ptype_abstract -> Ttype_abstract
-    | Ptype_abbrev te -> Ttype_abbrev (type_expression true env te)
-    | Ptype_variant l ->
+let type_equation_kind env tcs k =
+  begin match k with
+    | Pteq_abstract -> Teq_abstract
+    | Pteq_abbrev te -> Teq_abbrev (type_expression true env te)
+    | Pteq_variant l ->
         let idx_const = ref 0 in
         let idx_block = ref 0 in
-        Ttype_variant (mapi_careful (constructor env tcs (List.length l) idx_const idx_block) l)
-    | Ptype_record l -> Ttype_record (mapi (label env tcs) l)
+        Teq_variant (mapi_careful (constructor env tcs (List.length l) idx_const idx_block) l)
+    | Pteq_record l -> Teq_record (mapi (label env tcs) l)
   end
 
 let value_declaration env name typexp primstuff =
@@ -338,49 +338,50 @@ let value_declaration env name typexp primstuff =
   let typexp = type_expression false env typexp in
   v, typexp, Env.add_value v env
 
-let type_declaration env pdecls loc =
+let type_equation_list env pteql =
   let tcs_list =
     List.map
       begin fun pdecl ->
-        let nparams = List.length pdecl.ptype_params in
-        { tcs_id = Env.qualified_id pdecl.ptype_name;
+        let nparams = List.length pdecl.pteq_params in
+        { tcs_id = Env.qualified_id pdecl.pteq_name;
           tcs_arity = nparams;
           tcs_params = new_generics nparams; (* bending the rules *)
           tcs_kind = Type_abstract }
       end
-      pdecls
+      pteql
   in
   let temp_env =
     List.fold_left
       (fun env tcs -> Env.add_type_constructor tcs env)
       env tcs_list
   in
-  let decl =
+  let teql =
     List.map2
-      begin fun tcs pdecl ->
-        let params = bind_type_expression_vars pdecl.ptype_params loc in
-        let body = type_constructor_body temp_env tcs pdecl.ptype_kind in
-        (tcs, params, body)
+      begin fun tcs pteq ->
+        let params = bind_type_expression_vars pteq.pteq_params pteq.pteq_loc in
+        { teq_tcs = tcs;
+          teq_params = params;
+          teq_kind = type_equation_kind temp_env tcs pteq.pteq_kind;
+          teq_loc = pteq.pteq_loc }
       end
-      tcs_list pdecls
+      tcs_list pteql
   in
   List.iter
-    begin fun (tcs, params, body) ->
-      tcs.tcs_kind <-
-        begin match body with
-          | Ttype_abstract -> Type_abstract
-          | Ttype_variant l -> Type_variant (List.map fst l)
-          | Ttype_record l -> Type_record (List.map fst l)
-          | Ttype_abbrev ty -> Type_abbrev type_none
+    begin fun teq ->
+      teq.teq_tcs.tcs_kind <-
+        begin match teq.teq_kind with
+          | Teq_abstract -> Type_abstract
+          | Teq_variant l -> Type_variant (List.map fst l)
+          | Teq_record l -> Type_record (List.map fst l)
+          | Teq_abbrev ty -> Type_abbrev type_none
         end
-    end
-    decl;
+    end teql;
   let final_env =
     List.fold_left
       (fun env tcs -> Env.add_type_constructor tcs env)
       env tcs_list
   in
-  decl, final_env
+  teql, final_env
 
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
@@ -429,9 +430,9 @@ let structure_item env pstr =
     | Pstr_primitive(id,te,pr) ->
         let v, typexp, env = value_declaration env id te (Some pr) in
         mk (Tstr_primitive (v, typexp)), [Sig_value v], env
-    | Pstr_type decl ->
-        let decl, env =type_declaration env decl pstr.pstr_loc in
-        mk (Tstr_type decl), List.map (fun (tcs, _, _) -> Sig_type tcs) decl, env
+    | Pstr_type pteql ->
+        let teql, env = type_equation_list env pteql in
+        mk (Tstr_type teql), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
     | Pstr_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
         mk (Tstr_exception (cs, args)), [Sig_exception cs], env
@@ -448,9 +449,9 @@ let signature_item env psig =
     | Psig_value (s, te, pr) ->
         let v, typexp, env = value_declaration env s te pr in
         mk (Tsig_value (v, typexp)), [Sig_value v], env
-    | Psig_type decl ->
-        let decl, env = type_declaration env decl psig.psig_loc in
-        mk (Tsig_type decl), List.map (fun (tcs, _, _) -> Sig_type tcs) decl, env
+    | Psig_type pteql ->
+        let teql, env = type_equation_list env pteql in
+        mk (Tsig_type teql), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
     | Psig_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
         mk (Tsig_exception (cs, args)), [Sig_exception cs], env

@@ -68,17 +68,17 @@ and stream_pattern =
   | Pnontermpat of expression * pattern
   | Pexp_streampat of string
 
-type type_declaration =
-  { ptype_name : string;
-    ptype_params : string list;
-    ptype_kind : tcs_kind;
-    ptype_loc : Location.t }
+type type_equation =
+  { pteq_name : string;
+    pteq_params : string list;
+    pteq_kind : type_equation_kind;
+    pteq_loc : Location.t }
 
-and tcs_kind =
-    Ptype_abstract
-  | Ptype_variant of (string * type_expression list * Location.t) list
-  | Ptype_record of (string * mutable_flag * type_expression * Location.t) list
-  | Ptype_abbrev of type_expression
+and type_equation_kind =
+    Pteq_abstract
+  | Pteq_variant of (string * type_expression list * Location.t) list
+  | Pteq_record of (string * mutable_flag * type_expression * Location.t) list
+  | Pteq_abbrev of type_expression
 
 type signature_item =
   { psig_desc: signature_item_desc;
@@ -86,7 +86,7 @@ type signature_item =
 
 and signature_item_desc =
     Psig_value of string * type_expression * string list option
-  | Psig_type of type_declaration list
+  | Psig_type of type_equation list
   | Psig_exception of string * type_expression list
   | Psig_open of module_name
 
@@ -98,7 +98,7 @@ and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * type_expression * string list
-  | Pstr_type of type_declaration list
+  | Pstr_type of type_equation list
   | Pstr_exception of string * type_expression list
   | Pstr_open of module_name
 

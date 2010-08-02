@@ -80,11 +80,17 @@ and stream_pattern =
   | Znontermpat of expression * pattern
   | Zstreampat of value
 
-type type_body =
-    Ttype_abstract
-  | Ttype_variant of (constructor * type_expression list) list
-  | Ttype_record of (label * type_expression) list
-  | Ttype_abbrev of type_expression
+type type_equation = {
+  teq_tcs : type_constructor;
+  teq_params : user_type_variable list;
+  teq_kind : type_equation_kind;
+  teq_loc : Location.t }
+
+and type_equation_kind =
+    Teq_abstract
+  | Teq_variant of (constructor * type_expression list) list
+  | Teq_record of (label * type_expression) list
+  | Teq_abbrev of type_expression
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -92,7 +98,7 @@ type signature_item =
 
 and signature_item_desc =
     Tsig_value of value * type_expression
-  | Tsig_type of (type_constructor * user_type_variable list * type_body) list
+  | Tsig_type of type_equation list
   | Tsig_exception of constructor * type_expression list
   | Tsig_open of module_id
 
@@ -104,7 +110,7 @@ and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of value * type_expression
-  | Tstr_type of (type_constructor * user_type_variable list * type_body) list
+  | Tstr_type of type_equation list
   | Tstr_exception of constructor * type_expression list
   | Tstr_open of module_id
 

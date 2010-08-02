@@ -36,38 +36,41 @@ let is_cyclic tcs =
     | _ -> false
   end
       
-let define_new_type tcs params body =
-  let ty_res = Tconstruct (ref_type_constr tcs, List.map tvar params) in
-  begin match body with
-      Ttype_abstract -> ()
-    | Ttype_variant l ->
+let type_equation teq =
+  let tcs = teq.teq_tcs in
+  List.iter2 (fun utv tv -> utv.utv_type <- Tvar tv) teq.teq_params tcs.tcs_params;
+  let ty_res =
+    Tconstruct (ref_type_constr tcs,
+                List.map (fun tv -> Tvar tv) tcs.tcs_params)
+  in
+  begin match teq.teq_kind with
+      Teq_abstract -> ()
+    | Teq_variant lst ->
         List.iter
           begin fun (cs, args) ->
             let ty_args = List.map (type_of_type_expression Generic) args in
             cs.cs_res <- ty_res;
             cs.cs_args <- ty_args
-          end l
-    | Ttype_record l ->
+          end lst
+    | Teq_record lst ->
         List.iter
           begin fun (lbl, arg) ->
             lbl.lbl_res <- ty_res;
             lbl.lbl_arg <- type_of_type_expression Generic arg
-          end l
-    | Ttype_abbrev arg ->
+          end lst
+    | Teq_abbrev arg ->
         let ty_arg = type_of_type_expression Generic arg in
         tcs.tcs_kind <- Type_abbrev ty_arg
   end
 
-let type_typedecl_new decl loc =
+let type_equation_list teql =
+  List.iter type_equation teql;
   List.iter
-    begin fun (tcs, params, body) ->
-      List.iter2 (fun utv tv -> utv.utv_type <- Tvar tv) params tcs.tcs_params;
-      define_new_type tcs tcs.tcs_params body
-    end decl;
-  List.iter
-    begin fun (tcs, _, _) ->
-      if is_cyclic tcs then raise(Error(loc, Recursive_abbrev (tcs_name tcs)))
-    end decl
+    begin fun teq ->
+      let tcs = teq.teq_tcs in
+      if is_cyclic tcs then
+        raise(Error(teq.teq_loc, Recursive_abbrev (tcs_name tcs)))
+    end teql
 
 let type_excdecl cs args  =
   cs.cs_res <- Predef.type_exn;

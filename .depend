@@ -148,11 +148,13 @@ typing/typecore.cmx: typing/types.cmx typing/typedtree_aux.cmx \
     typing/module.cmx utils/misc.cmx parsing/location.cmx typing/get.cmx \
     typing/error.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/typedecl.cmo: typing/types.cmo typing/typedtree.cmi \
-    typing/typecore.cmo typing/predef.cmo typing/module.cmo typing/get.cmi \
-    typing/error.cmo typing/btype.cmo parsing/asttypes.cmi
+    typing/typecore.cmo typing/predef.cmo typing/module.cmo \
+    parsing/location.cmi typing/get.cmi typing/error.cmo typing/btype.cmo \
+    parsing/asttypes.cmi
 typing/typedecl.cmx: typing/types.cmx typing/typedtree.cmi \
-    typing/typecore.cmx typing/predef.cmx typing/module.cmx typing/get.cmx \
-    typing/error.cmx typing/btype.cmx parsing/asttypes.cmi
+    typing/typecore.cmx typing/predef.cmx typing/module.cmx \
+    parsing/location.cmx typing/get.cmx typing/error.cmx typing/btype.cmx \
+    parsing/asttypes.cmi
 typing/typedtree_aux.cmo: typing/types.cmo typing/typedtree.cmi \
     parsing/location.cmi parsing/asttypes.cmi
 typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
@@ -371,13 +373,13 @@ driver/compile.cmx: utils/warnings.cmx typing/unused_var.cmx \
     parsing/parse.cmx utils/misc.cmx parsing/location.cmx typing/env.cmx \
     bytecomp/emitcode.cmx utils/config.cmx utils/clflags.cmx utils/ccomp.cmx \
     bytecomp/bytegen.cmx driver/compile.cmi
-driver/errors.cmo: utils/warnings.cmi typing/typemod.cmo \
+driver/errors.cmo: utils/warnings.cmi typing/typemod.cmo typing/typedecl.cmo \
     bytecomp/translmod.cmi bytecomp/translcore.cmi parsing/syntaxerr.cmi \
     bytecomp/symtable.cmi typing/resolve.cmo driver/pparse.cmi \
     parsing/location.cmi parsing/lexer.cmo typing/includemod.cmo \
     typing/env.cmi bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi \
     driver/errors.cmi
-driver/errors.cmx: utils/warnings.cmx typing/typemod.cmx \
+driver/errors.cmx: utils/warnings.cmx typing/typemod.cmx typing/typedecl.cmx \
     bytecomp/translmod.cmx bytecomp/translcore.cmx parsing/syntaxerr.cmx \
     bytecomp/symtable.cmx typing/resolve.cmx driver/pparse.cmx \
     parsing/location.cmx parsing/lexer.cmx typing/includemod.cmx \
