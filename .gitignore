@@ -18,6 +18,7 @@ parsing/lexer.ml
 parsing/lexer.mll
 parsing/linenum.ml
 typing/location.ml
+bytecomp/opcodes.ml
 bytecomp/runtimedef.ml
 byterun/jumptbl.h
 byterun/llamarun
