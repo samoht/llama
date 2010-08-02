@@ -139,7 +139,7 @@ PACKLD=ld -r $(NATIVECCLINKOPTS) -o #there must be a space after this '-o'
 
 ############# Configuration for the contributed libraries
 
-OTHERLIBRARIES=win32unix str num win32graph dynlink bigarray systhreads labltk
+OTHERLIBRARIES=win32unix num win32graph dynlink bigarray systhreads labltk
 
 ### Name of the target architecture for the "num" library
 BNG_ARCH=ia32

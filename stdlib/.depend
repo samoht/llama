@@ -30,6 +30,7 @@ scanning.cmi: pervasives.cmi
 set.cmi:
 sort.cmi:
 stack.cmi:
+str.cmi:
 stream.cmi:
 string.cmi:
 sys.cmi:
@@ -75,8 +76,8 @@ lexing.cmo: sys.cmi string.cmi array.cmi lexing.cmi
 lexing.cmx: sys.cmx string.cmx array.cmx lexing.cmi
 list.cmo: list.cmi
 list.cmx: list.cmi
-map.cmo: map.cmi
-map.cmx: map.cmi
+map.cmo: pervasives.cmi map.cmi
+map.cmx: pervasives.cmx map.cmi
 marshal.cmo: string.cmi marshal.cmi
 marshal.cmx: string.cmx marshal.cmi
 nativeint.cmo: sys.cmi pervasives.cmi nativeint.cmi
@@ -111,14 +112,16 @@ scanf.cmx: string.cmx scanning.cmx printf_tformat.cmx printf_sformat.cmx \
     printf.cmx obj.cmx list.cmx hashtbl.cmx buffer.cmx array.cmx scanf.cmi
 scanning.cmo: string.cmi pervasives.cmi list.cmi buffer.cmi scanning.cmi
 scanning.cmx: string.cmx pervasives.cmx list.cmx buffer.cmx scanning.cmi
-set.cmo: set.cmi
-set.cmx: set.cmi
+set.cmo: pervasives.cmi set.cmi
+set.cmx: pervasives.cmx set.cmi
 sort.cmo: array.cmi sort.cmi
 sort.cmx: array.cmx sort.cmi
 stack.cmo: list.cmi stack.cmi
 stack.cmx: list.cmx stack.cmi
 std_exit.cmo:
 std_exit.cmx:
+str.cmo: string.cmi map.cmi list.cmi char.cmi buffer.cmi array.cmi str.cmi
+str.cmx: string.cmx map.cmx list.cmx char.cmx buffer.cmx array.cmx str.cmi
 stream.cmo: string.cmi obj.cmi list.cmi lazy.cmo stream.cmi
 stream.cmx: string.cmx obj.cmx list.cmx lazy.cmx stream.cmi
 string.cmo: pervasives.cmi list.cmi char.cmi string.cmi

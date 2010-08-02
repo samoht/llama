@@ -14,7 +14,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random_state.cmo random.cmo callback.cmo \
   genlex.cmo weak.cmo \
-  filename.cmo complex.cmo scanning.cmo scanf.cmo
+  filename.cmo complex.cmo scanning.cmo scanf.cmo str.cmo
 
 all: std_exit.cmo stdlib.cma camlheader camlheader_ur
 

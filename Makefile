@@ -300,7 +300,7 @@ install:
 #	for i in $(OTHERLIBRARIES); do \
 #	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 #	done
-	for i in num str graph unix; do \
+	for i in num graph unix; do \
 	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 	done
 	cd llamadoc; $(MAKE) install
@@ -378,8 +378,9 @@ otherlibs/dynlink/dynlink.cmxa: otherlibs/dynlink/natdynlink.ml
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
-	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
-	    -e 's|%%BYTERUN%%|$(BINDIR)/llamarun|' \
+	sed -e "s|%%VERSION%%|`head -1 VERSION`|" \
+	    -e 's|%%LIBDIR%%|$(LIBDIR)|' \
+            -e 's|%%BYTERUN%%|$(BINDIR)/llamarun|' \
 	    -e 's|%%CCOMPTYPE%%|cc|' \
 	    -e 's|%%BYTECC%%|$(BYTECC) $(BYTECCCOMPOPTS) $(SHAREDCCCOMPOPTS)|' \
 	    -e 's|%%NATIVECC%%|$(NATIVECC) $(NATIVECCCOMPOPTS)|' \
@@ -661,7 +662,7 @@ otherlibraries: llamatools
 #	for i in num graph str; do \
 #	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
 #	done
-	for i in num str graph unix; do \
+	for i in num graph unix; do \
 	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 	done
 
@@ -792,6 +793,7 @@ PUBLIC=stdlib/pervasives.mli \
   stdlib/digest.mli stdlib/random_state.mli stdlib/random.mli stdlib/callback.mli \
   stdlib/genlex.mli stdlib/weak.mli \
   stdlib/filename.mli stdlib/complex.mli stdlib/scanning.mli stdlib/scanf.mli \
+  stdlib/str.mli \
   parsing/location.mli parsing/parsetree.mli parsing/parse.mli
 
 docs: library llamac llamadoc/llamadoc

@@ -393,7 +393,7 @@ let initialize_toplevel_env () =
 exception PPerror
 
 let loop ppf =
-  fprintf ppf "        Objective Caml version %s@.@." Config.version;
+  fprintf ppf "        Llama version %s@.@." Config.version;
   Env.set_current_unit Module_toplevel;
   initialize_toplevel_env ();
   let lb = Lexing.from_function refill_lexbuf in

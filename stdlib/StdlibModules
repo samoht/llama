@@ -42,6 +42,7 @@ STDLIB_MODULES=\
   sort \
   stack \
   stdLabels \
+  str \
   stream \
   string \
   stringLabels \

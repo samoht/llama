@@ -10,7 +10,11 @@ open Primitive
 open Module
 
 type error =
-    Unbound_module of string
+    Unbound_type_constructor of Longident.t
+  | Unbound_value of Longident.t
+  | Unbound_constructor of Longident.t
+  | Unbound_label of Longident.t
+  | Unbound_module of string
 
 exception Error of Location.t * error
 
@@ -59,19 +63,19 @@ let rec var_names_of_pat pat =
 
 let lookup_type env li loc =
   try Env.lookup_type li env
-  with Not_found -> Error.unbound_type_constr_err li loc
+  with Not_found -> raise (Error (loc, Unbound_type_constructor li))
 
 let lookup_constructor env li loc =
   try Env.lookup_constructor li env
-  with Not_found -> Error.unbound_constr_err li loc
+  with Not_found -> raise (Error (loc, Unbound_constructor li))
 
 let lookup_label env li loc =
   try Env.lookup_label li env
-  with Not_found -> Error.unbound_label_err li loc
+  with Not_found -> raise (Error (loc, Unbound_label li))
 
 let lookup_value env li loc =
   try Env.lookup_value li env
-  with Not_found -> Error.unbound_value_err li loc
+  with Not_found -> raise (Error (loc, Unbound_value li))
 
 let lookup_module s loc =
   try Get.signature s
@@ -482,5 +486,13 @@ open Format
 open Printtyp
 
 let report_error ppf = function
-  | Unbound_module lid ->
-      fprintf ppf "Unbound module %s" lid
+    Unbound_module name ->
+      fprintf ppf "Unbound module %s" name
+  | Unbound_type_constructor lid ->
+      fprintf ppf "Unbound type constructor %a" longident lid
+  | Unbound_constructor lid ->
+      fprintf ppf "Unbound constructor %a" longident lid
+  | Unbound_label lid ->
+      fprintf ppf "Unbound record field label %a" longident lid
+  | Unbound_value lid ->
+      fprintf ppf "Unbound value %a" longident lid
