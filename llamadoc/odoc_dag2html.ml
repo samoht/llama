@@ -926,7 +926,7 @@ let tablify phony no_optim no_group d =
   let t = {table = [| Array.of_list r |]} in
   let rec loop t =
     let (t, new_row) = treat_new_row d t in
-    if List.for_all (fun x -> x.elem = Nothing) new_row then t
+    if List.forall (fun x -> x.elem = Nothing) new_row then t
     else
       let t = {table = Array.append t.table [| Array.of_list new_row |]} in
       let t =

@@ -112,19 +112,19 @@ let rec fold_right2 f l1 l2 accu =
   | (a1::l1, a2::l2) -> f a1 a2 (fold_right2 f l1 l2 accu)
   | (_, _) -> invalid_arg "List.fold_right2"
 
-let rec for_all p = function
+let rec forall p = function
     [] -> true
-  | a::l -> p a && for_all p l
+  | a::l -> p a && forall p l
 
 let rec exists p = function
     [] -> false
   | a::l -> p a || exists p l
 
-let rec for_all2 p l1 l2 =
+let rec forall2 p l1 l2 =
   match (l1, l2) with
     ([], []) -> true
-  | (a1::l1, a2::l2) -> p a1 a2 && for_all2 p l1 l2
-  | (_, _) -> invalid_arg "List.for_all2"
+  | (a1::l1, a2::l2) -> p a1 a2 && forall2 p l1 l2
+  | (_, _) -> invalid_arg "List.forall2"
 
 let rec exists2 p l1 l2 =
   match (l1, l2) with

@@ -153,7 +153,7 @@ let rec is_nullable = function
     Char c -> false
   | String s -> s = ""
   | CharClass(cl, cmpl) -> false
-  | Seq rl -> List.for_all is_nullable rl
+  | Seq rl -> List.forall is_nullable rl
   | Alt (r1, r2) -> is_nullable r1 || is_nullable r2
   | Star r -> true
   | Plus r -> is_nullable r

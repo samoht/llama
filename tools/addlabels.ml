@@ -198,7 +198,7 @@ let insert_labels_app ~labels ~text args =
   let aopt_labels = opt_labels @ nopt_labels in
   let args, lab_args = List.partition args ~f:(fun (l,_) -> l = "") in
   (* only optional arguments are labeled *)
-  if List.for_all lab_args ~f:(fun (l,_) -> List.mem l ~set:aopt_labels)
+  if List.forall lab_args ~f:(fun (l,_) -> List.mem l ~set:aopt_labels)
   then insert_labels_app ~labels ~text args
 
 let rec add_labels_expr ~text ~values ~classes expr =

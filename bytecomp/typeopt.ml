@@ -71,7 +71,7 @@ let array_element_kind env ty =
             {tcs_kind = (Type_abstract | Type_abbrev _)} ->
               Pgenarray
           | {tcs_kind = Type_variant cstrs}
-            when List.for_all (fun cs -> cs.cs_args = []) cstrs ->
+            when List.forall (fun cs -> cs.cs_args = []) cstrs ->
               Pintarray
           | {tcs_kind = _} ->
               Paddrarray

@@ -486,7 +486,7 @@ let up_ok_action act1 act2 =
   | Not_simple -> false
 
 let up_ok (ps,act_p) l =
-  List.for_all
+  List.forall
     (fun (qs,act_q) ->
       up_ok_action act_p act_q ||
       not (Parmatch.compats ps qs))
@@ -714,7 +714,7 @@ let conda p q = not (compat p q)
 and condb act ps qs =  not (is_guarded act) && Parmatch.le_pats qs ps
 
 let or_ok p ps l =
-  List.for_all
+  List.forall
     (function
       | ({pat_desc=Tpat_or _} as q::qs,act) ->
           conda p q || condb act ps qs
@@ -748,7 +748,7 @@ let insert_or_append p ps act ors no =
               let _, not_e = get_equiv q rem in
               if
                 or_ok p ps not_e && (* check append condition for head of O *)
-                List.for_all        (* check insert condition for tail of O *)
+                List.forall        (* check insert condition for tail of O *)
                   (fun cl -> match cl with
                   | (q::_,_) -> not (compat p q)
                   | _        -> assert false)
@@ -903,7 +903,7 @@ and split_constr cls args def k =
                   ((idef,next)::nexts)
             end
         | [ps,_ as cl]
-            when List.for_all group_var ps && yes <> [] ->
+            when List.forall group_var ps && yes <> [] ->
        (* This enables an extra division in some frequent case :
           last row is made of variables only *)
               split_noex yes (cl::no) []

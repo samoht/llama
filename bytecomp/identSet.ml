@@ -253,9 +253,9 @@
         Empty -> accu
       | Node(l, v, r, _) -> fold f r (f v (fold f l accu))
 
-    let rec for_all p = function
+    let rec forall p = function
         Empty -> true
-      | Node(l, v, r, _) -> p v && for_all p l && for_all p r
+      | Node(l, v, r, _) -> p v && forall p l && forall p r
 
     let rec exists p = function
         Empty -> false

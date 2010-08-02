@@ -467,7 +467,7 @@ let rec comp_expr env exp sz cont =
           (add_pop 1 cont))
   | Lletrec(decl, body) ->
       let ndecl = List.length decl in
-      if List.for_all (function (_, Lfunction(_,_,_)) -> true | _ -> false)
+      if List.forall (function (_, Lfunction(_,_,_)) -> true | _ -> false)
                       decl then begin
         (* let rec of functions *)
         let fv =

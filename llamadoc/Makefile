@@ -59,11 +59,7 @@ INCLUDES_DEP=-I $(LLAMASRCDIR)/parsing \
 	-I $(LLAMASRCDIR)/tools \
 	-I $(LLAMASRCDIR)/toplevel/
 
-INCLUDES_NODEP=	-I $(LLAMASRCDIR)/stdlib \
-	-I $(LLAMASRCDIR)/otherlibs/str \
-	-I $(LLAMASRCDIR)/otherlibs/unix \
-	-I $(LLAMASRCDIR)/otherlibs/num \
-	-I $(LLAMASRCDIR)/otherlibs/graph
+INCLUDES_NODEP=	-I $(LLAMASRCDIR)/stdlib
 
 INCLUDES=$(INCLUDES_DEP) $(INCLUDES_NODEP)
 
@@ -169,11 +165,7 @@ LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
 
 LLAMACMXFILES=$(LLAMACMOFILES:.cmo=.cmx)
 
-STDLIB_MLIS=../stdlib/*.mli \
-	../otherlibs/unix/unix.mli \
-	../otherlibs/str/str.mli \
-	../otherlibs/bigarray/bigarray.mli \
-	../otherlibs/num/num.mli
+STDLIB_MLIS=../stdlib/*.mli
 
 all: exe lib
 
@@ -188,9 +180,9 @@ debug:
 	make LLAMAPP=""
 
 $(LLAMADOC): $(EXECMOFILES)
-	$(LLAMAC) -o $@ -linkall unix.cma $(LINKFLAGS) $(LLAMACMOFILES) $(EXECMOFILES)
+	$(LLAMAC) -o $@ -linkall $(LINKFLAGS) $(LLAMACMOFILES) $(EXECMOFILES)
 $(LLAMADOC_OPT): $(EXECMXFILES)
-	$(LLAMAOPT) -o $@ unix.cmxa $(LINKFLAGS) $(LLAMACMXFILES) $(EXECMXFILES)
+	$(LLAMAOPT) -o $@ $(LINKFLAGS) $(LLAMACMXFILES) $(EXECMXFILES)
 
 $(LLAMADOC_LIBCMA): $(LIBCMOFILES)
 	$(LLAMAC) -a -o $@ $(LINKFLAGS) $(LLAMACMOFILES) $(LIBCMOFILES)

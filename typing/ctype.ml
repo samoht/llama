@@ -248,7 +248,7 @@ let rec equiv_gen corresp ty1 ty2 =
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
-        List.for_all2 (equiv_gen corresp) t1args t2args
+        List.forall2 (equiv_gen corresp) t1args t2args
     | Tconstruct (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp (expand_abbrev_aux params body args) ty2
@@ -257,7 +257,7 @@ let rec equiv_gen corresp ty1 ty2 =
         equiv_gen corresp ty1 (expand_abbrev_aux params body args)
     | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2) when
         Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.for_all2 (equiv_gen corresp) tyl1 tyl2
+        List.forall2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
         false
 
@@ -284,7 +284,7 @@ let rec moregeneral_gen subst ty1 ty2 =
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
-        List.for_all2 (moregeneral_gen subst) t1args t2args
+        List.forall2 (moregeneral_gen subst) t1args t2args
     | Tconstruct (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral_gen subst (expand_abbrev_aux params body args) ty2
@@ -293,7 +293,7 @@ let rec moregeneral_gen subst ty1 ty2 =
         moregeneral_gen subst ty1 (expand_abbrev_aux params body args)
     | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2)
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.for_all2 (moregeneral_gen subst) tyl1 tyl2
+        List.forall2 (moregeneral_gen subst) tyl1 tyl2
     | _ ->
         false
 

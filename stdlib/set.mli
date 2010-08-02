@@ -83,8 +83,8 @@ type 'a ord = 'a -> 'a -> int
     (** [fold f s a] computes [(f xN ... (f x2 (f x1 a))...)],
        where [x1 ... xN] are the elements of [s], in increasing order. *)
 
-    val for_all: ('elt -> bool) -> 'elt t -> bool
-    (** [for_all p s] checks if all elements of the set
+    val forall: ('elt -> bool) -> 'elt t -> bool
+    (** [forall p s] checks if all elements of the set
        satisfy the predicate [p]. *)
 
     val exists: ('elt -> bool) -> 'elt t -> bool

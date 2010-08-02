@@ -143,22 +143,22 @@ let rec is_nonexpansive expr =
   match expr.exp_desc with
     Texp_ident id -> true
   | Texp_constant sc -> true
-  | Texp_tuple el -> List.for_all is_nonexpansive el
-  | Texp_construct(cstr, l) -> List.for_all is_nonexpansive l
+  | Texp_tuple el -> List.forall is_nonexpansive el
+  | Texp_construct(cstr, l) -> List.forall is_nonexpansive l
   | Texp_let(rec_flag, bindings, body) ->
-      List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
+      List.forall (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
   | Texp_function (pat_expr_list, _) -> true
   | Texp_try(body, pat_expr_list) ->
       is_nonexpansive body &&
-      List.for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
+      List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
   | Texp_sequence(e1, e2) -> is_nonexpansive e2
   | Texp_ifthenelse(cond, ifso, ifnot) ->
       is_nonexpansive ifso && is_nonexpansive ifnot
   | Texp_constraint(e, ty) -> is_nonexpansive e
   | Texp_array [] -> true
   | Texp_record (lbl_expr_list, exten) ->
-      List.for_all (fun (lbl, expr) ->
+      List.forall (fun (lbl, expr) ->
                   lbl.lbl_mut == Immutable && is_nonexpansive expr)
               lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e

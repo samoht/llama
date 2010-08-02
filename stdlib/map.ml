@@ -156,9 +156,9 @@ type ('key, 'a) t =
       | Intrnlnode(_, l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
 
-    let rec for_all p = function
+    let rec forall p = function
         Empty _ -> true
-      | Intrnlnode(_, l, v, d, r, _) -> p v d && for_all p l && for_all p r
+      | Intrnlnode(_, l, v, d, r, _) -> p v d && forall p l && forall p r
 
     let rec exists p = function
         Empty _ -> false

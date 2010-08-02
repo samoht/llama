@@ -600,7 +600,7 @@ let full_match closing env =  match env with
     let row = row_of_pat p in
     if closing && not row.row_fixed then
       (* closing=true, we are considering the variant as closed *)
-      List.for_all
+      List.forall
         (fun (tag,f) ->
           match Btype.row_field_repr f with
             Rabsent | Reither(_, _, false, _) -> true
@@ -610,7 +610,7 @@ let full_match closing env =  match env with
         row.row_fields
     else
       row.row_closed &&
-      List.for_all
+      List.forall
         (fun (tag,f) ->
           Btype.row_field_repr f = Rabsent || List.mem tag fields)
         row.row_fields
@@ -1056,7 +1056,7 @@ let is_var p = match (unalias p).pat_desc with
 | _                   -> false
 
 let is_var_column rs =
-  List.for_all
+  List.forall
     (fun r -> match r.active with
     | p::_ -> is_var p
     | []   -> assert false)
@@ -1649,7 +1649,7 @@ let rec inactive pat = match pat with
 | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_, None, _) ->
     true
 | Tpat_tuple ps | Tpat_construct (_, ps) | Tpat_array ps ->
-    List.for_all (fun p -> inactive p.pat_desc) ps
+    List.forall (fun p -> inactive p.pat_desc) ps
 | Tpat_alias (p,_) | Tpat_variant (_, Some p, _) ->
     inactive p.pat_desc
 | Tpat_record ldps ->

@@ -87,8 +87,8 @@ type 'a ord = 'a -> 'a -> int
        where [k1 ... kN] are the keys of all bindings in [m]
        (in increasing order), and [d1 ... dN] are the associated data. *)
 
-    val for_all: ('a -> 'b -> bool) -> ('a, 'b) t -> bool
-    (** [for_all p m] checks if all the bindings of the map
+    val forall: ('a -> 'b -> bool) -> ('a, 'b) t -> bool
+    (** [forall p m] checks if all the bindings of the map
         satisfy the predicate [p].
      *)
 

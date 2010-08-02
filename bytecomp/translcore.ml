@@ -387,7 +387,7 @@ let check_recursive_lambda idlist lam =
         check idlist arg && check_top (add_let id arg idlist) body
     | Lletrec(bindings, body) ->
         let idlist' = add_letrec bindings idlist in
-        List.for_all (fun (id, arg) -> check idlist' arg) bindings &&
+        List.forall (fun (id, arg) -> check idlist' arg) bindings &&
         check_top idlist' body
     | Lprim (Pmakearray (Pgenarray), args) -> false
     | Lsequence (lam1, lam2) -> check idlist lam1 && check_top idlist lam2
@@ -403,12 +403,12 @@ let check_recursive_lambda idlist lam =
         check idlist arg && check (add_let id arg idlist) body
     | Lletrec(bindings, body) ->
         let idlist' = add_letrec bindings idlist in
-        List.for_all (fun (id, arg) -> check idlist' arg) bindings &&
+        List.forall (fun (id, arg) -> check idlist' arg) bindings &&
         check idlist' body
     | Lprim(Pmakeblock(tag, mut), args) ->
-        List.for_all (check idlist) args
+        List.forall (check idlist) args
     | Lprim(Pmakearray(_), args) ->
-        List.for_all (check idlist) args
+        List.forall (check idlist) args
     | Lsequence (lam1, lam2) -> check idlist lam1 && check idlist lam2
     | Levent (lam, _) -> check idlist lam
     | lam ->
@@ -881,7 +881,7 @@ and transl_apply lam sargs loc =
               Lvar id
         in
         let args, args' =
-          if List.for_all (fun (_,opt) -> opt = Optional) args then [], args
+          if List.forall (fun (_,opt) -> opt = Optional) args then [], args
           else args, [] in
         let lam =
           if args = [] then lam else lapply lam (List.rev_map fst args) in

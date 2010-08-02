@@ -23,19 +23,19 @@ let rec expr_is_pure expr =
   match expr.exp_desc with
     Texp_ident _ -> true
   | Texp_constant _ -> true
-  | Texp_tuple el -> List.for_all expr_is_pure el
-  | Texp_construct(cstr,args) -> List.for_all expr_is_pure args
+  | Texp_tuple el -> List.forall expr_is_pure el
+  | Texp_construct(cstr,args) -> List.forall expr_is_pure args
   | Texp_function _ -> true
   | Texp_constraint(expr, ty) -> expr_is_pure expr
-  | Texp_array el -> List.for_all expr_is_pure el
+  | Texp_array el -> List.forall expr_is_pure el
   | Texp_record (lbl_expr_list,_) (*xxx*) ->
-      List.for_all (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
+      List.forall (fun (lbl,e) -> expr_is_pure e) lbl_expr_list
   | Texp_parser _ -> true
   | _ -> false
 ;;
 
 let letdef_is_pure pat_expr_list =
-  List.for_all (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
+  List.forall (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
 ;;
 
 let single_constructor cstr =
@@ -50,10 +50,10 @@ let rec pat_irrefutable pat =
   | Tpat_var s -> true
   | Tpat_alias(pat, _) -> pat_irrefutable pat
   | Tpat_constant _ -> false
-  | Tpat_tuple patl -> List.for_all pat_irrefutable patl
-  | Tpat_construct(cstr, pats) -> single_constructor cstr && List.for_all pat_irrefutable pats
+  | Tpat_tuple patl -> List.forall pat_irrefutable patl
+  | Tpat_construct(cstr, pats) -> single_constructor cstr && List.forall pat_irrefutable pats
   | Tpat_record lbl_pat_list ->
-      List.for_all (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
+      List.forall (fun (lbl, pat) -> pat_irrefutable pat) lbl_pat_list
   | Tpat_array patl -> false
   | Tpat_or(pat1, pat2) -> pat_irrefutable pat1 || pat_irrefutable pat2
   | Tpat_constraint(pat, _) -> pat_irrefutable pat
