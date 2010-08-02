@@ -24,13 +24,13 @@ COMMONOBJS=\
   compare.o ints.o floats.o str.o array.o io.o extern.o intern.o \
   hash.o sys.o meta.o parsing.o gc_ctrl.o terminfo.o md5.o obj.o \
   lexing.o callback.o debugger.o weak.o compact.o finalise.o custom.o \
-  dynlink.o strstubs.o
+  dynlink.o strstubs.o nat_stubs.o bng.o
 
 PRIMS=\
   alloc.c array.c compare.c extern.c floats.c gc_ctrl.c hash.c \
   intern.c interp.c ints.c io.c lexing.c md5.c meta.c obj.c parsing.c \
   signals.c str.c sys.c terminfo.c callback.c weak.c finalise.c stacks.c \
-  dynlink.c backtrace.c strstubs.c
+  dynlink.c backtrace.c strstubs.c nat_stubs.c
 
 PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
@@ -70,6 +70,9 @@ prims.c : primitives
 	 echo 'char * caml_names_of_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	"&",/' primitives; \
 	 echo '	 0 };') > prims.c
+
+bng.o: bng.c bng.h bng_digit.c bng_alpha.c bng_amd64.c bng_ia32.c bng_mips.c bng_ppc.c bng_sparc.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ -DBNG_ARCH_$(BNG_ARCH) -DBNG_ASM_LEVEL=$(BNG_ASM_LEVEL) $<
 
 opnames.h : instruct.h
 	sed -e '/\/\*/d' \

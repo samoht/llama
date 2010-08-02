@@ -4,6 +4,12 @@
 /llamac
 /llamacomp.sh
 /testprog
+boot/camlheader
+boot/libcamlrun.a
+boot/llamarun
+boot/llamayacc
+boot/stdlib.cma
+boot/Saved
 tools/llamadep
 tools/llamamklib
 tools/llamamklib.ml
@@ -28,6 +34,7 @@ byterun/version.h
 byterun/*.o
 byterun/libcamlrun.a
 byterun/libcamlrun_shared.so
+byterun/ld.conf
 toplevel/toplevellib.cma
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
@@ -35,6 +42,7 @@ stdlib/sys.ml
 stdlib/camlheader
 stdlib/camlheader_ur
 stdlib/libcamlrun.a
+stdlib/caml
 otherlibs/num/*.o
 otherlibs/num/dllnums.so
 otherlibs/num/libnums.a
@@ -76,6 +84,7 @@ doc/*.html
 doc/style.css
 doc/manual.haux
 doc/manual.htoc
+doc/libref
 llamadoc/odoc_lexer.ml
 llamadoc/odoc_llamahtml.ml
 llamadoc/odoc_parser.ml

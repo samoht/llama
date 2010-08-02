@@ -663,7 +663,7 @@ otherlibraries: llamatools
 #	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
 #	done
 	for i in num graph unix; do \
-	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
+	  (cd otherlibs/$$i; $(MAKE) RUNTIME=$(RUNTIME) all) || exit $$?; \
 	done
 
 otherlibrariesopt:
