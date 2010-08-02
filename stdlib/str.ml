@@ -566,13 +566,13 @@ let regexp_string_case_fold s = compile true (String s)
 (** Matching functions **)
 
 external re_string_match: regexp -> string -> int -> int array
-     = "re_string_match"
+     = "caml_re_string_match"
 external re_partial_match: regexp -> string -> int -> int array
-     = "re_partial_match"
+     = "caml_re_partial_match"
 external re_search_forward: regexp -> string -> int -> int array
-     = "re_search_forward"
+     = "caml_re_search_forward"
 external re_search_backward: regexp -> string -> int -> int array
-     = "re_search_backward"
+     = "caml_re_search_backward"
 
 let last_search_result = ref [||]
 
@@ -628,7 +628,7 @@ and matched_string txt = matched_group 0 txt
 (** Replacement **)
 
 external re_replacement_text: string -> int array -> string -> string
-    = "re_replacement_text"
+    = "caml_re_replacement_text"
 
 let replace_matched repl matched =
   re_replacement_text repl !last_search_result matched
