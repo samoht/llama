@@ -300,9 +300,9 @@ install:
 #	for i in $(OTHERLIBRARIES); do \
 #	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
 #	done
-	for i in num graph unix; do \
-	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
-	done
+#	for i in num graph unix; do \
+#	  (cd otherlibs/$$i; $(MAKE) install) || exit $$?; \
+#	done
 	cd llamadoc; $(MAKE) install
 	if test -f llamaopt; then $(MAKE) installopt; else :; fi
 	if test -f debugger/llamadebug; then (cd debugger; $(MAKE) install); \

@@ -35,7 +35,9 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random_state.cmo random.cmo callback.cmo \
   genlex.cmo weak.cmo \
-  filename.cmo complex.cmo scanning.cmo scanf.cmo str.cmo
+  filename.cmo complex.cmo scanning.cmo scanf.cmo str.cmo \
+  int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
+  ratio.cmo num.cmo arith_status.cmo
 
 all: stdlib.cma std_exit.cmo camlheader camlheader_ur
 

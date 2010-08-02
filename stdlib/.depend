@@ -1,5 +1,8 @@
 arg.cmi:
+arith_flags.cmi:
+arith_status.cmi:
 array.cmi:
+big_int.cmi: nat.cmi
 buffer.cmi:
 callback.cmi:
 char.cmi:
@@ -12,11 +15,14 @@ genlex.cmi: stream.cmi
 hashtbl.cmi:
 int32.cmi:
 int64.cmi:
+int_misc.cmi:
 lexing.cmi:
 list.cmi:
 map.cmi:
 marshal.cmi:
+nat.cmi:
 nativeint.cmi:
+num.cmi: ratio.cmi nat.cmi big_int.cmi
 obj.cmi: int32.cmi
 parsing.cmi: obj.cmi lexing.cmi
 pervasives.cmi:
@@ -25,6 +31,7 @@ printf.cmi: buffer.cmi
 queue.cmi:
 random.cmi: random_state.cmi nativeint.cmi int64.cmi int32.cmi
 random_state.cmi: nativeint.cmi int64.cmi int32.cmi
+ratio.cmi: nat.cmi big_int.cmi
 scanf.cmi: scanning.cmi pervasives.cmi
 scanning.cmi: pervasives.cmi
 set.cmi:
@@ -38,8 +45,16 @@ weak.cmi:
 weak_hashtbl.cmi:
 arg.cmo: sys.cmi string.cmi printf.cmi list.cmi buffer.cmi array.cmi arg.cmi
 arg.cmx: sys.cmx string.cmx printf.cmx list.cmx buffer.cmx array.cmx arg.cmi
+arith_flags.cmo: arith_flags.cmi
+arith_flags.cmx: arith_flags.cmi
+arith_status.cmo: arith_flags.cmi arith_status.cmi
+arith_status.cmx: arith_flags.cmx arith_status.cmi
 array.cmo: array.cmi
 array.cmx: array.cmi
+big_int.cmo: sys.cmi string.cmi nativeint.cmi nat.cmi int_misc.cmi int64.cmi \
+    char.cmi big_int.cmi
+big_int.cmx: sys.cmx string.cmx nativeint.cmx nat.cmx int_misc.cmx int64.cmx \
+    char.cmx big_int.cmi
 buffer.cmo: sys.cmi string.cmi buffer.cmi
 buffer.cmx: sys.cmx string.cmx buffer.cmi
 bug.cmo:
@@ -70,6 +85,8 @@ int32.cmo: pervasives.cmi int32.cmi
 int32.cmx: pervasives.cmx int32.cmi
 int64.cmo: pervasives.cmi int64.cmi
 int64.cmx: pervasives.cmx int64.cmi
+int_misc.cmo: sys.cmi int_misc.cmi
+int_misc.cmx: sys.cmx int_misc.cmi
 lazy.cmo:
 lazy.cmx:
 lexing.cmo: sys.cmi string.cmi array.cmi lexing.cmi
@@ -80,8 +97,12 @@ map.cmo: pervasives.cmi map.cmi
 map.cmx: pervasives.cmx map.cmi
 marshal.cmo: string.cmi marshal.cmi
 marshal.cmx: string.cmx marshal.cmi
+nat.cmo: sys.cmi string.cmi obj.cmi int_misc.cmi int64.cmi char.cmi nat.cmi
+nat.cmx: sys.cmx string.cmx obj.cmx int_misc.cmx int64.cmx char.cmx nat.cmi
 nativeint.cmo: sys.cmi pervasives.cmi nativeint.cmi
 nativeint.cmx: sys.cmx pervasives.cmx nativeint.cmi
+num.cmo: ratio.cmi nat.cmi int_misc.cmi big_int.cmi arith_flags.cmi num.cmi
+num.cmx: ratio.cmx nat.cmx int_misc.cmx big_int.cmx arith_flags.cmx num.cmi
 obj.cmo: marshal.cmi int32.cmi array.cmi obj.cmi
 obj.cmx: marshal.cmx int32.cmx array.cmx obj.cmi
 parsing.cmo: obj.cmi lexing.cmi array.cmi parsing.cmi
@@ -106,6 +127,10 @@ random_state.cmo: string.cmi pervasives.cmi nativeint.cmi int64.cmi int32.cmi \
     digest.cmi char.cmi array.cmi random_state.cmi
 random_state.cmx: string.cmx pervasives.cmx nativeint.cmx int64.cmx int32.cmx \
     digest.cmx char.cmx array.cmx random_state.cmi
+ratio.cmo: string.cmi nat.cmi int_misc.cmi big_int.cmi arith_flags.cmi \
+    ratio.cmi
+ratio.cmx: string.cmx nat.cmx int_misc.cmx big_int.cmx arith_flags.cmx \
+    ratio.cmi
 scanf.cmo: string.cmi scanning.cmi printf_tformat.cmo printf_sformat.cmo \
     printf.cmi obj.cmi list.cmi hashtbl.cmi buffer.cmi array.cmi scanf.cmi
 scanf.cmx: string.cmx scanning.cmx printf_tformat.cmx printf_sformat.cmx \
@@ -140,8 +165,16 @@ weak_hashtbl.cmx: weak.cmx sys.cmx pervasives.cmx obj.cmx hashtbl.cmx \
     array.cmx weak_hashtbl.cmi
 arg.cmo: sys.cmi string.cmi printf.cmi list.cmi buffer.cmi array.cmi arg.cmi
 arg.p.cmx: sys.p.cmx string.p.cmx printf.p.cmx list.p.cmx buffer.p.cmx array.p.cmx arg.cmi
+arith_flags.cmo: arith_flags.cmi
+arith_flags.p.cmx: arith_flags.cmi
+arith_status.cmo: arith_flags.cmi arith_status.cmi
+arith_status.p.cmx: arith_flags.p.cmx arith_status.cmi
 array.cmo: array.cmi
 array.p.cmx: array.cmi
+big_int.cmo: sys.cmi string.cmi nativeint.cmi nat.cmi int_misc.cmi int64.cmi \
+    char.cmi big_int.cmi
+big_int.p.cmx: sys.p.cmx string.p.cmx nativeint.p.cmx nat.p.cmx int_misc.p.cmx int64.p.cmx \
+    char.p.cmx big_int.cmi
 buffer.cmo: sys.cmi string.cmi buffer.cmi
 buffer.p.cmx: sys.p.cmx string.p.cmx buffer.cmi
 bug.cmo:
@@ -172,6 +205,8 @@ int32.cmo: pervasives.cmi int32.cmi
 int32.p.cmx: pervasives.p.cmx int32.cmi
 int64.cmo: pervasives.cmi int64.cmi
 int64.p.cmx: pervasives.p.cmx int64.cmi
+int_misc.cmo: sys.cmi int_misc.cmi
+int_misc.p.cmx: sys.p.cmx int_misc.cmi
 lazy.cmo:
 lazy.p.cmx:
 lexing.cmo: sys.cmi string.cmi array.cmi lexing.cmi
@@ -182,8 +217,12 @@ map.cmo: pervasives.cmi map.cmi
 map.p.cmx: pervasives.p.cmx map.cmi
 marshal.cmo: string.cmi marshal.cmi
 marshal.p.cmx: string.p.cmx marshal.cmi
+nat.cmo: sys.cmi string.cmi obj.cmi int_misc.cmi int64.cmi char.cmi nat.cmi
+nat.p.cmx: sys.p.cmx string.p.cmx obj.p.cmx int_misc.p.cmx int64.p.cmx char.p.cmx nat.cmi
 nativeint.cmo: sys.cmi pervasives.cmi nativeint.cmi
 nativeint.p.cmx: sys.p.cmx pervasives.p.cmx nativeint.cmi
+num.cmo: ratio.cmi nat.cmi int_misc.cmi big_int.cmi arith_flags.cmi num.cmi
+num.p.cmx: ratio.p.cmx nat.p.cmx int_misc.p.cmx big_int.p.cmx arith_flags.p.cmx num.cmi
 obj.cmo: marshal.cmi int32.cmi array.cmi obj.cmi
 obj.p.cmx: marshal.p.cmx int32.p.cmx array.p.cmx obj.cmi
 parsing.cmo: obj.cmi lexing.cmi array.cmi parsing.cmi
@@ -208,6 +247,10 @@ random_state.cmo: string.cmi pervasives.cmi nativeint.cmi int64.cmi int32.cmi \
     digest.cmi char.cmi array.cmi random_state.cmi
 random_state.p.cmx: string.p.cmx pervasives.p.cmx nativeint.p.cmx int64.p.cmx int32.p.cmx \
     digest.p.cmx char.p.cmx array.p.cmx random_state.cmi
+ratio.cmo: string.cmi nat.cmi int_misc.cmi big_int.cmi arith_flags.cmi \
+    ratio.cmi
+ratio.p.cmx: string.p.cmx nat.p.cmx int_misc.p.cmx big_int.p.cmx arith_flags.p.cmx \
+    ratio.cmi
 scanf.cmo: string.cmi scanning.cmi printf_tformat.cmo printf_sformat.cmo \
     printf.cmi obj.cmi list.cmi hashtbl.cmi buffer.cmi array.cmi scanf.cmi
 scanf.p.cmx: string.p.cmx scanning.p.cmx printf_tformat.p.cmx printf_sformat.p.cmx \
