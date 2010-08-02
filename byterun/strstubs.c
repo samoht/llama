@@ -374,7 +374,7 @@ static value re_alloc_groups(value re, value str)
 /* String matching and searching.  All functions return the empty array
    on failure, and an array of positions on success. */
 
-CAMLprim value re_string_match(value re, value str, value pos)
+CAMLprim value caml_re_string_match(value re, value str, value pos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(pos));
@@ -389,7 +389,7 @@ CAMLprim value re_string_match(value re, value str, value pos)
   }
 }
 
-CAMLprim value re_partial_match(value re, value str, value pos)
+CAMLprim value caml_re_partial_match(value re, value str, value pos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(pos));
@@ -404,7 +404,7 @@ CAMLprim value re_partial_match(value re, value str, value pos)
   }
 }
 
-CAMLprim value re_search_forward(value re, value str, value startpos)
+CAMLprim value caml_re_search_forward(value re, value str, value startpos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(startpos));
@@ -433,7 +433,7 @@ CAMLprim value re_search_forward(value re, value str, value startpos)
   }
 }
 
-CAMLprim value re_search_backward(value re, value str, value startpos)
+CAMLprim value caml_re_search_backward(value re, value str, value startpos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(startpos));
@@ -464,7 +464,7 @@ CAMLprim value re_search_backward(value re, value str, value startpos)
 
 /* Replacement */
 
-CAMLprim value re_replacement_text(value repl, value groups, value orig)
+CAMLprim value caml_re_replacement_text(value repl, value groups, value orig)
 {
   CAMLparam3(repl, groups, orig);
   CAMLlocal1(res);
