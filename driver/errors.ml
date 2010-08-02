@@ -44,9 +44,9 @@ let report_error ppf exn =
       Location.print_error ppf loc; Typecore.report_error ppf err
   | Typetexp.Error(loc, err) ->
       Location.print_error ppf loc; Typetexp.report_error ppf err
+*)
   | Typedecl.Error(loc, err) ->
       Location.print_error ppf loc; Typedecl.report_error ppf err
-*)
   | Resolve.Error(loc, err) ->
       Location.print_error ppf loc; Resolve.report_error ppf err
   | Includemod.Error err ->

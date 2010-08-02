@@ -54,8 +54,6 @@ let rec var_names_of_pat pat =
       let l1 = List.sort compare (var_names_of_pat pat1) in
       let l2 = List.sort compare (var_names_of_pat pat2) in
       if l1 <> l2 then Error.orpat_should_be_good_err pat;
-      if l1 <> [] then
-        print_endline "Warning: non-closed or patterns not supported in Caml Light backend";
       l1
   | Ppat_constraint(pat, _) -> var_names_of_pat pat
   | Ppat_record lbl_pat_list ->

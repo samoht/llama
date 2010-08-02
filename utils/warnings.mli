@@ -45,6 +45,10 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (*30 *)
+(* #if DEDUCTIVE_LLAMA *)
+  | Type_not_denotational of string         (* 50 *)
+  | Type_not_inhabited of string            (* 51 *)
+(* #endif *)
 ;;
 
 val parse_options : bool -> string -> unit;;

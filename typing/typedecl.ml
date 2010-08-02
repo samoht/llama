@@ -8,31 +8,32 @@ open Btype
 open Error
 open Typecore
 
+type error =
+    Recursive_abbrev of string
+
+exception Error of Location.t * error
+
 (* Check whether a type constructor is a recursive abbrev *)
 
-exception Recursive_abbrev;;
-
-let check_recursive_abbrev cstr =
-  begin match cstr.tcs_kind with
+let is_cyclic tcs =
+  begin match tcs.tcs_kind with
       Type_abbrev body ->
-        let rec check_abbrev seen ty =
-          match (Btype.repr ty) with
-              Tvar _ -> ()
-            | Tarrow(t1, t2) -> check_abbrev seen t1; check_abbrev seen t2
-            | Ttuple tlist -> List.iter (check_abbrev seen) tlist
-            | Tconstruct(c, tlist) ->
-                let c = Get.type_constructor c in
-                if List.memq c seen then
-                  raise Recursive_abbrev
-                else begin
-                  List.iter (check_abbrev seen) tlist;
-                  begin match c.tcs_kind with
-                      Type_abbrev body -> check_abbrev (c :: seen) body
-                    | _ -> ()
-                  end
-                end
-        in check_abbrev [cstr] body
-    | _ -> ()
+        let rec is_acyclic seen ty =
+          match Btype.repr ty with
+              Tvar _ -> true
+            | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
+            | Ttuple tyl -> List.forall (is_acyclic seen) tyl
+            | Tconstruct (tcs, tyl) ->
+                let tcs = Get.type_constructor tcs in
+                not (List.memq tcs seen) &&
+                  begin match tcs.tcs_kind with
+                      Type_abbrev body -> is_acyclic (tcs :: seen) body
+                    | _ -> true
+                  end &&
+                  List.forall (is_acyclic seen) tyl
+        in
+        not (is_acyclic [tcs] body)
+    | _ -> false
   end
       
 let define_new_type tcs params body =
@@ -65,10 +66,7 @@ let type_typedecl_new decl loc =
     end decl;
   List.iter
     begin fun (tcs, _, _) ->
-      try
-        check_recursive_abbrev tcs
-      with Recursive_abbrev ->
-        recursive_abbrev_err loc tcs
+      if is_cyclic tcs then raise(Error(loc, Recursive_abbrev (tcs_name tcs)))
     end decl
 
 let type_excdecl cs args  =
@@ -98,3 +96,11 @@ let type_expression loc expr =
   pop_type_level();
   if is_nonexpansive expr then generalize_type ty;
   ty
+
+(**** Error report ****)
+
+open Format
+
+let report_error ppf = function
+  | Recursive_abbrev s ->
+      fprintf ppf "The type abbreviation %s is cyclic" s
