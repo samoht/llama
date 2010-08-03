@@ -50,7 +50,6 @@ let keyword_table =
     "for", FOR;
     "fun", FUN;
     "function", FUNCTION;
-    "hol", HOL;
     "if", IF;
     "in", IN;
     "include", INCLUDE;
@@ -79,7 +78,11 @@ let keyword_table =
     "lxor", INFIXOP3("lxor");
     "lsl", INFIXOP4("lsl");
     "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr")
+    "asr", INFIXOP4("asr");
+
+(* #if DEDUCTIVE_LLAMA *)
+    "formal", FORMAL;
+    "computable", COMPUTABLE;
 ]
 
 (* To buffer string literals *)

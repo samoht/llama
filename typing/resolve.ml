@@ -127,7 +127,7 @@ let mkpatvar s =
     val_id = Env.qualified_id s;
     val_type = type_none;
     val_global = false;
-    val_hol = Nonhol }
+    val_formal = Informal }
 
 let rec check_unique l =
   match l with
@@ -324,7 +324,7 @@ let value_declaration env name typexp primstuff =
       val_type = type_none;
       val_kind = primitive primstuff typexp;
       val_global = true;
-      val_hol = Nonhol }
+      val_formal = Informal }
   in
   let typexp = type_expression false env typexp in
   v, typexp, Env.add_value v env
@@ -338,7 +338,7 @@ let type_equation_list env pteql =
           tcs_arity = nparams;
           tcs_params = new_generics nparams; (* bending the rules *)
           tcs_kind = Type_abstract;
-          tcs_hol = Nonhol_type
+          tcs_formal = Informal_type;
         }
       end
       pteql

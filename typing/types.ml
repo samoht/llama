@@ -41,7 +41,7 @@ and type_constructor =
     tcs_params : type_variable list;
     tcs_arity: int;
     mutable tcs_kind: type_constructor_kind;
-    tcs_hol: hol_type_flag }
+    tcs_formal: formal_type_flag }
 
 and type_constructor_kind =
     Type_abstract
@@ -79,7 +79,7 @@ type value =
     mutable val_type: llama_type;                (* Type of the value *)
     val_kind: value_kind;
     mutable val_global: bool;
-    val_hol: hol_flags }
+    val_formal: formal_flags }
 
 and value_kind =
     Val_reg                             (* Regular value *)

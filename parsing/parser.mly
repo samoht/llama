@@ -153,6 +153,13 @@ let unclosed opening_name opening_num closing_name closing_num =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
+let fmltyflag = function
+    Informal -> Informal_type
+  | Formal -> Formal_type
+  | Computable -> failwith "fmltyflag"(*xxx*)
+
+let fmlflags x = x
+
 %}
 
 /* Tokens */
@@ -191,7 +198,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token FUNCTION
 %token GREATER
 %token GREATERRBRACKET
-%token HOL
 %token IF
 %token IN
 %token INCLUDE
@@ -247,6 +253,11 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token WHEN
 %token WHILE
 %token WITH
+
+/* #if DEDUCTIVE_LLAMA */
+%token FORMAL
+%token COMPUTABLE
+/* #endif */
 
 /* Precedences and associativities.
 
@@ -370,22 +381,16 @@ structure_tail:
 structure_item:
   | OPEN UIDENT
       { mkstr(Pstr_open $2) }
-  | TYPE type_declarations
-      { mkstr(Pstr_type(Nonhol_type, List.rev $2)) }
+  | formal_flags TYPE type_declarations
+      { mkstr(Pstr_type(fmltyflag($1), List.rev $3)) }
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
-        | _ -> mkstr(Pstr_value(Nonhol, $2, List.rev $3)) }
-  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mkstr(Pstr_primitive(Nonhol, $2, $4, $6)) }
+        | _ -> mkstr(Pstr_value(Informal, $2, List.rev $3)) }
+  | formal_flags EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
+      { mkstr(Pstr_primitive(fmlflags($1), $3, $5, $7)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
-  | HOL TYPE type_declarations
-      { mkstr(Pstr_type(Hol_type, List.rev $3)) }
-  | HOL computable_flag rec_flag let_bindings
-      { mkstr(Pstr_value($2, $3, List.rev $4)) }
-  | HOL computable_flag EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mkstr(Pstr_primitive($2, $4, $6, $8)) }
 ;
 
 /* ---------------------------------------------------------------------- */
@@ -400,20 +405,14 @@ signature:
 signature_item:
   | OPEN UIDENT
       { mksig(Psig_open $2) }
-  | TYPE type_declarations
-      { mksig(Psig_type(Nonhol_type, List.rev $2)) }
-  | VAL val_ident COLON core_type
-      { mksig(Psig_value(Nonhol, $2, $4, None)) }
-  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mksig(Psig_value(Nonhol, $2, $4, Some $6)) }
+  | formal_flags TYPE type_declarations
+      { mksig(Psig_type(fmltyflag($1), List.rev $3)) }
+  | formal_flags VAL val_ident COLON core_type
+      { mksig(Psig_value(fmlflags($1), $3, $5, None)) }
+  | formal_flags EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
+      { mksig(Psig_value(fmlflags($1), $3, $5, Some $7)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
-  | HOL TYPE type_declarations
-      { mksig(Psig_type(Hol_type, List.rev $3)) }
-  | HOL computable_flag val_ident COLON core_type
-      { mksig(Psig_value($2, $3, $5, None)) }
-  | HOL computable_flag EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mksig(Psig_value($2, $4, $6, Some $8)) }
 ;
 
 /* ---------------------------------------------------------------------- */
@@ -935,9 +934,10 @@ subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
 ;
-computable_flag:
-    /* empty */                                 { Hol }
-  | COMPUTABLE                                  { Hol_computable }
+formal_flags:
+    /* empty */                                 { Informal }
+  | FORMAL                                      { Formal }
+  | COMPUTABLE                                  { Computable }
 ;
 
 %%

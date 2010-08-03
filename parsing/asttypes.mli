@@ -16,20 +16,13 @@ type rec_flag = Nonrecursive | Recursive
 
 (* #if DEDUCTIVE_LLAMA *)
 
-(* Hol flag for types. Any denotation must be inhabited. *)
+type formal_type_flag =
+    Informal_type
+  | Formal_type
 
-type hol_type_flag =
-    Nonhol_type    (* type has no denotation *)
-  | Hol_type       (* type has a denotation *)
+type formal_flags =
+    Informal
+  | Formal
+  | Computable
 
-(* Hol flags for values.
-   For functions, any denotation must be total.
-   For non-functions, denotational implies computable. *)
-
-type hol_flags =
-    Nonhol         (* function has no denotation *)
-  | Hol            (* function has a denotation *)
-                   (* any terminating, successful computation will be consistent with it *)
-  | Hol_computable (* function computes its denotation *)
-
-(* #endif (* DEDUCTIVE_LLAMA *) *)
+(* #endif *)
