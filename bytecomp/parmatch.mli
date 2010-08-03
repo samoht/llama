@@ -52,7 +52,7 @@ val complete_constrs :
 
 val pressure_variants: Env.t -> pattern list -> unit
 val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial
-val check_unused: Env.t -> (pattern * Typedtree.expression) list -> unit
+val check_unused: (pattern * Typedtree.expression) list -> unit
 
 (* Irrefutability tests *)
 val irrefutable : pattern -> bool

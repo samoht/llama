@@ -606,15 +606,18 @@ and transl_exp0 e =
   | Texp_match({exp_desc = Texp_tuple argl}, pat_expr_list) ->
       let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
       let partial = Parmatch.check_partial e.exp_loc pat_expr_list in
+      Parmatch.check_unused pat_expr_list;
       Matching.for_multiple_match e.exp_loc
         (transl_list argl) (transl_cases pat_expr_list) partial
   | Texp_match(arg, pat_expr_list) ->
       let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
       let partial = Parmatch.check_partial e.exp_loc pat_expr_list in
+      Parmatch.check_unused pat_expr_list;
       Matching.for_function e.exp_loc None
         (transl_exp arg) (transl_cases pat_expr_list) partial
   | Texp_try(body, pat_expr_list) ->
       let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
+      Parmatch.check_unused pat_expr_list;
       let id = Ident.create (name_pattern "exn" pat_expr_list) in
       Ltrywith(transl_exp body, id,
                Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
@@ -880,6 +883,7 @@ and transl_apply lam sargs loc =
 and transl_function loc untuplify_fn repr pat_expr_list =
   let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
   let partial = Parmatch.check_partial loc pat_expr_list in
+  Parmatch.check_unused pat_expr_list;
   match pat_expr_list with
     [pat, ({exp_desc = Texp_function pl} as exp)]
     when Parmatch.fluid pat ->
@@ -918,8 +922,10 @@ and transl_let rec_flag pat_expr_list body =
         [] ->
           body
       | (pat, expr) :: rem ->
+          let loc = pat.pat_loc in
           let pat = Pmc_pattern.import pat in
-          Matching.for_let pat.Pmc_pattern.pat_loc (transl_exp expr) pat (transl rem)
+          ignore (Parmatch.check_partial loc [pat, expr]);
+          Matching.for_let loc (transl_exp expr) pat (transl rem)
       in transl pat_expr_list
   | Recursive ->
       let idlist =

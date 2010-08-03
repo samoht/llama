@@ -1602,7 +1602,7 @@ let check_partial loc casel =
 (* Exported unused clause check *)
 (********************************)
 
-let check_unused tdefs casel =
+let check_unused casel =
   if Warnings.is_active Warnings.Unused_match then
     let rec do_rec pref = function
       | [] -> ()
