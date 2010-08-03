@@ -103,10 +103,6 @@ typing/module.cmx: typing/types.cmx utils/misc.cmx parsing/longident.cmx \
     parsing/asttypes.cmi
 typing/oprint.cmo: typing/outcometree.cmi typing/oprint.cmi
 typing/oprint.cmx: typing/outcometree.cmi typing/oprint.cmi
-typing/pr_decl.cmo: typing/types.cmo typing/printtyp.cmo utils/misc.cmi \
-    parsing/asttypes.cmi
-typing/pr_decl.cmx: typing/types.cmx typing/printtyp.cmx utils/misc.cmx \
-    parsing/asttypes.cmi
 typing/predef.cmo: typing/types.cmo parsing/asttypes.cmi
 typing/predef.cmx: typing/types.cmx parsing/asttypes.cmi
 typing/primitive.cmo: utils/misc.cmi typing/primitive.cmi

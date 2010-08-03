@@ -126,9 +126,8 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/btype.cmo \
  $(LLAMASRCDIR)/typing/subst.cmo \
  $(LLAMASRCDIR)/typing/oprint.cmo \
- $(LLAMASRCDIR)/typing/printtyp.cmo $(LLAMASRCDIR)/typing/pr_decl.cmo \
+ $(LLAMASRCDIR)/typing/printtyp.cmo \
  $(LLAMASRCDIR)/typing/typedtree_aux.cmo $(LLAMASRCDIR)/typing/ctype.cmo \
- $(LLAMASRCDIR)/typing/error.cmo \
  $(LLAMASRCDIR)/typing/includecore.cmo $(LLAMASRCDIR)/typing/includemod.cmo \
  $(LLAMASRCDIR)/typing/resolve.cmo \
  $(LLAMASRCDIR)/typing/typecore.cmo \
