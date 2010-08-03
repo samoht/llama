@@ -8,6 +8,7 @@
 \usepackage{caml-sl}
 \usepackage{ocamldoc}
 \usepackage{color}
+\usepackage{amssymb}
 \newif\ifplaintext
 \plaintextfalse
 
@@ -25,6 +26,7 @@
 \newstyle{.subsection}{padding:0.3ex;background:\#66FF66;}
 \newstyle{.subsubsection}{padding:0.5ex;background:\#99FF99;}
 \newstyle{.toc}{list-style:disc;}
+\newstyle{.verbatim}{margin:1ex 1ex;padding:1ex;background:\#ccffcc;}
 
 \def\isalso{ & += & \spacefalse }
 
@@ -113,6 +115,108 @@ and such. It will be time well spent.
  \alt{}\token{exists}
  \alt{}\token{exists\_unique}
 \end{syntax}
+
+\subsection{Formality}
+
+Certain Llama constructs have well-behaved mathematical
+interpretations and are considered {\it formal}. Expressions must be
+entirely formal to participate in the Deductive Llama subsystem. This
+section documents our use of the formality concept.
+
+\subsubsection{For type constructors}
+
+Every type constructor is tagged internally as formal or not.
+
+An $n$-ary type constructor is considered formal provided that for any
+assignment of non-empty sets to its arguments, we understand how to
+associate a unique non-empty set with the constructed type.
+
+The {\tt int} type constructor is considered {\bf formal} even though its
+associated non-empty set is ambiguously either $\mathbb{Z} / 2^{31}
+\mathbb{Z}$ or $\mathbb{Z} / 2^{63} \mathbb{Z}$.  This ambiguity
+pervades the entire system.
+
+The {\tt float} type constructor is currently considered {\bf informal}.
+
+Mutability is irrelevant to formality.  In particular, the {\tt
+  string} and {\tt array} type constructors are formal. To understand this,
+consider that {\tt string} is isomorphic to {\tt char list} where
+{\tt char} is isomorphic to $\{ 0, 1, \ldots, 255 \}$, and {\tt 'a
+  array} is isomorphic to {\tt 'a list}.  Similarly, record types with
+mutable fields may be formal.
+
+To determine whether newly defined types should be tagged as formal,
+the definitions are tested for {\it covariance} and {\it inhabitation}.
+(To Do: expand upon this.)
+
+\subsubsection{For type expressions}
+
+A type expression is considered formal provided that all the type
+constructors appearing in it are formal. Semantically it means that
+for any assignment of non-empty sets to the type variables, we
+understand how to associate a unique non-empty set with the whole type
+expression.
+
+\subsubsection{For named values}
+
+Similarly to type constructors, every named value is tagged internally
+as formal or not.
+
+Roughly, a named value is formal provided that we understand how to
+associate it with an element of the set associated with its type.
+
+There are several complications however. The possibility of polymorphism is one.
+The {\tt int} ambiguity is another. Finally, consider the following definition:
+\begin{verbatim}
+  let f (str : string) : string = str ^ !my_global_suffix
+\end{verbatim}
+We wish to consider such an $\tt f$ as formal, even though the use of
+a global variable means that it is not unconditionally associated with
+an unambiguous maps from strings to strings.
+
+Therefore, the more precise definition of formality for values is as
+follows. Let $v$ be a named value whose possibly polymorphic type $t$
+is formal. Then $v$ is considered formal provided that for either
+interpretation of the {\tt int} type, and for any assignment $a$ of
+non-empty sets to the type variables appearing in $t$, and for any
+global state that the program may be in, we understand how to associate $v$ 
+with an element of $t/a$.
+
+\subsubsection{For expressions}
+
+There is a notion of formality for expressions. It is used to
+determine whether newly defined values should be tagged as formal.
+Moreover, the mapping to higher-order logic is defined only for formal
+expressions.
+
+It is necessary but not sufficient that all named values appearing in
+the expression should be formal. Beyond this, every language construct
+must obey strict rules. For example, the patterns appearing in a {\tt
+  match} construct must be exhaustive. Currently they must also be
+mutually exclusive (this may be relaxed in the future).  As another
+example, all recursion must be syntactically verifiable as
+terminating.
+
+We have admitted some definitions as formal even in the presence of
+non-trivial global state. For this to be coherent, the global state must be fixed.
+In particular, {\it mutation} does prevent an expression from being formal
+(in contradistinction to the case of {\it mutability} for types).
+
+To Do: expand upon the formality rules for expressions.
+
+\subsection{Computability}
+
+\subsection{The {\tt formal} and {\tt computable} keywords}
+
+Omitting the {\tt formal} flag from a value or type definition, in an
+{\tt *.ml} file or the toplevel, does not prevent its being tagged
+internally as formal. However if the intention is that it should be
+tagged internally as formal, then including the flag ensures that a
+useful error messages will be triggered as early as possible.
+
+Omitting the {\tt formal} flag from a value or type {\it declaration},
+in an {\tt *.mli} file, {\it does} prevent its being tagged internally
+as formal, when accessed from outside the module.
 
 \section{Inductive Llama}
 
