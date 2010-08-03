@@ -34,10 +34,7 @@ let type_of_type_expression varkind typexp =
       | Ttyp_tuple argl ->
           Ttuple(List.map type_of argl)
       | Ttyp_constr(tcs, args) ->
-          if List.length args != tcs.tcs_arity then
-            tcs_arity_err tcs args typexp.te_loc
-          else
-            Tconstruct (ref_type_constr tcs, List.map type_of args)
+          Tconstruct (ref_type_constr tcs, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;

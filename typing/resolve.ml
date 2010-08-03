@@ -15,6 +15,10 @@ type error =
   | Unbound_constructor of Longident.t
   | Unbound_label of Longident.t
   | Unbound_module of string
+  | Repeated_parameter
+  | Unbound_type_variable of string
+  | Orpat_vars of string
+  | Type_arity_mismatch of Longident.t * int * int
 
 exception Error of Location.t * error
 
@@ -33,7 +37,7 @@ let bind_type_expression_vars var_list loc =
   List.map
     (fun v ->
       if List.mem_assoc v !type_expr_vars then
-        Error.duplicate_param_in_type_decl_err loc
+        raise(Error(loc, Repeated_parameter))
       else begin
         let t = {utv_name=v; utv_type=type_none} in
         type_expr_vars := (v, t) :: !type_expr_vars; t
@@ -53,7 +57,13 @@ let rec var_names_of_pat pat =
   | Ppat_or(pat1, pat2) ->
       let l1 = List.sort compare (var_names_of_pat pat1) in
       let l2 = List.sort compare (var_names_of_pat pat2) in
-      if l1 <> l2 then Error.orpat_should_be_good_err pat;
+      if l1 <> l2 then begin
+        let id =
+          try List.find (fun id -> not (List.mem id l2)) l1
+          with Not_found -> List.find (fun id -> not (List.mem id l1)) l2
+        in
+        raise(Error(pat.ppat_loc, Orpat_vars id))
+      end;
       l1
   | Ppat_constraint(pat, _) -> var_names_of_pat pat
   | Ppat_record lbl_pat_list ->
@@ -90,11 +100,9 @@ let rec type_expression strict_flag env te =
                 List.assoc v !type_expr_vars
               with Not_found ->
                 if strict_flag then
-                  Error.unbound_type_var_err v te.ptyp_loc
-                else begin
-                  let t = {utv_name=v; utv_type=type_none} in
-                  type_expr_vars := (v,t) :: !type_expr_vars; t
-                end
+                  raise (Error (te.ptyp_loc, Unbound_type_variable v));
+                let t = {utv_name=v; utv_type=type_none} in
+                type_expr_vars := (v,t) :: !type_expr_vars; t
               end
         | Ptyp_arrow (x, y) ->
             Ttyp_arrow (type_expression strict_flag env x,
@@ -102,6 +110,10 @@ let rec type_expression strict_flag env te =
         | Ptyp_tuple l ->
             Ttyp_tuple (List.map (type_expression strict_flag env) l)
         | Ptyp_constr (li, l) ->
+            let tcs = lookup_type env li te.ptyp_loc in
+            if List.length l <> tcs.tcs_arity then
+              raise(Error(te.ptyp_loc, 
+                          Type_arity_mismatch(li, tcs.tcs_arity, List.length l)));
             Ttyp_constr (lookup_type env li te.ptyp_loc,
                          List.map (type_expression strict_flag env) l)
       end;
@@ -466,3 +478,14 @@ let report_error ppf = function
       fprintf ppf "Unbound record field label %a" longident lid
   | Unbound_value lid ->
       fprintf ppf "Unbound value %a" longident lid
+  | Repeated_parameter ->
+      fprintf ppf "A type parameter occurs several times"
+  | Unbound_type_variable name ->
+      fprintf ppf "Unbound type parameter %s" name
+  | Orpat_vars id ->
+      fprintf ppf "Variable %s must occur on both sides of this | pattern" id
+  | Type_arity_mismatch(lid, expected, provided) ->
+      fprintf ppf
+       "@[The type constructor %a@ expects %i argument(s),@ \
+        but is here applied to %i argument(s)@]"
+       longident lid expected provided
