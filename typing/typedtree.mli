@@ -37,8 +37,6 @@ and pattern_desc =
   | Tpat_or of pattern * pattern
   | Tpat_constraint of pattern * type_expression
 
-type partial = Partial | Total
-
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
@@ -49,13 +47,13 @@ and expression_desc =
     Texp_ident of value
   | Texp_constant of constant
   | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list * partial
+  | Texp_function of (pattern * expression) list
   | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list * partial  (* xxx *)
+  | Texp_match of expression * (pattern * expression) list
   | Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
   | Texp_construct of constructor * expression list
-  | Texp_record of (label * expression) list * expression option(*xxx*)
+  | Texp_record of (label * expression) list * expression option
   | Texp_field of expression * label
   | Texp_setfield of expression * label * expression
   | Texp_array of expression list
@@ -110,5 +108,4 @@ type module_coercion =
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
 
-
-type optional = Required | Optional
+type optional = Required | Optional (* xxx *)

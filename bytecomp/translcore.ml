@@ -456,12 +456,13 @@ let extract_float = function
 
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
+(* xxx no need to duplicate idents? *)
 let rec name_pattern default = function
     [] -> default
   | (p, e) :: rem ->
-      match p.pat_desc with
-        Tpat_var id -> val_name id
-      | Tpat_alias(p, id) -> val_name id
+      match p.Pmc_pattern.pat_desc with
+        Pmc_pattern.Tpat_var id -> Ident.name id
+      | Pmc_pattern.Tpat_alias(p, id) -> Ident.name id
       | _ -> name_pattern default rem
 
 (* Insertion of debugging events *)
@@ -555,11 +556,11 @@ and transl_exp0 e =
       Lconst(Const_base cst)
   | Texp_let(rec_flag, pat_expr_list, body) ->
       transl_let rec_flag pat_expr_list (event_before body (transl_exp body))
-  | Texp_function (pat_expr_list, partial) ->
+  | Texp_function pat_expr_list ->
       let ((kind, params), body) =
         event_function e
           (function repr ->
-            transl_function e.exp_loc !Clflags.native_code repr partial pat_expr_list)
+            transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
       in
       Lfunction(kind, params, body)
   | Texp_apply({exp_desc = Texp_ident(v)}, oargs)
@@ -602,13 +603,18 @@ and transl_exp0 e =
       end
   | Texp_apply(funct, oargs) ->
       event_after e (transl_apply (transl_exp funct) oargs e.exp_loc)
-  | Texp_match({exp_desc = Texp_tuple argl}, pat_expr_list, partial) ->
+  | Texp_match({exp_desc = Texp_tuple argl}, pat_expr_list) ->
+      let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
+      let partial = Parmatch.check_partial e.exp_loc pat_expr_list in
       Matching.for_multiple_match e.exp_loc
         (transl_list argl) (transl_cases pat_expr_list) partial
-  | Texp_match(arg, pat_expr_list, partial) ->
+  | Texp_match(arg, pat_expr_list) ->
+      let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
+      let partial = Parmatch.check_partial e.exp_loc pat_expr_list in
       Matching.for_function e.exp_loc None
         (transl_exp arg) (transl_cases pat_expr_list) partial
   | Texp_try(body, pat_expr_list) ->
+      let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
       let id = Ident.create (name_pattern "exn" pat_expr_list) in
       Ltrywith(transl_exp body, id,
                Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
@@ -871,16 +877,18 @@ and transl_apply lam sargs loc =
   let compat arg = (Some arg, Required) in
   build_apply lam [] (List.map compat (List.map transl_exp sargs))
 
-and transl_function loc untuplify_fn repr partial pat_expr_list =
+and transl_function loc untuplify_fn repr pat_expr_list =
+  let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in
+  let partial = Parmatch.check_partial loc pat_expr_list in
   match pat_expr_list with
-    [pat, ({exp_desc = Texp_function(pl,partial')} as exp)]
-    when Parmatch.fluid (Pmc_pattern.import pat) (* xxx inefficient *) ->
+    [pat, ({exp_desc = Texp_function pl} as exp)]
+    when Parmatch.fluid pat ->
       let param = Ident.create(name_pattern "param" pat_expr_list) in
       let ((_, params), body) =
-        transl_function exp.exp_loc false repr partial' pl in
+        transl_function exp.exp_loc false repr pl in
       ((Curried, param :: params),
        Matching.for_function loc None (Lvar param) [pat, body] partial)
-  | ({pat_desc = Tpat_tuple pl}, _) :: _ when untuplify_fn ->
+  | ({Pmc_pattern.pat_desc = Pmc_pattern.Tpat_tuple pl}, _) :: _ when untuplify_fn ->
       begin try
         let size = List.length pl in
         let pats_expr_list =
@@ -910,7 +918,8 @@ and transl_let rec_flag pat_expr_list body =
         [] ->
           body
       | (pat, expr) :: rem ->
-          Matching.for_let pat.pat_loc (transl_exp expr) pat (transl rem)
+          let pat = Pmc_pattern.import pat in
+          Matching.for_let pat.Pmc_pattern.pat_loc (transl_exp expr) pat (transl rem)
       in transl pat_expr_list
   | Recursive ->
       let idlist =

@@ -17,7 +17,8 @@ let rec longident ppf = function
 
 let tree_of_qualified id =
   match id.id_module with
-      Module_builtin | Module_toplevel ->
+    | Module_none -> assert false (*xxx*)
+    | Module_builtin | Module_toplevel ->
         Oide_ident id.id_name
     | Module name ->
         Oide_dot (Oide_ident name, id.id_name)

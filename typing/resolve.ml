@@ -219,7 +219,7 @@ let rec expr env ex =
                 end
                 l
             in
-            Texp_function (l, Partial)
+            Texp_function l
         | Pexp_try (exp, pat_exp_list) ->
             let pat_list = List.map (fun (pat, _) -> pattern env pat) pat_exp_list in
             let pat_exp_list =

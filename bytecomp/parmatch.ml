@@ -1476,10 +1476,10 @@ let do_check_partial loc casel pss = match pss with
     | [] -> ()
     | _  -> Location.prerr_warning loc Warnings.All_clauses_guarded
     end ;
-    Typedtree.Partial
+    Partial
 | ps::_  ->
     begin match exhaust None pss (List.length ps) with
-    | Rnone -> Typedtree.Total
+    | Rnone -> Total
     | Rsome [v] ->
         let errmsg =
           try
@@ -1500,7 +1500,7 @@ let do_check_partial loc casel pss = match pss with
           with _ ->
             "" in
         Location.prerr_warning loc (Warnings.Partial_match errmsg) ;
-        Typedtree.Partial
+        Partial
     | _ ->
         fatal_error "Parmatch.check_partial"
     end
@@ -1589,13 +1589,13 @@ let check_partial loc casel =
     let pss = get_mins le_pats pss in
     let total = do_check_partial loc casel pss in
     if
-      total = Typedtree.Total && Warnings.is_active (Warnings.Fragile_match "")
+      total = Total && Warnings.is_active (Warnings.Fragile_match "")
     then begin
       do_check_fragile loc casel pss
     end ;
     total
   end else
-    Typedtree.Partial
+    Partial
 
 
 (********************************)

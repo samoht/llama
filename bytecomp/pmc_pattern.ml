@@ -101,3 +101,6 @@ let calc_lbl_all lbl =
 
 let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
 
+type partial = Partial | Total
+
+let import_cases l = List.map (fun (pat, exp) -> import pat, exp) l

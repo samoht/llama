@@ -149,7 +149,7 @@ let rec is_nonexpansive expr =
   | Texp_let(rec_flag, bindings, body) ->
       List.forall (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
-  | Texp_function (pat_expr_list, _) -> true
+  | Texp_function pat_expr_list -> true
   | Texp_try(body, pat_expr_list) ->
       is_nonexpansive body &&
       List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
@@ -374,9 +374,11 @@ let rec type_expr expr =
   | Texp_let(rec_flag, pat_expr_list, body) ->
       type_let_decl rec_flag pat_expr_list;
       type_expr body
-  | Texp_function ([], _) ->
+  | Texp_match _ ->
+      assert false
+  | Texp_function [] ->
       fatal_error "type_expr: empty matching"
-  | Texp_function ((patl1,expr1)::_ as matching, _) ->
+  | Texp_function ((patl1,expr1)::_ as matching) ->
       let ty_arg = new_type_var() in
       let ty_res = new_type_var() in
       let tcase (pat, action) =

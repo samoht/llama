@@ -120,6 +120,7 @@ let cm_predef = make_cached_module Predef.signature []
 
 let cached_module mod_id =
   match mod_id with
+    | Module_none -> assert false(*xxx*)
     | Module_builtin ->
         cm_predef
     | Module name ->
@@ -278,7 +279,7 @@ let get_current_module () = !current_module
 let current_module_name () =
   begin match !current_module with
     | Module s -> s
-    | Module_builtin | Module_toplevel -> failwith "current_module_name"
+    | Module_none | Module_builtin | Module_toplevel -> failwith "current_module_name"
   end
 
 

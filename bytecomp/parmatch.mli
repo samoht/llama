@@ -51,7 +51,7 @@ val complete_constrs :
     pattern -> constructor list -> constructor_description  list
 
 val pressure_variants: Env.t -> pattern list -> unit
-val check_partial: Location.t -> (pattern * Typedtree.expression) list -> Typedtree.partial
+val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial
 val check_unused: Env.t -> (pattern * Typedtree.expression) list -> unit
 
 (* Irrefutability tests *)
