@@ -37,11 +37,10 @@ let letdef_is_pure pat_expr_list =
   List.forall (fun (pat,expr) -> expr_is_pure expr) pat_expr_list
 ;;
 
-let single_constructor cstr =
-  match cstr.cs_tag with
-    ConstrRegular(_, span) -> span == 1
-  | ConstrExtensible(_,_) -> false
-;;
+let single_constructor cs =
+  match cs.cstr_tag with
+      Cstr_exception _ -> false
+    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_arity = 1
 
 let rec pat_irrefutable pat =
   match pat.pat_desc with

@@ -54,13 +54,8 @@ and constructor =
     mutable cs_res: llama_type;                       (* Result type *)
     mutable cs_args: llama_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
-    cs_tag: constr_tag;        (* caml light tag *)
-    cstr_tag: constructor_kind; (* ocaml tag *)
+    cstr_tag: constructor_kind
   }
-
-and constr_tag =
-    ConstrExtensible of qualified_id * int (* name of constructor & stamp *)
-  | ConstrRegular of int * int             (* tag number & number of constrs *)
 
 and constructor_kind =
     Cstr_constant of type_constructor * int  (* Constant constructor (an int) *)

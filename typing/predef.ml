@@ -38,7 +38,6 @@ let tcs_nativeint = mkty "nativeint" [] Hol_type
 let tcs_int32 = mkty "int32" [] Hol_type
 let tcs_int64 = mkty "int64" [] Hol_type
 let tcs_lazy_t = mkty "lazy_t" [] Nonhol_type
-let qualid_stream = { id_module = Module "Stream"; id_name = "stream" }
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -58,7 +57,6 @@ let type_nativeint = Tconstruct(ref_type_constr tcs_nativeint, [])
 let type_int32 = Tconstruct(ref_type_constr tcs_int32, [])
 let type_int64 = Tconstruct(ref_type_constr tcs_int64, [])
 let type_lazy_t t = Tconstruct(ref_type_constr tcs_lazy_t, [])
-let type_stream t = Tconstruct({ref_id = qualid_stream; ref_contents = None}, [t])
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -68,7 +66,6 @@ let constr_void =
   { cs_name = "()";
     cs_res = Tconstruct(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
-    cs_tag = ConstrRegular(0,1);
     cstr_tag = Cstr_constant (tcs_unit,0) }
 
 let constr_nil =
@@ -76,7 +73,6 @@ let constr_nil =
   { cs_name = "[]";
     cs_res = Tconstruct(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
-    cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant (tcs_list,0) }
 
 let constr_cons =
@@ -85,7 +81,6 @@ let constr_cons =
   { cs_name = "::";
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
-    cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_block (tcs_list,0) }
 
 let constr_none =
@@ -93,7 +88,6 @@ let constr_none =
   { cs_name = "None";
     cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
-    cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant (tcs_option,0) }
 
 let constr_some =
@@ -101,21 +95,18 @@ let constr_some =
   { cs_name = "Some";
     cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
-    cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_block (tcs_option,0) }
 
 let constr_false =
   { cs_name = "false";
     cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
-    cs_tag = ConstrRegular(0,2);
     cstr_tag = Cstr_constant (tcs_bool,0) }
 
 let constr_true =
   { cs_name = "true";
     cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
-    cs_tag = ConstrRegular(1,2);
     cstr_tag = Cstr_constant(tcs_bool,1) }
 
 let _ =
@@ -147,33 +138,29 @@ let type_constructors =
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let predef_exn stamp name tyl =
+let mkexn name tyl =
   let qualid = { id_module = Module_builtin; id_name = name } in
-  let tag = ConstrExtensible (qualid, stamp) in
-  tag,
   { cs_name = name;
     cs_res = Tconstruct (ref_type_constr tcs_exn, []);
     cs_args = tyl;
     cs_arity = List.length tyl;
-    cs_tag = tag;
     cstr_tag = Cstr_exception Module_builtin }
-let qkexn stamp name tyl = snd(predef_exn stamp name tyl)
   
-let cs_out_of_memory = qkexn 0 "Out_of_memory" []
-let cs_sys_error = qkexn 1 "Sys_error" [type_string]
-let cs_failure = qkexn 2 "Failure" [type_string]
-let cs_invalid_argument = qkexn 3 "Invalid_argument" [type_string]
-let cs_end_of_file = qkexn 4 "End_of_file" []
-let cs_division_by_zero = qkexn 5 "Division_by_zero" []
-let cs_not_found = qkexn 6 "Not_found" []
-let tag_match_failure, cs_match_failure =
-  predef_exn 7 "Match_failure" [type_string; type_int; type_int]
-let cs_stack_overflow = qkexn 8 "Stack_overflow" []
-let cs_sys_blocked_io = qkexn 9 "Sys_blocked_io" []
-let tag_assert_failure, cs_assert_failure =
-  predef_exn 10 "Assert_failure" [type_string; type_int; type_int]
+let cs_out_of_memory = mkexn "Out_of_memory" []
+let cs_sys_error = mkexn "Sys_error" [type_string]
+let cs_failure = mkexn "Failure" [type_string]
+let cs_invalid_argument = mkexn "Invalid_argument" [type_string]
+let cs_end_of_file = mkexn "End_of_file" []
+let cs_division_by_zero = mkexn "Division_by_zero" []
+let cs_not_found = mkexn "Not_found" []
+let cs_match_failure =
+  mkexn "Match_failure" [type_string; type_int; type_int]
+let cs_stack_overflow = mkexn "Stack_overflow" []
+let cs_sys_blocked_io = mkexn "Sys_blocked_io" []
+let cs_assert_failure =
+  mkexn "Assert_failure" [type_string; type_int; type_int]
 let cs_undefined_recursive_module =
-  qkexn 11 "Undefined_recursive_module" [type_string; type_int; type_int]
+  mkexn "Undefined_recursive_module" [type_string; type_int; type_int]
 
 let exceptions =
   [ cs_out_of_memory;
