@@ -108,7 +108,7 @@ open Odoc_types
 
     let name_comment_from_type_kind pos_end pos_limit tk =
       match tk with
-        Parsetree.Pteq_abstract | Parsetree.Pteq_abbrev _ ->
+        Parsetree.Pteq_abstract _ | Parsetree.Pteq_abbrev _ ->
           (0, [])
       | Parsetree.Pteq_variant cons_core_type_list_list ->
           let rec f acc cons_core_type_list_list =
@@ -253,7 +253,7 @@ open Odoc_types
     and analyse_signature_item_desc env signat table current_module_name
         pos_start_ele pos_end_ele pos_limit comment_opt sig_item_desc =
         match sig_item_desc with
-          Parsetree.Psig_value (_, name_pre, _, _) ->
+          Parsetree.Psig_value (_, name_pre, _) | Parsetree.Psig_primitive (name_pre, _, _) ->
             let type_expr =
               try search_value table name_pre
               with Not_found ->
@@ -315,7 +315,7 @@ open Odoc_types
             let new_env = Odoc_env.add_exception env e.ex_name in
             (maybe_more, new_env, [ Element_exception e ])
 
-        | Parsetree.Psig_type (_, type_decl_list) ->
+        | Parsetree.Psig_type type_decl_list ->
             (* we start by extending the environment *)
             let new_env =
               List.fold_left

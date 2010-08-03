@@ -75,7 +75,7 @@ type type_equation = {
   teq_loc : Location.t }
 
 and type_equation_kind =
-    Teq_abstract
+    Teq_abstract of formal_type_flag
   | Teq_variant of (constructor * type_expression list) list
   | Teq_record of (label * type_expression) list
   | Teq_abbrev of type_expression
@@ -86,7 +86,8 @@ type signature_item =
 
 and signature_item_desc =
     Tsig_value of formal_flags * value * type_expression
-  | Tsig_type of formal_type_flag * type_equation list
+  | Tsig_primitive of value * type_expression
+  | Tsig_type of type_equation list
   | Tsig_exception of constructor * type_expression list
   | Tsig_open of module_id
 
@@ -97,8 +98,8 @@ type structure_item =
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of formal_flags * rec_flag * (pattern * expression) list
-  | Tstr_primitive of formal_flags * value * type_expression
-  | Tstr_type of formal_type_flag * type_equation list
+  | Tstr_primitive of value * type_expression
+  | Tstr_type of type_equation list
   | Tstr_exception of constructor * type_expression list
   | Tstr_open of module_id
 

@@ -42,9 +42,9 @@ let type_structure_item str =
         ignore (type_expression str.str_loc exp)
     | Tstr_value (_, _, pat_exp_list) ->
         type_letdef pat_exp_list;
-    | Tstr_primitive (_, v, typexp) ->
+    | Tstr_primitive (v, typexp) ->
         type_valuedecl_new v typexp;
-    | Tstr_type (_, teql) ->
+    | Tstr_type teql ->
         type_equation_list teql
     | Tstr_exception (cs, args) ->
         type_excdecl cs args
@@ -57,7 +57,9 @@ let type_signature_item tsig =
   begin match tsig.sig_desc with
     | Tsig_value (_, v, typexp) ->
         type_valuedecl_new v typexp;
-    | Tsig_type (_, teql) ->
+    | Tsig_primitive (v, typexp) ->
+        type_valuedecl_new v typexp
+    | Tsig_type teql ->
         type_equation_list teql
     | Tsig_exception (cs, args) ->
         type_excdecl cs args;

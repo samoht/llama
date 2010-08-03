@@ -85,7 +85,7 @@ let type_equation teq =
                 List.map (fun tv -> Tvar tv) tcs.tcs_params)
   in
   begin match teq.teq_kind with
-      Teq_abstract -> ()
+      Teq_abstract _ -> ()
     | Teq_variant lst ->
         List.iter
           begin fun (cs, args) ->

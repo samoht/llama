@@ -47,7 +47,7 @@ let add_opt add_fn bv = function
 
 let add_type_declaration bv pdecl =
   let rec add_tkind = function
-    Pteq_abstract -> ()
+    Pteq_abstract _ -> ()
   | Pteq_variant cstrs ->
       List.iter (fun (c, args, _) -> List.iter (add_type bv) args) cstrs
   | Pteq_record lbls ->
@@ -112,9 +112,11 @@ and add_signature bv = function
 
 and add_sig_item bv item =
   match item.psig_desc with
-    Psig_value(_, id, ty, _) ->
+    Psig_value(_, id, ty) ->
       add_type bv ty; bv
-  | Psig_type (_, dcls) ->
+  | Psig_primitive(id, ty, _) ->
+      add_type bv ty; bv
+  | Psig_type dcls ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
   | Psig_exception(id, args) ->
       List.iter (add_type bv) args; bv
@@ -132,9 +134,9 @@ and add_struct_item bv item =
       add_expr bv e; bv
   | Pstr_value(_, id, pel) ->
       add_pat_expr_list bv pel; bv
-  | Pstr_primitive(_, id, ty, _) ->
+  | Pstr_primitive(id, ty, _) ->
       add_type bv ty; bv
-  | Pstr_type (_, dcls) ->
+  | Pstr_type dcls ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
   | Pstr_exception(id, args) ->
       List.iter (add_type bv) args; bv

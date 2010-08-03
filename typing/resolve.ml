@@ -309,7 +309,7 @@ let mapi_careful f =
 
 let type_equation_kind env tcs k =
   begin match k with
-    | Pteq_abstract -> Teq_abstract
+    | Pteq_abstract fflag -> Teq_abstract fflag
     | Pteq_abbrev te -> Teq_abbrev (type_expression true env te)
     | Pteq_variant l ->
         let idx_const = ref 0 in
@@ -363,7 +363,7 @@ let type_equation_list env pteql =
     begin fun teq ->
       teq.teq_tcs.tcs_kind <-
         begin match teq.teq_kind with
-          | Teq_abstract -> Type_abstract
+          | Teq_abstract _ -> Type_abstract
           | Teq_variant l -> Type_variant (List.map fst l)
           | Teq_record l -> Type_record (List.map fst l)
           | Teq_abbrev ty -> Type_abbrev type_none
@@ -416,12 +416,12 @@ let structure_item env pstr =
         let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in
         mk (Tstr_value(hol_flags, rec_flag, pat_exp_list)),
         List.map (fun v -> Sig_value v) vals, env
-    | Pstr_primitive(hol_flags, id,te,pr) ->
+    | Pstr_primitive(id,te,pr) ->
         let v, typexp, env = value_declaration env id te (Some pr) in
-        mk (Tstr_primitive (hol_flags, v, typexp)), [Sig_value v], env
-    | Pstr_type (hol_flag, pteql) ->
+        mk (Tstr_primitive (v, typexp)), [Sig_value v], env
+    | Pstr_type (pteql) ->
         let teql, env = type_equation_list env pteql in
-        mk (Tstr_type (hol_flag, teql)), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
+        mk (Tstr_type (teql)), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
     | Pstr_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
         mk (Tstr_exception (cs, args)), [Sig_exception cs], env
@@ -435,12 +435,15 @@ let signature_item env psig =
   reset_type_expression_vars();
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
-    | Psig_value (hol_flags, s, te, pr) ->
-        let v, typexp, env = value_declaration env s te pr in
-        mk (Tsig_value (hol_flags, v, typexp)), [Sig_value v], env
-    | Psig_type (hol_flag, pteql) ->
+    | Psig_value (formality, s, te) ->
+        let v, typexp, env = value_declaration env s te None in
+        mk (Tsig_value (formality, v, typexp)), [Sig_value v], env
+    | Psig_primitive(id,te,pr) ->
+        let v, typexp, env = value_declaration env id te (Some pr) in
+        mk (Tsig_primitive (v, typexp)), [Sig_value v], env
+    | Psig_type pteql ->
         let teql, env = type_equation_list env pteql in
-        mk (Tsig_type (hol_flag, teql)), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
+        mk (Tsig_type teql), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
     | Psig_exception (name, args) ->
         let cs, args, env = exception_declaration env name args in
         mk (Tsig_exception (cs, args)), [Sig_exception cs], env

@@ -153,13 +153,6 @@ let unclosed opening_name opening_num closing_name closing_num =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
-let fmltyflag = function
-    Informal -> Informal_type
-  | Formal -> Formal_type
-  | Computable -> failwith "fmltyflag"(*xxx*)
-
-let fmlflags x = x
-
 %}
 
 /* Tokens */
@@ -381,14 +374,14 @@ structure_tail:
 structure_item:
   | OPEN UIDENT
       { mkstr(Pstr_open $2) }
-  | formal_flags TYPE type_declarations
-      { mkstr(Pstr_type(fmltyflag($1), List.rev $3)) }
+  | TYPE type_declarations
+      { mkstr(Pstr_type(List.rev $2)) }
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value(Informal, $2, List.rev $3)) }
-  | formal_flags EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mkstr(Pstr_primitive(fmlflags($1), $3, $5, $7)) }
+  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
+      { mkstr(Pstr_primitive($2, $4, $6)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
 ;
@@ -405,12 +398,12 @@ signature:
 signature_item:
   | OPEN UIDENT
       { mksig(Psig_open $2) }
-  | formal_flags TYPE type_declarations
-      { mksig(Psig_type(fmltyflag($1), List.rev $3)) }
-  | formal_flags VAL val_ident COLON core_type
-      { mksig(Psig_value(fmlflags($1), $3, $5, None)) }
-  | formal_flags EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mksig(Psig_value(fmlflags($1), $3, $5, Some $7)) }
+  | TYPE type_declarations
+      { mksig(Psig_type(List.rev $2)) }
+  | val_keyword val_ident COLON core_type
+      { mksig(Psig_value($1, $2, $4)) }
+  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
+      { mksig(Psig_primitive($2, $4, $6)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
 ;
@@ -714,8 +707,8 @@ type_declaration:
          pteq_loc = symbol_rloc()} }
 ;
 type_kind:
-    /*empty*/
-      { Pteq_abstract }
+    abstract_type_info
+      { Pteq_abstract $1 }
   | EQUAL core_type
       { Pteq_abbrev $2 }
   | EQUAL constructor_declarations
@@ -934,10 +927,19 @@ subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
 ;
-formal_flags:
-    /* empty */                                 { Informal }
+
+/* #if DEDUCTIVE_LLAMA */
+
+abstract_type_info:
+    /* empty */                                 { Informal_type }
+  | FORMAL                                      { Formal_type }
+;
+val_keyword:
+    VAL                                         { Informal }
   | FORMAL                                      { Formal }
   | COMPUTABLE                                  { Computable }
 ;
+
+/* #endif */
 
 %%
