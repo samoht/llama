@@ -20,21 +20,21 @@ open Myllamabuild_config
 let compiler_path name =
   if Sys.os_type = "Win32" then name else Filename.concat bindir name
 
-let bytecode_objs = ref []  (* .cmo,.cma,.ml,.mli files to pass to llamac *)
-and native_objs = ref []    (* .cmx,.cmxa,.ml,.mli files to pass to llamaopt *)
-and c_objs = ref []         (* .o, .a, .obj, .lib, .dll files to pass to mksharedlib and ar *)
-and caml_libs = ref []      (* -cclib to pass to llamac, llamaopt *)
-and caml_opts = ref []      (* -ccopt to pass to llamac, llamaopt *)
+let bytecode_objs = ref ([]:string list)  (* .cmo,.cma,.ml,.mli files to pass to llamac *)
+and native_objs = ref ([]:string list)    (* .cmx,.cmxa,.ml,.mli files to pass to llamaopt *)
+and c_objs = ref ([]:string list)         (* .o, .a, .obj, .lib, .dll files to pass to mksharedlib and ar *)
+and caml_libs = ref ([]:string list)      (* -cclib to pass to llamac, llamaopt *)
+and caml_opts = ref ([]:string list)      (* -ccopt to pass to llamac, llamaopt *)
 and dynlink = ref supports_shared_libraries
 and failsafe = ref false    (* whether to fall back on static build only *)
-and c_libs = ref []         (* libs to pass to mksharedlib and llamac -cclib *)
-and c_opts = ref []      (* options to pass to mksharedlib and llamac -ccopt *)
-and ld_opts = ref []        (* options to pass only to the linker *)
+and c_libs = ref ([]:string list)         (* libs to pass to mksharedlib and llamac -cclib *)
+and c_opts = ref ([]:string list)      (* options to pass to mksharedlib and llamac -ccopt *)
+and ld_opts = ref ([]:string list)        (* options to pass only to the linker *)
 and llamac = ref (compiler_path "llamac")
 and llamaopt = ref (compiler_path "llamaopt")
 and output = ref "a"        (* Output name for Caml part of library *)
 and output_c = ref ""       (* Output name for C part of library *)
-and rpath = ref []          (* rpath options *)
+and rpath = ref ([]:string list)          (* rpath options *)
 and verbose = ref false
 
 let starts_with s pref =

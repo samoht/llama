@@ -19,8 +19,25 @@ let gen_value x = Sig_value x
 let gen_type x = Sig_type x
 let gen_exception x = Sig_exception x
 
+let goo = ref ([]:expression list)
+
+let check_nongen_scheme foo item =
+      begin match item.str_desc with
+          Tstr_value (_, _, pat_exp_list) ->
+            List.iter
+              (fun (pat, exp) ->
+                 if not (Btype.closed_schema exp.exp_type) then
+                   if foo then begin
+                     fprintf err_formatter "@[%a@]@." Printtyp.one_type exp.exp_type;
+                     goo := exp :: !goo
+                   end
+                   else
+                     raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
+              pat_exp_list
+        | _ -> ()
+      end
+
 let type_structure_item str =
-  try
   begin match str.str_desc with
     | Tstr_eval exp ->
         ignore (type_expression str.str_loc exp)
@@ -34,10 +51,8 @@ let type_structure_item str =
         type_excdecl cs args
     | Tstr_open _ ->
         ()
-  end
-  with Sys.Break ->
-    Printexc.print_backtrace stdout;
-    exit 100
+  end;
+  check_nongen_scheme true str
 
 let type_signature_item tsig =
   begin match tsig.sig_desc with
@@ -52,24 +67,23 @@ let type_signature_item tsig =
   end
 
 let type_structure l =
-  List.iter type_structure_item l
+  goo := [];
+  List.iter type_structure_item l;
+  if !goo <> [] then begin
+    List.iter
+      begin fun exp ->
+        raise(Error(exp.exp_loc, Non_generalizable exp.exp_type))
+      end
+      (List.rev !goo);
+    assert false
+  end
+  
 
 let type_signature l =
   List.iter type_signature_item l
 
-let check_nongen_schemes str =
-  List.iter
-    begin fun item ->
-      begin match item.str_desc with
-          Tstr_value (_, _, pat_exp_list) ->
-            List.iter
-              (fun (pat, exp) ->
-                 if not (Btype.closed_schema exp.exp_type) then
-                   raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
-              pat_exp_list
-        | _ -> ()
-      end
-    end str
+
+let check_nongen_schemes = List.iter (check_nongen_scheme false)
     
 let normalize_compiled_signature csig =
   List.iter

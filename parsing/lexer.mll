@@ -108,7 +108,7 @@ let get_stored_string () =
 
 (* To store the position of the beginning of a string and comment *)
 let string_start_loc = ref Location.none;;
-let comment_start_loc = ref [];;
+let comment_start_loc = ref ([] : Location.t list);;
 let in_comment () = !comment_start_loc <> [];;
 
 (* To translate escape sequences *)

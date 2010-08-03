@@ -16,7 +16,7 @@ open Clflags
 
 let usage = "Usage: ocaml <options> <object-files> [script-file]\noptions are:"
 
-let preload_objects = ref []
+let preload_objects = ref ([] : string list)
 
 let prepare ppf =
   Toploop.set_paths ();

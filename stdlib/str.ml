@@ -574,7 +574,7 @@ external re_search_forward: regexp -> string -> int -> int array
 external re_search_backward: regexp -> string -> int -> int array
      = "caml_re_search_backward"
 
-let last_search_result = ref [||]
+let last_search_result = ref ([||] : int array)
 
 let string_match re s pos =
   let res = re_string_match re s pos in

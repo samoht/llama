@@ -237,7 +237,7 @@ let add_event ev =
 
 (* association staticraise numbers -> (lbl,size of stack *)
 
-let sz_static_raises = ref []
+let sz_static_raises = ref ([] : (int * (label * int)) list)
 let find_raise_label i =
   try
     List.assoc i !sz_static_raises

@@ -81,7 +81,7 @@ type ('args,'action) automata_entry =
 (* A lot of sets and map structures *)
 
 (* module Ints = Set.Make(struct type t = int let compare = compare end)*)
-let _Ints_empty = Set.empty compare
+let _Ints_empty : int Set.t = Set.empty compare
 let _Ints_mem = Set.mem
 let _Ints_add = Set.add
 let _Ints_diff = Set.diff
@@ -94,7 +94,7 @@ let tag_compare t1 t2 = Pervasives.compare t1 t2
 
 (* module Tags = Set.Make(struct type t = tag_info let compare = tag_compare end)*)
 type _Tags_t = tag_info Set.t
-let _Tags_empty = Set.empty tag_compare
+let _Tags_empty : tag_info Set.t = Set.empty tag_compare
 let _Tags_add = Set.add
 let _Tags_union = Set.union
 let _Tags_compare = Set.compare
@@ -113,7 +113,7 @@ let _TagMap_find = Map.find
 
 (* module IdSet =
     Set.Make (struct type t = ident let compare = id_compare end) *)
-let _IdSet_empty = Set.empty id_compare
+let _IdSet_empty : ident Set.t = Set.empty id_compare
 let _IdSet_add = Set.add
 let _IdSet_mem = Set.mem
 let _IdSet_union = Set.union
@@ -574,7 +574,7 @@ let trans_compare (t1,tags1) (t2,tags2) =
 
 (* module TransSet =
      Set.Make(struct type t = transition let compare = trans_compare end) *)
-let _TransSet_empty = Set.empty trans_compare
+let _TransSet_empty : transition Set.t = Set.empty trans_compare
 let _TransSet_add = Set.add
 let _TransSet_union = Set.union
 let _TransSet_iter = Set.iter
@@ -651,7 +651,7 @@ let no_action = max_int
 (* module StateSet =
      Set.Make (struct type t = t_transition let compare = Pervasives.compare end) *)
 type _StateSet_t = t_transition Set.t
-let _StateSet_empty = Set.empty Pervasives.compare
+let _StateSet_empty : _StateSet_t  = Set.empty Pervasives.compare
 let _StateSet_add = Set.add
 let _StateSet_compare = Set.compare
 let _StateSet_choose = Set.choose
@@ -718,7 +718,7 @@ and dfa_state_is_empty {final=(act,_) ; others=o} =
 (* module StateSetSet =
      Set.Make (struct type t = _StateSet_t let compare = _StateSet_compare end) *)
 type _StateSetSet_t = _StateSet_t Set.t
-let _StateSetSet_empty = Set.empty _StateSet_compare
+let _StateSetSet_empty : _StateSetSet_t = Set.empty _StateSet_compare
 let _StateSetSet_compare = Set.compare
 let _StateSetSet_add = Set.add
 let _StateSetSet_fold = Set.fold
@@ -809,11 +809,11 @@ let _StateMap_add = Map.add
 let _StateMap_find = Map.find
 
 let state_map = ref (_StateMap_empty : int _StateMap_t)
-let todo = Stack.create()
+let todo : (int dfa_state * int) Stack.t = Stack.create()
 let next_state_num = ref 0
 let next_mem_cell = ref 0
 let temp_pending = ref false
-let tag_cells = Hashtbl.create 17
+let tag_cells : (tag_info, int Set.t) Hashtbl.t = Hashtbl.create 17
 let state_table = Table.create dfa_state_empty
 
 

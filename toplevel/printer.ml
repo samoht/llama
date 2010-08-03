@@ -20,7 +20,7 @@ open Longident
 open Types
 open Outcometree
 
-let fwd_eval_exception = ref (fun _ -> assert false)
+let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
 
     (* Given an exception value, we cannot recover its type,
        hence we cannot print its arguments in general.

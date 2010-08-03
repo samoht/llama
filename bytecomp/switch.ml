@@ -264,7 +264,7 @@ let rec pkey chan  = function
   | k::rem ->
       Printf.fprintf chan "%a %a" pkey rem pkind k
 
-let t = Hashtbl.create 17
+let t : (kind list, t_ret * (ctests * ctests)) Hashtbl.t = Hashtbl.create 17
 
 let make_key  cases =
   let seen = ref []

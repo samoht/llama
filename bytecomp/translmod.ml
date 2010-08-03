@@ -363,7 +363,7 @@ let transl_implementation module_name (str, cc) =
    "map" is a table from defined idents to (pos in global block, coercion).
    "prim" is a list of (pos in global block, primitive declaration). *)
 
-let transl_store_subst = ref Ident.empty
+let transl_store_subst = ref (Ident.empty : (Ident.t, Lambda.lambda) Tbl.t)
   (** In the native toplevel, this reference is threaded through successive
       calls of transl_store_structure *)
 
@@ -576,7 +576,7 @@ let toploop_ident = Ident.of_module (Module "Toploop")
 let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
 let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
 
-let aliased_idents = ref Ident.empty
+let aliased_idents = ref (Ident.empty : (Ident.t, string) Tbl.t)
 
 let set_toplevel_unique_name id =
   aliased_idents :=

@@ -113,7 +113,7 @@ let hidden_modules = ref ([] : string list)
 
 let target_dir = ref Filename.current_dir_name
 
-let css_style = ref None
+let css_style = ref (None : string option)
 
 let index_only = ref false
 
@@ -143,9 +143,9 @@ let esc_8bits = ref false
 
 let info_section = ref "Objective Caml"
 
-let info_entry = ref []
+let info_entry = ref ([] : string list)
 
-let files = ref []
+let files = ref ([] : source_file list)
 
 let f_latex_title s =
   try

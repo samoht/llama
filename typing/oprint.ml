@@ -318,9 +318,9 @@ let out_class_type = ref print_out_class_type
 
 (* Signature *)
 
-let out_module_type = ref (fun _ -> failwith "Oprint.out_module_type")
-let out_sig_item = ref (fun _ -> failwith "Oprint.out_sig_item")
-let out_signature = ref (fun _ -> failwith "Oprint.out_signature")
+let out_module_type = ref (fun (_:formatter) (_:out_module_type) -> ())
+let out_sig_item = ref (fun (_:formatter) (_:out_sig_item) -> ())
+let out_signature = ref (fun (_:formatter) (_:out_sig_item list) -> ())
 
 let rec print_out_module_type ppf =
   function

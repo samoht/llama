@@ -15,9 +15,10 @@
 
 open Printf;;
 
-let printers = ref []
+let printers = ref ([] : (exn -> string option) list)
 
-let locfmt = format_of_string "File \"%s\", line %d, characters %d-%d: %s";;
+let locfmt : ('a, unit, string) format
+    = format_of_string "File \"%s\", line %d, characters %d-%d: %s";;
 
 let field x i =
   let f = Obj.field x i in

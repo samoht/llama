@@ -39,7 +39,7 @@ let do_emit_code c =
   emit_int 0xff ;
   r
 
-let memory = Hashtbl.create 101
+let memory : (int list, int) Hashtbl.t = Hashtbl.create 101
 
 let mem_emit_code c =
   try Hashtbl.find memory c with

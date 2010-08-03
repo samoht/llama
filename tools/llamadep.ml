@@ -135,7 +135,7 @@ let print_raw_dependencies source_file deps =
 
 (* Optionally preprocess a source file *)
 
-let preprocessor = ref None
+let preprocessor = ref (None : string option)
 
 exception Preprocessing_error
 

@@ -29,7 +29,7 @@ type cached_module =
     value_positions : (string, int) Tbl.t;
     exception_positions : (string, int) Tbl.t }
 
-let persistent_structures = ref Tbl.empty
+let persistent_structures = ref (Tbl.empty : (string, cached_module) Tbl.t)
 let crc_units = Consistbl.create()
 let current_module = ref Module_none
 let current_position = ref 0

@@ -18,8 +18,8 @@ open Syntax
 open Lexgen
 
 let ml_automata = ref false
-let source_name = ref None
-let output_name = ref None
+let source_name = ref (None : string option)
+let output_name = ref (None : string option)
 
 let usage = "usage: ocamlex [options] sourcefile"
 

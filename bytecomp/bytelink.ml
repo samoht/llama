@@ -40,9 +40,9 @@ type link_action =
 (* Add C objects and options from a library descriptor *)
 (* Ignore them if -noautolink or -use-runtime or -use-prim was given *)
 
-let lib_ccobjs = ref []
-let lib_ccopts = ref []
-let lib_dllibs = ref []
+let lib_ccobjs = ref ([] : string list)
+let lib_ccopts = ref ([] : string list)
+let lib_dllibs = ref ([] : string list)
 
 let add_ccobjs l =
   if not !Clflags.no_auto_link then begin

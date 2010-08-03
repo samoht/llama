@@ -228,7 +228,7 @@ let char_for_hexa_code lexbuf i =
 
 (** To store the position of the beginning of a string and comment *)
 let string_start_pos = ref 0;;
-let comment_start_pos = ref [];;
+let comment_start_pos = ref ([] : int list);;
 let in_comment () = !comment_start_pos <> [];;
 
 (** Error report *)

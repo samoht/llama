@@ -38,11 +38,9 @@ let copy_compunit ic oc compunit =
 
 (* Add C objects and options and "custom" info from a library descriptor *)
 
-(* xxx *)
-(*let lib_sharedobjs = ref []*)
-let lib_ccobjs = ref []
-let lib_ccopts = ref []
-let lib_dllibs = ref []
+let lib_ccobjs = ref ([] : string list)
+let lib_ccopts = ref ([] : string list)
+let lib_dllibs = ref ([] : string list)
 
 (* See Bytelink.add_ccobjs for explanations on how options are ordered.
    Notice that here we scan .cma files given on the command line from

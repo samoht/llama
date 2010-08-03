@@ -208,13 +208,13 @@ let bs = Buffer.add_string
         Some s -> s
       | None -> Printf.sprintf "%d_%s" n (label_of_text t)
 
-    let list_attributes = ref []
-    let list_methods = ref []
+    let list_attributes = ref ([] : Odoc_value.t_attribute list)
+    let list_methods = ref ([] : Odoc_value.t_method list)
     let list_values = ref ([] : Odoc_value.t_value list)
-    let list_exceptions = ref []
-    let list_types = ref []
+    let list_exceptions = ref ([] : Odoc_exception.t_exception list)
+    let list_types = ref ([] : Odoc_type.t_type list)
     let list_modules = ref ([] : Odoc_module.t_module list)
-    let list_module_types = ref []
+    let list_module_types = ref ([] : Odoc_module.t_module_type list)
 
 
     let index_prefix =
@@ -789,23 +789,24 @@ let newline_to_indented_br s =
     (** The known types names.
        Used to know if we must create a link to a type
        when printing a type. *)
-    let known_types_names = ref Set.empty_generic
+    let known_types_names = ref (Set.empty_generic : string Set.t)
 
     (** The known class and class type names.
        Used to know if we must create a link to a class
        or class type or not when printing a type. *)
-    let known_classes_names = ref Set.empty_generic
+    let known_classes_names = ref (Set.empty_generic : string Set.t)
 
     (** The known modules and module types names.
        Used to know if we must create a link to a type or not
        when printing a module type. *)
-    let known_modules_names = ref Set.empty_generic
+    let known_modules_names = ref (Set.empty_generic : string Set.t)
 
 
 
     (** The header of pages. Must be prepared by the [prepare_header] let.*)
 (* ?(nav=None) ?(comments=[]) *)
-    let header = ref (fun b nav comments _ -> ())
+    let header = ref (fun (b:Buffer.t) (nav:(string option * string option * Odoc_name.t) option)
+                        (comments:Odoc_types.text list) (_:string) -> ())
 
     (** Init the style. *)
     let init_style =
