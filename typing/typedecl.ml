@@ -43,13 +43,17 @@ let rec check_nonoccurrence tcs_list = function
   | Ttuple tyl -> List.forall (check_nonoccurrence tcs_list) tyl
   | Tconstruct (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
-      not (List.memq tcs tcs_list) && List.forall (check_nonoccurrence tcs_list) tyl
+      (not (List.memq tcs tcs_list) && tcs.tcs_formal = Formal_type) &&
+        List.forall (check_nonoccurrence tcs_list) tyl
 
 let rec check_covariance_rec tcs_list = function
     Tvar _ -> true
   | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_covariance_rec tcs_list ty2
   | Ttuple tyl -> List.forall (check_covariance_rec tcs_list) tyl
-  | Tconstruct (tcsr, tyl) -> List.forall (check_covariance_rec tcs_list) tyl
+  | Tconstruct (tcsr, tyl) ->
+      let tcs = Get.type_constructor tcsr in
+      (List.memq tcs tcs_list || tcs.tcs_formal = Formal_type) &&
+        List.forall (check_covariance_rec tcs_list) tyl
 
 let check_covariance tcs_list = function
     Type_abstract -> true
@@ -112,29 +116,19 @@ let type_equation_list teq_list =
       if is_cyclic tcs then
         raise(Error(teq.teq_loc, Recursive_abbrev (tcs_name tcs)))
     end teq_list;
-(*
 (* #if DEDUCTIVE_LLAMA *)
-  if Warnings.is_active (Warnings.Type_nondenotational "") then begin
-    let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
-    List.iter2
+  let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
+  let isformal =
+    List.forall2
       begin fun teq tcs ->
-        if not (check_covariance tcs_list tcs.tcs_kind) then
-          Location.prerr_warning teq.teq_loc
-            (Warnings.Type_nondenotational (tcs_name tcs))
+        match teq.teq_kind with
+            Teq_abstract x -> (x = Formal_type)
+          | _ ->
+              check_covariance tcs_list tcs.tcs_kind && check_inhabited tcs_list tcs.tcs_kind
       end teq_list tcs_list
-  end;
-  if Warnings.is_active (Warnings.Type_denotes_empty_set "") then begin
-    let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
-    List.iter2
-      begin fun teq tcs ->
-        if not (check_inhabited tcs_list tcs.tcs_kind) then
-          Location.prerr_warning teq.teq_loc
-            (Warnings.Type_denotes_empty_set (tcs_name tcs))
-      end teq_list tcs_list
-  end;
+  in
+  if isformal then List.iter (fun tcs -> tcs.tcs_formal <- Formal_type) tcs_list
 (* #endif *)
-*)
-    ()
 
 let type_excdecl cs args  =
   cs.cs_res <- Predef.type_exn;

@@ -162,7 +162,7 @@ let rec tree_of_type_decl tcs =
   params,
   begin match tcs.tcs_kind with
       Type_abstract ->
-        Otyp_abstract
+        Otyp_abstract (tcs.tcs_formal = Asttypes.Formal_type)
     | Type_variant cs_list ->
         Otyp_sum (List.map tree_of_constructor_description cs_list)
     | Type_record lbl_list ->

@@ -41,7 +41,7 @@ and type_constructor =
     tcs_params : type_variable list;
     tcs_arity: int;
     mutable tcs_kind: type_constructor_kind;
-    tcs_formal: formal_type_flag }
+    mutable tcs_formal: formal_type_flag }
 
 and type_constructor_kind =
     Type_abstract

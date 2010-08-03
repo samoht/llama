@@ -212,7 +212,7 @@ and print_simple_out_type ppf =
         print_present tags
   | Otyp_alias _ | Otyp_poly _ | Otyp_arrow _ | Otyp_tuple _ as ty ->
       fprintf ppf "@[<1>(%a)@]" print_out_type ty
-  | Otyp_abstract | Otyp_sum _ | Otyp_record _ | Otyp_manifest (_, _) -> ()
+  | Otyp_abstract _ | Otyp_sum _ | Otyp_record _ | Otyp_manifest (_, _) -> ()
   | Otyp_module (p, n, tyl) ->
       fprintf ppf "@[<1>(module %s" p;
       let first = ref true in
@@ -407,7 +407,9 @@ and print_out_type_decl kwd ppf (name, args, ty, constraints) =
     | _ -> ty
   in
   let rec print_out_tkind ppf = function
-  | Otyp_abstract -> ()
+  | Otyp_abstract false -> ()
+  | Otyp_abstract true ->
+      fprintf ppf " formal"
   | Otyp_record lbls ->
       fprintf ppf " = {%a@;<1 -2>}"
         (print_list_init print_out_label (fun ppf -> fprintf ppf "@ ")) lbls
