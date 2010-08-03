@@ -24,12 +24,13 @@ let values s vd1 vd2 =
 
 type type_mismatch =
     Arity
-  | Kind
   | Field_type of string
   | Field_mutable of string
   | Field_arity of string
   | Field_names of int * string * string
   | Field_missing of bool * string
+  | Formality
+  | General
 
 let nth n =
   if n = 1 then "first" else
@@ -40,7 +41,6 @@ let nth n =
 let report_type_mismatch0 first second decl ppf err =
   match err with
     Arity -> Format.fprintf ppf "They have different arities"
-  | Kind -> Format.fprintf ppf "Their kinds differ"
   | Field_type s ->
       Format.fprintf ppf "The types for field %s are not equal" s
   | Field_mutable s ->
@@ -53,11 +53,16 @@ let report_type_mismatch0 first second decl ppf err =
   | Field_missing (b, s) ->
       Format.fprintf ppf "The field %s is only present in %s %s"
         s (if b then second else first) decl
+  | Formality ->
+      Format.fprintf ppf "The definition is not formal."
+  | General ->
+      ()
 
 let report_type_mismatch first second decl ppf =
   List.iter
     (fun err ->
-      Format.fprintf ppf "@ %a." (report_type_mismatch0 first second decl) err)
+       if err = General then () else
+       Format.fprintf ppf "@ %a." (report_type_mismatch0 first second decl) err)
 
 let rec compare_variants s params n cstrs1 cstrs2 =
   match cstrs1, cstrs2 with
@@ -107,10 +112,22 @@ let type_constructors s tcs1 tcs2 =
         compare_records s params 1 lbls1 lbls2
     | Type_abbrev ty1, Type_abbrev ty2 ->
         if Ctype.equiv params ty1 (Subst.core_type s ty2) then [] else
-          assert false (* xxx *)
+          [General]
     | _, Type_abbrev ty2 ->
         let ty1 = Tconstruct (ref_type_constr tcs2, List.map tvar tcs2.tcs_params) in
-        if Ctype.equal ty1 ty2 then [] else assert false (* xxx *)
+        if Ctype.equal ty1 ty2 then [] else [General]
     | _, _ ->
-        assert false (* xxx *)
+        [General]
   end
+
+(* #if DEDUCTIVE_LLAMA *)
+
+let type_constructors s tcs1 tcs2 =
+  let err = type_constructors s tcs1 tcs2 in
+  if err <> [] then err else
+    begin match tcs1.tcs_formal, tcs2.tcs_formal with
+        Informal_type, Formal_type -> [Formality]
+      | _ -> []
+    end
+
+(* #endif *)
