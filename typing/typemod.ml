@@ -28,7 +28,6 @@ let check_nongen_scheme foo item =
               (fun (pat, exp) ->
                  if not (Btype.closed_schema exp.exp_type) then
                    if foo then begin
-                     fprintf err_formatter "@[%a@]@." Printtyp.one_type exp.exp_type;
                      goo := exp :: !goo
                    end
                    else

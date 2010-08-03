@@ -214,6 +214,7 @@ let execute_phrase print_outcome ppf phr =
 (*       Typecore.reset_delayed_checks (); *)
       let (str, sg, newenv) = Resolve.structure_item oldenv sstr in
       Typemod.type_structure_item str;
+      Typemod.check_nongen_scheme false str;
 (*       Typecore.force_delayed_checks (); *)
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();
