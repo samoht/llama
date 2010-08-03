@@ -464,43 +464,6 @@ let rec name_pattern default = function
       | Tpat_alias(p, id) -> val_name id
       | _ -> name_pattern default rem
 
-(* Push the default values under the functional abstractions *)
-(* xxx huh? *)
-let rec push_defaults loc bindings pat_expr_list partial =
-  match pat_expr_list with
-    [pat, ({exp_desc = Texp_function(pl,partial)} as exp)] ->
-      let pl = push_defaults exp.exp_loc bindings pl partial in
-      [pat, {exp with exp_desc = Texp_function(pl, partial)}]
-(*
-  | [pat, {exp_desc = Texp_let
-             (Default, cases, ({exp_desc = Texp_function _} as e2))}] ->
-      push_defaults loc (cases :: bindings) [pat, e2] partial
-*)
-  | [pat, exp] ->
-      let exp =
-        List.fold_left
-          (fun exp cases ->
-            {exp with exp_desc = Texp_let(Nonrecursive, cases, exp)})
-          exp bindings
-      in
-      [pat, exp]
-  | (pat, exp) :: _ when bindings <> [] ->
-      let param = Env.qualified_id(name_pattern "param" pat_expr_list) in
-      let param_val = {val_type = pat.pat_type; val_kind = Val_reg;
-                       val_id = param; val_global = false; val_hol = Nonhol }
-      in
-      let exp =
-        { exp with exp_loc = loc; exp_desc =
-          Texp_match
-            ({exp with exp_type = pat.pat_type; exp_desc =
-              Texp_ident param_val},
-             pat_expr_list, partial) }
-      in
-      push_defaults loc bindings
-        [{pat with pat_desc = Tpat_var param_val}, exp] Total
-  | _ ->
-      pat_expr_list
-
 (* Insertion of debugging events *)
 
 let event_before exp lam = match lam with
@@ -596,8 +559,7 @@ and transl_exp0 e =
       let ((kind, params), body) =
         event_function e
           (function repr ->
-            let pl = push_defaults e.exp_loc [] pat_expr_list partial in
-            transl_function e.exp_loc !Clflags.native_code repr partial pl)
+            transl_function e.exp_loc !Clflags.native_code repr partial pat_expr_list)
       in
       Lfunction(kind, params, body)
   | Texp_apply({exp_desc = Texp_ident(v)}, oargs)

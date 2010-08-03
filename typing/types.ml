@@ -174,13 +174,6 @@ type record_representation =
     Record_regular
   | Record_float
 
-let dummy_value name = (* xxx do we still need this? *)
-  { val_id = { id_module = Module "dummy"; id_name = name };
-    val_type = type_none;
-    val_kind = Val_reg;
-    val_global = false;
-    val_hol = Nonhol }
-
 exception Constr_not_found
 
 type module_expr = unit
