@@ -549,7 +549,7 @@ let transl_store_gen module_name (str, restr) topl =
   primitive_declarations := [];
   let module_id = Ident.of_module (Types.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
-  let f = function
+  let _f = function (*xxx*)
     | [ Tstr_eval expr ] when topl ->
         assert (size = 0);
         subst_lambda !transl_store_subst (transl_exp expr)

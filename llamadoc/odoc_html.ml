@@ -1565,7 +1565,7 @@ let newline_to_indented_br s =
     let generate_for_module_type pre post mt =
       try
         let (html_file, _) = naming_html_files mt.mt_name in
-        let type_file = naming_file_type_module_complete_target mt.mt_name in
+(*        let type_file = naming_file_type_module_complete_target mt.mt_name in*)
         let chanout = open_out (Filename.concat !Odoc_args.target_dir html_file) in
         let b = new_buf () in
         let pre_name = opt (fun mt -> mt.mt_name) pre in

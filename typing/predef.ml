@@ -139,7 +139,6 @@ let type_constructors =
 (* ---------------------------------------------------------------------- *)
 
 let mkexn name tyl =
-  let qualid = { id_module = Module_builtin; id_name = name } in
   { cs_name = name;
     cs_res = Tconstruct (ref_type_constr tcs_exn, []);
     cs_args = tyl;

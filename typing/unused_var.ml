@@ -11,7 +11,7 @@
 (***********************************************************************)
 
 (* $Id: unused_var.ml 10250 2010-04-08 03:58:41Z garrigue $ *)
-(*
+
 open Parsetree
 
 let silent v = String.length v > 0 && v.[0] = '_';;
@@ -68,13 +68,12 @@ let rec get_vars ((vacc, asacc) as acc) p =
   | Ppat_constant _ -> acc
   | Ppat_tuple pl -> List.fold_left get_vars acc pl
   | Ppat_construct (_, po) -> get_vars_option acc po
-  | Ppat_record (ipl, cls) ->
+  | Ppat_record ipl ->
       List.fold_left (fun a (_, p) -> get_vars a p) acc ipl
   | Ppat_array pl -> List.fold_left get_vars acc pl
   | Ppat_or (p1, _p2) -> get_vars acc p1
-  | Ppat_lazy p -> get_vars acc p
+(*  | Ppat_lazy p -> get_vars acc p*)
   | Ppat_constraint (pp, _) -> get_vars acc pp
-  | Ppat_type _ -> acc
 
 and get_vars_option acc po =
   match po with
@@ -92,19 +91,13 @@ let rec structure ppf tbl l =
 and structure_item ppf tbl s =
   match s.pstr_desc with
   | Pstr_eval e -> expression ppf tbl e;
-  | Pstr_value (recflag, pel) -> let_pel ppf tbl recflag pel None;
+  | Pstr_value (_, recflag, pel) -> let_pel ppf tbl recflag pel None;
   | Pstr_primitive _ -> ()
   | Pstr_type _ -> ()
   | Pstr_exception _ -> ()
-  | Pstr_exn_rebind _ -> ()
-  | Pstr_module (_, me) -> module_expr ppf tbl me;
-  | Pstr_recmodule stml ->
-      List.iter (fun (_, _, me) -> module_expr ppf tbl me) stml;
-  | Pstr_modtype _ -> ()
+(*  | Pstr_exn_rebind _ -> ()*)
   | Pstr_open _ -> ()
-  | Pstr_class cdl -> List.iter (class_declaration ppf tbl) cdl;
-  | Pstr_class_type _ -> ()
-  | Pstr_include _ -> ()
+(*  | Pstr_include _ -> ()*)
 
 and expression ppf tbl e =
   match e.pexp_desc with
@@ -116,21 +109,19 @@ and expression ppf tbl e =
   | Pexp_constant _ -> ()
   | Pexp_let (recflag, pel, e) ->
       let_pel ppf tbl recflag pel (Some (fun ppf tbl -> expression ppf tbl e));
-  | Pexp_function (_, eo, pel) ->
-      expression_option ppf tbl eo;
+  | Pexp_function pel ->
       match_pel ppf tbl pel;
-  | Pexp_apply (e, lel) ->
+  | Pexp_apply (e, el) ->
       expression ppf tbl e;
-      List.iter (fun (_, e) -> expression ppf tbl e) lel;
-  | Pexp_match (e, pel) ->
+      List.iter (expression ppf tbl) el;
+(*  | Pexp_match (e, pel) ->
       expression ppf tbl e;
-      match_pel ppf tbl pel;
+      match_pel ppf tbl pel;*)
   | Pexp_try (e, pel) ->
       expression ppf tbl e;
       match_pel ppf tbl pel;
   | Pexp_tuple el -> List.iter (expression ppf tbl) el;
-  | Pexp_construct (_, eo, _) -> expression_option ppf tbl eo;
-  | Pexp_variant (_, eo) -> expression_option ppf tbl eo;
+  | Pexp_construct (_, eo) -> expression_option ppf tbl eo;
   | Pexp_record (iel, eo) ->
       List.iter (fun (_, e) -> expression ppf tbl e) iel;
       expression_option ppf tbl eo;
@@ -139,10 +130,10 @@ and expression ppf tbl e =
       expression ppf tbl e1;
       expression ppf tbl e2;
   | Pexp_array el -> List.iter (expression ppf tbl) el;
-  | Pexp_ifthenelse (e1, e2, eo) ->
+  | Pexp_ifthenelse (e1, e2, e3) ->
       expression ppf tbl e1;
       expression ppf tbl e2;
-      expression_option ppf tbl eo;
+      expression ppf tbl e3;
   | Pexp_sequence (e1, e2) ->
       expression ppf tbl e1;
       expression ppf tbl e2;
@@ -156,25 +147,13 @@ and expression ppf tbl e =
       add_vars tbl defined;
       expression ppf tbl e3;
       check_rm_vars ppf tbl defined;
-  | Pexp_constraint (e, _, _) -> expression ppf tbl e;
+  | Pexp_constraint (e, _) -> expression ppf tbl e;
   | Pexp_when (e1, e2) ->
       expression ppf tbl e1;
       expression ppf tbl e2;
-  | Pexp_send (e, _) -> expression ppf tbl e;
-  | Pexp_new _ -> ()
-  | Pexp_setinstvar (_, e) -> expression ppf tbl e;
-  | Pexp_override sel -> List.iter (fun (_, e) -> expression ppf tbl e) sel;
-  | Pexp_letmodule (_, me, e) ->
-      module_expr ppf tbl me;
-      expression ppf tbl e;
   | Pexp_assert e -> expression ppf tbl e;
   | Pexp_assertfalse -> ()
-  | Pexp_lazy e -> expression ppf tbl e;
-  | Pexp_poly (e, _) -> expression ppf tbl e;
-  | Pexp_object cs -> class_structure ppf tbl cs;
-  | Pexp_newtype (_, e) -> expression ppf tbl e
-  | Pexp_pack (me, _) -> module_expr ppf tbl me
-  | Pexp_open (_, e) -> expression ppf tbl e
+(*  | Pexp_lazy e -> expression ppf tbl e;*)
 
 and expression_option ppf tbl eo =
   match eo with
@@ -214,14 +193,12 @@ and match_pe ppf tbl (p, e) =
   expression ppf tbl e;
   check_rm_vars ppf tbl defined;
 ;;
-*)
+
 let warn ppf ast =
-(*
   if Warnings.is_active (w_suspicious "") || Warnings.is_active (w_strict "")
   then begin
     let tbl = Hashtbl.create 97 in
     structure ppf tbl ast;
   end;
-*)
   ast
 ;;

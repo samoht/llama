@@ -396,12 +396,9 @@ let format_float_lexeme =
 
   (fun sfmt x ->
    let s = format_float sfmt x in
-   s)
-(*
    match classify_float x with
    | FP_normal | FP_subnormal | FP_zero -> make_valid_float_lexeme s
    | FP_nan | FP_infinite -> s)
-*)
 ;;
 
 (* Decode a format string and act on it.

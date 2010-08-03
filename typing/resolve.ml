@@ -394,7 +394,6 @@ let letdef env rec_flag pat_exp_list =
 let exception_declaration env name args =
   let args = List.map (type_expression true env) args in
   let nargs = List.length args in
-  let qualid = Env.qualified_id name in
   let cs =
     { cs_name = name;
       cs_res = type_none;
