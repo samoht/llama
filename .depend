@@ -83,14 +83,6 @@ typing/env.cmx: typing/types.cmx typing/typedtree.cmi utils/tbl.cmx \
     typing/predef.cmx typing/module.cmx utils/misc.cmx parsing/longident.cmx \
     parsing/location.cmx utils/consistbl.cmx utils/config.cmx \
     utils/clflags.cmx parsing/asttypes.cmi typing/env.cmi
-typing/error.cmo: typing/types.cmo typing/typedtree_aux.cmo \
-    typing/typedtree.cmi typing/printtyp.cmo parsing/parsetree.cmi \
-    utils/misc.cmi parsing/longident.cmi parsing/location.cmi \
-    typing/ctype.cmo typing/btype.cmo parsing/asttypes.cmi
-typing/error.cmx: typing/types.cmx typing/typedtree_aux.cmx \
-    typing/typedtree.cmi typing/printtyp.cmx parsing/parsetree.cmi \
-    utils/misc.cmx parsing/longident.cmx parsing/location.cmx \
-    typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/get.cmo: typing/types.cmo typing/env.cmi typing/get.cmi
 typing/get.cmx: typing/types.cmx typing/env.cmx typing/get.cmi
 typing/includecore.cmo: typing/types.cmo typing/typedtree.cmi \
@@ -139,22 +131,20 @@ typing/subst.cmo: typing/types.cmo typing/module.cmo typing/get.cmi \
     typing/btype.cmo
 typing/subst.cmx: typing/types.cmx typing/module.cmx typing/get.cmx \
     typing/btype.cmx
-typing/typecore.cmo: typing/types.cmo typing/typedtree_aux.cmo \
-    typing/typedtree.cmi typing/printtyp.cmo typing/predef.cmo \
-    typing/module.cmo utils/misc.cmi parsing/location.cmi typing/get.cmi \
-    typing/error.cmo typing/ctype.cmo typing/btype.cmo parsing/asttypes.cmi
-typing/typecore.cmx: typing/types.cmx typing/typedtree_aux.cmx \
-    typing/typedtree.cmi typing/printtyp.cmx typing/predef.cmx \
-    typing/module.cmx utils/misc.cmx parsing/location.cmx typing/get.cmx \
-    typing/error.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
+typing/typecore.cmo: utils/warnings.cmi typing/types.cmo \
+    typing/typedtree_aux.cmo typing/typedtree.cmi typing/printtyp.cmo \
+    typing/predef.cmo typing/module.cmo utils/misc.cmi parsing/location.cmi \
+    typing/get.cmi typing/ctype.cmo typing/btype.cmo parsing/asttypes.cmi
+typing/typecore.cmx: utils/warnings.cmx typing/types.cmx \
+    typing/typedtree_aux.cmx typing/typedtree.cmi typing/printtyp.cmx \
+    typing/predef.cmx typing/module.cmx utils/misc.cmx parsing/location.cmx \
+    typing/get.cmx typing/ctype.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/typedecl.cmo: typing/types.cmo typing/typedtree.cmi \
     typing/typecore.cmo typing/predef.cmo typing/module.cmo \
-    parsing/location.cmi typing/get.cmi typing/error.cmo typing/btype.cmo \
-    parsing/asttypes.cmi
+    parsing/location.cmi typing/get.cmi typing/btype.cmo parsing/asttypes.cmi
 typing/typedecl.cmx: typing/types.cmx typing/typedtree.cmi \
     typing/typecore.cmx typing/predef.cmx typing/module.cmx \
-    parsing/location.cmx typing/get.cmx typing/error.cmx typing/btype.cmx \
-    parsing/asttypes.cmi
+    parsing/location.cmx typing/get.cmx typing/btype.cmx parsing/asttypes.cmi
 typing/typedtree_aux.cmo: typing/types.cmo typing/typedtree.cmi \
     parsing/location.cmi parsing/asttypes.cmi
 typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
@@ -162,15 +152,13 @@ typing/typedtree_aux.cmx: typing/types.cmx typing/typedtree.cmi \
 typing/typemod.cmo: typing/types.cmo typing/typedtree.cmi typing/typedecl.cmo \
     typing/typecore.cmo typing/resolve.cmo typing/printtyp.cmo \
     typing/primitive.cmi parsing/parsetree.cmi typing/module.cmo \
-    utils/misc.cmi parsing/location.cmi typing/includemod.cmo \
-    typing/error.cmo typing/env.cmi utils/config.cmi utils/clflags.cmi \
-    typing/btype.cmo
+    utils/misc.cmi parsing/location.cmi typing/includemod.cmo typing/env.cmi \
+    utils/config.cmi utils/clflags.cmi typing/btype.cmo
 typing/typemod.cmx: typing/types.cmx typing/typedtree.cmi typing/typedecl.cmx \
     typing/typecore.cmx typing/resolve.cmx typing/printtyp.cmx \
     typing/primitive.cmx parsing/parsetree.cmi typing/module.cmx \
-    utils/misc.cmx parsing/location.cmx typing/includemod.cmx \
-    typing/error.cmx typing/env.cmx utils/config.cmx utils/clflags.cmx \
-    typing/btype.cmx
+    utils/misc.cmx parsing/location.cmx typing/includemod.cmx typing/env.cmx \
+    utils/config.cmx utils/clflags.cmx typing/btype.cmx
 typing/types.cmo: typing/primitive.cmi parsing/asttypes.cmi
 typing/types.cmx: typing/primitive.cmx parsing/asttypes.cmi
 typing/unused_var.cmo: typing/unused_var.cmi
@@ -374,17 +362,17 @@ driver/compile.cmx: utils/warnings.cmx typing/unused_var.cmx \
     bytecomp/emitcode.cmx utils/config.cmx utils/clflags.cmx utils/ccomp.cmx \
     bytecomp/bytegen.cmx driver/compile.cmi
 driver/errors.cmo: utils/warnings.cmi typing/typemod.cmo typing/typedecl.cmo \
-    bytecomp/translmod.cmi bytecomp/translcore.cmi parsing/syntaxerr.cmi \
-    bytecomp/symtable.cmi typing/resolve.cmo driver/pparse.cmi \
-    parsing/location.cmi parsing/lexer.cmo typing/includemod.cmo \
-    typing/env.cmi bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi \
-    driver/errors.cmi
+    typing/typecore.cmo bytecomp/translmod.cmi bytecomp/translcore.cmi \
+    parsing/syntaxerr.cmi bytecomp/symtable.cmi typing/resolve.cmo \
+    driver/pparse.cmi parsing/location.cmi parsing/lexer.cmo \
+    typing/includemod.cmo typing/env.cmi bytecomp/bytelink.cmi \
+    bytecomp/bytelibrarian.cmi driver/errors.cmi
 driver/errors.cmx: utils/warnings.cmx typing/typemod.cmx typing/typedecl.cmx \
-    bytecomp/translmod.cmx bytecomp/translcore.cmx parsing/syntaxerr.cmx \
-    bytecomp/symtable.cmx typing/resolve.cmx driver/pparse.cmx \
-    parsing/location.cmx parsing/lexer.cmx typing/includemod.cmx \
-    typing/env.cmx bytecomp/bytelink.cmx bytecomp/bytelibrarian.cmx \
-    driver/errors.cmi
+    typing/typecore.cmx bytecomp/translmod.cmx bytecomp/translcore.cmx \
+    parsing/syntaxerr.cmx bytecomp/symtable.cmx typing/resolve.cmx \
+    driver/pparse.cmx parsing/location.cmx parsing/lexer.cmx \
+    typing/includemod.cmx typing/env.cmx bytecomp/bytelink.cmx \
+    bytecomp/bytelibrarian.cmx driver/errors.cmi
 driver/main.cmo: utils/warnings.cmi utils/misc.cmi driver/main_args.cmi \
     driver/errors.cmi utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi driver/main.cmi

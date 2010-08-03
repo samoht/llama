@@ -19,6 +19,7 @@ type error =
   | Unbound_type_variable of string
   | Orpat_vars of string
   | Type_arity_mismatch of Longident.t * int * int
+  | Constructor_arity_mismatch of Longident.t * int * int
 
 exception Error of Location.t * error
 
@@ -148,8 +149,8 @@ let pattern env p =
           | Ppat_alias (p, s) -> Tpat_alias (aux p, List.assoc s varmap)
           | Ppat_constant c -> Tpat_constant c
           | Ppat_tuple l -> Tpat_tuple (List.map aux l)
-          | Ppat_construct (li,sarg) ->
-              let cs = lookup_constructor env li p.ppat_loc in
+          | Ppat_construct (lid,sarg) ->
+              let cs = lookup_constructor env lid p.ppat_loc in
               let arity = cs.cs_arity in
               let sargs =
                 match sarg with
@@ -159,6 +160,9 @@ let pattern env p =
                       replicate_list sp arity
                   | Some sp -> [sp]
               in
+              if List.length sargs <> cs.cs_arity then
+                raise(Error(p.ppat_loc, Constructor_arity_mismatch(lid,
+                                                            cs.cs_arity, List.length sargs)));
               Tpat_construct (cs, List.map aux sargs)
           | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
           | Ppat_array l -> Tpat_array (List.map aux l)
@@ -184,8 +188,8 @@ let rec expr env ex =
             Texp_ident (lookup_value env li ex.pexp_loc)
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
-        | Pexp_construct (li,sarg) ->
-            let cs = lookup_constructor env li ex.pexp_loc in
+        | Pexp_construct (lid, sarg) ->
+            let cs = lookup_constructor env lid ex.pexp_loc in
             let arity = cs.cs_arity in
             let sargs =
               match sarg with
@@ -193,6 +197,9 @@ let rec expr env ex =
                 | Some {pexp_desc = Pexp_tuple spl} when arity > 1 -> spl
                 | Some sp -> [sp]
             in
+            if List.length sargs <> cs.cs_arity then
+              raise(Error(ex.pexp_loc, Constructor_arity_mismatch(lid,
+                                                                 cs.cs_arity, List.length sargs)));
             Texp_construct (cs, List.map (expr env) sargs)
         | Pexp_apply (f, l) -> Texp_apply (expr env f, List.map (expr env) l)
         | Pexp_let (b, lpe, e) ->
@@ -488,4 +495,9 @@ let report_error ppf = function
       fprintf ppf
        "@[The type constructor %a@ expects %i argument(s),@ \
         but is here applied to %i argument(s)@]"
+       longident lid expected provided
+  | Constructor_arity_mismatch(lid, expected, provided) ->
+      fprintf ppf
+       "@[The constructor %a@ expects %i argument(s),@ \
+        but is applied here to %i argument(s)@]"
        longident lid expected provided

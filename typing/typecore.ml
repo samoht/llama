@@ -8,12 +8,18 @@ open Typedtree_aux
 open Module;;
 open Btype;;
 open Ctype;;
-open Error;;
 open Asttypes;;
 
 type error =
   | Incomplete_format of string
   | Bad_conversion of string * int * char
+  | Label_mismatch of qualified_id * type_expr * type_expr
+  | Label_multiply_defined of label
+  | Label_missing of label list
+  | Label_not_mutable of label
+  | Pattern_type_clash of type_expr * type_expr
+  | Expr_type_clash of type_expr * type_expr
+  | Apply_non_function of type_expr
 
 exception Error of Location.t * error
 
@@ -60,8 +66,8 @@ let warnings = ref false;;
 let unify_pat pat expected_ty actual_ty =
   try
     unify (expected_ty, actual_ty)
-  with OldUnify ->
-    pat_wrong_type_err pat actual_ty expected_ty
+  with Unify ->
+    raise(Error(pat.pat_loc, Pattern_type_clash(actual_ty, expected_ty)))
 ;;
 
 let rec tpat (pat, ty) =
@@ -85,13 +91,11 @@ let rec tpat (pat, ty) =
   | Tpat_tuple(patl) ->
       begin try
         tpat_list patl (filter_product (List.length patl) ty)
-      with OldUnify ->
-        pat_wrong_type_err pat ty
-          (Ttuple(List.map tvar(new_nongenerics (List.length patl))))
+      with Unify ->
+        let expty = Ttuple(List.map tvar(new_nongenerics (List.length patl))) in
+        raise (Error(pat.pat_loc, Pattern_type_clash(ty, expty)))
       end
   | Tpat_construct(cs, args) ->
-      if List.length args <> cs.cs_arity then
-        arity_err cs args pat.pat_loc;
       let (ty_args, ty_res) = instantiate_constructor cs in
       unify_pat pat ty ty_res;
       List.iter2
@@ -336,8 +340,9 @@ let type_format loc fmt =
 let unify_expr expr expected_ty actual_ty =
   try
     unify (expected_ty, actual_ty)
-  with OldUnify ->
-    expr_wrong_type_err expr actual_ty expected_ty
+  with Unify ->
+    raise(Error(expr.exp_loc,
+                Expr_type_clash(actual_ty, expected_ty)))
 ;;
 
 let rec type_expr expr =
@@ -350,8 +355,6 @@ let rec type_expr expr =
   | Texp_tuple(args) ->
       Ttuple(List.map type_expr args)
   | Texp_construct(cs, args) ->
-      if List.length args <> cs.cs_arity then
-        arity_err cs args expr.exp_loc;
       let (ty_args, ty_res) = instantiate_constructor cs in
       List.iter2 type_expect args ty_args;
       ty_res
@@ -363,8 +366,8 @@ let rec type_expr expr =
           let (ty1, ty2) =
             try
               filter_arrow ty_res
-            with OldUnify ->
-              application_of_non_function_err fct ty_fct in
+            with Unify ->
+              raise(Error(expr.exp_loc, Apply_non_function(ty_fct))) in
           type_expect arg1 ty1;
           type_args ty2 argl in
       type_args ty_fct args
@@ -424,36 +427,33 @@ let rec type_expr expr =
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
       Predef.type_array ty_arg
-  | Texp_record (lbl_expr_list, exten) ->
+  | Texp_record (lbl_exp_list, exten) ->
       let ty = new_type_var() in
       List.iter
         (fun (lbl, exp) ->
           let (ty_res, ty_arg) = instantiate_label lbl in
           begin try unify (ty, ty_res)
-          with OldUnify -> label_not_belong_err expr lbl ty
+          with Unify ->
+            raise(Error(expr.exp_loc,
+                        Label_mismatch(label_id lbl, ty_res, ty)))
           end;
           type_expect exp ty_arg)
-        lbl_expr_list;
-      let label =
-        match lbl_expr_list with
-          | ((lbl1,_)::_) -> Array.of_list (labels_of_type lbl1.lbl_parent)
-          | [] -> assert false
-      in
-      let defined = Array.make (Array.length label) false in
-      List.iter (fun (lbl, exp) ->
-        let p = lbl.lbl_pos in
-          if defined.(p)
-          then label_multiply_defined_err expr lbl
-          else defined.(p) <- true)
-        lbl_expr_list;
+        lbl_exp_list;
       begin match exten with
-        | None ->
-            for i = 0 to Array.length label - 1 do
-              if not defined.(i) then label_undefined_err expr label.(i)
-            done
-        | Some exten ->
-            type_expect exten ty
+          None -> ()
+        | Some exten -> type_expect exten ty
       end;
+      let fields =
+        match lbl_exp_list with [] -> assert false
+        | (lbl,_)::_ -> Ctype.labels_of_type lbl.lbl_parent in
+      let num_fields = List.length fields in
+      if exten = None && List.length lbl_exp_list <> num_fields then begin
+        let is_missing lbl = List.forall (fun (lbl', _) -> lbl != lbl') lbl_exp_list in
+        let missing = List.filter is_missing fields in
+        raise(Error(expr.exp_loc, Label_missing missing))
+      end
+      else if exten <> None && List.length lbl_exp_list = num_fields then
+        Location.prerr_warning expr.exp_loc Warnings.Useless_record_with;
       ty
   | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) = instantiate_label lbl in
@@ -461,7 +461,7 @@ let rec type_expr expr =
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) = instantiate_label lbl in
-      if lbl.lbl_mut == Immutable then label_not_mutable_err expr lbl;
+      if lbl.lbl_mut == Immutable then raise(Error(expr.exp_loc, Label_not_mutable lbl));
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       Predef.type_unit
@@ -503,7 +503,7 @@ and type_expect exp expected_ty =
       begin try
         List.iter2 (type_expect)
                  el (filter_product (List.length el) expected_ty)
-      with OldUnify ->
+      with Unify ->
         unify_expr exp expected_ty (type_expr exp)
       end
 (* To do: try...with, match...with ? *)
@@ -533,15 +533,33 @@ and type_let_decl rec_flag pat_expr_list =
 and type_statement expr =
   let ty = type_expr expr in
   match repr ty with
-  | Tarrow(_,_) -> partial_apply_warning expr.exp_loc
+  | Tarrow(_,_) ->
+      Location.prerr_warning expr.exp_loc Warnings.Partial_application
   | Tvar _ -> ()
+  | Tconstruct (p, _) when Get.type_constructor p == Predef.tcs_unit -> ()
   | _ ->
-      if not (Ctype.equal ty Predef.type_unit) then not_unit_type_warning expr ty
+      Location.prerr_warning expr.exp_loc Warnings.Statement_type
 
 (* Error report *)
 
 open Format
 open Printtyp
+
+let report_unification_error ppf t1 t2 txt1 txt2 =
+  let type_expansion ppf t =
+    let t = repr t in
+    let t' = expand_head t in
+    if t == t' then type_expr ppf t
+    else fprintf ppf "@[<2>%a@ =@ %a@]" type_expr t type_expr t'
+  in
+  fprintf ppf
+    "@[<v>\
+          @[%t@;<1 2>%a@ \
+            %t@;<1 2>%a\
+          @]\
+         @]"
+    txt1 type_expansion t1
+    txt2 type_expansion t2
 
 let report_error ppf = function
   | Incomplete_format s ->
@@ -550,3 +568,40 @@ let report_error ppf = function
       fprintf ppf
         "Bad conversion %%%c, at char number %d \
          in format string ``%s''" c i fmt
+  | Label_mismatch(qid, actual_ty, expected_ty) ->
+      report_unification_error ppf actual_ty expected_ty
+        (function ppf ->
+           fprintf ppf "The record field label %a@ belongs to the type"
+                   qualified_id qid)
+        (function ppf ->
+           fprintf ppf "but is mixed here with labels of type")
+  | Label_multiply_defined lbl ->
+      fprintf ppf "The record field label %a is defined several times"
+        qualified_id (label_id lbl)
+  | Label_missing labels ->
+      let print_labels ppf = List.iter (fun lbl -> fprintf ppf "@ %s" lbl.lbl_name) in
+      fprintf ppf "@[<hov>Some record field labels are undefined:%a@]"
+        print_labels labels
+  | Label_not_mutable lbl ->
+      fprintf ppf "The record field label %a is not mutable" qualified_id (label_id lbl)
+  | Pattern_type_clash (actual_ty, expected_ty) ->
+      report_unification_error ppf actual_ty expected_ty
+        (function ppf ->
+           fprintf ppf "This pattern matches values of type")
+        (function ppf ->
+           fprintf ppf "but a pattern was expected which matches values of type")
+  | Expr_type_clash (actual_ty, expected_ty) ->
+      report_unification_error ppf actual_ty expected_ty
+        (function ppf ->
+           fprintf ppf "This expression has type")
+        (function ppf ->
+           fprintf ppf "but an expression was expected of type")
+  | Apply_non_function typ ->
+      begin match repr typ with
+        Tarrow _ ->
+          fprintf ppf "This function is applied to too many arguments;@ ";
+          fprintf ppf "maybe you forgot a `;'"
+      | _ ->
+          fprintf ppf
+            "This expression is not a function; it cannot be applied"
+      end

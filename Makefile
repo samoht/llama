@@ -50,7 +50,6 @@ TYPING=typing/unused_var.cmo typing/primitive.cmo \
  typing/oprint.cmo \
  typing/printtyp.cmo typing/pr_decl.cmo \
  typing/typedtree_aux.cmo typing/ctype.cmo \
- typing/error.cmo \
  typing/includecore.cmo typing/includemod.cmo \
  typing/resolve.cmo \
  typing/typecore.cmo \

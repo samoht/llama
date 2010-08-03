@@ -5,7 +5,6 @@ open Types
 open Typedtree
 open Module
 open Btype
-open Error
 open Typecore
 
 type error =

@@ -34,14 +34,9 @@ let report_error ppf exn =
   | Env.Error err ->
       Location.print_error_cur_file ppf;
       Env.report_error ppf err
-(*
-  | Ctype.Tags(l, l') ->
-      Location.print_error_cur_file ppf;
-      fprintf ppf
-      "In this program,@ variant constructors@ `%s and `%s@ \
-       have the same hash value.@ Change one of them." l l'
   | Typecore.Error(loc, err) ->
       Location.print_error ppf loc; Typecore.report_error ppf err
+(*
   | Typetexp.Error(loc, err) ->
       Location.print_error ppf loc; Typetexp.report_error ppf err
 *)
@@ -67,11 +62,6 @@ let report_error ppf exn =
   | Bytelibrarian.Error code ->
       Location.print_error_cur_file ppf;
       Bytelibrarian.report_error ppf code
-(*
-  | Bytepackager.Error code ->
-      Location.print_error_cur_file ppf;
-      Bytepackager.report_error ppf code
-*)
   | Sys_error msg ->
       Location.print_error_cur_file ppf;
       fprintf ppf "I/O error: %s" msg

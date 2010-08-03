@@ -123,24 +123,29 @@ let rec rectify_type level0 x =
 (* Ensure that there are no nongeneric variables in a type, producing
    a forwarding-free copy for good measure. *)
 
-exception Genericize
-
-let rec genericize_type = function
+(* Return whether all variables of type [ty] are generic. *)
+let rec closed_schema = function
     Tvar tv ->
       begin match tv.tv_kind with
-        | Generic ->
-            Tvar tv
-        | Level _ ->
-            raise Genericize
-        | Forward ty ->
-            genericize_type ty
+          Generic -> true
+        | Level _ -> false
+        | Forward ty -> closed_schema ty
       end
-  | Tarrow (ty1, ty2) ->
-      Tarrow (genericize_type ty1, genericize_type ty2)
-  | Ttuple tyl ->
-      Ttuple (List.map genericize_type tyl)
-  | Tconstruct (tcs, tyl) ->
-      Tconstruct (tcs, List.map genericize_type tyl)
+  | Tarrow (ty1, ty2) -> closed_schema ty1 && closed_schema ty2
+  | Ttuple tyl -> List.forall closed_schema tyl
+  | Tconstruct (tcs, tyl) -> List.forall closed_schema tyl
+
+(* Eliminate forwards. *)
+let rec normalize_type = function
+    Tvar tv ->
+      begin match tv.tv_kind with
+        | Generic -> Tvar tv
+        | Level _ -> assert false
+        | Forward ty -> normalize_type ty
+      end
+  | Tarrow (ty1, ty2) -> Tarrow (normalize_type ty1, normalize_type ty2)
+  | Ttuple tyl -> Ttuple (List.map normalize_type tyl)
+  | Tconstruct (tcs, tyl) -> Tconstruct (tcs, List.map normalize_type tyl)
 
 (* Replace the type variables of a genericized type with arbitrary types,
    per the provided substitution. *)

@@ -11,6 +11,7 @@ open Misc
 
 type error =
   | Interface_not_compiled of string
+  | Non_generalizable of type_expr
 
 exception Error of Location.t * error
 
@@ -56,25 +57,33 @@ let type_structure l =
 let type_signature l =
   List.iter type_signature_item l
 
-let genericize_core_signature l =
+let check_nongen_schemes str =
+  List.iter
+    begin fun item ->
+      begin match item.str_desc with
+          Tstr_value (_, _, pat_exp_list) ->
+            List.iter
+              (fun (pat, exp) ->
+                 if not (Btype.closed_schema exp.exp_type) then
+                   raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
+              pat_exp_list
+        | _ -> ()
+      end
+    end str
+    
+let normalize_compiled_signature csig =
   List.iter
     begin function
-        Sig_value v ->
-          begin try
-            v.val_type <- genericize_type v.val_type
-          with Genericize ->
-            Error.cannot_generalize_err (val_name v) v
-          end
+        Sig_value v -> v.val_type <- normalize_type v.val_type
       | _ -> ()
-    end
-    l
+    end csig
 
-let transl_signature env l =
-  let l, sg, env = Resolve.signature env l in
+let transl_signature env psig =
+  let sg, csig, env = Resolve.signature env psig in
   ignore env;
-  type_signature l;
-  genericize_core_signature sg;
-  sg
+  type_signature sg;
+  normalize_compiled_signature csig;
+  csig
 
 let type_implementation sourcefile outputprefix modulename env str =
   let str, sg, env = Resolve.structure env str in
@@ -89,7 +98,7 @@ let type_implementation sourcefile outputprefix modulename env str =
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
     if Sys.file_exists sourceintf then begin
-      genericize_core_signature sg; (* xxx should normalize only *)
+      normalize_compiled_signature sg;
       let intf_file =
         try
           find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
@@ -99,9 +108,8 @@ let type_implementation sourcefile outputprefix modulename env str =
       let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
       (str, coercion)
     end else begin
-      (*      check_nongen_schemes finalenv str;*) genericize_core_signature sg;
-      
-(*      normalize_signature finalenv simple_sg; *)
+      check_nongen_schemes str;
+      normalize_compiled_signature simple_sg;
       let coercion =
         Includemod.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
@@ -119,3 +127,7 @@ let report_error ppf = function
   | Interface_not_compiled intf_name ->
       fprintf ppf
         "@[Could not find the .cmi file for interface@ %s.@]" intf_name
+  | Non_generalizable typ ->
+      fprintf ppf
+        "@[The type of this expression,@ %a,@ \
+           contains type variables that cannot be generalized@]" type_scheme typ

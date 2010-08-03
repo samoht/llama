@@ -112,8 +112,7 @@ let rec expand_head ty =
 
 (* The occur check *)
 
-exception OldUnify
-exception Unify of (core_type * core_type) list
+exception Unify
 
 let rec occur_check v = function
     Tvar tv ->
@@ -169,13 +168,13 @@ let rec unify (ty1, ty2) =
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
-        raise OldUnify
+        raise Unify
   end
 
 and unify_list = function
     [], [] -> ()
   | ty1::rest1, ty2::rest2 -> unify(ty1,ty2); unify_list(rest1,rest2)
-  | _ -> raise OldUnify
+  | _ -> raise Unify
 
 (* Two special cases of unification *)
 
@@ -200,7 +199,7 @@ let rec filter_arrow ty =
       let params, body = get_abbrev tcs in
       filter_arrow (expand_abbrev_aux params body args)
   | _ ->
-      raise OldUnify
+      raise Unify
 ;;
 
 let rec filter_product arity ty =
@@ -212,12 +211,12 @@ let rec filter_product arity ty =
       tv.tv_kind <- Forward(Ttuple tyl);
       tyl
   | Ttuple tyl ->
-      if List.length tyl == arity then tyl else raise OldUnify
+      if List.length tyl == arity then tyl else raise Unify
   | Tconstruct(tcs,args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
       filter_product arity (expand_abbrev_aux params body args)
   | _ ->
-      raise OldUnify
+      raise Unify
 ;;
 
 let rec filter_array ty =
@@ -234,7 +233,7 @@ let rec filter_array ty =
         let params, body = get_abbrev tcs in
         filter_array (expand_abbrev_aux params body args)
     | _ ->
-        raise OldUnify
+        raise Unify
 
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
@@ -299,6 +298,6 @@ let rec moregeneral_gen subst ty1 ty2 =
 
 let filter ty1 ty2 =
   let subst = ref [] in
-  if not (moregeneral_gen subst ty1 ty2) then raise OldUnify;
+  if not (moregeneral_gen subst ty1 ty2) then raise Unify;
   !subst
 let moregeneral = moregeneral_gen (ref [])
