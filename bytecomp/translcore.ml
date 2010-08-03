@@ -474,7 +474,7 @@ let event_before exp lam = match lam with
   then Levent(lam, {lev_loc = exp.exp_loc;
                     lev_kind = Lev_before;
                     lev_repr = None;
-                    lev_env = Env.summary exp.exp_env})
+                    lev_env = Env.summary exp.exp_env.Context.ctxt_env})
   else lam
 
 let event_after exp lam =
@@ -482,7 +482,7 @@ let event_after exp lam =
   then Levent(lam, {lev_loc = exp.exp_loc;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;
-                    lev_env = Env.summary exp.exp_env})
+                    lev_env = Env.summary exp.exp_env.Context.ctxt_env})
   else lam
 
 let event_function exp lam =
@@ -493,7 +493,7 @@ let event_function exp lam =
      Levent(body, {lev_loc = exp.exp_loc;
                    lev_kind = Lev_function;
                    lev_repr = repr;
-                   lev_env = Env.summary exp.exp_env}))
+                   lev_env = Env.summary exp.exp_env.Context.ctxt_env}))
   else
     lam None
 
@@ -545,7 +545,9 @@ let rec transl_exp e =
 
 and transl_exp0 e =
   match e.exp_desc with
-    Texp_ident v ->
+    Texp_ident (Context.Ref_local lv) ->
+      Lvar (Ident.of_local_value lv)
+  | Texp_ident (Context.Ref_global v) ->
       begin match v with
         | {val_kind = Val_prim p} ->
             transl_primitive p
@@ -563,7 +565,7 @@ and transl_exp0 e =
             transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
       in
       Lfunction(kind, params, body)
-  | Texp_apply({exp_desc = Texp_ident(v)}, oargs)
+  | Texp_apply({exp_desc = Texp_ident(Context.Ref_global(v))}, oargs)
       when (match v.val_kind with 
               | Val_prim p -> List.length oargs >= p.prim_arity
               | _ -> false) ->
@@ -656,7 +658,7 @@ and transl_exp0 e =
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      transl_record (Ctype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
+      transl_record (Btype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
   | Texp_field(arg, lbl) ->
@@ -713,7 +715,7 @@ and transl_exp0 e =
   | Texp_while(cond, body) ->
       Lwhile(transl_exp cond, event_before body (transl_exp body))
   | Texp_for(param, low, high, dir, body) ->
-      Lfor(Ident.of_value param, transl_exp low, transl_exp high, dir,
+      Lfor(Ident.of_local_value param, transl_exp low, transl_exp high, dir,
            event_before body (transl_exp body))
   | Texp_when(cond, body) ->
       event_before cond
@@ -932,7 +934,7 @@ and transl_let rec_flag pat_expr_list body =
         List.map
           (fun (pat, expr) ->
             match pat.pat_desc with
-              Tpat_var id -> Ident.of_value id
+              Tpat_var id -> Ident.of_local_value id
             | _ -> raise(Error(pat.pat_loc, Illegal_letrec_pat)))
         pat_expr_list in
       let transl_case (pat, expr) id =

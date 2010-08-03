@@ -25,9 +25,9 @@ open Lambda
 open Translcore
 
 let let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.of_value v) (Typedtree_aux.let_bound_values pat_expr_list)
+  List.map (fun v -> Ident.of_local_value v) (Typedtree_aux.let_bound_values pat_expr_list)
 let rev_let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.of_value v) (Typedtree_aux.rev_let_bound_values pat_expr_list)
+  List.map (fun v -> Ident.of_local_value v) (Typedtree_aux.rev_let_bound_values pat_expr_list)
 
 type error =
   Circular_dependency of Ident.t

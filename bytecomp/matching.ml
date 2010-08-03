@@ -2058,7 +2058,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
   end else begin
     (* Regular concrete type *)
     let ncases = List.length tag_lambda_list
-    and nconstrs =  List.length (Ctype.constructors_of_type (Btype.cs_parent cstr)) in
+    and nconstrs =  List.length (Btype.constructors_of_type (Btype.cs_parent cstr)) in
     let sig_complete = ncases = nconstrs in
     let fails,local_jumps =
       if sig_complete then [],jumps_empty

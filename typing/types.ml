@@ -78,7 +78,6 @@ type value =
   { val_id : qualified_id;
     mutable val_type: llama_type;                (* Type of the value *)
     val_kind: value_kind;
-    mutable val_global: bool;
     val_formal: formal_flags }
 
 and value_kind =

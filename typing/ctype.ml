@@ -2,102 +2,145 @@ open Types
 open Misc
 open Btype
 open Module
+open Context
 
-let none = type_none
-let repr = Btype.repr
-
-(* Extract the list of labels of a record type. *)
-
-let constructors_of_type ty =
-  begin match ty.tcs_kind with
-    | Type_variant l -> l
-    | _ -> assert false
-  end
-
-let labels_of_type ty =
-  begin match ty.tcs_kind with
-    | Type_record l -> l
-    | _ -> assert false
-  end
+let newtyvar() = { forward = None }
+let rec newtyvars n = if n=0 then [] else newtyvar()::newtyvars(n-1)
+let new_type_var() = LTvar (newtyvar())
+let none = Context.no_type
 
 (* ---------------------------------------------------------------------- *)
-(* Expansion of abbrevations: low-level.                                  *)
+(* instantiation (global type -> local type)                              *)
 (* ---------------------------------------------------------------------- *)
+
+let rec instantiate_type subst = function
+    Tvar tv ->
+      begin match tv.tv_kind with
+        | Generic ->
+            begin try
+              LTvar (List.assq tv !subst)
+            with Not_found ->
+              let ng = newtyvar() in
+              subst := (tv, ng) :: !subst;
+              LTvar ng
+            end
+        | Level _ -> assert false
+        | Forward ty -> assert false
+      end
+  | Tarrow (ty1, ty2) ->
+      LTarrow (instantiate_type subst ty1, instantiate_type subst ty2)
+  | Ttuple tyl ->
+      LTtuple (List.map (instantiate_type subst) tyl)
+  | Tconstruct (tcs, tyl) ->
+      LTconstruct (Get.type_constructor tcs, List.map (instantiate_type subst) tyl)
+
+let instantiate_one_type ty =
+  instantiate_type (ref []) ty
+
+let instantiate_constructor cs =
+  let subst = ref [] in
+  let ty_args = List.map (instantiate_type subst) cs.cs_args in
+  let ty_res = instantiate_type subst cs.cs_res in
+  (ty_args, ty_res)
+
+let instantiate_label lbl =
+  let subst = ref [] in
+  let ty_res = instantiate_type subst lbl.lbl_res in
+  let ty_arg = instantiate_type subst lbl.lbl_arg in
+  ty_res, ty_arg
+
+let type_unit = LTconstruct(Predef.tcs_unit, [])
+let type_bool = LTconstruct(Predef.tcs_bool, [])
+let type_int = LTconstruct(Predef.tcs_int, [])
+let type_float = LTconstruct(Predef.tcs_float, [])
+let type_string = LTconstruct(Predef.tcs_string, [])
+let type_char = LTconstruct(Predef.tcs_char, [])
+let type_int32 = LTconstruct(Predef.tcs_int32, [])
+let type_int64 = LTconstruct(Predef.tcs_int64, [])
+let type_nativeint = LTconstruct(Predef.tcs_nativeint, [])
+let type_exn = LTconstruct(Predef.tcs_exn, [])
+let type_array ty = LTconstruct(Predef.tcs_array, [ty])
+
+(* ---------------------------------------------------------------------- *)
+(* Generalization (local->global)                                         *)
+(* ---------------------------------------------------------------------- *)
+
+let is_closed, generalize =
+  let addq l x = if List.memq x l then l else x::l in
+  let unionq = List.fold_left addq in
+  let rec variables = function
+      LTvar tv ->
+        begin match tv.forward with
+            None -> [tv]
+          | Some ty -> variables ty
+        end
+    | LTarrow (ty1, ty2) -> unionq (variables ty1) (variables ty2)
+    | LTtuple tyl | LTconstruct (_, tyl) -> List.fold_left unionq [] (List.map variables tyl)
+  in
+  let is_closed ty = (variables ty = []) in
+  let generalize ty =
+    let vars = variables ty in
+    let subst = List.map (fun var -> (var, Tvar(new_generic()))) vars in
+    let rec aux = function
+        LTvar tv ->
+          begin match tv.forward with
+              None -> List.assq tv subst
+            | Some ty -> aux ty
+          end
+      | LTarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
+      | LTtuple tyl -> Ttuple (List.map aux tyl)
+      | LTconstruct (tcs, tyl) -> Tconstruct (ref_type_constr tcs, List.map aux tyl)
+    in aux ty
+  in is_closed, generalize
+
+(* ---------------------------------------------------------------------- *)
+(* expansion of abbreviations                                             *)
+(* ---------------------------------------------------------------------- *)
+
+let rec repr = function
+    LTvar tv as ty ->
+      begin match tv.forward with
+        | None -> ty
+        | Some ty -> repr ty
+      end
+  | ty -> ty
 
 let has_abbrev tcs =
-  begin match (Get.type_constructor tcs).tcs_kind with
+  begin match tcs.tcs_kind with
     | Type_abbrev _ -> true
     | _ -> false
   end
 
 let get_abbrev tcs =
-  let tcs = Get.type_constructor tcs in
   begin match tcs.tcs_kind with
     | Type_abbrev body -> tcs.tcs_params, body
     | _ -> assert false
   end
 
+let rec substitute_type subst = function
+    Tvar tv ->
+      begin match tv.tv_kind with
+        | Generic ->
+            List.assq tv subst
+        | Level _ ->
+            assert false
+        | Forward ty ->
+            assert false
+      end
+  | Tarrow (ty1, ty2) ->
+      LTarrow (substitute_type subst ty1, substitute_type subst ty2)
+  | Ttuple tyl ->
+      LTtuple (List.map (substitute_type subst) tyl)
+  | Tconstruct (tcs, tyl) ->
+      LTconstruct (Get.type_constructor tcs, List.map (substitute_type subst) tyl)
+
 let expand_abbrev_aux params body args =
   substitute_type (List.combine params args) body
 
-let apply _ = expand_abbrev_aux
-
-(* ---------------------------------------------------------------------- *)
-(* Expansion of abbreviations: high-level.                                *)
-(* ---------------------------------------------------------------------- *)
-
-(* I've dutifully ported many of ocaml's variations, but that section
-is kind of nightmarish and I can't imagine they are really necessary.
-My final version ought to suffice. *)
-
-exception Cannot_expand
-
-(* Expand an abbreviation. The expansion is not memorized. *)
-(*
-   An abbreviation expansion will fail in this case:
-   1. The type constructor does not correspond to a manifest type.
-*)
-(* Exactly once, else exception. No repr. *)
-let expand_abbrev ty =
-  match ty with
-      Tconstruct (tcs, args) ->
-        let tcs = Get.type_constructor tcs in
-        begin match tcs.tcs_kind with
-          | Type_abbrev body -> expand_abbrev_aux tcs.tcs_params body args
-          | _ -> raise Cannot_expand
-        end
-    | _ -> raise Cannot_expand
-
-(* Exactly once, else exception. *)
-let try_expand_once ty =
-  let ty = repr ty in
-  match ty with
-      Tconstruct _ -> repr (expand_abbrev ty)
-    | _ -> raise Cannot_expand
-
-(* At least once, else exception. *)
-let rec try_expand_head ty =
-  let ty' = try_expand_once ty in
-  begin try
-    try_expand_head ty'
-  with Cannot_expand ->
-    ty'
-  end
-
-(* Exactly once, else assert. *)
-let expand_head_once ty =
-  try expand_abbrev (repr ty) with Cannot_expand -> assert false
-
-(* Fully expand the head of a type. *)
-let expand_head ty =
-  try try_expand_head ty with Cannot_expand -> repr ty
-
-(* My version. *)
 let rec expand_head ty =
   let ty = repr ty in
   begin match ty with
-    | Tconstruct (tcs, args) ->
-        let tcs = Get.type_constructor tcs in
+    | LTconstruct (tcs, args) ->
         begin match tcs.tcs_kind with
           | Type_abbrev body ->
               expand_head (expand_abbrev_aux tcs.tcs_params body args)
@@ -115,17 +158,16 @@ let rec expand_head ty =
 exception Unify
 
 let rec occur_check v = function
-    Tvar tv ->
-      begin match tv.tv_kind with
-        | Generic -> assert false
-        | Level _ -> tv == v
-        | Forward ty -> occur_check v ty
+    LTvar tv ->
+      begin match tv.forward with
+        | None -> tv == v
+        | Some ty -> occur_check v ty
       end
-  | Tarrow (ty1, ty2) ->
+  | LTarrow (ty1, ty2) ->
       occur_check v ty1 || occur_check v ty2
-  | Ttuple tyl ->
+  | LTtuple tyl ->
       List.exists (occur_check v) tyl
-  | Tconstruct (tcs, tyl) ->
+  | LTconstruct (tcs, tyl) ->
       List.exists (occur_check v) tyl
 
 (* Unification *)
@@ -133,39 +175,26 @@ let rec occur_check v = function
 let rec unify (ty1, ty2) =
   let ty1 = repr ty1 in
   let ty2 = repr ty2 in
-  let level tv =
-    begin match tv.tv_kind with
-      | Level level -> level
-      | Generic | Forward _ -> assert false
-    end
-  in
   begin match ty1, ty2 with
-      Tvar tv1, Tvar tv2 ->
+      LTvar tv1, LTvar tv2 ->
         if tv1 == tv2 then () else
-          if level tv1 < level tv2 then begin
-            tv2.tv_kind <- Forward ty1
-          end else begin
-            tv1.tv_kind <- Forward ty2
-          end
-    | Tvar tv1, _ when not (occur_check tv1 ty2) ->
-        rectify_type (level tv1) ty2;
-        tv1.tv_kind <- Forward ty2
-    | _, Tvar tv2 when not (occur_check tv2 ty1) ->
-        rectify_type (level tv2) ty1;
-        tv2.tv_kind <- Forward ty1
-    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+          tv1.forward <- Some ty2
+    | LTvar tv1, _ when not (occur_check tv1 ty2) ->
+        tv1.forward <- Some ty2
+    | _, LTvar tv2 when not (occur_check tv2 ty1) ->
+        tv2.forward <- Some ty1
+    | LTarrow(t1arg, t1res), LTarrow(t2arg, t2res) ->
         unify (t1arg, t2arg);
         unify (t1res, t2res)
-    | Ttuple tyl1, Ttuple tyl2 ->
+    | LTtuple tyl1, LTtuple tyl2 ->
         unify_list (tyl1, tyl2)
-    | Tconstruct (tcs1, tyl1), _ when has_abbrev tcs1 ->
+    | LTconstruct (tcs1, tyl1), _ when has_abbrev tcs1 ->
         let params1, body1 = get_abbrev tcs1 in
         unify (expand_abbrev_aux params1 body1 tyl1, ty2)
-    | _, Tconstruct (tcs2, tyl2) when has_abbrev tcs2 ->
+    | _, LTconstruct (tcs2, tyl2) when has_abbrev tcs2 ->
         let params2, body2 = get_abbrev tcs2 in
         unify (ty1, expand_abbrev_aux params2 body2 tyl2)
-    | Tconstruct (tcs1, tyl1), Tconstruct (tcs2, tyl2)
-        when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
+    | LTconstruct (tcs1, tyl1), LTconstruct (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
         raise Unify
@@ -178,24 +207,17 @@ and unify_list = function
 
 (* Two special cases of unification *)
 
-let nongeneric_level tv =
-  begin match tv.tv_kind with
-    | Generic | Forward _ -> assert false
-    | Level level -> level
-  end
-
 let rec filter_arrow ty =
   let ty = repr ty in
   match ty with
-    Tvar tv ->
-      let level = nongeneric_level tv in
-      let ty1 = Tvar(new_nongeneric_gen level) in
-      let ty2 = Tvar(new_nongeneric_gen level) in
-      tv.tv_kind <- Forward(Tarrow(ty1, ty2));
+    LTvar tv ->
+      let ty1 = LTvar(newtyvar()) in
+      let ty2 = LTvar(newtyvar()) in
+      tv.forward <- Some(LTarrow(ty1, ty2));
       (ty1, ty2)
-  | Tarrow(ty1, ty2) ->
+  | LTarrow(ty1, ty2) ->
       (ty1, ty2)
-  | Tconstruct(tcs, args) when has_abbrev tcs ->
+  | LTconstruct(tcs, args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
       filter_arrow (expand_abbrev_aux params body args)
   | _ ->
@@ -205,14 +227,13 @@ let rec filter_arrow ty =
 let rec filter_product arity ty =
   let ty = repr ty in
   match ty with
-    Tvar tv ->
-      let level = nongeneric_level tv in
-      let tyl = List.map (fun tv -> Tvar tv) (new_nongenerics_gen arity level) in
-      tv.tv_kind <- Forward(Ttuple tyl);
+    LTvar tv ->
+      let tyl = List.map (fun tv -> LTvar tv) (newtyvars arity) in
+      tv.forward <- Some(LTtuple tyl);
       tyl
-  | Ttuple tyl ->
+  | LTtuple tyl ->
       if List.length tyl == arity then tyl else raise Unify
-  | Tconstruct(tcs,args) when has_abbrev tcs ->
+  | LTconstruct(tcs,args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
       filter_product arity (expand_abbrev_aux params body args)
   | _ ->
@@ -222,82 +243,14 @@ let rec filter_product arity ty =
 let rec filter_array ty =
   let ty = repr ty in
   match ty with
-      Tvar tv ->
-        let level = nongeneric_level tv in
-        let ty = Tvar(new_nongeneric_gen level) in
-        tv.tv_kind <- Forward(Tconstruct(ref_type_constr Predef.tcs_array, [ty]));
+      LTvar tv ->
+        let ty = LTvar(newtyvar()) in
+        tv.forward <- Some(LTconstruct(Predef.tcs_array, [ty]));
         ty
-    | Tconstruct(tcs,[arg]) when Get.type_constructor tcs == Predef.tcs_array ->
+    | LTconstruct(tcs,[arg]) when tcs == Predef.tcs_array ->
         arg
-    | Tconstruct(tcs, args) when has_abbrev tcs ->
+    | LTconstruct(tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         filter_array (expand_abbrev_aux params body args)
     | _ ->
         raise Unify
-
-(* Whether two types are identical, modulo expansion of abbreviations,
-and per the provided correspondence function for the variables. *)
-
-let rec equiv_gen corresp ty1 ty2 =
-  let ty1 = repr ty1 in
-  let ty2 = repr ty2 in
-  match ty1, ty2 with
-    | Tvar tv1, Tvar tv2 ->
-        corresp tv1 == tv2
-    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-        equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
-    | Ttuple(t1args), Ttuple(t2args) ->
-        List.forall2 (equiv_gen corresp) t1args t2args
-    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        equiv_gen corresp (expand_abbrev_aux params body args) ty2
-    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        equiv_gen corresp ty1 (expand_abbrev_aux params body args)
-    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2) when
-        Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.forall2 (equiv_gen corresp) tyl1 tyl2
-    | _ ->
-        false
-
-let equal = equiv_gen (fun id -> id)
-let equiv alist = equiv_gen (fun id -> List.assq id alist)
-
-(* Whether a genericized type is more general than an arbitrary type. *)
-
-let rec moregeneral_gen subst ty1 ty2 =
-  let ty1 = repr ty1 in
-  let ty2 = repr ty2 in
-  match ty1, ty2 with
-    | Tvar tv, _ ->
-        begin match tv.tv_kind with
-            Generic ->
-              if List.mem_assq tv !subst then begin
-                equal (List.assq tv !subst) ty2
-              end else begin
-                subst := (tv, ty2) :: !subst; true
-              end
-          | Level _ | Forward _ ->
-              assert false
-        end
-    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-        moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
-    | Ttuple(t1args), Ttuple(t2args) ->
-        List.forall2 (moregeneral_gen subst) t1args t2args
-    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        moregeneral_gen subst (expand_abbrev_aux params body args) ty2
-    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        moregeneral_gen subst ty1 (expand_abbrev_aux params body args)
-    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2)
-        when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.forall2 (moregeneral_gen subst) tyl1 tyl2
-    | _ ->
-        false
-
-let filter ty1 ty2 =
-  let subst = ref [] in
-  if not (moregeneral_gen subst ty1 ty2) then raise Unify;
-  !subst
-let moregeneral = moregeneral_gen (ref [])

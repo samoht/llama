@@ -121,4 +121,4 @@ let main () =
     end;
     exit 3
 
-let _ = (* Printexc.catch *) main (); exit 0
+let _ = main (); (exit 0:unit)

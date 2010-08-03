@@ -11,7 +11,6 @@ open Misc
 
 type error =
   | Interface_not_compiled of string
-  | Non_generalizable of type_expr
 
 exception Error of Location.t * error
 
@@ -19,39 +18,21 @@ let gen_value x = Sig_value x
 let gen_type x = Sig_type x
 let gen_exception x = Sig_exception x
 
-let goo = ref ([]:expression list)
-
-let check_nongen_scheme foo item =
-      begin match item.str_desc with
-          Tstr_value (_, _, pat_exp_list) ->
-            List.iter
-              (fun (pat, exp) ->
-                 if not (Btype.closed_schema exp.exp_type) then
-                   if foo then begin
-                     goo := exp :: !goo
-                   end
-                   else
-                     raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
-              pat_exp_list
-        | _ -> ()
-      end
-
 let type_structure_item str =
   begin match str.str_desc with
     | Tstr_eval exp ->
-        ignore (type_expression str.str_loc exp)
+        Some(type_expression str.str_loc exp)
     | Tstr_value (_, _, pat_exp_list) ->
-        type_letdef pat_exp_list;
+        type_letdef pat_exp_list; None
     | Tstr_primitive (v, typexp) ->
-        type_valuedecl_new v typexp;
+        type_valuedecl_new v typexp; None
     | Tstr_type teql ->
-        type_equation_list teql
+        type_equation_list teql; None
     | Tstr_exception (cs, args) ->
-        type_excdecl cs args
+        type_excdecl cs args; None
     | Tstr_open _ ->
-        ()
-  end;
-  check_nongen_scheme true str
+        None
+  end
 
 let type_signature_item tsig =
   begin match tsig.sig_desc with
@@ -68,36 +49,15 @@ let type_signature_item tsig =
   end
 
 let type_structure l =
-  goo := [];
-  List.iter type_structure_item l;
-  if !goo <> [] then begin
-    List.iter
-      begin fun exp ->
-        raise(Error(exp.exp_loc, Non_generalizable exp.exp_type))
-      end
-      (List.rev !goo);
-    assert false
-  end
-  
+  List.iter (fun si -> ignore (type_structure_item si)) l
 
 let type_signature l =
   List.iter type_signature_item l
-
-
-let check_nongen_schemes = List.iter (check_nongen_scheme false)
-    
-let normalize_compiled_signature csig =
-  List.iter
-    begin function
-        Sig_value v -> v.val_type <- normalize_type v.val_type
-      | _ -> ()
-    end csig
 
 let transl_signature env psig =
   let sg, csig, env = Resolve.signature env psig in
   ignore env;
   type_signature sg;
-  normalize_compiled_signature csig;
   csig
 
 let type_implementation sourcefile outputprefix modulename env str =
@@ -113,7 +73,6 @@ let type_implementation sourcefile outputprefix modulename env str =
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
     if Sys.file_exists sourceintf then begin
-      normalize_compiled_signature sg;
       let intf_file =
         try
           find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
@@ -123,8 +82,6 @@ let type_implementation sourcefile outputprefix modulename env str =
       let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
       (str, coercion)
     end else begin
-      check_nongen_schemes str;
-      normalize_compiled_signature simple_sg;
       let coercion =
         Includemod.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
@@ -142,7 +99,3 @@ let report_error ppf = function
   | Interface_not_compiled intf_name ->
       fprintf ppf
         "@[Could not find the .cmi file for interface@ %s.@]" intf_name
-  | Non_generalizable typ ->
-      fprintf ppf
-        "@[The type of this expression,@ %a,@ \
-           contains type variables that cannot be generalized@]" type_scheme typ

@@ -142,4 +142,5 @@ let _ =
    exit 1
   )
   else
-    exit 0
+    exit 0;
+  ()

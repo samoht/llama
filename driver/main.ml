@@ -155,7 +155,7 @@ let default_output = function
   | Some s -> s
   | None -> Config.default_executable_name
 
-let main () =
+let main () : unit =
   try
     Arg.parse options anonymous usage;
     if

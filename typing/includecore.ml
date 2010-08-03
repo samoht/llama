@@ -3,8 +3,6 @@ open Types
 open Btype
 open Typedtree
 
-let moregeneral = Ctype.moregeneral
-
 (* Inclusion between value descriptions *)
 
 exception Dont_match
@@ -74,7 +72,7 @@ let rec compare_variants s params n cstrs1 cstrs2 =
       if List.length cstr1.cs_args <> List.length cstr2.cs_args then [Field_arity cstr1.cs_name] else
       if Misc.forall2
           (fun ty1 ty2 ->
-            Ctype.equiv params ty1 (Subst.core_type s ty2))
+            Btype.equiv params ty1 (Subst.core_type s ty2))
           cstr1.cs_args cstr2.cs_args
       then compare_variants s params (n+1) rem1 rem2
       else [Field_type cstr1.cs_name]
@@ -87,18 +85,18 @@ let rec compare_records s params n labels1 labels2 =
   | lab1::rem1, lab2::rem2 ->
       if lab1.lbl_name <> lab2.lbl_name then [Field_names (n, lab1.lbl_name, lab2.lbl_name)] else
       if lab1.lbl_mut <> lab2.lbl_mut then [Field_mutable lab1.lbl_name] else
-      if Ctype.equiv params lab1.lbl_arg (Subst.core_type s lab2.lbl_arg)
+      if Btype.equiv params lab1.lbl_arg (Subst.core_type s lab2.lbl_arg)
       then compare_records s params (n+1) rem1 rem2
       else [Field_type lab1.lbl_name]
 
 let exceptions s cs1 cs2 =
   List.forall2
-    (fun ty1 ty2 -> Ctype.equal ty1 (Subst.core_type s ty2))
+    (fun ty1 ty2 -> Btype.equal ty1 (Subst.core_type s ty2))
     cs1.cs_args cs2.cs_args
 
 let labels s params lbl1 lbl2 =
   lbl1.lbl_name = lbl2.lbl_name &&
-  Ctype.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
+  Btype.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
 
 let type_constructors s tcs1 tcs2 =
   if tcs1.tcs_arity <> tcs2.tcs_arity then [Arity] else
@@ -111,11 +109,11 @@ let type_constructors s tcs1 tcs2 =
     | Type_record lbls1, Type_record lbls2 ->
         compare_records s params 1 lbls1 lbls2
     | Type_abbrev ty1, Type_abbrev ty2 ->
-        if Ctype.equiv params ty1 (Subst.core_type s ty2) then [] else
+        if Btype.equiv params ty1 (Subst.core_type s ty2) then [] else
           [General]
     | _, Type_abbrev ty2 ->
         let ty1 = Tconstruct (ref_type_constr tcs2, List.map tvar tcs2.tcs_params) in
-        if Ctype.equal ty1 ty2 then [] else [General]
+        if Btype.equal ty1 ty2 then [] else [General]
     | _, _ ->
         [General]
   end

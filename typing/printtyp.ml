@@ -55,12 +55,10 @@ let type_var_name_counter = ref 0
 
 let reset_names () =
   type_var_names := []; type_var_name_counter := 0
-
 let new_type_var_name () =
   let name = int_to_alpha !type_var_name_counter in
   incr type_var_name_counter;
   name
-
 let name_of_type tv =
   try List.assq tv !type_var_names with Not_found ->
     let name = new_type_var_name () in
@@ -247,3 +245,46 @@ let output_type_constr = convert type_constructor
 let output_constr = convert constructor
 let output_label = convert label
 let reset_type_var_name = reset_names
+
+(* ---------------------------------------------------------------------- *)
+(* local types                                                            *)
+(* ---------------------------------------------------------------------- *)
+
+open Context
+
+let local_names = ref ([] : (Context.type_variable * string) list)
+let local_counter = ref 0
+let reset_local_names () = local_names := []
+let new_local_name () =
+  let name = int_to_alpha !local_counter in
+  incr local_counter;
+  name
+let name_of_local_type tv =
+  try List.assq tv !local_names with Not_found ->
+    let name = new_local_name () in
+    local_names := (tv, name) :: !local_names;
+    name
+
+let rec tree_of_local_type ty =
+  begin match ty with
+    | LTvar tv ->
+        begin match tv.forward with
+          | None ->
+              Otyp_var (false, name_of_local_type tv)
+          | Some ty ->
+              tree_of_local_type ty
+        end
+    | LTarrow (ty1, ty2) ->
+        Otyp_arrow ("", tree_of_local_type ty1, tree_of_local_type ty2)
+    | LTtuple tyl ->
+        Otyp_tuple (tree_of_local_type_list tyl)
+    | LTconstruct (tcs, tyl) ->
+        Otyp_constr (tree_of_type_constructor tcs, tree_of_local_type_list tyl)
+  end
+
+and tree_of_local_type_list tyl =
+  List.map tree_of_local_type tyl
+
+let local_type ppf ty =
+  !Oprint.out_type ppf (tree_of_local_type ty)
+

@@ -33,7 +33,7 @@ type debug_event =
 
 and debug_event_kind =
     Event_before
-  | Event_after of Types.type_expr
+  | Event_after of Context.local_type
   | Event_pseudo
 
 and debug_event_info =

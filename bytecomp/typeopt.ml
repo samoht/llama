@@ -20,24 +20,23 @@ open Primitive
 open Types
 open Typedtree
 open Lambda
+open Context
+open Ctype
 
 (* llama xxx: these fns don't need an env *)
 
-let scrape env ty =
-  Ctype.expand_head ty
-
-let has_base_type exp base_ty_path =
-  match scrape exp.exp_env exp.exp_type with
-  | Tconstruct(p, _) -> Get.type_constructor p == base_ty_path
+let has_base_type exp base_tcs =
+  match expand_head exp.exp_type with
+  | LTconstruct(tcs, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
-  match scrape exp.exp_env exp.exp_type with
-  | Tconstruct(p, args) ->
-      not (Get.type_constructor p == Predef.tcs_int) &&
-      not (Get.type_constructor p == Predef.tcs_char) &&
+  match expand_head exp.exp_type with
+  | LTconstruct(tcs, args) ->
+      not (tcs == Predef.tcs_int) &&
+      not (tcs == Predef.tcs_char) &&
       begin try
-        match Get.type_constructor p with
+        match tcs with
           {tcs_kind = Type_variant []} -> true (* type exn *)
         | {tcs_kind = Type_variant cstrs} ->
             List.exists (fun cs -> cs.cs_args <> []) cstrs
@@ -50,11 +49,10 @@ let maybe_pointer exp =
   | _ -> true
 
 let array_element_kind env ty =
-  match scrape env ty with
-  | Tvar _ ->
+  match expand_head ty with
+  | LTvar _ ->
       Pgenarray
-  | Tconstruct(p, args) ->
-      let tcs = Get.type_constructor p in
+  | LTconstruct(tcs, args) ->
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
       else if tcs == Predef.tcs_float then
@@ -85,9 +83,8 @@ let array_element_kind env ty =
       Paddrarray
 
 let array_kind_gen ty env =
-  match scrape env ty with
-  | Tconstruct(p, [elt_ty])
-    when Get.type_constructor p == Predef.tcs_array ->
+  match expand_head ty with
+  | LTconstruct(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
       array_element_kind env elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)
@@ -98,8 +95,8 @@ let array_kind exp = array_kind_gen exp.exp_type exp.exp_env
 let array_pattern_kind pat = array_kind_gen pat.pat_type pat.pat_env
 
 let bigarray_decode_type env ty tbl dfl =
-  match scrape env ty with
-  | Tconstruct({ ref_id = id }, [])
+  match expand_head ty with
+  | LTconstruct({ tcs_id = id }, [])
     when id.id_module = Module "Bigarray" ->
       begin try List.assoc id.id_name tbl with Not_found -> dfl end
   | _ ->
@@ -124,8 +121,8 @@ let layout_table =
    "fortran_layout", Pbigarray_fortran_layout]
 
 let bigarray_kind_and_layout exp =
-  match scrape exp.exp_env exp.exp_type with
-  | Tconstruct(p, [caml_type; elt_type; layout_type]) ->
+  match expand_head exp.exp_type with
+  | LTconstruct(_, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type exp.exp_env elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type exp.exp_env layout_type layout_table Pbigarray_unknown_layout)
   | _ ->

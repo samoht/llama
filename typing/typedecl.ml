@@ -9,6 +9,7 @@ open Typecore
 
 type error =
     Recursive_abbrev of string
+  | Non_generalizable of Context.local_type
 
 exception Error of Location.t * error
 
@@ -81,31 +82,25 @@ let check_inhabited tcs_list = function
 
 (* #endif (* DEDUCTIVE_LLAMA *) *)
 
-let type_equation teq =
+let type_equation teq = (* xxx *)
   let tcs = teq.teq_tcs in
-  List.iter2 (fun utv tv -> utv.utv_type <- Tvar tv) teq.teq_params tcs.tcs_params;
-  let ty_res =
-    Tconstruct (ref_type_constr tcs,
-                List.map (fun tv -> Tvar tv) tcs.tcs_params)
-  in
+  let ty_res = Tconstruct (ref_type_constr tcs, List.map (fun tv -> Tvar tv) tcs.tcs_params) in
   begin match teq.teq_kind with
       Teq_abstract _ -> ()
     | Teq_variant lst ->
         List.iter
           begin fun (cs, args) ->
-            let ty_args = List.map (type_of_type_expression Generic) args in
             cs.cs_res <- ty_res;
-            cs.cs_args <- ty_args
+            cs.cs_args <- args
           end lst
     | Teq_record lst ->
         List.iter
           begin fun (lbl, arg) ->
             lbl.lbl_res <- ty_res;
-            lbl.lbl_arg <- type_of_type_expression Generic arg
+            lbl.lbl_arg <- arg
           end lst
     | Teq_abbrev arg ->
-        let ty_arg = type_of_type_expression Generic arg in
-        tcs.tcs_kind <- Type_abbrev ty_arg
+        tcs.tcs_kind <- Type_abbrev arg
   end
 
 let type_equation_list teq_list =
@@ -132,36 +127,48 @@ let type_equation_list teq_list =
 
 let type_excdecl cs args  =
   cs.cs_res <- Predef.type_exn;
-  cs.cs_args <- List.map (type_of_type_expression Generic) args
+  cs.cs_args <- args
 
 let type_valuedecl_new v typexp =
-  v.val_type <- type_of_type_expression Generic typexp
+  v.val_type <- typexp
 
 let type_letdef pat_exp_list =
-  push_type_level();
-  let ty_list = List.map (fun _ -> new_type_var ()) pat_exp_list in
+  let ty_list = List.map (fun _ -> Context.LTvar(Ctype.newtyvar())) pat_exp_list in
   List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
   List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
-  pop_type_level();
-  let gen_type =
-    List.map2
-      (fun (pat, exp) ty -> (is_nonexpansive exp, ty))
-      pat_exp_list ty_list
-  in
-  List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
-  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type
+  List.iter2
+    (fun (pat, exp) ty ->
+       if not (is_nonexpansive exp) && not (Ctype.is_closed ty) then
+         raise (Error(exp.exp_loc, Non_generalizable ty)))
+    pat_exp_list ty_list;
+  List.iter2
+    (fun (pat, exp) ty ->
+       List.iter
+         (fun locval ->
+            begin match locval.Context.val_global with
+              | None -> ()
+              | Some globval -> globval.val_type <- Ctype.generalize locval.Context.val_type
+            end
+         )
+         (Typedtree_aux.free_vars_of_pat pat)
+    )
+    pat_exp_list ty_list
   
 let type_expression loc expr =
-  push_type_level();
   let ty = type_expr expr in
-  pop_type_level();
-  if is_nonexpansive expr then generalize_type ty;
-  ty
+  if not (is_nonexpansive expr) && not (Ctype.is_closed ty) then
+    raise (Error(expr.exp_loc, Non_generalizable ty));
+  Ctype.generalize ty
 
 (**** Error report ****)
 
 open Format
+open Printtyp
 
 let report_error ppf = function
   | Recursive_abbrev s ->
       fprintf ppf "The type abbreviation %s is cyclic" s
+  | Non_generalizable typ ->
+      fprintf ppf
+        "@[The type of this expression,@ %a,@ \
+           contains type variables that cannot be generalized@]" local_type typ

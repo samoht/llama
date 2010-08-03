@@ -310,4 +310,5 @@ let _ =
      "-vnum", Arg.Unit print_version_num,
       " Print version number and exit";
     ] file_dependencies usage;
-  exit (if !error_occurred then 2 else 0)
+  exit (if !error_occurred then 2 else 0);
+  ()

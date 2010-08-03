@@ -18,6 +18,7 @@ open Misc
 open Asttypes
 open Types
 open Pmc_pattern
+open Context
 
 (*************************************)
 (* Utilities for building patterns   *)
@@ -116,7 +117,7 @@ exception Empty (* Empty pattern *)
 let get_type_path ty =
   let ty = Ctype.expand_head ty in
   match ty with
-  | Tconstruct (path,_) -> Get.type_constructor path
+  | LTconstruct (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
 
 
@@ -587,7 +588,7 @@ let full_match closing env =  match env with
 | ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
-    List.length env = List.length (Ctype.constructors_of_type (Btype.cs_parent c))
+    List.length env = List.length (Btype.constructors_of_type (Btype.cs_parent c))
 | ({pat_desc = Tpat_variant _} as p,_) :: _ ->
     ignore p; assert false
 (*
@@ -666,7 +667,7 @@ let rec pat_of_constrs ex_pat = function
 let complete_constrs p all_tags = match p.pat_desc with
 | Tpat_construct (c,_) ->
     let tcs = Btype.cs_parent c in
-    let cs_list = Ctype.constructors_of_type tcs in
+    let cs_list = Btype.constructors_of_type tcs in
     complete_tags cs_list all_tags
 | _ -> fatal_error "Parmatch.complete_constr"
 

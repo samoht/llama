@@ -7,7 +7,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env: Env.t;
-    pat_type: core_type }
+    pat_type: Context.local_type }
 
 and pattern_desc =
     Tpat_any
@@ -33,8 +33,8 @@ let rec import pat =
 
 and import_desc = function
     Typedtree.Tpat_any -> Tpat_any
-  | Typedtree.Tpat_var v -> Tpat_var (Ident.of_value v)
-  | Typedtree.Tpat_alias (p, v) -> Tpat_alias (import p, Ident.of_value v)
+  | Typedtree.Tpat_var v -> Tpat_var (Ident.of_local_value v)
+  | Typedtree.Tpat_alias (p, v) -> Tpat_alias (import p, Ident.of_local_value v)
   | Typedtree.Tpat_constant c -> Tpat_constant c
   | Typedtree.Tpat_tuple lp -> Tpat_tuple (List.map import lp)
   | Typedtree.Tpat_construct (cs, lp) -> Tpat_construct (cs, List.map import lp)
@@ -93,11 +93,11 @@ let count_constructors tcs =
         | Cstr_exception _ -> assert false
       end
     end
-    (Ctype.constructors_of_type tcs);
+    (Btype.constructors_of_type tcs);
   !a, !b
 
 let calc_lbl_all lbl =
-  Array.of_list (Ctype.labels_of_type lbl.lbl_parent)
+  Array.of_list (Btype.labels_of_type lbl.lbl_parent)
 
 let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
 

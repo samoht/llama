@@ -33,17 +33,16 @@ let nodup lref s cb =
 let type_expr_vars = ref ([] : (string * user_type_variable) list);;
 let reset_type_expression_vars () = type_expr_vars := []
 
-let bind_type_expression_vars var_list loc =
+let bind_type_expression_vars var_list ty_list loc =
   type_expr_vars := [];
-  List.map
-    (fun v ->
+  List.iter2
+    (fun v t ->
       if List.mem_assoc v !type_expr_vars then
         raise(Error(loc, Repeated_parameter))
       else begin
-        let t = {utv_name=v; utv_type=type_none} in
-        type_expr_vars := (v, t) :: !type_expr_vars; t
+        type_expr_vars := (v, t) :: !type_expr_vars
       end)
-    var_list
+    var_list ty_list
 
 let rec var_names_of_pat pat =
   match pat.ppat_desc with
@@ -83,7 +82,7 @@ let lookup_label env li loc =
   with Not_found -> raise (Error (loc, Unbound_label li))
 
 let lookup_value env li loc =
-  try Env.lookup_value li env
+  try Context.lookup_value li env
   with Not_found -> raise (Error (loc, Unbound_value li))
 
 let lookup_module s loc =
@@ -92,7 +91,7 @@ let lookup_module s loc =
 
 (* ---------------------------------------------------------------------- *)
 
-let rec type_expression strict_flag env te =
+let rec type_expression env te =
   { te_desc =
       begin match te.ptyp_desc with
         | Ptyp_var v ->
@@ -100,34 +99,68 @@ let rec type_expression strict_flag env te =
               begin try
                 List.assoc v !type_expr_vars
               with Not_found ->
-                if strict_flag then
-                  raise (Error (te.ptyp_loc, Unbound_type_variable v));
-                let t = {utv_name=v; utv_type=type_none} in
+                let t = {utv_name=v; utv_type=Context.no_type} in
                 type_expr_vars := (v,t) :: !type_expr_vars; t
               end
         | Ptyp_arrow (x, y) ->
-            Ttyp_arrow (type_expression strict_flag env x,
-                        type_expression strict_flag env y)
+            Ttyp_arrow (type_expression env x,
+                        type_expression env y)
         | Ptyp_tuple l ->
-            Ttyp_tuple (List.map (type_expression strict_flag env) l)
+            Ttyp_tuple (List.map (type_expression env) l)
         | Ptyp_constr (li, l) ->
             let tcs = lookup_type env li te.ptyp_loc in
             if List.length l <> tcs.tcs_arity then
               raise(Error(te.ptyp_loc, 
                           Type_arity_mismatch(li, tcs.tcs_arity, List.length l)));
             Ttyp_constr (lookup_type env li te.ptyp_loc,
-                         List.map (type_expression strict_flag env) l)
+                         List.map (type_expression env) l)
       end;
     te_loc = te.ptyp_loc;
     te_env = env;
-    te_type = type_none }
+    te_type = Context.no_type }
+
+let typexp ctxt te = type_expression ctxt.Context.ctxt_env te
+
+let rec global_type env tctxt te =
+  begin match te.ptyp_desc with
+    | Ptyp_var name -> Tvar (List.assoc name tctxt)
+    | Ptyp_arrow (ty1, ty2) -> Tarrow (global_type env tctxt ty1, global_type env tctxt ty2)
+    | Ptyp_tuple tyl -> Ttuple (List.map (global_type env tctxt) tyl)
+    | Ptyp_constr (lid, tyl) ->
+        let tcs = lookup_type env lid te.ptyp_loc in
+        if List.length tyl <> tcs.tcs_arity then
+          raise(Error(te.ptyp_loc, 
+                      Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
+        Tconstruct (ref_type_constr tcs, List.map (global_type env tctxt) tyl)
+  end
+
+let global_val_type env te =
+  let tctxt = ref [] in
+  let rec aux te =
+    begin match te.ptyp_desc with
+      | Ptyp_var name ->
+          begin try List.assoc name !tctxt
+          with Not_found ->
+            let ty = Tvar(new_generic ()) in
+            tctxt:=(name,ty):: !tctxt;
+            ty
+          end
+      | Ptyp_arrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
+      | Ptyp_tuple tyl -> Ttuple (List.map aux tyl)
+      | Ptyp_constr (lid, tyl) ->
+          let tcs = lookup_type env lid te.ptyp_loc in
+          if List.length tyl <> tcs.tcs_arity then
+            raise(Error(te.ptyp_loc, 
+                        Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
+          Tconstruct (ref_type_constr tcs, List.map aux tyl)
+    end
+  in
+  aux te
 
 let mkpatvar s =
-  { val_kind = Val_reg;
-    val_id = Env.qualified_id s;
-    val_type = type_none;
-    val_global = false;
-    val_formal = Informal }
+  { Context.val_name = s;
+    Context.val_type = Context.no_type;
+    Context.val_global = None }
 
 let rec check_unique l =
   match l with
@@ -136,7 +169,7 @@ let rec check_unique l =
         if hd = hd' then raise (Multiply_bound_variable hd);
         check_unique tl
 
-let pattern env p =
+let pattern_gen env p =
   let vars = List.sort compare (var_names_of_pat p) in
   check_unique vars;
   let vals = List.map mkpatvar vars in
@@ -168,15 +201,17 @@ let pattern env p =
           | Ppat_array l -> Tpat_array (List.map aux l)
           | Ppat_or (p1, p2) ->
               Tpat_or (aux p1, aux p2)
-          | Ppat_constraint (p, te) -> Tpat_constraint (aux p, type_expression false env te)
+          | Ppat_constraint (p, te) -> Tpat_constraint (aux p, type_expression env te)
         end;
       pat_loc = p.ppat_loc;
       pat_env = env;
-      pat_type = type_none }
+      pat_type = Context.no_type }
   in
   aux p
 
-let ext env v = Env.add_value v env
+let pattern ctxt = pattern_gen ctxt.Context.ctxt_env
+
+let ext env v = Context.add_value v env
 
 let extend_env env pat =
   List.fold_left ext env (free_vars_of_pat pat)
@@ -189,7 +224,7 @@ let rec expr env ex =
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
         | Pexp_construct (lid, sarg) ->
-            let cs = lookup_constructor env lid ex.pexp_loc in
+            let cs = lookup_constructor env.Context.ctxt_env lid ex.pexp_loc in
             let arity = cs.cs_arity in
             let sargs =
               match sarg with
@@ -235,24 +270,21 @@ let rec expr env ex =
             let v = mkpatvar s in
             let big_env = ext env v in
             Texp_for(v,expr env e1,expr env e2,b,expr big_env e3)
-        | Pexp_constraint(e,te) -> Texp_constraint(expr env e,type_expression false env te)
+        | Pexp_constraint(e,te) -> Texp_constraint(expr env e,typexp env te)
         | Pexp_array l -> Texp_array(List.map (expr env) l)
-        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label env li ex.pexp_loc,expr env e) l, match o with None -> None | Some e -> Some (expr env e))
-        | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env li ex.pexp_loc)
-        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env li ex.pexp_loc, expr env e2)
+        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label env.Context.ctxt_env li ex.pexp_loc,expr env e) l, match o with None -> None | Some e -> Some (expr env e))
+        | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env.Context.ctxt_env li ex.pexp_loc)
+        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env.Context.ctxt_env li ex.pexp_loc, expr env e2)
         | Pexp_assert e -> Texp_assert (expr env e)
         | Pexp_assertfalse -> Texp_assertfalse
         | Pexp_when(e1,e2) -> Texp_when(expr env e1,expr env e2)
       end;
     exp_loc = ex.pexp_loc;
     exp_env = env;
-    exp_type = type_none }
+    exp_type = Context.no_type }
 
 
-let constr_decl env (s,tys) =
-  (s, List.map (type_expression true env) tys)
-   
-let constructor env tcs n idx_const idx_block idx (name, typexps, _) =
+let constructor env tctxt tcs n idx_const idx_block idx (name, typexps, _) =
   let postincr idx = let n = !idx in incr idx; n in
   let arity = List.length typexps in
   let cs =
@@ -267,9 +299,9 @@ let constructor env tcs n idx_const idx_block idx (name, typexps, _) =
           Cstr_block (tcs, postincr idx_block)
     }
   in
-  (cs, List.map (type_expression true env) typexps)
+  (cs, List.map (global_type env tctxt) typexps)
 
-let label env tcs pos (name, mut, typexp, _) =
+let label env tctxt tcs pos (name, mut, typexp, _) =
   let lbl =
     { lbl_parent = tcs;
       lbl_name = name;
@@ -279,7 +311,7 @@ let label env tcs pos (name, mut, typexp, _) =
       lbl_pos = pos
     }
   in
-  (lbl, type_expression true env typexp)
+  (lbl, global_type env tctxt typexp)
 
 let rec crude_arity ptyp =
   begin match ptyp.ptyp_desc with
@@ -307,15 +339,15 @@ let mapi_careful f =
   in
   aux 0
 
-let type_equation_kind env tcs k =
+let type_equation_kind env tctxt tcs k =
   begin match k with
     | Pteq_abstract fflag -> Teq_abstract fflag
-    | Pteq_abbrev te -> Teq_abbrev (type_expression true env te)
+    | Pteq_abbrev te -> Teq_abbrev (global_type env tctxt te)
     | Pteq_variant l ->
         let idx_const = ref 0 in
         let idx_block = ref 0 in
-        Teq_variant (mapi_careful (constructor env tcs (List.length l) idx_const idx_block) l)
-    | Pteq_record l -> Teq_record (mapi (label env tcs) l)
+        Teq_variant (mapi_careful (constructor env tctxt tcs (List.length l) idx_const idx_block) l)
+    | Pteq_record l -> Teq_record (mapi (label env tctxt tcs) l)
   end
 
 let value_declaration env name typexp primstuff =
@@ -323,10 +355,9 @@ let value_declaration env name typexp primstuff =
     { val_id = Env.qualified_id name;
       val_type = type_none;
       val_kind = primitive primstuff typexp;
-      val_global = true;
       val_formal = Informal }
   in
-  let typexp = type_expression false env typexp in
+  let typexp = global_val_type env typexp in
   v, typexp, Env.add_value v env
 
 let type_equation_list env pteql =
@@ -336,7 +367,7 @@ let type_equation_list env pteql =
         let nparams = List.length pdecl.pteq_params in
         { tcs_id = Env.qualified_id pdecl.pteq_name;
           tcs_arity = nparams;
-          tcs_params = new_generics nparams; (* bending the rules *)
+          tcs_params = new_generics nparams;
           tcs_kind = Type_abstract;
           tcs_formal = Informal_type;
         }
@@ -351,10 +382,9 @@ let type_equation_list env pteql =
   let teql =
     List.map2
       begin fun tcs pteq ->
-        let params = bind_type_expression_vars pteq.pteq_params pteq.pteq_loc in
+        let tctxt = List.combine pteq.pteq_params tcs.tcs_params in
         { teq_tcs = tcs;
-          teq_params = params;
-          teq_kind = type_equation_kind temp_env tcs pteq.pteq_kind;
+          teq_kind = type_equation_kind temp_env tctxt tcs pteq.pteq_kind;
           teq_loc = pteq.pteq_loc }
       end
       tcs_list pteql
@@ -377,22 +407,35 @@ let type_equation_list env pteql =
   teql, final_env
 
 let letdef env rec_flag pat_exp_list =
-  let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
-  let vals = List.flatten (List.map free_vars_of_pat pat_list) in
-  List.iter (fun v -> v.val_global <- true) vals;
-  let enter_vals env =
-    List.fold_left (fun env v -> Env.add_value v env) env vals in
-  let env = if rec_flag = Recursive then enter_vals env else env in
-  let pat_exp_list =
-    List.map2 (fun pat (_, exp) -> pat, expr env exp)
-      pat_list
-      pat_exp_list
+  let pat_list = List.map (fun (pat, exp) -> pattern_gen env pat) pat_exp_list in
+  let localvals = List.flatten (List.map free_vars_of_pat pat_list) in
+  let globalvals =
+    List.map
+      begin fun locval ->
+        let globval =
+          { val_id = Env.qualified_id locval.Context.val_name;
+            val_type = type_none;
+            val_kind = Val_reg;
+            val_formal = Informal }
+        in
+        locval.Context.val_global <- Some globval;
+        globval
+      end
+      localvals
   in
-  let env = if rec_flag = Recursive then env else enter_vals env in
-  pat_exp_list, vals, env
+  let enter_globalvals env = List.fold_left (fun env v -> Env.add_value v env) env globalvals in
+  let enter_localvals ctxt = List.fold_left (fun ctxt v -> Context.add_value v ctxt) ctxt localvals in
+  let env = if rec_flag = Recursive then enter_globalvals env else env in
+  let ctxt = Context.create env in
+  let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
+  let pat_exp_list =
+    List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
+  in
+  let env = if rec_flag = Recursive then env else enter_globalvals env in
+  pat_exp_list, globalvals, env
 
 let exception_declaration env name args =
-  let args = List.map (type_expression true env) args in
+  let args = List.map (global_type env []) args in
   let nargs = List.length args in
   let cs =
     { cs_name = name;
@@ -410,7 +453,7 @@ let structure_item env pstr =
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval exp ->
-        let exp = expr env exp in
+        let exp = expr (Context.create env) exp in
         mk (Tstr_eval exp), [], env
     | Pstr_value(hol_flags, rec_flag, pat_exp_list) ->
         let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in

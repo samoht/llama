@@ -167,7 +167,7 @@ and lambda_event =
 
 and lambda_event_kind =
     Lev_before
-  | Lev_after of Types.core_type
+  | Lev_after of Context.local_type
   | Lev_function
 
 val same: lambda -> lambda -> bool

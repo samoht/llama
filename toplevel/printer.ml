@@ -101,7 +101,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       | [] ->
           raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Ctype.moregeneral sch ty (* xxx *)
+          if Btype.moregeneral sch ty (* xxx *)
           then printer
           else find remainder
       in find !printers
@@ -137,7 +137,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
         try
           find_printer env ty obj
         with Not_found ->
-          match Ctype.repr ty with
+          match Btype.repr ty with
           | Tvar _ ->
               Oval_stuff "<poly>"
           | Tarrow(ty1, ty2) ->
@@ -200,7 +200,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Type_abbrev body} ->
                     tree_of_val depth obj
-                      (Ctype.apply env decl.tcs_params body ty_list)
+                      (Btype.apply env decl.tcs_params body ty_list)
                 | {tcs_kind = Type_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -211,7 +211,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Ctype.apply env decl.tcs_params ty ty_list)
+                           Btype.apply env decl.tcs_params ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -223,7 +223,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Ctype.apply env decl.tcs_params lbl.lbl_arg
+                                Btype.apply env decl.tcs_params lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =
