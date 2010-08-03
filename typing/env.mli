@@ -13,7 +13,6 @@ val get_exception_position : constructor -> int
 val reset_cache : unit -> unit
 val set_current_unit : module_id -> unit
 val set_unit_name : string -> unit
-val postincrement_position : unit -> int
 
 (* ------------------------------ *)
 

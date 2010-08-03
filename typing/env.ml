@@ -34,11 +34,6 @@ let crc_units = Consistbl.create()
 let current_module = ref Module_none
 let current_position = ref 0
 
-let postincrement_position () =
-  let pos = !current_position in
-  incr current_position;
-  pos
-
 let reset_cache () =
   persistent_structures := Tbl.empty;
   Consistbl.clear crc_units;
