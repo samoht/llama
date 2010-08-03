@@ -46,8 +46,8 @@ type t =
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (*30 *)
 (* #if DEDUCTIVE_LLAMA *)
-  | Type_not_denotational of string         (* 50 *)
-  | Type_not_inhabited of string            (* 51 *)
+  | Type_nondenotational of string          (* 50 *)
+  | Type_denotes_empty_set of string        (* 51 *)
 (* #endif *)
 ;;
 

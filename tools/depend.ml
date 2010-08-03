@@ -112,9 +112,9 @@ and add_signature bv = function
 
 and add_sig_item bv item =
   match item.psig_desc with
-    Psig_value(id, ty, _) ->
+    Psig_value(_, id, ty, _) ->
       add_type bv ty; bv
-  | Psig_type dcls ->
+  | Psig_type (_, dcls) ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
   | Psig_exception(id, args) ->
       List.iter (add_type bv) args; bv
@@ -130,11 +130,11 @@ and add_struct_item bv item =
   match item.pstr_desc with
     Pstr_eval e ->
       add_expr bv e; bv
-  | Pstr_value(id, pel) ->
+  | Pstr_value(_, id, pel) ->
       add_pat_expr_list bv pel; bv
-  | Pstr_primitive(id, ty, _) ->
+  | Pstr_primitive(_, id, ty, _) ->
       add_type bv ty; bv
-  | Pstr_type dcls ->
+  | Pstr_type (_, dcls) ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
   | Pstr_exception(id, args) ->
       List.iter (add_type bv) args; bv

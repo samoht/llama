@@ -38,6 +38,7 @@ let keyword_table =
     "as", AS;
     "assert", ASSERT;
     "begin", BEGIN;
+    "computable", COMPUTABLE;
     "do", DO;
     "done", DONE;
     "downto", DOWNTO;
@@ -49,6 +50,7 @@ let keyword_table =
     "for", FOR;
     "fun", FUN;
     "function", FUNCTION;
+    "hol", HOL;
     "if", IF;
     "in", IN;
     "include", INCLUDE;

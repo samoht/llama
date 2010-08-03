@@ -85,8 +85,8 @@ type signature_item =
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of value * type_expression
-  | Tsig_type of type_equation list
+    Tsig_value of hol_flags * value * type_expression
+  | Tsig_type of hol_type_flag * type_equation list
   | Tsig_exception of constructor * type_expression list
   | Tsig_open of module_id
 
@@ -96,9 +96,9 @@ type structure_item =
 
 and structure_item_desc =
     Tstr_eval of expression
-  | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of value * type_expression
-  | Tstr_type of type_equation list
+  | Tstr_value of hol_flags * rec_flag * (pattern * expression) list
+  | Tstr_primitive of hol_flags * value * type_expression
+  | Tstr_type of hol_type_flag * type_equation list
   | Tstr_exception of constructor * type_expression list
   | Tstr_open of module_id
 

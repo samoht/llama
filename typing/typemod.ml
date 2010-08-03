@@ -23,11 +23,11 @@ let type_structure_item str =
   begin match str.str_desc with
     | Tstr_eval exp ->
         ignore (type_expression str.str_loc exp)
-    | Tstr_value (_, pat_exp_list) ->
+    | Tstr_value (_, _, pat_exp_list) ->
         type_letdef pat_exp_list;
-    | Tstr_primitive (v, typexp) ->
+    | Tstr_primitive (_, v, typexp) ->
         type_valuedecl_new v typexp;
-    | Tstr_type teql ->
+    | Tstr_type (_, teql) ->
         type_equation_list teql
     | Tstr_exception (cs, args) ->
         type_excdecl cs args
@@ -40,9 +40,9 @@ let type_structure_item str =
 
 let type_signature_item tsig =
   begin match tsig.sig_desc with
-    | Tsig_value (v, typexp) ->
+    | Tsig_value (_, v, typexp) ->
         type_valuedecl_new v typexp;
-    | Tsig_type teql ->
+    | Tsig_type (_, teql) ->
         type_equation_list teql
     | Tsig_exception (cs, args) ->
         type_excdecl cs args;

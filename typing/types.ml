@@ -40,7 +40,8 @@ and type_constructor =
   { tcs_id : qualified_id;
     tcs_params : type_variable list;
     tcs_arity: int;
-    mutable tcs_kind: type_constructor_kind }
+    mutable tcs_kind: type_constructor_kind;
+    tcs_hol: hol_type_flag }
 
 and type_constructor_kind =
     Type_abstract
@@ -83,14 +84,14 @@ type value =
     mutable val_type: llama_type;                (* Type of the value *)
     val_kind: value_kind;
     mutable val_global: bool;
-    foo : int }
+    val_hol: hol_flags }
 
 and value_kind =
     Val_reg                             (* Regular value *)
   | Val_prim of Primitive.description   (* Primitive *)
 
 (* ---------------------------------------------------------------------- *)
-(* Core signature items.                                                  *)
+(* Compiled signatures.                                                   *)
 (* ---------------------------------------------------------------------- *)
 
 type compiled_signature_item =
@@ -178,11 +179,12 @@ type record_representation =
     Record_regular
   | Record_float
 
-let dummy_value name =
+let dummy_value name = (* xxx do we still need this? *)
   { val_id = { id_module = Module "dummy"; id_name = name };
     val_type = type_none;
     val_kind = Val_reg;
-    val_global = false; foo = Random.int 1000 }
+    val_global = false;
+    val_hol = Nonhol }
 
 exception Constr_not_found
 

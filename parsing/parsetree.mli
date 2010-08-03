@@ -73,8 +73,8 @@ type signature_item =
     psig_loc: Location.t }
 
 and signature_item_desc =
-    Psig_value of string * type_expression * string list option
-  | Psig_type of type_equation list
+    Psig_value of hol_flags * string * type_expression * string list option
+  | Psig_type of hol_type_flag * type_equation list
   | Psig_exception of string * type_expression list
   | Psig_open of module_name
 
@@ -84,16 +84,13 @@ type structure_item =
 
 and structure_item_desc =
     Pstr_eval of expression
-  | Pstr_value of rec_flag * (pattern * expression) list
-  | Pstr_primitive of string * type_expression * string list
-  | Pstr_type of type_equation list
+  | Pstr_value of hol_flags * rec_flag * (pattern * expression) list
+  | Pstr_primitive of hol_flags * string * type_expression * string list
+  | Pstr_type of hol_type_flag * type_equation list
   | Pstr_exception of string * type_expression list
   | Pstr_open of module_name
 
 (* Toplevel phrases *)
-
-type directiveu =
-    Pdir of string * string
 
 type toplevel_phrase =
     Ptop_def of structure_item

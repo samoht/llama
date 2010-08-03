@@ -282,14 +282,14 @@ let rec transl_structure fields cc x =
       end
   | Tstr_eval expr :: rem ->
       Lsequence(transl_exp expr, transl_structure fields cc rem)
-  | Tstr_value(rec_flag, pat_expr_list) :: rem ->
+  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
       let ext_fields = rev_let_bound_idents pat_expr_list @ fields in
       transl_let rec_flag pat_expr_list
                  (transl_structure ext_fields cc rem)
-  | Tstr_primitive(v, _) :: rem ->
+  | Tstr_primitive(_, v, _) :: rem ->
       record_primitive v;
       transl_structure fields cc rem
-  | Tstr_type(decls) :: rem ->
+  | Tstr_type(_, decls) :: rem ->
       transl_structure fields cc rem
   | Tstr_exception(cs, _) :: rem ->
       let id = Ident.of_exception cs in
@@ -382,15 +382,15 @@ let transl_store_structure glob map prims str =
   | Tstr_eval expr :: rem ->
       Lsequence(subst_lambda subst (transl_exp expr),
                 transl_store subst rem)
-  | Tstr_value(rec_flag, pat_expr_list) :: rem ->
+  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
       let ids = let_bound_idents pat_expr_list in
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
       Lsequence(subst_lambda subst lam,
                 transl_store (add_idents false ids subst) rem)
-  | Tstr_primitive(v, _) :: rem ->
+  | Tstr_primitive(_, v, _) :: rem ->
       record_primitive v;
       transl_store subst rem
-  | Tstr_type(decls) :: rem ->
+  | Tstr_type(_, decls) :: rem ->
       transl_store subst rem
   | Tstr_exception(cs, _) :: rem ->
       let id = Ident.of_exception cs in
@@ -490,10 +490,10 @@ let transl_store_structure glob map prims str =
 let rec defined_idents = function
     [] -> []
   | Tstr_eval expr :: rem -> defined_idents rem
-  | Tstr_value(rec_flag, pat_expr_list) :: rem ->
+  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
       let_bound_idents pat_expr_list @ defined_idents rem
-  | Tstr_primitive(id, descr) :: rem -> defined_idents rem
-  | Tstr_type decls :: rem -> defined_idents rem
+  | Tstr_primitive(_, id, descr) :: rem -> defined_idents rem
+  | Tstr_type (_, decls) :: rem -> defined_idents rem
   | Tstr_exception(cs, _) :: rem -> Ident.of_exception cs :: defined_idents rem
 (*| Tstr_exn_rebind(id, path) :: rem -> id :: defined_idents rem *)
 (*| Tstr_module(id, modl) :: rem -> id :: defined_idents rem
@@ -607,13 +607,13 @@ let close_toplevel_term lam =
 let transl_toplevel_item = function
     Tstr_eval expr ->
       transl_exp expr
-  | Tstr_value(rec_flag, pat_expr_list) ->
+  | Tstr_value(_, rec_flag, pat_expr_list) ->
       let idents = let_bound_idents pat_expr_list in
       transl_let rec_flag pat_expr_list
                  (make_sequence toploop_setvalue_id idents)
-  | Tstr_primitive(id, descr) ->
+  | Tstr_primitive(_,id, descr) ->
       lambda_unit
-  | Tstr_type(decls) ->
+  | Tstr_type(_, decls) ->
       lambda_unit
   | Tstr_exception(cs, _) ->
       toploop_setvalue (Ident.of_exception cs) (transl_exception cs)

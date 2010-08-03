@@ -36,6 +36,48 @@ let is_cyclic tcs =
     | _ -> false
   end
       
+(* #if DEDUCTIVE_LLAMA *)
+
+let rec check_nonoccurrence tcs_list = function
+    Tvar _ -> true
+  | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_nonoccurrence tcs_list ty2
+  | Ttuple tyl -> List.forall (check_nonoccurrence tcs_list) tyl
+  | Tconstruct (tcsr, tyl) ->
+      let tcs = Get.type_constructor tcsr in
+      not (List.memq tcs tcs_list) && List.forall (check_nonoccurrence tcs_list) tyl
+
+let rec check_covariance_rec tcs_list = function
+    Tvar _ -> true
+  | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_covariance_rec tcs_list ty2
+  | Ttuple tyl -> List.forall (check_covariance_rec tcs_list) tyl
+  | Tconstruct (tcsr, tyl) -> List.forall (check_covariance_rec tcs_list) tyl
+
+let check_covariance tcs_list = function
+    Type_abstract -> true
+  | Type_variant cs_list ->
+      List.forall (fun cs -> List.forall (check_covariance_rec tcs_list) cs.cs_args) cs_list
+  | Type_record lbl_list ->
+      List.forall (fun lbl -> check_covariance_rec tcs_list lbl.lbl_arg) lbl_list
+  | Type_abbrev ty -> check_covariance_rec tcs_list ty
+
+let rec check_inhabited_rec tcs_list = function
+    Tvar _ -> true
+  | Tarrow (ty1, ty2) -> check_inhabited_rec tcs_list ty2
+  | Ttuple tyl -> List.forall (check_inhabited_rec tcs_list) tyl
+  | Tconstruct (tcsr, tyl) ->
+      let tcs = Get.type_constructor tcsr in
+      not (List.memq tcs tcs_list)
+
+let check_inhabited tcs_list = function
+    Type_abstract -> true
+  | Type_variant cs_list ->
+      List.exists (fun cs -> List.forall (check_inhabited_rec tcs_list) cs.cs_args) cs_list
+  | Type_record lbl_list ->
+      List.forall (fun lbl -> check_inhabited_rec tcs_list lbl.lbl_arg) lbl_list
+  | Type_abbrev ty -> check_inhabited_rec tcs_list ty
+
+(* #endif (* DEDUCTIVE_LLAMA *) *)
+
 let type_equation teq =
   let tcs = teq.teq_tcs in
   List.iter2 (fun utv tv -> utv.utv_type <- Tvar tv) teq.teq_params tcs.tcs_params;
@@ -63,14 +105,37 @@ let type_equation teq =
         tcs.tcs_kind <- Type_abbrev ty_arg
   end
 
-let type_equation_list teql =
-  List.iter type_equation teql;
+let type_equation_list teq_list =
+  List.iter type_equation teq_list;
   List.iter
     begin fun teq ->
       let tcs = teq.teq_tcs in
       if is_cyclic tcs then
         raise(Error(teq.teq_loc, Recursive_abbrev (tcs_name tcs)))
-    end teql
+    end teq_list;
+(*
+(* #if DEDUCTIVE_LLAMA *)
+  if Warnings.is_active (Warnings.Type_nondenotational "") then begin
+    let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
+    List.iter2
+      begin fun teq tcs ->
+        if not (check_covariance tcs_list tcs.tcs_kind) then
+          Location.prerr_warning teq.teq_loc
+            (Warnings.Type_nondenotational (tcs_name tcs))
+      end teq_list tcs_list
+  end;
+  if Warnings.is_active (Warnings.Type_denotes_empty_set "") then begin
+    let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
+    List.iter2
+      begin fun teq tcs ->
+        if not (check_inhabited tcs_list tcs.tcs_kind) then
+          Location.prerr_warning teq.teq_loc
+            (Warnings.Type_denotes_empty_set (tcs_name tcs))
+      end teq_list tcs_list
+  end;
+(* #endif *)
+*)
+    ()
 
 let type_excdecl cs args  =
   cs.cs_res <- Predef.type_exn;

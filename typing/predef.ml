@@ -16,27 +16,28 @@ let format6_generics = new_generics 6
 (* Type constructors.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let mkty name params =
+let mkty name params h =
   { tcs_id = { id_module = Module_builtin; id_name = name };
     tcs_params = params;
     tcs_arity = List.length params;
-    tcs_kind = Type_abstract }
+    tcs_kind = Type_abstract;
+    tcs_hol = h }
 
-let tcs_int = mkty "int" []
-let tcs_char = mkty "char" []
-let tcs_string = mkty "string" []
-let tcs_float = mkty "float" []
-let tcs_bool = mkty "bool" []
-let tcs_unit = mkty "unit" []
-let tcs_exn = mkty "exn" []
-let tcs_array = mkty "array" [array_generic]
-let tcs_list = mkty "list" [list_generic]
-let tcs_format6 = mkty "format6" format6_generics
-let tcs_option =  mkty "option" [option_generic]
-let tcs_nativeint = mkty "nativeint" []
-let tcs_int32 = mkty "int32" []
-let tcs_int64 = mkty "int64" []
-let tcs_lazy_t = mkty "lazy_t" []
+let tcs_int = mkty "int" [] Hol_type
+let tcs_char = mkty "char" [] Hol_type
+let tcs_string = mkty "string" [] Hol_type
+let tcs_float = mkty "float" [] Nonhol_type
+let tcs_bool = mkty "bool" [] Hol_type
+let tcs_unit = mkty "unit" [] Hol_type
+let tcs_exn = mkty "exn" [] Nonhol_type
+let tcs_array = mkty "array" [array_generic] Hol_type
+let tcs_list = mkty "list" [list_generic] Hol_type
+let tcs_format6 = mkty "format6" format6_generics Nonhol_type
+let tcs_option =  mkty "option" [option_generic] Hol_type
+let tcs_nativeint = mkty "nativeint" [] Hol_type
+let tcs_int32 = mkty "int32" [] Hol_type
+let tcs_int64 = mkty "int64" [] Hol_type
+let tcs_lazy_t = mkty "lazy_t" [] Nonhol_type
 let qualid_stream = { id_module = Module "Stream"; id_name = "stream" }
 
 (* ---------------------------------------------------------------------- *)
