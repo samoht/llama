@@ -426,11 +426,10 @@ let format_float_lexeme =
    one past the end of the string.  These "null" characters are then
    caught by the [_ -> bad_conversion] clauses below.
    Don't do this at home, kids. *)
+let get_arg args spec n =
+  Obj.magic (args.(Printf_sformat.int_of_index (get_index spec n)))
+
 let scan_format fmt args n pos cont_s cont_a cont_t cont_f cont_m =
-
-  let get_arg spec n =
-    Obj.magic (args.(Printf_sformat.int_of_index (get_index spec n))) in
-
   let rec scan_positional n widths i =
     let got_spec spec i = scan_flags spec n widths i in
     scan_positional_spec fmt got_spec n i
@@ -439,7 +438,7 @@ let scan_format fmt args n pos cont_s cont_a cont_t cont_f cont_m =
     match Printf_sformat.unsafe_get fmt i with
     | '*' ->
       let got_spec wspec i =
-        let (width : int) = get_arg wspec n in
+        let (width : int) = get_arg args wspec n in
         scan_flags spec (next_index wspec n) (width :: widths) i in
       scan_positional_spec fmt got_spec n (succ i)
     | '0'..'9'
@@ -451,7 +450,7 @@ let scan_format fmt args n pos cont_s cont_a cont_t cont_f cont_m =
     | '%' ->
       cont_s n "%" (succ i)
     | 's' | 'S' as conv ->
-      let (x : string) = get_arg spec n in
+      let (x : string) = get_arg args spec n in
       let x = if conv = 's' then x else "\"" ^ String.escaped x ^ "\"" in
       let s =
         (* Optimize for common case %s *)
@@ -459,66 +458,64 @@ let scan_format fmt args n pos cont_s cont_a cont_t cont_f cont_m =
         format_string (extract_format fmt pos i widths) x in
       cont_s (next_index spec n) s (succ i)
     | 'c' | 'C' as conv ->
-      let (x : char) = get_arg spec n in
+      let (x : char) = get_arg args spec n in
       let s =
         if conv = 'c' then String.make 1 x else "'" ^ Char.escaped x ^ "'" in
       cont_s (next_index spec n) s (succ i)
     | 'd' | 'i' | 'o' | 'u' | 'x' | 'X' | 'N' as conv ->
-      let (x : int) = get_arg spec n in
+      let (x : int) = get_arg args spec n in
       let s =
         format_int (extract_format_int conv fmt pos i widths) x in
       cont_s (next_index spec n) s (succ i)
     | 'f' | 'e' | 'E' | 'g' | 'G' ->
-      let (x : float) = get_arg spec n in
+      let (x : float) = get_arg args spec n in
       let s = format_float (extract_format fmt pos i widths) x in
       cont_s (next_index spec n) s (succ i)
     | 'F' as conv ->
-      let (x : float) = get_arg spec n in
+      let (x : float) = get_arg args spec n in
       let s =
         if widths = [] then Pervasives.string_of_float x else
         format_float_lexeme (extract_format_float conv fmt pos i widths) x in
       cont_s (next_index spec n) s (succ i)
     | 'B' | 'b' ->
-      let (x : bool) = get_arg spec n in
+      let (x : bool) = get_arg args spec n in
       cont_s (next_index spec n) (string_of_bool x) (succ i)
     | 'a' ->
-      let printer = get_arg spec n in
+      let printer = get_arg args spec n in
       (* If the printer spec is Spec_none, go on as usual.
          If the printer spec is Spec_index p,
          printer's argument spec is Spec_index (succ_index p). *)
       let n = Printf_sformat.succ_index (get_index spec n) in
-      let arg = get_arg Spec_none n in
+      let arg = get_arg args Spec_none n in
       cont_a (next_index spec n) printer arg (succ i)
     | 't' ->
-      let printer = get_arg spec n in
+      let printer = get_arg args spec n in
       cont_t (next_index spec n) printer (succ i)
     | 'l' | 'n' | 'L' as conv ->
       begin match Printf_sformat.unsafe_get fmt (succ i) with
-(*
       | 'd' | 'i' | 'o' | 'u' | 'x' | 'X' ->
         let i = succ i in
         let s =
           match conv with
           | 'l' ->
-            let (x : int32) = get_arg spec n in
+            let (x : int32) = get_arg args spec n in
             format_int32 (extract_format fmt pos i widths) x
           | 'n' ->
-            let (x : nativeint) = get_arg spec n in
+            let (x : nativeint) = get_arg args spec n in
             format_nativeint (extract_format fmt pos i widths) x
           | _ ->
-            let (x : int64) = get_arg spec n in
+            let (x : int64) = get_arg args spec n in
             format_int64 (extract_format fmt pos i widths) x in
         cont_s (next_index spec n) s (succ i)
-*)
       | _ ->
-        let (x : int) = get_arg spec n in
+        let (x : int) = get_arg args spec n in
         let s = format_int (extract_format_int 'n' fmt pos i widths) x in
         cont_s (next_index spec n) s (succ i)
       end
     | ',' -> cont_s n "" (succ i)
     | '!' -> cont_f n (succ i)
     | '{' | '(' as conv (* ')' '}' *) ->
-      let (xf : ('a, 'b, 'c, 'd, 'e, 'f) format6) = get_arg spec n in
+      let (xf : ('a, 'b, 'c, 'd, 'e, 'f) format6) = get_arg args spec n in
       let i = succ i in
       let j = sub_format_for_printf conv fmt i in
       if conv = '{' (* '}' *) then

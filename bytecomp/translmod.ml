@@ -687,11 +687,12 @@ let transl_package component_names target_name coercion =
         assert false in
   Lprim(Psetglobal target_name, [Lprim(Pmakeblock(0, Immutable), components)])
 
-let transl_store_package component_names target_name coercion =
   let rec make_sequence fn pos arg =
     match arg with
       [] -> lambda_unit
-    | hd :: tl -> Lsequence(fn pos hd, make_sequence fn (pos + 1) tl) in
+    | hd :: tl -> Lsequence(fn pos hd, make_sequence fn (pos + 1) tl) 
+
+let transl_store_package component_names target_name coercion =
   match coercion with
     Tcoerce_none ->
       (List.length component_names,

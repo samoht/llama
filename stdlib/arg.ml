@@ -124,8 +124,8 @@ let parse_argv current_opt argv speclist anonfun errmsg =
     end;
     usage_b b speclist errmsg;
     if error = Unknown "-help" || error = Unknown "--help"
-    then raise (Help (Buffer.contents b))
-    else raise (Bad (Buffer.contents b))
+    then Help (Buffer.contents b)
+    else Bad (Buffer.contents b)
   in
   incr current;
   while !current < l do
@@ -133,7 +133,7 @@ let parse_argv current_opt argv speclist anonfun errmsg =
     if String.length s >= 1 && String.get s 0 = '-' then begin
       let action =
         try assoc3 s speclist
-        with Not_found -> stop (Unknown s)
+        with Not_found -> raise (stop (Unknown s))
       in
       begin try
         let rec treat_action = function
@@ -200,12 +200,12 @@ let parse_argv current_opt argv speclist anonfun errmsg =
         | _ -> raise (Stop (Missing s))
         in
         treat_action action
-      with Bad m -> stop (Message m);
-         | Stop e -> stop e;
+      with Bad m -> raise (stop (Message m))
+         | Stop e -> raise (stop e)
       end;
       incr current;
     end else begin
-      (try anonfun s with Bad m -> stop (Message m));
+      (try anonfun s with Bad m -> raise (stop (Message m)));
       incr current;
     end;
   done;

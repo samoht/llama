@@ -174,24 +174,24 @@ let type_format loc fmt =
   let ty_arrow gty ty = Tarrow(instantiate_one_type gty (* why? *), ty) in
 
   let bad_conversion fmt i c =
-    raise (Error (loc, Bad_conversion (fmt, i, c))) in
+    Error (loc, Bad_conversion (fmt, i, c)) in
   let incomplete_format fmt =
-    raise (Error (loc, Incomplete_format fmt)) in
+    Error (loc, Incomplete_format fmt) in
 
   let range_closing_index fmt i =
 
     let len = String.length fmt in
     let find_closing j =
-      if j >= len then incomplete_format fmt else
+      if j >= len then raise (incomplete_format fmt) else
       try String.index_from fmt j ']' with
-      | Not_found -> incomplete_format fmt in
+      | Not_found -> raise (incomplete_format fmt) in
     let skip_pos j =
-      if j >= len then incomplete_format fmt else
+      if j >= len then raise (incomplete_format fmt) else
       match fmt.[j] with
       | ']' -> find_closing (j + 1)
       | c -> find_closing j in
     let rec skip_neg j =
-      if j >= len then incomplete_format fmt else
+      if j >= len then raise (incomplete_format fmt) else
       match fmt.[j] with
       | '^' -> skip_pos (j + 1)
       | c -> skip_pos j in
@@ -212,29 +212,29 @@ let type_format loc fmt =
       if i >= len then
         if !meta = 0
         then ty_uresult, ty_result
-        else incomplete_format fmt else
+        else raise (incomplete_format fmt) else
       match fmt.[i] with
       | '%' -> scan_opts i (i + 1)
       | _ -> scan_format (i + 1)
     and scan_opts i j =
-      if j >= len then incomplete_format fmt else
+      if j >= len then raise (incomplete_format fmt) else
       match fmt.[j] with
       | '_' -> scan_rest true i (j + 1)
       | _ -> scan_rest false i j
     and scan_rest skip i j =
       let rec scan_flags i j =
-        if j >= len then incomplete_format fmt else
+        if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '#' | '0' | '-' | ' ' | '+' -> scan_flags i (j + 1)
         | _ -> scan_width i j
       and scan_width i j = scan_width_or_prec_value scan_precision i j
       and scan_decimal_string scan i j =
-        if j >= len then incomplete_format fmt else
+        if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '0' .. '9' -> scan_decimal_string scan i (j + 1)
         | _ -> scan i j
       and scan_width_or_prec_value scan i j =
-        if j >= len then incomplete_format fmt else
+        if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '*' ->
           let ty_uresult, ty_result = scan i (j + 1) in
@@ -242,7 +242,7 @@ let type_format loc fmt =
         | '-' | '+' -> scan_decimal_string scan i (j + 1)
         | _ -> scan_decimal_string scan i j
       and scan_precision i j =
-        if j >= len then incomplete_format fmt else
+        if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '.' -> scan_width_or_prec_value scan_conversion i (j + 1)
         | _ -> scan_conversion i j
@@ -263,7 +263,7 @@ let type_format loc fmt =
         ty_arrow ty_r ty_uresult, ty_result
 
       and scan_conversion i j =
-        if j >= len then incomplete_format fmt else
+        if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
         | 's' | 'S' -> conversion j Predef.type_string
@@ -312,11 +312,11 @@ let type_format loc fmt =
 (*
         | '{' | '(' as c ->
           let j = j + 1 in
-          if j >= len then incomplete_format fmt else
+          if j >= len then raise (incomplete_format fmt) else
           let sj =
             Printf_tformat.sub_format
-              (fun fmt -> incomplete_format (format_to_string fmt))
-              (fun fmt -> bad_conversion (format_to_string fmt))
+              (fun fmt -> raise (incomplete_format (format_to_string fmt)))
+              (fun fmt -> raise (bad_conversion (format_to_string fmt)))
               c (string_to_format fmt) j in
           let sfmt = String.sub fmt j (sj - 2 - j) in
           let ty_sfmt = type_in_format sfmt in
@@ -325,7 +325,7 @@ let type_format loc fmt =
           | _ -> incr meta; conversion (j - 1) ty_sfmt end
         | ')' when !meta > 0 -> decr meta; scan_format (j + 1)
 *)
-        | c -> bad_conversion fmt i c in
+        | c -> raise (bad_conversion fmt i c) in
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
@@ -513,7 +513,7 @@ and type_expect exp expected_ty =
 (* Typecore of "let" definitions *)
 
 and type_let_decl rec_flag pat_expr_list =
-  push_type_level();
+(*  push_type_level();*)
   let ty_list =
     List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
   type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list;
@@ -521,7 +521,7 @@ and type_let_decl rec_flag pat_expr_list =
     (fun (pat, exp) ty ->
         type_expect exp ty)
     pat_expr_list ty_list;
-  pop_type_level();
+(*  pop_type_level();*)
   let gen_type =
     List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
          pat_expr_list ty_list in

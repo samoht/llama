@@ -915,14 +915,14 @@ let ascanf sc fmt =
    aborts and applies the scanning buffer and a string that explains
    the error to the error handling function [ef] (the error continuation). *)
 
+  let return v = Obj.magic v ()
+  let delay f x () = f x
+  let stack f = delay (return f)
+  let no_stack f x = f
+
 let scan_format ib ef fmt rv f =
 
   let limr = Array.length rv - 1 in
-
-  let return v = Obj.magic v () in
-  let delay f x () = f x in
-  let stack f = delay (return f) in
-  let no_stack f x = f in
 
   let rec scan fmt =
 

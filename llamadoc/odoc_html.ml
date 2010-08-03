@@ -210,10 +210,10 @@ let bs = Buffer.add_string
 
     let list_attributes = ref []
     let list_methods = ref []
-    let list_values = ref []
+    let list_values = ref ([] : Odoc_value.t_value list)
     let list_exceptions = ref []
     let list_types = ref []
-    let list_modules = ref []
+    let list_modules = ref ([] : Odoc_module.t_module list)
     let list_module_types = ref []
 
 
@@ -250,6 +250,11 @@ let bs = Buffer.add_string
 
     let html_of_code b with_pre code = (* ?(with_pre=true) *)
       Odoc_llamahtml.html_of_code b with_pre code
+
+      let index_if_not_empty b l url m =
+        match l with
+          [] -> ()
+        | _ -> bp b "<a href=\"%s\">%s</a><br>\n" url m
 
     (** Print the html code corresponding to the [text] parameter. *)
     let rec html_of_text b t =
@@ -497,18 +502,13 @@ let bs = Buffer.add_string
       bs b "</table>\n"
 
     and html_of_Index_list b =
-      let index_if_not_empty l url m =
-        match l with
-          [] -> ()
-        | _ -> bp b "<a href=\"%s\">%s</a><br>\n" url m
-      in
-      index_if_not_empty !list_types index_types Odoc_messages.index_of_types;
-      index_if_not_empty !list_exceptions index_exceptions Odoc_messages.index_of_exceptions;
-      index_if_not_empty !list_values index_values Odoc_messages.index_of_values;
-      index_if_not_empty !list_attributes index_attributes Odoc_messages.index_of_attributes;
-      index_if_not_empty !list_methods index_methods Odoc_messages.index_of_methods;
-      index_if_not_empty !list_modules index_modules Odoc_messages.index_of_modules;
-      index_if_not_empty !list_module_types index_module_types Odoc_messages.index_of_module_types
+      index_if_not_empty b !list_types index_types Odoc_messages.index_of_types;
+      index_if_not_empty b !list_exceptions index_exceptions Odoc_messages.index_of_exceptions;
+      index_if_not_empty b !list_values index_values Odoc_messages.index_of_values;
+      index_if_not_empty b !list_attributes index_attributes Odoc_messages.index_of_attributes;
+      index_if_not_empty b !list_methods index_methods Odoc_messages.index_of_methods;
+      index_if_not_empty b !list_modules index_modules Odoc_messages.index_of_modules;
+      index_if_not_empty b !list_module_types index_module_types Odoc_messages.index_of_module_types
     (** Print html code for the first sentence of a description.
        The titles and lists in this first sentence has been removed.*)
     and html_of_info_first_sentence b info_opt =
@@ -887,15 +887,15 @@ let newline_to_indented_br s =
       print_lines "Section" section_titles ;
       print_lines "Subsection" subsection_titles
 
-    (** A function to build the header of pages. *)
-    let prepare_header module_list =
-      let f b nav comments t = (* ?(nav=None) ?(comments=[]) *)
-        let link_if_not_empty l m url =
+        let link_if_not_empty b l m url =
           match l with
             [] -> ()
           | _ ->
               bp b "<link title=\"%s\" rel=Appendix href=\"%s\">\n" m url
-        in
+
+    (** A function to build the header of pages. *)
+    let prepare_header module_list =
+      let f b nav comments t = (* ?(nav=None) ?(comments=[]) *)
         bs b "<head>\n";
         bs b !style;
         bs b character_encoding ;
@@ -924,13 +924,13 @@ let newline_to_indented_br s =
               bp b "<link rel=\"Up\" href=\"%s\">\n" href
              )
         );
-        link_if_not_empty !list_types Odoc_messages.index_of_types index_types;
-        link_if_not_empty !list_exceptions Odoc_messages.index_of_exceptions index_exceptions;
-        link_if_not_empty !list_values Odoc_messages.index_of_values index_values;
-        link_if_not_empty !list_attributes Odoc_messages.index_of_attributes index_attributes;
-        link_if_not_empty !list_methods Odoc_messages.index_of_methods index_methods;
-        link_if_not_empty !list_modules Odoc_messages.index_of_modules index_modules;
-        link_if_not_empty !list_module_types Odoc_messages.index_of_module_types index_module_types;
+        link_if_not_empty b !list_types Odoc_messages.index_of_types index_types;
+        link_if_not_empty b !list_exceptions Odoc_messages.index_of_exceptions index_exceptions;
+        link_if_not_empty b !list_values Odoc_messages.index_of_values index_values;
+        link_if_not_empty b !list_attributes Odoc_messages.index_of_attributes index_attributes;
+        link_if_not_empty b !list_methods Odoc_messages.index_of_methods index_methods;
+        link_if_not_empty b !list_modules Odoc_messages.index_of_modules index_modules;
+        link_if_not_empty b !list_module_types Odoc_messages.index_of_module_types index_module_types;
         let print_one m =
           let html_file = fst (naming_html_files m.m_name) in
           bp b "<link title=\"%s\" rel=\"Chapter\" href=\"%s\">"
@@ -1717,7 +1717,13 @@ let newline_to_indented_br s =
 
     (** Generate the values index in the file [index_values.html]. *)
     let generate_values_index module_list =
-      generate_elements_index
+(      generate_elements_index
+:
+        Odoc_value.t_value list ->
+          (Odoc_value.t_value -> Odoc_name.t) ->
+            (Odoc_value.t_value -> Odoc_types.info option) ->
+              (Odoc_value.t_value -> string) -> string -> string -> unit   )
+
         !list_values
         (fun v -> v.val_name)
         (fun v -> v.val_info)

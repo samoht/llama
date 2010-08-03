@@ -38,21 +38,20 @@ let nth n =
   string_of_int n ^ "th"
 
 let report_type_mismatch0 first second decl ppf err =
-  let pr fmt = Format.fprintf ppf fmt in
   match err with
-    Arity -> pr "They have different arities"
-  | Kind -> pr "Their kinds differ"
+    Arity -> Format.fprintf ppf "They have different arities"
+  | Kind -> Format.fprintf ppf "Their kinds differ"
   | Field_type s ->
-      pr "The types for field %s are not equal" s
+      Format.fprintf ppf "The types for field %s are not equal" s
   | Field_mutable s ->
-      pr "The mutability of field %s is different" s
+      Format.fprintf ppf "The mutability of field %s is different" s
   | Field_arity s ->
-      pr "The arities for field %s differ" s
+      Format.fprintf ppf "The arities for field %s differ" s
   | Field_names (n, name1, name2) ->
-      pr "Their %s fields have different names, %s and %s"
+      Format.fprintf ppf "Their %s fields have different names, %s and %s"
         (nth n) name1 name2
   | Field_missing (b, s) ->
-      pr "The field %s is only present in %s %s"
+      Format.fprintf ppf "The field %s is only present in %s %s"
         s (if b then second else first) decl
 
 let report_type_mismatch first second decl ppf =
