@@ -36,7 +36,7 @@ and type_constructor =
     tcs_params : type_variable list;
     tcs_arity: int;
     mutable tcs_kind: type_constructor_kind;
-    mutable tcs_formal: formal_type_flag }
+    tcs_formal: formal_type_flag }
 
 and type_constructor_kind =
     Type_abstract
@@ -46,8 +46,8 @@ and type_constructor_kind =
 
 and constructor =
   { cs_name: string;
-    mutable cs_res: llama_type;                       (* Result type *)
-    mutable cs_args: llama_type list;                 (* Argument types *)
+    cs_res: llama_type;                       (* Result type *)
+    cs_args: llama_type list;                 (* Argument types *)
     cs_arity: int;                     (* Number of arguments *)
     cstr_tag: constructor_kind
   }
@@ -60,8 +60,8 @@ and constructor_kind =
 and label =
   { lbl_parent: type_constructor;
     lbl_name: string;
-    mutable lbl_res: llama_type;                      (* Result type *)
-    mutable lbl_arg: llama_type;                      (* Argument type *)
+    lbl_res: llama_type;                      (* Result type *)
+    lbl_arg: llama_type;                      (* Argument type *)
     lbl_mut: mutable_flag;             (* Mutable or not *)
     lbl_pos: int }                     (* Position in the tuple *)
 
