@@ -15,20 +15,11 @@ let ltvar v = LTvar v
 
 type local_value = {
   val_name : string;
-  mutable val_type : local_type;
-  mutable val_global : value option }
+  mutable val_type : local_type }
 
 type value_reference =
     Ref_local of local_value
   | Ref_global of value
-
-let forward_reference = function
-    Ref_local lv as r ->
-      begin match lv.val_global with
-          None -> r
-        | Some v -> Ref_global v
-      end
-  | Ref_global v as r -> r
 
 type t = {
   ctxt_env : Env.t;

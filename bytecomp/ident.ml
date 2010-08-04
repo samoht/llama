@@ -37,15 +37,13 @@ let of_value v =
   try List.assq v (Hashtbl.find_all values name)
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add values name (v, id); id
+let identify (lv, v) = (* NB *)
+  Hashtbl.add local_values lv.Context.val_name (lv, of_value v)
 let of_local_value lv =
-  begin match lv.Context.val_global with
-    | Some v -> of_value v
-    | None ->
-        let name = lv.Context.val_name in
-        try List.assq lv (Hashtbl.find_all local_values name)
-        with Not_found ->
-          let id = Id (next_id (), name) in Hashtbl.add local_values name (lv, id); id
-  end
+  let name = lv.Context.val_name in
+  try List.assq lv (Hashtbl.find_all local_values name)
+  with Not_found ->
+    let id = Id (next_id (), name) in Hashtbl.add local_values name (lv, id); id
 let create name = Id (next_id (), name)
 let name = function
     Id_module s -> s

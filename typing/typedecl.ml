@@ -235,7 +235,6 @@ let g_structure_item str = match str.str_desc with
                 val_kind = Val_reg;
                 val_formal = Informal }
             in
-            locval.Context.val_global <- Some globval;
             locval, globval
           end localvals
       in

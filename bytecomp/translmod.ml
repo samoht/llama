@@ -96,6 +96,7 @@ let rec transl_structure fields cc x =
   | Str_eval expr :: rem ->
       Lsequence(transl_exp expr, transl_structure fields cc rem)
   | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+      List.iter Ident.identify m;
       let ext_fields = List.rev_map (fun (_, v) -> Ident.of_value v) m @ fields in
       transl_let rec_flag pat_expr_list
                  (transl_structure ext_fields cc rem)
@@ -156,6 +157,7 @@ let transl_store_structure glob map prims str =
       Lsequence(subst_lambda subst (transl_exp expr),
                 transl_store subst rem)
   | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+      List.iter Ident.identify m;
       let ids = List.map (fun (_, v) -> Ident.of_value v) m in
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
       Lsequence(subst_lambda subst lam,
@@ -319,6 +321,7 @@ let transl_toplevel_item = function
     Str_eval expr ->
       transl_exp expr
   | Str_value(rec_flag, pat_expr_list, m) ->
+      List.iter Ident.identify m;
       let idents = List.map (fun (_, v) -> Ident.of_value v) m in
       transl_let rec_flag pat_expr_list
                  (make_sequence toploop_setvalue_id idents)

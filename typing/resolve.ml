@@ -163,8 +163,7 @@ let global_val_type env te =
 
 let mkpatvar s =
   { Context.val_name = s;
-    Context.val_type = Context.no_type;
-    Context.val_global = None }
+    Context.val_type = Context.no_type }
 
 let rec check_unique l =
   match l with
