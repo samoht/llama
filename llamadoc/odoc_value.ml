@@ -71,8 +71,6 @@ let parameter_list_from_arrows typ =
     match t with
       Types.Tarrow (t1, t2) ->
         ("", t1) :: (iter t2)
-    | Types.Tvar { Types.tv_kind = Types.Forward texp } ->
-        iter texp
     | _ ->
         []
   in
@@ -105,9 +103,6 @@ let dummy_parameter_list typ =
             { Odoc_parameter.sn_name = normal_name label ;
               Odoc_parameter.sn_type = t ;
               Odoc_parameter.sn_text = None }
-    | Types.Tvar { Types.tv_kind = Types.Forward t2 } ->
-        (iter (label, t2))
-
     | _ ->
         Odoc_parameter.Simple_name
           { Odoc_parameter.sn_name = normal_name label ;
@@ -122,9 +117,7 @@ let is_function v =
     match t with
       Types.Tarrow _ ->
         true
-    | Types.Tvar { Types.tv_kind = Types.Forward t } ->
-        f t
-        | _ ->
-            false
+      | _ ->
+          false
       in
   f v.val_type

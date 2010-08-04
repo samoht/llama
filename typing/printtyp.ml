@@ -72,14 +72,7 @@ let name_of_type tv =
 let rec tree_of_typexp sch ty =
   begin match ty with
     | Tvar tv ->
-        begin match tv.tv_kind with
-          | Generic ->
-              Otyp_var (false, name_of_type tv)
-          | Level _ ->
-              Otyp_var (not sch, name_of_type tv)
-          | Forward ty ->
-              tree_of_typexp sch ty
-        end
+        Otyp_var (false, name_of_type tv)
     | Tarrow (ty1, ty2) ->
         Otyp_arrow ("", tree_of_typexp sch ty1, tree_of_typexp sch ty2)
     | Ttuple tyl ->

@@ -4,11 +4,7 @@ open Types;;
 open Longident
 
 let rec erase_type m t = match t with
-    Tvar v ->
-      begin match v.tv_kind with
-        | Forward ty -> erase_type m ty
-        | _ -> ()
-      end
+    Tvar v -> ()
   | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
   | Ttuple l -> List.iter (erase_type m) l
   | Tconstruct (r, l) ->

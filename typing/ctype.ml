@@ -15,17 +15,12 @@ let none = Context.no_type
 
 let rec instantiate_type subst = function
     Tvar tv ->
-      begin match tv.tv_kind with
-        | Generic ->
-            begin try
-              LTvar (List.assq tv !subst)
-            with Not_found ->
-              let ng = newtyvar() in
-              subst := (tv, ng) :: !subst;
-              LTvar ng
-            end
-        | Level _ -> assert false
-        | Forward ty -> assert false
+      begin try
+        LTvar (List.assq tv !subst)
+      with Not_found ->
+        let ng = newtyvar() in
+        subst := (tv, ng) :: !subst;
+        LTvar ng
       end
   | Tarrow (ty1, ty2) ->
       LTarrow (instantiate_type subst ty1, instantiate_type subst ty2)
@@ -119,14 +114,7 @@ let get_abbrev tcs =
 
 let rec substitute_type subst = function
     Tvar tv ->
-      begin match tv.tv_kind with
-        | Generic ->
-            List.assq tv subst
-        | Level _ ->
-            assert false
-        | Forward ty ->
-            assert false
-      end
+      List.assq tv subst
   | Tarrow (ty1, ty2) ->
       LTarrow (substitute_type subst ty1, substitute_type subst ty2)
   | Ttuple tyl ->

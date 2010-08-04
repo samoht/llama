@@ -29,12 +29,7 @@ type llama_type =
   | Tconstruct of type_constructor reference * llama_type list
 
 and type_variable = {
-  mutable tv_kind : type_variable_kind }
-
-and type_variable_kind =
-  | Generic
-  | Level of int
-  | Forward of llama_type
+  tv_name : string }
 
 and type_constructor =
   { tcs_id : qualified_id;
@@ -115,17 +110,8 @@ let constructor_module cs =
     | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_id.id_module
 
 let tvar tv = Tvar tv
-let new_generic () = { tv_kind=Generic }
+let new_generic () = (fun s -> { tv_name=s }) ""
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
-let new_nongeneric_gen lev = { tv_kind=Level lev }
-let module_level = 0
-let phrase_level = 1
-
-let rec new_nongenerics_gen n lev =
-  if n > 0 then new_nongeneric_gen lev :: new_nongenerics_gen (n-1) lev
-  else []
-
-let new_phrase_nongeneric () = new_nongeneric_gen phrase_level
 
 let constr_id cs = { id_module = constructor_module cs;
                      id_name = cs.cs_name }
@@ -162,10 +148,6 @@ type constructor_description = constructor
 type label_description = label
 type core_type = llama_type
 type type_expr = llama_type
-
-let generic = -1
-let notgeneric = 0
-let level_global = 1
 
 let type_none = Ttuple []
 

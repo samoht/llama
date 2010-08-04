@@ -18,19 +18,18 @@ exception Error of Location.t * error
 let is_cyclic tcs =
   begin match tcs.tcs_kind with
       Type_abbrev body ->
-        let rec is_acyclic seen ty =
-          match Btype.repr ty with
-              Tvar _ -> true
-            | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
-            | Ttuple tyl -> List.forall (is_acyclic seen) tyl
-            | Tconstruct (tcs, tyl) ->
-                let tcs = Get.type_constructor tcs in
-                not (List.memq tcs seen) &&
-                  begin match tcs.tcs_kind with
-                      Type_abbrev body -> is_acyclic (tcs :: seen) body
-                    | _ -> true
-                  end &&
-                  List.forall (is_acyclic seen) tyl
+        let rec is_acyclic seen = function
+            Tvar _ -> true
+          | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
+          | Ttuple tyl -> List.forall (is_acyclic seen) tyl
+          | Tconstruct (tcs, tyl) ->
+              let tcs = Get.type_constructor tcs in
+              not (List.memq tcs seen) &&
+                begin match tcs.tcs_kind with
+                    Type_abbrev body -> is_acyclic (tcs :: seen) body
+                  | _ -> true
+                end &&
+                List.forall (is_acyclic seen) tyl
         in
         not (is_acyclic [tcs] body)
     | _ -> false

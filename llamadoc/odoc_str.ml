@@ -26,7 +26,6 @@ let string_of_variance t (co,cn) =
 let rec is_arrow_type t =
   match t with
     Types.Tarrow _ -> true
-  | Types.Tvar { Types.tv_kind = Types.Forward t2 } -> is_arrow_type t2
   | Types.Ttuple _
   | Types.Tconstruct _
   | Types.Tvar _ -> false
@@ -37,7 +36,6 @@ let raw_string_of_type_list sep type_list =
   let rec need_parent t =
     match t with
       Types.Tarrow _ | Types.Ttuple _ -> true
-    | Types.Tvar { Types.tv_kind = Types.Forward t2 } -> need_parent t2
     | Types.Tconstruct _ ->
         false
     | Types.Tvar _ -> false

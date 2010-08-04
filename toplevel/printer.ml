@@ -137,7 +137,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
         try
           find_printer env ty obj
         with Not_found ->
-          match Btype.repr ty with
+          match ty with
           | Tvar _ ->
               Oval_stuff "<poly>"
           | Tarrow(ty1, ty2) ->

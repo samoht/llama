@@ -10,37 +10,12 @@ let cs_parent cs =
       Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs
     | Cstr_exception _ -> Predef.tcs_exn
 
-let rec repr ty =
-  match ty with
-      Tvar {tv_kind=Forward ty} -> repr ty
-    | _ -> ty
-
-(* ---------------------------------------------------------------------- *)
-(* Handling of current level.                                             *)
-(* ---------------------------------------------------------------------- *)
-
-let current_level = ref module_level
-let reset_type_level () = current_level := module_level
-let push_type_level () = incr current_level
-let pop_type_level () = decr current_level
-let new_nongeneric () = new_nongeneric_gen !current_level
-let new_nongenerics n = new_nongenerics_gen n !current_level
-let new_type_var () = Tvar (new_nongeneric ())
-let new_global_type_var () =Tvar (new_phrase_nongeneric ())
-
 (* Replace the type variables of a genericized type with arbitrary types,
    per the provided substitution. *)
 
 let rec substitute_type subst = function
     Tvar tv ->
-      begin match tv.tv_kind with
-        | Generic ->
-            List.assq tv subst
-        | Level _ ->
-            assert false
-        | Forward ty ->
-            assert false
-      end
+      List.assq tv subst
   | Tarrow (ty1, ty2) ->
       Tarrow (substitute_type subst ty1, substitute_type subst ty2)
   | Ttuple tyl ->
@@ -118,9 +93,8 @@ let expand_abbrev ty =
 
 (* Exactly once, else exception. *)
 let try_expand_once ty =
-  let ty = repr ty in
   match ty with
-      Tconstruct _ -> repr (expand_abbrev ty)
+      Tconstruct _ -> expand_abbrev ty
     | _ -> raise Cannot_expand
 
 (* At least once, else exception. *)
@@ -134,15 +108,14 @@ let rec try_expand_head ty =
 
 (* Exactly once, else assert. *)
 let expand_head_once ty =
-  try expand_abbrev (repr ty) with Cannot_expand -> assert false
+  try expand_abbrev ty with Cannot_expand -> assert false
 
 (* Fully expand the head of a type. *)
 let expand_head ty =
-  try try_expand_head ty with Cannot_expand -> repr ty
+  try try_expand_head ty with Cannot_expand -> ty
 
 (* My version. *)
 let rec expand_head ty =
-  let ty = repr ty in
   begin match ty with
     | Tconstruct (tcs, args) ->
         let tcs = Get.type_constructor tcs in
@@ -155,15 +128,10 @@ let rec expand_head ty =
   end
 
 
-
-
-
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
 
 let rec equiv_gen corresp ty1 ty2 =
-  let ty1 = repr ty1 in
-  let ty2 = repr ty2 in
   match ty1, ty2 with
     | Tvar tv1, Tvar tv2 ->
         corresp tv1 == tv2
@@ -189,19 +157,12 @@ let equiv alist = equiv_gen (fun id -> List.assq id alist)
 (* Whether a genericized type is more general than an arbitrary type. *)
 
 let rec moregeneral_gen subst ty1 ty2 =
-  let ty1 = repr ty1 in
-  let ty2 = repr ty2 in
   match ty1, ty2 with
     | Tvar tv, _ ->
-        begin match tv.tv_kind with
-            Generic ->
-              if List.mem_assq tv !subst then begin
-                equal (List.assq tv !subst) ty2
-              end else begin
-                subst := (tv, ty2) :: !subst; true
-              end
-          | Level _ | Forward _ ->
-              assert false
+        if List.mem_assq tv !subst then begin
+          equal (List.assq tv !subst) ty2
+        end else begin
+          subst := (tv, ty2) :: !subst; true
         end
     | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
         moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
