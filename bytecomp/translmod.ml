@@ -77,190 +77,8 @@ let record_primitive = function
   | {val_kind=Val_prim p} -> primitive_declarations := p :: !primitive_declarations
   | _ -> ()
 
-(* Keep track of the root path (from the root of the namespace to the
-   currently compiled module expression).  Useful for naming exceptions. *)
-(*
-let global_path glob = Some(Pident glob)
-let functor_path path param =
-  match path with
-    None -> None
-  | Some p -> Some(Papply(p, Pident param))
-let field_path path field =
-  match path with
-    None -> None
-  | Some p -> Some(Pdot(p, Ident.name field, Path.nopos))
-*)
-(* Utilities for compiling "module rec" definitions *)
-(*
-let mod_prim name =
-  try
-    transl_path
-      (fst (Env.lookup_value (Ldot (Lident "CamlinternalMod", name))
-                             Env.empty))
-  with Not_found ->
-    fatal_error ("Primitive " ^ name ^ " not found.")
-
-let undefined_location loc =
-  (* Confer Translcore.assert_failed *)
-  let fname = match loc.Location.loc_start.Lexing.pos_fname with
-              | "" -> !Location.input_name
-              | x -> x in
-  let pos = loc.Location.loc_start in
-  let line = pos.Lexing.pos_lnum in
-  let char = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
-  Lconst(Const_block(0,
-                     [Const_base(Const_string fname);
-                      Const_base(Const_int line);
-                      Const_base(Const_int char)]))
-
-let init_shape modl =
-  let rec init_shape_mod env mty =
-    match Mtype.scrape env mty with
-      Tmty_ident _ ->
-        raise Not_found
-    | Tmty_signature sg ->
-        Const_block(0, [Const_block(0, init_shape_struct env sg)])
-    | Tmty_functor(id, arg, res) ->
-        raise Not_found (* can we do better? *)
-  and init_shape_struct env sg =
-    match sg with
-      [] -> []
-    | Tsig_value(id, vdesc) :: rem ->
-        let init_v =
-          match Ctype.expand_head env vdesc.val_type with
-            {desc = Tarrow(_,_,_,_)} ->
-              Const_pointer 0 (* camlinternalMod.Function *)
-          | {desc = Tconstr(p, _, _)} when Path.same p Predef.path_lazy_t ->
-              Const_pointer 1 (* camlinternalMod.Lazy *)
-          | _ -> raise Not_found in
-        init_v :: init_shape_struct env rem
-    | Tsig_type(id, tdecl, _) :: rem ->
-        init_shape_struct (Env.add_type id tdecl env) rem
-    | Tsig_exception(id, edecl) :: rem ->
-        raise Not_found
-    | Tsig_module(id, mty, _) :: rem ->
-        init_shape_mod env mty ::
-        init_shape_struct (Env.add_module id mty env) rem
-    | Tsig_modtype(id, minfo) :: rem ->
-        init_shape_struct (Env.add_modtype id minfo env) rem
-    | Tsig_class(id, cdecl, _) :: rem ->
-        Const_pointer 2 (* camlinternalMod.Class *)
-        :: init_shape_struct env rem
-    | Tsig_cltype(id, ctyp, _) :: rem ->
-        init_shape_struct env rem
-  in
-  try
-    Some(undefined_location modl.mod_loc,
-         Lconst(init_shape_mod modl.mod_env modl.mod_type))
-  with Not_found ->
-    None
-
-(* Reorder bindings to honor dependencies.  *)
-
-type binding_status = Undefined | Inprogress | Defined
-
-let reorder_rec_bindings bindings =
-  let id = Array.of_list (List.map (fun (id,_,_,_) -> id) bindings)
-  and loc = Array.of_list (List.map (fun (_,loc,_,_) -> loc) bindings)
-  and init = Array.of_list (List.map (fun (_,_,init,_) -> init) bindings)
-  and rhs = Array.of_list (List.map (fun (_,_,_,rhs) -> rhs) bindings) in
-  let fv = Array.map Lambda.free_variables rhs in
-  let num_bindings = Array.length id in
-  let status = Array.create num_bindings Undefined in
-  let res = ref [] in
-  let rec emit_binding i =
-    match status.(i) with
-      Defined -> ()
-    | Inprogress -> raise(Error(loc.(i), Circular_dependency id.(i)))
-    | Undefined ->
-        if init.(i) = None then begin
-          status.(i) <- Inprogress;
-          for j = 0 to num_bindings - 1 do
-            if IdentSet.mem id.(j) fv.(i) then emit_binding j
-          done
-        end;
-        res := (id.(i), init.(i), rhs.(i)) :: !res;
-        status.(i) <- Defined in
-  for i = 0 to num_bindings - 1 do
-    match status.(i) with
-      Undefined -> emit_binding i
-    | Inprogress -> assert false
-    | Defined -> ()
-  done;
-  List.rev !res
-
-(* Generate lambda-code for a reordered list of bindings *)
-
-let eval_rec_bindings bindings cont =
-  let rec bind_inits = function
-    [] ->
-      bind_strict bindings
-  | (id, None, rhs) :: rem ->
-      bind_inits rem
-  | (id, Some(loc, shape), rhs) :: rem ->
-      Llet(Strict, id, Lapply(mod_prim "init_mod", [loc; shape], Location.none),
-           bind_inits rem)
-  and bind_strict = function
-    [] ->
-      patch_forwards bindings
-  | (id, None, rhs) :: rem ->
-      Llet(Strict, id, rhs, bind_strict rem)
-  | (id, Some(loc, shape), rhs) :: rem ->
-      bind_strict rem
-  and patch_forwards = function
-    [] ->
-      cont
-  | (id, None, rhs) :: rem ->
-      patch_forwards rem
-  | (id, Some(loc, shape), rhs) :: rem ->
-      Lsequence(Lapply(mod_prim "update_mod", [shape; Lvar id; rhs],
-                       Location.none),
-                patch_forwards rem)
-  in
-    bind_inits bindings
-
-let compile_recmodule compile_rhs bindings cont =
-  eval_rec_bindings
-    (reorder_rec_bindings
-      (List.map
-        (fun (id, modl) ->
-                  (id, modl.mod_loc, init_shape modl, compile_rhs id modl))
-        bindings))
-    cont
-*)
 (* Compile a module expression *)
-(*
-let rec transl_module cc rootpath mexp =
-  match mexp.mod_desc with
-    Tmod_ident path ->
-      apply_coercion cc (transl_path path)
-  | Tmod_structure str ->
-      transl_structure [] cc rootpath str
-  | Tmod_functor(param, mty, body) ->
-      let bodypath = functor_path rootpath param in
-      oo_wrap mexp.mod_env true
-        (function
-        | Tcoerce_none ->
-            Lfunction(Curried, [param],
-                      transl_module Tcoerce_none bodypath body)
-        | Tcoerce_functor(ccarg, ccres) ->
-            let param' = Ident.create "funarg" in
-            Lfunction(Curried, [param'],
-                      Llet(Alias, param, apply_coercion ccarg (Lvar param'),
-                           transl_module ccres bodypath body))
-        | _ ->
-            fatal_error "Translmod.transl_module")
-        cc
-  | Tmod_apply(funct, arg, ccarg) ->
-      oo_wrap mexp.mod_env true
-        (apply_coercion cc)
-        (Lapply(transl_module Tcoerce_none None funct,
-                [transl_module ccarg None arg], mexp.mod_loc))
-  | Tmod_constraint(arg, mty, ccarg) ->
-      transl_module (compose_coercions cc ccarg) rootpath arg
-  | Tmod_unpack(arg, _) ->
-      Translcore.transl_exp arg
-*)
+
 let rec transl_structure fields cc x =
   match x with
     [] ->
@@ -280,62 +98,23 @@ let rec transl_structure fields cc x =
       | _ ->
           fatal_error "Translmod.transl_structure"
       end
-  | Tstr_eval expr :: rem ->
+  | Str_eval expr :: rem ->
       Lsequence(transl_exp expr, transl_structure fields cc rem)
-  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
+  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
       let ext_fields = rev_let_bound_idents pat_expr_list @ fields in
       transl_let rec_flag pat_expr_list
                  (transl_structure ext_fields cc rem)
-  | Tstr_primitive(v, _) :: rem ->
+  | Str_primitive(v) :: rem ->
       record_primitive v;
       transl_structure fields cc rem
-  | Tstr_type(decls) :: rem ->
+  | Str_type(decls) :: rem ->
       transl_structure fields cc rem
-  | Tstr_exception(cs, _) :: rem ->
+  | Str_exception(cs) :: rem ->
       let id = Ident.of_exception cs in
       Llet(Strict, id, transl_exception cs,
            transl_structure (id :: fields) cc rem)
-(*
-  | Tstr_exn_rebind(id, path) :: rem ->
-      Llet(Strict, id, transl_path path,
-           transl_structure (id :: fields) cc rem)
-  | Tstr_module(id, modl) :: rem ->
-      Llet(Strict, id,
-           transl_module Tcoerce_none (field_path id) modl,
-           transl_structure (id :: fields) cc rem)
-  | Tstr_recmodule bindings :: rem ->
-      let ext_fields = List.rev_append (List.map fst bindings) fields in
-      compile_recmodule
-        (fun id modl ->
-          transl_module Tcoerce_none (field_path id) modl)
-        bindings
-        (transl_structure ext_fields cc rem)
-  | Tstr_modtype(id, decl) :: rem ->
+  | Str_open _ :: rem ->
       transl_structure fields cc rem
-*)
-  | Tstr_open path :: rem ->
-      transl_structure fields cc rem
-(*
-  | Tstr_class cl_list :: rem ->
-      let ids = List.map (fun (i, _, _, _, _) -> i) cl_list in
-      Lletrec(List.map
-                (fun (id, arity, meths, cl, vf) ->
-                  (id, transl_class ids id arity meths cl vf))
-                cl_list,
-              transl_structure (List.rev ids @ fields) cc rem)
-  | Tstr_cltype cl_list :: rem ->
-      transl_structure fields cc rem
-  | Tstr_include(modl, ids) :: rem ->
-      let mid = Ident.create "include" in
-      let rec rebind_idents pos newfields = function
-        [] ->
-          transl_structure newfields cc rem
-      | id :: ids ->
-          Llet(Alias, id, Lprim(Pfield pos, [Lvar mid]),
-               rebind_idents (pos + 1) (id :: newfields) ids) in
-      Llet(Strict, mid, transl_module Tcoerce_none None modl,
-           rebind_idents 0 fields ids)
-*)
 
 (* Update forward declaration in Translcore *)
 (*
@@ -346,7 +125,6 @@ let _ =
 (* Compile an implementation *)
 
 let transl_implementation module_name (str, cc) =
-  let str = List.map (fun si -> si.str_desc) str in
 (*reset_labels (); *)
   primitive_declarations := [];
   let module_id = Ident.of_module (Types.Module module_name) in
@@ -379,79 +157,26 @@ let transl_store_structure glob map prims str =
     [] ->
       transl_store_subst := subst;
       lambda_unit
-  | Tstr_eval expr :: rem ->
+  | Str_eval expr :: rem ->
       Lsequence(subst_lambda subst (transl_exp expr),
                 transl_store subst rem)
-  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
+  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
       let ids = let_bound_idents pat_expr_list in
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
       Lsequence(subst_lambda subst lam,
                 transl_store (add_idents false ids subst) rem)
-  | Tstr_primitive(v, _) :: rem ->
+  | Str_primitive(v) :: rem ->
       record_primitive v;
       transl_store subst rem
-  | Tstr_type(decls) :: rem ->
+  | Str_type(decls) :: rem ->
       transl_store subst rem
-  | Tstr_exception(cs, _) :: rem ->
+  | Str_exception(cs) :: rem ->
       let id = Ident.of_exception cs in
       let lam = transl_exception cs in
       Lsequence(Llet(Strict, id, lam, store_ident id),
                 transl_store (add_ident false id subst) rem)
-(*
-  | Tstr_exn_rebind(id, path) :: rem ->
-      let lam = subst_lambda subst (transl_path path) in
-      Lsequence(Llet(Strict, id, lam, store_ident id),
-                transl_store (add_ident false id subst) rem)
-  | Tstr_module(id, modl) :: rem ->
-      let lam =
-        transl_module Tcoerce_none (field_path (global_path glob) id) modl in
-      (* Careful: the module value stored in the global may be different
-         from the local module value, in case a coercion is applied.
-         If so, keep using the local module value (id) in the remainder of
-         the compilation unit (add_ident true returns subst unchanged).
-         If not, we can use the value from the global
-         (add_ident true adds id -> Pgetglobal... to subst). *)
-      Llet(Strict, id, subst_lambda subst lam,
-        Lsequence(store_ident id, transl_store(add_ident true id subst) rem))
-  | Tstr_recmodule bindings :: rem ->
-      let ids = List.map fst bindings in
-      compile_recmodule
-        (fun id modl ->
-          subst_lambda subst
-            (transl_module Tcoerce_none
-                           (field_path (global_path glob) id) modl))
-        bindings
-        (Lsequence(store_idents ids,
-                   transl_store (add_idents true ids subst) rem))
-  | Tstr_modtype(id, decl) :: rem ->
+  | Str_open _ :: rem ->
       transl_store subst rem
-*)
-  | Tstr_open path :: rem ->
-      transl_store subst rem
-(*
-  | Tstr_class cl_list :: rem ->
-      let ids = List.map (fun (i, _, _, _, _) -> i) cl_list in
-      let lam =
-        Lletrec(List.map
-                  (fun (id, arity, meths, cl, vf) ->
-                     (id, transl_class ids id arity meths cl vf))
-                  cl_list,
-                store_idents ids) in
-      Lsequence(subst_lambda subst lam,
-                transl_store (add_idents false ids subst) rem)
-  | Tstr_cltype cl_list :: rem ->
-      transl_store subst rem
-  | Tstr_include(modl, ids) :: rem ->
-      let mid = Ident.create "include" in
-      let rec store_idents pos = function
-        [] -> transl_store (add_idents true ids subst) rem
-      | id :: idl ->
-          Llet(Alias, id, Lprim(Pfield pos, [Lvar mid]),
-               Lsequence(store_ident id, store_idents (pos + 1) idl)) in
-      Llet(Strict, mid,
-           subst_lambda subst (transl_module Tcoerce_none None modl),
-           store_idents 0 ids)
-*)
   and store_ident id =
     try
       let (pos, cc) = Ident.find_same id map in
@@ -489,21 +214,13 @@ let transl_store_structure glob map prims str =
 
 let rec defined_idents = function
     [] -> []
-  | Tstr_eval expr :: rem -> defined_idents rem
-  | Tstr_value(_, rec_flag, pat_expr_list) :: rem ->
+  | Str_eval expr :: rem -> defined_idents rem
+  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
       let_bound_idents pat_expr_list @ defined_idents rem
-  | Tstr_primitive(id, descr) :: rem -> defined_idents rem
-  | Tstr_type (decls) :: rem -> defined_idents rem
-  | Tstr_exception(cs, _) :: rem -> Ident.of_exception cs :: defined_idents rem
-(*| Tstr_exn_rebind(id, path) :: rem -> id :: defined_idents rem *)
-(*| Tstr_module(id, modl) :: rem -> id :: defined_idents rem
-  | Tstr_recmodule decls :: rem -> List.map fst decls @ defined_idents rem
-  | Tstr_modtype(id, decl) :: rem -> defined_idents rem*)
-  | Tstr_open path :: rem -> defined_idents rem
-(*| Tstr_class cl_list :: rem ->
-      List.map (fun (i, _, _, _, _) -> i) cl_list @ defined_idents rem
-  | Tstr_cltype cl_list :: rem -> defined_idents rem
-  | Tstr_include(modl, ids) :: rem -> ids @ defined_idents rem *)
+  | Str_primitive _ :: rem -> defined_idents rem
+  | Str_type (decls) :: rem -> defined_idents rem
+  | Str_exception(cs) :: rem -> Ident.of_exception cs :: defined_idents rem
+  | Str_open _ :: rem -> defined_idents rem
 
 (* Transform a coercion and the list of value identifiers defined by
    a toplevel structure into a table [id -> (pos, coercion)],
@@ -549,21 +266,20 @@ let transl_store_gen module_name (str, restr) topl =
   primitive_declarations := [];
   let module_id = Ident.of_module (Types.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
-  let _f = function (*xxx*)
+(* xxx
+  let _f = function
     | [ Tstr_eval expr ] when topl ->
         assert (size = 0);
         subst_lambda !transl_store_subst (transl_exp expr)
     | str -> transl_store_structure module_id map prims str in
-(*  transl_store_label_init module_id size f str*)
-  (*size, transl_label_init (transl_store_structure module_id map prims str)*)
+  transl_store_label_init module_id size f str
+  size, transl_label_init (transl_store_structure module_id map prims str)*)
   size, transl_store_structure module_id map prims str
 
 let transl_store_phrases module_name str =
-  let str = List.map (fun si -> si.str_desc) str in
   transl_store_gen module_name (str,Tcoerce_none) true
 
 let transl_store_implementation module_name (str, restr) =
-  let str = List.map (fun si -> si.str_desc) str in
   let s = !transl_store_subst in
   transl_store_subst := Ident.empty;
   let r = transl_store_gen module_name (str, restr) false in
@@ -605,65 +321,25 @@ let close_toplevel_term lam =
                 (free_variables lam) lam
 
 let transl_toplevel_item = function
-    Tstr_eval expr ->
+    Str_eval expr ->
       transl_exp expr
-  | Tstr_value(_, rec_flag, pat_expr_list) ->
+  | Str_value(rec_flag, pat_expr_list, _) ->
       let idents = let_bound_idents pat_expr_list in
       transl_let rec_flag pat_expr_list
                  (make_sequence toploop_setvalue_id idents)
-  | Tstr_primitive(id, descr) ->
+  | Str_primitive _ ->
       lambda_unit
-  | Tstr_type(decls) ->
+  | Str_type(decls) ->
       lambda_unit
-  | Tstr_exception(cs, _) ->
+  | Str_exception(cs) ->
       toploop_setvalue (Ident.of_exception cs) (transl_exception cs)
-(*  | Tstr_exn_rebind(id, path) ->
-      toploop_setvalue id (transl_path path)*)
-(*| Tstr_module(id, modl) ->
-      (* we need to use the unique name for the module because of issues
-         with "open" (PR#1672) *)
-      set_toplevel_unique_name id;
-      toploop_setvalue id
-                        (transl_module Tcoerce_none (Some(Pident id)) modl)
-  | Tstr_recmodule bindings ->
-      let idents = List.map fst bindings in
-      compile_recmodule
-        (fun id modl -> transl_module Tcoerce_none (Some(Pident id)) modl)
-        bindings
-        (make_sequence toploop_setvalue_id idents)
-  | Tstr_modtype(id, decl) ->
-      lambda_unit*)
-  | Tstr_open path ->
+  | Str_open _ ->
       lambda_unit
-(*  | Tstr_class cl_list ->
-      (* we need to use unique names for the classes because there might
-         be a value named identically *)
-      let ids = List.map (fun (i, _, _, _, _) -> i) cl_list in
-      List.iter set_toplevel_unique_name ids;
-      Lletrec(List.map
-                (fun (id, arity, meths, cl, vf) ->
-                   (id, transl_class ids id arity meths cl vf))
-                cl_list,
-              make_sequence
-                (fun (id, _, _, _, _) -> toploop_setvalue_id id)
-                cl_list)
-  | Tstr_cltype cl_list ->
-      lambda_unit
-  | Tstr_include(modl, ids) ->
-      let mid = Ident.create "include" in
-      let rec set_idents pos = function
-        [] ->
-          lambda_unit
-      | id :: ids ->
-          Lsequence(toploop_setvalue id (Lprim(Pfield pos, [Lvar mid])),
-                    set_idents (pos + 1) ids) in
-      Llet(Strict, mid, transl_module Tcoerce_none None modl, set_idents 0 ids)*)
 
 let transl_toplevel_item_and_close itm =
   close_toplevel_term ((*transl_label_init*) (transl_toplevel_item itm))
 
 let transl_toplevel_definition str =
-  let str = List.map (fun si -> si.str_desc) str in
 (*  reset_labels ();*)
   make_sequence transl_toplevel_item_and_close str
 

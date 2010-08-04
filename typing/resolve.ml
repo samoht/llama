@@ -120,17 +120,22 @@ let rec type_expression env te =
 
 let typexp ctxt te = type_expression ctxt.Context.ctxt_env te
 
-let rec global_type env tctxt te =
+let rec global_type ctxt te =
   begin match te.ptyp_desc with
-    | Ptyp_var name -> Tvar (List.assoc name tctxt)
-    | Ptyp_arrow (ty1, ty2) -> Tarrow (global_type env tctxt ty1, global_type env tctxt ty2)
-    | Ptyp_tuple tyl -> Ttuple (List.map (global_type env tctxt) tyl)
+    | Ptyp_var name -> Type_context.Tvar (Type_context.lookup_type_variable name ctxt)
+    | Ptyp_arrow (ty1, ty2) -> Type_context.Tarrow (global_type ctxt ty1, global_type ctxt ty2)
+    | Ptyp_tuple tyl -> Type_context.Ttuple (List.map (global_type ctxt) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcs = lookup_type env lid te.ptyp_loc in
-        if List.length tyl <> tcs.tcs_arity then
+        let tcsr = Type_context.lookup_type_constructor lid ctxt in
+        let arity =
+          match tcsr with
+              Type_context.Ref_local ltcs -> ltcs.Type_context.ltcs_arity
+            | Type_context.Ref_global tcs -> tcs.tcs_arity
+        in
+        if List.length tyl <> arity then
           raise(Error(te.ptyp_loc, 
-                      Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
-        Tconstr (ref_type_constr tcs, List.map (global_type env tctxt) tyl)
+                      Type_arity_mismatch(lid, arity, List.length tyl)));
+        Type_context.Tconstr (tcsr, List.map (global_type ctxt) tyl)
   end
 
 let global_val_type env te =
@@ -283,7 +288,9 @@ let rec expr env ex =
     exp_type = Context.no_type }
 
 
-let constructor env tctxt tcs n idx_const idx_block idx (name, typexps, _) =
+let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =
+  (name, List.map (global_type ctxt) typexps)
+(*
   let postincr idx = let n = !idx in incr idx; n in
   let arity = List.length typexps in
   let cs =
@@ -298,9 +305,12 @@ let constructor env tctxt tcs n idx_const idx_block idx (name, typexps, _) =
           Cstr_block (tcs, postincr idx_block)
     }
   in
-  (cs, List.map (global_type env tctxt) typexps)
+  (cs, List.map (global_type ctxt) typexps)
+*)
 
-let label env tctxt tcs pos (name, mut, typexp, _) =
+let label ctxt tcs pos (name, mut, typexp, _) =
+  (name, global_type ctxt typexp)
+(*
   let lbl =
     { lbl_parent = tcs;
       lbl_name = name;
@@ -310,7 +320,8 @@ let label env tctxt tcs pos (name, mut, typexp, _) =
       lbl_pos = pos
     }
   in
-  (lbl, global_type env tctxt typexp)
+  (lbl, global_type ctxt typexp)
+*)
 
 let rec crude_arity ptyp =
   begin match ptyp.ptyp_desc with
@@ -318,11 +329,8 @@ let rec crude_arity ptyp =
     | _ -> 0
   end
 
-let primitive o typexp =
-  begin match o with
-    | None ->Val_reg
-    | Some l -> Val_prim (Primitive.parse_declaration (crude_arity typexp) l)
-  end
+let primitive l typexp =
+  Primitive.parse_declaration (crude_arity typexp) l
 
 let mapi f =
   let rec aux i = function
@@ -338,17 +346,25 @@ let mapi_careful f =
   in
   aux 0
 
-let type_equation_kind env tctxt tcs k =
+let type_equation_kind ctxt k =
   begin match k with
     | Pteq_abstract fflag -> Teq_abstract fflag
-    | Pteq_abbrev te -> Teq_abbrev (global_type env tctxt te)
+    | Pteq_abbrev te -> Teq_abbrev (global_type ctxt te)
     | Pteq_variant l ->
+        Teq_variant (List.map (fun (name, tyl, _) -> (name, List.map (global_type ctxt) tyl)) l)
+(*
         let idx_const = ref 0 in
         let idx_block = ref 0 in
-        Teq_variant (mapi_careful (constructor env tctxt tcs (List.length l) idx_const idx_block) l)
-    | Pteq_record l -> Teq_record (mapi (label env tctxt tcs) l)
+        Teq_variant (mapi_careful (constructor ctxt tcs (List.length l) idx_const idx_block) l)
+*)
+    | Pteq_record l ->
+        Teq_record (List.map (fun (name, mut, ty, _) -> (name, mut, global_type ctxt ty)) l)
+(*
+    | Pteq_record l -> Teq_record (mapi (label ctxt tcs) l)
+*)
   end
 
+(*
 let value_declaration env name typexp primstuff =
   let v =
     { val_id = Env.qualified_id name;
@@ -358,56 +374,39 @@ let value_declaration env name typexp primstuff =
   in
   let typexp = global_val_type env typexp in
   v, typexp, Env.add_value v env
-
-let type_equation_list env pteql =
-  let tcs_list =
+*)
+let type_equation_list env pteq_list =
+  let ltcs_list =
     List.map
-      begin fun pdecl ->
-        let nparams = List.length pdecl.pteq_params in
-        { tcs_id = Env.qualified_id pdecl.pteq_name;
-          tcs_arity = nparams;
-          tcs_params = new_generics nparams;
-          tcs_kind = Type_abstract;
-          tcs_formal = Informal_type;
-        }
+      begin fun pteq ->
+        { Type_context.ltcs_name = pteq.pteq_name;
+          Type_context.ltcs_arity = List.length pteq.pteq_params;
+          Type_context.ltcs_params = List.map (fun name -> {tv_name=name}) pteq.pteq_params }
       end
-      pteql
+      pteq_list
   in
-  let temp_env =
+  let ctxt = Type_context.create env in
+  let ctxt =
     List.fold_left
-      (fun env tcs -> Env.add_type_constructor tcs env)
-      env tcs_list
+      (fun ctxt ltcs -> Type_context.add_type_constructor ltcs ctxt)
+      ctxt ltcs_list
   in
-  let teql =
-    List.map2
-      begin fun tcs pteq ->
-        let tctxt = List.combine pteq.pteq_params tcs.tcs_params in
-        { teq_tcs = tcs;
-          teq_kind = type_equation_kind temp_env tctxt tcs pteq.pteq_kind;
-          teq_loc = pteq.pteq_loc }
-      end
-      tcs_list pteql
-  in
-  List.iter
-    begin fun teq ->
-      teq.teq_tcs.tcs_kind <-
-        begin match teq.teq_kind with
-          | Teq_abstract _ -> Type_abstract
-          | Teq_variant l -> Type_variant (List.map fst l)
-          | Teq_record l -> Type_record (List.map fst l)
-          | Teq_abbrev ty -> Type_abbrev type_none
-        end
-    end teql;
-  let final_env =
-    List.fold_left
-      (fun env tcs -> Env.add_type_constructor tcs env)
-      env tcs_list
-  in
-  teql, final_env
+  List.map2
+    begin fun pteq ltcs ->
+      let ctxt =
+        List.fold_left
+          (fun ctxt tv -> Type_context.add_type_variable tv ctxt) ctxt ltcs.Type_context.ltcs_params
+      in
+      { teq_ltcs = ltcs;
+        teq_kind = type_equation_kind ctxt pteq.pteq_kind;
+        teq_loc = pteq.pteq_loc }
+    end
+    pteq_list ltcs_list
 
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern_gen env pat) pat_exp_list in
   let localvals = List.flatten (List.map free_vars_of_pat pat_list) in
+(*
   let globalvals =
     List.map
       begin fun locval ->
@@ -423,16 +422,18 @@ let letdef env rec_flag pat_exp_list =
       localvals
   in
   let enter_globalvals env = List.fold_left (fun env v -> Env.add_value v env) env globalvals in
+*)
   let enter_localvals ctxt = List.fold_left (fun ctxt v -> Context.add_value v ctxt) ctxt localvals in
-  let env = if rec_flag = Recursive then enter_globalvals env else env in
+(*  let env = if rec_flag = Recursive then enter_globalvals env else env in *)
   let ctxt = Context.create env in
   let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
   let pat_exp_list =
     List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
   in
-  let env = if rec_flag = Recursive then env else enter_globalvals env in
-  pat_exp_list, globalvals, env
+(*  let env = if rec_flag = Recursive then env else enter_globalvals env in*)
+  pat_exp_list
 
+(*
 let exception_declaration env name args =
   let args = List.map (global_type env []) args in
   let nargs = List.length args in
@@ -446,31 +447,29 @@ let exception_declaration env name args =
   in
   let env = Env.add_exception cs env in
   cs, args, env
-
+*)
 let structure_item env pstr =
   reset_type_expression_vars();
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval exp ->
         let exp = expr (Context.create env) exp in
-        mk (Tstr_eval exp), [], env
+        mk (Tstr_eval exp)
     | Pstr_value(hol_flags, rec_flag, pat_exp_list) ->
-        let pat_exp_list, vals, env = letdef env rec_flag pat_exp_list in
-        mk (Tstr_value(hol_flags, rec_flag, pat_exp_list)),
-        List.map (fun v -> Sig_value v) vals, env
+        let pat_exp_list = letdef env rec_flag pat_exp_list in
+        mk (Tstr_value(hol_flags, rec_flag, pat_exp_list))
     | Pstr_primitive(id,te,pr) ->
-        let v, typexp, env = value_declaration env id te (Some pr) in
-        mk (Tstr_primitive (v, typexp)), [Sig_value v], env
+(*        let v, typexp, env = value_declaration env id te (Some pr) in *)
+        mk (Tstr_primitive (id, global_val_type env te, primitive pr te))
     | Pstr_type (pteql) ->
-        let teql, env = type_equation_list env pteql in
-        mk (Tstr_type (teql)), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
+        let teql = type_equation_list env pteql in
+        mk (Tstr_type (teql))
     | Pstr_exception (name, args) ->
-        let cs, args, env = exception_declaration env name args in
-        mk (Tstr_exception (cs, args)), [Sig_exception cs], env
-    | Pstr_open mn ->
-        let phr = mk (Tstr_open (Module mn)) in
-        let env = Env.add_signature (lookup_module mn pstr.pstr_loc) env in
-        phr, [], env
+(*        let cs, args, env = exception_declaration env name args in*)
+        let ctxt = Type_context.create env in
+        mk (Tstr_exception (name, List.map (global_type ctxt) args))
+    | Pstr_open name ->
+        mk (Tstr_open (name, lookup_module name pstr.pstr_loc))
   end
 
 let signature_item env psig =
@@ -478,23 +477,23 @@ let signature_item env psig =
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
     | Psig_value (formality, s, te) ->
-        let v, typexp, env = value_declaration env s te None in
-        mk (Tsig_value (formality, v, typexp)), [Sig_value v], env
+(*        let v, typexp, env = value_declaration env s te None in *)
+        mk (Tsig_value (formality, s, global_val_type env te))
     | Psig_primitive(id,te,pr) ->
-        let v, typexp, env = value_declaration env id te (Some pr) in
-        mk (Tsig_primitive (v, typexp)), [Sig_value v], env
+(*        let v, typexp, env = value_declaration env id te (Some pr) in*)
+        mk (Tsig_primitive (id, global_val_type env te, primitive pr te))
     | Psig_type pteql ->
-        let teql, env = type_equation_list env pteql in
-        mk (Tsig_type teql), List.map (fun teq -> Sig_type teq.teq_tcs) teql, env
+        let teql = type_equation_list env pteql in
+        mk (Tsig_type teql)
     | Psig_exception (name, args) ->
-        let cs, args, env = exception_declaration env name args in
-        mk (Tsig_exception (cs, args)), [Sig_exception cs], env
-    | Psig_open mn ->
-        let phr = mk (Tsig_open (Module mn)) in
-        let env = Env.add_signature (lookup_module mn psig.psig_loc) env in
-        phr, [], env
+(*        let cs, args, env = exception_declaration env name args in*)
+        let ctxt = Type_context.create env in
+        mk (Tsig_exception (name, List.map (global_type ctxt) args))
+    | Psig_open name ->
+        mk (Tsig_open (name, lookup_module name psig.psig_loc))
+(*        let env = Env.add_signature (lookup_module mn psig.psig_loc) env in *)
   end
-
+(*
 let rec structure env l =
   match l with
       [] ->
@@ -512,7 +511,7 @@ let rec signature env l =
         let hd, hd_gens, env = signature_item env hd in
         let tl, tl_gens, env = signature env tl in
         hd :: tl, hd_gens @ tl_gens, env
-
+*)
 (* Error report *)
 
 open Format

@@ -49,6 +49,7 @@ TYPING=typing/unused_var.cmo typing/primitive.cmo \
  typing/subst.cmo \
  typing/oprint.cmo \
  typing/context.cmo \
+ typing/type_context.cmo \
  typing/printtyp.cmo \
  typing/typedtree_aux.cmo typing/ctype.cmo \
  typing/includecore.cmo typing/includemod.cmo \

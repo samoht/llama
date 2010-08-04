@@ -67,26 +67,26 @@ and expression_desc =
   | Texp_constraint of expression * type_expression
 
 type type_equation = {
-  teq_tcs : type_constructor;
+  teq_ltcs : Type_context.local_type_constructor;
   teq_kind : type_equation_kind;
   teq_loc : Location.t }
 
 and type_equation_kind =
     Teq_abstract of formal_type_flag
-  | Teq_variant of (constructor * llama_type list) list
-  | Teq_record of (label * llama_type) list
-  | Teq_abbrev of llama_type
+  | Teq_variant of (string * Type_context.local_type list) list
+  | Teq_record of (string * mutable_flag * Type_context.local_type) list
+  | Teq_abbrev of Type_context.local_type
 
 type signature_item =
   { sig_desc: signature_item_desc;
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of formal_flags * value * llama_type
-  | Tsig_primitive of value * llama_type
+    Tsig_value of formal_flags * string * llama_type
+  | Tsig_primitive of string * llama_type * Primitive.description
   | Tsig_type of type_equation list
-  | Tsig_exception of constructor * llama_type list
-  | Tsig_open of module_id
+  | Tsig_exception of string * Type_context.local_type list
+  | Tsig_open of string * compiled_signature
 
 type structure_item =
   { str_desc: structure_item_desc;
@@ -95,10 +95,22 @@ type structure_item =
 and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of formal_flags * rec_flag * (pattern * expression) list
-  | Tstr_primitive of value * llama_type
+  | Tstr_primitive of string * llama_type * Primitive.description
   | Tstr_type of type_equation list
-  | Tstr_exception of constructor * llama_type list
-  | Tstr_open of module_id
+  | Tstr_exception of string * Type_context.local_type list
+  | Tstr_open of string * compiled_signature
+
+type processed_structure_item =
+    Str_eval of expression
+  | Str_value of rec_flag * (pattern * expression) list * (Context.local_value * value) list
+  | Str_primitive of value
+  | Str_type of type_constructor list
+  | Str_exception of constructor
+  | Str_open of compiled_signature
+
+type processed_structure = processed_structure_item list
+
+(* detritus *)
 
 type structure = structure_item list
 
@@ -107,4 +119,4 @@ type module_coercion =
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
 
-type optional = Required | Optional (* xxx *)
+type optional = Required | Optional

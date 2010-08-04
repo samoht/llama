@@ -13,61 +13,56 @@ type error =
 
 exception Error of Location.t * error
 
-let gen_value x = Sig_value x
-let gen_type x = Sig_type x
-let gen_exception x = Sig_exception x
+let process_structure_item env pstr =
+  let str = Resolve.structure_item env pstr in
+  Typedecl.structure_item env str;
+  let gstr = Typedecl.g_structure_item str in
+  let env = Typedecl.extend env gstr in
+  gstr, env
 
-let type_structure_item str =
-  begin match str.str_desc with
-    | Tstr_eval exp ->
-        Some(type_expression str.str_loc exp)
-    | Tstr_value (_, _, pat_exp_list) ->
-        type_letdef pat_exp_list; None
-    | Tstr_primitive (v, typexp) ->
-        type_valuedecl_new v typexp; None
-    | Tstr_type teql ->
-        type_equation_list teql; None
-    | Tstr_exception (cs, args) ->
-        type_excdecl cs args; None
-    | Tstr_open _ ->
-        None
-  end
+let process_signature_item env psig =
+  let tsig = Resolve.signature_item env psig in
+  let sg, env = Typedecl.signature_item env tsig in
+  tsig, sg, env
 
-let type_signature_item tsig =
-  begin match tsig.sig_desc with
-    | Tsig_value (_, v, typexp) ->
-        type_valuedecl_new v typexp;
-    | Tsig_primitive (v, typexp) ->
-        type_valuedecl_new v typexp
-    | Tsig_type teql ->
-        type_equation_list teql
-    | Tsig_exception (cs, args) ->
-        type_excdecl cs args;
-    | Tsig_open _ ->
-        ()
-  end
+let rec process_structure env = function
+    [] ->
+      [], env
+  | hd :: tl ->
+      let hd, env = process_structure_item env hd in
+      let tl, env = process_structure env tl in
+      hd :: tl, env
 
-let type_structure l =
-  List.iter (fun si -> ignore (type_structure_item si)) l
+let rec process_signature env = function
+    [] ->
+      [], [], env
+  | hd :: tl ->
+      let hd, hd_gens, env = process_signature_item env hd in
+      let tl, tl_gens, env = process_signature env tl in
+      hd :: tl, hd_gens @ tl_gens, env
 
-let type_signature l =
-  List.iter type_signature_item l
+(* xxx: integrate with simplification? *)
+let rec structure_aux = function
+    [] -> []
+  | Str_eval _ :: rem -> structure_aux rem
+  | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
+  | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
+  | Str_type tcs_list :: rem -> List.map (fun tcs -> Sig_type tcs) tcs_list @ structure_aux rem
+  | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
+  | Str_open _ :: rem -> structure_aux rem
 
 let transl_signature env psig =
-  let sg, csig, env = Resolve.signature env psig in
-  ignore env;
-  type_signature sg;
-  csig
+  let _tsig, prsig, _env = process_signature env psig in
+  prsig
 
 let type_implementation sourcefile outputprefix modulename env str =
-  let str, sg, env = Resolve.structure env str in
-  ignore env;
-  type_structure str;
+  let gstr, _env = process_structure env str in
+  let sg = structure_aux gstr in
   let simple_sg = (* simplify_signature *) sg in
 (*   Typecore.force_delayed_checks (); *)
   if !Clflags.print_types then begin
     fprintf std_formatter "%a@." Printtyp.signature simple_sg;
-    (str, Tcoerce_none)   (* result is ignored by Compile.implementation *)
+    (gstr, Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
@@ -79,14 +74,14 @@ let type_implementation sourcefile outputprefix modulename env str =
           raise(Error(Location.none, Interface_not_compiled sourceintf)) in
       let dclsig = Modenv.read_signature modulename intf_file in
       let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
-      (str, coercion)
+      (gstr, coercion)
     end else begin
       let coercion =
         Includemod.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
       if not !Clflags.dont_write_files then
         Modenv.save_signature simple_sg modulename (outputprefix ^ ".cmi");
-      (str, coercion)
+      (gstr, coercion)
     end
   end
 

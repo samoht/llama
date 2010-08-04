@@ -214,8 +214,8 @@ let execute_phrase print_outcome ppf phr =
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf [sstr] in
 (*       Typecore.reset_delayed_checks (); *)
-      let (str, sg, newenv) = Resolve.structure_item oldenv sstr in
-      let typopt = Typemod.type_structure_item str in
+      let (str, newenv) = Typemod.process_structure_item oldenv sstr in
+      let sg = Typemod.structure_aux [str] in
 (*      Typemod.check_nongen_scheme false str; *)
 (*       Typecore.force_delayed_checks (); *)
       let lam = Translmod.transl_toplevel_definition [str] in
@@ -227,9 +227,9 @@ let execute_phrase print_outcome ppf phr =
           match res with
           | Result v ->
               if print_outcome then
-                match str.str_desc with
-                | Tstr_eval exp ->
-                    let typ = match typopt with Some typ -> typ | None -> assert false in
+                match str with
+                | Str_eval exp ->
+                    let typ = !Typedecl.recent_type in
                     let outv = outval_of_value newenv v typ in
                     let ty = Printtyp.tree_of_type_scheme typ in
                     Ophr_eval (outv, ty)
