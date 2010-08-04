@@ -104,7 +104,7 @@ let _Tags_fold = Set.fold
 (* module TagMap =
     Map.Make (struct type t = tag_info let compare = tag_compare end) *)
 type 'a _TagMap_t = (tag_info, 'a) Map.t
-let _TagMap_empty = Map.Empty tag_compare
+let _TagMap_empty = Map.empty_generic (* tag_compare = Pervasives.compare *)
 let _TagMap_add = Map.add
 let _TagMap_remove = Map.remove
 let _TagMap_iter = Map.iter
@@ -660,7 +660,7 @@ let _StateSet_choose = Set.choose
 (* module MemMap =
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
 type 'a _MemMap_t = (int, 'a) Map.t
-let _MemMap_empty = Map.Empty Pervasives.compare
+let _MemMap_empty = Map.empty_generic
 let _MemMap_is_empty = Map.is_empty
 let _MemMap_add = Map.add
 let _MemMap_remove = Map.remove
@@ -803,12 +803,12 @@ let key_compare k1 k2 = match _StateSet_compare k1.kstate k2.kstate with
 
 (* module StateMap =
      Map.Make(struct type t = dfa_key let compare = key_compare end) *)
-type 'a _StateMap_t = (dfa_key, 'a) Map.t
-let _StateMap_empty = Map.Empty key_compare
+type _StateMap_t = (dfa_key, int) Map.t
+let _StateMap_empty : _StateMap_t = Map.empty key_compare
 let _StateMap_add = Map.add
 let _StateMap_find = Map.find
 
-let state_map = ref (_StateMap_empty : int _StateMap_t)
+let state_map = ref _StateMap_empty
 let todo : (int dfa_state * int) Stack.t = Stack.create()
 let next_state_num = ref 0
 let next_mem_cell = ref 0

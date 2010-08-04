@@ -29,14 +29,11 @@ type 'a ord = 'a -> 'a -> int
           [f e1 e2] is strictly negative if [e1] is smaller than [e2],
           and [f e1 e2] is strictly positive if [e1] is greater than [e2]. *)
 
-    type ('a, 'b) t =
-        Empty of 'a ord
-      | Intrnlnode of 'a ord * ('a, 'b) t * 'a * 'b * ('a, 'b) t * int
-          (** *)
-    (** The type of maps from type ['a] to type ['b]. The [Empty]
-    constructor may be used to create a map ordered by a non-generic
-    comparison function. The other constructor is for system use only;
-    it is exposed here for technical reasons. *)
+    type ('a, 'b) t
+    (** The type of maps from type ['a] to type ['b]. *)
+
+    val empty: 'a ord -> ('a, 'b) t
+    (** The empty map, ordered by the specified comparison function. *)
 
     val empty_generic: ('a, 'b) t
     (** The empty map, ordered by the generic structural comparison function

@@ -17,49 +17,51 @@ type 'key ord = 'key -> 'key -> int
 
 type ('key, 'a) t =
     Empty of 'key ord
-  | Intrnlnode of 'key ord * ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
+  | Node of 'key ord * ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
 
     let comparator = function
         Empty cmp -> cmp
-      | Intrnlnode(cmp,_,_,_,_,_) -> cmp
+      | Node(cmp,_,_,_,_,_) -> cmp
 
     let height = function
         Empty _ -> 0
-      | Intrnlnode(_,_,_,_,_,h) -> h
+      | Node(_,_,_,_,_,h) -> h
 
     let create l x d r =
       let hl = height l and hr = height r in
-      Intrnlnode(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
+      Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
 
     let bal l x d r =
-      let hl = match l with Empty _ -> 0 | Intrnlnode(_,_,_,_,_,h) -> h in
-      let hr = match r with Empty _ -> 0 | Intrnlnode(_,_,_,_,_,h) -> h in
+      let hl = match l with Empty _ -> 0 | Node(_,_,_,_,_,h) -> h in
+      let hr = match r with Empty _ -> 0 | Node(_,_,_,_,_,h) -> h in
       if hl > hr + 2 then begin
         match l with
           Empty _ -> invalid_arg "Map.bal"
-        | Intrnlnode(_, ll, lv, ld, lr, _) ->
+        | Node(_, ll, lv, ld, lr, _) ->
             if height ll >= height lr then
               create ll lv ld (create lr x d r)
             else begin
               match lr with
                 Empty _ -> invalid_arg "Map.bal"
-              | Intrnlnode(_, lrl, lrv, lrd, lrr, _)->
+              | Node(_, lrl, lrv, lrd, lrr, _)->
                   create (create ll lv ld lrl) lrv lrd (create lrr x d r)
             end
       end else if hr > hl + 2 then begin
         match r with
           Empty _ -> invalid_arg "Map.bal"
-        | Intrnlnode(_, rl, rv, rd, rr, _) ->
+        | Node(_, rl, rv, rd, rr, _) ->
             if height rr >= height rl then
               create (create l x d rl) rv rd rr
             else begin
               match rl with
                 Empty _ -> invalid_arg "Map.bal"
-              | Intrnlnode(_, rll, rlv, rld, rlr, _) ->
+              | Node(_, rll, rlv, rld, rlr, _) ->
                   create (create l x d rll) rlv rld (create rlr rv rd rr)
             end
       end else
-        Intrnlnode(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
+        Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
+
+    let empty cmp = Empty cmp
 
     let empty_generic = Empty Pervasives.compare
 
@@ -67,11 +69,11 @@ type ('key, 'a) t =
 
     let rec add x data = function
         Empty cmp as m ->
-          Intrnlnode(cmp, m, x, data, m, 1)
-      | Intrnlnode(cmp, l, v, d, r, h) ->
+          Node(cmp, m, x, data, m, 1)
+      | Node(cmp, l, v, d, r, h) ->
           let c = cmp x v in
           if c = 0 then
-            Intrnlnode(cmp, l, x, data, r, h)
+            Node(cmp, l, x, data, r, h)
           else if c < 0 then
             bal (add x data l) v d r
           else
@@ -80,7 +82,7 @@ type ('key, 'a) t =
     let rec find x = function
         Empty _ ->
           raise Not_found
-      | Intrnlnode(cmp, l, v, d, r, _) ->
+      | Node(cmp, l, v, d, r, _) ->
           let c = cmp x v in
           if c = 0 then d
           else find x (if c < 0 then l else r)
@@ -88,24 +90,24 @@ type ('key, 'a) t =
     let rec mem x = function
         Empty _ ->
           false
-      | Intrnlnode(cmp, l, v, d, r, _) ->
+      | Node(cmp, l, v, d, r, _) ->
           let c = cmp x v in
           c = 0 || mem x (if c < 0 then l else r)
 
     let rec min_binding = function
         Empty _ -> raise Not_found
-      | Intrnlnode(_, Empty _, x, d, r, _) -> (x, d)
-      | Intrnlnode(_, l, x, d, r, _) -> min_binding l
+      | Node(_, Empty _, x, d, r, _) -> (x, d)
+      | Node(_, l, x, d, r, _) -> min_binding l
 
     let rec max_binding = function
         Empty _ -> raise Not_found
-      | Intrnlnode(_, l, x, d, Empty _, _) -> (x, d)
-      | Intrnlnode(_, l, x, d, r, _) -> max_binding r
+      | Node(_, l, x, d, Empty _, _) -> (x, d)
+      | Node(_, l, x, d, r, _) -> max_binding r
 
     let rec remove_min_binding = function
         Empty _ -> invalid_arg "Map.remove_min_elt"
-      | Intrnlnode(_, Empty _, x, d, r, _) -> r
-      | Intrnlnode(_, l, x, d, r, _) -> bal (remove_min_binding l) x d r
+      | Node(_, Empty _, x, d, r, _) -> r
+      | Node(_, l, x, d, r, _) -> bal (remove_min_binding l) x d r
 
     let merge t1 t2 =
       match (t1, t2) with
@@ -118,7 +120,7 @@ type ('key, 'a) t =
     let rec remove x = function
         Empty _ as m ->
           m
-      | Intrnlnode(cmp, l, v, d, r, h) ->
+      | Node(cmp, l, v, d, r, h) ->
           let c = cmp x v in
           if c = 0 then
             merge l r
@@ -129,52 +131,52 @@ type ('key, 'a) t =
 
     let rec iter f = function
         Empty _ -> ()
-      | Intrnlnode(_, l, v, d, r, _) ->
+      | Node(_, l, v, d, r, _) ->
           iter f l; f v d; iter f r
 (*
     let rec map f = function
         Empty _ ->
           m
-      | Intrnlnode(l, v, d, r, h) ->
+      | Node(l, v, d, r, h) ->
           let l' = map f l in
           let d' = f d in
           let r' = map f r in
-          { desc = Intrnlnode(l', v, d', r', h); cmp = m.cmp }
+          { desc = Node(l', v, d', r', h); cmp = m.cmp }
 
     let rec mapi f = function
         Empty _ ->
           m
-      | Intrnlnode(l, v, d, r, h) ->
+      | Node(l, v, d, r, h) ->
           let l' = mapi f l in
           let d' = f v d in
           let r' = mapi f r in
-          { desc = Intrnlnode(l', v, d', r', h); cmp = m.cmp }
+          { desc = Node(l', v, d', r', h); cmp = m.cmp }
 *)
     let rec fold f m accu =
       match m with
         Empty _ -> accu
-      | Intrnlnode(_, l, v, d, r, _) ->
+      | Node(_, l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
 
     let rec forall p = function
         Empty _ -> true
-      | Intrnlnode(_, l, v, d, r, _) -> p v d && forall p l && forall p r
+      | Node(_, l, v, d, r, _) -> p v d && forall p l && forall p r
 
     let rec exists p = function
         Empty _ -> false
-      | Intrnlnode(_, l, v, d, r, _) -> p v d || exists p l || exists p r
+      | Node(_, l, v, d, r, _) -> p v d || exists p l || exists p r
 
     let filter p s =
       let rec filt accu = function
         | Empty _ -> accu
-        | Intrnlnode(_, l, v, d, r, _) ->
+        | Node(_, l, v, d, r, _) ->
             filt (filt (if p v d then add v d accu else accu) l) r in
       filt (Empty (comparator s)) s
 
     let partition p s =
       let rec part (t, f as accu) = function
         | Empty _ -> accu
-        | Intrnlnode(_, l, v, d, r, _) ->
+        | Node(_, l, v, d, r, _) ->
             part (part (if p v d then (add v d t, f) else (t, add v d f)) l) r in
       let e = Empty (comparator s) in
       part (e, e) s
@@ -186,7 +188,7 @@ type ('key, 'a) t =
       match (l, r) with
         (Empty _, _) -> add v d r
       | (_, Empty _) -> add v d l
-      | (Intrnlnode(_, ll, lv, ld, lr, lh), Intrnlnode(_, rl, rv, rd, rr, rh)) ->
+      | (Node(_, ll, lv, ld, lr, lh), Node(_, rl, rv, rd, rr, rh)) ->
           if lh > rh + 2 then bal ll lv ld (join lr v d r) else
           if rh > lh + 2 then bal (join l v d rl) rv rd rr else
           create l v d r
@@ -211,7 +213,7 @@ type ('key, 'a) t =
     let rec split x = function
         Empty _ as m ->
           (m, None, m)
-      | Intrnlnode(cmp, l, v, d, r, _) ->
+      | Node(cmp, l, v, d, r, _) ->
           let c = cmp x v in
           if c = 0 then (l, Some d, r)
           else if c < 0 then
@@ -222,10 +224,10 @@ type ('key, 'a) t =
     let rec merge f s1 s2 =
       match (s1, s2) with
         (Empty, Empty) -> s1
-      | (Intrnlnode (l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
+      | (Node (l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
           let (l2, d2, r2) = split v1 s2 in
           concat_or_join (merge f l1 l2) v1 (f v1 (Some d1) d2) (merge f r1 r2)
-      | (_, Intrnlnode (l2, v2, d2, r2, h2)) ->
+      | (_, Node (l2, v2, d2, r2, h2)) ->
           let (l1, d1, r1) = split v2 s1 in
           concat_or_join (merge f l1 l2) v2 (f v2 d1 (Some d2)) (merge f r1 r2)
       | _ ->
@@ -236,7 +238,7 @@ type ('key, 'a) t =
     let rec cons_enum m e =
       match m with
         Empty _ -> e
-      | Intrnlnode(_, l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
+      | Node(_, l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
 
     let compare cmp m1 m2 =
       let rec compare_aux e1 e2 =
@@ -265,11 +267,11 @@ type ('key, 'a) t =
 
     let rec cardinal = function
         Empty _ -> 0
-      | Intrnlnode(_, l, _, _, r, _) -> cardinal l + 1 + cardinal r
+      | Node(_, l, _, _, r, _) -> cardinal l + 1 + cardinal r
 
     let rec bindings_aux accu = function
         Empty _ -> accu
-      | Intrnlnode(_, l, v, d, r, _) -> bindings_aux ((v, d) :: bindings_aux accu r) l
+      | Node(_, l, v, d, r, _) -> bindings_aux ((v, d) :: bindings_aux accu r) l
 
     let bindings s =
       bindings_aux [] s
