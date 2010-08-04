@@ -7,17 +7,18 @@ open Types
 (* Type constructor parameters.                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let list_generic = new_generic ()
-let array_generic = new_generic ()
-let option_generic = new_generic ()
-let format6_generics = new_generics 6
+let list_generic = tvar(new_generic ())
+let array_generic = tvar(new_generic ())
+let option_generic = tvar(new_generic ())
+let format6_generics = List.map tvar (new_generics 6)
 
 (* ---------------------------------------------------------------------- *)
 (* Type constructors.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let mkty name params h =
-  { tcs_id = { id_module = Module_builtin; id_name = name };
+let mkty name params h : type_constructor =
+  { tcs_module = Module_builtin;
+    tcs_name = name;
     tcs_params = params;
     tcs_arity = List.length params;
     tcs_kind = Type_abstract;
@@ -69,14 +70,14 @@ let constr_void =
     cstr_tag = Cstr_constant (tcs_unit,0) }
 
 let constr_nil =
-  let arg = Tvar list_generic in
+  let arg = list_generic in
   { cs_name = "[]";
     cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
     cstr_tag = Cstr_constant (tcs_list,0) }
 
 let constr_cons =
-  let arg1 = Tvar list_generic in
+  let arg1 = list_generic in
   let arg2 = Tconstr(ref_type_constr tcs_list, [arg1]) in
   { cs_name = "::";
     cs_res = arg2;
@@ -84,14 +85,14 @@ let constr_cons =
     cstr_tag = Cstr_block (tcs_list,0) }
 
 let constr_none =
-  let arg = Tvar option_generic in
+  let arg =  option_generic in
   { cs_name = "None";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
     cstr_tag = Cstr_constant (tcs_option,0) }
 
 let constr_some =
-  let arg = Tvar option_generic in
+  let arg =  option_generic in
   { cs_name = "Some";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;

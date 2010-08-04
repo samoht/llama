@@ -22,7 +22,7 @@ let tree_of_qualified id =
     | Module name ->
         Oide_dot (Oide_ident name, id.id_name)
 
-let tree_of_type_constructor tcs = tree_of_qualified tcs.tcs_id
+let tree_of_type_constructor tcs = tree_of_qualified (tcs_id tcs)
 let tree_of_constr cs = tree_of_qualified (constr_id cs)
 let tree_of_label lbl = tree_of_qualified (label_id lbl)
 
@@ -33,7 +33,7 @@ let qualified_id ppf id =
   end;
   pp_print_string ppf id.id_name
 
-let type_constructor ppf tcs = qualified_id ppf (tcs.tcs_id)
+let type_constructor ppf tcs = qualified_id ppf (tcs_id tcs)
 let constructor ppf cs = qualified_id ppf (constr_id cs)
 let label ppf lbl = qualified_id ppf (label_id lbl)
 let value ppf v = qualified_id ppf v.val_id
@@ -145,11 +145,9 @@ let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 
 let rec tree_of_type_decl tcs =
   reset_names ();
-  let params =
-    List.map (fun tv -> name_of_type tv, (true, true))
-      tcs.tcs_params
-  in
-  tcs.tcs_id.id_name,
+  let params = List.map (function Tvar tv -> tv | _ -> assert false) tcs.tcs_params in
+  let params = List.map (fun tv -> name_of_type tv, (true, true)) params in
+  tcs.tcs_name,
   params,
   begin match tcs.tcs_kind with
       Type_abstract ->
@@ -225,7 +223,7 @@ let signature ppf sg =
 (* ---------------------------------------------------------------------- *)
 (* caml light compatibility stuff                                         *)
 (* ---------------------------------------------------------------------- *)
-
+(*
 let convert f oc x =
   f str_formatter x;
   output_string oc (flush_str_formatter ())
@@ -237,7 +235,7 @@ let output_type_constr = convert type_constructor
 let output_constr = convert constructor
 let output_label = convert label
 let reset_type_var_name = reset_names
-
+*)
 (* ---------------------------------------------------------------------- *)
 (* local types                                                            *)
 (* ---------------------------------------------------------------------- *)

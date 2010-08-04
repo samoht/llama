@@ -1570,7 +1570,7 @@ let do_check_fragile loc casel pss =
             | Rnone ->
                 Location.prerr_warning
                   loc
-                  (Warnings.Fragile_match ext.tcs_id.id_name)
+                  (Warnings.Fragile_match ext.tcs_name)
             | Rsome _ -> ())
           exts
 

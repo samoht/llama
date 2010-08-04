@@ -1,7 +1,7 @@
 open Asttypes
 
 (* ---------------------------------------------------------------------- *)
-(* Identifiers and erasable references.                                   *)
+(* Core stuff.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
 type module_id =
@@ -9,6 +9,40 @@ type module_id =
   | Module_builtin
   | Module of string
   | Module_toplevel
+
+type 'ty abstract_type_constructor =
+  { tcs_module : module_id;
+    tcs_name : string;
+    tcs_params : 'ty list;
+    tcs_arity: int;
+    mutable tcs_kind: 'ty abstract_type_constructor_kind;
+    tcs_formal: formal_type_flag }
+
+and 'ty abstract_type_constructor_kind =
+    Type_abstract
+  | Type_variant of 'ty abstract_constructor list
+  | Type_record of 'ty abstract_label list
+  | Type_abbrev of 'ty
+
+and 'ty abstract_constructor =
+  { cs_name: string;
+    cs_res: 'ty;
+    cs_args: 'ty list;
+    cs_arity: int;
+    cstr_tag: 'ty abstract_constructor_kind }
+
+and 'ty abstract_constructor_kind =
+    Cstr_constant of 'ty abstract_type_constructor * int  (* Constant constructor (an int) *)
+  | Cstr_block of 'ty abstract_type_constructor * int     (* Regular constructor (a block) *)
+  | Cstr_exception of module_id                   (* Exception constructor *)
+
+and 'ty abstract_label =
+  { lbl_parent: 'ty abstract_type_constructor;
+    lbl_name: string;
+    lbl_res: 'ty;                      (* Result type *)
+    lbl_arg: 'ty;                      (* Argument type *)
+    lbl_mut: mutable_flag;             (* Mutable or not *)
+    lbl_pos: int }                     (* Position in the tuple *)
 
 type qualified_id =
   { id_module : module_id;
@@ -18,52 +52,15 @@ type 'a reference =
   { ref_id : qualified_id;
     mutable ref_contents : 'a option }
 
-(* ---------------------------------------------------------------------- *)
-(* Core types and type constructors.                                      *)
-(* ---------------------------------------------------------------------- *)
-
+type type_variable = { tv_name : string }
 type llama_type =
     Tvar of type_variable
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
-
-and type_variable = {
-  tv_name : string }
-
-and type_constructor =
-  { tcs_id : qualified_id;
-    tcs_params : type_variable list;
-    tcs_arity: int;
-    mutable tcs_kind: type_constructor_kind;
-    tcs_formal: formal_type_flag }
-
-and type_constructor_kind =
-    Type_abstract
-  | Type_variant of constructor list (* Sum type -> list of constr. *)
-  | Type_record of label list (* Record type -> list of labels *)
-  | Type_abbrev of llama_type
-
-and constructor =
-  { cs_name: string;
-    cs_res: llama_type;                       (* Result type *)
-    cs_args: llama_type list;                 (* Argument types *)
-    cs_arity: int;                     (* Number of arguments *)
-    cstr_tag: constructor_kind
-  }
-
-and constructor_kind =
-    Cstr_constant of type_constructor * int  (* Constant constructor (an int) *)
-  | Cstr_block of type_constructor * int     (* Regular constructor (a block) *)
-  | Cstr_exception of module_id              (* Exception constructor *)
-
-and label =
-  { lbl_parent: type_constructor;
-    lbl_name: string;
-    lbl_res: llama_type;                      (* Result type *)
-    lbl_arg: llama_type;                      (* Argument type *)
-    lbl_mut: mutable_flag;             (* Mutable or not *)
-    lbl_pos: int }                     (* Position in the tuple *)
+and type_constructor = llama_type abstract_type_constructor
+type constructor = llama_type abstract_constructor
+type label = llama_type abstract_label
 
 (* ---------------------------------------------------------------------- *)
 (* Values.                                                                *)
@@ -99,6 +96,8 @@ type compiled_signature = compiled_signature_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
+let rawvar = function Tvar tv -> tv | _ -> failwith "rawvar"
+
 let is_exception cs =
   match cs.cstr_tag with
       Cstr_exception _ -> true
@@ -107,7 +106,7 @@ let is_exception cs =
 let constructor_module cs =
   match cs.cstr_tag with
       Cstr_exception m -> m
-    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_id.id_module
+    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_module
 
 let tvar tv = Tvar tv
 let new_generic () = (fun s -> { tv_name=s }) ""
@@ -115,15 +114,15 @@ let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (p
 
 let constr_id cs = { id_module = constructor_module cs;
                      id_name = cs.cs_name }
-let label_id lbl = { id_module = lbl.lbl_parent.tcs_id.id_module;
+let label_id lbl = { id_module = lbl.lbl_parent.tcs_module;
                      id_name = lbl.lbl_name }
-let ref_type_constr t = { ref_id = t.tcs_id; ref_contents = Some t }
+let tcs_id tcs = { id_module = tcs.tcs_module; id_name = tcs.tcs_name }
+let ref_type_constr (t:type_constructor) = { ref_id = tcs_id t; ref_contents = Some t }
 let ref_constr cs = { ref_id = constr_id cs; ref_contents = Some cs }
 let ref_label lbl = { ref_id = label_id lbl; ref_contents = Some lbl }
 let ref_value v = { ref_id = v.val_id; ref_contents = Some v }
 
 let val_name v = v.val_id.id_name
-let tcs_name tcs = tcs.tcs_id.id_name
 
 type tag =
   | Tag_block of int

@@ -67,7 +67,7 @@ let add_exception cs env =
     values = env.values }
 
 let add_type_constructor tcs env =
-  let name = tcs.tcs_id.id_name in
+  let name = tcs.tcs_name in
   begin match tcs.tcs_kind with
     | Type_variant cstrs ->
         { types = Tbl.add name tcs env.types;

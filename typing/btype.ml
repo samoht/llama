@@ -56,7 +56,7 @@ let rec substitute_type subst = function
       Tconstr (tcs, List.map (substitute_type subst) tyl)
 
 let apply params body args =
-  substitute_type (List.combine params args) body
+  substitute_type (List.combine (List.map rawvar params) args) body
 
 let rec expand_head ty =
   begin match ty with

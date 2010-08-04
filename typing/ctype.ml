@@ -114,6 +114,7 @@ let get_abbrev tcs =
   end
 
 let apply params body args =
+  let params = List.map (function Tvar tv -> tv | _ -> assert false) params in
   let subst = List.combine params args in
   let rec aux = function
       Tvar tv -> List.assq tv subst

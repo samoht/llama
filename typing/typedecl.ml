@@ -116,8 +116,9 @@ let type_equation_list teq_list =
   let tcs_list =
     List.map
       begin fun ltcs ->
-        { tcs_id = Env.qualified_id ltcs.Type_context.ltcs_name;
-          tcs_params = ltcs.Type_context.ltcs_params;
+        { tcs_module = Env.get_current_module();
+          tcs_name =  ltcs.Type_context.ltcs_name;
+          tcs_params = List.map tvar ltcs.Type_context.ltcs_params;
           tcs_arity = ltcs.Type_context.ltcs_arity;
           tcs_kind = Type_abstract;
           tcs_formal = Informal_type }
@@ -127,7 +128,7 @@ let type_equation_list teq_list =
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
     begin fun tcs teq ->
-      let ty_res = Tconstr (ref_type_constr tcs, List.map (fun tv -> Tvar tv) tcs.tcs_params) in
+      let ty_res = Tconstr (ref_type_constr tcs, tcs.tcs_params) in
       tcs.tcs_kind <-
         begin match teq.teq_kind with
             Teq_abstract _ -> Type_abstract

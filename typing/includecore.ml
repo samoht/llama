@@ -100,7 +100,7 @@ let labels s params lbl1 lbl2 =
 
 let type_constructors s tcs1 tcs2 =
   if tcs1.tcs_arity <> tcs2.tcs_arity then [Arity] else
-  let params = List.combine tcs1.tcs_params tcs2.tcs_params in
+  let params = List.combine (List.map rawvar tcs1.tcs_params) (List.map rawvar tcs2.tcs_params) in
   begin match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Type_abstract ->
         []
@@ -112,7 +112,7 @@ let type_constructors s tcs1 tcs2 =
         if Btype.equiv params ty1 (Subst.core_type s ty2) then [] else
           [General]
     | _, Type_abbrev ty2 ->
-        let ty1 = Tconstr (ref_type_constr tcs2, List.map tvar tcs2.tcs_params) in
+        let ty1 = Tconstr (ref_type_constr tcs2, tcs2.tcs_params) in
         if Btype.equal ty1 ty2 then [] else [General]
     | _, _ ->
         [General]

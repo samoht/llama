@@ -3,11 +3,6 @@
 open Longident
 open Types
 
-type local_type_constructor = {
-  ltcs_name : string;
-  ltcs_arity : int;
-  ltcs_params : type_variable list }
-
 type local_type =
     Tvar of type_variable
   | Tarrow of local_type * local_type
@@ -17,6 +12,11 @@ type local_type =
 and type_constructor_reference =
     Ref_local of local_type_constructor
   | Ref_global of type_constructor
+
+and local_type_constructor = {
+  ltcs_name : string;
+  ltcs_arity : int;
+  ltcs_params : type_variable list }
 
 let export subst =
   let rec aux = function

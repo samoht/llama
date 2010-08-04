@@ -63,7 +63,7 @@ let make_cached_module sg crcs =
             exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
             incr pos
         | Sig_type tcs ->
-            type_constructors := Tbl.add tcs.tcs_id.id_name tcs !type_constructors;
+            type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
             begin match tcs.tcs_kind with
               | Type_variant cstrs ->
                   List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs

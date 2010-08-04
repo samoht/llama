@@ -96,9 +96,8 @@ let array_pattern_kind pat = array_kind_gen pat.pat_type pat.pat_env
 
 let bigarray_decode_type env ty tbl dfl =
   match expand_head ty with
-  | LTconstr({ tcs_id = id }, [])
-    when id.id_module = Module "Bigarray" ->
-      begin try List.assoc id.id_name tbl with Not_found -> dfl end
+  | LTconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
+      begin try List.assoc name tbl with Not_found -> dfl end
   | _ ->
       dfl
 
