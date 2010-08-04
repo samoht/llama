@@ -24,11 +24,6 @@ open Primitive
 open Lambda
 open Translcore
 
-let let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.of_local_value v) (Typedtree_aux.let_bound_values pat_expr_list)
-let rev_let_bound_idents pat_expr_list =
-  List.map (fun v -> Ident.of_local_value v) (Typedtree_aux.rev_let_bound_values pat_expr_list)
-
 type error =
   Circular_dependency of Ident.t
 
@@ -100,8 +95,8 @@ let rec transl_structure fields cc x =
       end
   | Str_eval expr :: rem ->
       Lsequence(transl_exp expr, transl_structure fields cc rem)
-  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
-      let ext_fields = rev_let_bound_idents pat_expr_list @ fields in
+  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+      let ext_fields = List.rev_map (fun (_, v) -> Ident.of_value v) m @ fields in
       transl_let rec_flag pat_expr_list
                  (transl_structure ext_fields cc rem)
   | Str_primitive(v) :: rem ->
@@ -160,8 +155,8 @@ let transl_store_structure glob map prims str =
   | Str_eval expr :: rem ->
       Lsequence(subst_lambda subst (transl_exp expr),
                 transl_store subst rem)
-  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
-      let ids = let_bound_idents pat_expr_list in
+  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+      let ids = List.map (fun (_, v) -> Ident.of_value v) m in
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
       Lsequence(subst_lambda subst lam,
                 transl_store (add_idents false ids subst) rem)
@@ -215,8 +210,8 @@ let transl_store_structure glob map prims str =
 let rec defined_idents = function
     [] -> []
   | Str_eval expr :: rem -> defined_idents rem
-  | Str_value(rec_flag, pat_expr_list, _) :: rem ->
-      let_bound_idents pat_expr_list @ defined_idents rem
+  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+      List.map (fun (_, v) -> Ident.of_value v) m @ defined_idents rem
   | Str_primitive _ :: rem -> defined_idents rem
   | Str_type (decls) :: rem -> defined_idents rem
   | Str_exception(cs) :: rem -> Ident.of_exception cs :: defined_idents rem
@@ -323,8 +318,8 @@ let close_toplevel_term lam =
 let transl_toplevel_item = function
     Str_eval expr ->
       transl_exp expr
-  | Str_value(rec_flag, pat_expr_list, _) ->
-      let idents = let_bound_idents pat_expr_list in
+  | Str_value(rec_flag, pat_expr_list, m) ->
+      let idents = List.map (fun (_, v) -> Ident.of_value v) m in
       transl_let rec_flag pat_expr_list
                  (make_sequence toploop_setvalue_id idents)
   | Str_primitive _ ->
