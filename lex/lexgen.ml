@@ -81,7 +81,7 @@ type ('args,'action) automata_entry =
 (* A lot of sets and map structures *)
 
 (* module Ints = Set.Make(struct type t = int let compare = compare end)*)
-let _Ints_empty : int Set.t = Set.empty compare
+let _Ints_empty : int Set.t = Set.empty
 let _Ints_mem = Set.mem
 let _Ints_add = Set.add
 let _Ints_diff = Set.diff
@@ -94,7 +94,7 @@ let tag_compare t1 t2 = Pervasives.compare t1 t2
 
 (* module Tags = Set.Make(struct type t = tag_info let compare = tag_compare end)*)
 type _Tags_t = tag_info Set.t
-let _Tags_empty : tag_info Set.t = Set.empty tag_compare
+let _Tags_empty : tag_info Set.t = Set.empty_custom tag_compare
 let _Tags_add = Set.add
 let _Tags_union = Set.union
 let _Tags_compare = Set.compare
@@ -104,7 +104,7 @@ let _Tags_fold = Set.fold
 (* module TagMap =
     Map.Make (struct type t = tag_info let compare = tag_compare end) *)
 type 'a _TagMap_t = (tag_info, 'a) Map.t
-let _TagMap_empty = Map.empty_generic (* tag_compare = Pervasives.compare *)
+let _TagMap_empty = Map.empty (* tag_compare = Pervasives.compare *)
 let _TagMap_add = Map.add
 let _TagMap_remove = Map.remove
 let _TagMap_iter = Map.iter
@@ -113,7 +113,7 @@ let _TagMap_find = Map.find
 
 (* module IdSet =
     Set.Make (struct type t = ident let compare = id_compare end) *)
-let _IdSet_empty : ident Set.t = Set.empty id_compare
+let _IdSet_empty : ident Set.t = Set.empty_custom id_compare
 let _IdSet_add = Set.add
 let _IdSet_mem = Set.mem
 let _IdSet_union = Set.union
@@ -574,7 +574,7 @@ let trans_compare (t1,tags1) (t2,tags2) =
 
 (* module TransSet =
      Set.Make(struct type t = transition let compare = trans_compare end) *)
-let _TransSet_empty : transition Set.t = Set.empty trans_compare
+let _TransSet_empty : transition Set.t = Set.empty_custom trans_compare
 let _TransSet_add = Set.add
 let _TransSet_union = Set.union
 let _TransSet_iter = Set.iter
@@ -651,7 +651,7 @@ let no_action = max_int
 (* module StateSet =
      Set.Make (struct type t = t_transition let compare = Pervasives.compare end) *)
 type _StateSet_t = t_transition Set.t
-let _StateSet_empty : _StateSet_t  = Set.empty Pervasives.compare
+let _StateSet_empty : _StateSet_t  = Set.empty
 let _StateSet_add = Set.add
 let _StateSet_compare = Set.compare
 let _StateSet_choose = Set.choose
@@ -660,7 +660,7 @@ let _StateSet_choose = Set.choose
 (* module MemMap =
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
 type 'a _MemMap_t = (int, 'a) Map.t
-let _MemMap_empty = Map.empty_generic
+let _MemMap_empty = Map.empty
 let _MemMap_is_empty = Map.is_empty
 let _MemMap_add = Map.add
 let _MemMap_remove = Map.remove
@@ -718,7 +718,7 @@ and dfa_state_is_empty {final=(act,_) ; others=o} =
 (* module StateSetSet =
      Set.Make (struct type t = _StateSet_t let compare = _StateSet_compare end) *)
 type _StateSetSet_t = _StateSet_t Set.t
-let _StateSetSet_empty : _StateSetSet_t = Set.empty _StateSet_compare
+let _StateSetSet_empty : _StateSetSet_t = Set.empty_custom _StateSet_compare
 let _StateSetSet_compare = Set.compare
 let _StateSetSet_add = Set.add
 let _StateSetSet_fold = Set.fold
@@ -737,7 +737,7 @@ module MemKey =
    end)
 *)
 type _MemKey_t = t_equiv Set.t
-let _MemKey_empty = Set.empty
+let _MemKey_empty = Set.empty_custom
   (fun e1 e2 -> match Pervasives.compare e1.tag e2.tag with
      | 0 -> _StateSetSet_compare e1.equiv e2.equiv
      | r -> r)
@@ -804,7 +804,7 @@ let key_compare k1 k2 = match _StateSet_compare k1.kstate k2.kstate with
 (* module StateMap =
      Map.Make(struct type t = dfa_key let compare = key_compare end) *)
 type _StateMap_t = (dfa_key, int) Map.t
-let _StateMap_empty : _StateMap_t = Map.empty key_compare
+let _StateMap_empty : _StateMap_t = Map.empty_custom key_compare
 let _StateMap_add = Map.add
 let _StateMap_find = Map.find
 

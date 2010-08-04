@@ -32,12 +32,12 @@ type 'a ord = 'a -> 'a -> int
     type 'elt t
     (** The type of sets. *)
 
-    val empty: 'elt ord -> 'elt t
-    (** The empty set, ordered by the specified comparison function. *)
-
-    val empty_generic: 'elt t
+    val empty: 'elt t
       (** The empty set, ordered by the generic structural
           comparison function {!Pervasives.compare}. *)
+
+    val empty_custom: 'elt ord -> 'elt t
+    (** The empty set, ordered by the specified comparison function. *)
 
     val is_empty: 'elt t -> bool
     (** Test whether a set is empty or not. *)

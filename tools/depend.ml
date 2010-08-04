@@ -19,7 +19,7 @@ open Parsetree
 
 (* Collect free module identifiers in the a.s.t. *)
 
-let free_structure_names = ref (Set.empty_generic : string Set.t)
+let free_structure_names = ref (Set.empty : string Set.t)
 
 let rec addmodule bv lid =
   match lid with

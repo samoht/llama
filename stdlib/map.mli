@@ -32,12 +32,12 @@ type 'a ord = 'a -> 'a -> int
     type ('a, 'b) t
     (** The type of maps from type ['a] to type ['b]. *)
 
-    val empty: 'a ord -> ('a, 'b) t
-    (** The empty map, ordered by the specified comparison function. *)
-
-    val empty_generic: ('a, 'b) t
+    val empty: ('a, 'b) t
     (** The empty map, ordered by the generic structural comparison function
         {!Pervasives.compare}. *)
+
+    val empty_custom: 'a ord -> ('a, 'b) t
+    (** The empty map, ordered by the specified comparison function. *)
 
     val is_empty: ('a, 'b) t -> bool
     (** Test whether a map is empty or not. *)

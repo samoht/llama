@@ -195,12 +195,12 @@ let parse_interface ic =
 (* Process one file *)
 
 let ml_file_dependencies source_file =
-  Depend.free_structure_names := Set.empty_generic;
+  Depend.free_structure_names := Set.empty;
   let input_file = preprocess source_file in
   let ic = open_in_bin input_file in
   try
     let ast = parse_use_file ic in
-    Depend.add_use_file Set.empty_generic ast;
+    Depend.add_use_file Set.empty ast;
     if !raw_dependencies then begin
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin
@@ -220,12 +220,12 @@ let ml_file_dependencies source_file =
     close_in ic; remove_preprocessed input_file; raise x
 
 let mli_file_dependencies source_file =
-  Depend.free_structure_names := Set.empty_generic;
+  Depend.free_structure_names := Set.empty;
   let input_file = preprocess source_file in
   let ic = open_in_bin input_file in
   try
     let ast = parse_interface ic in
-    Depend.add_signature Set.empty_generic ast;
+    Depend.add_signature Set.empty ast;
     if !raw_dependencies then begin
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin

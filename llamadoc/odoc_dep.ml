@@ -19,13 +19,13 @@ let set_to_list s =
   !l
 
 let impl_dependencies ast =
-  Depend.free_structure_names := Set.empty_generic;
-  Depend.add_use_file Set.empty_generic [Parsetree.Ptop_def ast];
+  Depend.free_structure_names := Set.empty;
+  Depend.add_use_file Set.empty [Parsetree.Ptop_def ast];
   set_to_list !Depend.free_structure_names
 
 let intf_dependencies ast =
-  Depend.free_structure_names := Set.empty_generic;
-  Depend.add_signature Set.empty_generic ast;
+  Depend.free_structure_names := Set.empty;
+  Depend.add_signature Set.empty ast;
   set_to_list !Depend.free_structure_names
 
 
@@ -43,7 +43,7 @@ let intf_dependencies ast =
       let set = List.fold_right
           Set.add
           children
-          Set.empty_generic
+          Set.empty
       in
       { id = s;
         near = Set.remove s set ;
@@ -70,7 +70,7 @@ let intf_dependencies ast =
     let node_trans_closure graph n =
       let far = List.map
           (fun child ->
-            let set = trans_closure graph Set.empty_generic (get_node graph child) in
+            let set = trans_closure graph Set.empty (get_node graph child) in
             (child, set)
           )
           (set_to_list n.near)
@@ -90,7 +90,7 @@ let intf_dependencies ast =
                 else
                   Set.union acc reachables
               )
-              Set.empty_generic
+              Set.empty
               node.far
           in
           let set = Set.remove node.id set_reachables in

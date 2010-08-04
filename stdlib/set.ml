@@ -154,9 +154,9 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
 
     (* Implementation of the set operations *)
 
-    let empty cmp = Empty cmp
+    let empty = Empty Pervasives.compare
 
-    let empty_generic = Empty Pervasives.compare
+    let empty_custom cmp = Empty cmp
 
     let is_empty = function Empty _ -> true | _ -> false
 
@@ -249,9 +249,9 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
           if c = 0 then
             subset l1 l2 && subset r1 r2
           else if c < 0 then
-            subset (Node (cmp, l1, v1, empty cmp, 0)) l2 && subset r1 s2
+            subset (Node (cmp, l1, v1, Empty cmp, 0)) l2 && subset r1 s2
           else
-            subset (Node (cmp, empty cmp, v1, r1, 0)) r2 && subset l1 s2
+            subset (Node (cmp, Empty cmp, v1, r1, 0)) r2 && subset l1 s2
 
     let rec iter f = function
         Empty _ -> ()
@@ -275,14 +275,14 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
         | Empty _ -> accu
         | Node(_, l, v, r, _) ->
             filt (filt (if p v then add v accu else accu) l) r in
-      filt (empty (comparator s)) s
+      filt (Empty (comparator s)) s
 
     let partition p s =
       let rec part (t, f as accu) = function
         | Empty _ -> accu
         | Node(_, l, v, r, _) ->
             part (part (if p v then (add v t, f) else (t, add v f)) l) r in
-      let e = empty (comparator s) in
+      let e = Empty (comparator s) in
       part (e, e) s
 
     let rec cardinal = function

@@ -353,7 +353,7 @@ let group_by_common_children d list =
     List.map
       (fun id ->
          let n = d.dag.(int_of_idag id) in
-         let cs = List.fold_right Set.add n.chil Set.empty_generic in [id], cs)
+         let cs = List.fold_right Set.add n.chil Set.empty in [id], cs)
       list
   in
   let nlcsl =
@@ -609,16 +609,16 @@ let group_span_by_common_children d t =
       match line.(j).elem with
         Elem id ->
           let n = d.dag.(int_of_idag id) in
-          let curr_cs = List.fold_right Set.add n.chil Set.empty_generic in
+          let curr_cs = List.fold_right Set.add n.chil Set.empty in
           if Set.is_empty (Set.inter cs curr_cs) then loop (j + 1) curr_cs
           else
             begin
               line.(j).span <- line.(j - 1).span;
               loop (j + 1) (Set.union cs curr_cs)
             end
-      | _ -> loop (j + 1) Set.empty_generic
+      | _ -> loop (j + 1) Set.empty
   in
-  loop 0 Set.empty_generic
+  loop 0 Set.empty
 ;;
 
 let find_same_parents t i j1 j2 j3 j4 =
