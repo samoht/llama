@@ -7,7 +7,6 @@ open Parsetree
 open Typedtree
 open Typedtree_aux
 open Primitive
-open Module
 
 type error =
     Unbound_type_constructor of Longident.t

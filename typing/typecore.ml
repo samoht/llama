@@ -5,7 +5,6 @@ open Asttypes;;
 open Types;;
 open Typedtree;;
 open Typedtree_aux
-open Module;;
 open Btype;;
 open Ctype;;
 open Asttypes;;

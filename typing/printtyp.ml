@@ -1,7 +1,6 @@
 open Format
 open Longident
 open Types
-open Module
 open Outcometree
 open Oprint
 

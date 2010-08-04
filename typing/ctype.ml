@@ -3,7 +3,6 @@
 open Types
 open Misc
 open Btype
-open Module
 open Context
 
 (* ---------------------------------------------------------------------- *)

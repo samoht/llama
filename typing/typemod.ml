@@ -3,7 +3,6 @@ open Parsetree
 open Typedtree
 open Primitive
 open Typedecl
-open Module
 open Btype
 open Types
 open Format

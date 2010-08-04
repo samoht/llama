@@ -1,5 +1,4 @@
 open Types
-open Module
 
 type t = {
   subst_module : module_id;

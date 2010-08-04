@@ -3,7 +3,6 @@
 open Asttypes
 open Types
 open Typedtree
-open Module
 open Btype
 open Typecore
 
