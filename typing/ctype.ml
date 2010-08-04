@@ -1,13 +1,31 @@
+(* basic operations on local types *)
+
 open Types
 open Misc
 open Btype
 open Module
 open Context
 
+(* ---------------------------------------------------------------------- *)
+(* trivial stuff                                                          *)
+(* ---------------------------------------------------------------------- *)
+
 let newtyvar() = { forward = None }
 let rec newtyvars n = if n=0 then [] else newtyvar()::newtyvars(n-1)
 let new_type_var() = LTvar (newtyvar())
 let none = Context.no_type
+
+let type_unit = LTconstruct(Predef.tcs_unit, [])
+let type_bool = LTconstruct(Predef.tcs_bool, [])
+let type_int = LTconstruct(Predef.tcs_int, [])
+let type_float = LTconstruct(Predef.tcs_float, [])
+let type_string = LTconstruct(Predef.tcs_string, [])
+let type_char = LTconstruct(Predef.tcs_char, [])
+let type_int32 = LTconstruct(Predef.tcs_int32, [])
+let type_int64 = LTconstruct(Predef.tcs_int64, [])
+let type_nativeint = LTconstruct(Predef.tcs_nativeint, [])
+let type_exn = LTconstruct(Predef.tcs_exn, [])
+let type_array ty = LTconstruct(Predef.tcs_array, [ty])
 
 (* ---------------------------------------------------------------------- *)
 (* instantiation (global type -> local type)                              *)
@@ -43,18 +61,6 @@ let instantiate_label lbl =
   let ty_res = instantiate_type subst lbl.lbl_res in
   let ty_arg = instantiate_type subst lbl.lbl_arg in
   ty_res, ty_arg
-
-let type_unit = LTconstruct(Predef.tcs_unit, [])
-let type_bool = LTconstruct(Predef.tcs_bool, [])
-let type_int = LTconstruct(Predef.tcs_int, [])
-let type_float = LTconstruct(Predef.tcs_float, [])
-let type_string = LTconstruct(Predef.tcs_string, [])
-let type_char = LTconstruct(Predef.tcs_char, [])
-let type_int32 = LTconstruct(Predef.tcs_int32, [])
-let type_int64 = LTconstruct(Predef.tcs_int64, [])
-let type_nativeint = LTconstruct(Predef.tcs_nativeint, [])
-let type_exn = LTconstruct(Predef.tcs_exn, [])
-let type_array ty = LTconstruct(Predef.tcs_array, [ty])
 
 (* ---------------------------------------------------------------------- *)
 (* Generalization (local->global)                                         *)
@@ -93,11 +99,7 @@ let is_closed, generalize =
 (* ---------------------------------------------------------------------- *)
 
 let rec repr = function
-    LTvar tv as ty ->
-      begin match tv.forward with
-        | None -> ty
-        | Some ty -> repr ty
-      end
+    LTvar { forward = Some ty } -> repr ty
   | ty -> ty
 
 let has_abbrev tcs =
@@ -112,30 +114,20 @@ let get_abbrev tcs =
     | _ -> assert false
   end
 
-let rec substitute_type subst = function
-    Tvar tv ->
-      List.assq tv subst
-  | Tarrow (ty1, ty2) ->
-      LTarrow (substitute_type subst ty1, substitute_type subst ty2)
-  | Ttuple tyl ->
-      LTtuple (List.map (substitute_type subst) tyl)
-  | Tconstruct (tcs, tyl) ->
-      LTconstruct (Get.type_constructor tcs, List.map (substitute_type subst) tyl)
+let apply params body args =
+  let subst = List.combine params args in
+  let rec aux = function
+      Tvar tv -> List.assq tv subst
+    | Tarrow (ty1, ty2) -> LTarrow (aux ty1, aux ty2)
+    | Ttuple tyl -> LTtuple (List.map aux tyl)
+    | Tconstruct (tcs, tyl) -> LTconstruct (Get.type_constructor tcs, List.map aux tyl)
+  in aux body
 
-let expand_abbrev_aux params body args =
-  substitute_type (List.combine params args) body
-
-let rec expand_head ty =
-  let ty = repr ty in
-  begin match ty with
-    | LTconstruct (tcs, args) ->
-        begin match tcs.tcs_kind with
-          | Type_abbrev body ->
-              expand_head (expand_abbrev_aux tcs.tcs_params body args)
-          | _ -> ty
-        end
-    | _ -> ty
-  end
+let rec expand_head = function
+    LTvar { forward = Some ty } -> expand_head ty
+  | LTconstruct ({tcs_params = params; tcs_kind = Type_abbrev body}, args) ->
+      expand_head (apply params body args)
+  | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
 (* unification                                                            *)
@@ -178,10 +170,10 @@ let rec unify (ty1, ty2) =
         unify_list (tyl1, tyl2)
     | LTconstruct (tcs1, tyl1), _ when has_abbrev tcs1 ->
         let params1, body1 = get_abbrev tcs1 in
-        unify (expand_abbrev_aux params1 body1 tyl1, ty2)
+        unify (apply params1 body1 tyl1, ty2)
     | _, LTconstruct (tcs2, tyl2) when has_abbrev tcs2 ->
         let params2, body2 = get_abbrev tcs2 in
-        unify (ty1, expand_abbrev_aux params2 body2 tyl2)
+        unify (ty1, apply params2 body2 tyl2)
     | LTconstruct (tcs1, tyl1), LTconstruct (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
@@ -193,7 +185,7 @@ and unify_list = function
   | ty1::rest1, ty2::rest2 -> unify(ty1,ty2); unify_list(rest1,rest2)
   | _ -> raise Unify
 
-(* Two special cases of unification *)
+(* Three special cases of unification *)
 
 let rec filter_arrow ty =
   let ty = repr ty in
@@ -207,7 +199,7 @@ let rec filter_arrow ty =
       (ty1, ty2)
   | LTconstruct(tcs, args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
-      filter_arrow (expand_abbrev_aux params body args)
+      filter_arrow (apply params body args)
   | _ ->
       raise Unify
 ;;
@@ -223,7 +215,7 @@ let rec filter_product arity ty =
       if List.length tyl == arity then tyl else raise Unify
   | LTconstruct(tcs,args) when has_abbrev tcs ->
       let params, body = get_abbrev tcs in
-      filter_product arity (expand_abbrev_aux params body args)
+      filter_product arity (apply params body args)
   | _ ->
       raise Unify
 ;;
@@ -239,6 +231,6 @@ let rec filter_array ty =
         arg
     | LTconstruct(tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
-        filter_array (expand_abbrev_aux params body args)
+        filter_array (apply params body args)
     | _ ->
         raise Unify
