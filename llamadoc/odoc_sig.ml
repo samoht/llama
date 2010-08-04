@@ -47,7 +47,7 @@ open Odoc_types
       | Types.Sig_exception cs ->
           Hashtbl.add table (E cs.Types.cs_name) signat
       | Types.Sig_type tcs ->
-          Hashtbl.add table (T (Types.tcs_name tcs)) signat
+          Hashtbl.add table (T tcs.Types.tcs_name) signat
 
     let table signat =
       let t = Hashtbl.create 13 in
@@ -153,10 +153,10 @@ open Odoc_types
 
     let get_type_kind env name_comment_list type_kind =
       match type_kind with
-        Types.Type_abstract | Types.Type_abbrev _ ->
-          Odoc_type.Type_abstract
+        Types.Tcs_abstract | Types.Tcs_abbrev _ ->
+          Odoc_type.Tcs_abstract
 
-      | Types.Type_variant l ->
+      | Types.Tcs_sum l ->
           let f cs =
             let constructor_name = cs.Types.cs_name in
             let type_expr_list = cs.Types.cs_args in
@@ -173,9 +173,9 @@ open Odoc_types
               vc_text = comment_opt
             }
           in
-          Odoc_type.Type_variant (List.map f l)
+          Odoc_type.Tcs_sum (List.map f l)
 
-      | Types.Type_record l ->
+      | Types.Tcs_record l ->
           let f lbl =
             let field_name = lbl.Types.lbl_name in
             let mutable_flag = lbl.Types.lbl_mut in
@@ -189,12 +189,12 @@ open Odoc_types
             in
             {
               rf_name = field_name ;
-              rf_mutable = mutable_flag = Mutable ;
+              rf_mutable = mutable_flag ;
               rf_type = type_expr ; (* Odoc_env.subst_type env type_expr ; *)
               rf_text = comment_opt
             }
           in
-          Odoc_type.Type_record (List.map f l)
+          Odoc_type.Tcs_record (List.map f l)
 
     (** Analyse of a .mli parse tree, to get the corresponding elements.
        last_pos is the position of the first character which may be used to look for special comments.
@@ -377,11 +377,11 @@ open Odoc_types
                                       co, cn)
                                   )
                         *)
-                        List.map (fun tv -> Types.Tvar tv) sig_type_decl.Types.tcs_params;
+                        sig_type_decl.Types.tcs_params;
                       ty_kind = type_kind;
                       ty_manifest =
                         (match sig_type_decl.Types.tcs_kind with
-                           | Types.Type_abbrev t -> Some t
+                           | Types.Tcs_abbrev t -> Some t
                            | _ -> None);
                       ty_loc =
                       { loc_impl = None ;

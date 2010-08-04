@@ -129,8 +129,8 @@ let type_deps t =
     s2
   in
   (match t.Odoc_type.ty_kind with
-    Odoc_type.Type_abstract -> ()
-  | Odoc_type.Type_variant cl ->
+    Odoc_type.Tcs_abstract -> ()
+  | Odoc_type.Tcs_sum cl ->
       List.iter
         (fun c ->
           List.iter
@@ -141,7 +141,7 @@ let type_deps t =
             c.Odoc_type.vc_args
         )
         cl
-  | Odoc_type.Type_record rl ->
+  | Odoc_type.Tcs_record rl ->
       List.iter
         (fun r ->
           let s = Odoc_print.string_of_type_expr r.Odoc_type.rf_type in

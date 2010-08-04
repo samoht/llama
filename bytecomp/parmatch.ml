@@ -400,9 +400,7 @@ let do_set_args erase_mutable q r = match q with
       (Tpat_record
          (List.map2 (fun (lbl,_) arg ->
            if
-             erase_mutable &&
-             (match lbl.lbl_mut with
-             | Mutable -> true | Immutable -> false)
+             erase_mutable && lbl.lbl_mut
            then
              lbl, omega
            else
@@ -585,7 +583,7 @@ let row_of_pat pat =
 *)
 
 let full_match closing env =  match env with
-| ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)::_ ->
+| ({pat_desc = Tpat_construct ({cs_tag=Cs_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
     List.length env = List.length (Btype.constructors_of_type (Btype.cs_parent c))
@@ -626,7 +624,7 @@ let full_match closing env =  match env with
 | _ -> fatal_error "Parmatch.full_match"
 
 let extendable_match env = match env with
-| ({pat_desc = Tpat_construct({cstr_tag=(Cstr_constant _|Cstr_block _)},_)} as p,_) :: _ ->
+| ({pat_desc = Tpat_construct({cs_tag=(Cs_constant _|Cs_block _)},_)} as p,_) :: _ ->
     let path = get_type_path p.pat_type in
     not
       (path == Predef.tcs_bool ||
@@ -639,7 +637,7 @@ let should_extend ext env = match ext with
 | None -> false
 | Some ext -> match env with
   | ({pat_desc =
-       Tpat_construct({cstr_tag=(Cstr_constant _|Cstr_block _)},_)} as p,_)
+       Tpat_construct({cs_tag=(Cs_constant _|Cs_block _)},_)} as p,_)
     :: _ ->
       let path = get_type_path p.pat_type in
       path == ext
@@ -688,7 +686,7 @@ let build_other_constant proj make first next p env =
 *)
 
 let build_other ext env =  match env with
-| ({pat_desc = Tpat_construct ({cstr_tag=Cstr_exception _},_)},_)
+| ({pat_desc = Tpat_construct ({cs_tag=Cs_exception _},_)},_)
   ::_ ->
     make_pat
       (Tpat_var (Ident.create "*exception*"))
@@ -1526,7 +1524,7 @@ let extendable_path path =
     path == Predef.tcs_option)
 
 let rec collect_paths_from_pat r p = match p.pat_desc with
-| Tpat_construct({cstr_tag=(Cstr_constant _|Cstr_block _)},ps) ->
+| Tpat_construct({cs_tag=(Cs_constant _|Cs_block _)},ps) ->
     let path =  get_type_path p.pat_type in
     List.fold_left
       collect_paths_from_pat
@@ -1534,7 +1532,7 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
       ps
 | Tpat_any|Tpat_var _|Tpat_constant _| Tpat_variant (_,None,_) -> r
 | Tpat_tuple ps | Tpat_array ps
-| Tpat_construct ({cstr_tag=Cstr_exception _}, ps)->
+| Tpat_construct ({cs_tag=Cs_exception _}, ps)->
     List.fold_left collect_paths_from_pat r ps
 | Tpat_record lps ->
     List.fold_left

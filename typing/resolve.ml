@@ -108,9 +108,9 @@ let rec type_expression env te =
             Ttyp_tuple (List.map (type_expression env) l)
         | Ptyp_constr (li, l) ->
             let tcs = lookup_type env li te.ptyp_loc in
-            if List.length l <> tcs.tcs_arity then
+            if List.length l <> tcs_arity tcs then
               raise(Error(te.ptyp_loc, 
-                          Type_arity_mismatch(li, tcs.tcs_arity, List.length l)));
+                          Type_arity_mismatch(li, tcs_arity tcs, List.length l)));
             Ttyp_constr (lookup_type env li te.ptyp_loc,
                          List.map (type_expression env) l)
       end;
@@ -130,7 +130,7 @@ let rec global_type ctxt te =
         let arity =
           match tcsr with
               Type_context.Ref_local ltcs -> ltcs.Type_context.ltcs_arity
-            | Type_context.Ref_global tcs -> tcs.tcs_arity
+            | Type_context.Ref_global tcs -> tcs_arity tcs
         in
         if List.length tyl <> arity then
           raise(Error(te.ptyp_loc, 
@@ -153,9 +153,9 @@ let global_val_type env te =
       | Ptyp_tuple tyl -> Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) ->
           let tcs = lookup_type env lid te.ptyp_loc in
-          if List.length tyl <> tcs.tcs_arity then
+          if List.length tyl <> tcs_arity tcs then
             raise(Error(te.ptyp_loc, 
-                        Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
+                        Type_arity_mismatch(lid, tcs_arity tcs, List.length tyl)));
           Tconstr (ref_type_constr tcs, List.map aux tyl)
     end
   in
@@ -297,11 +297,11 @@ let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =
       cs_res = type_none;
       cs_args = replicate_list type_none arity;
       cs_arity = arity;
-      cstr_tag =
+      cs_tag =
         if arity=0 then
-          Cstr_constant (tcs, postincr idx_const)
+          Cs_constant (tcs, postincr idx_const)
         else
-          Cstr_block (tcs, postincr idx_block)
+          Cs_block (tcs, postincr idx_block)
     }
   in
   (cs, List.map (global_type ctxt) typexps)
@@ -311,7 +311,7 @@ let label ctxt tcs pos (name, mut, typexp, _) =
   (name, global_type ctxt typexp)
 (*
   let lbl =
-    { lbl_parent = tcs;
+    { lbl_tcs = tcs;
       lbl_name = name;
       lbl_res = type_none;
       lbl_arg = type_none;
@@ -441,7 +441,7 @@ let exception_declaration env name args =
       cs_res = type_none;
       cs_args = replicate_list type_none nargs;
       cs_arity = nargs;
-      cstr_tag = Cstr_exception (Env.get_current_module())
+      cs_tag = Cs_exception (Env.get_current_module())
     }
   in
   let env = Env.add_exception cs env in

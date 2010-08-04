@@ -67,7 +67,7 @@ let lcond (arg, const_lambda_list) fail =
 
 let lswitch (arg, cs_action_list) fail =
   begin match cs_action_list with
-    | (({cstr_tag=Cstr_exception _},_)::_) ->
+    | (({cs_tag=Cs_exception _},_)::_) ->
         List.fold_right
           begin fun (ex, act) rem ->
             Lifthenelse(Lprim(Pintcomp Ceq,
@@ -90,10 +90,10 @@ let lswitch (arg, cs_action_list) fail =
         in
         List.iter
           begin fun (cs, action) ->
-            begin match cs.cstr_tag with
-              | Cstr_constant i -> addconst i action
-              | Cstr_block i -> addblock i action
-              | Cstr_exception _ -> assert false
+            begin match cs.cs_tag with
+              | Cs_constant i -> addconst i action
+              | Cs_block i -> addblock i action
+              | Cs_exception _ -> assert false
             end
           end cs_action_list;
         let full =
@@ -456,7 +456,7 @@ let rec conquer_matching =
             and lambda2, total2 = conquer_matching vars in
               (lcond (path, condlist1) (Some lambda2), total2)
       | {pat_desc = Tpat_record ((lbl,_)::_); pat_type = ty} ->
-          conquer_matching (divide_record_matching lbl.lbl_parent matching)
+          conquer_matching (divide_record_matching lbl.lbl_tcs matching)
       | _ ->
           fatal_error "conquer_matching 2"
       end

@@ -16,29 +16,30 @@ let format6_generics = List.map tvar (new_generics 6)
 (* Type constructors.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let mkty name params h : type_constructor =
+(* abstract types *)
+let mkabs name params h : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
     tcs_params = params;
-    tcs_arity = List.length params;
-    tcs_kind = Type_abstract;
+    tcs_kind = Tcs_abstract;
     tcs_formal = h }
+let tcs_int = mkabs "int" [] true
+let tcs_char = mkabs "char" [] true
+let tcs_string = mkabs "string" [] true
+let tcs_float = mkabs "float" [] false
+let tcs_exn = mkabs "exn" [] false
+let tcs_array = mkabs "array" [array_generic] true
+let tcs_format6 = mkabs "format6" format6_generics false
+let tcs_nativeint = mkabs "nativeint" [] true
+let tcs_int32 = mkabs "int32" [] true
+let tcs_int64 = mkabs "int64" [] true
+let tcs_lazy_t = mkabs "lazy_t" [] true
 
-let tcs_int = mkty "int" [] Formal_type
-let tcs_char = mkty "char" [] Formal_type
-let tcs_string = mkty "string" [] Formal_type
-let tcs_float = mkty "float" [] Informal_type
-let tcs_bool = mkty "bool" [] Formal_type
-let tcs_unit = mkty "unit" [] Formal_type
-let tcs_exn = mkty "exn" [] Informal_type
-let tcs_array = mkty "array" [array_generic] Formal_type
-let tcs_list = mkty "list" [list_generic] Formal_type
-let tcs_format6 = mkty "format6" format6_generics Informal_type
-let tcs_option =  mkty "option" [option_generic] Formal_type
-let tcs_nativeint = mkty "nativeint" [] Formal_type
-let tcs_int32 = mkty "int32" [] Formal_type
-let tcs_int64 = mkty "int64" [] Formal_type
-let tcs_lazy_t = mkty "lazy_t" [] Formal_type
+(* xxx variant types *)
+let tcs_unit = mkabs "unit" [] true
+let tcs_bool = mkabs "bool" [] true
+let tcs_list = mkabs "list" [list_generic] true
+let tcs_option =  mkabs "option" [option_generic] true
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -67,14 +68,14 @@ let constr_void =
   { cs_name = "()";
     cs_res = Tconstr(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
-    cstr_tag = Cstr_constant (tcs_unit,0) }
+    cs_tag = Cs_constant (tcs_unit,0) }
 
 let constr_nil =
   let arg = list_generic in
   { cs_name = "[]";
     cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
-    cstr_tag = Cstr_constant (tcs_list,0) }
+    cs_tag = Cs_constant (tcs_list,0) }
 
 let constr_cons =
   let arg1 = list_generic in
@@ -82,41 +83,41 @@ let constr_cons =
   { cs_name = "::";
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
-    cstr_tag = Cstr_block (tcs_list,0) }
+    cs_tag = Cs_block (tcs_list,0) }
 
 let constr_none =
   let arg =  option_generic in
   { cs_name = "None";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
-    cstr_tag = Cstr_constant (tcs_option,0) }
+    cs_tag = Cs_constant (tcs_option,0) }
 
 let constr_some =
   let arg =  option_generic in
   { cs_name = "Some";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
-    cstr_tag = Cstr_block (tcs_option,0) }
+    cs_tag = Cs_block (tcs_option,0) }
 
 let constr_false =
   { cs_name = "false";
     cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
-    cstr_tag = Cstr_constant (tcs_bool,0) }
+    cs_tag = Cs_constant (tcs_bool,0) }
 
 let constr_true =
   { cs_name = "true";
     cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
-    cstr_tag = Cstr_constant(tcs_bool,1) }
+    cs_tag = Cs_constant(tcs_bool,1) }
 
 let _ =
   List.iter (fun (tcs, tk) -> tcs.tcs_kind <- tk)
-    [ tcs_unit, Type_variant [ constr_void ];
-      tcs_exn, Type_variant [];
-      tcs_bool, Type_variant [ constr_false; constr_true ];
-      tcs_list, Type_variant [ constr_nil; constr_cons ];
-      tcs_option, Type_variant [ constr_none; constr_some ] ]
+    [ tcs_unit, Tcs_sum [ constr_void ];
+      tcs_exn, Tcs_sum [];
+      tcs_bool, Tcs_sum [ constr_false; constr_true ];
+      tcs_list, Tcs_sum [ constr_nil; constr_cons ];
+      tcs_option, Tcs_sum [ constr_none; constr_some ] ]
 
 let type_constructors =
   [ tcs_int;
@@ -144,7 +145,7 @@ let mkexn name tyl =
     cs_res = Tconstr (ref_type_constr tcs_exn, []);
     cs_args = tyl;
     cs_arity = List.length tyl;
-    cstr_tag = Cstr_exception Module_builtin }
+    cs_tag = Cs_exception Module_builtin }
   
 let cs_out_of_memory = mkexn "Out_of_memory" []
 let cs_sys_error = mkexn "Sys_error" [type_string]

@@ -160,7 +160,7 @@ let rec is_nonexpansive expr =
   | Texp_array [] -> true
   | Texp_record (lbl_expr_list, exten) ->
       List.forall (fun (lbl, expr) ->
-                  lbl.lbl_mut == Immutable && is_nonexpansive expr)
+                  not lbl.lbl_mut && is_nonexpansive expr)
               lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_when(cond, act) -> is_nonexpansive act
@@ -450,7 +450,7 @@ let rec type_expr expr =
       end;
       let fields =
         match lbl_exp_list with [] -> assert false
-        | (lbl,_)::_ -> Btype.labels_of_type lbl.lbl_parent in
+        | (lbl,_)::_ -> Btype.labels_of_type lbl.lbl_tcs in
       let num_fields = List.length fields in
       if exten = None && List.length lbl_exp_list <> num_fields then begin
         let is_missing lbl = List.forall (fun (lbl', _) -> lbl != lbl') lbl_exp_list in
@@ -466,7 +466,7 @@ let rec type_expr expr =
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) = instantiate_label lbl in
-      if lbl.lbl_mut == Immutable then raise(Error(expr.exp_loc, Label_not_mutable lbl));
+      if not lbl.lbl_mut then raise(Error(expr.exp_loc, Label_not_mutable lbl));
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       Ctype.type_unit

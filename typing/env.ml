@@ -7,13 +7,10 @@ open Printf
 open Longident
 open Modenv
 
-let current_module = ref Module_none
-let current_position = ref 0
+let current_module = ref (Module "")
 
 let reset_cache () =
-  Modenv.reset ();
-  current_module := Module_none;
-  current_position := 0
+  Modenv.reset ()
 
 (* ---------------------------------------------------------------------- *)
 (* Handling of unqualified identifiers.                                   *)
@@ -69,7 +66,7 @@ let add_exception cs env =
 let add_type_constructor tcs env =
   let name = tcs.tcs_name in
   begin match tcs.tcs_kind with
-    | Type_variant cstrs ->
+    | Tcs_sum cstrs ->
         { types = Tbl.add name tcs env.types;
           constrs =
             List.fold_right
@@ -78,7 +75,7 @@ let add_type_constructor tcs env =
               cstrs env.constrs;
           labels = env.labels;
           values = env.values }
-    | Type_record lbls ->
+    | Tcs_record lbls ->
         { types = Tbl.add name tcs env.types;
           constrs = env.constrs;
           labels =
@@ -87,7 +84,7 @@ let add_type_constructor tcs env =
                  Tbl.add lbl.lbl_name lbl lbls)
               lbls env.labels;
           values = env.values }
-    | Type_abstract | Type_abbrev _ ->
+    | Tcs_abstract | Tcs_abbrev _ ->
         { types = Tbl.add name tcs env.types;
           constrs = env.constrs;
           labels = env.labels;
@@ -136,7 +133,7 @@ let get_current_module () = !current_module
 let current_module_name () =
   begin match !current_module with
     | Module s -> s
-    | Module_none | Module_builtin | Module_toplevel -> failwith "current_module_name"
+    | Module_builtin | Module_toplevel -> failwith "current_module_name"
   end
 
 

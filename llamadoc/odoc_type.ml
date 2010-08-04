@@ -30,10 +30,10 @@ type record_field = {
 
 (** The various kinds of type. *)
 type type_kind =
-    Type_abstract
-  | Type_variant of variant_constructor list
+    Tcs_abstract
+  | Tcs_sum of variant_constructor list
                    (** constructors *)
-  | Type_record of record_field list
+  | Tcs_record of record_field list
                    (** fields *)
 
 (** Representation of a type. *)

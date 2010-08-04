@@ -196,12 +196,12 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
           | Tconstr(path, ty_list) ->
               let decl = Get.type_constructor path in
               match decl with
-                | {tcs_kind = Type_abstract} ->
+                | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"
-                | {tcs_kind = Type_abbrev body} ->
+                | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
                       (Btype.apply decl.tcs_params body ty_list)
-                | {tcs_kind = Type_variant constr_list} ->
+                | {tcs_kind = Tcs_sum constr_list} ->
                     let tag =
                       if Obj.is_block obj
                       then Tag_block(Obj.tag obj)
@@ -215,7 +215,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
-                | {tcs_kind = Type_record(lbl_list)} ->
+                | {tcs_kind = Tcs_record(lbl_list)} ->
                     begin match check_depth depth obj ty with
                       Some x -> x
                     | None ->

@@ -38,9 +38,9 @@ let letdef_is_pure pat_expr_list =
 ;;
 
 let single_constructor cs =
-  match cs.cstr_tag with
-      Cstr_exception _ -> false
-    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_arity = 1
+  match cs.cs_tag with
+      Cs_exception _ -> false
+    | Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs_arity tcs = 1
 
 let rec pat_irrefutable pat =
   match pat.pat_desc with

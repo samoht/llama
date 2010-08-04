@@ -48,9 +48,7 @@ let setvalue name v =
 
 let eval_exception cs =
   begin match constructor_module cs with
-      Module_none ->
-        assert false(*xxx*)
-    | Module_builtin ->
+      Module_builtin ->
         Symtable.get_global_value (Ident.of_exception cs)
     | Module name ->
         Obj.field

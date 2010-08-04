@@ -65,9 +65,9 @@ let make_cached_module sg crcs =
         | Sig_type tcs ->
             type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
             begin match tcs.tcs_kind with
-              | Type_variant cstrs ->
+              | Tcs_sum cstrs ->
                   List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
-              | Type_record lbls ->
+              | Tcs_record lbls ->
                   List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
               | _ ->
                   ()
@@ -109,7 +109,6 @@ let cm_predef = make_cached_module Predef.signature []
 
 let cached_module mod_id =
   match mod_id with
-    | Module_none -> assert false(*xxx*)
     | Module_builtin ->
         cm_predef
     | Module name ->
@@ -141,8 +140,8 @@ let get_value_position v =
   let id = v.val_id in
   Tbl.find id.id_name (cached_module v.val_id.id_module).value_positions
 let get_exception_position cs =
-  begin match cs.cstr_tag with
-    | Cstr_exception m ->
+  begin match cs.cs_tag with
+    | Cs_exception m ->
         Tbl.find cs.cs_name (cached_module m).exception_positions
     | _ -> assert false
   end
@@ -168,10 +167,10 @@ let erase_label m lbl =
   erase_type m lbl.lbl_arg
 let erase_value m v = erase_type m v.val_type
 let erase_tcs_kind m = function
-    Type_abstract -> ()
-  | Type_variant l -> List.iter (erase_constr m) l
-  | Type_record l -> List.iter (erase_label m) l
-  | Type_abbrev t -> erase_type m t
+    Tcs_abstract -> ()
+  | Tcs_sum l -> List.iter (erase_constr m) l
+  | Tcs_record l -> List.iter (erase_label m) l
+  | Tcs_abbrev t -> erase_type m t
 let erase_type_constr m t =
   erase_tcs_kind m t.tcs_kind
 let erase_item m = function

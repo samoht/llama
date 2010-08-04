@@ -285,8 +285,8 @@ let prim_obj_dup =
     prim_native_name = ""; prim_native_float = false }
 
 let is_constant_constructor cs =
-  match cs.cstr_tag with
-      Cstr_constant _ -> true
+  match cs.cs_tag with
+      Cs_constant _ -> true
     | _ -> false
 
 let transl_prim prim args =
@@ -632,16 +632,16 @@ and transl_exp0 e =
       end
   | Texp_construct(cstr, args) ->
       let ll = transl_list args in
-      begin match cstr.cstr_tag with
-        Cstr_constant (_, n) ->
+      begin match cstr.cs_tag with
+        Cs_constant (_, n) ->
           Lconst(Const_pointer n)
-      | Cstr_block (_, n) ->
+      | Cs_block (_, n) ->
           begin try
             Lconst(Const_block(n, List.map extract_constant ll))
           with Not_constant ->
             Lprim(Pmakeblock(n, Immutable), ll)
           end
-      | Cstr_exception _ ->
+      | Cs_exception _ ->
           Lprim(Pmakeblock(0, Immutable), transl_exception cstr :: ll)
       end
 (*| Texp_variant(l, arg) ->
@@ -658,7 +658,7 @@ and transl_exp0 e =
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      transl_record (Btype.labels_of_type lbl1.lbl_parent) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
+      transl_record (Btype.labels_of_type lbl1.lbl_tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
   | Texp_field(arg, lbl) ->
@@ -971,7 +971,7 @@ and transl_record all_labels repres lbl_expr_list opt_init_expr =
       lbl_expr_list;
     let ll = Array.to_list lv in
     let mut =
-      if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
+      if List.exists (fun (lbl, expr) -> lbl.lbl_mut) lbl_expr_list
       then Mutable
       else Immutable in
     let lam =

@@ -87,17 +87,17 @@ let count_constructors tcs =
   let b = ref 0 in
   List.iter
     begin fun cs ->
-      begin match cs.cstr_tag with
-        | Cstr_constant _ -> incr a
-        | Cstr_block _ -> incr b
-        | Cstr_exception _ -> assert false
+      begin match cs.cs_tag with
+        | Cs_constant _ -> incr a
+        | Cs_block _ -> incr b
+        | Cs_exception _ -> assert false
       end
     end
     (Btype.constructors_of_type tcs);
   !a, !b
 
 let calc_lbl_all lbl =
-  Array.of_list (Btype.labels_of_type lbl.lbl_parent)
+  Array.of_list (Btype.labels_of_type lbl.lbl_tcs)
 
 let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
 

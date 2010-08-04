@@ -1232,12 +1232,12 @@ let newline_to_indented_br s =
       let father = Odoc_name.father t.ty_name in
       bs b
         (match t.ty_manifest, t.ty_kind with
-          None, Type_abstract -> "<pre>"
-        | None, Type_variant _
-        | None, Type_record _ -> "<br><code>"
-        | Some _, Type_abstract -> "<pre>"
-        | Some _, Type_variant _
-        | Some _, Type_record _ -> "<pre>"
+          None, Tcs_abstract -> "<pre>"
+        | None, Tcs_sum _
+        | None, Tcs_record _ -> "<br><code>"
+        | Some _, Tcs_abstract -> "<pre>"
+        | Some _, Tcs_sum _
+        | Some _, Tcs_record _ -> "<pre>"
         );
       bp b "<span id=\"%s\">" (naming_type_target t);
       bs b ((keyword "type")^" ");
@@ -1254,8 +1254,8 @@ let newline_to_indented_br s =
            bs b " "
       );
       (match t.ty_kind with
-        Type_abstract -> bs b "</pre>"
-      | Type_variant l ->
+        Tcs_abstract -> bs b "</pre>"
+      | Tcs_sum l ->
           bs b "= ";
           bs b
             (
@@ -1300,7 +1300,7 @@ let newline_to_indented_br s =
           print_concat b "\n" print_one l;
           bs b "</table>\n"
 
-      | Type_record l ->
+      | Tcs_record l ->
           bs b "= ";
           bs b "{";
           bs b

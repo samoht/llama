@@ -103,13 +103,13 @@ let rec repr = function
 
 let has_abbrev tcs =
   begin match tcs.tcs_kind with
-    | Type_abbrev _ -> true
+    | Tcs_abbrev _ -> true
     | _ -> false
   end
 
 let get_abbrev tcs =
   begin match tcs.tcs_kind with
-    | Type_abbrev body -> tcs.tcs_params, body
+    | Tcs_abbrev body -> tcs.tcs_params, body
     | _ -> assert false
   end
 
@@ -125,7 +125,7 @@ let apply params body args =
 
 let rec expand_head = function
     LTvar { forward = Some ty } -> expand_head ty
-  | LTconstr ({tcs_params = params; tcs_kind = Type_abbrev body}, args) ->
+  | LTconstr ({tcs_params = params; tcs_kind = Tcs_abbrev body}, args) ->
       expand_head (apply params body args)
   | ty -> ty
 

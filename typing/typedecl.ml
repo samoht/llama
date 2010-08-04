@@ -16,7 +16,7 @@ exception Error of Location.t * error
 
 let is_cyclic tcs =
   begin match tcs.tcs_kind with
-      Type_abbrev body ->
+      Tcs_abbrev body ->
         let rec is_acyclic seen = function
             Tvar _ -> true
           | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
@@ -25,7 +25,7 @@ let is_cyclic tcs =
               let tcs = Get.type_constructor tcs in
               not (List.memq tcs seen) &&
                 begin match tcs.tcs_kind with
-                    Type_abbrev body -> is_acyclic (tcs :: seen) body
+                    Tcs_abbrev body -> is_acyclic (tcs :: seen) body
                   | _ -> true
                 end &&
                 List.forall (is_acyclic seen) tyl
@@ -42,7 +42,7 @@ let rec check_nonoccurrence tcs_list = function
   | Ttuple tyl -> List.forall (check_nonoccurrence tcs_list) tyl
   | Tconstr (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
-      (not (List.memq tcs tcs_list) && tcs.tcs_formal = Formal_type) &&
+      (not (List.memq tcs tcs_list) && tcs.tcs_formal) &&
         List.forall (check_nonoccurrence tcs_list) tyl
 
 let rec check_covariance_rec tcs_list = function
@@ -51,16 +51,16 @@ let rec check_covariance_rec tcs_list = function
   | Ttuple tyl -> List.forall (check_covariance_rec tcs_list) tyl
   | Tconstr (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
-      (List.memq tcs tcs_list || tcs.tcs_formal = Formal_type) &&
+      (List.memq tcs tcs_list || tcs.tcs_formal) &&
         List.forall (check_covariance_rec tcs_list) tyl
 
 let check_covariance tcs_list = function
-    Type_abstract -> true
-  | Type_variant cs_list ->
+    Tcs_abstract -> true
+  | Tcs_sum cs_list ->
       List.forall (fun cs -> List.forall (check_covariance_rec tcs_list) cs.cs_args) cs_list
-  | Type_record lbl_list ->
+  | Tcs_record lbl_list ->
       List.forall (fun lbl -> check_covariance_rec tcs_list lbl.lbl_arg) lbl_list
-  | Type_abbrev ty -> check_covariance_rec tcs_list ty
+  | Tcs_abbrev ty -> check_covariance_rec tcs_list ty
 
 let rec check_inhabited_rec tcs_list = function
     Tvar _ -> true
@@ -71,12 +71,12 @@ let rec check_inhabited_rec tcs_list = function
       not (List.memq tcs tcs_list)
 
 let check_inhabited tcs_list = function
-    Type_abstract -> true
-  | Type_variant cs_list ->
+    Tcs_abstract -> true
+  | Tcs_sum cs_list ->
       List.exists (fun cs -> List.forall (check_inhabited_rec tcs_list) cs.cs_args) cs_list
-  | Type_record lbl_list ->
+  | Tcs_record lbl_list ->
       List.forall (fun lbl -> check_inhabited_rec tcs_list lbl.lbl_arg) lbl_list
-  | Type_abbrev ty -> check_inhabited_rec tcs_list ty
+  | Tcs_abbrev ty -> check_inhabited_rec tcs_list ty
 
 (*
   let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
@@ -119,9 +119,8 @@ let type_equation_list teq_list =
         { tcs_module = Env.get_current_module();
           tcs_name =  ltcs.Type_context.ltcs_name;
           tcs_params = List.map tvar ltcs.Type_context.ltcs_params;
-          tcs_arity = ltcs.Type_context.ltcs_arity;
-          tcs_kind = Type_abstract;
-          tcs_formal = Informal_type }
+          tcs_kind = Tcs_abstract;
+          tcs_formal = false(*xxx*) }
       end
       ltcs_list
   in
@@ -131,7 +130,7 @@ let type_equation_list teq_list =
       let ty_res = Tconstr (ref_type_constr tcs, tcs.tcs_params) in
       tcs.tcs_kind <-
         begin match teq.teq_kind with
-            Teq_abstract _ -> Type_abstract
+            Teq_abstract _ -> Tcs_abstract
           | Teq_variant name_args_list ->
               let idx_const = ref 0 in
               let idx_block = ref 0 in
@@ -140,35 +139,35 @@ let type_equation_list teq_list =
                   [] -> []
                 | (hd :: tl) -> let hd = f hd in hd :: map_careful f tl
               in
-              Type_variant
+              Tcs_sum
                 (List.map
                    begin fun (name, args) ->
                      { cs_name = name;
                        cs_res = ty_res;
                        cs_args = List.map (Type_context.export subst) args;
                        cs_arity = List.length args;
-                       cstr_tag =
+                       cs_tag =
                          if args=[] then
-                           Cstr_constant (tcs, postincr idx_const)
+                           Cs_constant (tcs, postincr idx_const)
                          else
-                           Cstr_block (tcs, postincr idx_block)
+                           Cs_block (tcs, postincr idx_block)
                      }
                    end
                    name_args_list)
           | Teq_record name_mut_arg_list ->
-              Type_record
+              Tcs_record
                 (Resolve.mapi
                    begin fun pos (name, mut, arg) ->
-                     { lbl_parent = tcs;
+                     { lbl_tcs = tcs;
                        lbl_name = name;
                        lbl_res = ty_res;
                        lbl_arg = Type_context.export subst arg;
-                       lbl_mut = mut;
+                       lbl_mut = (mut = Mutable);
                        lbl_pos = pos }
                    end
                    name_mut_arg_list)
           | Teq_abbrev arg ->
-              Type_abbrev (Type_context.export subst arg)
+              Tcs_abbrev (Type_context.export subst arg)
         end
     end
     tcs_list teq_list;
@@ -191,7 +190,7 @@ let do_exception name args =
     cs_res = Predef.type_exn;
     cs_args = List.map (Type_context.export []) args;
     cs_arity = List.length args;
-    cstr_tag = Cstr_exception (Env.get_current_module())
+    cs_tag = Cs_exception (Env.get_current_module())
   }
 
 let structure_item env str = match str.str_desc with

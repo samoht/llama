@@ -213,10 +213,10 @@ let merge_types merge_options mli ml =
   mli.ty_code <- (match mli.ty_code with None -> ml.ty_code | _ -> mli.ty_code) ;
 
   match mli.ty_kind, ml.ty_kind with
-    Type_abstract, _ ->
+    Tcs_abstract, _ ->
       ()
 
-  | Type_variant l1, Type_variant l2 ->
+  | Tcs_sum l1, Tcs_sum l2 ->
       let f cons =
         try
           let cons2 = List.find
@@ -244,7 +244,7 @@ let merge_types merge_options mli ml =
       in
       List.iter f l1
 
-  | Type_record l1, Type_record l2 ->
+  | Tcs_record l1, Tcs_record l2 ->
       let f record =
         try
           let record2= List.find

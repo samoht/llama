@@ -14,7 +14,7 @@
 (** The functions to get a string from different kinds of elements (types, modules, ...). *)
 
 let string_of_variance t (co,cn) =
-  if t.Odoc_type.ty_kind = Odoc_type.Type_abstract &&
+  if t.Odoc_type.ty_kind = Odoc_type.Tcs_abstract &&
     t.Odoc_type.ty_manifest = None
   then
     match (co, cn) with
@@ -118,9 +118,9 @@ let string_of_type t =
        (Odoc_print.string_of_type_expr typ)^" "
   )^
   (match t.Odoc_type.ty_kind with
-    Odoc_type.Type_abstract ->
+    Odoc_type.Tcs_abstract ->
       ""
-  | Odoc_type.Type_variant l ->
+  | Odoc_type.Tcs_sum l ->
       "="^"\n"^
       (String.concat ""
          (List.map
@@ -142,7 +142,7 @@ let string_of_type t =
             l
          )
       )
-  | Odoc_type.Type_record l ->
+  | Odoc_type.Tcs_record l ->
       "= "^"{\n"^
       (String.concat ""
          (List.map

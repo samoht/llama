@@ -99,19 +99,19 @@ let labels s params lbl1 lbl2 =
   Btype.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
 
 let type_constructors s tcs1 tcs2 =
-  if tcs1.tcs_arity <> tcs2.tcs_arity then [Arity] else
+  if tcs_arity tcs1 <> tcs_arity tcs2 then [Arity] else
   let params = List.combine (List.map rawvar tcs1.tcs_params) (List.map rawvar tcs2.tcs_params) in
   begin match tcs1.tcs_kind, tcs2.tcs_kind with
-      _, Type_abstract ->
+      _, Tcs_abstract ->
         []
-    | Type_variant cstrs1, Type_variant cstrs2 ->
+    | Tcs_sum cstrs1, Tcs_sum cstrs2 ->
         compare_variants s params 0 cstrs1 cstrs2
-    | Type_record lbls1, Type_record lbls2 ->
+    | Tcs_record lbls1, Tcs_record lbls2 ->
         compare_records s params 1 lbls1 lbls2
-    | Type_abbrev ty1, Type_abbrev ty2 ->
+    | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
         if Btype.equiv params ty1 (Subst.core_type s ty2) then [] else
           [General]
-    | _, Type_abbrev ty2 ->
+    | _, Tcs_abbrev ty2 ->
         let ty1 = Tconstr (ref_type_constr tcs2, tcs2.tcs_params) in
         if Btype.equal ty1 ty2 then [] else [General]
     | _, _ ->
@@ -124,7 +124,7 @@ let type_constructors s tcs1 tcs2 =
   let err = type_constructors s tcs1 tcs2 in
   if err <> [] then err else
     begin match tcs1.tcs_formal, tcs2.tcs_formal with
-        Informal_type, Formal_type -> [Formality]
+        false, true -> [Formality]
       | _ -> []
     end
 

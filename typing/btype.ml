@@ -11,19 +11,19 @@ open Types;;
 let none = type_none
 
 let cs_parent cs =
-  match cs.cstr_tag with
-      Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs
-    | Cstr_exception _ -> Predef.tcs_exn
+  match cs.cs_tag with
+      Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs
+    | Cs_exception _ -> Predef.tcs_exn
 
 let constructors_of_type ty =
   begin match ty.tcs_kind with
-    | Type_variant l -> l
+    | Tcs_sum l -> l
     | _ -> assert false
   end
 
 let labels_of_type ty =
   begin match ty.tcs_kind with
-    | Type_record l -> l
+    | Tcs_record l -> l
     | _ -> assert false
   end
 
@@ -34,14 +34,14 @@ let labels_of_type ty =
 let has_abbrev tcs =
   let tcs = Get.type_constructor tcs in
   begin match tcs.tcs_kind with
-    | Type_abbrev _ -> true
+    | Tcs_abbrev _ -> true
     | _ -> false
   end
 
 let get_abbrev tcs =
   let tcs = Get.type_constructor tcs in
   begin match tcs.tcs_kind with
-    | Type_abbrev body -> tcs.tcs_params, body
+    | Tcs_abbrev body -> tcs.tcs_params, body
     | _ -> assert false
   end
 
@@ -63,7 +63,7 @@ let rec expand_head ty =
     | Tconstr (tcs, args) ->
         let tcs = Get.type_constructor tcs in
         begin match tcs.tcs_kind with
-          | Type_abbrev body ->
+          | Tcs_abbrev body ->
               expand_head (apply tcs.tcs_params body args)
           | _ -> ty
         end

@@ -37,8 +37,8 @@ let maybe_pointer exp =
       not (tcs == Predef.tcs_char) &&
       begin try
         match tcs with
-          {tcs_kind = Type_variant []} -> true (* type exn *)
-        | {tcs_kind = Type_variant cstrs} ->
+          {tcs_kind = Tcs_sum []} -> true (* type exn *)
+        | {tcs_kind = Tcs_sum cstrs} ->
             List.exists (fun cs -> cs.cs_args <> []) cstrs
         | _ -> true
       with Not_found -> true
@@ -66,9 +66,9 @@ let array_element_kind env ty =
       else begin
         try
           match tcs with
-            {tcs_kind = (Type_abstract | Type_abbrev _)} ->
+            {tcs_kind = (Tcs_abstract | Tcs_abbrev _)} ->
               Pgenarray
-          | {tcs_kind = Type_variant cstrs}
+          | {tcs_kind = Tcs_sum cstrs}
             when List.forall (fun cs -> cs.cs_args = []) cstrs ->
               Pintarray
           | {tcs_kind = _} ->

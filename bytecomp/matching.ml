@@ -1190,10 +1190,10 @@ let make_constr_matching p def ctx = function
   | ((arg, mut) :: argl) ->
       let cstr = pat_as_constr p in
       let newargs =
-        match cstr.cstr_tag with
-          Cstr_constant _ | Cstr_block _ ->
+        match cstr.cs_tag with
+          Cs_constant _ | Cs_block _ ->
             make_field_args Alias arg 0 (cstr.cs_arity - 1) argl
-        | Cstr_exception _ ->
+        | Cs_exception _ ->
             make_field_args Alias arg 1 cstr.cs_arity argl in
       {pm=
         {cases = []; args = newargs;
@@ -1253,8 +1253,8 @@ let make_variant_matching_nonconst p lab def ctx = function
 let get_key_variant p = assert false
 (*
 match p.pat_desc with
-| Tpat_variant(lab, Some _ , _) ->  Cstr_block (Btype.hash_variant lab)
-| Tpat_variant(lab, None , _) -> Cstr_constant (Btype.hash_variant lab)
+| Tpat_variant(lab, Some _ , _) ->  Cs_block (Btype.hash_variant lab)
+| Tpat_variant(lab, None , _) -> Cs_constant (Btype.hash_variant lab)
 |  _ -> assert false
 *)
 
@@ -1274,10 +1274,10 @@ assert false
           match pato with
             None ->
               add (make_variant_matching_constant p lab def ctx) variants
-                (Cstr_constant tag) (patl, action) al
+                (Cs_constant tag) (patl, action) al
           | Some pat ->
               add (make_variant_matching_nonconst p lab def ctx) variants
-                (Cstr_block tag) (pat :: patl, action) al
+                (Cs_block tag) (pat :: patl, action) al
         end
     | cl -> []
   in
@@ -1490,8 +1490,8 @@ let make_record_matching all_labels def = function
 *)
           let str =
             match lbl.lbl_mut with
-              Immutable -> Alias
-            | Mutable -> StrictOpt in
+              false -> Alias
+            | true -> StrictOpt in
           (Lprim(access, [arg]), str) :: make_args(pos + 1)
         end in
       let nfields = Array.length all_labels in
@@ -2020,9 +2020,9 @@ let split_cases tag_lambda_list =
       [] -> ([], [])
     | (cstr, act) :: rem ->
         let (consts, nonconsts) = split_rec rem in
-        match cstr.cstr_tag with
-          Cstr_constant (_, n) -> ((n, act) :: consts, nonconsts)
-        | Cstr_block (_, n)    -> (consts, (n, act) :: nonconsts)
+        match cstr.cs_tag with
+          Cs_constant (_, n) -> ((n, act) :: consts, nonconsts)
+        | Cs_block (_, n)    -> (consts, (n, act) :: nonconsts)
         | _ -> assert false in
   let const, nonconst = split_rec tag_lambda_list in
   sort_int_lambda_list const,
@@ -2047,8 +2047,8 @@ let combine_constructor arg ex_pat cstr partial ctx def
         | Some fail -> fail, tag_lambda_list in
       List.fold_right
         (fun (ex, act) rem ->
-          match ex.cstr_tag with
-          | Cstr_exception _ ->
+          match ex.cs_tag with
+          | Cs_exception _ ->
               Lifthenelse(Lprim(Pintcomp Ceq,
                                 [Lprim(Pfield 0, [arg]); transl_exception ex]),
                           act, rem)

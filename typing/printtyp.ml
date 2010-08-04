@@ -16,7 +16,6 @@ let rec longident ppf = function
 
 let tree_of_qualified id =
   match id.id_module with
-    | Module_none -> assert false (*xxx*)
     | Module_builtin | Module_toplevel ->
         Oide_ident id.id_name
     | Module name ->
@@ -150,13 +149,13 @@ let rec tree_of_type_decl tcs =
   tcs.tcs_name,
   params,
   begin match tcs.tcs_kind with
-      Type_abstract ->
-        Otyp_abstract (tcs.tcs_formal = Asttypes.Formal_type)
-    | Type_variant cs_list ->
+      Tcs_abstract ->
+        Otyp_abstract tcs.tcs_formal
+    | Tcs_sum cs_list ->
         Otyp_sum (List.map tree_of_constructor_description cs_list)
-    | Type_record lbl_list ->
+    | Tcs_record lbl_list ->
         Otyp_record (List.map tree_of_label_description lbl_list)
-    | Type_abbrev ty ->
+    | Tcs_abbrev ty ->
         tree_of_typexp false ty
   end,
   []
@@ -165,7 +164,7 @@ and tree_of_constructor_description cs =
   (cs.cs_name, tree_of_typlist false cs.cs_args)
 
 and tree_of_label_description lbl =
-  (lbl.lbl_name, lbl.lbl_mut = Asttypes.Mutable, tree_of_typexp false lbl.lbl_arg)
+  (lbl.lbl_name, lbl.lbl_mut, tree_of_typexp false lbl.lbl_arg)
 
 let tree_of_rec = function
   | Rec_not -> Orec_not

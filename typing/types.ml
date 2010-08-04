@@ -1,11 +1,8 @@
-open Asttypes
-
 (* ---------------------------------------------------------------------- *)
 (* Core stuff.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
 type module_id =
-  | Module_none
   | Module_builtin
   | Module of string
   | Module_toplevel
@@ -14,35 +11,37 @@ type 'ty abstract_type_constructor =
   { tcs_module : module_id;
     tcs_name : string;
     tcs_params : 'ty list;
-    tcs_arity: int;
-    mutable tcs_kind: 'ty abstract_type_constructor_kind;
-    tcs_formal: formal_type_flag }
+    mutable tcs_kind : 'ty abstract_type_constructor_kind;
+    tcs_formal : bool }
 
 and 'ty abstract_type_constructor_kind =
-    Type_abstract
-  | Type_variant of 'ty abstract_constructor list
-  | Type_record of 'ty abstract_label list
-  | Type_abbrev of 'ty
+    Tcs_abstract
+  | Tcs_sum of 'ty abstract_constructor list
+  | Tcs_record of 'ty abstract_label list
+  | Tcs_abbrev of 'ty
 
 and 'ty abstract_constructor =
-  { cs_name: string;
-    cs_res: 'ty;
-    cs_args: 'ty list;
-    cs_arity: int;
-    cstr_tag: 'ty abstract_constructor_kind }
+  { (* mutable cs_tcs : 'ty abstract_type_constructor; *)
+    cs_name : string;
+    cs_res : 'ty;
+    cs_args : 'ty list;
+    cs_arity : int;
+    cs_tag : 'ty abstract_constructor_tag }
 
-and 'ty abstract_constructor_kind =
-    Cstr_constant of 'ty abstract_type_constructor * int  (* Constant constructor (an int) *)
-  | Cstr_block of 'ty abstract_type_constructor * int     (* Regular constructor (a block) *)
-  | Cstr_exception of module_id                   (* Exception constructor *)
+and 'ty abstract_constructor_tag =
+    Cs_constant of 'ty abstract_type_constructor * int
+  | Cs_block of 'ty abstract_type_constructor * int
+  | Cs_exception of module_id
 
 and 'ty abstract_label =
-  { lbl_parent: 'ty abstract_type_constructor;
-    lbl_name: string;
-    lbl_res: 'ty;                      (* Result type *)
-    lbl_arg: 'ty;                      (* Argument type *)
-    lbl_mut: mutable_flag;             (* Mutable or not *)
-    lbl_pos: int }                     (* Position in the tuple *)
+  { lbl_tcs : 'ty abstract_type_constructor;
+    lbl_name : string;
+    lbl_res : 'ty;
+    lbl_arg : 'ty;
+    lbl_mut : bool;
+    lbl_pos : int }
+
+open Asttypes
 
 type qualified_id =
   { id_module : module_id;
@@ -59,6 +58,7 @@ type llama_type =
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
 and type_constructor = llama_type abstract_type_constructor
+type type_constructor_kind = llama_type abstract_type_constructor_kind
 type constructor = llama_type abstract_constructor
 type label = llama_type abstract_label
 
@@ -99,14 +99,14 @@ type compiled_signature = compiled_signature_item list
 let rawvar = function Tvar tv -> tv | _ -> failwith "rawvar"
 
 let is_exception cs =
-  match cs.cstr_tag with
-      Cstr_exception _ -> true
+  match cs.cs_tag with
+      Cs_exception _ -> true
     | _ -> false
 
 let constructor_module cs =
-  match cs.cstr_tag with
-      Cstr_exception m -> m
-    | Cstr_constant (tcs, _) | Cstr_block (tcs, _) -> tcs.tcs_module
+  match cs.cs_tag with
+      Cs_exception m -> m
+    | Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs.tcs_module
 
 let tvar tv = Tvar tv
 let new_generic () = (fun s -> { tv_name=s }) ""
@@ -114,9 +114,10 @@ let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (p
 
 let constr_id cs = { id_module = constructor_module cs;
                      id_name = cs.cs_name }
-let label_id lbl = { id_module = lbl.lbl_parent.tcs_module;
+let label_id lbl = { id_module = lbl.lbl_tcs.tcs_module;
                      id_name = lbl.lbl_name }
 let tcs_id tcs = { id_module = tcs.tcs_module; id_name = tcs.tcs_name }
+let tcs_arity tcs = List.length tcs.tcs_params
 let ref_type_constr (t:type_constructor) = { ref_id = tcs_id t; ref_contents = Some t }
 let ref_constr cs = { ref_id = constr_id cs; ref_contents = Some cs }
 let ref_label lbl = { ref_id = label_id lbl; ref_contents = Some lbl }
@@ -130,9 +131,9 @@ type tag =
 let find_constr_by_tag tag cs_list =
   List.find
     begin fun cs ->
-      begin match cs.cstr_tag, tag with
-        | Cstr_block (_, i), Tag_block j  -> i =j
-        | Cstr_constant (_, i), Tag_constant j -> i = j
+      begin match cs.cs_tag, tag with
+        | Cs_block (_, i), Tag_block j  -> i =j
+        | Cs_constant (_, i), Tag_constant j -> i = j
         | _ -> false
       end
     end
