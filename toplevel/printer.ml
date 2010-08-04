@@ -144,9 +144,9 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
-          | Tconstruct(path, []) when Get.type_constructor path == Predef.tcs_exn ->
+          | Tconstr(path, []) when Get.type_constructor path == Predef.tcs_exn ->
               tree_of_exception depth obj
-          | Tconstruct(path, [ty_arg])
+          | Tconstr(path, [ty_arg])
             when Get.type_constructor path == Predef.tcs_list ->
               if Obj.is_block obj then
                 match check_depth depth obj ty with
@@ -165,7 +165,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_list (List.rev (tree_of_conses [] obj))
               else
                 Oval_list []
-          | Tconstruct(path, [ty_arg])
+          | Tconstr(path, [ty_arg])
             when Get.type_constructor path == Predef.tcs_array ->
               let length = Obj.size obj in
               if length > 0 then
@@ -184,7 +184,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_array (List.rev (tree_of_items [] 0))
               else
                 Oval_array []
-          | Tconstruct (path, [ty_arg])
+          | Tconstr (path, [ty_arg])
             when Get.type_constructor path == Predef.tcs_lazy_t ->
 (*
               if Lazy.lazy_is_val (Obj.obj obj)
@@ -193,7 +193,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               else
 *)
               Oval_stuff "<lazy>"
-          | Tconstruct(path, ty_list) ->
+          | Tconstr(path, ty_list) ->
               let decl = Get.type_constructor path in
               match decl with
                 | {tcs_kind = Type_abstract} ->

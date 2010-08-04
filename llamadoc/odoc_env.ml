@@ -166,9 +166,9 @@ let subst_type env t =
       deja_vu := t :: !deja_vu;
       Btype.iter_type_expr iter t;
       match t with
-      | Types.Tconstruct (p, [ty]) when Get.type_constructor p == Predef.tcs_option ->
+      | Types.Tconstr (p, [ty]) when Get.type_constructor p == Predef.tcs_option ->
           ()
-      | Types.Tconstruct (p, l) ->
+      | Types.Tconstr (p, l) ->
           let new_p =
             Odoc_name.to_path (full_type_name env (Odoc_name.from_path p)) in
           t.Types.desc <- Types.Tconstr (new_p, l, a)

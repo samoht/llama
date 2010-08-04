@@ -27,7 +27,7 @@ let rec is_arrow_type t =
   match t with
     Types.Tarrow _ -> true
   | Types.Ttuple _
-  | Types.Tconstruct _
+  | Types.Tconstr _
   | Types.Tvar _ -> false
 
 let raw_string_of_type_list sep type_list =
@@ -36,7 +36,7 @@ let raw_string_of_type_list sep type_list =
   let rec need_parent t =
     match t with
       Types.Tarrow _ | Types.Ttuple _ -> true
-    | Types.Tconstruct _ ->
+    | Types.Tconstr _ ->
         false
     | Types.Tvar _ -> false
   in

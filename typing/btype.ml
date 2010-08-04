@@ -53,15 +53,15 @@ let rec substitute_type subst = function
       Tarrow (substitute_type subst ty1, substitute_type subst ty2)
   | Ttuple tyl ->
       Ttuple (List.map (substitute_type subst) tyl)
-  | Tconstruct (tcs, tyl) ->
-      Tconstruct (tcs, List.map (substitute_type subst) tyl)
+  | Tconstr (tcs, tyl) ->
+      Tconstr (tcs, List.map (substitute_type subst) tyl)
 
 let apply params body args =
   substitute_type (List.combine params args) body
 
 let rec expand_head ty =
   begin match ty with
-    | Tconstruct (tcs, args) ->
+    | Tconstr (tcs, args) ->
         let tcs = Get.type_constructor tcs in
         begin match tcs.tcs_kind with
           | Type_abbrev body ->
@@ -85,13 +85,13 @@ let rec equiv_gen corresp ty1 ty2 =
         equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
         List.forall2 (equiv_gen corresp) t1args t2args
-    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
+    | Tconstr (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp (apply params body args) ty2
-    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
+    | _, Tconstr (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         equiv_gen corresp ty1 (apply params body args)
-    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2) when
+    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when
         Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         List.forall2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
@@ -113,13 +113,13 @@ let rec moregeneral_gen subst ty1 ty2 =
         moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
         List.forall2 (moregeneral_gen subst) t1args t2args
-    | Tconstruct (tcs, args), _ when has_abbrev tcs ->
+    | Tconstr (tcs, args), _ when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral_gen subst (apply params body args) ty2
-    | _, Tconstruct (tcs, args) when has_abbrev tcs ->
+    | _, Tconstr (tcs, args) when has_abbrev tcs ->
         let params, body = get_abbrev tcs in
         moregeneral_gen subst ty1 (apply params body args)
-    | Tconstruct(tcs1, tyl1), Tconstruct(tcs2, tyl2)
+    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2)
         when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
         List.forall2 (moregeneral_gen subst) tyl1 tyl2
     | _ ->

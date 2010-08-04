@@ -26,7 +26,7 @@ let rec core_type s ty =
     | Tvar _ -> ty
     | Tarrow (tyl, tyr) -> Tarrow (core_type s tyl, core_type s tyr)
     | Ttuple l -> Ttuple (List.map (core_type s) l)
-    | Tconstruct (c, l) -> Tconstruct (type_constructor s c, List.map (core_type s)l)
+    | Tconstr (c, l) -> Tconstr (type_constructor s c, List.map (core_type s)l)
   end
 
 let type_list s tyl = List.map (core_type s) tyl

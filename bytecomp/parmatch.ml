@@ -117,7 +117,7 @@ exception Empty (* Empty pattern *)
 let get_type_path ty =
   let ty = Ctype.expand_head ty in
   match ty with
-  | LTconstruct (path,_) -> path
+  | LTconstr (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
 
 

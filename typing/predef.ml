@@ -43,20 +43,20 @@ let tcs_lazy_t = mkty "lazy_t" [] Formal_type
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let type_int = Tconstruct(ref_type_constr tcs_int, [])
-let type_char = Tconstruct(ref_type_constr tcs_char, [])
-let type_string = Tconstruct(ref_type_constr tcs_string, [])
-let type_float = Tconstruct(ref_type_constr tcs_float, [])
-let type_bool = Tconstruct(ref_type_constr tcs_bool, [])
-let type_unit = Tconstruct(ref_type_constr tcs_unit, [])
-let type_exn = Tconstruct(ref_type_constr tcs_exn, [])
-let type_array t = Tconstruct(ref_type_constr tcs_array, [t])
-let type_list t = Tconstruct(ref_type_constr tcs_list, [t])
-let type_option t = Tconstruct(ref_type_constr tcs_option, [t])
-let type_nativeint = Tconstruct(ref_type_constr tcs_nativeint, [])
-let type_int32 = Tconstruct(ref_type_constr tcs_int32, [])
-let type_int64 = Tconstruct(ref_type_constr tcs_int64, [])
-let type_lazy_t t = Tconstruct(ref_type_constr tcs_lazy_t, [])
+let type_int = Tconstr(ref_type_constr tcs_int, [])
+let type_char = Tconstr(ref_type_constr tcs_char, [])
+let type_string = Tconstr(ref_type_constr tcs_string, [])
+let type_float = Tconstr(ref_type_constr tcs_float, [])
+let type_bool = Tconstr(ref_type_constr tcs_bool, [])
+let type_unit = Tconstr(ref_type_constr tcs_unit, [])
+let type_exn = Tconstr(ref_type_constr tcs_exn, [])
+let type_array t = Tconstr(ref_type_constr tcs_array, [t])
+let type_list t = Tconstr(ref_type_constr tcs_list, [t])
+let type_option t = Tconstr(ref_type_constr tcs_option, [t])
+let type_nativeint = Tconstr(ref_type_constr tcs_nativeint, [])
+let type_int32 = Tconstr(ref_type_constr tcs_int32, [])
+let type_int64 = Tconstr(ref_type_constr tcs_int64, [])
+let type_lazy_t t = Tconstr(ref_type_constr tcs_lazy_t, [])
 
 (* ---------------------------------------------------------------------- *)
 (* Constructors.                                                          *)
@@ -64,20 +64,20 @@ let type_lazy_t t = Tconstruct(ref_type_constr tcs_lazy_t, [])
 
 let constr_void =
   { cs_name = "()";
-    cs_res = Tconstruct(ref_type_constr tcs_unit,[]);
+    cs_res = Tconstr(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
     cstr_tag = Cstr_constant (tcs_unit,0) }
 
 let constr_nil =
   let arg = Tvar list_generic in
   { cs_name = "[]";
-    cs_res = Tconstruct(ref_type_constr tcs_list, [arg]);
+    cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
     cstr_tag = Cstr_constant (tcs_list,0) }
 
 let constr_cons =
   let arg1 = Tvar list_generic in
-  let arg2 = Tconstruct(ref_type_constr tcs_list, [arg1]) in
+  let arg2 = Tconstr(ref_type_constr tcs_list, [arg1]) in
   { cs_name = "::";
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
@@ -86,26 +86,26 @@ let constr_cons =
 let constr_none =
   let arg = Tvar option_generic in
   { cs_name = "None";
-    cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
+    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
     cstr_tag = Cstr_constant (tcs_option,0) }
 
 let constr_some =
   let arg = Tvar option_generic in
   { cs_name = "Some";
-    cs_res = Tconstruct(ref_type_constr tcs_option, [arg]);
+    cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
     cstr_tag = Cstr_block (tcs_option,0) }
 
 let constr_false =
   { cs_name = "false";
-    cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
+    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
     cstr_tag = Cstr_constant (tcs_bool,0) }
 
 let constr_true =
   { cs_name = "true";
-    cs_res = Tconstruct(ref_type_constr tcs_bool,[]);
+    cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
     cstr_tag = Cstr_constant(tcs_bool,1) }
 
@@ -140,7 +140,7 @@ let type_constructors =
 
 let mkexn name tyl =
   { cs_name = name;
-    cs_res = Tconstruct (ref_type_constr tcs_exn, []);
+    cs_res = Tconstr (ref_type_constr tcs_exn, []);
     cs_args = tyl;
     cs_arity = List.length tyl;
     cstr_tag = Cstr_exception Module_builtin }

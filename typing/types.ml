@@ -26,7 +26,7 @@ type llama_type =
     Tvar of type_variable
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
-  | Tconstruct of type_constructor reference * llama_type list
+  | Tconstr of type_constructor reference * llama_type list
 
 and type_variable = {
   tv_name : string }

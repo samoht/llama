@@ -22,7 +22,7 @@ let is_cyclic tcs =
             Tvar _ -> true
           | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
           | Ttuple tyl -> List.forall (is_acyclic seen) tyl
-          | Tconstruct (tcs, tyl) ->
+          | Tconstr (tcs, tyl) ->
               let tcs = Get.type_constructor tcs in
               not (List.memq tcs seen) &&
                 begin match tcs.tcs_kind with
@@ -41,7 +41,7 @@ let rec check_nonoccurrence tcs_list = function
     Tvar _ -> true
   | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_nonoccurrence tcs_list ty2
   | Ttuple tyl -> List.forall (check_nonoccurrence tcs_list) tyl
-  | Tconstruct (tcsr, tyl) ->
+  | Tconstr (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
       (not (List.memq tcs tcs_list) && tcs.tcs_formal = Formal_type) &&
         List.forall (check_nonoccurrence tcs_list) tyl
@@ -50,7 +50,7 @@ let rec check_covariance_rec tcs_list = function
     Tvar _ -> true
   | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_covariance_rec tcs_list ty2
   | Ttuple tyl -> List.forall (check_covariance_rec tcs_list) tyl
-  | Tconstruct (tcsr, tyl) ->
+  | Tconstr (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
       (List.memq tcs tcs_list || tcs.tcs_formal = Formal_type) &&
         List.forall (check_covariance_rec tcs_list) tyl
@@ -67,7 +67,7 @@ let rec check_inhabited_rec tcs_list = function
     Tvar _ -> true
   | Tarrow (ty1, ty2) -> check_inhabited_rec tcs_list ty2
   | Ttuple tyl -> List.forall (check_inhabited_rec tcs_list) tyl
-  | Tconstruct (tcsr, tyl) ->
+  | Tconstr (tcsr, tyl) ->
       let tcs = Get.type_constructor tcsr in
       not (List.memq tcs tcs_list)
 
@@ -83,7 +83,7 @@ let check_inhabited tcs_list = function
 
 let type_equation teq = (* xxx *)
   let tcs = teq.teq_tcs in
-  let ty_res = Tconstruct (ref_type_constr tcs, List.map (fun tv -> Tvar tv) tcs.tcs_params) in
+  let ty_res = Tconstr (ref_type_constr tcs, List.map (fun tv -> Tvar tv) tcs.tcs_params) in
   begin match teq.teq_kind with
       Teq_abstract _ -> ()
     | Teq_variant lst ->

@@ -41,7 +41,7 @@ let type_of_type_expression typexp =
       | Ttyp_tuple argl ->
           LTtuple(List.map type_of argl)
       | Ttyp_constr(tcs, args) ->
-          LTconstruct (tcs, List.map type_of args)
+          LTconstr (tcs, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -330,7 +330,7 @@ let type_format loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    LTconstruct
+    LTconstr
       (Predef.tcs_format6,
        [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
@@ -489,7 +489,7 @@ and type_expect exp expected_ty =
       let actual_ty =
         match expand_head expected_ty with
           (* Hack for format strings *)
-          LTconstruct(cstr, _) when cstr == Predef.tcs_format6 ->
+          LTconstr(cstr, _) when cstr == Predef.tcs_format6 ->
             type_format exp.exp_loc s
         | _ ->
             Ctype.type_string in
@@ -541,7 +541,7 @@ and type_statement expr =
   | LTarrow(_,_) ->
       Location.prerr_warning expr.exp_loc Warnings.Partial_application
   | LTvar _ -> ()
-  | LTconstruct (tcs, _) when tcs == Predef.tcs_unit -> ()
+  | LTconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Location.prerr_warning expr.exp_loc Warnings.Statement_type
 

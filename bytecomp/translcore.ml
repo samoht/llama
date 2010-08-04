@@ -786,7 +786,7 @@ and transl_exp0 e =
           | Tarrow(_,_,_,_) | Ttuple _ | Tpackage _ | Tobject(_,_) | Tnil | Tvariant _
               -> transl_exp e
           (* optimize predefined types (excepted float) *)
-          | Tconstruct(_,_,_) ->
+          | Tconstr(_,_,_) ->
               if has_base_type e Predef.path_int
                 || has_base_type e Predef.path_char
                 || has_base_type e Predef.path_string

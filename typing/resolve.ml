@@ -131,7 +131,7 @@ let rec global_type env tctxt te =
         if List.length tyl <> tcs.tcs_arity then
           raise(Error(te.ptyp_loc, 
                       Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
-        Tconstruct (ref_type_constr tcs, List.map (global_type env tctxt) tyl)
+        Tconstr (ref_type_constr tcs, List.map (global_type env tctxt) tyl)
   end
 
 let global_val_type env te =
@@ -152,7 +152,7 @@ let global_val_type env te =
           if List.length tyl <> tcs.tcs_arity then
             raise(Error(te.ptyp_loc, 
                         Type_arity_mismatch(lid, tcs.tcs_arity, List.length tyl)));
-          Tconstruct (ref_type_constr tcs, List.map aux tyl)
+          Tconstr (ref_type_constr tcs, List.map aux tyl)
     end
   in
   aux te

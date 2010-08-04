@@ -5,7 +5,7 @@ type local_type =
   | LTvar of type_variable
   | LTarrow of local_type * local_type
   | LTtuple of local_type list
-  | LTconstruct of type_constructor * local_type list
+  | LTconstr of type_constructor * local_type list
 
 and type_variable = {
   mutable forward : local_type option }
