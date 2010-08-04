@@ -162,9 +162,9 @@ let process_error exn =
       Lexer.report_error ppf err
   | Syntaxerr.Error err ->
       Syntaxerr.report_error ppf err
-  | Env.Error err ->
+  | Modenv.Error err ->
       Location.print_error_cur_file ppf;
-      Env.report_error ppf err
+      Modenv.report_error ppf err
   | Typecore.Error(loc, err) ->
       Location.print_error ppf loc; Typecore.report_error ppf err
 (*

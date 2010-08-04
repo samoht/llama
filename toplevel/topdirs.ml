@@ -54,7 +54,7 @@ exception Load_failed
 let check_consistency ppf filename cu =
   try
     List.iter
-      (fun (name, crc) -> Consistbl.check Env.crc_units name crc filename)
+      (fun (name, crc) -> Consistbl.check Modenv.crc_units name crc filename)
       cu.cu_imports
   with Consistbl.Inconsistency(name, user, auth) ->
     fprintf ppf "@[<hv 0>The files %s@ and %s@ \

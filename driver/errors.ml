@@ -31,9 +31,9 @@ let report_error ppf exn =
   | Pparse.Error ->
       Location.print_error_cur_file ppf;
       fprintf ppf "Preprocessor error"
-  | Env.Error err ->
+  | Modenv.Error err ->
       Location.print_error_cur_file ppf;
-      Env.report_error ppf err
+      Modenv.report_error ppf err
   | Typecore.Error(loc, err) ->
       Location.print_error ppf loc; Typecore.report_error ppf err
 (*

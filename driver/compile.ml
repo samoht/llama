@@ -89,7 +89,7 @@ let interface ppf sourcefile outputprefix =
 (*                                   (Typemod.simplify_signature sg);*)
     Warnings.check_fatal ();
     if not !Clflags.print_types then
-      Env.save_signature sg modulename (outputprefix ^ ".cmi");
+      Modenv.save_signature sg modulename (outputprefix ^ ".cmi");
     Pparse.remove_preprocessed inputfile
   with e ->
     Pparse.remove_preprocessed_if_ast inputfile;

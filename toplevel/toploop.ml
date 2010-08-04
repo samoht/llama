@@ -55,7 +55,7 @@ let eval_exception cs =
     | Module name ->
         Obj.field
           (Symtable.get_global_value (Ident.of_module_name name))
-          (Env.get_exception_position cs)
+          (Modenv.get_exception_position cs)
     | Module_toplevel ->
         let name = Translmod.toplevel_name (Ident.of_exception cs) in (* ? *)
         try
@@ -366,7 +366,7 @@ let _ =
   Compile.init_path();
   List.iter
     (fun (name, crc) ->
-      Consistbl.set Env.crc_units name crc Sys.executable_name)
+      Consistbl.set Modenv.crc_units name crc Sys.executable_name)
     crc_intfs
 
 let load_ocamlinit ppf =

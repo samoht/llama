@@ -42,7 +42,7 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/syntaxerr.cmo \
 TYPING=typing/unused_var.cmo typing/primitive.cmo \
  typing/types.cmo \
  typing/predef.cmo \
- typing/module.cmo \
+ typing/modenv.cmo \
  typing/env.cmo \
  typing/get.cmo \
  typing/btype.cmo \

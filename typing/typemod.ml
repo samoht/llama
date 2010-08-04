@@ -78,7 +78,7 @@ let type_implementation sourcefile outputprefix modulename env str =
           find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
         with Not_found ->
           raise(Error(Location.none, Interface_not_compiled sourceintf)) in
-      let dclsig = Env.read_signature modulename intf_file in
+      let dclsig = Modenv.read_signature modulename intf_file in
       let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
       (str, coercion)
     end else begin
@@ -86,7 +86,7 @@ let type_implementation sourcefile outputprefix modulename env str =
         Includemod.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
       if not !Clflags.dont_write_files then
-        Env.save_signature simple_sg modulename (outputprefix ^ ".cmi");
+        Modenv.save_signature simple_sg modulename (outputprefix ^ ".cmi");
       (str, coercion)
     end
   end

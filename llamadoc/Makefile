@@ -120,7 +120,7 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/primitive.cmo \
  $(LLAMASRCDIR)/typing/types.cmo \
  $(LLAMASRCDIR)/typing/predef.cmo \
- $(LLAMASRCDIR)/typing/module.cmo \
+ $(LLAMASRCDIR)/typing/modenv.cmo \
  $(LLAMASRCDIR)/typing/env.cmo \
  $(LLAMASRCDIR)/typing/get.cmo \
  $(LLAMASRCDIR)/typing/btype.cmo \

@@ -355,7 +355,7 @@ let transl_exception cs =
   else if m = Env.get_current_module () then begin
     Lvar (Ident.of_exception cs)
   end else
-    let pos = Env.get_exception_position cs in
+    let pos = Modenv.get_exception_position cs in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
@@ -366,7 +366,7 @@ let transl_regular_value v =
     Lvar id
 (*    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id*)
   else
-    let pos = Env.get_value_position v in
+    let pos = Modenv.get_value_position v in
     Lprim(Pfield pos, [transl_noncurrent_module m])
 (*
 let rec transl_path = function

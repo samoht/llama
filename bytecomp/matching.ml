@@ -1341,7 +1341,7 @@ let get_mod_field modname field =
                   Env.lookup_value (Longident.Lident field) env
                 with Not_found -> fatal_error ("Primitive "^modname^"."^field^" not found.")
               in
-              let p = Env.get_value_position value in
+              let p = Modenv.get_value_position value in
               Lprim(Pfield p, [Lprim(Pgetglobal (Ident.of_module mod_ident), [])])
             with Not_found -> fatal_error ("Module "^modname^" unavailable.")
           in
