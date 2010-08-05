@@ -68,7 +68,7 @@ let lookup_value env li loc =
   with Not_found -> raise (Error (loc, Unbound_value li))
 
 let lookup_module s loc =
-  try Get.signature s
+  try Modenv.lookup_signature s
   with Not_found -> raise (Error (loc, Unbound_module s))
 
 let lookup_type_constructor tctxt lid loc =

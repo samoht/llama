@@ -207,7 +207,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                       then Cs_block(Obj.tag obj)
                       else Cs_constant(Obj.obj obj : int) in
                     let cs =
-                      find_constr_by_tag tag constr_list in
+                      List.find (fun cs -> cs.cs_tag = tag) constr_list in
                     let ty_args =
                       List.map
                         (function ty ->

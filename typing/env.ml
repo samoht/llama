@@ -35,14 +35,10 @@ let lookup proj1 get_fun lid env =
   | _ ->
       failwith (Longident.name lid)
 
-let lookup_value =
-  lookup (fun env -> env.values) fetch_value
-and lookup_constructor =
-  lookup (fun env -> env.constrs) fetch_constructor
-and lookup_label =
-  lookup (fun env -> env.labels) fetch_label
-and lookup_type =
-  lookup (fun env -> env.types) fetch_type_constructor
+let lookup_value = lookup (fun env -> env.values) Modenv.lookup_value
+let lookup_constructor = lookup (fun env -> env.constrs) Modenv.lookup_constructor
+let lookup_label = lookup (fun env -> env.labels) Modenv.lookup_label
+let lookup_type = lookup (fun env -> env.types) Modenv.lookup_type_constructor
 
 let add_value v env =
   { types = env.types;
@@ -96,11 +92,11 @@ let add_signature sg env =
     env sg
 
 let open_pers_signature str env =
-  add_signature (get_signature str) env
+  add_signature (Modenv.lookup_signature str) env
 
 let initial = add_signature Predef.signature empty
 
-let open_module name env = add_signature (get_signature name) env
+let open_module name env = add_signature (Modenv.lookup_signature name) env
 
 let initial_env () =
   try

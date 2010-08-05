@@ -265,21 +265,14 @@ let read_signature modname filename =
 (* Getting                                                                *)
 (* ---------------------------------------------------------------------- *)
 
-let id x = x
-let get_type_constructor = id
-let get_constructor = id
-let get_value = id
-let get_label = id
-
-let fetch_type_constructor modid name = Tbl.find name (cached_module modid).mod_types
-let fetch_constructor modid name = Tbl.find name (cached_module modid).mod_constrs
-let fetch_label modid name = Tbl.find name (cached_module modid).mod_labels
-let fetch_value modid name = Tbl.find name (cached_module modid).mod_values
-
-let get_signature name = (cached_module (Module name)).mod_sig
-let get_value_position v =
+let lookup_signature name = (cached_module (Module name)).mod_sig
+let lookup_type_constructor modid name = Tbl.find name (cached_module modid).mod_types
+let lookup_constructor modid name = Tbl.find name (cached_module modid).mod_constrs
+let lookup_label modid name = Tbl.find name (cached_module modid).mod_labels
+let lookup_value modid name = Tbl.find name (cached_module modid).mod_values
+let lookup_value_position v =
   Tbl.find v.val_name (cached_module v.val_module).value_positions
-let get_exception_position cs =
+let lookup_exception_position cs =
   Tbl.find cs.cs_name (cached_module cs.cs_module).exception_positions
 
 (* ---------------------------------------------------------------------- *)

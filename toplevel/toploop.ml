@@ -229,7 +229,7 @@ let execute_phrase print_outcome ppf phr =
                 | Str_eval exp ->
                     let typ = !Typedecl.recent_type in
                     let outv = outval_of_value newenv v typ in
-                    let ty = Printtyp.tree_of_type_scheme typ in
+                    let ty = Printtyp.tree_of_type typ in
                     Ophr_eval (outv, ty)
 (*                | [] -> Ophr_signature [] *)
                 | _ -> Ophr_signature (item_list newenv sg)

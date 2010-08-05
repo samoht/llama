@@ -1169,7 +1169,6 @@ let newline_to_indented_br s =
 
     (** Print html code for a value. *)
     let html_of_value b v =
-      Printtyp.reset_names ();
       bs b "<pre>" ;
       bp b "<span id=\"%s\">" (naming_value_target v);
       bs b (keyword "val");
@@ -1196,7 +1195,6 @@ let newline_to_indented_br s =
 
     (** Print html code for an exception. *)
     let html_of_exception b e =
-      Printtyp.reset_names ();
       bs b "<pre>";
       bp b "<span id=\"%s\">" (naming_exception_target e);
       bs b (keyword "exception");
@@ -1228,7 +1226,6 @@ let newline_to_indented_br s =
 
     (** Print html code for a type. *)
     let html_of_type b t =
-      Printtyp.reset_names ();
       let father = Odoc_name.father t.ty_name in
       bs b
         (match t.ty_manifest, t.ty_kind with

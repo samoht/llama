@@ -44,13 +44,13 @@ let raw_string_of_type_list sep type_list =
     if need_parent t then
       (
        Format.fprintf fmt "(%s" variance;
-       Printtyp.type_sch fmt t;
+       Printtyp.llama_type fmt t;
        Format.fprintf fmt ")"
       )
     else
       (
        Format.fprintf fmt "%s" variance;
-       Printtyp.type_sch fmt t;
+       Printtyp.llama_type fmt t;
       )
   in
   begin match type_list with

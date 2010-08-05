@@ -39,69 +39,28 @@ let label ppf lbl = qualid ppf (lbl_qualid lbl)
 let value ppf v = qualid ppf (val_qualid v)
 
 (* ---------------------------------------------------------------------- *)
-(* Names for type variables.                                              *)
-(* ---------------------------------------------------------------------- *)
-
-let type_var_names = ref ([] : (type_variable * string) list)
-let type_var_name_counter = ref 0
-
-let reset_names () =
-  type_var_names := []; type_var_name_counter := 0
-let new_type_var_name () =
-  let name = int_to_alpha !type_var_name_counter in
-  incr type_var_name_counter;
-  name
-let name_of_type tv =
-  try List.assq tv !type_var_names with Not_found ->
-    let name = new_type_var_name () in
-    type_var_names := (tv, name) :: !type_var_names;
-    name
-
-(* ---------------------------------------------------------------------- *)
 (* Conversion of types to output trees.                                   *)
 (* ---------------------------------------------------------------------- *)
 
-let rec tree_of_typexp sch ty =
-  begin match ty with
-    | Tvar tv ->
-        Otyp_var (false, name_of_type tv)
-    | Tarrow (ty1, ty2) ->
-        Otyp_arrow ("", tree_of_typexp sch ty1, tree_of_typexp sch ty2)
-    | Ttuple tyl ->
-        Otyp_tuple (tree_of_typlist sch tyl)
-    | Tconstr (tcs, tyl) ->
-        let tcs = Get.type_constructor tcs in
-        Otyp_constr (tree_of_type_constructor tcs, tree_of_typlist sch tyl)
-  end
+let rec tree_of_type = function
+    Tvar tv ->
+      Otyp_var (false, tv.tv_name)
+  | Tarrow (ty1, ty2) ->
+      Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
+  | Ttuple tyl ->
+      Otyp_tuple (tree_of_type_list tyl)
+  | Tconstr (tcs, tyl) ->
+      Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
 
-and tree_of_typlist sch tyl =
-  List.map (tree_of_typexp sch) tyl
-
-let tree_of_type_scheme = tree_of_typexp true
-
-let typexp sch ppf ty =
-  !Oprint.out_type ppf (tree_of_typexp sch ty)
-
-let type_expr ppf ty = typexp false ppf ty
-
-let type_sch ppf ty = typexp true ppf ty
-
-let type_scheme ppf ty = reset_names (); type_sch ppf ty
+and tree_of_type_list tyl =
+  List.map tree_of_type tyl
 
 (* ---------------------------------------------------------------------- *)
 (* Printing of types.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let core_type ppf ty =
-  !out_type ppf (tree_of_typexp false ty)
-
-let one_type ppf ty =
-  reset_names ();
-  !out_type ppf (tree_of_typexp false ty)
-
-let schema ppf ty =
-  reset_names ();
-  !out_type ppf (tree_of_typexp true ty)
+let llama_type ppf ty =
+  !out_type ppf (tree_of_type ty)
 
 (* ---------------------------------------------------------------------- *)
 (* Signatures.                                                            *)
@@ -137,9 +96,8 @@ let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 (* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =
-  reset_names ();
   let params = List.map (function Tvar tv -> tv | _ -> assert false) tcs.tcs_params in
-  let params = List.map (fun tv -> name_of_type tv, (true, true)) params in
+  let params = List.map (fun tv -> tv.tv_name, (true, true)) params in
   tcs.tcs_name,
   params,
   begin match tcs.tcs_kind with
@@ -150,15 +108,15 @@ let rec tree_of_type_decl tcs =
     | Tcs_record lbl_list ->
         Otyp_record (List.map tree_of_label_description lbl_list)
     | Tcs_abbrev ty ->
-        tree_of_typexp false ty
+        tree_of_type ty
   end,
   []
 
 and tree_of_constructor_description cs =
-  (cs.cs_name, tree_of_typlist false cs.cs_args)
+  (cs.cs_name, tree_of_type_list cs.cs_args)
 
 and tree_of_label_description lbl =
-  (lbl.lbl_name, lbl.lbl_mut, tree_of_typexp false lbl.lbl_arg)
+  (lbl.lbl_name, lbl.lbl_mut, tree_of_type lbl.lbl_arg)
 
 let tree_of_rec = function
   | Rec_first -> Orec_first
@@ -173,7 +131,7 @@ let type_declaration ppf decl =
 (* Print an exception declaration *)
 
 let tree_of_exception_declaration cs =
-  let tyl = tree_of_typlist false cs.cs_args in
+  let tyl = tree_of_type_list cs.cs_args in
   Osig_exception (cs.cs_name, tyl)
 
 let exception_declaration ppf decl =
@@ -183,7 +141,7 @@ let exception_declaration ppf decl =
 
 let tree_of_value_description v =
   let id = v.val_name in
-  let ty = tree_of_typexp true v.val_type in
+  let ty = tree_of_type v.val_type in
   let prims =
     match v.val_kind with
     | Val_prim p -> Primitive.description_list p
@@ -213,22 +171,6 @@ let signature ppf sg =
   fprintf ppf "%a" print_signature (tree_of_signature sg)
 
 (* ---------------------------------------------------------------------- *)
-(* caml light compatibility stuff                                         *)
-(* ---------------------------------------------------------------------- *)
-(*
-let convert f oc x =
-  f str_formatter x;
-  output_string oc (flush_str_formatter ())
-
-let output_type = convert core_type
-let output_one_type = convert one_type
-let output_schema = convert schema
-let output_type_constr = convert type_constructor
-let output_constr = convert constructor
-let output_label = convert label
-let reset_type_var_name = reset_names
-*)
-(* ---------------------------------------------------------------------- *)
 (* local types                                                            *)
 (* ---------------------------------------------------------------------- *)
 
@@ -252,7 +194,7 @@ let rec tree_of_local_type ty =
     | LTvar tv ->
         begin match tv.forward with
           | None ->
-              Otyp_var (false, name_of_local_type tv)
+              Otyp_var (true, name_of_local_type tv)
           | Some ty ->
               tree_of_local_type ty
         end

@@ -94,17 +94,15 @@ type compiled_signature_item = llama_type abstract_signature_item
 type compiled_signature = llama_type abstract_signature
 
 (* ---------------------------------------------------------------------- *)
-(* Utilities and detritus.                                                *)
+(* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
-
-let tcs_arity tcs = List.length tcs.tcs_params
-let cs_arity cs = List.length cs.cs_args
-let lbl_module lbl = lbl.lbl_tcs.tcs_module
-let find_constr_by_tag tag cs_list = List.find (fun cs -> cs.cs_tag = tag) cs_list
 
 type qualified_id = module_id * string
 let tcs_qualid tcs = (tcs.tcs_module, tcs.tcs_name)
+let tcs_arity tcs = List.length tcs.tcs_params
 let cs_qualid cs = (cs.cs_module, cs.cs_name)
+let cs_arity cs = List.length cs.cs_args
+let lbl_module lbl = lbl.lbl_tcs.tcs_module
 let lbl_qualid lbl = (lbl_module lbl, lbl.lbl_name)
 let val_qualid v = (v.val_module, v.val_name)
 
@@ -120,5 +118,3 @@ let mkparams n =
 type record_representation =
     Record_regular
   | Record_float
-
-type 'a reference = 'a
