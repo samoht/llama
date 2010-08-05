@@ -8,9 +8,9 @@ type module_id =
   | Module_toplevel
 
 type constructor_tag =
-    Cs_constant of int
-  | Cs_block of int
-  | Cs_exception
+    Tag_constant of int
+  | Tag_block of int
+  | Tag_exception
 
 type value_kind =
     Val_reg

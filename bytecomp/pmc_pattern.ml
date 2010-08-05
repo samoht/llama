@@ -92,9 +92,9 @@ let count_constructors tcs =
   List.iter
     begin fun cs ->
       begin match cs.cs_tag with
-        | Cs_constant _ -> incr a
-        | Cs_block _ -> incr b
-        | Cs_exception _ -> assert false
+        | Tag_constant _ -> incr a
+        | Tag_block _ -> incr b
+        | Tag_exception _ -> assert false
       end
     end
     (Btype.constructors_of_type tcs);

@@ -43,7 +43,7 @@ and cs_void =
     cs_name = "()";
     cs_res = Tconstr (tcs_unit, []);
     cs_args = [];
-    cs_tag = Cs_constant 0 }
+    cs_tag = Tag_constant 0 }
 
 let rec tcs_bool =
   { tcs_module = Module_builtin;
@@ -58,7 +58,7 @@ and cs_false =
     cs_name = "false";
     cs_res = Tconstr (tcs_bool, []);
     cs_args = [];
-    cs_tag = Cs_constant 0 }
+    cs_tag = Tag_constant 0 }
 
 and cs_true =
   { cs_tcs = tcs_bool;
@@ -66,7 +66,7 @@ and cs_true =
     cs_name = "true";
     cs_res = Tconstr (tcs_bool, []);
     cs_args = [];
-    cs_tag = Cs_constant 1 }
+    cs_tag = Tag_constant 1 }
 
 let list_param = mkparam 0
 
@@ -83,7 +83,7 @@ and cs_nil =
     cs_name = "[]";
     cs_res = Tconstr(tcs_list, [list_param]);
     cs_args = [];
-    cs_tag = Cs_constant 0 }
+    cs_tag = Tag_constant 0 }
 
 and cs_cons =
   { cs_tcs = tcs_list;
@@ -91,7 +91,7 @@ and cs_cons =
     cs_name = "::";
     cs_res = Tconstr(tcs_list, [list_param]);
     cs_args = [list_param;Tconstr(tcs_list,[list_param])];
-    cs_tag = Cs_block 0 }
+    cs_tag = Tag_block 0 }
 
 let option_param = mkparam 0
 
@@ -108,7 +108,7 @@ and cs_none =
     cs_name = "None";
     cs_res = Tconstr (tcs_option, [option_param]);
     cs_args = [];
-    cs_tag = Cs_constant 0 }
+    cs_tag = Tag_constant 0 }
 
 and cs_some =
   { cs_tcs = tcs_option;
@@ -116,7 +116,7 @@ and cs_some =
     cs_name = "Some";
     cs_res = Tconstr (tcs_option, [option_param]);
     cs_args = [option_param];
-    cs_tag = Cs_block 0 }
+    cs_tag = Tag_block 0 }
 
 let type_constructors =
   [ tcs_int;
@@ -164,7 +164,7 @@ let mkexn name tyl =
     cs_name = name;
     cs_res = type_exn;
     cs_args = tyl;
-    cs_tag = Cs_exception }
+    cs_tag = Tag_exception }
   
 let cs_out_of_memory = mkexn "Out_of_memory" []
 let cs_sys_error = mkexn "Sys_error" [type_string]

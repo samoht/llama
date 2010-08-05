@@ -67,7 +67,7 @@ let lcond (arg, const_lambda_list) fail =
 
 let lswitch (arg, cs_action_list) fail =
   begin match cs_action_list with
-    | (({cs_tag=Cs_exception _},_)::_) ->
+    | (({cs_tag=Tag_exception _},_)::_) ->
         List.fold_right
           begin fun (ex, act) rem ->
             Lifthenelse(Lprim(Pintcomp Ceq,
@@ -91,9 +91,9 @@ let lswitch (arg, cs_action_list) fail =
         List.iter
           begin fun (cs, action) ->
             begin match cs.cs_tag with
-              | Cs_constant i -> addconst i action
-              | Cs_block i -> addblock i action
-              | Cs_exception _ -> assert false
+              | Tag_constant i -> addconst i action
+              | Tag_block i -> addblock i action
+              | Tag_exception _ -> assert false
             end
           end cs_action_list;
         let full =
