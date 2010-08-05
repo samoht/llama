@@ -18,15 +18,13 @@ let reset () =
 let same = (=)
 let of_exception cs =
   let name = cs.cs_name in
-  match cs.cs_tag with
-      Cs_exception m ->
-        if m = Module_builtin then Id_predef_exn name
-        else
-          begin try List.assq cs (Hashtbl.find_all exceptions name)
-          with Not_found ->
-            let id = Id (next_id (), name) in Hashtbl.add exceptions name (cs, id); id
-          end
-    | _ -> assert false
+  let m = cs.cs_module in
+  if m = Module_builtin then Id_predef_exn name
+  else
+    begin try List.assq cs (Hashtbl.find_all exceptions name)
+    with Not_found ->
+      let id = Id (next_id (), name) in Hashtbl.add exceptions name (cs, id); id
+    end
 let of_module_name name = Id_module name
 let of_module m =
   match m with

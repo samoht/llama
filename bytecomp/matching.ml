@@ -2021,8 +2021,8 @@ let split_cases tag_lambda_list =
     | (cstr, act) :: rem ->
         let (consts, nonconsts) = split_rec rem in
         match cstr.cs_tag with
-          Cs_constant (_, n) -> ((n, act) :: consts, nonconsts)
-        | Cs_block (_, n)    -> (consts, (n, act) :: nonconsts)
+          Cs_constant n -> ((n, act) :: consts, nonconsts)
+        | Cs_block n    -> (consts, (n, act) :: nonconsts)
         | _ -> assert false in
   let const, nonconst = split_rec tag_lambda_list in
   sort_int_lambda_list const,
@@ -2058,7 +2058,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
   end else begin
     (* Regular concrete type *)
     let ncases = List.length tag_lambda_list
-    and nconstrs =  List.length (Btype.constructors_of_type (Btype.cs_parent cstr)) in
+    and nconstrs =  List.length (Btype.constructors_of_type cstr.cs_tcs) in
     let sig_complete = ncases = nconstrs in
     let fails,local_jumps =
       if sig_complete then [],jumps_empty
@@ -2072,7 +2072,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
       | Some act -> act
       | _ ->
           let cstr_consts, cstr_nonconsts =
-            Pmc_pattern.count_constructors (Btype.cs_parent cstr) in
+            Pmc_pattern.count_constructors cstr.cs_tcs in
           match
             (cstr_consts, cstr_nonconsts, consts, nonconsts)
           with

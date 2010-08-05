@@ -65,51 +65,65 @@ let type_lazy_t t = Tconstr(ref_type_constr tcs_lazy_t, [])
 (* ---------------------------------------------------------------------- *)
 
 let constr_void =
-  { cs_name = "()";
+  { cs_tcs = tcs_unit;
+    cs_module = Module_builtin;
+    cs_name = "()";
     cs_res = Tconstr(ref_type_constr tcs_unit,[]);
     cs_args = []; cs_arity = 0;
-    cs_tag = Cs_constant (tcs_unit,0) }
+    cs_tag = Cs_constant 0 }
 
 let constr_nil =
   let arg = list_generic in
-  { cs_name = "[]";
+  { cs_tcs = tcs_list;
+    cs_module = Module_builtin;
+    cs_name = "[]";
     cs_res = Tconstr(ref_type_constr tcs_list, [arg]);
     cs_args = []; cs_arity = 0;
-    cs_tag = Cs_constant (tcs_list,0) }
+    cs_tag = Cs_constant 0 }
 
 let constr_cons =
   let arg1 = list_generic in
   let arg2 = Tconstr(ref_type_constr tcs_list, [arg1]) in
-  { cs_name = "::";
+  { cs_tcs = tcs_list;
+    cs_module = Module_builtin;
+    cs_name = "::";
     cs_res = arg2;
     cs_args = [arg1;arg2]; cs_arity = 2; 
-    cs_tag = Cs_block (tcs_list,0) }
+    cs_tag = Cs_block 0 }
 
 let constr_none =
   let arg =  option_generic in
-  { cs_name = "None";
+  { cs_tcs = tcs_option;
+    cs_module = Module_builtin;
+    cs_name = "None";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = []; cs_arity = 0; 
-    cs_tag = Cs_constant (tcs_option,0) }
+    cs_tag = Cs_constant 0 }
 
 let constr_some =
   let arg =  option_generic in
-  { cs_name = "Some";
+  { cs_tcs = tcs_option;
+    cs_module = Module_builtin;
+    cs_name = "Some";
     cs_res = Tconstr(ref_type_constr tcs_option, [arg]);
     cs_args = [arg]; cs_arity = 1;
-    cs_tag = Cs_block (tcs_option,0) }
+    cs_tag = Cs_block 0 }
 
 let constr_false =
-  { cs_name = "false";
+  { cs_tcs = tcs_bool;
+    cs_module = Module_builtin;
+    cs_name = "false";
     cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0; 
-    cs_tag = Cs_constant (tcs_bool,0) }
+    cs_tag = Cs_constant 0 }
 
 let constr_true =
-  { cs_name = "true";
+  { cs_tcs = tcs_bool;
+    cs_module = Module_builtin;
+    cs_name = "true";
     cs_res = Tconstr(ref_type_constr tcs_bool,[]);
     cs_args = []; cs_arity = 0;
-    cs_tag = Cs_constant(tcs_bool,1) }
+    cs_tag = Cs_constant 1 }
 
 let _ =
   List.iter (fun (tcs, tk) -> tcs.tcs_kind <- tk)
@@ -141,11 +155,13 @@ let type_constructors =
 (* ---------------------------------------------------------------------- *)
 
 let mkexn name tyl =
-  { cs_name = name;
+  { cs_tcs = tcs_exn;
+    cs_module = Module_builtin;
+    cs_name = name;
     cs_res = Tconstr (ref_type_constr tcs_exn, []);
     cs_args = tyl;
     cs_arity = List.length tyl;
-    cs_tag = Cs_exception Module_builtin }
+    cs_tag = Cs_exception }
   
 let cs_out_of_memory = mkexn "Out_of_memory" []
 let cs_sys_error = mkexn "Sys_error" [type_string]

@@ -586,7 +586,7 @@ let full_match closing env =  match env with
 | ({pat_desc = Tpat_construct ({cs_tag=Cs_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
-    List.length env = List.length (Btype.constructors_of_type (Btype.cs_parent c))
+    List.length env = List.length (Btype.constructors_of_type c.cs_tcs)
 | ({pat_desc = Tpat_variant _} as p,_) :: _ ->
     ignore p; assert false
 (*
@@ -664,7 +664,7 @@ let rec pat_of_constrs ex_pat = function
 (* Sends back a pattern that complements constructor tags all_tag *)
 let complete_constrs p all_tags = match p.pat_desc with
 | Tpat_construct (c,_) ->
-    let tcs = Btype.cs_parent c in
+    let tcs = c.cs_tcs in
     let cs_list = Btype.constructors_of_type tcs in
     complete_tags cs_list all_tags
 | _ -> fatal_error "Parmatch.complete_constr"

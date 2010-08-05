@@ -47,7 +47,7 @@ let setvalue name v =
 (* Return the value referred to by a path *)
 
 let eval_exception cs =
-  begin match constructor_module cs with
+  begin match cs.cs_module with
       Module_builtin ->
         Symtable.get_global_value (Ident.of_exception cs)
     | Module name ->

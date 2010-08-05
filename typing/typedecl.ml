@@ -142,15 +142,17 @@ let type_equation_list teq_list =
               Tcs_sum
                 (List.map
                    begin fun (name, args) ->
-                     { cs_name = name;
+                     { cs_tcs = tcs;
+                       cs_module = tcs.tcs_module;
+                       cs_name = name;
                        cs_res = ty_res;
                        cs_args = List.map (Type_context.export subst) args;
                        cs_arity = List.length args;
                        cs_tag =
                          if args=[] then
-                           Cs_constant (tcs, postincr idx_const)
+                           Cs_constant (postincr idx_const)
                          else
-                           Cs_block (tcs, postincr idx_block)
+                           Cs_block (postincr idx_block)
                      }
                    end
                    name_args_list)
@@ -188,11 +190,13 @@ let primitive name ty prim =
     val_formal = Informal }  
 
 let do_exception name args =
-  { cs_name = name;
+  { cs_tcs = Predef.tcs_exn;
+    cs_module = Env.get_current_module ();
+    cs_name = name;
     cs_res = Predef.type_exn;
     cs_args = List.map (Type_context.export []) args;
     cs_arity = List.length args;
-    cs_tag = Cs_exception (Env.get_current_module())
+    cs_tag = Cs_exception;
   }
 
 let structure_item env str = match str.str_desc with

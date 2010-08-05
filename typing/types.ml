@@ -7,6 +7,11 @@ type module_id =
   | Module of string
   | Module_toplevel
 
+type constructor_tag =
+    Cs_constant of int
+  | Cs_block of int
+  | Cs_exception
+
 type 'ty abstract_type_constructor =
   { tcs_module : module_id;
     tcs_name : string;
@@ -21,17 +26,13 @@ and 'ty abstract_type_constructor_kind =
   | Tcs_abbrev of 'ty
 
 and 'ty abstract_constructor =
-  { (* mutable cs_tcs : 'ty abstract_type_constructor; *)
+  { mutable cs_tcs : 'ty abstract_type_constructor;
+    cs_module : module_id;
     cs_name : string;
     cs_res : 'ty;
     cs_args : 'ty list;
     cs_arity : int;
-    cs_tag : 'ty abstract_constructor_tag }
-
-and 'ty abstract_constructor_tag =
-    Cs_constant of 'ty abstract_type_constructor * int
-  | Cs_block of 'ty abstract_type_constructor * int
-  | Cs_exception of module_id
+    cs_tag : constructor_tag }
 
 and 'ty abstract_label =
   { lbl_tcs : 'ty abstract_type_constructor;
@@ -98,19 +99,12 @@ let is_exception cs =
       Cs_exception _ -> true
     | _ -> false
 
-let constructor_module cs =
-  match cs.cs_tag with
-      Cs_exception m -> m
-    | Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs.tcs_module
-
 let tvar tv = Tvar tv
 let new_generic () = (fun s -> { tv_name=s }) ""
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
 
-let constr_id cs = { id_module = constructor_module cs;
-                     id_name = cs.cs_name }
-let label_id lbl = { id_module = lbl.lbl_tcs.tcs_module;
-                     id_name = lbl.lbl_name }
+let constr_id cs = { id_module = cs.cs_module; id_name = cs.cs_name }
+let label_id lbl = { id_module = lbl.lbl_tcs.tcs_module; id_name = lbl.lbl_name }
 let tcs_id tcs = { id_module = tcs.tcs_module; id_name = tcs.tcs_name }
 let val_id v = { id_module = v.val_module; id_name = v.val_name }
 let tcs_arity tcs = List.length tcs.tcs_params
@@ -119,20 +113,8 @@ let ref_constr cs =  cs (* { ref_id = constr_id cs; ref_contents = Some cs } *)
 let ref_label lbl = lbl (* { ref_id = label_id lbl; ref_contents = Some lbl } *)
 let ref_value v =  v (* { ref_id = val_id v; ref_contents = Some v } *)
 
-
-type tag =
-  | Tag_block of int
-  | Tag_constant of int
 let find_constr_by_tag tag cs_list =
-  List.find
-    begin fun cs ->
-      begin match cs.cs_tag, tag with
-        | Cs_block (_, i), Tag_block j  -> i =j
-        | Cs_constant (_, i), Tag_constant j -> i = j
-        | _ -> false
-      end
-    end
-    cs_list
+  List.find (fun cs -> cs.cs_tag = tag) cs_list
 
 (* ---------------------------------------------------------------------- *)
 (* Detritus.                                                              *)

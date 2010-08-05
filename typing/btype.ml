@@ -10,11 +10,6 @@ open Types;;
 
 let none = type_none
 
-let cs_parent cs =
-  match cs.cs_tag with
-      Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs
-    | Cs_exception _ -> Predef.tcs_exn
-
 let constructors_of_type ty =
   begin match ty.tcs_kind with
     | Tcs_sum l -> l

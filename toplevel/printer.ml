@@ -204,8 +204,8 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                 | {tcs_kind = Tcs_sum constr_list} ->
                     let tag =
                       if Obj.is_block obj
-                      then Tag_block(Obj.tag obj)
-                      else Tag_constant(Obj.obj obj : int) in
+                      then Cs_block(Obj.tag obj)
+                      else Cs_constant(Obj.obj obj : int) in
                     let cs =
                       find_constr_by_tag tag constr_list in
                     let ty_args =

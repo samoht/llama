@@ -345,11 +345,7 @@ let rec patch_guarded patch = function
 let transl_noncurrent_module m =
   Lprim(Pgetglobal (Ident.of_module m), [])
 let transl_exception cs =
-  let m =
-    match cs.Types.cs_tag with
-      | Types.Cs_exception m -> m
-      | _ -> assert false
-  in
+  let m = cs.Types.cs_module in
   if m = Types.Module_builtin then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
   else if m = Env.get_current_module () then begin

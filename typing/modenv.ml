@@ -110,16 +110,13 @@ and map_type_constructor_kind memo f = function
   | Tcs_abbrev ty -> Tcs_abbrev (f ty)
 
 and map_constructor memo f cs =
-  { cs_name = cs.cs_name;
+  { cs_tcs = map_type_constructor memo f cs.cs_tcs;
+    cs_module = cs.cs_module;
+    cs_name = cs.cs_name;
     cs_res = f cs.cs_res;
     cs_args = List.map f cs.cs_args;
     cs_arity = cs.cs_arity;
-    cs_tag = map_constructor_tag memo f cs.cs_tag }
-
-and map_constructor_tag memo f = function
-    Cs_constant (tcs, i) -> Cs_constant (map_type_constructor memo f tcs, i)
-  | Cs_block (tcs, i) -> Cs_block (map_type_constructor memo f tcs, i)
-  | Cs_exception m -> Cs_exception m
+    cs_tag = cs.cs_tag }
 
 and map_label memo f lbl =
   { lbl_tcs = map_type_constructor memo f lbl.lbl_tcs;
@@ -225,7 +222,11 @@ let rec map_signature_for_load l =
         in
         let tcs = tmp_xxx_ref tcs in
         Tconstr (tcs, List.map f tyl) in
-  map_signature memo f l
+  List.map
+    begin function
+        Sig_exception cs as item -> cs.cs_tcs <- Predef.tcs_exn; item
+      | item -> item
+    end (map_signature memo f l)
 
 and get_type_constructor modid name =
   let cm = cached_module modid in
@@ -398,11 +399,7 @@ let get_signature name = (cached_module (Module name)).mod_sig
 let get_value_position v =
   Tbl.find v.val_name (cached_module v.val_module).value_positions
 let get_exception_position cs =
-  begin match cs.cs_tag with
-    | Cs_exception m ->
-        Tbl.find cs.cs_name (cached_module m).exception_positions
-    | _ -> assert false
-  end
+  Tbl.find cs.cs_name (cached_module cs.cs_module).exception_positions
 
 (* ---------------------------------------------------------------------- *)
 

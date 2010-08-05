@@ -39,8 +39,8 @@ let letdef_is_pure pat_expr_list =
 
 let single_constructor cs =
   match cs.cs_tag with
-      Cs_exception _ -> false
-    | Cs_constant (tcs, _) | Cs_block (tcs, _) -> tcs_arity tcs = 1
+      Cs_exception -> false
+    | _ -> List.length (Btype.constructors_of_type cs.cs_tcs) = 1
 
 let rec pat_irrefutable pat =
   match pat.pat_desc with

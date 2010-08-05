@@ -633,15 +633,15 @@ and transl_exp0 e =
   | Texp_construct(cstr, args) ->
       let ll = transl_list args in
       begin match cstr.cs_tag with
-        Cs_constant (_, n) ->
+        Cs_constant n ->
           Lconst(Const_pointer n)
-      | Cs_block (_, n) ->
+      | Cs_block n ->
           begin try
             Lconst(Const_block(n, List.map extract_constant ll))
           with Not_constant ->
             Lprim(Pmakeblock(n, Immutable), ll)
           end
-      | Cs_exception _ ->
+      | Cs_exception ->
           Lprim(Pmakeblock(0, Immutable), transl_exception cstr :: ll)
       end
 (*| Texp_variant(l, arg) ->
