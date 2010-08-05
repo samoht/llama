@@ -33,7 +33,7 @@ let init_path () =
   let exp_dirs =
     List.map (expand_directory Config.standard_library) dirs in
   load_path := "" :: List.rev_append exp_dirs (Clflags.std_include_dir ());
-  Env.reset_cache ()
+  Modenv.reset_cache ()
 
 (* Return the initial environment in which compilation proceeds. *)
 
@@ -77,7 +77,7 @@ let interface ppf sourcefile outputprefix =
   let modulename =
     String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
   check_unit_name ppf sourcefile modulename;
-  Env.set_unit_name modulename;
+  Modenv.set_unit_name modulename;
   let inputfile = Pparse.preprocess sourcefile in
   try
     let ast =
@@ -109,7 +109,7 @@ let implementation ppf sourcefile outputprefix =
   let modulename =
     String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
   check_unit_name ppf sourcefile modulename;
-  Env.set_unit_name modulename;
+  Modenv.set_unit_name modulename;
   let inputfile = Pparse.preprocess sourcefile in
   let env = initial_env() in
   if !Clflags.print_types then begin

@@ -348,7 +348,7 @@ let transl_exception cs =
   let m = cs.Types.cs_module in
   if m = Types.Module_builtin then
     Lprim(Pgetglobal (Ident.of_exception cs), [])
-  else if m = Env.get_current_module () then begin
+  else if m = Modenv.get_current_module () then begin
     Lvar (Ident.of_exception cs)
   end else
     let pos = Modenv.get_exception_position cs in
@@ -357,7 +357,7 @@ let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
 let transl_regular_value v =
   let m = v.Types.val_module in
-  if m = Types.Module_builtin || m = Env.get_current_module () then
+  if m = Types.Module_builtin || m = Modenv.get_current_module () then
     let id = Ident.of_value v in
     Lvar id
 (*    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id*)

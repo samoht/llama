@@ -721,39 +721,6 @@ and transl_exp0 e =
       event_before cond
         (Lifthenelse(transl_exp cond, event_before body (transl_exp body),
                      staticfail))
-(*
-  | Texp_send(expr, met) ->
-      let obj = transl_exp expr in
-      let lam =
-        match met with
-          Tmeth_val id -> Lsend (Self, Lvar id, obj, [])
-        | Tmeth_name nm ->
-            let (tag, cache) = Translobj.meth obj nm in
-            let kind = if cache = [] then Public else Cached in
-            Lsend (kind, tag, obj, cache)
-      in
-      event_after e lam
-  | Texp_new (cl, _) ->
-      Lapply(Lprim(Pfield 0, [transl_path cl]), [lambda_unit], Location.none)
-  | Texp_instvar(path_self, path) ->
-      Lprim(Parrayrefu Paddrarray, [transl_path path_self; transl_path path])
-  | Texp_setinstvar(path_self, path, expr) ->
-      transl_setinstvar (transl_path path_self) path expr
-  | Texp_override(path_self, modifs) ->
-      let cpy = Ident.create "copy" in
-      Llet(Strict, cpy,
-           Lapply(Translobj.oo_prim "copy", [transl_path path_self],
-                  Location.none),
-           List.fold_right
-             (fun (path, expr) rem ->
-                Lsequence(transl_setinstvar (Lvar cpy) path expr, rem))
-             modifs
-             (Lvar cpy))
-  | Texp_letmodule(id, modl, body) ->
-      Llet(Strict, id, !transl_module Tcoerce_none None modl, transl_exp body)
-  | Texp_pack modl ->
-      !transl_module Tcoerce_none None modl
-*)
   | Texp_assert (cond) ->
       if !Clflags.noassert
       then lambda_unit
@@ -809,13 +776,6 @@ and transl_exp0 e =
           let fn = Lfunction (Curried, [Ident.create "param"], transl_exp e) in
           Lprim(Pmakeblock(Config.lazy_tag, Immutable), [fn])
       end
-  | Texp_object (cs, cty, meths) ->
-      let cl = Ident.create "class" in
-      !transl_object cl meths
-        { cl_desc = Tclass_structure cs;
-          cl_loc = e.exp_loc;
-          cl_type = Tcty_signature cty;
-          cl_env = e.exp_env }
 *)
   | Texp_constraint (e, _) -> transl_exp e
 

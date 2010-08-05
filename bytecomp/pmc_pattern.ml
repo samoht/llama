@@ -1,6 +1,10 @@
 open Asttypes
 open Types
 
+(* Compatibility layer for ocaml's pattern-matching compiler.
+   We're currently not so much interested in understanding it, as in easily incorporating
+   any updates. *)
+
 type row_desc = unit
 
 type pattern =

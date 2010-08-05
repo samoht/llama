@@ -14,7 +14,7 @@ val fetch_value : module_id -> string -> value
 val get_value_position : value -> int
 val get_exception_position : constructor -> int
 
-val reset : unit -> unit
+val reset_cache : unit -> unit
 
 (* Return the set of compilation units imported, with their CRC *)
 
@@ -33,6 +33,14 @@ val save_signature_with_imports:
 
 val crc_units : Consistbl.t
 
+
+(* Current module *)
+
+val set_current_unit : module_id -> unit
+val set_unit_name : string -> unit
+val get_current_module : unit -> module_id
+val current_module_name : unit -> string
+val qualified_id : string -> qualified_id
 
 (* Error report *)
 

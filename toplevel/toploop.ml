@@ -396,7 +396,7 @@ exception PPerror
 
 let loop ppf =
   fprintf ppf "        Llama version %s@.@." Config.version;
-  Env.set_current_unit Module_toplevel;
+  Modenv.set_current_unit Module_toplevel;
   initialize_toplevel_env ();
   let lb = Lexing.from_function refill_lexbuf in
   Location.input_name := "";

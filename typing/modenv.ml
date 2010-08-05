@@ -25,7 +25,7 @@ type cached_module =
 let persistent_structures = ref (Tbl.empty : (string, cached_module) Tbl.t)
 let crc_units = Consistbl.create()
 
-let reset () =
+let reset_cache () =
   persistent_structures := Tbl.empty;
   Consistbl.clear crc_units
 
@@ -267,123 +267,11 @@ and read_cached_module modname filename =
 let read_signature modname filename =
   (read_cached_module modname filename).mod_sig
 
-(*  
-(* ---------------------------------------------------------------------- *)
-(* old loading                                                            *)
-(* ---------------------------------------------------------------------- *)
-
-let read_cached_module modname filename =
-  let ic = open_in_bin filename in
-  try
-    let mn = (input_value ic : string) in
-    let mod_sig = (input_value ic : compiled_signature) in
-    let crcs = input_value ic in
-    close_in ic;
-    assert (mn = modname);
-    check_consistency filename crcs;
-    let cm = make_cached_module mod_sig crcs in
-    persistent_structures := Tbl.add modname cm !persistent_structures;
-    cm
-  with End_of_file | Failure _ ->
-    close_in ic;
-    Printf.eprintf "Corrupted compiled interface file %s.\n\
-                       Please recompile %s.mli or %s.ml first.\n"
-      filename modname modname;
-    assert false
-
-let read_signature modname filename =
-  (read_cached_module modname filename).mod_sig
-
-let cached_module mod_id =
-  match mod_id with
-    | Module_builtin ->
-        cm_predef
-    | Module name ->
-        begin try
-          Tbl.find name !persistent_structures
-        with Not_found ->
-          read_cached_module name
-            (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
-        end
-    | Module_toplevel ->
-        failwith "Get.cached_module"
-
-(* ---------------------------------------------------------------------- *)
-(* old saving                                                             *)
-(* ---------------------------------------------------------------------- *)
-
-let rec erase_type m t = match t with
-    Tvar v -> ()
-  | Tarrow (t1,t2) -> erase_type m t1; erase_type m t2
-  | Ttuple l -> List.iter (erase_type m) l
-  | Tconstr (r, l) ->
-      if r.ref_id.id_module <> m then r.ref_contents <- None;
-      List.iter (erase_type m) l
-let erase_constr m cs =
-  erase_type m cs.cs_res;
-  List.iter (erase_type m) cs.cs_args
-let erase_label m lbl =
-  erase_type m lbl.lbl_res;
-  erase_type m lbl.lbl_arg
-let erase_value m v = erase_type m v.val_type
-let erase_tcs_kind m = function
-    Tcs_abstract -> ()
-  | Tcs_sum l -> List.iter (erase_constr m) l
-  | Tcs_record l -> List.iter (erase_label m) l
-  | Tcs_abbrev t -> erase_type m t
-let erase_type_constr m t =
-  erase_tcs_kind m t.tcs_kind
-let erase_item m = function
-    Sig_value v -> erase_value m v
-  | Sig_type tcs -> erase_type_constr m tcs
-  | Sig_exception cs -> erase_constr m cs
-let erase_sig m l = List.iter (erase_item m) l
-
-let save_signature_with_imports sg modname filename imports =
-  erase_sig (Module modname) sg;
-  let oc = open_out_bin filename in
-  try
-    output_value oc modname;
-    output_value oc sg;
-    flush oc;
-    let crc = Digest.file filename in
-    let crcs = (modname, crc) :: imports in
-(*
-    print_endline "Saving crcs";
-    List.iter
-      begin fun (s, d) ->
-        print_endline ("  "^Digest.to_hex d^" "^s)
-      end crcs;
-*)
-    output_value oc crcs;
-    close_out oc;
-    (* Enter signature in persistent table so that imported_unit()
-       will also return its crc *)
-    let ps = make_cached_module sg crcs in
-    persistent_structures := Tbl.add modname ps !persistent_structures;
-    Consistbl.set crc_units modname crc filename
-  with exn ->
-    close_out oc;
-    Misc.remove_file filename;
-    raise exn
-
-let save_signature sg modname filename =
-  save_signature_with_imports sg modname filename (imported_units())
-*)
 (* ---------------------------------------------------------------------- *)
 (* Getting                                                                *)
 (* ---------------------------------------------------------------------- *)
 
 let id x = x
-(*
-  begin match r.ref_contents with
-    | Some x -> x
-    | None ->
-        let x = Tbl.find r.ref_id.id_name (proj (cached_module r.ref_id.id_module)) in
-        r.ref_contents <- Some x;
-        x
-  end
-*)
 let get_type_constructor = id
 let get_constructor = id
 let get_value = id
@@ -399,6 +287,30 @@ let get_value_position v =
   Tbl.find v.val_name (cached_module v.val_module).value_positions
 let get_exception_position cs =
   Tbl.find cs.cs_name (cached_module cs.cs_module).exception_positions
+
+(* ---------------------------------------------------------------------- *)
+(* Current module.                                                        *)
+(* ---------------------------------------------------------------------- *)
+
+let current_module = ref (Module "")
+
+let qualified_id name =
+  { id_module = !current_module;
+    id_name = name }
+
+let set_current_unit m =
+  current_module := m
+
+let set_unit_name s =
+  set_current_unit (Module s)
+
+let get_current_module () = !current_module
+
+let current_module_name () =
+  begin match !current_module with
+    | Module s -> s
+    | Module_builtin | Module_toplevel -> failwith "current_module_name"
+  end
 
 (* ---------------------------------------------------------------------- *)
 

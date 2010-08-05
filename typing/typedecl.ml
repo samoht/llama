@@ -116,7 +116,7 @@ let type_equation_list teq_list =
   let tcs_list =
     List.map
       begin fun ltcs ->
-        { tcs_module = Env.get_current_module();
+        { tcs_module = Modenv.get_current_module();
           tcs_name =  ltcs.Type_context.ltcs_name;
           tcs_params = List.map tvar ltcs.Type_context.ltcs_params;
           tcs_kind = Tcs_abstract;
@@ -174,23 +174,16 @@ let type_equation_list teq_list =
     tcs_list teq_list;
   tcs_list
 
-let do_value name ty =
-  { val_module = Env.get_current_module();
+let make_value name ty kind =
+  { val_module = Modenv.get_current_module();
     val_name = name;
     val_type = ty;
-    val_kind = Val_reg;
-    val_formal = None }
-
-let primitive name ty prim =
-  { val_module = Env.get_current_module();
-    val_name = name;
-    val_type = ty;
-    val_kind = Val_prim prim;
+    val_kind = kind;
     val_formal = None }
 
 let do_exception name args =
   { cs_tcs = Predef.tcs_exn;
-    cs_module = Env.get_current_module ();
+    cs_module = Modenv.get_current_module ();
     cs_name = name;
     cs_res = Predef.type_exn;
     cs_args = List.map (Type_context.export []) args;
@@ -208,10 +201,10 @@ let make_sig_types tcs_list =
 
 let signature_item env sg = match sg.sig_desc with
     Tsig_value (_, name, ty) ->
-      let v = do_value name ty in
+      let v = make_value name ty Val_reg in
       [Sig_value v], Env.add_value v env
   | Tsig_primitive (name, ty, prim) ->
-      let v = primitive name ty prim in
+      let v = make_value name ty (Val_prim prim) in
       [Sig_value v], Env.add_value v env
   | Tsig_type teq_list ->
       let tcs_list = type_equation_list teq_list in
@@ -238,7 +231,7 @@ let g_structure_item str = match str.str_desc with
         List.map
           begin fun locval ->
             let globval =
-              { val_module = Env.get_current_module();
+              { val_module = Modenv.get_current_module();
                 val_name = locval.Context.val_name;
                 val_type = Ctype.generalize locval.Context.val_type;
                 val_kind = Val_reg;
@@ -249,7 +242,7 @@ let g_structure_item str = match str.str_desc with
       in
       Str_value (rec_flag, pat_exp_list, m)
   | Tstr_primitive (name, ty, prim) ->
-      Str_primitive (primitive name ty prim)
+      Str_primitive (make_value name ty (Val_prim prim))
   | Tstr_type teq_list ->
       Str_type (type_equation_list teq_list)
   | Tstr_exception (name, args) ->

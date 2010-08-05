@@ -8,8 +8,6 @@ val empty : t
 val initial : t  (* builtins but not Pervasives *)
 val initial_env : unit -> t  (* incl. Pervasives unless --nopervasives *)
 
-val reset_cache: unit -> unit
-
 (* Building environments *)
 
 val add_type_constructor : type_constructor -> t -> t
@@ -24,14 +22,6 @@ val lookup_type : Longident.t -> t -> type_constructor
 val lookup_constructor : Longident.t -> t -> constructor
 val lookup_label : Longident.t -> t -> label
 val lookup_value : Longident.t -> t -> value
-
-(* Current module *)
-
-val set_current_unit : module_id -> unit
-val set_unit_name : string -> unit
-val get_current_module : unit -> module_id
-val current_module_name : unit -> string
-val qualified_id : string -> qualified_id
 
 type summary = unit
 val summary : t -> summary

@@ -7,11 +7,6 @@ open Printf
 open Longident
 open Modenv
 
-let current_module = ref (Module "")
-
-let reset_cache () =
-  Modenv.reset ()
-
 (* ---------------------------------------------------------------------- *)
 (* Handling of unqualified identifiers.                                   *)
 (* ---------------------------------------------------------------------- *)
@@ -107,32 +102,13 @@ let initial = add_signature Predef.signature empty
 
 let open_module name env = add_signature (get_signature name) env
 
-let qualified_id name =
-  { id_module = !current_module;
-    id_name = name }
-
 let initial_env () =
-(*  Ident.reinit(); *)
   try
     if !Clflags.nopervasives
     then initial
     else open_pers_signature "Pervasives" initial
   with Not_found ->
     fatal_error "cannot open pervasives.cmi"
-
-let set_current_unit m =
-  current_module := m
-
-let set_unit_name s =
-  set_current_unit (Module s)
-
-let get_current_module () = !current_module
-
-let current_module_name () =
-  begin match !current_module with
-    | Module s -> s
-    | Module_builtin | Module_toplevel -> failwith "current_module_name"
-  end
 
 
 type summary = unit
