@@ -47,7 +47,7 @@ type field_desc =
 
 let item_ident_name = function
     Sig_value v -> let s = v.val_name in s, Field_value s
-  | Sig_type tcs -> let s = tcs.tcs_name in s, Field_type s
+  | Sig_type (tcs, _) -> let s = tcs.tcs_name in s, Field_type s
   | Sig_exception cs -> let s = cs.cs_name in s, Field_exception s
 
 (* Simplify a structure coercion *)
@@ -96,7 +96,7 @@ let rec signatures subst sig1 sig2 =
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
           let new_subst =
             match item2, item1 with
-                Sig_type td2, Sig_type td1 ->
+                Sig_type (td2, _), Sig_type (td1, _) ->
                   Subst.add_type_constructor td2 td1 subst
               | _ ->
                   subst
@@ -117,7 +117,7 @@ and signature_components subst = function
         Val_prim _ -> signature_components subst rem
       | _ -> (pos, cc) :: signature_components subst rem
       end
-  | (Sig_type(tydecl1), Sig_type(tydecl2), pos) :: rem ->
+  | (Sig_type(tydecl1,_), Sig_type(tydecl2,_), pos) :: rem ->
       type_constructors subst tydecl1 tydecl2;
       signature_components subst rem
   | (Sig_exception(excdecl1), Sig_exception(excdecl2), pos)

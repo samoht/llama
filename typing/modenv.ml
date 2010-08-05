@@ -62,7 +62,7 @@ let make_cached_module sg crcs =
             constructors := Tbl.add cs.cs_name cs !constructors;
             exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
             incr pos
-        | Sig_type tcs ->
+        | Sig_type (tcs,_) ->
             type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
             begin match tcs.tcs_kind with
               | Tcs_sum cstrs ->
@@ -134,7 +134,7 @@ let map_value f v =
 
 let map_signature_item memo f = function
     Sig_value v -> Sig_value (map_value f v)
-  | Sig_type tcs -> Sig_type (map_type_constructor memo f tcs)
+  | Sig_type (tcs, rec_status) -> Sig_type (map_type_constructor memo f tcs, rec_status)
   | Sig_exception cs -> Sig_exception (map_constructor memo f cs)
 
 let map_signature memo f = List.map (map_signature_item memo f)

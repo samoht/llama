@@ -179,14 +179,14 @@ let do_value name ty =
     val_name = name;
     val_type = ty;
     val_kind = Val_reg;
-    val_formal = Informal }
+    val_formal = None }
 
 let primitive name ty prim =
   { val_module = Env.get_current_module();
     val_name = name;
     val_type = ty;
     val_kind = Val_prim prim;
-    val_formal = Informal }  
+    val_formal = None }
 
 let do_exception name args =
   { cs_tcs = Predef.tcs_exn;
@@ -202,6 +202,10 @@ let structure_item env str = match str.str_desc with
   | Tstr_value (_, _, pat_exp_list) -> type_letdef pat_exp_list
   | _ -> ()
 
+let make_sig_types tcs_list =
+  Sig_type (List.hd tcs_list, Rec_first) ::
+    List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
+
 let signature_item env sg = match sg.sig_desc with
     Tsig_value (_, name, ty) ->
       let v = do_value name ty in
@@ -211,7 +215,7 @@ let signature_item env sg = match sg.sig_desc with
       [Sig_value v], Env.add_value v env
   | Tsig_type teq_list ->
       let tcs_list = type_equation_list teq_list in
-      List.map (fun tcs -> Sig_type tcs) tcs_list,
+      make_sig_types tcs_list,
       List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
   | Tsig_exception (name, args) ->
       let cs = do_exception name args in
@@ -238,7 +242,7 @@ let g_structure_item str = match str.str_desc with
                 val_name = locval.Context.val_name;
                 val_type = Ctype.generalize locval.Context.val_type;
                 val_kind = Val_reg;
-                val_formal = Informal }
+                val_formal = None }
             in
             locval, globval
           end localvals

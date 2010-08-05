@@ -47,7 +47,7 @@ let rec structure_aux = function
   | Str_eval _ :: rem -> structure_aux rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
   | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
-  | Str_type tcs_list :: rem -> List.map (fun tcs -> Sig_type tcs) tcs_list @ structure_aux rem
+  | Str_type tcs_list :: rem -> make_sig_types tcs_list @ structure_aux rem
   | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
   | Str_open _ :: rem -> structure_aux rem
 

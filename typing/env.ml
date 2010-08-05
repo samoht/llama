@@ -96,7 +96,7 @@ let add_signature sg env =
            add_value v env
        | Sig_exception cs ->
            add_exception cs env
-       | Sig_type tcs ->
+       | Sig_type (tcs, _) ->
            add_type_constructor tcs env)
     env sg
 

@@ -167,7 +167,6 @@ and tree_of_label_description lbl =
   (lbl.lbl_name, lbl.lbl_mut, tree_of_typexp false lbl.lbl_arg)
 
 let tree_of_rec = function
-  | Rec_not -> Orec_not
   | Rec_first -> Orec_first
   | Rec_next -> Orec_next
 
@@ -206,8 +205,8 @@ let value_description ppf decl =
 let tree_of_signature_item = function
     Sig_value v ->
       tree_of_value_description v
-  | Sig_type (tcs (*, rs *) ) ->
-      tree_of_type_declaration tcs Rec_not
+  | Sig_type (tcs, rec_status) ->
+      tree_of_type_declaration tcs rec_status
   | Sig_exception cs ->
       tree_of_exception_declaration cs
 

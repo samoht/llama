@@ -17,8 +17,7 @@ type value_kind =
   | Val_prim of Primitive.description
 
 type rec_status =
-    Rec_not
-  | Rec_first
+    Rec_first
   | Rec_next
 
 (* ---------------------------------------------------------------------- *)
@@ -59,11 +58,11 @@ type 'ty abstract_value =
     val_name : string;
     val_type : 'ty;
     val_kind : value_kind;
-    val_formal : Asttypes.formal_flags }  (* TODO: int option *)
+    val_formal : int option }
 
 type 'ty abstract_signature_item =
     Sig_value of 'ty abstract_value
-  | Sig_type of 'ty abstract_type_constructor (* TODO: * rec_status *)
+  | Sig_type of 'ty abstract_type_constructor * rec_status
   | Sig_exception of 'ty abstract_constructor
     
 type 'ty abstract_signature = 'ty abstract_signature_item list
@@ -81,8 +80,6 @@ type llama_type =
   | Tconstr of type_constructor * llama_type list
 
 and type_constructor = llama_type abstract_type_constructor
-
-type type_constructor_kind = llama_type abstract_type_constructor_kind
 
 type constructor = llama_type abstract_constructor
 

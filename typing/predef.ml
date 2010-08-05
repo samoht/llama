@@ -203,5 +203,5 @@ let exceptions =
 (* ---------------------------------------------------------------------- *)
 
 let signature =
-  List.map (fun tcs -> Sig_type tcs) type_constructors @
+  List.map (fun tcs -> Sig_type (tcs,Rec_first)) type_constructors @
     List.map (fun cs -> Sig_exception cs) exceptions
