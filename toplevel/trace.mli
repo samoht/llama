@@ -30,6 +30,6 @@ val is_traced: Obj.t -> Types.qualified_id option
 val get_code_pointer: Obj.t -> codeptr
 val set_code_pointer: Obj.t -> codeptr -> unit
 val instrument_closure:
-        Env.t -> Longident.t -> formatter -> Types.type_expr ->
+        Env.t -> Longident.t -> formatter -> Types.llama_type ->
         codeptr -> Obj.t -> Obj.t -> Obj.t
 val print_trace: Obj.t -> Obj.t -> Obj.t

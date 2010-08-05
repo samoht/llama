@@ -97,53 +97,23 @@ type compiled_signature = llama_type abstract_signature
 (* Utilities and detritus.                                                *)
 (* ---------------------------------------------------------------------- *)
 
-open Asttypes
-
-type qualified_id =
-  { id_module : module_id;
-    id_name : string }
 type 'a reference = 'a
-
 let rawvar = function Tvar tv -> tv | _ -> failwith "rawvar"
-
-let is_exception cs =
-  match cs.cs_tag with
-      Cs_exception _ -> true
-    | _ -> false
-
+let tcs_arity tcs = List.length tcs.tcs_params
+let cs_arity cs = List.length cs.cs_args
+let lbl_module lbl = lbl.lbl_tcs.tcs_module
+let is_exception cs = cs.cs_tag = Cs_exception
 let tvar tv = Tvar tv
 let new_generic () = (fun s -> { tv_name=s }) ""
 let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
+let find_constr_by_tag tag cs_list = List.find (fun cs -> cs.cs_tag = tag) cs_list
 
-let tcs_arity tcs = List.length tcs.tcs_params
-let cs_arity cs = List.length cs.cs_args
-
-let constr_id cs = { id_module = cs.cs_module; id_name = cs.cs_name }
-let label_id lbl = { id_module = lbl.lbl_tcs.tcs_module; id_name = lbl.lbl_name }
-let tcs_id tcs = { id_module = tcs.tcs_module; id_name = tcs.tcs_name }
-let val_id v = { id_module = v.val_module; id_name = v.val_name }
-let ref_type_constr (t:type_constructor) = t (* { ref_id = tcs_id t; ref_contents = Some t }*)
-let ref_constr cs =  cs (* { ref_id = constr_id cs; ref_contents = Some cs } *)
-let ref_label lbl = lbl (* { ref_id = label_id lbl; ref_contents = Some lbl } *)
-let ref_value v =  v (* { ref_id = val_id v; ref_contents = Some v } *)
-
-let find_constr_by_tag tag cs_list =
-  List.find (fun cs -> cs.cs_tag = tag) cs_list
-
-type exception_declaration = constructor
-type constructor_description = constructor
-type label_description = label
-type core_type = llama_type
-type type_expr = llama_type
-
-let type_none = Ttuple []
+type qualified_id = module_id * string
+let tcs_qualid tcs = (tcs.tcs_module, tcs.tcs_name)
+let cs_qualid cs = (cs.cs_module, cs.cs_name)
+let lbl_qualid lbl = (lbl_module lbl, lbl.lbl_name)
+let val_qualid v = (v.val_module, v.val_name)
 
 type record_representation =
     Record_regular
   | Record_float
-
-exception Constr_not_found
-
-type module_expr = unit
-type class_expr = unit
-

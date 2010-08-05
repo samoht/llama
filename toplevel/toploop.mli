@@ -65,11 +65,11 @@ val use_silently : formatter -> string -> bool
 
 (* Printing of values *)
 
-val print_value: Env.t -> Obj.t -> formatter -> Types.type_expr -> unit
+val print_value: Env.t -> Obj.t -> formatter -> Types.llama_type -> unit
 val print_untyped_exception: formatter -> Obj.t -> unit
 
 val install_printer :
-  Types.value -> Types.type_expr -> (formatter -> Obj.t -> unit) -> unit
+  Types.value -> Types.llama_type -> (formatter -> Obj.t -> unit) -> unit
 val remove_printer : Types.value -> unit
 
 val max_printer_depth: int ref

@@ -19,7 +19,7 @@
 type t_value = {
     val_name : Odoc_name.t ;
     mutable val_info : Odoc_types.info option ;
-    val_type : Types.type_expr ;
+    val_type : Types.llama_type ;
     val_recursive : bool ;
     mutable val_parameters : Odoc_parameter.parameter list ;
     mutable val_code : string option ;

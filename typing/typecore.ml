@@ -13,7 +13,7 @@ open Context;;
 type error =
   | Incomplete_format of string
   | Bad_conversion of string * int * char
-  | Label_mismatch of qualified_id * local_type * local_type
+  | Label_mismatch of label * local_type * local_type
   | Label_multiply_defined of label
   | Label_missing of label list
   | Label_not_mutable of label
@@ -440,7 +440,7 @@ let rec type_expr expr =
           begin try unify (ty, ty_res)
           with Unify ->
             raise(Error(expr.exp_loc,
-                        Label_mismatch(label_id lbl, ty_res, ty)))
+                        Label_mismatch(lbl, ty_res, ty)))
           end;
           type_expect exp ty_arg)
         lbl_exp_list;
@@ -572,22 +572,22 @@ let report_error ppf = function
       fprintf ppf
         "Bad conversion %%%c, at char number %d \
          in format string ``%s''" c i fmt
-  | Label_mismatch(qid, actual_ty, expected_ty) ->
+  | Label_mismatch(lbl, actual_ty, expected_ty) ->
       report_unification_error ppf actual_ty expected_ty
         (function ppf ->
            fprintf ppf "The record field label %a@ belongs to the type"
-                   qualified_id qid)
+                   label lbl)
         (function ppf ->
            fprintf ppf "but is mixed here with labels of type")
   | Label_multiply_defined lbl ->
       fprintf ppf "The record field label %a is defined several times"
-        qualified_id (label_id lbl)
+        label lbl
   | Label_missing labels ->
       let print_labels ppf = List.iter (fun lbl -> fprintf ppf "@ %s" lbl.lbl_name) in
       fprintf ppf "@[<hov>Some record field labels are undefined:%a@]"
         print_labels labels
   | Label_not_mutable lbl ->
-      fprintf ppf "The record field label %a is not mutable" qualified_id (label_id lbl)
+      fprintf ppf "The record field label %a is not mutable" label lbl
   | Pattern_type_clash (actual_ty, expected_ty) ->
       report_unification_error ppf actual_ty expected_ty
         (function ppf ->

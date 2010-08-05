@@ -8,8 +8,6 @@ open Types;;
 (* Trivial utilities.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let none = type_none
-
 let constructors_of_type ty =
   begin match ty.tcs_kind with
     | Tcs_sum l -> l

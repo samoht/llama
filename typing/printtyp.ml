@@ -14,30 +14,29 @@ let rec longident ppf = function
 (* Printing of identifiers, named entities, and references.               *)
 (* ---------------------------------------------------------------------- *)
 
-let tree_of_qualified id =
-  match id.id_module with
+let tree_of_qualid (modid, name) =
+  match modid with
     | Module_builtin | Module_toplevel ->
-        Oide_ident id.id_name
-    | Module name ->
-        Oide_dot (Oide_ident name, id.id_name)
+        Oide_ident name
+    | Module modname ->
+        Oide_dot (Oide_ident modname, name)
 
-let tree_of_type_constructor tcs = tree_of_qualified (tcs_id tcs)
-let tree_of_constr cs = tree_of_qualified (constr_id cs)
-let tree_of_label lbl = tree_of_qualified (label_id lbl)
+let tree_of_type_constructor tcs = tree_of_qualid (tcs_qualid tcs)
+let tree_of_constructor cs = tree_of_qualid (cs_qualid cs)
+let tree_of_label lbl = tree_of_qualid (lbl_qualid lbl)
+let tree_of_value v = tree_of_qualid (val_qualid v)
 
-let qualified_id ppf id =
-  begin match id.id_module with
-    | Module s -> fprintf ppf "%s." s
-    | _ -> ()
-  end;
-  pp_print_string ppf id.id_name
+let qualid ppf (modid, name) =
+  match modid with
+    | Module_builtin | Module_toplevel ->
+        pp_print_string ppf name
+    | Module modname ->
+        fprintf ppf "%s.%s" modname name
 
-let type_constructor ppf tcs = qualified_id ppf (tcs_id tcs)
-let constructor ppf cs = qualified_id ppf (constr_id cs)
-let label ppf lbl = qualified_id ppf (label_id lbl)
-let value ppf v = qualified_id ppf (val_id v)
-
-(*let reference ppf r = qualified_id ppf r.ref_id*)
+let type_constructor ppf tcs = qualid ppf (tcs_qualid tcs)
+let constructor ppf cs = qualid ppf (cs_qualid cs)
+let label ppf lbl = qualid ppf (lbl_qualid lbl)
+let value ppf v = qualid ppf (val_qualid v)
 
 (* ---------------------------------------------------------------------- *)
 (* Names for type variables.                                              *)

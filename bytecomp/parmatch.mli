@@ -25,8 +25,7 @@ val omega : pattern
 val omegas : int -> pattern list
 val omega_list : 'a list -> pattern list
 val normalize_pat : pattern -> pattern
-val all_record_args :
-    (label_description * pattern) list -> (label_description * pattern) list
+val all_record_args : (label * pattern) list -> (label * pattern) list
 
 val le_pat : pattern -> pattern -> bool
 val le_pats : pattern list -> pattern list -> bool
@@ -46,9 +45,8 @@ val get_mins : ('a -> 'a -> bool) -> 'a list -> 'a list
 val set_args : pattern -> pattern list -> pattern list
 val set_args_erase_mutable : pattern -> pattern list -> pattern list
 
-val pat_of_constr : pattern -> constructor_description -> pattern
-val complete_constrs :
-    pattern -> constructor list -> constructor_description  list
+val pat_of_constr : pattern -> constructor -> pattern
+val complete_constrs : pattern -> constructor list -> constructor list
 
 val pressure_variants: Env.t -> pattern list -> unit
 val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial

@@ -89,7 +89,7 @@ let is_closed, generalize =
           end
       | LTarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
       | LTtuple tyl -> Ttuple (List.map aux tyl)
-      | LTconstr (tcs, tyl) -> Tconstr (ref_type_constr tcs, List.map aux tyl)
+      | LTconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
     in aux ty
   in is_closed, generalize
 

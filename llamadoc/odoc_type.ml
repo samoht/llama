@@ -16,7 +16,7 @@
 (** Description of a variant type constructor. *)
 type variant_constructor = {
     vc_name : string ;
-    vc_args : Types.type_expr list ; (** arguments of the constructor *)
+    vc_args : Types.llama_type list ; (** arguments of the constructor *)
     mutable vc_text : Odoc_types.text option ; (** optional user description *)
   }
 
@@ -24,7 +24,7 @@ type variant_constructor = {
 type record_field = {
     rf_name : string ;
     rf_mutable : bool ; (** true if mutable *)
-    rf_type : Types.type_expr ;
+    rf_type : Types.llama_type ;
     mutable rf_text : Odoc_types.text option ; (** optional user description *)
   }
 
@@ -40,10 +40,10 @@ type type_kind =
 type t_type = {
     ty_name : Odoc_name.t ;
     mutable ty_info : Odoc_types.info option ; (** optional user information *)
-    ty_parameters : Types.type_expr list ;
+    ty_parameters : Types.llama_type list ;
                     (** type parameters: (type, covariant, contravariant) *)
     ty_kind : type_kind ;
-    ty_manifest : Types.type_expr option; (** type manifest *)
+    ty_manifest : Types.llama_type option; (** type manifest *)
     mutable ty_loc : Odoc_types.location ;
     mutable ty_code : string option;
   }

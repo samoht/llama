@@ -30,15 +30,6 @@ type error =
 
 exception Error of Location.t * error
 
-(* Forward declaration -- to be filled in by Translmod.transl_module *)
-let transl_module =
-  ref((fun cc (* rootpath *) modl -> assert false) :
-      module_coercion -> (* Path.t option -> *) module_expr -> lambda)
-
-let transl_object =
-  ref (fun id s cl -> assert false :
-       Ident.t -> string list -> class_expr -> lambda)
-
 (* Translation of primitives *)
 
 let comparisons_table = create_hashtable 11 [

@@ -16,32 +16,15 @@ type error =
   | Unbound_module of string
   | Repeated_parameter
   | Unbound_type_variable of string
+  | Multiply_bound_variable of string
   | Orpat_vars of string
   | Type_arity_mismatch of Longident.t * int * int
   | Constructor_arity_mismatch of Longident.t * int * int
 
 exception Error of Location.t * error
 
-exception Multiply_bound_variable of string
-exception Duplicate_constructor of string
-exception Duplicate_label of string
-
-let nodup lref s cb =
-  if List.mem s !lref then cb () else lref := s :: !lref; s
-
 let type_expr_vars = ref ([] : (string * user_type_variable) list);;
 let reset_type_expression_vars () = type_expr_vars := []
-
-let bind_type_expression_vars var_list ty_list loc =
-  type_expr_vars := [];
-  List.iter2
-    (fun v t ->
-      if List.mem_assoc v !type_expr_vars then
-        raise(Error(loc, Repeated_parameter))
-      else begin
-        type_expr_vars := (v, t) :: !type_expr_vars
-      end)
-    var_list ty_list
 
 let rec var_names_of_pat pat =
   match pat.ppat_desc with
@@ -88,6 +71,14 @@ let lookup_module s loc =
   try Get.signature s
   with Not_found -> raise (Error (loc, Unbound_module s))
 
+let lookup_type_constructor tctxt lid loc =
+  try Type_context.lookup_type_constructor lid tctxt
+  with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
+
+let lookup_type_variable tctxt name loc =
+  try Type_context.lookup_type_variable name tctxt
+  with Not_found -> raise (Error (loc, Unbound_type_variable name))
+
 (* ---------------------------------------------------------------------- *)
 
 let rec type_expression env te =
@@ -122,11 +113,11 @@ let typexp ctxt te = type_expression ctxt.Context.ctxt_env te
 
 let rec global_type ctxt te =
   begin match te.ptyp_desc with
-    | Ptyp_var name -> Type_context.Tvar (Type_context.lookup_type_variable name ctxt)
+    | Ptyp_var name -> Type_context.Tvar (lookup_type_variable ctxt name te.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) -> Type_context.Tarrow (global_type ctxt ty1, global_type ctxt ty2)
     | Ptyp_tuple tyl -> Type_context.Ttuple (List.map (global_type ctxt) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcsr = Type_context.lookup_type_constructor lid ctxt in
+        let tcsr = lookup_type_constructor ctxt lid te.ptyp_loc in
         let arity =
           match tcsr with
               Type_context.Ref_local ltcs -> ltcs.Type_context.ltcs_arity
@@ -156,7 +147,7 @@ let global_val_type env te =
           if List.length tyl <> tcs_arity tcs then
             raise(Error(te.ptyp_loc, 
                         Type_arity_mismatch(lid, tcs_arity tcs, List.length tyl)));
-          Tconstr (ref_type_constr tcs, List.map aux tyl)
+          Tconstr (tcs, List.map aux tyl)
     end
   in
   aux te
@@ -165,16 +156,16 @@ let mkpatvar s =
   { Context.val_name = s;
     Context.val_type = Context.no_type }
 
-let rec check_unique l =
+let rec check_unique l loc =
   match l with
     | [] | [_] -> ()
     | (hd::(hd'::_ as tl)) ->
-        if hd = hd' then raise (Multiply_bound_variable hd);
-        check_unique tl
+        if hd = hd' then raise (Error (loc, Multiply_bound_variable hd));
+        check_unique tl loc
 
 let pattern_gen env p =
   let vars = List.sort compare (var_names_of_pat p) in
-  check_unique vars;
+  check_unique vars p.ppat_loc;
   let vals = List.map mkpatvar vars in
   let varmap = List.combine vars vals in
   let rec aux p =
@@ -289,38 +280,9 @@ let rec expr env ex =
 
 let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =
   (name, List.map (global_type ctxt) typexps)
-(*
-  let postincr idx = let n = !idx in incr idx; n in
-  let arity = List.length typexps in
-  let cs =
-    { cs_name = name;
-      cs_res = type_none;
-      cs_args = replicate_list type_none arity;
-      cs_arity = arity;
-      cs_tag =
-        if arity=0 then
-          Cs_constant (tcs, postincr idx_const)
-        else
-          Cs_block (tcs, postincr idx_block)
-    }
-  in
-  (cs, List.map (global_type ctxt) typexps)
-*)
 
 let label ctxt tcs pos (name, mut, typexp, _) =
   (name, global_type ctxt typexp)
-(*
-  let lbl =
-    { lbl_tcs = tcs;
-      lbl_name = name;
-      lbl_res = type_none;
-      lbl_arg = type_none;
-      lbl_mut = mut;
-      lbl_pos = pos
-    }
-  in
-  (lbl, global_type ctxt typexp)
-*)
 
 let rec crude_arity ptyp =
   begin match ptyp.ptyp_desc with
@@ -351,29 +313,10 @@ let type_equation_kind ctxt k =
     | Pteq_abbrev te -> Teq_abbrev (global_type ctxt te)
     | Pteq_variant l ->
         Teq_variant (List.map (fun (name, tyl, _) -> (name, List.map (global_type ctxt) tyl)) l)
-(*
-        let idx_const = ref 0 in
-        let idx_block = ref 0 in
-        Teq_variant (mapi_careful (constructor ctxt tcs (List.length l) idx_const idx_block) l)
-*)
     | Pteq_record l ->
         Teq_record (List.map (fun (name, mut, ty, _) -> (name, mut, global_type ctxt ty)) l)
-(*
-    | Pteq_record l -> Teq_record (mapi (label ctxt tcs) l)
-*)
   end
 
-(*
-let value_declaration env name typexp primstuff =
-  let v =
-    { val_id = Env.qualified_id name;
-      val_type = type_none;
-      val_kind = primitive primstuff typexp;
-      val_formal = Informal }
-  in
-  let typexp = global_val_type env typexp in
-  v, typexp, Env.add_value v env
-*)
 let type_equation_list env pteq_list =
   let ltcs_list =
     List.map
@@ -405,48 +348,14 @@ let type_equation_list env pteq_list =
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern_gen env pat) pat_exp_list in
   let localvals = List.flatten (List.map free_vars_of_pat pat_list) in
-(*
-  let globalvals =
-    List.map
-      begin fun locval ->
-        let globval =
-          { val_id = Env.qualified_id locval.Context.val_name;
-            val_type = type_none;
-            val_kind = Val_reg;
-            val_formal = Informal }
-        in
-        locval.Context.val_global <- Some globval;
-        globval
-      end
-      localvals
-  in
-  let enter_globalvals env = List.fold_left (fun env v -> Env.add_value v env) env globalvals in
-*)
   let enter_localvals ctxt = List.fold_left (fun ctxt v -> Context.add_value v ctxt) ctxt localvals in
-(*  let env = if rec_flag = Recursive then enter_globalvals env else env in *)
   let ctxt = Context.create env in
   let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
   let pat_exp_list =
     List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
   in
-(*  let env = if rec_flag = Recursive then env else enter_globalvals env in*)
   pat_exp_list
 
-(*
-let exception_declaration env name args =
-  let args = List.map (global_type env []) args in
-  let nargs = List.length args in
-  let cs =
-    { cs_name = name;
-      cs_res = type_none;
-      cs_args = replicate_list type_none nargs;
-      cs_arity = nargs;
-      cs_tag = Cs_exception (Env.get_current_module())
-    }
-  in
-  let env = Env.add_exception cs env in
-  cs, args, env
-*)
 let structure_item env pstr =
   reset_type_expression_vars();
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
@@ -458,13 +367,11 @@ let structure_item env pstr =
         let pat_exp_list = letdef env rec_flag pat_exp_list in
         mk (Tstr_value(hol_flags, rec_flag, pat_exp_list))
     | Pstr_primitive(id,te,pr) ->
-(*        let v, typexp, env = value_declaration env id te (Some pr) in *)
         mk (Tstr_primitive (id, global_val_type env te, primitive pr te))
     | Pstr_type (pteql) ->
         let teql = type_equation_list env pteql in
         mk (Tstr_type (teql))
     | Pstr_exception (name, args) ->
-(*        let cs, args, env = exception_declaration env name args in*)
         let ctxt = Type_context.create env in
         mk (Tstr_exception (name, List.map (global_type ctxt) args))
     | Pstr_open name ->
@@ -476,41 +383,19 @@ let signature_item env psig =
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
     | Psig_value (formality, s, te) ->
-(*        let v, typexp, env = value_declaration env s te None in *)
         mk (Tsig_value (formality, s, global_val_type env te))
     | Psig_primitive(id,te,pr) ->
-(*        let v, typexp, env = value_declaration env id te (Some pr) in*)
         mk (Tsig_primitive (id, global_val_type env te, primitive pr te))
     | Psig_type pteql ->
         let teql = type_equation_list env pteql in
         mk (Tsig_type teql)
     | Psig_exception (name, args) ->
-(*        let cs, args, env = exception_declaration env name args in*)
         let ctxt = Type_context.create env in
         mk (Tsig_exception (name, List.map (global_type ctxt) args))
     | Psig_open name ->
         mk (Tsig_open (name, lookup_module name psig.psig_loc))
-(*        let env = Env.add_signature (lookup_module mn psig.psig_loc) env in *)
   end
-(*
-let rec structure env l =
-  match l with
-      [] ->
-        ([], [], env)
-    | hd :: tl ->
-        let hd, hd_gens, env = structure_item env hd in
-        let tl, tl_gens, env = structure env tl in
-        hd :: tl, hd_gens @ tl_gens, env
 
-let rec signature env l =
-  match l with
-      [] ->
-        ([], [], env)
-    | hd :: tl ->
-        let hd, hd_gens, env = signature_item env hd in
-        let tl, tl_gens, env = signature env tl in
-        hd :: tl, hd_gens @ tl_gens, env
-*)
 (* Error report *)
 
 open Format
@@ -531,6 +416,8 @@ let report_error ppf = function
       fprintf ppf "A type parameter occurs several times"
   | Unbound_type_variable name ->
       fprintf ppf "Unbound type parameter %s" name
+  | Multiply_bound_variable name ->
+      fprintf ppf "Variable %s is bound several times in this matching" name
   | Orpat_vars id ->
       fprintf ppf "Variable %s must occur on both sides of this | pattern" id
   | Type_arity_mismatch(lid, expected, provided) ->

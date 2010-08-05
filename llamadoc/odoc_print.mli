@@ -13,6 +13,6 @@
 
 (** Printing functions. *)
 
-(** This function takes a Types.type_expr and returns a string.
+(** This function takes a Types.llama_type and returns a string.
    It writes in and flushes [Format.str_formatter].*)
-val string_of_type_expr : Types.type_expr -> string
+val string_of_type_expr : Types.llama_type -> string

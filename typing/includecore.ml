@@ -112,7 +112,7 @@ let type_constructors s tcs1 tcs2 =
         if Btype.equiv params ty1 (Subst.core_type s ty2) then [] else
           [General]
     | _, Tcs_abbrev ty2 ->
-        let ty1 = Tconstr (ref_type_constr tcs2, tcs2.tcs_params) in
+        let ty1 = Tconstr (tcs2, tcs2.tcs_params) in
         if Btype.equal ty1 ty2 then [] else [General]
     | _, _ ->
         [General]

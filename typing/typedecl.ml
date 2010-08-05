@@ -104,7 +104,7 @@ let type_letdef pat_exp_list =
          raise (Error(exp.exp_loc, Non_generalizable ty)))
     pat_exp_list ty_list
 
-let recent_type = ref type_none
+let recent_type = ref (Ttuple []) (* xxx *)
 let type_expression loc expr =
   let ty = type_expr expr in
   if not (is_nonexpansive expr) && not (Ctype.is_closed ty) then
@@ -127,7 +127,7 @@ let type_equation_list teq_list =
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
     begin fun tcs teq ->
-      let ty_res = Tconstr (ref_type_constr tcs, tcs.tcs_params) in
+      let ty_res = Tconstr (tcs, tcs.tcs_params) in
       tcs.tcs_kind <-
         begin match teq.teq_kind with
             Teq_abstract _ -> Tcs_abstract

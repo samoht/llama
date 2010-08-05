@@ -40,7 +40,6 @@ val set_current_unit : module_id -> unit
 val set_unit_name : string -> unit
 val get_current_module : unit -> module_id
 val current_module_name : unit -> string
-val qualified_id : string -> qualified_id
 
 (* Error report *)
 

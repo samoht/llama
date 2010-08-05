@@ -79,7 +79,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
         (fun x -> Oval_nativeint (Obj.obj x : nativeint));
       Builtin "print_int64", Predef.type_int64,
         (fun x -> Oval_int64 (Obj.obj x : int64))
-    ] : (printer_id * type_expr * (Obj.t -> Outcometree.out_value)) list)
+    ] : (printer_id * llama_type * (Obj.t -> Outcometree.out_value)) list)
 
     let install_printer v ty fn =
       let print_val ppf obj =
@@ -115,7 +115,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       if try Env.lookup_constructor lid env == cs with Not_found -> false then
         Oide_ident cs.cs_name
       else
-        Printtyp.tree_of_constr cs
+        Printtyp.tree_of_constructor cs
 
     let tree_of_label env lbl =
       let lid = Lident lbl.lbl_name in

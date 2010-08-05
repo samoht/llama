@@ -154,8 +154,6 @@ and type_constructor_reference =
   | External of module_id * string
 type pers_signature = pers_type abstract_signature
 
-let tmp_xxx_deref tcs = tcs (* match tcs.ref_contents with None -> assert false | Some tcs -> tcs*)
-
 let map_signature_for_save modid l =
   let memo = ref ([] : (type_constructor * pers_type_constructor) list) in
   let rec f = function
@@ -163,7 +161,6 @@ let map_signature_for_save modid l =
     | Tarrow (ty1, ty2) -> Parrow (f ty1, f ty2)
     | Ttuple tyl -> Ptuple (List.map f tyl)
     | Tconstr (tcs, tyl) ->
-        let tcs = tmp_xxx_deref tcs in
         let tcsr =
           if tcs.tcs_module = modid then Internal (map_type_constructor memo f tcs)
           else External (tcs.tcs_module, tcs.tcs_name) in
@@ -205,8 +202,6 @@ let save_signature sg modname filename =
 (* Loading signatures.                                                    *)
 (* ---------------------------------------------------------------------- *)
 
-let tmp_xxx_ref tcs = ref_type_constr tcs 
-
 let rec map_signature_for_load l =
   let memo = ref ([] : (pers_type_constructor * type_constructor) list) in
   let rec f = function
@@ -219,7 +214,6 @@ let rec map_signature_for_load l =
               Internal tcs -> map_type_constructor memo f tcs
             | External (modid, name) -> get_type_constructor modid name
         in
-        let tcs = tmp_xxx_ref tcs in
         Tconstr (tcs, List.map f tyl) in
   List.map
     begin function
@@ -293,10 +287,6 @@ let get_exception_position cs =
 (* ---------------------------------------------------------------------- *)
 
 let current_module = ref (Module "")
-
-let qualified_id name =
-  { id_module = !current_module;
-    id_name = name }
 
 let set_current_unit m =
   current_module := m

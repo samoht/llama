@@ -20,7 +20,7 @@ let print_DEBUG s = print_string s ; print_newline ()
 (** Representation of a simple parameter name *)
 type simple_name = {
     sn_name : string ;
-    sn_type : Types.type_expr ;
+    sn_type : Types.llama_type ;
     mutable sn_text : Odoc_types.text option ;
   }
 
@@ -28,7 +28,7 @@ type simple_name = {
    The value [Tuple ([], t)] stands for an anonymous parameter.*)
 type param_info =
   | Simple_name of simple_name
-  | Tuple of param_info list * Types.type_expr
+  | Tuple of param_info list * Types.llama_type
 
 (** A parameter is just a param_info.*)
 type parameter = param_info

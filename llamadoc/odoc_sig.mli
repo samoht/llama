@@ -24,12 +24,12 @@
       (** This function returns the type expression for the value whose name is given,
          in the given signature.
          @raise Not_found if error.*)
-      val search_value : tab -> string -> Types.type_expr
+      val search_value : tab -> string -> Types.llama_type
 
       (** This function returns the type expression list for the exception whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_exception : tab -> string -> Types.type_expr list
+      val search_exception : tab -> string -> Types.llama_type list
 
       (** This function returns the Types.type_declaration  for the type whose name is given,
          in the given table.

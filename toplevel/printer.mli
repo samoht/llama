@@ -20,10 +20,10 @@ open Format
 val fwd_eval_exception : (constructor -> Obj.t) ref
 
     val install_printer :
-          value -> Types.type_expr -> (formatter -> Obj.t -> unit) -> unit
+          value -> llama_type -> (formatter -> Obj.t -> unit) -> unit
     val remove_printer : value -> unit
     val outval_of_untyped_exception : Obj.t -> Outcometree.out_value
     val outval_of_value :
           int -> int ->
-          (int -> Obj.t -> Types.type_expr -> Outcometree.out_value option) ->
-          Env.t -> Obj.t -> type_expr -> Outcometree.out_value
+          (int -> Obj.t -> llama_type -> Outcometree.out_value option) ->
+          Env.t -> Obj.t -> llama_type -> Outcometree.out_value

@@ -24,11 +24,10 @@ let export subst =
     | Tarrow (ty1, ty2) -> Types.Tarrow (aux ty1, aux ty2)
     | Ttuple tyl -> Types.Ttuple (List.map aux tyl)
     | Tconstr (tcsr, tyl) ->
-        Types.Tconstr(ref_type_constr
-                        begin match tcsr with
-                            Ref_local ltcs -> List.assq ltcs subst
-                          | Ref_global tcs -> tcs
-                        end,
+        Types.Tconstr(begin match tcsr with
+                          Ref_local ltcs -> List.assq ltcs subst
+                        | Ref_global tcs -> tcs
+                      end,
                       List.map aux tyl)
   in
   aux
