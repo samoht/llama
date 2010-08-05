@@ -115,7 +115,6 @@ and map_constructor memo f cs =
     cs_name = cs.cs_name;
     cs_res = f cs.cs_res;
     cs_args = List.map f cs.cs_args;
-    cs_arity = cs.cs_arity;
     cs_tag = cs.cs_tag }
 
 and map_label memo f lbl =

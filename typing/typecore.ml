@@ -402,7 +402,7 @@ let rec type_expr expr =
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect cond Ctype.type_bool;
       if match ifnot.exp_desc
-         with Texp_construct (cs,[]) when (cs == Predef.constr_void) -> true | _ -> false
+         with Texp_construct (cs,[]) when (cs == Predef.cs_void) -> true | _ -> false
       then begin
         type_expect ifso Ctype.type_unit;
         Ctype.type_unit

@@ -187,7 +187,7 @@ let pattern_gen env p =
           | Ppat_tuple l -> Tpat_tuple (List.map aux l)
           | Ppat_construct (lid,sarg) ->
               let cs = lookup_constructor env lid p.ppat_loc in
-              let arity = cs.cs_arity in
+              let arity = cs_arity cs in
               let sargs =
                 match sarg with
                     None -> []
@@ -196,9 +196,9 @@ let pattern_gen env p =
                       replicate_list sp arity
                   | Some sp -> [sp]
               in
-              if List.length sargs <> cs.cs_arity then
-                raise(Error(p.ppat_loc, Constructor_arity_mismatch(lid,
-                                                            cs.cs_arity, List.length sargs)));
+              if List.length sargs <> cs_arity cs then
+                raise(Error(p.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
+                                                                   List.length sargs)));
               Tpat_construct (cs, List.map aux sargs)
           | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
           | Ppat_array l -> Tpat_array (List.map aux l)
@@ -228,16 +228,16 @@ let rec expr env ex =
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
         | Pexp_construct (lid, sarg) ->
             let cs = lookup_constructor env.Context.ctxt_env lid ex.pexp_loc in
-            let arity = cs.cs_arity in
+            let arity = cs_arity cs in
             let sargs =
               match sarg with
                   None -> []
                 | Some {pexp_desc = Pexp_tuple spl} when arity > 1 -> spl
                 | Some sp -> [sp]
             in
-            if List.length sargs <> cs.cs_arity then
+            if List.length sargs <> cs_arity cs then
               raise(Error(ex.pexp_loc, Constructor_arity_mismatch(lid,
-                                                                 cs.cs_arity, List.length sargs)));
+                                                                  cs_arity cs, List.length sargs)));
             Texp_construct (cs, List.map (expr env) sargs)
         | Pexp_apply (f, l) -> Texp_apply (expr env f, List.map (expr env) l)
         | Pexp_let (b, lpe, e) ->

@@ -147,7 +147,6 @@ let type_equation_list teq_list =
                        cs_name = name;
                        cs_res = ty_res;
                        cs_args = List.map (Type_context.export subst) args;
-                       cs_arity = List.length args;
                        cs_tag =
                          if args=[] then
                            Cs_constant (postincr idx_const)
@@ -195,7 +194,6 @@ let do_exception name args =
     cs_name = name;
     cs_res = Predef.type_exn;
     cs_args = List.map (Type_context.export []) args;
-    cs_arity = List.length args;
     cs_tag = Cs_exception;
   }
 

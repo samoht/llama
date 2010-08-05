@@ -130,7 +130,7 @@ open Format
 
 let get_constr_name cs = cs.cs_name
 
-let is_cons cs = (cs == Predef.constr_cons)
+let is_cons cs = (cs == Predef.cs_cons)
 
 
 let rec pretty_val ppf v = match v.pat_desc with
@@ -649,7 +649,7 @@ let complete_tags cs_list tags =
 
 (* build a pattern from a constructor list *)
 let pat_of_constr ex_pat cstr =
- {ex_pat with pat_desc = Tpat_construct (cstr,omegas cstr.cs_arity)}
+ {ex_pat with pat_desc = Tpat_construct (cstr,omegas (cs_arity cstr))}
 
 let rec pat_of_constrs ex_pat = function
 | [] -> raise Empty

@@ -1141,7 +1141,7 @@ let pat_as_constr = function
   | _ -> fatal_error "Matching.pat_as_constr"
 
 
-let matcher_constr cstr = match cstr.cs_arity with
+let matcher_constr cstr = match cs_arity cstr with
 | 0 ->
     let rec matcher_rec q rem = match q.pat_desc with
     | Tpat_or (p1,p2,_) ->
@@ -1182,7 +1182,7 @@ pat_desc = Tpat_or (a1, a2, None)}::
     | Tpat_or (_,_,_) -> raise OrPat
     | Tpat_construct (cstr1, args)
         when cstr == cstr1 -> args @ rem
-    | Tpat_any -> Parmatch.omegas cstr.cs_arity @ rem
+    | Tpat_any -> Parmatch.omegas (cs_arity cstr) @ rem
     | _        -> raise NoMatch
 
 let make_constr_matching p def ctx = function
@@ -1192,9 +1192,9 @@ let make_constr_matching p def ctx = function
       let newargs =
         match cstr.cs_tag with
           Cs_constant _ | Cs_block _ ->
-            make_field_args Alias arg 0 (cstr.cs_arity - 1) argl
+            make_field_args Alias arg 0 (cs_arity cstr - 1) argl
         | Cs_exception _ ->
-            make_field_args Alias arg 1 cstr.cs_arity argl in
+            make_field_args Alias arg 1 (cs_arity cstr) argl in
       {pm=
         {cases = []; args = newargs;
           default = make_default (matcher_constr cstr) def} ;
