@@ -170,8 +170,8 @@ let rec pr_item env = function
             Some v
       in
       Some (tree, valopt, rem)
-  | Sig_type(tcs (* , rs *) ) :: rem ->
-      let tree = Printtyp.tree_of_type_declaration tcs Rec_not(* rs *) in
+  | Sig_type(tcs, rec_status) :: rem ->
+      let tree = Printtyp.tree_of_type_declaration tcs rec_status in
       Some (tree, None, rem)
   | Sig_exception(cs) :: rem ->
       let tree = Printtyp.tree_of_exception_declaration cs in

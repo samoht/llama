@@ -81,6 +81,8 @@ type llama_type =
 
 and type_constructor = llama_type abstract_type_constructor
 
+type type_constructor_kind = llama_type abstract_type_constructor_kind
+
 type constructor = llama_type abstract_constructor
 
 type label = llama_type abstract_label

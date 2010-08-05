@@ -46,7 +46,7 @@ open Odoc_types
           Hashtbl.add table (V v.Types.val_name) signat
       | Types.Sig_exception cs ->
           Hashtbl.add table (E cs.Types.cs_name) signat
-      | Types.Sig_type tcs ->
+      | Types.Sig_type (tcs, _) ->
           Hashtbl.add table (T tcs.Types.tcs_name) signat
 
     let table signat =
@@ -67,7 +67,7 @@ open Odoc_types
 
     let search_type table name =
       match Hashtbl.find table (T name) with
-      | (Types.Sig_type tcs) -> tcs
+      | Types.Sig_type (tcs, _) -> tcs
       | _ -> assert false
 
     (** This variable is used to load a file as a string and retrieve characters from it.*)

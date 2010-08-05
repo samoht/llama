@@ -50,7 +50,7 @@ let rec add_signature env root rel_opt signat =
   let f env item =
     match item with
       Types.Sig_value {Types.val_name=ident} -> { env with env_values = (rel_name ident, qualify ident) :: env.env_values }
-    | Types.Sig_type {Types.tcs_name=ident} -> { env with env_types = (rel_name ident, qualify ident) :: env.env_types }
+    | Types.Sig_type ({Types.tcs_name=ident}, _) -> { env with env_types = (rel_name ident, qualify ident) :: env.env_types }
     | Types.Sig_exception {Types.cs_name=ident} -> { env with env_exceptions = (rel_name ident, qualify ident) :: env.env_exceptions }
   in
   List.fold_left f env signat
