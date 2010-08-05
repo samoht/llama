@@ -73,6 +73,7 @@ examples/libgraph/*.o
 examples/libgraph/dllgraphics.so
 examples/libgraph/graphics.cma
 examples/libgraph/libgraphics.a
+examples/libgraph/config/Makefile
 examples/libunix/*.o
 examples/libunix/dllunix.so
 examples/libunix/libunix.a

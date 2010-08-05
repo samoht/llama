@@ -294,7 +294,7 @@ install:
 	cp toplevel/topstart.cmo $(LIBDIR)
 	cp toplevel/toploop.cmi toplevel/topdirs.cmi toplevel/topmain.cmi \
 	   $(LIBDIR)
-#	cd tools; $(MAKE) install
+	cd tools; $(MAKE) install
 #	-cd man; $(MAKE) install
 	cd llamadoc; $(MAKE) install
 	if test -f llamaopt; then $(MAKE) installopt; else :; fi

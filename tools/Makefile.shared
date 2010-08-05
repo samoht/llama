@@ -68,16 +68,16 @@ llamaprof: $(CSLPROF) profiling.cmo
 llamacp: llamacp.cmo
 	$(CAMLC) $(LINKFLAGS) -o llamacp warnings.cmo main_args.cmo llamacp.cmo
 
-install::
-	cp llamaprof $(BINDIR)/llamaprof$(EXE)
-	cp llamacp $(BINDIR)/llamacp$(EXE)
-	cp profiling.cmi profiling.cmo $(LIBDIR)
+#install::
+#	cp llamaprof $(BINDIR)/llamaprof$(EXE)
+#	cp llamacp $(BINDIR)/llamacp$(EXE)
+#	cp profiling.cmi profiling.cmo $(LIBDIR)
 
 clean::
 	rm -f llamaprof llamacp
 
-install::
-	cp llamamktop $(BINDIR)/llamamktop$(EXE)
+#install::
+#	cp llamamktop $(BINDIR)/llamamktop$(EXE)
 
 clean::
 	rm -f llamamktop
@@ -119,8 +119,8 @@ clean::
 
 # To make custom toplevels (see Makefile/Makefile.nt)
 
-install::
-	cp llamamktop $(BINDIR)/llamamktop$(EXE)
+#install::
+#	cp llamamktop $(BINDIR)/llamamktop$(EXE)
 
 clean::
 	rm -f llamamktop
@@ -236,9 +236,9 @@ OBJINFO=../utils/misc.cmo ../utils/config.cmo ../bytecomp/bytesections.cmo \
 objinfo: objinfo_helper$(EXE) $(OBJINFO)
 	$(CAMLC) -o objinfo $(OBJINFO)
 
-install::
-	cp objinfo $(BINDIR)/llamaobjinfo$(EXE)
-	cp objinfo_helper$(EXE) $(LIBDIR)/objinfo_helper$(EXE)
+#install::
+#	cp objinfo $(BINDIR)/llamaobjinfo$(EXE)
+#	cp objinfo_helper$(EXE) $(LIBDIR)/objinfo_helper$(EXE)
 
 clean::
 	rm -f objinfo objinfo_helper$(EXE)

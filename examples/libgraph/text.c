@@ -14,7 +14,7 @@
 /* $Id: text.c 6171 2004-03-24 15:02:06Z starynke $ */
 
 #include "libgraph.h"
-#include <alloc.h>
+#include "caml/alloc.h"
 
 XFontStruct * caml_gr_font = NULL;
 

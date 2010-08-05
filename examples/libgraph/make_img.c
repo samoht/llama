@@ -15,7 +15,7 @@
 
 #include "libgraph.h"
 #include "image.h"
-#include <memory.h>
+#include "caml/memory.h"
 
 value caml_gr_make_image(value m)
 {

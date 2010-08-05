@@ -14,7 +14,7 @@
 /* $Id: fill.c 6351 2004-05-30 14:11:41Z xleroy $ */
 
 #include "libgraph.h"
-#include <memory.h>
+#include "caml/memory.h"
 
 value caml_gr_fill_rect(value vx, value vy, value vw, value vh)
 {

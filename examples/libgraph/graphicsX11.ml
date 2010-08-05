@@ -19,7 +19,7 @@ type window_id = string
 
 external window_id : unit -> window_id = "caml_gr_window_id"
 
-let subwindows = Hashtbl.create 13
+let subwindows : (window_id, unit) Hashtbl.t = Hashtbl.create 13
 
 external open_subwindow : int -> int -> int -> int -> window_id
     = "caml_gr_open_subwindow"

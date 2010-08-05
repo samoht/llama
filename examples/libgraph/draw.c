@@ -14,7 +14,7 @@
 /* $Id: draw.c 6351 2004-05-30 14:11:41Z xleroy $ */
 
 #include "libgraph.h"
-#include <alloc.h>
+#include "caml/alloc.h"
 
 value caml_gr_plot(value vx, value vy)
 {

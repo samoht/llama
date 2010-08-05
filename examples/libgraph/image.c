@@ -15,8 +15,8 @@
 
 #include "libgraph.h"
 #include "image.h"
-#include <alloc.h>
-#include <custom.h>
+#include "caml/alloc.h"
+#include "caml/custom.h"
 
 static void caml_gr_free_image(value im)
 {
