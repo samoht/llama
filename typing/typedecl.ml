@@ -118,7 +118,7 @@ let type_equation_list teq_list =
       begin fun ltcs ->
         { tcs_module = Modenv.get_current_module();
           tcs_name =  ltcs.Type_context.ltcs_name;
-          tcs_params = List.map tvar ltcs.Type_context.ltcs_params;
+          tcs_params = List.map (fun tv -> Tvar tv) ltcs.Type_context.ltcs_params;
           tcs_kind = Tcs_abstract;
           tcs_formal = false(*xxx*) }
       end

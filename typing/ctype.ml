@@ -80,7 +80,7 @@ let is_closed, generalize =
   let is_closed ty = (variables ty = []) in
   let generalize ty =
     let vars = variables ty in
-    let subst = List.map (fun var -> (var, Tvar(new_generic()))) vars in
+    let subst = List.combine vars (mkparams (List.length vars)) in
     let rec aux = function
         LTvar tv ->
           begin match tv.forward with

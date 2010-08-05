@@ -100,16 +100,17 @@ let labels s params lbl1 lbl2 =
 
 let type_constructors s tcs1 tcs2 =
   if tcs_arity tcs1 <> tcs_arity tcs2 then [Arity] else
-  let params = List.combine (List.map rawvar tcs1.tcs_params) (List.map rawvar tcs2.tcs_params) in
+  let f = function Tvar tv -> tv | _ -> assert false in
+  let corresp = List.combine (List.map f tcs1.tcs_params) (List.map f tcs2.tcs_params) in
   begin match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->
         []
     | Tcs_sum cstrs1, Tcs_sum cstrs2 ->
-        compare_variants s params 0 cstrs1 cstrs2
+        compare_variants s corresp 0 cstrs1 cstrs2
     | Tcs_record lbls1, Tcs_record lbls2 ->
-        compare_records s params 1 lbls1 lbls2
+        compare_records s corresp 1 lbls1 lbls2
     | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
-        if Btype.equiv params ty1 (Subst.core_type s ty2) then [] else
+        if Btype.equiv corresp ty1 (Subst.core_type s ty2) then [] else
           [General]
     | _, Tcs_abbrev ty2 ->
         let ty1 = Tconstr (tcs2, tcs2.tcs_params) in

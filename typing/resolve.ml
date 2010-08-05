@@ -136,7 +136,7 @@ let global_val_type env te =
       | Ptyp_var name ->
           begin try List.assoc name !tctxt
           with Not_found ->
-            let ty = Tvar(new_generic ()) in
+            let ty = Tvar{tv_name=name} in
             tctxt:=(name,ty):: !tctxt;
             ty
           end

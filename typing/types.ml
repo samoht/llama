@@ -97,15 +97,9 @@ type compiled_signature = llama_type abstract_signature
 (* Utilities and detritus.                                                *)
 (* ---------------------------------------------------------------------- *)
 
-type 'a reference = 'a
-let rawvar = function Tvar tv -> tv | _ -> failwith "rawvar"
 let tcs_arity tcs = List.length tcs.tcs_params
 let cs_arity cs = List.length cs.cs_args
 let lbl_module lbl = lbl.lbl_tcs.tcs_module
-let is_exception cs = cs.cs_tag = Cs_exception
-let tvar tv = Tvar tv
-let new_generic () = (fun s -> { tv_name=s }) ""
-let rec new_generics n = if n = 0 then [] else new_generic () :: new_generics (pred n)
 let find_constr_by_tag tag cs_list = List.find (fun cs -> cs.cs_tag = tag) cs_list
 
 type qualified_id = module_id * string
@@ -114,6 +108,17 @@ let cs_qualid cs = (cs.cs_module, cs.cs_name)
 let lbl_qualid lbl = (lbl_module lbl, lbl.lbl_name)
 let val_qualid v = (v.val_module, v.val_name)
 
+let int_to_alpha i =
+  if i < 26
+  then String.make 1 (char_of_int (i+97))
+  else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
+let mkparam i = Tvar { tv_name = int_to_alpha i }
+let mkparams n =
+  let rec aux i = if i < n then mkparam i :: aux (i+1) else [] in
+  aux 0
+
 type record_representation =
     Record_regular
   | Record_float
+
+type 'a reference = 'a

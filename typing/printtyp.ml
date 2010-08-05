@@ -42,11 +42,6 @@ let value ppf v = qualid ppf (val_qualid v)
 (* Names for type variables.                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let int_to_alpha i =
-  if i < 26
-  then String.make 1 (char_of_int (i+97))
-  else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-
 let type_var_names = ref ([] : (type_variable * string) list)
 let type_var_name_counter = ref 0
 

@@ -38,18 +38,15 @@ let get_abbrev tcs =
     | _ -> assert false
   end
 
-let rec substitute_type subst = function
-    Tvar tv ->
-      List.assq tv subst
-  | Tarrow (ty1, ty2) ->
-      Tarrow (substitute_type subst ty1, substitute_type subst ty2)
-  | Ttuple tyl ->
-      Ttuple (List.map (substitute_type subst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (substitute_type subst) tyl)
-
 let apply params body args =
-  substitute_type (List.combine (List.map rawvar params) args) body
+  let f = function Tvar tv -> tv | _ -> assert false in
+  let subst = List.combine (List.map f params) args in
+  let rec aux = function
+      Tvar tv -> List.assq tv subst
+    | Tarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
+    | Ttuple tyl -> Ttuple (List.map aux tyl)
+    | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
+  in aux body
 
 let rec expand_head ty =
   begin match ty with

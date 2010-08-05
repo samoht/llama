@@ -7,27 +7,22 @@ open Types
 (* Type constructors.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let new_param () = new_generic ()
-let new_params = new_generics
-
 (* abstract types *)
 
-let mkabs name params h : type_constructor =
+let mkabs name params b : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
     tcs_params = params;
     tcs_kind = Tcs_abstract;
-    tcs_formal = h }
+    tcs_formal = b }
 
 let tcs_int = mkabs "int" [] true
 let tcs_char = mkabs "char" [] true
 let tcs_string = mkabs "string" [] true
 let tcs_float = mkabs "float" [] false
 let tcs_exn = mkabs "exn" [] false
-let array_param = tvar(new_param ())
-let tcs_array = mkabs "array" [array_param] true
-let format6_params = List.map tvar (new_params 6)
-let tcs_format6 = mkabs "format6" format6_params false
+let tcs_array = mkabs "array" [mkparam 0] true
+let tcs_format6 = mkabs "format6" (mkparams 6) false
 let tcs_nativeint = mkabs "nativeint" [] true
 let tcs_int32 = mkabs "int32" [] true
 let tcs_int64 = mkabs "int64" [] true
@@ -73,7 +68,7 @@ and cs_true =
     cs_args = [];
     cs_tag = Cs_constant 1 }
 
-let list_param = tvar(new_param ())
+let list_param = mkparam 0
 
 let rec tcs_list =
   { tcs_module = Module_builtin;
@@ -98,7 +93,7 @@ and cs_cons =
     cs_args = [list_param;Tconstr(tcs_list,[list_param])];
     cs_tag = Cs_block 0 }
 
-let option_param = tvar(new_param ())
+let option_param = mkparam 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;

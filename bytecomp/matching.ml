@@ -2031,7 +2031,7 @@ let split_cases tag_lambda_list =
 
 let combine_constructor arg ex_pat cstr partial ctx def
     (tag_lambda_list, total1, pats) =
-  if is_exception cstr then begin
+  if cstr.cs_tag = Cs_exception then begin
     (* Special cases for exceptions *)
     let fail, to_add, local_jumps =
       mk_failaction_neg partial ctx def in
