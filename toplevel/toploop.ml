@@ -53,7 +53,7 @@ let eval_exception cs =
     | Module name ->
         Obj.field
           (Symtable.get_global_value (Ident.of_module_name name))
-          (Modenv.get_exception_position cs)
+          (Modenv.lookup_exception_position cs)
     | Module_toplevel ->
         let name = Translmod.toplevel_name (Ident.of_exception cs) in (* ? *)
         try

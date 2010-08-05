@@ -4,39 +4,19 @@ open Misc;;
 open Asttypes;;
 open Types;;
 
-(* ---------------------------------------------------------------------- *)
-(* Trivial utilities.                                                     *)
-(* ---------------------------------------------------------------------- *)
+(* Trivial utilities. *)
 
-let constructors_of_type ty =
-  begin match ty.tcs_kind with
-    | Tcs_sum l -> l
-    | _ -> assert false
-  end
+let constructors_of_type tcs =
+  match tcs.tcs_kind with
+    | Tcs_sum cs_list -> cs_list
+    | _ -> failwith "constructors_of_type"
 
-let labels_of_type ty =
-  begin match ty.tcs_kind with
-    | Tcs_record l -> l
-    | _ -> assert false
-  end
+let labels_of_type tcs =
+  match tcs.tcs_kind with
+    | Tcs_record lbl_list -> lbl_list
+    | _ -> failwith "labels_of_type"
 
-(* ---------------------------------------------------------------------- *)
-(* Expansion of abbreviations.                                            *)
-(* ---------------------------------------------------------------------- *)
-
-let has_abbrev tcs =
-  let tcs = Get.type_constructor tcs in
-  begin match tcs.tcs_kind with
-    | Tcs_abbrev _ -> true
-    | _ -> false
-  end
-
-let get_abbrev tcs =
-  let tcs = Get.type_constructor tcs in
-  begin match tcs.tcs_kind with
-    | Tcs_abbrev body -> tcs.tcs_params, body
-    | _ -> assert false
-  end
+(* Expansion of abbreviations. *)
 
 let apply params body args =
   let f = function Tvar tv -> tv | _ -> assert false in
@@ -48,24 +28,14 @@ let apply params body args =
     | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
   in aux body
 
-let rec expand_head ty =
-  begin match ty with
-    | Tconstr (tcs, args) ->
-        let tcs = Get.type_constructor tcs in
-        begin match tcs.tcs_kind with
-          | Tcs_abbrev body ->
-              expand_head (apply tcs.tcs_params body args)
-          | _ -> ty
-        end
-    | _ -> ty
-  end
-
-(* ---------------------------------------------------------------------- *)
-(* Equivalence and moregeneral for types.                                 *)
-(* ---------------------------------------------------------------------- *)
+let rec expand_head = function
+    Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      expand_head (apply tcs.tcs_params body args)
+  | ty -> ty
 
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
+
 let rec equiv_gen corresp ty1 ty2 =
   match ty1, ty2 with
     | Tvar tv1, Tvar tv2 ->
@@ -74,43 +44,39 @@ let rec equiv_gen corresp ty1 ty2 =
         equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
     | Ttuple(t1args), Ttuple(t2args) ->
         List.forall2 (equiv_gen corresp) t1args t2args
-    | Tconstr (tcs, args), _ when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        equiv_gen corresp (apply params body args) ty2
-    | _, Tconstr (tcs, args) when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        equiv_gen corresp ty1 (apply params body args)
-    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when
-        Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
+    | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+        equiv_gen corresp (apply tcs.tcs_params body args) ty2
+    | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+        equiv_gen corresp ty1 (apply tcs.tcs_params body args)
+    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
         List.forall2 (equiv_gen corresp) tyl1 tyl2
     | _ ->
         false
 let equal = equiv_gen (fun id -> id)
 let equiv alist = equiv_gen (fun id -> List.assq id alist)
 
-(* Whether a genericized type is more general than an arbitrary type. *)
+(* Whether one type is more general than another. *)
 
-let rec moregeneral_gen subst ty1 ty2 =
-  match ty1, ty2 with
-    | Tvar tv, _ ->
-        if List.mem_assq tv !subst then begin
-          equal (List.assq tv !subst) ty2
-        end else begin
-          subst := (tv, ty2) :: !subst; true
-        end
-    | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
-        moregeneral_gen subst t1arg t2arg && moregeneral_gen subst t1res t2res
-    | Ttuple(t1args), Ttuple(t2args) ->
-        List.forall2 (moregeneral_gen subst) t1args t2args
-    | Tconstr (tcs, args), _ when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        moregeneral_gen subst (apply params body args) ty2
-    | _, Tconstr (tcs, args) when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        moregeneral_gen subst ty1 (apply params body args)
-    | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2)
-        when Get.type_constructor tcs1 == Get.type_constructor tcs2 ->
-        List.forall2 (moregeneral_gen subst) tyl1 tyl2
-    | _ ->
-        false
-let moregeneral = moregeneral_gen (ref [])
+let moregeneral ty1 ty2 =
+  let subst = ref [] in
+  let rec aux ty1 ty2 =
+    match ty1, ty2 with
+        Tvar tv, _ ->
+          begin try
+            equal (List.assq tv !subst) ty2
+          with Not_found ->
+            subst := (tv, ty2) :: !subst; true
+          end
+      | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+          aux t1arg t2arg && aux t1res t2res
+      | Ttuple(t1args), Ttuple(t2args) ->
+          List.forall2 aux t1args t2args
+      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+          aux (apply tcs.tcs_params body args) ty2
+      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+          aux ty1 (apply tcs.tcs_params body args)
+      | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
+          List.forall2 aux tyl1 tyl2
+      | _ ->
+          false
+  in aux ty1 ty2

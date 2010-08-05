@@ -27,7 +27,7 @@ let type_exn = LTconstr(Predef.tcs_exn, [])
 let type_array ty = LTconstr(Predef.tcs_array, [ty])
 
 (* ---------------------------------------------------------------------- *)
-(* instantiation (global type -> local type)                              *)
+(* instantiation (global -> local)                                        *)
 (* ---------------------------------------------------------------------- *)
 
 let rec instantiate_type subst = function
@@ -44,7 +44,7 @@ let rec instantiate_type subst = function
   | Ttuple tyl ->
       LTtuple (List.map (instantiate_type subst) tyl)
   | Tconstr (tcs, tyl) ->
-      LTconstr (Get.type_constructor tcs, List.map (instantiate_type subst) tyl)
+      LTconstr (tcs, List.map (instantiate_type subst) tyl)
 
 let instantiate_one_type ty =
   instantiate_type (ref []) ty
@@ -101,18 +101,6 @@ let rec repr = function
     LTvar { forward = Some ty } -> repr ty
   | ty -> ty
 
-let has_abbrev tcs =
-  begin match tcs.tcs_kind with
-    | Tcs_abbrev _ -> true
-    | _ -> false
-  end
-
-let get_abbrev tcs =
-  begin match tcs.tcs_kind with
-    | Tcs_abbrev body -> tcs.tcs_params, body
-    | _ -> assert false
-  end
-
 let apply params body args =
   let params = List.map (function Tvar tv -> tv | _ -> assert false) params in
   let subst = List.combine params args in
@@ -120,7 +108,7 @@ let apply params body args =
       Tvar tv -> List.assq tv subst
     | Tarrow (ty1, ty2) -> LTarrow (aux ty1, aux ty2)
     | Ttuple tyl -> LTtuple (List.map aux tyl)
-    | Tconstr (tcs, tyl) -> LTconstr (Get.type_constructor tcs, List.map aux tyl)
+    | Tconstr (tcs, tyl) -> LTconstr (tcs, List.map aux tyl)
   in aux body
 
 let rec expand_head = function
@@ -132,8 +120,6 @@ let rec expand_head = function
 (* ---------------------------------------------------------------------- *)
 (* unification                                                            *)
 (* ---------------------------------------------------------------------- *)
-
-(* The occur check *)
 
 exception Unify
 
@@ -168,12 +154,10 @@ let rec unify (ty1, ty2) =
         unify (t1res, t2res)
     | LTtuple tyl1, LTtuple tyl2 ->
         unify_list (tyl1, tyl2)
-    | LTconstr (tcs1, tyl1), _ when has_abbrev tcs1 ->
-        let params1, body1 = get_abbrev tcs1 in
-        unify (apply params1 body1 tyl1, ty2)
-    | _, LTconstr (tcs2, tyl2) when has_abbrev tcs2 ->
-        let params2, body2 = get_abbrev tcs2 in
-        unify (ty1, apply params2 body2 tyl2)
+    | LTconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
+        unify (apply tcs1.tcs_params body1 tyl1, ty2)
+    | _, LTconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
+        unify (ty1, apply tcs2.tcs_params body2 tyl2)
     | LTconstr (tcs1, tyl1), LTconstr (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list (tyl1, tyl2)
     | _ ->
@@ -185,7 +169,7 @@ and unify_list = function
   | ty1::rest1, ty2::rest2 -> unify(ty1,ty2); unify_list(rest1,rest2)
   | _ -> raise Unify
 
-(* Three special cases of unification *)
+(* Three special cases of unification (really needed?) *)
 
 let rec filter_arrow ty =
   let ty = repr ty in
@@ -197,9 +181,8 @@ let rec filter_arrow ty =
       (ty1, ty2)
   | LTarrow(ty1, ty2) ->
       (ty1, ty2)
-  | LTconstr(tcs, args) when has_abbrev tcs ->
-      let params, body = get_abbrev tcs in
-      filter_arrow (apply params body args)
+  | LTconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      filter_arrow (apply tcs.tcs_params body args)
   | _ ->
       raise Unify
 ;;
@@ -213,9 +196,8 @@ let rec filter_product arity ty =
       tyl
   | LTtuple tyl ->
       if List.length tyl == arity then tyl else raise Unify
-  | LTconstr(tcs,args) when has_abbrev tcs ->
-      let params, body = get_abbrev tcs in
-      filter_product arity (apply params body args)
+  | LTconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      filter_product arity (apply tcs.tcs_params body args)
   | _ ->
       raise Unify
 ;;
@@ -229,8 +211,7 @@ let rec filter_array ty =
         ty
     | LTconstr(tcs,[arg]) when tcs == Predef.tcs_array ->
         arg
-    | LTconstr(tcs, args) when has_abbrev tcs ->
-        let params, body = get_abbrev tcs in
-        filter_array (apply params body args)
+    | LTconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+        filter_array (apply tcs.tcs_params body args)
     | _ ->
         raise Unify

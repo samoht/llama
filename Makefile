@@ -44,7 +44,6 @@ TYPING=typing/unused_var.cmo typing/primitive.cmo \
  typing/predef.cmo \
  typing/modenv.cmo \
  typing/env.cmo \
- typing/get.cmo \
  typing/btype.cmo \
  typing/subst.cmo \
  typing/oprint.cmo \

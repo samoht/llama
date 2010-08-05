@@ -144,10 +144,9 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
-          | Tconstr(path, []) when Get.type_constructor path == Predef.tcs_exn ->
+          | Tconstr(tcs, []) when tcs == Predef.tcs_exn ->
               tree_of_exception depth obj
-          | Tconstr(path, [ty_arg])
-            when Get.type_constructor path == Predef.tcs_list ->
+          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_list ->
               if Obj.is_block obj then
                 match check_depth depth obj ty with
                   Some x -> x
@@ -165,8 +164,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_list (List.rev (tree_of_conses [] obj))
               else
                 Oval_list []
-          | Tconstr(path, [ty_arg])
-            when Get.type_constructor path == Predef.tcs_array ->
+          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_array ->
               let length = Obj.size obj in
               if length > 0 then
                 match check_depth depth obj ty with
@@ -184,8 +182,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_array (List.rev (tree_of_items [] 0))
               else
                 Oval_array []
-          | Tconstr (path, [ty_arg])
-            when Get.type_constructor path == Predef.tcs_lazy_t ->
+          | Tconstr (tcs, [ty_arg]) when tcs == Predef.tcs_lazy_t ->
 (*
               if Lazy.lazy_is_val (Obj.obj obj)
               then let v = tree_of_val depth (Lazy.force (Obj.obj obj)) ty_arg in
@@ -193,14 +190,13 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               else
 *)
               Oval_stuff "<lazy>"
-          | Tconstr(path, ty_list) ->
-              let decl = Get.type_constructor path in
-              match decl with
+          | Tconstr(tcs, ty_list) ->
+              match tcs with
                 | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Btype.apply decl.tcs_params body ty_list)
+                      (Btype.apply tcs.tcs_params body ty_list)
                 | {tcs_kind = Tcs_sum constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -211,7 +207,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Btype.apply decl.tcs_params ty ty_list)
+                           Btype.apply tcs.tcs_params ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -223,7 +219,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Btype.apply decl.tcs_params lbl.lbl_arg
+                                Btype.apply tcs.tcs_params lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =
