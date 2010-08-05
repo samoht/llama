@@ -22,7 +22,7 @@ libgraphics.a: $(COBJS)
 	llamac -c $<
 
 install:
-	cp libgraphics.a graphics.cma *.cmi *.mli $(LIBDIR)
+	cp libgraphics.a dllgraphics.so graphics.cma *.cmi *.mli $(LIBDIR)
 .PHONY: install
 
 clean:
