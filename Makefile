@@ -31,8 +31,7 @@ CAMLRUN=byterun/llamarun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I bytecomp -I driver \
-	 -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I bytecomp -I driver -I toplevel
 
 UTILS=utils/config.cmo utils/clflags.cmo utils/misc.cmo utils/tbl.cmo utils/warnings.cmo utils/consistbl.cmo utils/ccomp.cmo utils/terminfo.cmo
 

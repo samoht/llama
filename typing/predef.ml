@@ -1,6 +1,3 @@
-(* builtins.ml : the pre-defined global identifiers *)
-
-open Asttypes
 open Types
 
 (* ---------------------------------------------------------------------- *)
@@ -118,22 +115,12 @@ and cs_some =
     cs_args = [option_param];
     cs_tag = Tag_block 0 }
 
+(* list them *)
+
 let type_constructors =
-  [ tcs_int;
-    tcs_char;
-    tcs_string;
-    tcs_float;
-    tcs_bool;
-    tcs_unit;
-    tcs_exn;
-    tcs_array;
-    tcs_list;
-    tcs_format6;
-    tcs_option;
-    tcs_lazy_t;
-    tcs_nativeint;
-    tcs_int32;
-    tcs_int64 ]
+  [ tcs_int; tcs_char; tcs_string; tcs_float; tcs_bool; tcs_unit;
+    tcs_exn; tcs_array; tcs_list; tcs_format6; tcs_option; tcs_lazy_t;
+    tcs_nativeint; tcs_int32; tcs_int64 ]
 
 (* ---------------------------------------------------------------------- *)
 (* Types.                                                                 *)
@@ -146,13 +133,13 @@ let type_float = Tconstr(tcs_float, [])
 let type_bool = Tconstr(tcs_bool, [])
 let type_unit = Tconstr(tcs_unit, [])
 let type_exn = Tconstr(tcs_exn, [])
-let type_array t = Tconstr(tcs_array, [t])
-let type_list t = Tconstr(tcs_list, [t])
-let type_option t = Tconstr(tcs_option, [t])
+let type_array ty = Tconstr(tcs_array, [ty])
+let type_list ty = Tconstr(tcs_list, [ty])
+let type_option ty = Tconstr(tcs_option, [ty])
 let type_nativeint = Tconstr(tcs_nativeint, [])
 let type_int32 = Tconstr(tcs_int32, [])
 let type_int64 = Tconstr(tcs_int64, [])
-let type_lazy_t t = Tconstr(tcs_lazy_t, [])
+let type_lazy_t ty = Tconstr(tcs_lazy_t, [ty])
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
@@ -180,23 +167,19 @@ let cs_assert_failure = mkexn "Assert_failure" [type_string; type_int; type_int]
 let cs_undefined_recursive_module =
   mkexn "Undefined_recursive_module" [type_string; type_int; type_int]
 
+(* list them *)
+
 let exceptions =
-  [ cs_out_of_memory;
-    cs_sys_error;
-    cs_failure;
-    cs_invalid_argument;
-    cs_end_of_file;
-    cs_division_by_zero;
-    cs_not_found;
-    cs_match_failure;
-    cs_stack_overflow;
-    cs_sys_blocked_io;
-    cs_assert_failure;
-    cs_undefined_recursive_module;
+  [ cs_out_of_memory; cs_sys_error; cs_failure; cs_invalid_argument;
+    cs_end_of_file; cs_division_by_zero; cs_not_found; cs_match_failure;
+    cs_stack_overflow; cs_sys_blocked_io; cs_assert_failure;
+    cs_undefined_recursive_module
   ]
 
 (* ---------------------------------------------------------------------- *)
+(* Signature for the built-in module.                                     *)
+(* ---------------------------------------------------------------------- *)
 
 let signature =
-  List.map (fun tcs -> Sig_type (tcs,Rec_first)) type_constructors @
+  List.map (fun tcs -> Sig_type (tcs, Rec_first)) type_constructors @
     List.map (fun cs -> Sig_exception cs) exceptions
