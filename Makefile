@@ -57,7 +57,7 @@ TYPING=typing/unused_var.cmo typing/primitive.cmo \
  typing/typecore.cmo \
  typing/typedecl.cmo typing/typemod.cmo
 
-COMP=bytecomp/ident.cmo bytecomp/identSet.cmo \
+COMP=bytecomp/ident.cmo \
   bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo \
   bytecomp/pmc_pattern.cmo bytecomp/parmatch.cmo \

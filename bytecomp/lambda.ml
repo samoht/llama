@@ -284,25 +284,25 @@ let rec iter f = function
       f e
 
 let free_ids get l =
-  let fv = ref IdentSet.empty in
+  let fv = ref Set.empty in
   let rec free l =
     iter free l;
-    fv := List.fold_right IdentSet.add (get l) !fv;
+    fv := List.fold_right Set.add (get l) !fv;
     match l with
       Lfunction(kind, params, body) ->
-        List.iter (fun param -> fv := IdentSet.remove param !fv) params
+        List.iter (fun param -> fv := Set.remove param !fv) params
     | Llet(str, id, arg, body) ->
-        fv := IdentSet.remove id !fv
+        fv := Set.remove id !fv
     | Lletrec(decl, body) ->
-        List.iter (fun (id, exp) -> fv := IdentSet.remove id !fv) decl
+        List.iter (fun (id, exp) -> fv := Set.remove id !fv) decl
     | Lstaticcatch(e1, (_,vars), e2) ->
-        List.iter (fun id -> fv := IdentSet.remove id !fv) vars
+        List.iter (fun id -> fv := Set.remove id !fv) vars
     | Ltrywith(e1, exn, e2) ->
-        fv := IdentSet.remove exn !fv
+        fv := Set.remove exn !fv
     | Lfor(v, e1, e2, dir, e3) ->
-        fv := IdentSet.remove v !fv
+        fv := Set.remove v !fv
     | Lassign(id, e) ->
-        fv := IdentSet.add id !fv
+        fv := Set.add id !fv
     | Lvar _ | Lconst _ | Lapply _
     | Lprim _ | Lswitch _ | Lstaticraise _
     | Lifthenelse _ | Lsequence _ | Lwhile _

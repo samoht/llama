@@ -29,7 +29,7 @@ let rec eliminate_ref id = function
   | Lapply(e1, el, loc) ->
       Lapply(eliminate_ref id e1, List.map (eliminate_ref id) el, loc)
   | Lfunction(kind, params, body) as lam ->
-      if IdentSet.mem id (free_variables lam)
+      if Set.mem id (free_variables lam)
       then raise Real_reference
       else lam
   | Llet(str, v, e1, e2) ->

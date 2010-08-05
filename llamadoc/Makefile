@@ -153,7 +153,6 @@ LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
 	$(LLAMASRCDIR)/parsing/parse.cmo \
         $(TYPING) \
 	$(LLAMASRCDIR)/bytecomp/ident.cmo \
-	$(LLAMASRCDIR)/bytecomp/identSet.cmo \
 	$(LLAMASRCDIR)/bytecomp/lambda.cmo \
 	$(LLAMASRCDIR)/bytecomp/typeopt.cmo \
 	$(LLAMASRCDIR)/bytecomp/printlambda.cmo \

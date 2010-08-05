@@ -290,11 +290,11 @@ let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
 let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
 
 let aliased_idents = ref (Ident.empty : (Ident.t, string) Tbl.t)
-
+(*
 let set_toplevel_unique_name id =
   aliased_idents :=
     Ident.add id (Ident.unique_toplevel_name id) !aliased_idents
-
+*)
 let toplevel_name id =
   try Ident.find_same id !aliased_idents
   with Not_found -> Ident.name id
@@ -314,7 +314,7 @@ let toploop_setvalue id lam =
 let toploop_setvalue_id id = toploop_setvalue id (Lvar id)
 
 let close_toplevel_term lam =
-  IdentSet.fold (fun id l -> Llet(Strict, id, toploop_getvalue id, l))
+  Set.fold (fun id l -> Llet(Strict, id, toploop_getvalue id, l))
                 (free_variables lam) lam
 
 let transl_toplevel_item = function

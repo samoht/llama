@@ -81,24 +81,24 @@ let add_ccobjs l =
 
 (* First pass: determine which units are needed *)
 
-let missing_globals = ref IdentSet.empty
+let missing_globals = ref (Set.empty : Ident.t Set.t)
 
 let is_required (rel, pos) =
   match rel with
     Reloc_setglobal id ->
-      IdentSet.mem id !missing_globals
+      Set.mem id !missing_globals
   | _ -> false
 
 let add_required (rel, pos) =
   match rel with
     Reloc_getglobal id ->
-      missing_globals := IdentSet.add id !missing_globals
+      missing_globals := Set.add id !missing_globals
   | _ -> ()
 
 let remove_required (rel, pos) =
   match rel with
     Reloc_setglobal id ->
-      missing_globals := IdentSet.remove id !missing_globals
+      missing_globals := Set.remove id !missing_globals
   | _ -> ()
 
 let scan_file obj_name tolink =

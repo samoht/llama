@@ -142,7 +142,7 @@ let rec check_recordwith_updates id e =
 
 let rec size_of_lambda = function
   | Lfunction(kind, params, body) as funct ->
-      RHS_block (1 + IdentSet.cardinal(free_variables funct))
+      RHS_block (1 + Set.cardinal(free_variables funct))
   | Llet (Strict, id, Lprim (Pduprecord (kind, size), _), body)
     when check_recordwith_updates id body ->
       begin match kind with
@@ -454,7 +454,7 @@ let rec comp_expr env exp sz cont =
         end
   | Lfunction(kind, params, body) -> (* assume kind = Curried *)
       let lbl = new_label() in
-      let fv = IdentSet.elements(free_variables exp) in
+      let fv = Set.elements(free_variables exp) in
       let to_compile =
         { params = params; body = body; label = lbl;
           free_vars = fv; num_defs = 1; rec_vars = []; rec_pos = 0 } in
@@ -471,7 +471,7 @@ let rec comp_expr env exp sz cont =
                       decl then begin
         (* let rec of functions *)
         let fv =
-          IdentSet.elements (free_variables (Lletrec(decl, lambda_unit))) in
+          Set.elements (free_variables (Lletrec(decl, lambda_unit))) in
         let rec_idents = List.map (fun (id, lam) -> id) decl in
         let rec comp_fun pos = function
             [] -> []

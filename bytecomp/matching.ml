@@ -606,9 +606,9 @@ let default_compat p def =
 
 (* Or-pattern expansion, variables are a complication w.r.t. the article *)
 let rec extract_vars r p = match p.pat_desc with
-| Tpat_var id -> IdentSet.add id r
+| Tpat_var id -> Set.add id r
 | Tpat_alias (p, id) ->
-    extract_vars (IdentSet.add id r) p
+    extract_vars (Set.add id r) p
 | Tpat_tuple pats ->
     List.fold_left extract_vars r pats
 | Tpat_record lpats ->
@@ -654,8 +654,8 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
 
 let pm_free_variables {cases=cases} =
   List.fold_right
-    (fun (_,act) r -> IdentSet.union (free_variables act) r)
-    cases IdentSet.empty
+    (fun (_,act) r -> Set.union (free_variables act) r)
+    cases Set.empty
 
 
 (* Basic grouping predicates *)
@@ -741,8 +741,8 @@ let insert_or_append p ps act ors no =
         if is_or q then begin
           if compat p q then
             if
-              IdentSet.is_empty (extract_vars IdentSet.empty p) &&
-              IdentSet.is_empty (extract_vars IdentSet.empty q) &&
+              Set.is_empty (extract_vars Set.empty p) &&
+              Set.is_empty (extract_vars Set.empty q) &&
               equiv_pat p q
             then (* attempt insert, for equivalent orpats with no variables *)
               let _, not_e = get_equiv q rem in
@@ -974,9 +974,9 @@ and precompile_or argo cls ors args def k = match ors with
               args = (match args with _::r -> r | _ -> assert false) ;
               default = default_compat orp def} in
           let vars =
-            IdentSet.elements
-              (IdentSet.inter
-                 (extract_vars IdentSet.empty orp)
+            Set.elements
+              (Set.inter
+                 (extract_vars Set.empty orp)
                  (pm_free_variables orpm)) in
           let or_num = next_raise_count () in
           let new_patl = Parmatch.omega_list patl in

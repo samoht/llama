@@ -413,11 +413,11 @@ let check_recursive_lambda idlist lam =
     | Levent (lam, _) -> check idlist lam
     | lam ->
         let fv = free_variables lam in
-        not (List.exists (fun id -> IdentSet.mem id fv) idlist)
+        not (List.exists (fun id -> Set.mem id fv) idlist)
 
   and add_let id arg idlist =
     let fv = free_variables arg in
-    if List.exists (fun id -> IdentSet.mem id fv) idlist
+    if List.exists (fun id -> Set.mem id fv) idlist
     then id :: idlist
     else idlist
 

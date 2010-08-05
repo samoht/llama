@@ -177,8 +177,8 @@ val name_lambda: lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
 
 val iter: (lambda -> unit) -> lambda -> unit
-val free_variables: lambda -> IdentSet.t
-val free_methods: lambda -> IdentSet.t
+val free_variables: lambda -> Ident.t Set.t
+val free_methods: lambda -> Ident.t Set.t
 
 val transl_exception : Types.constructor -> lambda
 val transl_regular_value : Types.value -> lambda
