@@ -332,7 +332,7 @@ val sscanf : string -> ('a, 'b, 'c, 'd) scanner;;
 
 val scanf : ('a, 'b, 'c, 'd) scanner;;
 (** Same as {!Scanf.bscanf}, but reads from the predefined formatted input
-    channel {!Scanf.Scanning.stdin} that is connected to [Pervasives.stdin]. *)
+    channel {!Scanning.stdin} that is connected to [Pervasives.stdin]. *)
 
 val kscanf :
   Scanning.in_channel -> (Scanning.in_channel -> exn -> 'd) ->

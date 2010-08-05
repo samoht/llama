@@ -1649,7 +1649,7 @@ let newline_to_indented_br s =
           );
         bs b "</h1></center>\n<br>\n";
 
-        if not modu.m_text_only then html_of_module b false true true modu;
+        if not modu.m_text_only then html_of_module b true true false modu;
 
         (* a horizontal line *)
         if not modu.m_text_only then bs b "<hr width=\"100%\">\n";

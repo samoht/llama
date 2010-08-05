@@ -2,7 +2,7 @@ type in_channel;;
 (* The notion of input channel for the [Scanf] module:
    those channels provide all the machinery necessary to read from a given
    [Pervasives.in_channel] value.
-   A [Scanf.Scanning.in_channel] value is also called a {i formatted input
+   A [Scanning.in_channel] value is also called a {i formatted input
    channel} or equivalently a {i scanning buffer}.
    The type [scanbuf] below is an alias for [in_channel].
    @since 3.12.0

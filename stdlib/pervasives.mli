@@ -88,8 +88,8 @@ external compare : 'a -> 'a -> int = "%compare"
    [compare] applied to functional values may raise [Invalid_argument].
    [compare] applied to cyclic structures may not terminate.
 
-   The [compare] function can be used as the comparison function
-   required by the {!Set.Make} and {!Map.Make} functors, as well as
+   The [compare] function is used as the default comparison function
+   by the {!Set} and {!Map} modules, and can also be used with
    the {!List.sort} and {!Array.sort} functions. *)
 
 val min : 'a -> 'a -> 'a
