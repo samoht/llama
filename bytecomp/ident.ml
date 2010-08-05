@@ -33,7 +33,7 @@ let of_module m =
       Module name -> of_module_name name
     | _ -> assert false (* xxx *)
 let of_value v =
-  let name = val_name v in
+  let name = v.val_name in
   try List.assq v (Hashtbl.find_all values name)
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add values name (v, id); id

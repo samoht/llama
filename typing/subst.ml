@@ -13,12 +13,11 @@ let add_type_constructor c1 c2 s =
     types = (c1, c2) :: s.types;
     values = s.values; }
 
-let type_constructor s r =
-  if r.ref_id.id_module = s.subst_module then
-    { ref_id = r.ref_id;
-      ref_contents = Some (List.assq (Get.type_constructor r) s.types) }
+let type_constructor s tcs =
+  if tcs.tcs_module = s.subst_module then
+    List.assq tcs s.types
   else
-    r
+    tcs
 
 let rec core_type s ty =
   begin match ty with

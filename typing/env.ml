@@ -36,26 +36,24 @@ let lookup proj1 get_fun lid env =
     Lident s ->
       Tbl.find s (proj1 env)
   | Ldot(Lident mn, s) ->
-      let qualid = { id_module = Module mn; id_name = s } in
-      let myref = { ref_id = qualid; ref_contents = None } in
-      get_fun myref
+      get_fun (Module mn) s
   | _ ->
       failwith (Longident.name lid)
 
 let lookup_value =
-  lookup (fun env -> env.values) get_value
+  lookup (fun env -> env.values) fetch_value
 and lookup_constructor =
-  lookup (fun env -> env.constrs) get_constructor
+  lookup (fun env -> env.constrs) fetch_constructor
 and lookup_label =
-  lookup (fun env -> env.labels) get_label
+  lookup (fun env -> env.labels) fetch_label
 and lookup_type =
-  lookup (fun env -> env.types) get_type_constructor
+  lookup (fun env -> env.types) fetch_type_constructor
 
 let add_value v env =
   { types = env.types;
     constrs = env.constrs;
     labels = env.labels;
-    values = Tbl.add (val_name v) v env.values }
+    values = Tbl.add v.val_name v env.values }
 
 let add_exception cs env =
   { types = env.types;

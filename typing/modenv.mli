@@ -5,6 +5,12 @@ val get_type_constructor : type_constructor reference -> type_constructor
 val get_constructor : constructor reference -> constructor
 val get_label : label reference -> label
 val get_value : value reference -> value
+
+val fetch_type_constructor : module_id -> string -> type_constructor
+val fetch_constructor : module_id -> string -> constructor
+val fetch_label : module_id -> string -> label
+val fetch_value : module_id -> string -> value
+
 val get_value_position : value -> int
 val get_exception_position : constructor -> int
 

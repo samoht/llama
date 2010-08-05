@@ -174,13 +174,15 @@ let type_equation_list teq_list =
   tcs_list
 
 let do_value name ty =
-  { val_id = Env.qualified_id name;
+  { val_module = Env.get_current_module();
+    val_name = name;
     val_type = ty;
     val_kind = Val_reg;
     val_formal = Informal }
 
 let primitive name ty prim =
-  { val_id = Env.qualified_id name;
+  { val_module = Env.get_current_module();
+    val_name = name;
     val_type = ty;
     val_kind = Val_prim prim;
     val_formal = Informal }  
@@ -230,7 +232,8 @@ let g_structure_item str = match str.str_desc with
         List.map
           begin fun locval ->
             let globval =
-              { val_id = Env.qualified_id locval.Context.val_name;
+              { val_module = Env.get_current_module();
+                val_name = locval.Context.val_name;
                 val_type = Ctype.generalize locval.Context.val_type;
                 val_kind = Val_reg;
                 val_formal = Informal }

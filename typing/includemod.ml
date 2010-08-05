@@ -46,7 +46,7 @@ type field_desc =
   | Field_exception of string
 
 let item_ident_name = function
-    Sig_value v -> let s = val_name v in s, Field_value s
+    Sig_value v -> let s = v.val_name in s, Field_value s
   | Sig_type tcs -> let s = tcs.tcs_name in s, Field_type s
   | Sig_exception cs -> let s = cs.cs_name in s, Field_exception s
 

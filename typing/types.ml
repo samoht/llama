@@ -41,16 +41,38 @@ and 'ty abstract_label =
     lbl_mut : bool;
     lbl_pos : int }
 
-open Asttypes
+type 'ty abstract_value =
+  { val_module : module_id;
+    val_name : string;
+    val_type : 'ty;
+    val_kind : value_kind;
+    val_formal : Asttypes.formal_flags }
 
+and value_kind =
+    Val_reg
+  | Val_prim of Primitive.description
+
+type 'ty abstract_signature_item =
+    Sig_value of 'ty abstract_value
+  | Sig_type of 'ty abstract_type_constructor (* * rec_status? *)
+  | Sig_exception of 'ty abstract_constructor
+    
+and rec_status =
+    Rec_not
+  | Rec_first
+  | Rec_next
+
+type 'ty abstract_signature = 'ty abstract_signature_item list
+
+(* ---------------------------------------------------------------------- *)
+(* Specialization to the in-memory case.                                  *)
+(* ---------------------------------------------------------------------- *)
+
+open Asttypes
 type qualified_id =
   { id_module : module_id;
     id_name : string }
-
-type 'a reference =
-  { ref_id : qualified_id;
-    mutable ref_contents : 'a option }
-
+type 'a reference = 'a
 type type_variable = { tv_name : string }
 type llama_type =
     Tvar of type_variable
@@ -61,36 +83,9 @@ and type_constructor = llama_type abstract_type_constructor
 type type_constructor_kind = llama_type abstract_type_constructor_kind
 type constructor = llama_type abstract_constructor
 type label = llama_type abstract_label
-
-(* ---------------------------------------------------------------------- *)
-(* Values.                                                                *)
-(* ---------------------------------------------------------------------- *)
-
-type value =
-  { val_id : qualified_id;
-    mutable val_type: llama_type;                (* Type of the value *)
-    val_kind: value_kind;
-    val_formal: formal_flags }
-
-and value_kind =
-    Val_reg                             (* Regular value *)
-  | Val_prim of Primitive.description   (* Primitive *)
-
-(* ---------------------------------------------------------------------- *)
-(* Compiled signatures.                                                   *)
-(* ---------------------------------------------------------------------- *)
-
-type compiled_signature_item =
-    Sig_value of value
-  | Sig_type of type_constructor (*  * rec_status *)
-  | Sig_exception of constructor
-
-and rec_status =
-    Rec_not
-  | Rec_first
-  | Rec_next
-
-type compiled_signature = compiled_signature_item list
+type value = llama_type abstract_value
+type compiled_signature_item = llama_type abstract_signature_item
+type compiled_signature = llama_type abstract_signature
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
@@ -117,13 +112,13 @@ let constr_id cs = { id_module = constructor_module cs;
 let label_id lbl = { id_module = lbl.lbl_tcs.tcs_module;
                      id_name = lbl.lbl_name }
 let tcs_id tcs = { id_module = tcs.tcs_module; id_name = tcs.tcs_name }
+let val_id v = { id_module = v.val_module; id_name = v.val_name }
 let tcs_arity tcs = List.length tcs.tcs_params
-let ref_type_constr (t:type_constructor) = { ref_id = tcs_id t; ref_contents = Some t }
-let ref_constr cs = { ref_id = constr_id cs; ref_contents = Some cs }
-let ref_label lbl = { ref_id = label_id lbl; ref_contents = Some lbl }
-let ref_value v = { ref_id = v.val_id; ref_contents = Some v }
+let ref_type_constr (t:type_constructor) = t (* { ref_id = tcs_id t; ref_contents = Some t }*)
+let ref_constr cs =  cs (* { ref_id = constr_id cs; ref_contents = Some cs } *)
+let ref_label lbl = lbl (* { ref_id = label_id lbl; ref_contents = Some lbl } *)
+let ref_value v =  v (* { ref_id = val_id v; ref_contents = Some v } *)
 
-let val_name v = v.val_id.id_name
 
 type tag =
   | Tag_block of int
@@ -159,3 +154,4 @@ exception Constr_not_found
 
 type module_expr = unit
 type class_expr = unit
+

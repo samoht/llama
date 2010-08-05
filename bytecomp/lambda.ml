@@ -360,7 +360,7 @@ let transl_exception cs =
 let transl_predef_exn cs =
   Lprim(Pgetglobal (Ident.of_exception cs), [])
 let transl_regular_value v =
-  let m = v.Types.val_id.Types.id_module in
+  let m = v.Types.val_module in
   if m = Types.Module_builtin || m = Env.get_current_module () then
     let id = Ident.of_value v in
     Lvar id

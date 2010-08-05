@@ -43,7 +43,7 @@ open Odoc_types
     let add_to_hash table signat =
       match signat with
         Types.Sig_value v ->
-          Hashtbl.add table (V (Types.val_name v)) signat
+          Hashtbl.add table (V v.Types.val_name) signat
       | Types.Sig_exception cs ->
           Hashtbl.add table (E cs.Types.cs_name) signat
       | Types.Sig_type tcs ->

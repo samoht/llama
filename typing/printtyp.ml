@@ -35,9 +35,9 @@ let qualified_id ppf id =
 let type_constructor ppf tcs = qualified_id ppf (tcs_id tcs)
 let constructor ppf cs = qualified_id ppf (constr_id cs)
 let label ppf lbl = qualified_id ppf (label_id lbl)
-let value ppf v = qualified_id ppf v.val_id
+let value ppf v = qualified_id ppf (val_id v)
 
-let reference ppf r = qualified_id ppf r.ref_id
+(*let reference ppf r = qualified_id ppf r.ref_id*)
 
 (* ---------------------------------------------------------------------- *)
 (* Names for type variables.                                              *)
@@ -189,7 +189,7 @@ let exception_declaration ppf decl =
 (* Print a value declaration *)
 
 let tree_of_value_description v =
-  let id = val_name v in
+  let id = v.val_name in
   let ty = tree_of_typexp true v.val_type in
   let prims =
     match v.val_kind with
