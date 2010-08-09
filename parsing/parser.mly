@@ -522,9 +522,10 @@ simple_expr:
       { mkexp(Pexp_constraint($2, $3)) }
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
-  | UIDENT DOT LPAREN seq_expr RPAREN
-      { mkexp(Pexp_open($1, $4)) }
-  | UIDENT DOT LPAREN seq_expr error
+  | mod_longident DOT LPAREN seq_expr RPAREN
+      { let modname = match $1 with Lident s -> s | Ldot _ -> assert false (* xxx *) in
+        mkexp(Pexp_open(modname, $4)) }
+  | mod_longident DOT LPAREN seq_expr error
       { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LPAREN seq_expr RPAREN
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "get")),
