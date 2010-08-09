@@ -154,6 +154,7 @@ and expression ppf tbl e =
   | Pexp_assert e -> expression ppf tbl e;
   | Pexp_assertfalse -> ()
 (*  | Pexp_lazy e -> expression ppf tbl e;*)
+  | Pexp_open (_, e) -> expression ppf tbl e
 
 and expression_option ppf tbl eo =
   match eo with

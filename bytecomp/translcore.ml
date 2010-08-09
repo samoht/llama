@@ -769,6 +769,7 @@ and transl_exp0 e =
       end
 *)
   | Texp_constraint (e, _) -> transl_exp e
+  | Texp_open (_, e) -> transl_exp e
 
 and transl_list expr_list =
   List.map transl_exp expr_list

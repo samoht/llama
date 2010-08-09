@@ -424,6 +424,8 @@ expr:
       { mkexp(Pexp_apply($1, List.rev $2)) }
   | LET rec_flag let_bindings IN seq_expr
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
+  | LET OPEN UIDENT IN seq_expr
+      { mkexp(Pexp_open($3, $5)) }
   | FUNCTION opt_bar match_cases
       { mkexp(Pexp_function(List.rev $3)) }
   | FUN simple_pattern fun_def
@@ -520,6 +522,10 @@ simple_expr:
       { mkexp(Pexp_constraint($2, $3)) }
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
+  | UIDENT DOT LPAREN seq_expr RPAREN
+      { mkexp(Pexp_open($1, $4)) }
+  | UIDENT DOT LPAREN seq_expr error
+      { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LPAREN seq_expr RPAREN
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "get")),
                          [$1; $4])) }

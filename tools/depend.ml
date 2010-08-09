@@ -103,6 +103,7 @@ let rec add_expr bv exp =
   | Pexp_assert (e) -> add_expr bv e
   | Pexp_assertfalse -> ()
 (*  | Pexp_lazy (e) -> add_expr bv e *)
+  | Pexp_open (m, e) -> addmodule bv (Lident m); add_expr bv e
 and add_pat_expr_list bv pel =
   List.iter (fun (p, e) -> add_pattern bv p; add_expr bv e) pel
 
