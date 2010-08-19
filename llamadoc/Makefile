@@ -16,7 +16,7 @@ include ../config/Makefile
 # Various commands and dir
 ##########################
 CAMLRUN=../boot/llamarun
-LLAMAC   = ../llamac -g
+LLAMAC   = ../byterun/llamarun ../llamac
 LLAMAOPT = ../llamacompopt.sh
 LLAMADEP = $(CAMLRUN) ../tools/llamadep
 LLAMALEX = $(CAMLRUN) ../boot/llamalex
