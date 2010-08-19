@@ -46,16 +46,6 @@ let add_value lv ctxt =
   { ctxt_env = ctxt.ctxt_env;
     ctxt_values = Tbl.add lv.val_name lv ctxt.ctxt_values }
 
-let add_signature sg ctxt =
-  { ctxt_env = Env.add_signature sg ctxt.ctxt_env;
-    ctxt_values =
-      List.fold_left
-        (fun tbl -> function
-             Sig_value v -> Tbl.remove v.Types.val_name tbl
-           | _ -> tbl)
-        ctxt.ctxt_values sg
-  }
-
 let create env =
   { ctxt_env = env;
     ctxt_values = Tbl.empty }

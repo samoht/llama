@@ -55,7 +55,6 @@ and expression_desc =
   | Pexp_when of expression * expression
   | Pexp_assert of expression
   | Pexp_assertfalse
-  | Pexp_open of module_name * expression
 
 type type_equation =
   { pteq_name : string;

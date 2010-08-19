@@ -65,7 +65,6 @@ and expression_desc =
   | Texp_assert of expression
   | Texp_assertfalse
   | Texp_constraint of expression * type_expression
-  | Texp_open of string * expression
 
 type type_equation = {
   teq_ltcs : Type_context.local_type_constructor;

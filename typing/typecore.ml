@@ -164,7 +164,6 @@ let rec is_nonexpansive expr =
               lbl_expr_list (* xxx exten *)
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_when(cond, act) -> is_nonexpansive act
-  | Texp_open(_, e) -> is_nonexpansive e
   | _ -> false
 ;;
 
@@ -476,8 +475,6 @@ let rec type_expr expr =
       Ctype.type_unit
   | Texp_assertfalse ->
       new_type_var ()
-  | Texp_open (_, e) ->
-      type_expr e
   in
     expr.exp_type <- inferred_ty;
     inferred_ty

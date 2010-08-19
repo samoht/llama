@@ -272,9 +272,6 @@ let rec expr env ex =
         | Pexp_assert e -> Texp_assert (expr env e)
         | Pexp_assertfalse -> Texp_assertfalse
         | Pexp_when(e1,e2) -> Texp_when(expr env e1,expr env e2)
-        | Pexp_open (modname, e) ->
-            Texp_open (modname,
-                       expr (Context.add_signature (lookup_module modname ex.pexp_loc) env) e)
       end;
     exp_loc = ex.pexp_loc;
     exp_env = env;
