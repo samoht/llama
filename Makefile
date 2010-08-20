@@ -696,8 +696,11 @@ depend: beforedepend
 
 alldepend:: depend
 
-distclean:
-	./build/distclean.sh
+bootclean:
+	rm -f boot/{llamarun,llamayacc,camlheader,libcamlrun.a,*.cm*}
+configclean:
+	rm -f config/{Makefile,s.h,m.h}
+.PHONY: bootclean configclean
 
 .PHONY: all backup bootstrap camlp4opt camlp4out checkstack clean
 .PHONY: partialclean beforedepend alldepend cleanboot coldstart
