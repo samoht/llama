@@ -132,9 +132,9 @@ let ghstrexp e =
         loc_ghost = true } }
 
 let array_function str name =
-  Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
+  Ldot(str, (if !Clflags.fast then "unsafe_" ^ name else name))
 
-let array_function mn s = Ldot (Lident mn, s) (* xxx *)
+let array_function mn s = Ldot (mn, s) (* xxx *)
 
 let rec deep_mkrangepat c1 c2 =
   if c1 = c2 then ghpat(Ppat_constant(Const_char c1)) else
@@ -862,7 +862,8 @@ val_longident:
   | mod_longident DOT val_ident                 { Ldot($1, $3) }
 ;
 constr_longident:
-    mod_longident       %prec below_DOT         { $1 }
+    mod_longident    %prec below_DOT            { Lident $1 }
+  | mod_longident DOT UIDENT                    { Ldot($1, $3) }
   | LBRACKET RBRACKET                           { Lident "[]" }
   | LPAREN RPAREN                               { Lident "()" }
   | FALSE                                       { Lident "false" }
@@ -877,8 +878,7 @@ type_longident:
   | mod_longident DOT LIDENT                { Ldot($1, $3) }
 ;
 mod_longident:
-    UIDENT                                      { Lident $1 }
-  | mod_longident DOT UIDENT                    { Ldot($1, $3) }
+    UIDENT                                      { $1 }
 ;
 
 /* ---------------------------------------------------------------------- */

@@ -30,10 +30,8 @@ let lookup proj1 get_fun lid env =
   match lid with
     Lident s ->
       Tbl.find s (proj1 env)
-  | Ldot(Lident mn, s) ->
+  | Ldot(mn, s) ->
       get_fun (Module mn) s
-  | _ ->
-      failwith (Longident.name lid)
 
 let lookup_value = lookup (fun env -> env.values) Modenv.lookup_value
 let lookup_constructor = lookup (fun env -> env.constrs) Modenv.lookup_constructor

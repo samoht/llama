@@ -1,6 +1,5 @@
 type t =
   | Lident of string
-  | Ldot of t * string
+  | Ldot of string * string
 
 val parse : string -> t
-val name : t -> string

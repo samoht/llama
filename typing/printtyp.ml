@@ -6,9 +6,9 @@ open Oprint
 
 (* Print a long identifier *)
 
-let rec longident ppf = function
+let longident ppf = function
   | Lident s -> fprintf ppf "%s" s
-  | Ldot(p, s) -> fprintf ppf "%a.%s" longident p s
+  | Ldot(p, s) -> fprintf ppf "%s.%s" p s
 
 (* ---------------------------------------------------------------------- *)
 (* Printing of identifiers, named entities, and references.               *)

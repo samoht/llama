@@ -73,7 +73,7 @@ let list_concat sep =
 let rec string_of_longident li =
   match li with
   | Longident.Lident s -> s
-  | Longident.Ldot(li, s) -> string_of_longident li ^ "." ^ s
+  | Longident.Ldot(li, s) -> li ^ "." ^ s
 
 let rec string_of_text t =
   let rec iter t_ele =

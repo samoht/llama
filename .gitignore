@@ -12,6 +12,7 @@ tools/llamadep
 tools/llamamklib
 tools/llamamklib.ml
 tools/myllamabuild_config.ml
+tools/llamadep.bak
 config/m.h
 config/s.h
 config/Makefile

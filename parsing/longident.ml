@@ -1,6 +1,6 @@
 type t =
   | Lident of string
-  | Ldot of t * string
+  | Ldot of string * string
 
 let rec split_at_dots s pos =
   try
@@ -11,10 +11,7 @@ let rec split_at_dots s pos =
 
 let parse s =
   match split_at_dots s 0 with
-    [] -> Lident ""  (* should not happen, but don't put assert false
-                        so as not to crash the toplevel (see Genprintval) *)
-  | hd :: tl -> List.fold_left (fun p s -> Ldot(p, s)) (Lident hd) tl
-
-let rec name = function
-    Lident s -> s
-  | Ldot (i,s) -> name i ^ "." ^ s
+    [ name ] -> Lident name
+  | [ modname; name ] -> Ldot (modname, name)
+  | _ -> Lident ""  (* should not happen, but don't put assert false
+                       so as not to crash the toplevel (see Printer) *)

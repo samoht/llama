@@ -21,11 +21,13 @@ open Parsetree
 
 let free_structure_names = ref (Set.empty : string Set.t)
 
-let rec addmodule bv lid =
+let addmodule bv modname =
+  if not (Set.mem modname bv)
+  then free_structure_names := Set.add modname !free_structure_names
+
+let rec add_longident bv lid =
   match lid with
-    Lident s ->
-      if not (Set.mem s bv)
-      then free_structure_names := Set.add s !free_structure_names
+    Lident s -> ()
   | Ldot(l, s) -> addmodule bv l
 
 let add bv lid =
@@ -121,7 +123,7 @@ and add_sig_item bv item =
   | Psig_exception(id, args) ->
       List.iter (add_type bv) args; bv
   | Psig_open lid ->
-      addmodule bv (Lident lid); bv
+      addmodule bv lid; bv
 (*  | Psig_include mty ->
       add_modtype bv mty; bv *)
 
@@ -143,7 +145,7 @@ and add_struct_item bv item =
 (*  | Pstr_exn_rebind(id, l) ->
       add bv l; bv *)
   | Pstr_open l ->
-      addmodule bv (Lident l); bv
+      addmodule bv l; bv
 (*  | Pstr_include modl ->
       add_module bv modl; bv *)
 
