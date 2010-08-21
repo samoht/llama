@@ -687,7 +687,6 @@ and transl_exp0 e =
       with Not_constant ->
         Lprim(Pmakearray kind, ll)
       end
-(*
   | Texp_ifthenelse(cond, ifso, Some ifnot) ->
       Lifthenelse(transl_exp cond,
                   event_before ifso (transl_exp ifso),
@@ -696,11 +695,6 @@ and transl_exp0 e =
       Lifthenelse(transl_exp cond,
                   event_before ifso (transl_exp ifso),
                   lambda_unit)
-*)
-  | Texp_ifthenelse(cond, ifso, ifnot) ->
-      Lifthenelse(transl_exp cond,
-                  event_before ifso (transl_exp ifso),
-                  event_before ifnot (transl_exp ifnot))
   | Texp_sequence(expr1, expr2) ->
       Lsequence(transl_exp expr1, event_before expr2 (transl_exp expr2))
   | Texp_while(cond, body) ->

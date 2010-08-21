@@ -155,7 +155,7 @@ let rec is_nonexpansive expr =
       List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
   | Texp_sequence(e1, e2) -> is_nonexpansive e2
   | Texp_ifthenelse(cond, ifso, ifnot) ->
-      is_nonexpansive ifso && is_nonexpansive ifnot
+      is_nonexpansive ifso && is_nonexpansive_opt ifnot
   | Texp_constraint(e, ty) -> is_nonexpansive e
   | Texp_array [] -> true
   | Texp_record (lbl_expr_list, exten) ->
@@ -165,7 +165,10 @@ let rec is_nonexpansive expr =
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_when(cond, act) -> is_nonexpansive act
   | _ -> false
-;;
+
+and is_nonexpansive_opt = function
+    None -> true
+  | Some e -> is_nonexpansive e
 
 (* Typecore of printf formats *)
 
@@ -377,11 +380,17 @@ let rec type_expr expr =
   | Texp_let(rec_flag, pat_expr_list, body) ->
       type_let_decl rec_flag pat_expr_list;
       type_expr body
-  | Texp_match _ ->
-      assert false
+  | Texp_match (item, matching) ->
+      let ty_arg = type_expr item in
+      let ty_res = new_type_var() in
+      let tcase (pat, action) =
+        type_pattern (pat, ty_arg);
+        type_expect action ty_res in
+      List.iter tcase matching;
+      ty_res
   | Texp_function [] ->
       fatal_error "type_expr: empty matching"
-  | Texp_function ((patl1,expr1)::_ as matching) ->
+  | Texp_function matching ->
       let ty_arg = new_type_var() in
       let ty_res = new_type_var() in
       let tcase (pat, action) =
@@ -401,15 +410,14 @@ let rec type_expr expr =
       type_statement e1; type_expr  e2
   | Texp_ifthenelse (cond, ifso, ifnot) ->
       type_expect cond Ctype.type_bool;
-      if match ifnot.exp_desc
-         with Texp_construct (cs,[]) when (cs == Predef.cs_void) -> true | _ -> false
-      then begin
-        type_expect ifso Ctype.type_unit;
-        Ctype.type_unit
-      end else begin
-        let ty = type_expr ifso in
-        type_expect ifnot ty;
-        ty
+      begin match ifnot with
+        | None ->
+            type_expect ifso Ctype.type_unit;
+            Ctype.type_unit
+        | Some ifnot ->
+            let ty = type_expr ifso in
+            type_expect ifnot ty;
+            ty
       end
   | Texp_when (cond, act) ->
       type_expect cond Ctype.type_bool;
@@ -498,7 +506,7 @@ and type_expect exp expected_ty =
       type_expect body expected_ty
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expect e2 expected_ty
-  | Texp_ifthenelse (cond, ifso, ifnot) ->
+  | Texp_ifthenelse (cond, ifso, Some ifnot) ->
       type_expect cond Ctype.type_bool;
       type_expect ifso expected_ty;
       type_expect ifnot expected_ty

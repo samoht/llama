@@ -114,9 +114,9 @@ and expression ppf tbl e =
   | Pexp_apply (e, el) ->
       expression ppf tbl e;
       List.iter (expression ppf tbl) el;
-(*  | Pexp_match (e, pel) ->
+  | Pexp_match (e, pel) ->
       expression ppf tbl e;
-      match_pel ppf tbl pel;*)
+      match_pel ppf tbl pel;
   | Pexp_try (e, pel) ->
       expression ppf tbl e;
       match_pel ppf tbl pel;
@@ -130,10 +130,10 @@ and expression ppf tbl e =
       expression ppf tbl e1;
       expression ppf tbl e2;
   | Pexp_array el -> List.iter (expression ppf tbl) el;
-  | Pexp_ifthenelse (e1, e2, e3) ->
+  | Pexp_ifthenelse (e1, e2, eo) ->
       expression ppf tbl e1;
       expression ppf tbl e2;
-      expression ppf tbl e3;
+      expression_option ppf tbl eo;
   | Pexp_sequence (e1, e2) ->
       expression ppf tbl e1;
       expression ppf tbl e2;

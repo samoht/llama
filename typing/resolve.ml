@@ -231,6 +231,14 @@ let rec expr env ex =
                                                                   cs_arity cs, List.length sargs)));
             Texp_construct (cs, List.map (expr env) sargs)
         | Pexp_apply (f, l) -> Texp_apply (expr env f, List.map (expr env) l)
+        | Pexp_match (item, pat_exp_list) ->
+            Texp_match
+              (expr env item,
+               List.map
+                 (fun (pat, exp) ->
+                    let pat = pattern env pat in
+                    let exp = expr (extend_env env pat) exp in
+                    pat, exp) pat_exp_list)
         | Pexp_let (b, lpe, e) ->
             let pat_list = List.map (pattern env) (List.map fst lpe) in
             let big_env = List.fold_left extend_env env pat_list in
@@ -238,17 +246,12 @@ let rec expr env ex =
             let exp_list = List.map (expr cond_env) (List.map snd lpe) in
             Texp_let (b, List.combine pat_list exp_list, expr big_env e)
         | Pexp_function l ->
-            let l =
-              List.map
-                begin fun (p, e) ->
-                  let pat = pattern env p in
-                  let big_env = extend_env env pat in
-                  let exp = expr big_env e in
-                  pat, exp
-                end
-                l
-            in
-            Texp_function l
+            Texp_function
+              (List.map
+                 (fun (pat, exp) ->
+                    let pat = pattern env pat in
+                    let exp = expr (extend_env env pat) exp in
+                    pat, exp) l)
         | Pexp_try (exp, pat_exp_list) ->
             let pat_list = List.map (fun (pat, _) -> pattern env pat) pat_exp_list in
             let pat_exp_list =
@@ -258,7 +261,7 @@ let rec expr env ex =
             in
             Texp_try (expr env exp, pat_exp_list)
         | Pexp_sequence (e1,e2) -> Texp_sequence(expr env e1,expr env e2)
-        | Pexp_ifthenelse(e1,e2,e3) -> Texp_ifthenelse (expr env e1,expr env e2, expr env e3)
+        | Pexp_ifthenelse(e1,e2,o) -> Texp_ifthenelse (expr env e1,expr env e2, match o with None -> None | Some e3 -> Some (expr env e3))
         | Pexp_while(e1,e2) -> Texp_while(expr env e1,expr env e2)
         | Pexp_for(s,e1,e2,b,e3) ->
             let v = mkpatvar s in

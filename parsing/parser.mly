@@ -406,7 +406,7 @@ expr:
   | FUN simple_pattern fun_def
       { mkexp(Pexp_function([$2, $3])) }
   | MATCH seq_expr WITH opt_bar match_cases
-      { mkexp(Pexp_apply(ghexp(Pexp_function(List.rev $5)), [$2])) }
+      { mkexp(Pexp_match($2, List.rev $5)) }
   | TRY seq_expr WITH opt_bar match_cases
       { mkexp(Pexp_try($2, List.rev $5)) }
   | TRY seq_expr WITH error
@@ -416,9 +416,9 @@ expr:
   | constr_longident simple_expr %prec below_SHARP
       { mkexp(Pexp_construct($1, Some $2)) }
   | IF seq_expr THEN expr ELSE expr
-      { mkexp(Pexp_ifthenelse($2, $4, $6)) }
+      { mkexp(Pexp_ifthenelse($2, $4, Some $6)) }
   | IF seq_expr THEN expr
-      { mkexp(Pexp_ifthenelse($2, $4, ghexp(Pexp_construct(Lident "()",None)))) }
+      { mkexp(Pexp_ifthenelse($2, $4, None)) }
   | WHILE seq_expr DO seq_expr DONE
       { mkexp(Pexp_while($2, $4)) }
   | FOR val_ident EQUAL seq_expr direction_flag seq_expr DO seq_expr DONE

@@ -57,7 +57,7 @@ and expression_desc =
   | Texp_field of expression * label
   | Texp_setfield of expression * label * expression
   | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression
+  | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
   | Texp_for of Context.local_value * expression * expression * direction_flag * expression

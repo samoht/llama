@@ -82,7 +82,7 @@ let rec add_expr bv exp =
       add_pat_expr_list bv pel
   | Pexp_apply(e, el) ->
       add_expr bv e; List.iter (add_expr bv) el
-(*  | Pexp_match(e, pel) -> add_expr bv e; add_pat_expr_list bv pel *)
+  | Pexp_match(e, pel) -> add_expr bv e; add_pat_expr_list bv pel
   | Pexp_try(e, pel) -> add_expr bv e; add_pat_expr_list bv pel
   | Pexp_tuple el -> List.iter (add_expr bv) el
   | Pexp_construct(c, opte) -> add bv c; add_opt add_expr bv opte
@@ -92,8 +92,8 @@ let rec add_expr bv exp =
   | Pexp_field(e, fld) -> add_expr bv e; add bv fld
   | Pexp_setfield(e1, fld, e2) -> add_expr bv e1; add bv fld; add_expr bv e2
   | Pexp_array el -> List.iter (add_expr bv) el
-  | Pexp_ifthenelse(e1, e2, e3) ->
-      add_expr bv e1; add_expr bv e2; add_expr bv e3
+  | Pexp_ifthenelse(e1, e2, opte3) ->
+      add_expr bv e1; add_expr bv e2; add_opt add_expr bv opte3
   | Pexp_sequence(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexp_while(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexp_for(_, e1, e2, _, e3) ->
