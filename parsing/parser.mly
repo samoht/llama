@@ -247,11 +247,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token WHILE
 %token WITH
 
-/* #if DEDUCTIVE_LLAMA */
-%token FORMAL
-%token COMPUTABLE
-/* #endif */
-
 /* Precedences and associativities.
 
 Tokens and rules have precedences.  A reduce/reduce conflict is resolved
