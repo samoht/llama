@@ -10,7 +10,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: parser.mly,v 1.131 2008/07/14 09:09:53 xleroy Exp $ */
+/* $Id: parser.mly 10536 2010-06-07 15:32:32Z doligez $ */
 
 /* The parser definition */
 
@@ -31,8 +31,8 @@ let mksig d =
 let mkstr d =
   { pstr_desc = d; pstr_loc = symbol_rloc() }
 
-let reloc_pat x = { ppat_desc = x.ppat_desc; ppat_loc = symbol_rloc () };;
-let reloc_exp x = { pexp_desc = x.pexp_desc; pexp_loc = symbol_rloc () };;
+let reloc_pat x = { x with ppat_loc = symbol_rloc () };;
+let reloc_exp x = { x with pexp_loc = symbol_rloc () };;
 
 let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
@@ -124,17 +124,10 @@ let rec mktailpat = function
       {ppat_desc = Ppat_construct(Lident "::", Some arg); ppat_loc = l}
 
 let ghstrexp e =
-  { pstr_desc = Pstr_eval e;
-    pstr_loc =
-      let loc = e.pexp_loc in
-      { loc_start = loc.loc_start;
-        loc_end = loc.loc_end;
-        loc_ghost = true } }
+  { pstr_desc = Pstr_eval e; pstr_loc = {e.pexp_loc with loc_ghost = true} }
 
 let array_function str name =
   Ldot(str, (if !Clflags.fast then "unsafe_" ^ name else name))
-
-let array_function mn s = Ldot (mn, s) (* xxx *)
 
 let rec deep_mkrangepat c1 c2 =
   if c1 = c2 then ghpat(Ppat_constant(Const_char c1)) else
@@ -163,6 +156,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token AS
 %token ASSERT
 %token BACKQUOTE
+%token BANG
 %token BAR
 %token BARBAR
 %token BARRBRACKET
@@ -172,7 +166,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token COLONCOLON
 %token COLONEQUAL
 %token COMMA
-%token COMPUTABLE
 %token DO
 %token DONE
 %token DOT
@@ -224,6 +217,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token OR
 /* %token PARSER */
 %token PLUS
+%token PLUSDOT
 %token <string> PREFIXOP
 %token QUOTE
 %token RBRACE
@@ -285,17 +279,17 @@ The precedences must be listed from low to high.
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
-%right    MINUSGREATER                  /* core_type (t -> t -> t) */
+%right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
 %right    OR BARBAR                     /* expr (e || e || e) */
 %right    AMPERSAND AMPERAMPER          /* expr (e && e && e) */
 %nonassoc below_EQUAL
 %left     INFIXOP0 EQUAL LESS GREATER   /* expr (e OP e OP e) */
 %right    INFIXOP1                      /* expr (e OP e OP e) */
 %right    COLONCOLON                    /* expr (e :: e :: e) */
-%left     INFIXOP2 PLUS MINUS MINUSDOT  /* expr (e OP e OP e) */
+%left     INFIXOP2 PLUS PLUSDOT MINUS MINUSDOT  /* expr (e OP e OP e) */
 %left     INFIXOP3 STAR                 /* expr (e OP e OP e) */
 %right    INFIXOP4                      /* expr (e OP e OP e) */
-%nonassoc prec_unary_minus              /* unary - */
+%nonassoc prec_unary_minus prec_unary_plus /* unary - */
 %nonassoc prec_constant_constructor     /* cf. simple_expr (C versus C x) */
 %nonassoc prec_constr_appl              /* above AS BAR COLONCOLON COMMA */
 %nonassoc below_SHARP
@@ -303,7 +297,7 @@ The precedences must be listed from low to high.
 %nonassoc below_DOT
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
-%nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
+%nonassoc BACKQUOTE BANG BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKETLESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT
 
@@ -321,9 +315,7 @@ The precedences must be listed from low to high.
 
 %%
 
-/* ---------------------------------------------------------------------- */
-/* Entry points.                                                          */
-/* ---------------------------------------------------------------------- */
+/* Entry points */
 
 implementation:
     structure EOF                        { $1 }
@@ -351,10 +343,6 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Structures.                                                            */
-/* ---------------------------------------------------------------------- */
-
 structure:
     structure_tail                              { $1 }
   | seq_expr structure_tail                     { ghstrexp $1 :: $2 }
@@ -367,23 +355,19 @@ structure_tail:
   | structure_item structure_tail               { $1 :: $2 }
 ;
 structure_item:
-  | OPEN UIDENT
-      { mkstr(Pstr_open $2) }
-  | TYPE type_declarations
-      { mkstr(Pstr_type(List.rev $2)) }
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mkstr(Pstr_primitive($2, $4, $6)) }
+  | TYPE type_declarations
+      { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
+  | OPEN UIDENT
+      { mkstr(Pstr_open $2) }
 ;
-
-/* ---------------------------------------------------------------------- */
-/* Signatures.                                                            */
-/* ---------------------------------------------------------------------- */
 
 signature:
     /* empty */                                 { [] }
@@ -391,21 +375,19 @@ signature:
   | signature signature_item SEMISEMI           { $2 :: $1 }
 ;
 signature_item:
-  | OPEN UIDENT
-      { mksig(Psig_open $2) }
-  | TYPE type_declarations
-      { mksig(Psig_type(List.rev $2)) }
-  | VAL val_ident COLON core_type
+    VAL val_ident COLON core_type
       { mksig(Psig_value($2, $4)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mksig(Psig_primitive($2, $4, $6)) }
+  | TYPE type_declarations
+      { mksig(Psig_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
+  | OPEN UIDENT
+      { mksig(Psig_open $2) }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Core expressions.                                                      */
-/* ---------------------------------------------------------------------- */
+/* Core expressions */
 
 seq_expr:
   | expr        %prec below_SEMI  { $1 }
@@ -459,6 +441,8 @@ expr:
       { mkinfix $1 $2 $3 }
   | expr PLUS expr
       { mkinfix $1 "+" $3 }
+  | expr PLUSDOT expr
+      { mkinfix $1 "+." $3 }
   | expr MINUS expr
       { mkinfix $1 "-" $3 }
   | expr MINUSDOT expr
@@ -483,6 +467,8 @@ expr:
       { mkinfix $1 ":=" $3 }
   | subtractive expr %prec prec_unary_minus
       { mkuminus $1 $2 }
+  | additive expr %prec prec_unary_plus
+      { mkuplus $1 $2 }
   | simple_expr DOT label_longident LESSMINUS expr
       { mkexp(Pexp_setfield($1, $3, $5)) }
   | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
@@ -543,6 +529,8 @@ simple_expr:
       { unclosed "[" 1 "]" 4 }
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
+  | BANG simple_expr
+      { mkexp(Pexp_apply(mkoperator "!" 1, [$2])) }
 ;
 simple_expr_list:
     simple_expr
@@ -834,7 +822,9 @@ operator:
   | INFIXOP2                                    { $1 }
   | INFIXOP3                                    { $1 }
   | INFIXOP4                                    { $1 }
+  | BANG                                        { "!" }
   | PLUS                                        { "+" }
+  | PLUSDOT                                     { "+." }
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
   | STAR                                        { "*" }
@@ -922,5 +912,8 @@ subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
 ;
-
+additive:
+  | PLUS                                        { "+" }
+  | PLUSDOT                                     { "+." }
+;
 %%

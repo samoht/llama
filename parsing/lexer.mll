@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.73.24.1 2008/10/08 13:07:13 doligez Exp $ *)
+(* $Id: lexer.mll 10250 2010-04-08 03:58:41Z garrigue $ *)
 
 (* The lexer definition *)
 
@@ -38,7 +38,6 @@ let keyword_table =
     "as", AS;
     "assert", ASSERT;
     "begin", BEGIN;
-    "computable", COMPUTABLE;
     "do", DO;
     "done", DONE;
     "downto", DOWNTO;
@@ -78,7 +77,7 @@ let keyword_table =
     "lxor", INFIXOP3("lxor");
     "lsl", INFIXOP4("lsl");
     "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr");
+    "asr", INFIXOP4("asr")
 ]
 
 (* To buffer string literals *)
@@ -175,11 +174,10 @@ let update_loc lexbuf file line absolute chars =
                  | None -> pos.pos_fname
                  | Some s -> s
   in
-  lexbuf.lex_curr_p <- {
+  lexbuf.lex_curr_p <- { pos with
     pos_fname = new_file;
     pos_lnum = if absolute then line else pos.pos_lnum + line;
     pos_bol = pos.pos_cnum - chars;
-    pos_cnum = pos.pos_cnum;
   }
 ;;
 
@@ -246,10 +244,12 @@ rule token = parse
       { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
   | int_literal
       { try
-          INT (int_of_string(Lexing.lexeme lexbuf))
+          INT (cvt_int_literal (Lexing.lexeme lexbuf))
         with Failure _ ->
           raise (Error(Literal_overflow "int", Location.curr lexbuf))
       }
+  | float_literal
+      { FLOAT (remove_underscores(Lexing.lexeme lexbuf)) }
   | int_literal "l"
       { try
           INT32 (cvt_int32_literal (Lexing.lexeme lexbuf))
@@ -265,8 +265,6 @@ rule token = parse
           NATIVEINT (cvt_nativeint_literal (Lexing.lexeme lexbuf))
         with Failure _ ->
           raise (Error(Literal_overflow "nativeint", Location.curr lexbuf)) }
-  | float_literal
-      { FLOAT (remove_underscores(Lexing.lexeme lexbuf)) }
   | "\""
       { reset_string_buffer();
         let string_start = lexbuf.lex_start_p in
@@ -351,13 +349,15 @@ rule token = parse
   | ">"  { GREATER }
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }
+  | "!"  { BANG }
 
   | "!=" { INFIXOP0 "!=" }
   | "+"  { PLUS }
+  | "+." { PLUSDOT }
   | "-"  { MINUS }
   | "-." { MINUSDOT }
 
-  | "!" symbolchar *
+  | "!" symbolchar +
             { PREFIXOP(Lexing.lexeme lexbuf) }
   | ['~' '?'] symbolchar +
             { PREFIXOP(Lexing.lexeme lexbuf) }
@@ -460,7 +460,9 @@ and string = parse
         end
       }
   | newline
-      { update_loc lexbuf None 1 false 0;
+      { if not (in_comment ()) then
+          Location.prerr_warning (Location.curr lexbuf) Warnings.Eol_in_string;
+        update_loc lexbuf None 1 false 0;
         let s = Lexing.lexeme lexbuf in
         for i = 0 to String.length s - 1 do
           store_string_char s.[i];
