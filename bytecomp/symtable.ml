@@ -136,9 +136,8 @@ let init () =
   Array.iter
     (fun name ->
       let id =
-        Ident.of_exception
-          (try List.find (fun cs -> cs.Types.cs_name = name) Predef.exceptions
-           with Not_found -> fatal_error "Symtable.init") in
+        try Ident.of_exception (Predef.find_exception name)
+        with Not_found -> fatal_error "Symtable.init" in
       let c = slot_for_setglobal id in
       let cst = Const_block(0, [Const_base(Const_string name)]) in
       literal_table := (c, cst) :: !literal_table)

@@ -543,7 +543,7 @@ and transl_exp0 e =
         | {val_kind = Val_prim p} ->
             transl_primitive p
         | {val_kind = Val_reg} ->
-            transl_regular_value v
+            transl_value v
       end
   | Texp_constant cst ->
       Lconst(Const_base cst)

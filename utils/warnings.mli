@@ -45,10 +45,6 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (*30 *)
-(* #if DEDUCTIVE_LLAMA *)
-  | Type_nondenotational of string          (* 50 *)
-  | Type_denotes_empty_set of string        (* 51 *)
-(* #endif *)
 ;;
 
 val parse_options : bool -> string -> unit;;
@@ -60,6 +56,7 @@ val defaults_w : string;;
 val defaults_warn_error : string;;
 
 val print : formatter -> t -> unit;;
+  (* returns the number of newlines in the printed string *)
 
 
 exception Errors of int;;

@@ -171,7 +171,6 @@ let copy_event ev kind info repr =
     ev_kind = kind;
     ev_info = info;
     ev_typenv = ev.ev_typenv;
-(*    ev_typsubst = ev.ev_typsubst;*)
     ev_compenv = ev.ev_compenv;
     ev_stacksize = ev.ev_stacksize;
     ev_repr = repr }
@@ -413,12 +412,12 @@ let rec comp_expr env exp sz cont =
   | Lapply(func, args, loc) ->
       let nargs = List.length args in
       if is_tailcall cont then begin
-(*        Stypes.record (Stypes.An_call (loc, Annot.Tail)); *)
+(*      Stypes.record (Stypes.An_call (loc, Annot.Tail)); *)
         comp_args env args sz
           (Kpush :: comp_expr env func (sz + nargs)
             (Kappterm(nargs, sz + nargs) :: discard_dead_code cont))
       end else begin
-(*        Stypes.record (Stypes.An_call (loc, Annot.Stack)); *)
+(*      Stypes.record (Stypes.An_call (loc, Annot.Stack)); *)
         if nargs < 4 then
           comp_args env args sz
             (Kpush :: comp_expr env func (sz + nargs) (Kapply nargs :: cont))
@@ -715,7 +714,6 @@ let rec comp_expr env exp sz cont =
           ev_kind = kind;
           ev_info = info;
           ev_typenv = lev.lev_env;
-(*          ev_typsubst = Subst.identity;*)
           ev_compenv = env;
           ev_stacksize = sz;
           ev_repr =

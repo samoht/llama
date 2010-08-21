@@ -40,10 +40,10 @@ let rec map_left_right f = function
     [] -> []
   | hd::tl -> let res = f hd in res :: map_left_right f tl
 
-let rec forall2 pred l1 l2 =
+let rec for_all2 pred l1 l2 =
   match (l1, l2) with
     ([], []) -> true
-  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 && forall2 pred tl1 tl2
+  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 && for_all2 pred tl1 tl2
   | (_, _) -> false
 
 let rec replicate_list elem n =
@@ -195,16 +195,3 @@ let rev_split_words s =
       | _ -> split2 res i (j+1)
     end
   in split1 [] 0
-
-(* caml light *)
-exception Toplevel
-exception Zinc of string
-let toplevel = ref false
-let rollback_buffer = ref ([] : (unit -> unit) list);;
-let reset_rollback () = rollback_buffer := [];;
-let add_rollback f =
-  rollback_buffer := f :: !rollback_buffer
-let rec rollback () =
-  match !rollback_buffer with
-    [] -> ()
-  | f::rest -> f (); rollback_buffer := rest; rollback()

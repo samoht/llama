@@ -176,6 +176,8 @@ let exceptions =
     cs_undefined_recursive_module
   ]
 
+let find_exception name = List.find (fun cs -> cs.cs_name = name) exceptions
+
 (* ---------------------------------------------------------------------- *)
 (* Signature for the built-in module.                                     *)
 (* ---------------------------------------------------------------------- *)

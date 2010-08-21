@@ -50,10 +50,6 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (*30 *)
-(* #if DEDUCTIVE_LLAMA *)
-  | Type_nondenotational of string         (* 50 *)
-  | Type_denotes_empty_set of string       (* 51 *)
-(* #endif *)
 ;;
 
 (* If you remove a warning, leave a hole in the numbering.  NEVER change
@@ -93,14 +89,10 @@ let number = function
   | Wildcard_arg_to_constant_constr -> 28
   | Eol_in_string -> 29
   | Duplicate_definitions _ -> 30
-(* #if DEDUCTIVE_LLAMA *)
-  | Type_nondenotational _ -> 50
-  | Type_denotes_empty_set _ -> 51
-(* #endif *)
 ;;
 
-let last_warning_number = 100;;
-(* Must be >= the max number returned by the [number] function. *)
+let last_warning_number = 30;;
+(* Must be the max number returned by the [number] function. *)
 
 let letter = function
   | 'a' ->
@@ -268,12 +260,6 @@ let message = function
   | Duplicate_definitions (kind, cname, tc1, tc2) ->
       Printf.sprintf "the %s %s is defined in both types %s and %s."
         kind cname tc1 tc2
-(* #if DEDUCTIVE_LLAMA *)
-  | Type_nondenotational tc ->
-      Printf.sprintf "this type is non-denotational"
-  | Type_denotes_empty_set tc ->
-      Printf.sprintf "this type denotes the empty set"
-(* #endif *)
 ;;
 
 let nerrors = ref 0;;
@@ -338,10 +324,6 @@ let descriptions =
    29, "Unescaped end-of-line in a string constant (non-portable code).";
    30, "Two labels or constructors of the same name are defined in two\n\
    \    mutually recursive types.";
-(* #if DEDUCTIVE_LLAMA *)
-   50, "Type does not denote a well-defined set.";
-   51, "Type denotes the empty set.";
-(* #endif *)
   ]
 
 let help_warnings () =

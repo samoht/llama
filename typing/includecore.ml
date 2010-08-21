@@ -70,7 +70,7 @@ let rec compare_variants s params n cstrs1 cstrs2 =
   | cstr1::rem1, cstr2::rem2 ->
       if cstr1.cs_name <> cstr2.cs_name then [Field_names (n, cstr1.cs_name, cstr2.cs_name)] else
       if List.length cstr1.cs_args <> List.length cstr2.cs_args then [Field_arity cstr1.cs_name] else
-      if Misc.forall2
+      if Misc.for_all2
           (fun ty1 ty2 ->
             Btype.equiv params ty1 (Subst.core_type s ty2))
           cstr1.cs_args cstr2.cs_args

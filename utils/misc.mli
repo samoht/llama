@@ -23,9 +23,9 @@ val map_end: ('a -> 'b) -> 'a list -> 'b list -> 'b list
         (* [map_end f l t] is [map f l @ t], just more efficient. *)
 val map_left_right: ('a -> 'b) -> 'a list -> 'b list
         (* Like [List.map], with guaranteed left-to-right evaluation order *)
-val forall2: ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
-        (* Same as [List.forall] but for a binary predicate.
-           In addition, this [forall2] never fails: given two lists
+val for_all2: ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
+        (* Same as [List.for_all] but for a binary predicate.
+           In addition, this [for_all2] never fails: given two lists
            with different lengths, it returns false. *)
 val replicate_list: 'a -> int -> 'a list
         (* [replicate_list elem n] is the list with [n] elements
@@ -36,7 +36,7 @@ val list_remove: 'a -> 'a list -> 'a list
 val split_last: 'a list -> 'a list * 'a
         (* Return the last element and the other elements of the given list. *)
 val samelist: ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
-        (* Like [List.forall2] but returns [false] if the two
+        (* Like [List.for_all2] but returns [false] if the two
            lists have different length. *)
 
 val may: ('a -> unit) -> 'a option -> unit
@@ -102,11 +102,3 @@ val search_substring: string -> string -> int -> int
 val rev_split_words: string -> string list
         (* [rev_split_words s] splits [s] in blank-separated words, and return
            the list of words in reverse order. *)
-
-(* caml light *)
-exception Toplevel
-exception Zinc of string
-val toplevel : bool ref
-val reset_rollback : unit -> unit
-val add_rollback : (unit -> unit) -> unit
-val rollback : unit -> unit

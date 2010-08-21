@@ -342,28 +342,29 @@ let rec patch_guarded patch = function
 
 (* Translate an access path *)
 
-let transl_noncurrent_module m =
-  Lprim(Pgetglobal (Ident.of_module m), [])
+let transl_module m =
+  assert (m <> Modenv.get_current_module ());
+  Lprim (Pgetglobal (Ident.of_module m), [])
+
 let transl_exception cs =
   let m = cs.Types.cs_module in
-  if m = Types.Module_builtin then
-    Lprim(Pgetglobal (Ident.of_exception cs), [])
-  else if m = Modenv.get_current_module () then begin
+  if m = Modenv.get_current_module () then
     Lvar (Ident.of_exception cs)
-  end else
+  else if m = Types.Module_builtin then
+    Lprim (Pgetglobal (Ident.of_exception cs), [])
+  else
     let pos = Modenv.lookup_exception_position cs in
-    Lprim(Pfield pos, [transl_noncurrent_module m])
-let transl_predef_exn cs =
-  Lprim(Pgetglobal (Ident.of_exception cs), [])
-let transl_regular_value v =
+    Lprim (Pfield pos, [transl_module m])
+
+let transl_value v =
   let m = v.Types.val_module in
   if m = Types.Module_builtin || m = Modenv.get_current_module () then
     let id = Ident.of_value v in
     Lvar id
-(*    if v.Types.val_global then Lprim(Pgetglobal id, []) else Lvar id*)
   else
     let pos = Modenv.lookup_value_position v in
-    Lprim(Pfield pos, [transl_noncurrent_module m])
+    Lprim(Pfield pos, [transl_module m])
+
 (*
 let rec transl_path = function
     Pident id ->
@@ -373,6 +374,7 @@ let rec transl_path = function
   | Papply(p1, p2) ->
       fatal_error "Lambda.transl_path"
 *)
+
 (* Compile a sequence of expressions *)
 
 let rec make_sequence fn = function

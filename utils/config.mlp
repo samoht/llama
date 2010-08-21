@@ -22,7 +22,8 @@
 (***********************************************************************)
 
 
-let version = "%%VERSION%%"
+(* The main OCaml version string has moved to ../VERSION *)
+let version = Sys.ocaml_version
 
 let standard_library_default = "%%LIBDIR%%"
 
@@ -85,7 +86,7 @@ let default_executable_name =
   | "Win32" | "Cygwin" -> "camlprog.exe"
   | _ -> "camlprog"
 
-let systhread_supported = true;; (* %%SYSTHREAD_SUPPORT%%;; *)
+let systhread_supported = %%SYSTHREAD_SUPPORT%%;;
 
 let print_config oc =
   let p name valu = Printf.fprintf oc "%s: %s\n" name valu in
@@ -115,11 +116,3 @@ let print_config oc =
   p_bool "systhread_supported" systhread_supported;
   flush oc;
 ;;
-
-(* caml light *)
-let maxint_byte = 255
-let minint_byte = 0
-let maxint_short = 32767
-let minint_short = (-32768)
-let toplevel_input_prompt = "# "
-let error_prompt = ">"

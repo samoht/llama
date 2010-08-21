@@ -115,11 +115,3 @@ val systhread_supported : bool
         (* Whether the system thread library is implemented *)
 
 val print_config : out_channel -> unit;;
-
-(* caml light *)
-val maxint_byte : int
-val minint_byte : int
-val maxint_short : int
-val minint_short : int
-val toplevel_input_prompt : string
-val error_prompt : string
