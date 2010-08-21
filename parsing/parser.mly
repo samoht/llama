@@ -195,7 +195,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <int> INT
 %token <int32> INT32
 %token <int64> INT64
-%token <string> LABEL
 %token LAZY
 %token LBRACE
 %token LBRACKET
@@ -279,7 +278,7 @@ The precedences must be listed from low to high.
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
-%right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
+%right    MINUSGREATER                  /* core_type (t -> t -> t) */
 %right    OR BARBAR                     /* expr (e || e || e) */
 %right    AMPERSAND AMPERAMPER          /* expr (e && e && e) */
 %nonassoc below_EQUAL
@@ -596,9 +595,7 @@ type_constraint:
   | COLON error                                 { syntax_error() }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Patterns.                                                              */
-/* ---------------------------------------------------------------------- */
+/* Patterns */
 
 pattern:
     simple_pattern
@@ -664,18 +661,14 @@ lbl_pattern_list:
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Primitive declarations.                                                */
-/* ---------------------------------------------------------------------- */
+/* Primitive declarations */
 
 primitive_declaration:
     STRING                                      { [$1] }
   | STRING primitive_declaration                { $1 :: $2 }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Type declarations.                                                     */
-/* ---------------------------------------------------------------------- */
+/* Type declarations */
 
 type_declarations:
     type_declaration                            { [$1] }
@@ -684,10 +677,10 @@ type_declarations:
 
 type_declaration:
     type_parameters LIDENT type_kind
-      { {pteq_name = $2;
-         pteq_params = $1;
-         pteq_kind = $3;
-         pteq_loc = symbol_rloc()} }
+      { { pteq_name = $2;
+          pteq_params = $1;
+          pteq_kind = $3;
+          pteq_loc = symbol_rloc() } }
 ;
 type_kind:
     /* empty */
@@ -732,9 +725,7 @@ label_declaration:
     mutable_flag label COLON core_type          { ($2, $1, $4, symbol_rloc()) }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Core types.                                                            */
-/* ---------------------------------------------------------------------- */
+/* Core types */
 
 core_type:
     simple_core_type_or_tuple
@@ -776,9 +767,7 @@ label:
     LIDENT                                      { $1 }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Constants.                                                             */
-/* ---------------------------------------------------------------------- */
+/* Constants */
 
 constant:
     INT                                         { Const_int $1 }
@@ -803,9 +792,7 @@ signed_constant:
   | PLUS NATIVEINT                              { Const_nativeint $2 }
 ;
 
-/* ---------------------------------------------------------------------- */
-/* Identifiers and long identifiers.                                      */
-/* ---------------------------------------------------------------------- */
+/* Identifiers and long identifiers */
 
 ident:
     UIDENT                                      { $1 }
@@ -849,11 +836,11 @@ constr_ident:
 
 val_longident:
     val_ident                                   { Lident $1 }
-  | mod_longident DOT val_ident                 { Ldot($1, $3) }
+  | UIDENT DOT val_ident                        { Ldot($1, $3) }
 ;
 constr_longident:
-    mod_longident    %prec below_DOT            { Lident $1 }
-  | mod_longident DOT UIDENT                    { Ldot($1, $3) }
+    UIDENT       %prec below_DOT                { Lident $1 }
+  | UIDENT DOT UIDENT                           { Ldot($1, $3) }
   | LBRACKET RBRACKET                           { Lident "[]" }
   | LPAREN RPAREN                               { Lident "()" }
   | FALSE                                       { Lident "false" }
@@ -861,14 +848,11 @@ constr_longident:
 ;
 label_longident:
     LIDENT                                      { Lident $1 }
-  | mod_longident DOT LIDENT                    { Ldot($1, $3) }
+  | UIDENT DOT LIDENT                           { Ldot($1, $3) }
 ;
 type_longident:
     LIDENT                                      { Lident $1 }
-  | mod_longident DOT LIDENT                { Ldot($1, $3) }
-;
-mod_longident:
-    UIDENT                                      { $1 }
+  | UIDENT DOT LIDENT                           { Ldot($1, $3) }
 ;
 
 /* ---------------------------------------------------------------------- */

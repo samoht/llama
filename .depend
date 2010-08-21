@@ -25,6 +25,7 @@ utils/terminfo.cmx: utils/terminfo.cmi
 utils/warnings.cmo: utils/warnings.cmi
 utils/warnings.cmx: utils/warnings.cmi
 parsing/asttypes.cmi:
+parsing/lexer.cmi: parsing/parser.cmi parsing/location.cmi
 parsing/linenum.cmi:
 parsing/location.cmi: utils/warnings.cmi
 parsing/longident.cmi:
@@ -35,17 +36,19 @@ parsing/parsetree.cmi: parsing/longident.cmi parsing/location.cmi \
 parsing/printast.cmi: parsing/parsetree.cmi
 parsing/syntaxerr.cmi: parsing/location.cmi
 parsing/lexer.cmo: utils/warnings.cmi parsing/parser.cmi utils/misc.cmi \
-    parsing/location.cmi
+    parsing/location.cmi parsing/lexer.cmi
 parsing/lexer.cmx: utils/warnings.cmx parsing/parser.cmx utils/misc.cmx \
-    parsing/location.cmx
+    parsing/location.cmx parsing/lexer.cmi
 parsing/linenum.cmo: utils/misc.cmi parsing/linenum.cmi
 parsing/linenum.cmx: utils/misc.cmx parsing/linenum.cmi
-parsing/location.cmo: utils/warnings.cmi parsing/location.cmi
-parsing/location.cmx: utils/warnings.cmx parsing/location.cmi
+parsing/location.cmo: utils/warnings.cmi parsing/linenum.cmi \
+    parsing/location.cmi
+parsing/location.cmx: utils/warnings.cmx parsing/linenum.cmx \
+    parsing/location.cmi
 parsing/longident.cmo: parsing/longident.cmi
 parsing/longident.cmx: parsing/longident.cmi
 parsing/parse.cmo: parsing/syntaxerr.cmi parsing/parser.cmi \
-    parsing/location.cmi parsing/lexer.cmo parsing/parse.cmi
+    parsing/location.cmi parsing/lexer.cmi parsing/parse.cmi
 parsing/parse.cmx: parsing/syntaxerr.cmx parsing/parser.cmx \
     parsing/location.cmx parsing/lexer.cmx parsing/parse.cmi
 parsing/parser.cmo: parsing/syntaxerr.cmi parsing/parsetree.cmi \
@@ -364,7 +367,7 @@ driver/errors.cmo: utils/warnings.cmi typing/typemod.cmo typing/typedecl.cmo \
     typing/typecore.cmo bytecomp/translmod.cmi bytecomp/translcore.cmi \
     parsing/syntaxerr.cmi bytecomp/symtable.cmi typing/resolve.cmo \
     driver/pparse.cmi typing/modenv.cmi parsing/location.cmi \
-    parsing/lexer.cmo typing/includemod.cmo bytecomp/bytelink.cmi \
+    parsing/lexer.cmi typing/includemod.cmo bytecomp/bytelink.cmi \
     bytecomp/bytelibrarian.cmi driver/errors.cmi
 driver/errors.cmx: utils/warnings.cmx typing/typemod.cmx typing/typedecl.cmx \
     typing/typecore.cmx bytecomp/translmod.cmx bytecomp/translcore.cmx \
@@ -417,7 +420,7 @@ toplevel/toploop.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/predef.cmo parsing/parsetree.cmi parsing/parse.cmi \
     typing/outcometree.cmi typing/oprint.cmi typing/modenv.cmi utils/misc.cmi \
     bytecomp/meta.cmi parsing/longident.cmi parsing/location.cmi \
-    parsing/lexer.cmo bytecomp/ident.cmo driver/errors.cmi typing/env.cmi \
+    parsing/lexer.cmi bytecomp/ident.cmo driver/errors.cmi typing/env.cmi \
     bytecomp/emitcode.cmi bytecomp/dll.cmi utils/consistbl.cmi \
     utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     bytecomp/bytegen.cmi toplevel/toploop.cmi
