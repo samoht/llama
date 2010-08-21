@@ -407,9 +407,7 @@ and print_out_type_decl kwd ppf (name, args, ty, constraints) =
     | _ -> ty
   in
   let rec print_out_tkind ppf = function
-  | Otyp_abstract false -> ()
-  | Otyp_abstract true ->
-      fprintf ppf " formal"
+  | Otyp_abstract -> ()
   | Otyp_record lbls ->
       fprintf ppf " = {%a@;<1 -2>}"
         (print_list_init print_out_label (fun ppf -> fprintf ppf "@ ")) lbls

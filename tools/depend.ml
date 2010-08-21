@@ -112,7 +112,7 @@ and add_signature bv = function
 
 and add_sig_item bv item =
   match item.psig_desc with
-    Psig_value(_, id, ty) ->
+    Psig_value(id, ty) ->
       add_type bv ty; bv
   | Psig_primitive(id, ty, _) ->
       add_type bv ty; bv
@@ -132,7 +132,7 @@ and add_struct_item bv item =
   match item.pstr_desc with
     Pstr_eval e ->
       add_expr bv e; bv
-  | Pstr_value(_, id, pel) ->
+  | Pstr_value(id, pel) ->
       add_pat_expr_list bv pel; bv
   | Pstr_primitive(id, ty, _) ->
       add_type bv ty; bv

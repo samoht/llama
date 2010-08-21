@@ -13,16 +13,3 @@ type constant =
 type direction_flag = Upto | Downto
 
 type rec_flag = Nonrecursive | Recursive
-
-(* #if DEDUCTIVE_LLAMA *)
-
-type formal_type_flag =
-    Informal_type
-  | Formal_type
-
-type formal_flags =
-    Informal
-  | Formal
-  | Computable
-
-(* #endif *)

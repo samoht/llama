@@ -102,7 +102,7 @@ let rec tree_of_type_decl tcs =
   params,
   begin match tcs.tcs_kind with
       Tcs_abstract ->
-        Otyp_abstract tcs.tcs_formal
+        Otyp_abstract
     | Tcs_sum cs_list ->
         Otyp_sum (List.map tree_of_constructor_description cs_list)
     | Tcs_record lbl_list ->

@@ -97,8 +97,7 @@ let rec map_type_constructor memo f tcs =
       { tcs_module = tcs.tcs_module;
         tcs_name = tcs.tcs_name;
         tcs_params = List.map f tcs.tcs_params;
-        tcs_kind = Tcs_abstract;
-        tcs_formal = tcs.tcs_formal } in
+        tcs_kind = Tcs_abstract } in
     memo := (tcs, new_tcs) :: !memo;
     new_tcs.tcs_kind <- map_type_constructor_kind memo f tcs.tcs_kind;
     new_tcs
@@ -129,8 +128,7 @@ let map_value f v =
   { val_module = v.val_module;
     val_name = v.val_name;
     val_type = f v.val_type;
-    val_kind = v.val_kind;
-    val_formal = v.val_formal }
+    val_kind = v.val_kind }
 
 let map_signature_item memo f = function
     Sig_value v -> Sig_value (map_value f v)

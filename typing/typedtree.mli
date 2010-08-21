@@ -72,7 +72,7 @@ type type_equation = {
   teq_loc : Location.t }
 
 and type_equation_kind =
-    Teq_abstract of formal_type_flag
+    Teq_abstract
   | Teq_variant of (string * Type_context.local_type list) list
   | Teq_record of (string * mutable_flag * Type_context.local_type) list
   | Teq_abbrev of Type_context.local_type
@@ -82,7 +82,7 @@ type signature_item =
     sig_loc: Location.t }
 
 and signature_item_desc =
-    Tsig_value of formal_flags * string * llama_type
+    Tsig_value of string * llama_type
   | Tsig_primitive of string * llama_type * Primitive.description
   | Tsig_type of type_equation list
   | Tsig_exception of string * Type_context.local_type list
@@ -94,7 +94,7 @@ type structure_item =
 
 and structure_item_desc =
     Tstr_eval of expression
-  | Tstr_value of formal_flags * rec_flag * (pattern * expression) list
+  | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of string * llama_type * Primitive.description
   | Tstr_type of type_equation list
   | Tstr_exception of string * Type_context.local_type list

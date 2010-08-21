@@ -10,8 +10,7 @@ let mkabs name params b : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
     tcs_params = params;
-    tcs_kind = Tcs_abstract;
-    tcs_formal = b }
+    tcs_kind = Tcs_abstract }
 
 let tcs_int = mkabs "int" [] true
 let tcs_char = mkabs "char" [] true
@@ -31,8 +30,7 @@ let rec tcs_unit =
   { tcs_module = Module_builtin;
     tcs_name = "unit";
     tcs_params = [];
-    tcs_kind = Tcs_sum [ cs_void ];
-    tcs_formal = true }
+    tcs_kind = Tcs_sum [ cs_void ] }
 
 and cs_void =
   { cs_tcs = tcs_unit;
@@ -46,8 +44,7 @@ let rec tcs_bool =
   { tcs_module = Module_builtin;
     tcs_name = "bool";
     tcs_params = [];
-    tcs_kind = Tcs_sum [ cs_false; cs_true ];
-    tcs_formal = true }
+    tcs_kind = Tcs_sum [ cs_false; cs_true ] }
 
 and cs_false =
   { cs_tcs = tcs_bool;
@@ -71,8 +68,7 @@ let rec tcs_list =
   { tcs_module = Module_builtin;
     tcs_name = "list";
     tcs_params = [ list_param ];
-    tcs_kind = Tcs_sum [ cs_nil; cs_cons ];
-    tcs_formal = true }
+    tcs_kind = Tcs_sum [ cs_nil; cs_cons ] }
 
 and cs_nil =
   { cs_tcs = tcs_list;
@@ -96,8 +92,7 @@ let rec tcs_option =
   { tcs_module = Module_builtin;
     tcs_name = "option";
     tcs_params = [ option_param ];
-    tcs_kind = Tcs_sum [ cs_none; cs_some ];
-    tcs_formal = true }
+    tcs_kind = Tcs_sum [ cs_none; cs_some ] }
 
 and cs_none =
   { cs_tcs = tcs_option;

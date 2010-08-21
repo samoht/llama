@@ -28,8 +28,7 @@ type 'ty abstract_type_constructor =
   { tcs_module : module_id;
     tcs_name : string;
     tcs_params : 'ty list;
-    mutable tcs_kind : 'ty abstract_type_constructor_kind;
-    tcs_formal : bool }
+    mutable tcs_kind : 'ty abstract_type_constructor_kind }
 
 and 'ty abstract_type_constructor_kind =
     Tcs_abstract
@@ -57,8 +56,7 @@ type 'ty abstract_value =
   { val_module : module_id;
     val_name : string;
     val_type : 'ty;
-    val_kind : value_kind;
-    val_formal : int option }
+    val_kind : value_kind }
 
 type 'ty abstract_signature_item =
     Sig_value of 'ty abstract_value

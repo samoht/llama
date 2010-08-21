@@ -33,62 +33,6 @@ let is_cyclic tcs =
     | _ -> false
   end
       
-(* #if DEDUCTIVE_LLAMA *)
-
-let rec check_nonoccurrence tcs_list = function
-    Tvar _ -> true
-  | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_nonoccurrence tcs_list ty2
-  | Ttuple tyl -> List.forall (check_nonoccurrence tcs_list) tyl
-  | Tconstr (tcs, tyl) ->
-      (not (List.memq tcs tcs_list) && tcs.tcs_formal) &&
-        List.forall (check_nonoccurrence tcs_list) tyl
-
-let rec check_covariance_rec tcs_list = function
-    Tvar _ -> true
-  | Tarrow (ty1, ty2) -> check_nonoccurrence tcs_list ty1 && check_covariance_rec tcs_list ty2
-  | Ttuple tyl -> List.forall (check_covariance_rec tcs_list) tyl
-  | Tconstr (tcs, tyl) ->
-      (List.memq tcs tcs_list || tcs.tcs_formal) &&
-        List.forall (check_covariance_rec tcs_list) tyl
-
-let check_covariance tcs_list = function
-    Tcs_abstract -> true
-  | Tcs_sum cs_list ->
-      List.forall (fun cs -> List.forall (check_covariance_rec tcs_list) cs.cs_args) cs_list
-  | Tcs_record lbl_list ->
-      List.forall (fun lbl -> check_covariance_rec tcs_list lbl.lbl_arg) lbl_list
-  | Tcs_abbrev ty -> check_covariance_rec tcs_list ty
-
-let rec check_inhabited_rec tcs_list = function
-    Tvar _ -> true
-  | Tarrow (ty1, ty2) -> check_inhabited_rec tcs_list ty2
-  | Ttuple tyl -> List.forall (check_inhabited_rec tcs_list) tyl
-  | Tconstr (tcs, tyl) -> not (List.memq tcs tcs_list)
-
-let check_inhabited tcs_list = function
-    Tcs_abstract -> true
-  | Tcs_sum cs_list ->
-      List.exists (fun cs -> List.forall (check_inhabited_rec tcs_list) cs.cs_args) cs_list
-  | Tcs_record lbl_list ->
-      List.forall (fun lbl -> check_inhabited_rec tcs_list lbl.lbl_arg) lbl_list
-  | Tcs_abbrev ty -> check_inhabited_rec tcs_list ty
-
-(*
-  let tcs_list = List.map (fun teq -> teq.teq_tcs) teq_list in
-  let isformal =
-    List.forall2
-      begin fun teq tcs ->
-        match teq.teq_kind with
-            Teq_abstract x -> (x = Formal_type)
-          | _ ->
-              check_covariance tcs_list tcs.tcs_kind && check_inhabited tcs_list tcs.tcs_kind
-      end teq_list tcs_list
-  in
-  if isformal then List.iter (fun tcs -> tcs.tcs_formal <- Formal_type) tcs_list
-*)
-
-(* #endif (* DEDUCTIVE_LLAMA *) *)
-
 let type_letdef pat_exp_list =
   let ty_list = List.map (fun _ -> Context.LTvar(Ctype.newtyvar())) pat_exp_list in
   List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
@@ -114,8 +58,7 @@ let type_equation_list teq_list =
         { tcs_module = Modenv.get_current_module();
           tcs_name =  ltcs.Type_context.ltcs_name;
           tcs_params = List.map (fun tv -> Tvar tv) ltcs.Type_context.ltcs_params;
-          tcs_kind = Tcs_abstract;
-          tcs_formal = false(*xxx*) }
+          tcs_kind = Tcs_abstract }
       end
       ltcs_list
   in
@@ -170,11 +113,10 @@ let type_equation_list teq_list =
   tcs_list
 
 let make_value name ty kind =
-  { val_module = Modenv.get_current_module();
+  { val_module = Modenv.get_current_module ();
     val_name = name;
     val_type = ty;
-    val_kind = kind;
-    val_formal = None }
+    val_kind = kind }
 
 let do_exception name args =
   { cs_tcs = Predef.tcs_exn;
@@ -187,7 +129,7 @@ let do_exception name args =
 
 let structure_item env str = match str.str_desc with
     Tstr_eval exp -> type_expression exp.exp_loc exp;
-  | Tstr_value (_, _, pat_exp_list) -> type_letdef pat_exp_list
+  | Tstr_value (_, pat_exp_list) -> type_letdef pat_exp_list
   | _ -> ()
 
 let make_sig_types tcs_list =
@@ -195,7 +137,7 @@ let make_sig_types tcs_list =
     List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
 
 let signature_item env sg = match sg.sig_desc with
-    Tsig_value (_, name, ty) ->
+    Tsig_value (name, ty) ->
       let v = make_value name ty Val_reg in
       [Sig_value v], Env.add_value v env
   | Tsig_primitive (name, ty, prim) ->
@@ -218,7 +160,7 @@ let signature_item env sg = match sg.sig_desc with
 let g_structure_item str = match str.str_desc with
     Tstr_eval exp ->
       Str_eval exp
-  | Tstr_value (_, rec_flag, pat_exp_list) ->
+  | Tstr_value (rec_flag, pat_exp_list) ->
       let localvals =
         List.flatten (List.map (fun (pat, _) ->
                                   Typedtree_aux.free_vars_of_pat pat) pat_exp_list) in
@@ -226,11 +168,10 @@ let g_structure_item str = match str.str_desc with
         List.map
           begin fun locval ->
             let globval =
-              { val_module = Modenv.get_current_module();
+              { val_module = Modenv.get_current_module ();
                 val_name = locval.Context.val_name;
                 val_type = Ctype.generalize locval.Context.val_type;
-                val_kind = Val_reg;
-                val_formal = None }
+                val_kind = Val_reg }
             in
             locval, globval
           end localvals

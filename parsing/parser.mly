@@ -379,7 +379,7 @@ structure_item:
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
-        | _ -> mkstr(Pstr_value(Informal, $2, List.rev $3)) }
+        | _ -> mkstr(Pstr_value($2, List.rev $3)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mkstr(Pstr_primitive($2, $4, $6)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -400,8 +400,8 @@ signature_item:
       { mksig(Psig_open $2) }
   | TYPE type_declarations
       { mksig(Psig_type(List.rev $2)) }
-  | val_keyword val_ident COLON core_type
-      { mksig(Psig_value($1, $2, $4)) }
+  | VAL val_ident COLON core_type
+      { mksig(Psig_value($2, $4)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mksig(Psig_primitive($2, $4, $6)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -707,8 +707,8 @@ type_declaration:
          pteq_loc = symbol_rloc()} }
 ;
 type_kind:
-    abstract_type_info
-      { Pteq_abstract $1 }
+    /* empty */
+      { Pteq_abstract }
   | EQUAL core_type
       { Pteq_abbrev $2 }
   | EQUAL constructor_declarations
@@ -927,19 +927,5 @@ subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
 ;
-
-/* #if DEDUCTIVE_LLAMA */
-
-abstract_type_info:
-    /* empty */                                 { Informal_type }
-  | FORMAL                                      { Formal_type }
-;
-val_keyword:
-    VAL                                         { Informal }
-  | FORMAL                                      { Formal }
-  | COMPUTABLE                                  { Computable }
-;
-
-/* #endif */
 
 %%

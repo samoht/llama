@@ -45,7 +45,7 @@ type out_value =
   | Oval_variant of string * out_value option
 
 type out_type =
-  | Otyp_abstract of bool
+  | Otyp_abstract
   | Otyp_alias of out_type * string
   | Otyp_arrow of string * out_type * out_type
   | Otyp_class of bool * out_ident * out_type list

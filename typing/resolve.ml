@@ -309,7 +309,7 @@ let mapi_careful f =
 
 let type_equation_kind ctxt k =
   begin match k with
-    | Pteq_abstract fflag -> Teq_abstract fflag
+    | Pteq_abstract -> Teq_abstract
     | Pteq_abbrev te -> Teq_abbrev (global_type ctxt te)
     | Pteq_variant l ->
         Teq_variant (List.map (fun (name, tyl, _) -> (name, List.map (global_type ctxt) tyl)) l)
@@ -363,9 +363,9 @@ let structure_item env pstr =
     | Pstr_eval exp ->
         let exp = expr (Context.create env) exp in
         mk (Tstr_eval exp)
-    | Pstr_value(hol_flags, rec_flag, pat_exp_list) ->
+    | Pstr_value(rec_flag, pat_exp_list) ->
         let pat_exp_list = letdef env rec_flag pat_exp_list in
-        mk (Tstr_value(hol_flags, rec_flag, pat_exp_list))
+        mk (Tstr_value(rec_flag, pat_exp_list))
     | Pstr_primitive(id,te,pr) ->
         mk (Tstr_primitive (id, global_val_type env te, primitive pr te))
     | Pstr_type (pteql) ->
@@ -382,8 +382,8 @@ let signature_item env psig =
   reset_type_expression_vars();
   let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   begin match psig.psig_desc with
-    | Psig_value (formality, s, te) ->
-        mk (Tsig_value (formality, s, global_val_type env te))
+    | Psig_value (s, te) ->
+        mk (Tsig_value (s, global_val_type env te))
     | Psig_primitive(id,te,pr) ->
         mk (Tsig_primitive (id, global_val_type env te, primitive pr te))
     | Psig_type pteql ->

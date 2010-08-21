@@ -27,7 +27,6 @@ type type_mismatch =
   | Field_arity of string
   | Field_names of int * string * string
   | Field_missing of bool * string
-  | Formality
   | General
 
 let nth n =
@@ -51,8 +50,6 @@ let report_type_mismatch0 first second decl ppf err =
   | Field_missing (b, s) ->
       Format.fprintf ppf "The field %s is only present in %s %s"
         s (if b then second else first) decl
-  | Formality ->
-      Format.fprintf ppf "The definition is not formal."
   | General ->
       ()
 
@@ -118,15 +115,3 @@ let type_constructors s tcs1 tcs2 =
     | _, _ ->
         [General]
   end
-
-(* #if DEDUCTIVE_LLAMA *)
-
-let type_constructors s tcs1 tcs2 =
-  let err = type_constructors s tcs1 tcs2 in
-  if err <> [] then err else
-    begin match tcs1.tcs_formal, tcs2.tcs_formal with
-        false, true -> [Formality]
-      | _ -> []
-    end
-
-(* #endif *)
