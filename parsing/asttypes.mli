@@ -1,15 +1,30 @@
-type mutable_flag = Immutable | Mutable
-type module_name = string
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  en Automatique.  All rights reserved.  This file is distributed    *)
+(*  under the terms of the Q Public License version 1.0.               *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: asttypes.mli 10250 2010-04-08 03:58:41Z garrigue $ *)
+
+(* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 
 type constant =
     Const_int of int
-  | Const_float of string
-  | Const_string of string
   | Const_char of char
+  | Const_string of string
+  | Const_float of string
   | Const_int32 of int32
   | Const_int64 of int64
   | Const_nativeint of nativeint
 
+type rec_flag = Nonrecursive | Recursive
+
 type direction_flag = Upto | Downto
 
-type rec_flag = Nonrecursive | Recursive
+type mutable_flag = Immutable | Mutable

@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: location.mli,v 1.17 2007/12/04 13:38:58 doligez Exp $ *)
+(* $Id: location.mli 8705 2007-12-04 13:38:58Z doligez $ *)
 
 (* Source code locations (ranges of positions), used in parsetree. *)
 
@@ -21,7 +21,6 @@ type t = {
   loc_end: Lexing.position;
   loc_ghost: bool;
 }
-(** A source code location. *)
 
 (* Note on the use of Lexing.position in this module.
    If [pos_fname = ""], then use [!input_name] instead.
@@ -55,7 +54,3 @@ val prerr_warning: t -> Warnings.t -> unit
 val echo_eof: unit -> unit
 
 val highlight_locations: formatter -> t -> t -> bool
-
-(* legacy *)
-val output_location : out_channel -> t -> unit
-val output_input_name : out_channel -> unit

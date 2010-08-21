@@ -77,7 +77,7 @@ and signature_item_desc =
   | Psig_primitive of string * type_expression * string list
   | Psig_type of type_equation list
   | Psig_exception of string * type_expression list
-  | Psig_open of module_name
+  | Psig_open of string
 
 type structure_item =
   { pstr_desc: structure_item_desc;
@@ -89,7 +89,7 @@ and structure_item_desc =
   | Pstr_primitive of string * type_expression * string list
   | Pstr_type of type_equation list
   | Pstr_exception of string * type_expression list
-  | Pstr_open of module_name
+  | Pstr_open of string
 
 (* Toplevel phrases *)
 

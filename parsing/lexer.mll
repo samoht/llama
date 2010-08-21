@@ -79,10 +79,6 @@ let keyword_table =
     "lsl", INFIXOP4("lsl");
     "lsr", INFIXOP4("lsr");
     "asr", INFIXOP4("asr");
-
-(* #if DEDUCTIVE_LLAMA *)
-    "formal", FORMAL;
-    "computable", COMPUTABLE;
 ]
 
 (* To buffer string literals *)

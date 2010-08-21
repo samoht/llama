@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: location.ml,v 1.50 2008/01/11 16:13:16 doligez Exp $ *)
+(* $Id: location.ml 8768 2008-01-11 16:13:18Z doligez $ *)
 
 open Lexing
 
@@ -85,7 +85,7 @@ let highlight_dumb ppf lb loc =
     end
   done;
   (* Print character location (useful for Emacs) *)
-  Format.fprintf ppf "Characters %d-%d:@."
+  Format.fprintf ppf "Characters %i-%i:@."
                  loc.loc_start.pos_cnum loc.loc_end.pos_cnum;
   (* Print the input, underlining the location *)
   Format.pp_print_string ppf "  ";
@@ -133,7 +133,7 @@ let highlight_dumb ppf lb loc =
 (* Highlight the location using one of the supported modes. *)
 
 let rec highlight_locations ppf loc1 loc2 =
-  begin match !input_lexbuf with
+  match !input_lexbuf with
       None -> false
     | Some lb ->
         let norepeat =
@@ -141,7 +141,6 @@ let rec highlight_locations ppf loc1 loc2 =
         if norepeat then false else
           try highlight_dumb ppf lb loc1; true
           with Exit -> false
-  end
 
 (* Print the location in some way or another *)
 
@@ -155,10 +154,8 @@ let get_pos_info pos =
   let (filename, linenum, linebeg) =
     if pos.pos_fname = "" && !input_name = "" then
       ("", -1, 0)
-(*
     else if pos.pos_fname = "" then
       Linenum.for_position !input_name pos.pos_cnum
-*)
     else
       (pos.pos_fname, pos.pos_lnum, pos.pos_bol)
   in
@@ -173,12 +170,12 @@ let print ppf loc =
   in
   if file = "" then begin
     if highlight_locations ppf loc none then () else
-      fprintf ppf "Characters %d-%d:@."
+      fprintf ppf "Characters %i-%i:@."
               loc.loc_start.pos_cnum loc.loc_end.pos_cnum
   end else begin
-    fprintf ppf "%s%s%s%d" msg_file file msg_line line;
-    fprintf ppf "%s%d" msg_chars startchar;
-    fprintf ppf "%s%d%s@.%s" msg_to endchar msg_colon msg_head;
+    fprintf ppf "%s%s%s%i" msg_file file msg_line line;
+    fprintf ppf "%s%i" msg_chars startchar;
+    fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head;
   end
 ;;
 
@@ -202,8 +199,3 @@ let prerr_warning loc w = print_warning loc err_formatter w;;
 
 let echo_eof () =
   print_newline ()
-
-(* legacy *)
-let output_location oc loc =
-  print_error Format.std_formatter loc
-let output_input_name oc = ()
