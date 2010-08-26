@@ -22,7 +22,7 @@ type rec_status =
 
 (* ---------------------------------------------------------------------- *)
 (* Types representing the essential global entities.                      *)
-(* Generic so they can be used in-memory on disk.                         *)
+(* Generic so they can be used in-memory or on disk.                      *)
 (* ---------------------------------------------------------------------- *)
 
 (* TODO: pull in descriptive comments from ocaml *)
