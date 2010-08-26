@@ -27,13 +27,9 @@ val save_signature_with_imports:
 
 val crc_units : Consistbl.t
 
-
 (* Current module *)
 
-val set_current_unit : module_id -> unit
-val set_unit_name : string -> unit
-val get_current_module : unit -> module_id
-val current_module_name : unit -> string
+val current_module : module_id ref
 
 (* Error report *)
 

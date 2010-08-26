@@ -77,7 +77,7 @@ let interface ppf sourcefile outputprefix =
   let modulename =
     String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
   check_unit_name ppf sourcefile modulename;
-  Modenv.set_unit_name modulename;
+  Modenv.current_module := Base.Module modulename;
   let inputfile = Pparse.preprocess sourcefile in
   try
     let ast =
@@ -109,7 +109,7 @@ let implementation ppf sourcefile outputprefix =
   let modulename =
     String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
   check_unit_name ppf sourcefile modulename;
-  Modenv.set_unit_name modulename;
+  Modenv.current_module := Base.Module modulename;
   let inputfile = Pparse.preprocess sourcefile in
   let env = initial_env() in
   if !Clflags.print_types then begin

@@ -174,13 +174,6 @@ let save_signature_with_imports sg modname filename imports =
     flush oc;
     let crc = Digest.file filename in
     let crcs = (modname, crc) :: imports in
-(*
-    print_endline "Saving crcs";
-    List.iter
-      begin fun (s, d) ->
-        print_endline ("  "^Digest.to_hex d^" "^s)
-      end crcs;
-*)
     output_value oc crcs;
     close_out oc;
     (* Enter signature in persistent table so that imported_unit()
@@ -282,16 +275,7 @@ let current_module = ref (Module "")
 let set_current_unit m =
   current_module := m
 
-let set_unit_name s =
-  set_current_unit (Module s)
-
 let get_current_module () = !current_module
-
-let current_module_name () =
-  begin match !current_module with
-    | Module s -> s
-    | Module_builtin | Module_toplevel -> failwith "current_module_name"
-  end
 
 (* ---------------------------------------------------------------------- *)
 

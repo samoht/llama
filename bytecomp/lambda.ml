@@ -347,12 +347,12 @@ let rec patch_guarded patch = function
 (* Translate an access path *)
 
 let transl_module m =
-  assert (m <> Modenv.get_current_module ());
+  assert (m <> !Modenv.current_module);
   Lprim (Pgetglobal (Ident.of_module m), [])
 
 let transl_exception cs =
   let m = cs.Base.cs_module in
-  if m = Modenv.get_current_module () then
+  if m = !Modenv.current_module then
     Lvar (Ident.of_exception cs)
   else if m = Base.Module_builtin then
     Lprim (Pgetglobal (Ident.of_exception cs), [])
@@ -362,7 +362,7 @@ let transl_exception cs =
 
 let transl_value v =
   let m = v.Base.val_module in
-  if m = Base.Module_builtin || m = Modenv.get_current_module () then
+  if m = Base.Module_builtin || m = !Modenv.current_module then
     let id = Ident.of_value v in
     Lvar id
   else

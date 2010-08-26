@@ -56,7 +56,7 @@ let type_equation_list teq_list =
   let tcs_list =
     List.map
       begin fun ltcs ->
-        { tcs_module = Modenv.get_current_module();
+        { tcs_module = !Modenv.current_module;
           tcs_name =  ltcs.Pseudoenv.ltcs_name;
           tcs_params = List.map (fun tv -> Tvar tv) ltcs.Pseudoenv.ltcs_params;
           tcs_kind = Tcs_abstract }
@@ -114,14 +114,14 @@ let type_equation_list teq_list =
   tcs_list
 
 let make_value name ty kind =
-  { val_module = Modenv.get_current_module ();
+  { val_module = !Modenv.current_module;
     val_name = name;
     val_type = ty;
     val_kind = kind }
 
 let do_exception name args =
   { cs_tcs = Predef.tcs_exn;
-    cs_module = Modenv.get_current_module ();
+    cs_module = !Modenv.current_module;
     cs_name = name;
     cs_res = Predef.type_exn;
     cs_args = List.map (type_of_local_type []) args;
@@ -169,7 +169,7 @@ let g_structure_item str = match str.str_desc with
         List.map
           begin fun locval ->
             let globval =
-              { val_module = Modenv.get_current_module ();
+              { val_module = !Modenv.current_module;
                 val_name = locval.lval_name;
                 val_type = generalize locval.lval_type;
                 val_kind = Val_reg }
