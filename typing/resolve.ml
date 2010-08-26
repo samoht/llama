@@ -196,7 +196,7 @@ let pattern_gen env p =
         end;
       pat_loc = p.ppat_loc;
       pat_env = env;
-      pat_type = invalid_mutable_type }
+      pat_type = new_type_var() }
   in
   aux p
 
@@ -275,8 +275,7 @@ let rec expr env ex =
       end;
     exp_loc = ex.pexp_loc;
     exp_env = env;
-    exp_type = invalid_mutable_type }
-
+    exp_type = new_type_var() }
 
 let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =
   (name, List.map (global_type ctxt) typexps)

@@ -1,13 +1,13 @@
-(* typing.ml : type inference *)
+(* originally derived from Caml Light's typing.ml *)
 
-open Misc;;
-open Asttypes;;
-open Base;;
-open Typedtree;;
+open Misc
+open Asttypes
+open Base
+open Typedtree
 open Typedtree_aux
-open Mutable_type;;
-open Asttypes;;
-open Context;;
+open Mutable_type
+open Asttypes
+open Context
 
 type error =
   | Incomplete_format of string
@@ -22,8 +22,6 @@ type error =
 
 exception Error of Location.t * error
 
-(* Typecore of constants *)
-
 let type_of_constant = function
     Const_int _ -> mutable_type_int
   | Const_float _ -> mutable_type_float
@@ -32,10 +30,6 @@ let type_of_constant = function
   | Const_int32 _ -> mutable_type_int32
   | Const_int64 _ -> mutable_type_int64
   | Const_nativeint _ -> mutable_type_nativeint
-;;
-
-(* Enables warnings *)
-let warnings = ref false;;
 
 (* Typecore of patterns *)
 
@@ -44,10 +38,9 @@ let unify_pat pat expected_ty actual_ty =
     unify (expected_ty, actual_ty)
   with Unify ->
     raise(Error(pat.pat_loc, Pattern_type_clash(actual_ty, expected_ty)))
-;;
 
-let rec tpat (pat, ty) =
-  pat.pat_type <- ty;
+let rec type_pattern (pat, ty) =
+  unify (pat.pat_type, ty);
   match pat.pat_desc with
     Tpat_any ->
       ()
@@ -61,12 +54,12 @@ let rec tpat (pat, ty) =
         v.lval_type <- ty
       else
         unify_pat pat ty v.lval_type;
-      tpat (pat, ty)
+      type_pattern (pat, ty)
   | Tpat_constant cst ->
       unify_pat pat ty (type_of_constant cst)
   | Tpat_tuple(patl) ->
       begin try
-        tpat_list patl (filter_product (List.length patl) ty)
+        type_pattern_list patl (filter_product (List.length patl) ty)
       with Unify ->
         let expty = Mtuple(new_type_vars (List.length patl)) in
         raise (Error(pat.pat_loc, Pattern_type_clash(ty, expty)))
@@ -76,7 +69,7 @@ let rec tpat (pat, ty) =
       unify_pat pat ty ty_res;
       List.iter2
         (fun arg ty_arg ->
-           tpat (arg, ty_arg))
+           type_pattern (arg, ty_arg))
         args ty_args
   | Tpat_record lbl_pat_list ->
       let rec tpat_lbl = function
@@ -84,33 +77,28 @@ let rec tpat (pat, ty) =
       | (lbl,p) :: rest ->
           let (ty_res, ty_arg) = instantiate_label lbl in
           unify_pat pat ty ty_res;
-          tpat (p, ty_arg);
+          type_pattern (p, ty_arg);
           tpat_lbl rest
       in
         tpat_lbl lbl_pat_list
   | Tpat_array patl ->
       let ty_arg = filter_array ty in
-      List.iter (fun p -> tpat (p, ty_arg)) patl
+      List.iter (fun p -> type_pattern (p, ty_arg)) patl
   | Tpat_or(pat1, pat2) ->
-      tpat (pat1, ty);
-      tpat (pat2, ty)
+      type_pattern (pat1, ty);
+      type_pattern (pat2, ty)
   | Tpat_constraint(pat, ty') ->
-      tpat (pat, ty');
+      type_pattern (pat, ty');
       unify_pat pat ty ty'
 
-and tpat_list pats tys = match pats, tys with
+and type_pattern_list pats tys = match pats, tys with
     [], [] ->
       ()
   | (pat::patl), (ty::tyl) ->
-      tpat (pat, ty);
-      tpat_list patl tyl
+      type_pattern (pat, ty);
+      type_pattern_list patl tyl
   | _, _ ->
       fatal_error "type_pattern: arity error"
-;;
-
-let type_pattern = tpat
-and type_pattern_list = tpat_list
-;;
 
 (* Check if an expression is non-expansive, that is, the result of its 
    evaluation cannot contain newly created mutable objects. *)
@@ -458,8 +446,8 @@ let rec type_expr expr =
   | Texp_assertfalse ->
       new_type_var ()
   in
-    expr.exp_type <- inferred_ty;
-    inferred_ty
+  unify (expr.exp_type, inferred_ty);
+  inferred_ty
 
 (* Typecore of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
@@ -498,7 +486,6 @@ and type_expect exp expected_ty =
 (* Typecore of "let" definitions *)
 
 and type_let_decl rec_flag pat_expr_list =
-(*  push_type_level();*)
   let ty_list =
     List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
   type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list;
@@ -506,13 +493,8 @@ and type_let_decl rec_flag pat_expr_list =
     (fun (pat, exp) ty ->
         type_expect exp ty)
     pat_expr_list ty_list;
-(*  pop_type_level();*)
     List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
          pat_expr_list ty_list
-(*
-  List.iter (fun (gen, ty) -> if not gen then nongen_type ty) gen_type;
-  List.iter (fun (gen, ty) -> if gen then generalize_type ty) gen_type
-*)
 
 (* Typecore of statements (expressions whose values are ignored) *)
 

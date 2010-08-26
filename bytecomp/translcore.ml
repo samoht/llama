@@ -23,6 +23,8 @@ open Typedtree
 open Typeopt
 open Lambda
 
+type optional = Required | Optional
+
 type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr

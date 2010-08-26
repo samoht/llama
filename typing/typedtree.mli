@@ -10,7 +10,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env : Env.t;
-    mutable pat_type: mutable_type }
+    pat_type: mutable_type }
 
 and pattern_desc =
     Tpat_any
@@ -28,7 +28,7 @@ type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
     exp_env : context;
-    mutable exp_type: mutable_type }
+    exp_type: mutable_type }
 
 and expression_desc =
     Texp_ident of value_reference
@@ -87,6 +87,12 @@ and structure_item_desc =
   | Tstr_exception of string * local_type list
   | Tstr_open of string * compiled_signature
 
+type signature = signature_item list
+
+type structure = structure_item list
+
+(* for the compiler *)
+
 type processed_structure_item =
     Str_eval of expression
   | Str_value of rec_flag * (pattern * expression) list * (local_value * value) list
@@ -97,13 +103,7 @@ type processed_structure_item =
 
 type processed_structure = processed_structure_item list
 
-(* detritus *)
-
-type structure = structure_item list
-
 type module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
-
-type optional = Required | Optional
