@@ -146,11 +146,11 @@ type pers_type =
   | Parrow of pers_type * pers_type
   | Ptuple of pers_type list
   | Pconstr of type_constructor_reference * pers_type list
-and pers_type_constructor = pers_type abstract_type_constructor
+and pers_type_constructor = pers_type gen_type_constructor
 and type_constructor_reference =
     Internal of pers_type_constructor
   | External of module_id * string
-type pers_signature = pers_type abstract_signature
+type pers_signature = pers_type gen_signature
 
 let map_signature_for_save modid l =
   let memo = ref ([] : (type_constructor * pers_type_constructor) list) in

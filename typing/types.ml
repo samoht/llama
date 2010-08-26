@@ -21,49 +21,50 @@ type rec_status =
   | Rec_next
 
 (* ---------------------------------------------------------------------- *)
-(* Core types.                                                            *)
+(* The most important types. Generic so they can be used in-memory or     *)
+(* on disk.                                                               *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty abstract_type_constructor =
+type 'ty gen_type_constructor =
   { tcs_module : module_id;
     tcs_name : string;
     tcs_params : 'ty list;
-    mutable tcs_kind : 'ty abstract_type_constructor_kind }
+    mutable tcs_kind : 'ty gen_type_constructor_kind }
 
-and 'ty abstract_type_constructor_kind =
+and 'ty gen_type_constructor_kind =
     Tcs_abstract
-  | Tcs_sum of 'ty abstract_constructor list
-  | Tcs_record of 'ty abstract_label list
+  | Tcs_sum of 'ty gen_constructor list
+  | Tcs_record of 'ty gen_label list
   | Tcs_abbrev of 'ty
 
-and 'ty abstract_constructor =
-  { mutable cs_tcs : 'ty abstract_type_constructor;
+and 'ty gen_constructor =
+  { mutable cs_tcs : 'ty gen_type_constructor;
     cs_module : module_id;
     cs_name : string;
     cs_res : 'ty;
     cs_args : 'ty list;
     cs_tag : constructor_tag }
 
-and 'ty abstract_label =
-  { lbl_tcs : 'ty abstract_type_constructor;
+and 'ty gen_label =
+  { lbl_tcs : 'ty gen_type_constructor;
     lbl_name : string;
     lbl_res : 'ty;
     lbl_arg : 'ty;
     lbl_mut : bool;
     lbl_pos : int }
 
-type 'ty abstract_value =
+type 'ty gen_value =
   { val_module : module_id;
     val_name : string;
     val_type : 'ty;
     val_kind : value_kind }
 
-type 'ty abstract_signature_item =
-    Sig_value of 'ty abstract_value
-  | Sig_type of 'ty abstract_type_constructor * rec_status
-  | Sig_exception of 'ty abstract_constructor
+type 'ty gen_signature_item =
+    Sig_value of 'ty gen_value
+  | Sig_type of 'ty gen_type_constructor * rec_status
+  | Sig_exception of 'ty gen_constructor
     
-type 'ty abstract_signature = 'ty abstract_signature_item list
+type 'ty gen_signature = 'ty gen_signature_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Specialization to the in-memory case.                                  *)
@@ -77,19 +78,19 @@ type llama_type =
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
 
-and type_constructor = llama_type abstract_type_constructor
+and type_constructor = llama_type gen_type_constructor
 
-type type_constructor_kind = llama_type abstract_type_constructor_kind
+type type_constructor_kind = llama_type gen_type_constructor_kind
 
-type constructor = llama_type abstract_constructor
+type constructor = llama_type gen_constructor
 
-type label = llama_type abstract_label
+type label = llama_type gen_label
 
-type value = llama_type abstract_value
+type value = llama_type gen_value
 
-type compiled_signature_item = llama_type abstract_signature_item
+type compiled_signature_item = llama_type gen_signature_item
 
-type compiled_signature = llama_type abstract_signature
+type compiled_signature = llama_type gen_signature
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
@@ -112,7 +113,3 @@ let mkparam i = Tvar { tv_name = int_to_alpha i }
 let mkparams n =
   let rec aux i = if i < n then mkparam i :: aux (i+1) else [] in
   aux 0
-
-type record_representation =
-    Record_regular
-  | Record_float

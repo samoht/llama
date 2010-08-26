@@ -15,6 +15,10 @@
 open Misc
 open Asttypes
 
+type record_representation =
+    Record_regular
+  | Record_float
+
 type primitive =
     Pidentity
   | Pignore
@@ -27,7 +31,7 @@ type primitive =
   | Psetfield of int * bool
   | Pfloatfield of int
   | Psetfloatfield of int
-  | Pduprecord of Types.record_representation * int
+  | Pduprecord of record_representation * int
   (* Force lazy values *)
   | Plazyforce
   (* External call *)
