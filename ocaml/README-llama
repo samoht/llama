@@ -1,0 +1,6 @@
+Notes on specific QPL-licensed directories:
+
+asmcomp   not used by Llama, so not included here
+debugger  not used by Llama, so not included here
+ocamldoc  compare with ../llamadoc
+yacc      not modified by Llama, so not included here
