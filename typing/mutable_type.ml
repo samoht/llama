@@ -15,9 +15,7 @@ and mutable_type_variable = {
 
 let invalid_mutable_type = Mtuple []
 
-let newtyvar() = { link = None }
-let rec newtyvars n = if n=0 then [] else newtyvar()::newtyvars(n-1)
-let new_type_var() = Mvar (newtyvar())
+let new_type_var() = Mvar { link = None }
 let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
 
 let mutable_type_unit = Mconstr(Predef.tcs_unit, [])
@@ -39,11 +37,11 @@ let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
 let rec instantiate_type subst = function
     Tvar tv ->
       begin try
-        Mvar (List.assq tv !subst)
+        List.assq tv !subst
       with Not_found ->
-        let ng = newtyvar() in
-        subst := (tv, ng) :: !subst;
-        Mvar ng
+        let mv = new_type_var () in
+        subst := (tv, mv) :: !subst;
+        mv
       end
   | Tarrow (ty1, ty2) ->
       Marrow (instantiate_type subst ty1, instantiate_type subst ty2)

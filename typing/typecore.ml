@@ -30,7 +30,7 @@ let type_of_type_expression typexp =
     match typexp.te_desc with
         Ttyp_var utv ->
           if utv.utv_type == invalid_mutable_type then
-            let ty = Mvar(newtyvar()) in
+            let ty = new_type_var () in
             utv.utv_type <- ty;
             ty
           else

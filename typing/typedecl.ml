@@ -35,7 +35,7 @@ let is_cyclic tcs =
   end
       
 let type_letdef pat_exp_list =
-  let ty_list = List.map (fun _ -> Mutable_type.Mvar(Mutable_type.newtyvar())) pat_exp_list in
+  let ty_list = List.map (fun _ -> Mutable_type.new_type_var()) pat_exp_list in
   List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
   List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
   List.iter2
