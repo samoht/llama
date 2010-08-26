@@ -1,8 +1,6 @@
 (* Mutable types, useful for type inference. *)
 
 open Base
-open Misc
-open Btype
 
 type mutable_type =
   | Mvar of mutable_type_variable

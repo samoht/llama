@@ -408,7 +408,7 @@ let loop ppf =
   Sys.catch_break true;
   load_ocamlinit ppf;
   while true do
-(*    let snap = Btype.snapshot () in *)
+(*    let snap = Typeutil.snapshot () in *)
     try
       Lexing.flush_input lb;
 (*      Location.reset();*)
@@ -418,9 +418,9 @@ let loop ppf =
       ignore(execute_phrase true ppf phr)
     with
     | End_of_file -> exit 0
-    | Sys.Break -> fprintf ppf "Interrupted.@." (* ; Btype.backtrack snap*)
+    | Sys.Break -> fprintf ppf "Interrupted.@." (* ; Typeutil.backtrack snap*)
     | PPerror -> ()
-    | x -> Errors.report_error ppf x (* ; Btype.backtrack snap*)
+    | x -> Errors.report_error ppf x (* ; Typeutil.backtrack snap*)
   done
 
 (* Execute a script *)

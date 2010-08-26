@@ -21,9 +21,11 @@ type rec_status =
   | Rec_next
 
 (* ---------------------------------------------------------------------- *)
-(* The most important types. Generic so they can be used in-memory or     *)
-(* on disk.                                                               *)
+(* Types representing the essential global entities.                      *)
+(* Generic so they can be used in-memory on disk.                         *)
 (* ---------------------------------------------------------------------- *)
+
+(* TODO: pull in descriptive comments from ocaml *)
 
 type 'ty gen_type_constructor =
   { tcs_module : module_id;
@@ -116,10 +118,10 @@ let mkparams n =
 
 let constructors_of_type tcs =
   match tcs.tcs_kind with
-    | Tcs_sum cs_list -> cs_list
+      Tcs_sum cs_list -> cs_list
     | _ -> failwith "constructors_of_type"
 
 let labels_of_type tcs =
   match tcs.tcs_kind with
-    | Tcs_record lbl_list -> lbl_list
+      Tcs_record lbl_list -> lbl_list
     | _ -> failwith "labels_of_type"

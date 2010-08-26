@@ -1253,24 +1253,24 @@ let make_variant_matching_nonconst p lab def ctx = function
 let get_key_variant p = assert false
 (*
 match p.pat_desc with
-| Tpat_variant(lab, Some _ , _) ->  Tag_block (Btype.hash_variant lab)
-| Tpat_variant(lab, None , _) -> Tag_constant (Btype.hash_variant lab)
+| Tpat_variant(lab, Some _ , _) ->  Tag_block (Typeutil.hash_variant lab)
+| Tpat_variant(lab, None , _) -> Tag_constant (Typeutil.hash_variant lab)
 |  _ -> assert false
 *)
 
 let divide_variant row ctx {cases = cl; args = al; default=def} =
 assert false
 (*
-  let row = Btype.row_repr row in
+  let row = Typeutil.row_repr row in
   let rec divide = function
       ({pat_desc = Tpat_variant(lab, pato, _)} as p:: patl, action) :: rem ->
         let variants = divide rem in
-        if try Btype.row_field_repr (List.assoc lab row.row_fields) = Rabsent
+        if try Typeutil.row_field_repr (List.assoc lab row.row_fields) = Rabsent
         with Not_found -> true
         then
           variants
         else begin
-          let tag = Btype.hash_variant lab in
+          let tag = Typeutil.hash_variant lab in
           match pato with
             None ->
               add (make_variant_matching_constant p lab def ctx) variants
@@ -2123,12 +2123,12 @@ let call_switcher_variant_constr fail arg int_lambda_list =
 let combine_variant row arg partial ctx def (tag_lambda_list, total1, pats) =
   assert false
 (*
-  let row = Btype.row_repr row in
+  let row = Typeutil.row_repr row in
   let num_constr = ref 0 in
   if row.row_closed then
     List.iter
       (fun (_, f) ->
-        match Btype.row_field_repr f with
+        match Typeutil.row_field_repr f with
           Rabsent | Reither(true, _::_, _, _) -> ()
         | _ -> incr num_constr)
       row.row_fields

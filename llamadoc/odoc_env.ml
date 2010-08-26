@@ -164,7 +164,7 @@ let subst_type env t =
   let rec iter t =
     if List.memq t !deja_vu then () else begin
       deja_vu := t :: !deja_vu;
-      Btype.iter_type_expr iter t;
+      Typeutil.iter_type_expr iter t;
       match t with
       | Base.Tconstr (p, [ty]) when Get.type_constructor p == Predef.tcs_option ->
           ()

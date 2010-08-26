@@ -3,7 +3,6 @@
 open Asttypes
 open Base
 open Typedtree
-open Btype
 open Mutable_type
 open Typecore
 

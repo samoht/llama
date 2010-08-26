@@ -5,7 +5,6 @@ open Asttypes;;
 open Base;;
 open Typedtree;;
 open Typedtree_aux
-open Btype;;
 open Mutable_type;;
 open Asttypes;;
 open Context;;

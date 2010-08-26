@@ -43,9 +43,9 @@ TYPING=\
   typing/primitive.cmo \
   typing/base.cmo \
   typing/predef.cmo \
+  typing/typeutil.cmo \
   typing/modenv.cmo \
   typing/env.cmo \
-  typing/btype.cmo \
   typing/subst.cmo \
   typing/oprint.cmo \
   typing/mutable_type.cmo \

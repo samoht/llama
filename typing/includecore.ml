@@ -1,6 +1,5 @@
 open Asttypes
 open Base
-open Btype
 open Typedtree
 
 (* Inclusion between value descriptions *)
@@ -8,7 +7,7 @@ open Typedtree
 exception Dont_match
 
 let values s vd1 vd2 =
-  if moregeneral vd1.val_type (Subst.core_type s vd2.val_type) then begin
+  if Typeutil.moregeneral vd1.val_type (Subst.core_type s vd2.val_type) then begin
     match (vd1.val_kind, vd2.val_kind) with
         (Val_prim (p1), Val_prim (p2)) ->
           if p1 = p2 then Tcoerce_none else raise Dont_match
@@ -69,7 +68,7 @@ let rec compare_variants s params n cstrs1 cstrs2 =
       if List.length cstr1.cs_args <> List.length cstr2.cs_args then [Field_arity cstr1.cs_name] else
       if Misc.for_all2
           (fun ty1 ty2 ->
-            Btype.equiv params ty1 (Subst.core_type s ty2))
+            Typeutil.equiv params ty1 (Subst.core_type s ty2))
           cstr1.cs_args cstr2.cs_args
       then compare_variants s params (n+1) rem1 rem2
       else [Field_type cstr1.cs_name]
@@ -82,18 +81,18 @@ let rec compare_records s params n labels1 labels2 =
   | lab1::rem1, lab2::rem2 ->
       if lab1.lbl_name <> lab2.lbl_name then [Field_names (n, lab1.lbl_name, lab2.lbl_name)] else
       if lab1.lbl_mut <> lab2.lbl_mut then [Field_mutable lab1.lbl_name] else
-      if Btype.equiv params lab1.lbl_arg (Subst.core_type s lab2.lbl_arg)
+      if Typeutil.equiv params lab1.lbl_arg (Subst.core_type s lab2.lbl_arg)
       then compare_records s params (n+1) rem1 rem2
       else [Field_type lab1.lbl_name]
 
 let exceptions s cs1 cs2 =
   List.forall2
-    (fun ty1 ty2 -> Btype.equal ty1 (Subst.core_type s ty2))
+    (fun ty1 ty2 -> Typeutil.equal ty1 (Subst.core_type s ty2))
     cs1.cs_args cs2.cs_args
 
 let labels s params lbl1 lbl2 =
   lbl1.lbl_name = lbl2.lbl_name &&
-  Btype.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
+  Typeutil.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
 
 let type_constructors s tcs1 tcs2 =
   if tcs_arity tcs1 <> tcs_arity tcs2 then [Arity] else
@@ -107,11 +106,11 @@ let type_constructors s tcs1 tcs2 =
     | Tcs_record lbls1, Tcs_record lbls2 ->
         compare_records s corresp 1 lbls1 lbls2
     | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
-        if Btype.equiv corresp ty1 (Subst.core_type s ty2) then [] else
+        if Typeutil.equiv corresp ty1 (Subst.core_type s ty2) then [] else
           [General]
     | _, Tcs_abbrev ty2 ->
         let ty1 = Tconstr (tcs2, tcs2.tcs_params) in
-        if Btype.equal ty1 ty2 then [] else [General]
+        if Typeutil.equal ty1 ty2 then [] else [General]
     | _, _ ->
         [General]
   end

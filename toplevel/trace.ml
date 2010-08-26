@@ -59,7 +59,7 @@ let print_label ppf l = if l <> "" then fprintf ppf "%s:" l
 (* If a function returns a functional value, wrap it into a trace code *)
 
 let rec instrument_result env name ppf clos_typ =
-  match Btype.expand_head clos_typ with
+  match Typeutil.expand_head clos_typ with
   | Tarrow(t1, t2) ->
       let starred_name =
         match name with
@@ -97,7 +97,7 @@ let rec instrument_result env name ppf clos_typ =
 (* Same as instrument_result, but for a toplevel closure (modified in place) *)
 
 let instrument_closure env name ppf clos_typ =
-  match Btype.expand_head clos_typ with
+  match Typeutil.expand_head clos_typ with
   | Tarrow(t1, t2) ->
       let trace_res = instrument_result env name ppf t2 in
       (fun actual_code closure arg ->

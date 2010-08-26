@@ -636,7 +636,7 @@ and transl_exp0 e =
           Lprim(Pmakeblock(0, Immutable), transl_exception cstr :: ll)
       end
 (*| Texp_variant(l, arg) ->
-      let tag = Btype.hash_variant l in
+      let tag = Typeutil.hash_variant l in
       begin match arg with
         None -> Lconst(Const_pointer tag)
       | Some arg ->

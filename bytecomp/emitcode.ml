@@ -378,7 +378,7 @@ let to_file outchan unit_name code =
       cu_debug = pos_debug;
       cu_debugsize = size_debug } in
   init();                               (* Free out_buffer and reloc_info *)
-(*  Btype.cleanup_abbrev ();              (* Remove any cached abbreviation
+(*  Typeutil.cleanup_abbrev ();              (* Remove any cached abbreviation
                                            expansion before saving *) whose?? *)
   let pos_compunit = pos_out outchan in
   output_value outchan compunit;

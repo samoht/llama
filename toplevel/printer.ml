@@ -101,7 +101,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       | [] ->
           raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Btype.moregeneral sch ty (* xxx *)
+          if Typeutil.moregeneral sch ty (* xxx *)
           then printer
           else find remainder
       in find !printers
@@ -196,7 +196,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Btype.apply tcs.tcs_params body ty_list)
+                      (Typeutil.apply tcs.tcs_params body ty_list)
                 | {tcs_kind = Tcs_sum constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -207,7 +207,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Btype.apply tcs.tcs_params ty ty_list)
+                           Typeutil.apply tcs.tcs_params ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -219,7 +219,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Btype.apply tcs.tcs_params lbl.lbl_arg
+                                Typeutil.apply tcs.tcs_params lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =

@@ -46,7 +46,7 @@ let zero = make_pat (Tpat_constant (Const_int 0)) invalid_mutable_type Env.empty
 
 (* p and q compatible means, there exists V that matches both *)
 
-let is_absent tag row = assert false (* Btype.row_field tag !row = Rabsent *)
+let is_absent tag row = assert false (* Typeutil.row_field tag !row = Rabsent *)
 
 let is_absent_pat p = match p.pat_desc with
 | Tpat_variant (tag, _, row) -> is_absent tag row
@@ -549,22 +549,22 @@ let rec mark_partial = function
 let close_variant env row =
   assert false
 (*
-  let row = Btype.row_repr row in
+  let row = Typeutil.row_repr row in
   let nm =
     List.fold_left
       (fun nm (tag,f) ->
-        match Btype.row_field_repr f with
+        match Typeutil.row_field_repr f with
         | Reither(_, _, false, e) ->
             (* m=false means that this tag is not explicitly matched *)
-            Btype.set_row_field e Rabsent;
+            Typeutil.set_row_field e Rabsent;
             None
         | Rabsent | Reither (_, _, true, _) | Rpresent _ -> nm)
       row.row_name row.row_fields in
   if not row.row_closed || nm != row.row_name then begin
     (* this unification cannot fail *)
     Mutable_type.unify env row.row_more
-      (Btype.newgenty
-         (Tvariant {row with row_fields = []; row_more = Btype.newgenvar();
+      (Typeutil.newgenty
+         (Tvariant {row with row_fields = []; row_more = Typeutil.newgenvar();
                     row_closed = true; row_name = nm}))
   end
 *)
@@ -573,7 +573,7 @@ let row_of_pat pat =
   assert false
 (*
   match Mutable_type.expand_head pat.pat_env pat.pat_type with
-    {desc = Tvariant row} -> Btype.row_repr row
+    {desc = Tvariant row} -> Typeutil.row_repr row
   | _ -> assert false
 *)
 
@@ -601,7 +601,7 @@ let full_match closing env =  match env with
       (* closing=true, we are considering the variant as closed *)
       List.forall
         (fun (tag,f) ->
-          match Btype.row_field_repr f with
+          match Typeutil.row_field_repr f with
             Rabsent | Reither(_, _, false, _) -> true
           | Reither (_, _, true, _)
               (* m=true, do not discard matched tags, rather warn *)
@@ -611,7 +611,7 @@ let full_match closing env =  match env with
       row.row_closed &&
       List.forall
         (fun (tag,f) ->
-          Btype.row_field_repr f = Rabsent || List.mem tag fields)
+          Typeutil.row_field_repr f = Rabsent || List.mem tag fields)
         row.row_fields
 *)
 | ({pat_desc = Tpat_constant(Const_char _)},_) :: _ ->
@@ -719,7 +719,7 @@ let build_other ext env =  match env with
       List.fold_left
         (fun others (tag,f) ->
           if List.mem tag tags then others else
-          match Btype.row_field_repr f with
+          match Typeutil.row_field_repr f with
             Rabsent (* | Reither _ *) -> others
           (* This one is called after erasing pattern info *)
           | Reither (c, _, _, _) -> make_other_pat tag c :: others
