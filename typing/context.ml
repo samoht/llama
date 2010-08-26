@@ -6,7 +6,7 @@ open Mutable_type
 
 type local_value = {
   lval_name : string;
-  mutable lval_type : mutable_type }
+  lval_type : mutable_type }
 
 type value_reference =
     Ref_local of local_value
@@ -14,8 +14,7 @@ type value_reference =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_values : (string, local_value) Tbl.t;
-}
+  ctxt_values : (string, local_value) Tbl.t }
 
 let context_lookup_value lid ctxt =
   let find_global() = Env.lookup_value lid ctxt.ctxt_env in

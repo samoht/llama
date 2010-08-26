@@ -1,9 +1,8 @@
 open Asttypes
 open Base
+open Mutable_type
 
-(* Compatibility layer for ocaml's pattern-matching compiler.
-   We're currently not so much interested in understanding it, as in easily incorporating
-   any updates. *)
+(* Compatibility layer for ocaml's pattern-matching compiler.*)
 
 type row_desc = unit
 
@@ -11,7 +10,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env: Env.t;
-    pat_type: Mutable_type.mutable_type }
+    pat_type: mutable_type }
 
 and pattern_desc =
     Tpat_any

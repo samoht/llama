@@ -11,8 +11,6 @@ type mutable_type =
 and mutable_type_variable = {
   mutable link : mutable_type option }
 
-let invalid_mutable_type = Mtuple []
-
 let new_type_var() = Mvar { link = None }
 let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
 

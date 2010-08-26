@@ -211,4 +211,3 @@ and tree_of_mutable_type_list tyl =
 
 let mutable_type ppf ty =
   !Oprint.out_type ppf (tree_of_mutable_type ty)
-

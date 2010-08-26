@@ -24,6 +24,8 @@ open Pmc_pattern
 (* Utilities for building patterns   *)
 (*************************************)
 
+let invalid_mutable_type = Mtuple []
+
 let make_pat desc ty tenv =
   {pat_desc = desc; pat_loc = Location.none;
    pat_type = ty ; pat_env = tenv }

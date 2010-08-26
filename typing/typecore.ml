@@ -45,15 +45,9 @@ let rec type_pattern (pat, ty) =
     Tpat_any ->
       ()
   | Tpat_var v ->
-      if v.lval_type = invalid_mutable_type then
-        v.lval_type <- ty
-      else
-        unify_pat pat ty v.lval_type
+      unify_pat pat v.lval_type ty
   | Tpat_alias(pat, v) ->
-      if v.lval_type = invalid_mutable_type then
-        v.lval_type <- ty
-      else
-        unify_pat pat ty v.lval_type;
+      unify_pat pat v.lval_type ty;
       type_pattern (pat, ty)
   | Tpat_constant cst ->
       unify_pat pat ty (type_of_constant cst)
@@ -390,7 +384,7 @@ let rec type_expr expr =
       type_statement body;
       mutable_type_unit
   | Texp_for (id, start, stop, up_flag, body) ->
-      id.lval_type <- mutable_type_int;
+      unify (id.lval_type, mutable_type_int);
       type_expect start mutable_type_int;
       type_expect stop mutable_type_int;
       type_statement body;

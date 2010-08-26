@@ -151,7 +151,7 @@ let global_val_type env te =
 
 let mkpatvar s =
   { lval_name = s;
-    lval_type = invalid_mutable_type }
+    lval_type = new_type_var () }
 
 let rec check_unique l loc =
   match l with
