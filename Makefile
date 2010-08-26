@@ -40,24 +40,24 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/syntaxerr.cmo \
 
 TYPING=\
   typing/unused_var.cmo \
+  typing/oprint.cmo \
   typing/primitive.cmo \
   typing/base.cmo \
   typing/predef.cmo \
   typing/typeutil.cmo \
   typing/modenv.cmo \
   typing/env.cmo \
-  typing/subst.cmo \
-  typing/oprint.cmo \
   typing/mutable_type.cmo \
   typing/context.cmo \
   typing/pseudoenv.cmo \
   typing/printtyp.cmo \
   typing/typedtree_aux.cmo \
-  typing/includecore.cmo \
-  typing/includemod.cmo \
   typing/resolve.cmo \
   typing/typecore.cmo \
   typing/typedecl.cmo \
+  typing/subst.cmo \
+  typing/includecore.cmo \
+  typing/includemod.cmo \
   typing/typemod.cmo
 
 COMP=bytecomp/ident.cmo \
