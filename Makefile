@@ -50,7 +50,7 @@ TYPING=\
   typing/oprint.cmo \
   typing/mutable_type.cmo \
   typing/context.cmo \
-  typing/type_context.cmo \
+  typing/pseudoenv.cmo \
   typing/printtyp.cmo \
   typing/typedtree_aux.cmo \
   typing/includecore.cmo \

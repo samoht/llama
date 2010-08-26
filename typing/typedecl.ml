@@ -6,6 +6,7 @@ open Typedtree
 open Context
 open Mutable_type
 open Typecore
+open Pseudoenv
 
 type error =
     Recursive_abbrev of string
@@ -56,8 +57,8 @@ let type_equation_list teq_list =
     List.map
       begin fun ltcs ->
         { tcs_module = Modenv.get_current_module();
-          tcs_name =  ltcs.Type_context.ltcs_name;
-          tcs_params = List.map (fun tv -> Tvar tv) ltcs.Type_context.ltcs_params;
+          tcs_name =  ltcs.Pseudoenv.ltcs_name;
+          tcs_params = List.map (fun tv -> Tvar tv) ltcs.Pseudoenv.ltcs_params;
           tcs_kind = Tcs_abstract }
       end
       ltcs_list
@@ -84,7 +85,7 @@ let type_equation_list teq_list =
                        cs_module = tcs.tcs_module;
                        cs_name = name;
                        cs_res = ty_res;
-                       cs_args = List.map (Type_context.export subst) args;
+                       cs_args = List.map (type_of_local_type subst) args;
                        cs_tag =
                          if args=[] then
                            Tag_constant (postincr idx_const)
@@ -100,13 +101,13 @@ let type_equation_list teq_list =
                      { lbl_tcs = tcs;
                        lbl_name = name;
                        lbl_res = ty_res;
-                       lbl_arg = Type_context.export subst arg;
+                       lbl_arg = type_of_local_type subst arg;
                        lbl_mut = (mut = Mutable);
                        lbl_pos = pos }
                    end
                    name_mut_arg_list)
           | Teq_abbrev arg ->
-              Tcs_abbrev (Type_context.export subst arg)
+              Tcs_abbrev (type_of_local_type subst arg)
         end
     end
     tcs_list teq_list;
@@ -123,7 +124,7 @@ let do_exception name args =
     cs_module = Modenv.get_current_module ();
     cs_name = name;
     cs_res = Predef.type_exn;
-    cs_args = List.map (Type_context.export []) args;
+    cs_args = List.map (type_of_local_type []) args;
     cs_tag = Tag_exception;
   }
 

@@ -2,6 +2,7 @@
 
 open Asttypes
 open Base
+open Pseudoenv
 open Context
 
 type user_type_variable =
@@ -68,15 +69,15 @@ and expression_desc =
   | Texp_constraint of expression * type_expression
 
 type type_equation = {
-  teq_ltcs : Type_context.local_type_constructor;
+  teq_ltcs : local_type_constructor;
   teq_kind : type_equation_kind;
   teq_loc : Location.t }
 
 and type_equation_kind =
     Teq_abstract
-  | Teq_variant of (string * Type_context.local_type list) list
-  | Teq_record of (string * mutable_flag * Type_context.local_type) list
-  | Teq_abbrev of Type_context.local_type
+  | Teq_variant of (string * local_type list) list
+  | Teq_record of (string * mutable_flag * local_type) list
+  | Teq_abbrev of local_type
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -86,7 +87,7 @@ and signature_item_desc =
     Tsig_value of string * llama_type
   | Tsig_primitive of string * llama_type * Primitive.description
   | Tsig_type of type_equation list
-  | Tsig_exception of string * Type_context.local_type list
+  | Tsig_exception of string * local_type list
   | Tsig_open of string * compiled_signature
 
 type structure_item =
@@ -98,7 +99,7 @@ and structure_item_desc =
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of string * llama_type * Primitive.description
   | Tstr_type of type_equation list
-  | Tstr_exception of string * Type_context.local_type list
+  | Tstr_exception of string * local_type list
   | Tstr_open of string * compiled_signature
 
 type processed_structure_item =

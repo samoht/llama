@@ -9,6 +9,7 @@ open Typedtree_aux
 open Primitive
 open Mutable_type
 open Context
+open Pseudoenv
 
 type error =
     Unbound_type_constructor of Longident.t
@@ -74,11 +75,11 @@ let lookup_module s loc =
   with Not_found -> raise (Error (loc, Unbound_module s))
 
 let lookup_type_constructor tctxt lid loc =
-  try Type_context.lookup_type_constructor lid tctxt
+  try pseudoenv_lookup_type_constructor lid tctxt
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
 let lookup_type_variable tctxt name loc =
-  try Type_context.lookup_type_variable name tctxt
+  try pseudoenv_lookup_type_variable name tctxt
   with Not_found -> raise (Error (loc, Unbound_type_variable name))
 
 (* ---------------------------------------------------------------------- *)
@@ -115,20 +116,20 @@ let typexp ctxt te = type_expression ctxt.ctxt_env te
 
 let rec global_type ctxt te =
   begin match te.ptyp_desc with
-    | Ptyp_var name -> Type_context.Tvar (lookup_type_variable ctxt name te.ptyp_loc)
-    | Ptyp_arrow (ty1, ty2) -> Type_context.Tarrow (global_type ctxt ty1, global_type ctxt ty2)
-    | Ptyp_tuple tyl -> Type_context.Ttuple (List.map (global_type ctxt) tyl)
+    | Ptyp_var name -> Pseudoenv.Lvar (lookup_type_variable ctxt name te.ptyp_loc)
+    | Ptyp_arrow (ty1, ty2) -> Pseudoenv.Larrow (global_type ctxt ty1, global_type ctxt ty2)
+    | Ptyp_tuple tyl -> Pseudoenv.Ltuple (List.map (global_type ctxt) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcsr = lookup_type_constructor ctxt lid te.ptyp_loc in
         let arity =
           match tcsr with
-              Type_context.Ref_local ltcs -> ltcs.Type_context.ltcs_arity
-            | Type_context.Ref_global tcs -> tcs_arity tcs
+              Pseudoenv.Ref_local ltcs -> ltcs.Pseudoenv.ltcs_arity
+            | Pseudoenv.Ref_global tcs -> tcs_arity tcs
         in
         if List.length tyl <> arity then
           raise(Error(te.ptyp_loc, 
                       Type_arity_mismatch(lid, arity, List.length tyl)));
-        Type_context.Tconstr (tcsr, List.map (global_type ctxt) tyl)
+        Pseudoenv.Lconstr (tcsr, List.map (global_type ctxt) tyl)
   end
 
 let global_val_type env te =
@@ -326,23 +327,23 @@ let type_equation_list env pteq_list =
   let ltcs_list =
     List.map
       begin fun pteq ->
-        { Type_context.ltcs_name = pteq.pteq_name;
-          Type_context.ltcs_arity = List.length pteq.pteq_params;
-          Type_context.ltcs_params = List.map (fun name -> {tv_name=name}) pteq.pteq_params }
+        { Pseudoenv.ltcs_name = pteq.pteq_name;
+          Pseudoenv.ltcs_arity = List.length pteq.pteq_params;
+          Pseudoenv.ltcs_params = List.map (fun name -> {tv_name=name}) pteq.pteq_params }
       end
       pteq_list
   in
-  let ctxt = Type_context.create env in
+  let ctxt = pseudoenv_create env in
   let ctxt =
     List.fold_left
-      (fun ctxt ltcs -> Type_context.add_type_constructor ltcs ctxt)
+      (fun ctxt ltcs -> pseudoenv_add_type_constructor ltcs ctxt)
       ctxt ltcs_list
   in
   List.map2
     begin fun pteq ltcs ->
       let ctxt =
         List.fold_left
-          (fun ctxt tv -> Type_context.add_type_variable tv ctxt) ctxt ltcs.Type_context.ltcs_params
+          (fun ctxt tv -> pseudoenv_add_type_variable tv ctxt) ctxt ltcs.ltcs_params
       in
       { teq_ltcs = ltcs;
         teq_kind = type_equation_kind ctxt pteq.pteq_kind;
@@ -377,7 +378,7 @@ let structure_item env pstr =
         let teql = type_equation_list env pteql in
         mk (Tstr_type (teql))
     | Pstr_exception (name, args) ->
-        let ctxt = Type_context.create env in
+        let ctxt = pseudoenv_create env in
         mk (Tstr_exception (name, List.map (global_type ctxt) args))
     | Pstr_open name ->
         mk (Tstr_open (name, lookup_module name pstr.pstr_loc))
@@ -395,7 +396,7 @@ let signature_item env psig =
         let teql = type_equation_list env pteql in
         mk (Tsig_type teql)
     | Psig_exception (name, args) ->
-        let ctxt = Type_context.create env in
+        let ctxt = pseudoenv_create env in
         mk (Tsig_exception (name, List.map (global_type ctxt) args))
     | Psig_open name ->
         mk (Tsig_open (name, lookup_module name psig.psig_loc))
