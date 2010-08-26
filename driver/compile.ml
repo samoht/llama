@@ -44,7 +44,7 @@ let initial_env () =
   try
     if !Clflags.nopervasives
     then Env.initial
-    else Env.open_pers_signature "Pervasives" Env.initial
+    else Env.add_signature (Modenv.lookup_signature "Pervasives") Env.initial
   with Not_found ->
     fatal_error "cannot open pervasives.cmi"
 

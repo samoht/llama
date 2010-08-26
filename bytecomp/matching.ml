@@ -1335,7 +1335,7 @@ let get_mod_field modname field =
           let x =
             try
               let mod_ident = Module modname in
-              let env = Env.open_pers_signature modname Env.initial in
+              let env = Env.add_signature (Modenv.lookup_signature modname) Env.initial in
               let value =
                 try
                   Env.lookup_value (Longident.Lident field) env
@@ -2201,8 +2201,7 @@ let rec event_branch repr lam =
       incr r;
       Levent(lam', {lev_loc = ev.lev_loc;
                     lev_kind = ev.lev_kind;
-                    lev_repr = repr;
-                    lev_env = ev.lev_env})
+                    lev_repr = repr})
   | (Llet(str, id, lam, body), _) ->
       Llet(str, id, lam, event_branch repr body)
   | Lstaticraise _,_ -> lam

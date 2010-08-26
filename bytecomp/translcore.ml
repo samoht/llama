@@ -464,16 +464,14 @@ let event_before exp lam = match lam with
   if !Clflags.debug
   then Levent(lam, {lev_loc = exp.exp_loc;
                     lev_kind = Lev_before;
-                    lev_repr = None;
-                    lev_env = Env.summary exp.exp_env.Context.ctxt_env})
+                    lev_repr = None})
   else lam
 
 let event_after exp lam =
   if !Clflags.debug
   then Levent(lam, {lev_loc = exp.exp_loc;
                     lev_kind = Lev_after exp.exp_type;
-                    lev_repr = None;
-                    lev_env = Env.summary exp.exp_env.Context.ctxt_env})
+                    lev_repr = None})
   else lam
 
 let event_function exp lam =
@@ -483,8 +481,7 @@ let event_function exp lam =
     (info,
      Levent(body, {lev_loc = exp.exp_loc;
                    lev_kind = Lev_function;
-                   lev_repr = repr;
-                   lev_env = Env.summary exp.exp_env.Context.ctxt_env}))
+                   lev_repr = repr}))
   else
     lam None
 
