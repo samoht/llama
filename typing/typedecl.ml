@@ -3,6 +3,7 @@
 open Asttypes
 open Base
 open Typedtree
+open Context
 open Mutable_type
 open Typecore
 
@@ -168,8 +169,8 @@ let g_structure_item str = match str.str_desc with
           begin fun locval ->
             let globval =
               { val_module = Modenv.get_current_module ();
-                val_name = locval.Context.val_name;
-                val_type = Mutable_type.generalize locval.Context.val_type;
+                val_name = locval.lval_name;
+                val_type = generalize locval.lval_type;
                 val_kind = Val_reg }
             in
             locval, globval

@@ -36,9 +36,9 @@ let of_value v =
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add values name (v, id); id
 let identify (lv, v) = (* NB *)
-  Hashtbl.add local_values lv.Context.val_name (lv, of_value v)
+  Hashtbl.add local_values lv.Context.lval_name (lv, of_value v)
 let of_local_value lv =
-  let name = lv.Context.val_name in
+  let name = lv.Context.lval_name in
   try List.assq lv (Hashtbl.find_all local_values name)
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add local_values name (lv, id); id

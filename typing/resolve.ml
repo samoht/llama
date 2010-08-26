@@ -8,6 +8,7 @@ open Typedtree
 open Typedtree_aux
 open Primitive
 open Mutable_type
+open Context
 
 type error =
     Unbound_type_constructor of Longident.t
@@ -65,7 +66,7 @@ let lookup_label env li loc =
   with Not_found -> raise (Error (loc, Unbound_label li))
 
 let lookup_value env li loc =
-  try Context.lookup_value li env
+  try context_lookup_value li env
   with Not_found -> raise (Error (loc, Unbound_value li))
 
 let lookup_module s loc =
@@ -110,7 +111,7 @@ let rec type_expression env te =
     te_env = env;
     te_type = invalid_mutable_type }
 
-let typexp ctxt te = type_expression ctxt.Context.ctxt_env te
+let typexp ctxt te = type_expression ctxt.ctxt_env te
 
 let rec global_type ctxt te =
   begin match te.ptyp_desc with
@@ -154,8 +155,8 @@ let global_val_type env te =
   aux te
 
 let mkpatvar s =
-  { Context.val_name = s;
-    Context.val_type = invalid_mutable_type }
+  { lval_name = s;
+    lval_type = invalid_mutable_type }
 
 let rec check_unique l loc =
   match l with
@@ -204,9 +205,9 @@ let pattern_gen env p =
   in
   aux p
 
-let pattern ctxt = pattern_gen ctxt.Context.ctxt_env
+let pattern ctxt = pattern_gen ctxt.ctxt_env
 
-let ext env v = Context.add_value v env
+let ext env v = context_add_value v env
 
 let extend_env env pat =
   List.fold_left ext env (free_vars_of_pat pat)
@@ -219,7 +220,7 @@ let rec expr env ex =
         | Pexp_constant c -> Texp_constant c
         | Pexp_tuple l -> Texp_tuple (List.map (expr env) l)
         | Pexp_construct (lid, sarg) ->
-            let cs = lookup_constructor env.Context.ctxt_env lid ex.pexp_loc in
+            let cs = lookup_constructor env.ctxt_env lid ex.pexp_loc in
             let arity = cs_arity cs in
             let sargs =
               match sarg with
@@ -270,9 +271,9 @@ let rec expr env ex =
             Texp_for(v,expr env e1,expr env e2,b,expr big_env e3)
         | Pexp_constraint(e,te) -> Texp_constraint(expr env e,typexp env te)
         | Pexp_array l -> Texp_array(List.map (expr env) l)
-        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label env.Context.ctxt_env li ex.pexp_loc,expr env e) l, match o with None -> None | Some e -> Some (expr env e))
-        | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env.Context.ctxt_env li ex.pexp_loc)
-        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env.Context.ctxt_env li ex.pexp_loc, expr env e2)
+        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label env.ctxt_env li ex.pexp_loc,expr env e) l, match o with None -> None | Some e -> Some (expr env e))
+        | Pexp_field (e,li) -> Texp_field(expr env e,lookup_label env.ctxt_env li ex.pexp_loc)
+        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr env e, lookup_label env.ctxt_env li ex.pexp_loc, expr env e2)
         | Pexp_assert e -> Texp_assert (expr env e)
         | Pexp_assertfalse -> Texp_assertfalse
         | Pexp_when(e1,e2) -> Texp_when(expr env e1,expr env e2)
@@ -352,8 +353,8 @@ let type_equation_list env pteq_list =
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern_gen env pat) pat_exp_list in
   let localvals = List.flatten (List.map free_vars_of_pat pat_list) in
-  let enter_localvals ctxt = List.fold_left (fun ctxt v -> Context.add_value v ctxt) ctxt localvals in
-  let ctxt = Context.create env in
+  let enter_localvals ctxt = List.fold_left (fun ctxt v -> context_add_value v ctxt) ctxt localvals in
+  let ctxt = context_create env in
   let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
   let pat_exp_list =
     List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
@@ -365,7 +366,7 @@ let structure_item env pstr =
   let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   begin match pstr.pstr_desc with
     | Pstr_eval exp ->
-        let exp = expr (Context.create env) exp in
+        let exp = expr (context_create env) exp in
         mk (Tstr_eval exp)
     | Pstr_value(rec_flag, pat_exp_list) ->
         let pat_exp_list = letdef env rec_flag pat_exp_list in

@@ -2,6 +2,7 @@
 
 open Asttypes
 open Base
+open Context
 
 type user_type_variable =
   { utv_name : string;
@@ -27,8 +28,8 @@ type pattern =
 
 and pattern_desc =
     Tpat_any
-  | Tpat_var of Context.local_value
-  | Tpat_alias of pattern * Context.local_value
+  | Tpat_var of local_value
+  | Tpat_alias of pattern * local_value
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor * pattern list
@@ -40,11 +41,11 @@ and pattern_desc =
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
-    exp_env : Context.t;
+    exp_env : context;
     mutable exp_type: Mutable_type.mutable_type }
 
 and expression_desc =
-    Texp_ident of Context.value_reference
+    Texp_ident of value_reference
   | Texp_constant of constant
   | Texp_let of rec_flag * (pattern * expression) list * expression
   | Texp_function of (pattern * expression) list
@@ -60,7 +61,7 @@ and expression_desc =
   | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
-  | Texp_for of Context.local_value * expression * expression * direction_flag * expression
+  | Texp_for of local_value * expression * expression * direction_flag * expression
   | Texp_when of expression * expression
   | Texp_assert of expression
   | Texp_assertfalse
@@ -102,7 +103,7 @@ and structure_item_desc =
 
 type processed_structure_item =
     Str_eval of expression
-  | Str_value of rec_flag * (pattern * expression) list * (Context.local_value * value) list
+  | Str_value of rec_flag * (pattern * expression) list * (local_value * value) list
   | Str_primitive of value
   | Str_type of type_constructor list
   | Str_exception of constructor

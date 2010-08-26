@@ -75,15 +75,15 @@ let rec tpat (pat, ty) =
     Tpat_any ->
       ()
   | Tpat_var v ->
-      if v.val_type = invalid_mutable_type then
-        v.val_type <- ty
+      if v.lval_type = invalid_mutable_type then
+        v.lval_type <- ty
       else
-        unify_pat pat ty v.val_type
+        unify_pat pat ty v.lval_type
   | Tpat_alias(pat, v) ->
-      if v.val_type = invalid_mutable_type then
-        v.val_type <- ty
+      if v.lval_type = invalid_mutable_type then
+        v.lval_type <- ty
       else
-        unify_pat pat ty v.val_type;
+        unify_pat pat ty v.lval_type;
       tpat (pat, ty)
   | Tpat_constant cst ->
       unify_pat pat ty (type_of_constant cst)
@@ -352,8 +352,8 @@ let rec type_expr expr =
   match expr.exp_desc with
     Texp_ident vref ->
       begin match vref with
-        | Ref_local lv -> lv.val_type
-        | Ref_global v -> instantiate_one_type v.Base.val_type
+        | Ref_local lv -> lv.lval_type
+        | Ref_global v -> instantiate_one_type v.val_type
       end
   | Texp_constant cst ->
       type_of_constant cst
@@ -426,7 +426,7 @@ let rec type_expr expr =
       type_statement body;
       mutable_type_unit
   | Texp_for (id, start, stop, up_flag, body) ->
-      id.val_type <- mutable_type_int;
+      id.lval_type <- mutable_type_int;
       type_expect start mutable_type_int;
       type_expect stop mutable_type_int;
       type_statement body;
