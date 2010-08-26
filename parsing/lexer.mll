@@ -25,6 +25,7 @@ type error =
   | Unterminated_comment
   | Unterminated_string
   | Unterminated_string_in_comment
+  | Keyword_as_label of string
   | Literal_overflow of string
 ;;
 
@@ -196,6 +197,8 @@ let report_error ppf = function
       fprintf ppf "String literal not terminated"
   | Unterminated_string_in_comment ->
       fprintf ppf "This comment contains an unterminated string literal"
+  | Keyword_as_label kwd ->
+      fprintf ppf "`%s' is a keyword, it cannot be used as label name" kwd
   | Literal_overflow ty ->
       fprintf ppf "Integer literal exceeds the range of representable integers of type %s" ty
 ;;

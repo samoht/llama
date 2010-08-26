@@ -43,12 +43,11 @@ let type_letdef pat_exp_list =
          raise (Error(exp.exp_loc, Non_generalizable ty)))
     pat_exp_list ty_list
 
-let recent_type = ref (Ttuple []) (* xxx *)
 let type_expression loc expr =
   let ty = type_expr expr in
   if not (is_nonexpansive expr) && not (Ctype.is_closed ty) then
     raise (Error(expr.exp_loc, Non_generalizable ty));
-  recent_type := Ctype.generalize ty
+  Ctype.generalize ty
 
 let type_equation_list teq_list =
   let ltcs_list = List.map (fun teq -> teq.teq_ltcs) teq_list in
@@ -128,7 +127,7 @@ let do_exception name args =
   }
 
 let structure_item env str = match str.str_desc with
-    Tstr_eval exp -> type_expression exp.exp_loc exp;
+    Tstr_eval exp -> ignore (type_expr exp)
   | Tstr_value (_, pat_exp_list) -> type_letdef pat_exp_list
   | _ -> ()
 

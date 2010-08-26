@@ -173,13 +173,6 @@ let main () : unit =
       Bytelibrarian.create_archive (List.rev !objfiles)
                                    (extract_output !output_name)
     end
-(*
-    else if !make_package then begin
-      Compile.init_path();
-      Bytepackager.package_files (List.rev !objfiles)
-                                 (extract_output !output_name)
-    end
-*)
     else if not !compile_only && !objfiles <> [] then begin
       let target =
         if !output_c_object then
