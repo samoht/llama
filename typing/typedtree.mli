@@ -4,28 +4,13 @@ open Asttypes
 open Base
 open Pseudoenv
 open Context
-
-type user_type_variable =
-  { utv_name : string;
-    mutable utv_type : Mutable_type.mutable_type }
-
-type type_expression =
-  { te_desc: type_expression_desc;
-    te_loc: Location.t;
-    te_env : Env.t;
-    mutable te_type : Mutable_type.mutable_type }
-
-and type_expression_desc =
-    Ttyp_var of user_type_variable
-  | Ttyp_arrow of type_expression * type_expression
-  | Ttyp_tuple of type_expression list
-  | Ttyp_constr of type_constructor * type_expression list
+open Mutable_type
 
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env : Env.t;
-    mutable pat_type: Mutable_type.mutable_type }
+    mutable pat_type: mutable_type }
 
 and pattern_desc =
     Tpat_any
@@ -37,13 +22,13 @@ and pattern_desc =
   | Tpat_record of (label * pattern) list
   | Tpat_array of pattern list
   | Tpat_or of pattern * pattern
-  | Tpat_constraint of pattern * type_expression
+  | Tpat_constraint of pattern * mutable_type
 
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
     exp_env : context;
-    mutable exp_type: Mutable_type.mutable_type }
+    mutable exp_type: mutable_type }
 
 and expression_desc =
     Texp_ident of value_reference
@@ -66,7 +51,7 @@ and expression_desc =
   | Texp_when of expression * expression
   | Texp_assert of expression
   | Texp_assertfalse
-  | Texp_constraint of expression * type_expression
+  | Texp_constraint of expression * mutable_type
 
 type type_equation = {
   teq_ltcs : local_type_constructor;

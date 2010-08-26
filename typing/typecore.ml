@@ -22,29 +22,6 @@ type error =
 
 exception Error of Location.t * error
 
-(* To convert type expressions to types *)
-
-let type_of_type_expression typexp =
-  let rec type_of typexp =
-    match typexp.te_desc with
-        Ttyp_var utv ->
-          if utv.utv_type == invalid_mutable_type then
-            let ty = new_type_var () in
-            utv.utv_type <- ty;
-            ty
-          else
-            utv.utv_type
-      | Ttyp_arrow(arg1, arg2) ->
-          Marrow(type_of arg1, type_of arg2)
-      | Ttyp_tuple argl ->
-          Mtuple(List.map type_of argl)
-      | Ttyp_constr(tcs, args) ->
-          Mconstr (tcs, List.map type_of args)
-  in
-  let ty = type_of typexp in
-  typexp.te_type <- ty;
-  ty
-
 (* Typecore of constants *)
 
 let type_of_constant = function
@@ -117,10 +94,9 @@ let rec tpat (pat, ty) =
   | Tpat_or(pat1, pat2) ->
       tpat (pat1, ty);
       tpat (pat2, ty)
-  | Tpat_constraint(pat, ty_expr) ->
-      let ty' = type_of_type_expression ty_expr in
-       tpat  (pat, ty');
-        unify_pat pat ty ty'
+  | Tpat_constraint(pat, ty') ->
+      tpat (pat, ty');
+      unify_pat pat ty ty'
 
 and tpat_list pats tys = match pats, tys with
     [], [] ->
@@ -431,8 +407,7 @@ let rec type_expr expr =
       type_expect stop mutable_type_int;
       type_statement body;
       mutable_type_unit
-  | Texp_constraint (e, ty_expr) ->
-      let ty' = type_of_type_expression ty_expr in
+  | Texp_constraint (e, ty') ->
       type_expect e ty';
       ty'
   | Texp_array elist ->

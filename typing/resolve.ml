@@ -26,7 +26,7 @@ type error =
 
 exception Error of Location.t * error
 
-let type_expr_vars = ref ([] : (string * user_type_variable) list);;
+let type_expr_vars = ref ([] : (string * mutable_type) list);;
 let reset_type_expression_vars () = type_expr_vars := []
 
 let rec var_names_of_pat pat =
@@ -85,32 +85,26 @@ let lookup_type_variable tctxt name loc =
 (* ---------------------------------------------------------------------- *)
 
 let rec type_expression env te =
-  { te_desc =
-      begin match te.ptyp_desc with
-        | Ptyp_var v ->
-            Ttyp_var
-              begin try
-                List.assoc v !type_expr_vars
-              with Not_found ->
-                let t = {utv_name=v; utv_type=invalid_mutable_type} in
-                type_expr_vars := (v,t) :: !type_expr_vars; t
-              end
-        | Ptyp_arrow (x, y) ->
-            Ttyp_arrow (type_expression env x,
-                        type_expression env y)
-        | Ptyp_tuple l ->
-            Ttyp_tuple (List.map (type_expression env) l)
-        | Ptyp_constr (li, l) ->
-            let tcs = lookup_type env li te.ptyp_loc in
-            if List.length l <> tcs_arity tcs then
-              raise(Error(te.ptyp_loc, 
-                          Type_arity_mismatch(li, tcs_arity tcs, List.length l)));
-            Ttyp_constr (lookup_type env li te.ptyp_loc,
-                         List.map (type_expression env) l)
-      end;
-    te_loc = te.ptyp_loc;
-    te_env = env;
-    te_type = invalid_mutable_type }
+  begin match te.ptyp_desc with
+      Ptyp_var v ->
+        begin try
+          List.assoc v !type_expr_vars
+        with Not_found ->
+          let ty = new_type_var() in
+          type_expr_vars := (v,ty) :: !type_expr_vars; ty
+        end
+    | Ptyp_arrow (x, y) ->
+        Marrow (type_expression env x, type_expression env y)
+    | Ptyp_tuple l ->
+        Mtuple (List.map (type_expression env) l)
+    | Ptyp_constr (li, l) ->
+        let tcs = lookup_type env li te.ptyp_loc in
+        if List.length l <> tcs_arity tcs then
+          raise(Error(te.ptyp_loc, 
+                      Type_arity_mismatch(li, tcs_arity tcs, List.length l)));
+        Mconstr (lookup_type env li te.ptyp_loc,
+                 List.map (type_expression env) l)
+  end
 
 let typexp ctxt te = type_expression ctxt.ctxt_env te
 
