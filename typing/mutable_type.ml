@@ -11,11 +11,11 @@ type mutable_type =
   | Mconstr of type_constructor * mutable_type list
 
 and mutable_type_variable = {
-  mutable forward : mutable_type option }
+  mutable link : mutable_type option }
 
 let invalid_mutable_type = Mtuple []
 
-let newtyvar() = { forward = None }
+let newtyvar() = { link = None }
 let rec newtyvars n = if n=0 then [] else newtyvar()::newtyvars(n-1)
 let new_type_var() = Mvar (newtyvar())
 let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
@@ -76,7 +76,7 @@ let is_closed, generalize =
   let unionq = List.fold_left addq in
   let rec variables = function
       Mvar tv ->
-        begin match tv.forward with
+        begin match tv.link with
             None -> [tv]
           | Some ty -> variables ty
         end
@@ -89,7 +89,7 @@ let is_closed, generalize =
     let subst = List.combine vars (mkparams (List.length vars)) in
     let rec aux = function
         Mvar tv ->
-          begin match tv.forward with
+          begin match tv.link with
               None -> List.assq tv subst
             | Some ty -> aux ty
           end
@@ -104,7 +104,7 @@ let is_closed, generalize =
 (* ---------------------------------------------------------------------- *)
 
 let rec repr = function
-    Mvar { forward = Some ty } -> repr ty
+    Mvar { link = Some ty } -> repr ty
   | ty -> ty
 
 let apply params body args =
@@ -118,7 +118,7 @@ let apply params body args =
   in aux body
 
 let rec expand_head = function
-    Mvar { forward = Some ty } -> expand_head ty
+    Mvar { link = Some ty } -> expand_head ty
   | Mconstr ({tcs_params = params; tcs_kind = Tcs_abbrev body}, args) ->
       expand_head (apply params body args)
   | ty -> ty
@@ -131,7 +131,7 @@ exception Unify
 
 let rec occur_check v = function
     Mvar tv ->
-      begin match tv.forward with
+      begin match tv.link with
         | None -> tv == v
         | Some ty -> occur_check v ty
       end
@@ -150,11 +150,11 @@ let rec unify (ty1, ty2) =
   begin match ty1, ty2 with
       Mvar tv1, Mvar tv2 ->
         if tv1 == tv2 then () else
-          tv1.forward <- Some ty2
+          tv1.link <- Some ty2
     | Mvar tv1, _ when not (occur_check tv1 ty2) ->
-        tv1.forward <- Some ty2
+        tv1.link <- Some ty2
     | _, Mvar tv2 when not (occur_check tv2 ty1) ->
-        tv2.forward <- Some ty1
+        tv2.link <- Some ty1
     | Marrow(t1arg, t1res), Marrow(t2arg, t2res) ->
         unify (t1arg, t2arg);
         unify (t1res, t2res)
@@ -183,7 +183,7 @@ let rec filter_arrow ty =
     Mvar tv ->
       let ty1 = new_type_var () in
       let ty2 = new_type_var () in
-      tv.forward <- Some(Marrow(ty1, ty2));
+      tv.link <- Some(Marrow(ty1, ty2));
       (ty1, ty2)
   | Marrow(ty1, ty2) ->
       (ty1, ty2)
@@ -198,7 +198,7 @@ let rec filter_product arity ty =
   match ty with
     Mvar tv ->
       let tyl = new_type_vars arity in
-      tv.forward <- Some(Mtuple tyl);
+      tv.link <- Some(Mtuple tyl);
       tyl
   | Mtuple tyl ->
       if List.length tyl == arity then tyl else raise Unify
@@ -213,7 +213,7 @@ let rec filter_array ty =
   match ty with
       Mvar tv ->
         let ty = new_type_var () in
-        tv.forward <- Some(Mconstr(Predef.tcs_array, [ty]));
+        tv.link <- Some(Mconstr(Predef.tcs_array, [ty]));
         ty
     | Mconstr(tcs,[arg]) when tcs == Predef.tcs_array ->
         arg

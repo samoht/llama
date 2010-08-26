@@ -192,7 +192,7 @@ let name_of_mutable_type tv =
 let rec tree_of_mutable_type ty =
   begin match ty with
     | Mvar tv ->
-        begin match tv.forward with
+        begin match tv.link with
           | None ->
               Otyp_var (true, name_of_mutable_type tv)
           | Some ty ->
