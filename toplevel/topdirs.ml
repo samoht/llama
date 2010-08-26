@@ -17,7 +17,7 @@
 open Format
 open Misc
 open Longident
-open Types
+open Base
 open Cmo_format
 open Trace
 open Toploop

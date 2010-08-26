@@ -20,7 +20,7 @@ val string_of_variance : Odoc_type.t_type -> (bool * bool) -> string
    with a given separator.
    @param par can be used to force the addition or not of parentheses around the returned string.
 *)
-val string_of_type_list : bool option -> string -> Types.llama_type list -> string
+val string_of_type_list : bool option -> string -> Base.llama_type list -> string
 
 (** This function returns a string to represent the list of type parameters
    for the given type. *)

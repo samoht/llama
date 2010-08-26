@@ -24,10 +24,10 @@ type typedtree = Typedtree.structure * Typedtree.module_coercion
       (** Create hash tables used to search by some of the functions below. *)
       val tables : Typedtree.structure_item list -> tab * tab_values
 
-      (** This function returns the [Types.exception_declaration] associated to the given exception name,
+      (** This function returns the [Base.exception_declaration] associated to the given exception name,
          in the given table.
          @raise Not_found if the exception was not found.*)
-      val search_exception : tab -> string -> Types.constructor
+      val search_exception : tab -> string -> Base.constructor
 (*
       (** This function returns the [Path.t] associated to the given exception rebind name,
          in the table.
@@ -37,7 +37,7 @@ type typedtree = Typedtree.structure * Typedtree.module_coercion
       (** This function returns the [Typedtree.type_declaration] associated to the given type name,
          in the given table.
          @raise Not_found if the type was not found. *)
-      val search_type_declaration : tab -> string -> Types.type_constructor
+      val search_type_declaration : tab -> string -> Base.type_constructor
 
       (** This function returns the couple (pat, exp) for the given value name, in the
          given table of values.
@@ -47,7 +47,7 @@ type typedtree = Typedtree.structure * Typedtree.module_coercion
       (** This function returns the [type_expr] for the given primitive name, in the
          given table.
          @raise Not found if no value matches the name.*)
-      val search_primitive : tab -> string -> Types.type_expr
+      val search_primitive : tab -> string -> Base.type_expr
 
       (** This function takes a file name, a file containg the code and
          the typed tree obtained from the compiler.

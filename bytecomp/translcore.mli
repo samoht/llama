@@ -16,7 +16,7 @@
    for the core language *)
 
 open Asttypes
-open Types
+open Base
 open Typedtree
 open Lambda
 

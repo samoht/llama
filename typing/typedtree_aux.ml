@@ -1,6 +1,6 @@
 open Asttypes
 open Location
-open Types
+open Base
 open Asttypes
 open Typedtree
 
@@ -40,7 +40,7 @@ let letdef_is_pure pat_expr_list =
 let single_constructor cs =
   match cs.cs_tag with
       Tag_exception -> false
-    | _ -> List.length (Btype.constructors_of_type cs.cs_tcs) = 1
+    | _ -> List.length (constructors_of_type cs.cs_tcs) = 1
 
 let rec pat_irrefutable pat =
   match pat.pat_desc with

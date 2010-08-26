@@ -1,6 +1,6 @@
 (* handling of unqualified identifiers *)
 
-open Types
+open Base
 
 type t
 

@@ -1,4 +1,4 @@
-open Types
+open Base
 
 (* identifiers that may appear in the lambda representation *)
 

@@ -21,7 +21,7 @@ type exception_alias = {
 and t_exception = {
     ex_name : Odoc_name.t ;
     mutable ex_info : Odoc_types.info option ; (** optional user information *)
-    ex_args : Types.llama_type list ; (** the types of the parameters *)
+    ex_args : Base.llama_type list ; (** the types of the parameters *)
     ex_alias : exception_alias option ;
     mutable ex_loc : Odoc_types.location ;
     mutable ex_code : string option ;

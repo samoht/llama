@@ -15,7 +15,7 @@
 open Format
 open Asttypes
 open Primitive
-open Types
+open Base
 open Lambda
 
 

@@ -1,7 +1,7 @@
 (* Typecore toplevel phrases *)
 
 open Asttypes
-open Types
+open Base
 open Typedtree
 open Btype
 open Mutable_type

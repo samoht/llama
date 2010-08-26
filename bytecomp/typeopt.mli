@@ -14,7 +14,7 @@
 
 (* Auxiliaries for type-based optimizations, e.g. array kinds *)
 
-val has_base_type : Typedtree.expression -> Types.type_constructor -> bool
+val has_base_type : Typedtree.expression -> Base.type_constructor -> bool
 val maybe_pointer : Typedtree.expression -> bool
 val array_kind_gen : Mutable_type.mutable_type -> Env.t -> Lambda.array_kind
 val array_kind : Typedtree.expression -> Lambda.array_kind

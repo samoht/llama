@@ -13,13 +13,13 @@
 
 (** Representation and manipulation of values, class attributes and class methods. *)
 
-(** Types *)
+(** Base *)
 
 (** Representation of a value. *)
 type t_value = {
     val_name : Odoc_name.t ;
     mutable val_info : Odoc_types.info option ;
-    val_type : Types.llama_type ;
+    val_type : Base.llama_type ;
     val_recursive : bool ;
     mutable val_parameters : Odoc_parameter.parameter list ;
     mutable val_code : string option ;
@@ -69,7 +69,7 @@ let update_value_parameters_text v =
 let parameter_list_from_arrows typ =
   let rec iter t =
     match t with
-      Types.Tarrow (t1, t2) ->
+      Base.Tarrow (t1, t2) ->
         ("", t1) :: (iter t2)
     | _ ->
         []
@@ -93,7 +93,7 @@ let dummy_parameter_list typ =
   let liste_param = parameter_list_from_arrows typ in
   let rec iter (label, t) =
     match t with
-    | Types.Ttuple l ->
+    | Base.Ttuple l ->
         if label = "" then
           Odoc_parameter.Tuple
             (List.map (fun t2 -> iter ("", t2)) l, t)
@@ -115,7 +115,7 @@ let dummy_parameter_list typ =
 let is_function v =
   let rec f t =
     match t with
-      Types.Tarrow _ ->
+      Base.Tarrow _ ->
         true
       | _ ->
           false

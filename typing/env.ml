@@ -1,6 +1,6 @@
 open Asttypes
 open Misc
-open Types
+open Base
 open Location
 open Typedtree
 open Printf

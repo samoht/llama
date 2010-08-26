@@ -15,7 +15,7 @@
 
 open Misc
 open Asttypes
-open Types
+open Base
 open Typedtree
 
 let print_DEBUG s = print_string s ; print_newline ();;
@@ -38,16 +38,16 @@ open Odoc_types
       | ER of string
       | P of string
 
-    type tab = (ele, Types.compiled_signature_item) Hashtbl.t
+    type tab = (ele, Base.compiled_signature_item) Hashtbl.t
 
     let add_to_hash table signat =
       match signat with
-        Types.Sig_value v ->
-          Hashtbl.add table (V v.Types.val_name) signat
-      | Types.Sig_exception cs ->
-          Hashtbl.add table (E cs.Types.cs_name) signat
-      | Types.Sig_type (tcs, _) ->
-          Hashtbl.add table (T tcs.Types.tcs_name) signat
+        Base.Sig_value v ->
+          Hashtbl.add table (V v.Base.val_name) signat
+      | Base.Sig_exception cs ->
+          Hashtbl.add table (E cs.Base.cs_name) signat
+      | Base.Sig_type (tcs, _) ->
+          Hashtbl.add table (T tcs.Base.tcs_name) signat
 
     let table signat =
       let t = Hashtbl.create 13 in
@@ -56,18 +56,18 @@ open Odoc_types
 
     let search_value table name =
       match Hashtbl.find table (V name) with
-      | (Types.Sig_value v) ->  v.Types.val_type
+      | (Base.Sig_value v) ->  v.Base.val_type
       | _ -> assert false
 
     let search_exception table name =
       match Hashtbl.find table (E name) with
-      | (Types.Sig_exception cs) ->
-          cs.Types.cs_args
+      | (Base.Sig_exception cs) ->
+          cs.Base.cs_args
       | _ -> assert false
 
     let search_type table name =
       match Hashtbl.find table (T name) with
-      | Types.Sig_type (tcs, _) -> tcs
+      | Base.Sig_type (tcs, _) -> tcs
       | _ -> assert false
 
     (** This variable is used to load a file as a string and retrieve characters from it.*)
@@ -153,13 +153,13 @@ open Odoc_types
 
     let get_type_kind env name_comment_list type_kind =
       match type_kind with
-        Types.Tcs_abstract | Types.Tcs_abbrev _ ->
+        Base.Tcs_abstract | Base.Tcs_abbrev _ ->
           Odoc_type.Tcs_abstract
 
-      | Types.Tcs_sum l ->
+      | Base.Tcs_sum l ->
           let f cs =
-            let constructor_name = cs.Types.cs_name in
-            let type_expr_list = cs.Types.cs_args in
+            let constructor_name = cs.Base.cs_name in
+            let type_expr_list = cs.Base.cs_args in
             let comment_opt =
               try
                 match List.assoc constructor_name name_comment_list with
@@ -175,11 +175,11 @@ open Odoc_types
           in
           Odoc_type.Tcs_sum (List.map f l)
 
-      | Types.Tcs_record l ->
+      | Base.Tcs_record l ->
           let f lbl =
-            let field_name = lbl.Types.lbl_name in
-            let mutable_flag = lbl.Types.lbl_mut in
-            let type_expr = lbl.Types.lbl_arg in
+            let field_name = lbl.Base.lbl_name in
+            let mutable_flag = lbl.Base.lbl_mut in
+            let type_expr = lbl.Base.lbl_arg in
             let comment_opt =
               try
                 match List.assoc field_name name_comment_list with
@@ -362,7 +362,7 @@ open Odoc_types
                       raise (Failure (Odoc_messages.type_not_found current_module_name name))
                   in
                   (* get the type kind with the associated comments *)
-                  let type_kind = get_type_kind new_env name_comment_list sig_type_decl.Types.tcs_kind in
+                  let type_kind = get_type_kind new_env name_comment_list sig_type_decl.Base.tcs_kind in
                   let loc_start = type_decl.Parsetree.pteq_loc.Location.loc_start.Lexing.pos_cnum in
                   let new_end = type_decl.Parsetree.pteq_loc.Location.loc_end.Lexing.pos_cnum + maybe_more in
                   (* associate the comments to each constructor and build the [Type.t_type] *)
@@ -377,11 +377,11 @@ open Odoc_types
                                       co, cn)
                                   )
                         *)
-                        sig_type_decl.Types.tcs_params;
+                        sig_type_decl.Base.tcs_params;
                       ty_kind = type_kind;
                       ty_manifest =
-                        (match sig_type_decl.Types.tcs_kind with
-                           | Types.Tcs_abbrev t -> Some t
+                        (match sig_type_decl.Base.tcs_kind with
+                           | Base.Tcs_abbrev t -> Some t
                            | _ -> None);
                       ty_loc =
                       { loc_impl = None ;
@@ -425,7 +425,7 @@ open Odoc_types
 
 
     let analyse_signature source_file input_file
-        (ast : Parsetree.signature) (signat : Types.compiled_signature) =
+        (ast : Parsetree.signature) (signat : Base.compiled_signature) =
       let complete_source_file =
         try
           let curdir = Sys.getcwd () in

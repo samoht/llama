@@ -2,7 +2,7 @@
 
 open Misc;;
 open Asttypes;;
-open Types;;
+open Base;;
 open Typedtree;;
 open Typedtree_aux
 open Btype;;
@@ -354,7 +354,7 @@ let rec type_expr expr =
     Texp_ident vref ->
       begin match vref with
         | Ref_local lv -> lv.val_type
-        | Ref_global v -> instantiate_one_type v.Types.val_type
+        | Ref_global v -> instantiate_one_type v.Base.val_type
       end
   | Texp_constant cst ->
       type_of_constant cst
@@ -458,7 +458,7 @@ let rec type_expr expr =
       end;
       let fields =
         match lbl_exp_list with [] -> assert false
-        | (lbl,_)::_ -> Btype.labels_of_type lbl.lbl_tcs in
+        | (lbl,_)::_ -> labels_of_type lbl.lbl_tcs in
       let num_fields = List.length fields in
       if exten = None && List.length lbl_exp_list <> num_fields then begin
         let is_missing lbl = List.forall (fun (lbl', _) -> lbl != lbl') lbl_exp_list in

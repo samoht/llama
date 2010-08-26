@@ -22,7 +22,7 @@ val empty : env
 
 (** Extending an environment *)
 
-val add_signature : env -> string -> string option -> Types.compiled_signature -> env
+val add_signature : env -> string -> string option -> Base.compiled_signature -> env
 val add_exception : env -> Odoc_name.t -> env
 val add_type : env -> Odoc_name.t -> env
 val add_value : env -> Odoc_name.t -> env
@@ -63,5 +63,5 @@ val full_class_or_class_type_name : env -> Odoc_name.t -> Odoc_name.t
 
 (** Substitutions *)
 
-(** Replace the [Path.t] by a complete [Path.t] in a [Types.type_expr].*)
-(* val subst_type : env -> Types.type_expr -> Types.type_expr *)
+(** Replace the [Path.t] by a complete [Path.t] in a [Base.type_expr].*)
+(* val subst_type : env -> Base.type_expr -> Base.type_expr *)

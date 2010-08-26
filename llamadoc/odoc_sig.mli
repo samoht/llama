@@ -15,26 +15,26 @@
 
 (** The functions used to retrieve information from a signature. *)
       type ele
-      type tab = (ele, Types.compiled_signature_item) Hashtbl.t
+      type tab = (ele, Base.compiled_signature_item) Hashtbl.t
 
       (** Create a table from a signature. This table is used by some
          of the search functions below. *)
-      val table : Types.compiled_signature -> tab
+      val table : Base.compiled_signature -> tab
 
       (** This function returns the type expression for the value whose name is given,
          in the given signature.
          @raise Not_found if error.*)
-      val search_value : tab -> string -> Types.llama_type
+      val search_value : tab -> string -> Base.llama_type
 
       (** This function returns the type expression list for the exception whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_exception : tab -> string -> Types.llama_type list
+      val search_exception : tab -> string -> Base.llama_type list
 
-      (** This function returns the Types.type_declaration  for the type whose name is given,
+      (** This function returns the Base.type_declaration  for the type whose name is given,
          in the given table.
          @raise Not_found if error.*)
-      val search_type : tab -> string -> Types.type_constructor
+      val search_type : tab -> string -> Base.type_constructor
 
       (** This variable is used to load a file as a string and retrieve characters from it.*)
       val file : string ref
@@ -65,11 +65,11 @@
       val name_comment_from_type_kind :
           int -> int -> Parsetree.type_equation_kind -> int * (string * Odoc_types.info option) list
 
-      (** This function converts a [Types.type_kind] into a [Odoc_type.type_kind],
+      (** This function converts a [Base.type_kind] into a [Odoc_type.type_kind],
          by associating the comment found in the parsetree of each constructor/field, if any.*)
       val get_type_kind :
           Odoc_env.env -> (string * Odoc_types.info option) list ->
-            Types.type_constructor_kind -> Odoc_type.type_kind
+            Base.type_constructor_kind -> Odoc_type.type_kind
 
       (** This function merge two optional info structures. *)
       val merge_infos :
@@ -83,4 +83,4 @@
          and in the signature for types information. *)
       val analyse_signature :
         string -> string ->
-        Parsetree.signature -> Types.compiled_signature -> Odoc_module.t_module
+        Parsetree.signature -> Base.compiled_signature -> Odoc_module.t_module

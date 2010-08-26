@@ -1,4 +1,4 @@
-open Types
+open Base
 
 type t = {
   subst_module : module_id;

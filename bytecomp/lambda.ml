@@ -351,18 +351,18 @@ let transl_module m =
   Lprim (Pgetglobal (Ident.of_module m), [])
 
 let transl_exception cs =
-  let m = cs.Types.cs_module in
+  let m = cs.Base.cs_module in
   if m = Modenv.get_current_module () then
     Lvar (Ident.of_exception cs)
-  else if m = Types.Module_builtin then
+  else if m = Base.Module_builtin then
     Lprim (Pgetglobal (Ident.of_exception cs), [])
   else
     let pos = Modenv.lookup_exception_position cs in
     Lprim (Pfield pos, [transl_module m])
 
 let transl_value v =
-  let m = v.Types.val_module in
-  if m = Types.Module_builtin || m = Modenv.get_current_module () then
+  let m = v.Base.val_module in
+  if m = Base.Module_builtin || m = Modenv.get_current_module () then
     let id = Ident.of_value v in
     Lvar id
   else

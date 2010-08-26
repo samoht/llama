@@ -1052,7 +1052,7 @@ let newline_to_indented_br s =
       in
       s2
 
-    (** Print html code to display a [Types.type_expr]. *)
+    (** Print html code to display a [Base.type_expr]. *)
     let html_of_type_expr b m_name t =
       let s = Odoc_misc.remove_ending_newline (Odoc_print.string_of_type_expr t) in
       let s2 = newline_to_indented_br s in
@@ -1060,7 +1060,7 @@ let newline_to_indented_br s =
       bs b (create_fully_qualified_idents_links m_name s2);
       bs b "</code>"
 
-    (** Print html code to display a [Types.type_expr list]. *)
+    (** Print html code to display a [Base.type_expr list]. *)
     let html_of_type_expr_list par b m_name sep l = (* ?par *)
       print_DEBUG "html#html_of_type_expr_list";
       let s = Odoc_str.string_of_type_list par sep l in
@@ -1079,7 +1079,7 @@ let newline_to_indented_br s =
       bs b (create_fully_qualified_idents_links m_name s2);
       bs b "</code>"
 
-    (** Print html code to display a [Types.module_type]. *)
+    (** Print html code to display a [Base.module_type]. *)
     let html_of_module_type b code m_name t = (* ?code *)
       assert false
 (*

@@ -4,7 +4,7 @@ open Typedtree
 open Primitive
 open Typedecl
 open Btype
-open Types
+open Base
 open Format
 open Misc
 

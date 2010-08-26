@@ -49,9 +49,9 @@ let rec add_signature env root rel_opt signat =
   in
   let f env item =
     match item with
-      Types.Sig_value {Types.val_name=ident} -> { env with env_values = (rel_name ident, qualify ident) :: env.env_values }
-    | Types.Sig_type ({Types.tcs_name=ident}, _) -> { env with env_types = (rel_name ident, qualify ident) :: env.env_types }
-    | Types.Sig_exception {Types.cs_name=ident} -> { env with env_exceptions = (rel_name ident, qualify ident) :: env.env_exceptions }
+      Base.Sig_value {Base.val_name=ident} -> { env with env_values = (rel_name ident, qualify ident) :: env.env_values }
+    | Base.Sig_type ({Base.tcs_name=ident}, _) -> { env with env_types = (rel_name ident, qualify ident) :: env.env_types }
+    | Base.Sig_exception {Base.cs_name=ident} -> { env with env_exceptions = (rel_name ident, qualify ident) :: env.env_exceptions }
   in
   List.fold_left f env signat
 
@@ -166,12 +166,12 @@ let subst_type env t =
       deja_vu := t :: !deja_vu;
       Btype.iter_type_expr iter t;
       match t with
-      | Types.Tconstr (p, [ty]) when Get.type_constructor p == Predef.tcs_option ->
+      | Base.Tconstr (p, [ty]) when Get.type_constructor p == Predef.tcs_option ->
           ()
-      | Types.Tconstr (p, l) ->
+      | Base.Tconstr (p, l) ->
           let new_p =
             Odoc_name.to_path (full_type_name env (Odoc_name.from_path p)) in
-          t.Types.desc <- Types.Tconstr (new_p, l, a)
+          t.Base.desc <- Base.Tconstr (new_p, l, a)
       | _ ->
           ()
     end

@@ -1,5 +1,5 @@
 open Asttypes
-open Types
+open Base
 
 (* Compatibility layer for ocaml's pattern-matching compiler.
    We're currently not so much interested in understanding it, as in easily incorporating
@@ -97,11 +97,11 @@ let count_constructors tcs =
         | Tag_exception _ -> assert false
       end
     end
-    (Btype.constructors_of_type tcs);
+    (constructors_of_type tcs);
   !a, !b
 
 let calc_lbl_all lbl =
-  Array.of_list (Btype.labels_of_type lbl.lbl_tcs)
+  Array.of_list (labels_of_type lbl.lbl_tcs)
 
 let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
 

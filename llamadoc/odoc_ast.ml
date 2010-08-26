@@ -14,7 +14,7 @@
 (** Analysis of implementation files. *)
 open Misc
 open Asttypes
-open Types
+open Base
 open Typedtree
 
 let print_DEBUG3 s = print_string s ; print_newline ();;
@@ -55,7 +55,7 @@ let simple_blank = "[ \013\009\012]"
 
     let iter_val_pattern = function
       | Typedtree.Tpat_any -> None
-      | Typedtree.Tpat_var v -> Some (Types.val_name v)
+      | Typedtree.Tpat_var v -> Some (Base.val_name v)
       | Typedtree.Tpat_tuple _ -> None (* A VOIR quand on traitera les tuples *)
       | _ -> None
 
@@ -146,7 +146,7 @@ let simple_blank = "[ \013\009\012]"
           (
            try
              let type_decl = search_type_declaration table name in
-             (ce, type_decl.Types.type_params)
+             (ce, type_decl.Base.type_params)
            with
              Not_found ->
                (ce, [])
@@ -162,7 +162,7 @@ let simple_blank = "[ \013\009\012]"
 
     let search_primitive table name =
       match Hashtbl.find table (P name) with
-        Tstr_primitive (ident, val_desc) -> val_desc.Types.val_type
+        Tstr_primitive (ident, val_desc) -> val_desc.Base.val_type
       | _ -> assert false
 
     let get_nth_inherit_class_expr cls n =
@@ -190,16 +190,16 @@ let simple_blank = "[ \013\009\012]"
 
     let class_sig_of_cltype_decl =
       let rec iter = function
-        Types.Tcty_constr (_, _, cty) -> iter cty
-      | Types.Tcty_signature s -> s
-      | Types.Tcty_fun (_,_, cty) -> iter cty
+        Base.Tcty_constr (_, _, cty) -> iter cty
+      | Base.Tcty_signature s -> s
+      | Base.Tcty_fun (_,_, cty) -> iter cty
       in
-      fun ct_decl -> iter ct_decl.Types.clty_type
+      fun ct_decl -> iter ct_decl.Base.clty_type
 
     let search_virtual_attribute_type table ctname name =
       let ct_decl = search_class_type_declaration table ctname in
       let cls_sig = class_sig_of_cltype_decl ct_decl in
-      let (_,_,texp) = Types.Vars.find name cls_sig.cty_vars in
+      let (_,_,texp) = Base.Vars.find name cls_sig.cty_vars in
       texp
 
    let search_method_expression cls name =
@@ -435,7 +435,7 @@ let simple_blank = "[ \013\009\012]"
        and the module has a "structure" kind. *)
     let rec filter_module_with_module_type_constraint m mt =
       match m.m_kind, mt with
-        Module_struct l, Types.Tmty_signature lsig ->
+        Module_struct l, Base.Tmty_signature lsig ->
           m.m_kind <- Module_struct (filter_module_elements_with_module_type_constraint l lsig);
           m.m_type <- mt;
       | _ -> ()
@@ -445,7 +445,7 @@ let simple_blank = "[ \013\009\012]"
        and the module type has a "structure" kind. *)
     and filter_module_type_with_module_type_constraint mtyp mt =
       match mtyp.mt_kind, mt with
-        Some Module_type_struct l, Types.Tmty_signature lsig ->
+        Some Module_type_struct l, Base.Tmty_signature lsig ->
           mtyp.mt_kind <- Some (Module_type_struct (filter_module_elements_with_module_type_constraint l lsig));
           mtyp.mt_type <- Some mt;
       | _ -> ()
@@ -455,7 +455,7 @@ let simple_blank = "[ \013\009\012]"
         let f = match ele with
           Element_module m ->
             (function
-                Types.Tsig_module (ident,t,_) ->
+                Base.Tsig_module (ident,t,_) ->
                   let n1 = Odoc_name.simple m.m_name
                   and n2 = Ident.name ident in
                   (
@@ -466,7 +466,7 @@ let simple_blank = "[ \013\009\012]"
               | _ -> false)
         | Element_module_type mt ->
             (function
-                Types.Tsig_modtype (ident,Types.Tmodtype_manifest t) ->
+                Base.Tsig_modtype (ident,Base.Tmodtype_manifest t) ->
                   let n1 = Odoc_name.simple mt.mt_name
                   and n2 = Ident.name ident in
                   (
@@ -477,14 +477,14 @@ let simple_blank = "[ \013\009\012]"
               | _ -> false)
         | Element_value v ->
             (function
-                Types.Tsig_value (ident,_) ->
+                Base.Tsig_value (ident,_) ->
                   let n1 = Odoc_name.simple v.val_name
                   and n2 = Ident.name ident in
                   n1 = n2
               | _ -> false)
         | Element_type t ->
              (function
-                Types.Tsig_type (ident,_,_) ->
+                Base.Tsig_type (ident,_,_) ->
                   (* A VOIR: il est possible que le détail du type soit caché *)
                   let n1 = Odoc_name.simple t.ty_name
                   and n2 = Ident.name ident in
@@ -492,21 +492,21 @@ let simple_blank = "[ \013\009\012]"
                | _ -> false)
         | Element_exception e ->
             (function
-                Types.Tsig_exception (ident,_) ->
+                Base.Tsig_exception (ident,_) ->
                   let n1 = Odoc_name.simple e.ex_name
                   and n2 = Ident.name ident in
                   n1 = n2
               | _ -> false)
         | Element_class c ->
             (function
-                Types.Tsig_class (ident,_,_) ->
+                Base.Tsig_class (ident,_,_) ->
                   let n1 = Odoc_name.simple c.cl_name
                   and n2 = Ident.name ident in
                   n1 = n2
               | _ -> false)
         | Element_class_type ct ->
             (function
-                Types.Tsig_cltype (ident,_,_) ->
+                Base.Tsig_cltype (ident,_,_) ->
                   let n1 = Odoc_name.simple ct.clt_name
                   and n2 = Ident.name ident in
                   n1 = n2
@@ -693,7 +693,7 @@ let simple_blank = "[ \013\009\012]"
                 in
                 let kind = Odoc_sig.get_type_kind
                     new_env name_comment_list
-                    tt_type_decl.Types.type_kind
+                    tt_type_decl.Base.type_kind
                 in
                 let new_end = loc_end + maybe_more in
                 let t =
@@ -706,12 +706,12 @@ let simple_blank = "[ \013\009\012]"
                           (Odoc_env.subst_type new_env p,
                            co, cn)
                         )
-                      tt_type_decl.Types.type_params
-                      tt_type_decl.Types.type_variance ;
+                      tt_type_decl.Base.type_params
+                      tt_type_decl.Base.type_variance ;
                     ty_kind = kind ;
-                    ty_private = tt_type_decl.Types.type_private;
+                    ty_private = tt_type_decl.Base.type_private;
                     ty_manifest =
-                    (match tt_type_decl.Types.type_manifest with
+                    (match tt_type_decl.Base.type_manifest with
                       None -> None
                     | Some t -> Some (Odoc_env.subst_type new_env t));
                     ty_loc = { loc_impl = Some (!file_name, loc_start) ; loc_inter = None } ;
@@ -818,7 +818,7 @@ let simple_blank = "[ \013\009\012]"
              let new_env2 =
                match new_module.m_type with
                  (* A VOIR : cela peut-il être Tmty_ident ? dans ce cas, on aurait pas la signature *)
-                 Types.Tmty_signature s ->
+                 Base.Tmty_signature s ->
                    Odoc_env.add_signature new_env new_module.m_name
                      (Some (Odoc_name.simple new_module.m_name)) s
                | _ ->
@@ -1071,7 +1071,7 @@ let simple_blank = "[ \013\009\012]"
        let kind = Module_struct elements2 in
        {
          m_name = mod_name ;
-         m_type = Types.Tmty_signature [] ;
+         m_type = Base.Tmty_signature [] ;
          m_info = info_opt ;
          m_is_interface = false ;
          m_file = !file_name ;

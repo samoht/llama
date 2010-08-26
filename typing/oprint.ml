@@ -139,7 +139,7 @@ let print_out_value ppf tree =
 
 let out_value = ref print_out_value
 
-(* Types *)
+(* Base *)
 
 let rec print_list_init pr sep ppf =
   function

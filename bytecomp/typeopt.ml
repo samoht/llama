@@ -17,7 +17,7 @@
 open Misc
 open Asttypes
 open Primitive
-open Types
+open Base
 open Typedtree
 open Lambda
 open Context

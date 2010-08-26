@@ -18,7 +18,7 @@
 open Misc
 open Asttypes
 open Longident
-open Types
+open Base
 open Typedtree
 open Primitive
 open Lambda
@@ -123,7 +123,7 @@ let _ =
 let transl_implementation module_name (str, cc) =
 (*reset_labels (); *)
   primitive_declarations := [];
-  let module_id = Ident.of_module (Types.Module module_name) in
+  let module_id = Ident.of_module (Base.Module module_name) in
   Lprim(Psetglobal module_id,
         [(* transl_label_init *)
             (transl_structure [] cc str)])
@@ -261,7 +261,7 @@ let build_ident_map restr idlist =
 let transl_store_gen module_name (str, restr) topl =
 (*  reset_labels ();*)
   primitive_declarations := [];
-  let module_id = Ident.of_module (Types.Module module_name) in
+  let module_id = Ident.of_module (Base.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
 (* xxx
   let _f = function

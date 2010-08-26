@@ -118,7 +118,7 @@ LIBCMIFILES= $(LIBCMOFILES:.cmo=.cmi)
 # Les cmo et cmx de la distrib LLAMA
 TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/primitive.cmo \
- $(LLAMASRCDIR)/typing/types.cmo \
+ $(LLAMASRCDIR)/typing/base.cmo \
  $(LLAMASRCDIR)/typing/predef.cmo \
  $(LLAMASRCDIR)/typing/modenv.cmo \
  $(LLAMASRCDIR)/typing/env.cmo \

@@ -14,7 +14,7 @@
 
 (* Printing of values *)
 
-open Types
+open Base
 open Format
 
 val fwd_eval_exception : (constructor -> Obj.t) ref

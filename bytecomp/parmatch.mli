@@ -13,7 +13,7 @@
 (* $Id: parmatch.mli 8906 2008-07-09 13:03:38Z mauny $ *)
 
 (* Detection of partial matches and unused match cases. *)
-open Types
+open Base
 open Pmc_pattern
 
 val top_pretty : Format.formatter -> pattern -> unit

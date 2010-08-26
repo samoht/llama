@@ -1,4 +1,4 @@
-open Types
+open Base
 
 val lookup_signature : string -> compiled_signature
 val lookup_type_constructor : module_id -> string -> type_constructor

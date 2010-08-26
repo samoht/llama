@@ -1,5 +1,5 @@
 open Asttypes
-open Types
+open Base
 open Btype
 open Typedtree
 

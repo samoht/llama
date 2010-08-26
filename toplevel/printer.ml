@@ -17,7 +17,7 @@
 open Misc
 open Format
 open Longident
-open Types
+open Base
 open Outcometree
 
 let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))

@@ -1,4 +1,4 @@
-open Types
+open Base
 
 type error =
     Not_an_interface of string

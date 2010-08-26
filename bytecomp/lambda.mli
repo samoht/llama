@@ -184,8 +184,8 @@ val iter: (lambda -> unit) -> lambda -> unit
 val free_variables: lambda -> Ident.t Set.t
 val free_methods: lambda -> Ident.t Set.t
 
-val transl_exception : Types.constructor -> lambda
-val transl_value : Types.value -> lambda
+val transl_exception : Base.constructor -> lambda
+val transl_value : Base.value -> lambda
 (* val transl_path: Path.t -> lambda *)
 
 val make_sequence: ('a -> lambda) -> 'a list -> lambda

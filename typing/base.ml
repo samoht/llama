@@ -113,3 +113,13 @@ let mkparam i = Tvar { tv_name = int_to_alpha i }
 let mkparams n =
   let rec aux i = if i < n then mkparam i :: aux (i+1) else [] in
   aux 0
+
+let constructors_of_type tcs =
+  match tcs.tcs_kind with
+    | Tcs_sum cs_list -> cs_list
+    | _ -> failwith "constructors_of_type"
+
+let labels_of_type tcs =
+  match tcs.tcs_kind with
+    | Tcs_record lbl_list -> lbl_list
+    | _ -> failwith "labels_of_type"

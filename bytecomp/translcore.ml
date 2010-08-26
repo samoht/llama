@@ -18,7 +18,7 @@
 open Misc
 open Asttypes
 open Primitive
-open Types
+open Base
 open Typedtree
 open Typeopt
 open Lambda
@@ -649,7 +649,7 @@ and transl_exp0 e =
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
   | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      transl_record (Btype.labels_of_type lbl1.lbl_tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
+      transl_record (labels_of_type lbl1.lbl_tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_record ([], _) ->
       fatal_error "Translcore.transl_exp: bad Texp_record"
   | Texp_field(arg, lbl) ->

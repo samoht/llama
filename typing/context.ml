@@ -1,5 +1,5 @@
 open Longident
-open Types
+open Base
 open Mutable_type
 
 type local_value = {

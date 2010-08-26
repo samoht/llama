@@ -1,7 +1,7 @@
 (* env extended by some type variables and local type constructors *)
 
 open Longident
-open Types
+open Base
 
 type local_type =
     Tvar of type_variable
@@ -20,11 +20,11 @@ and local_type_constructor = {
 
 let export subst =
   let rec aux = function
-      Tvar tv -> Types.Tvar tv
-    | Tarrow (ty1, ty2) -> Types.Tarrow (aux ty1, aux ty2)
-    | Ttuple tyl -> Types.Ttuple (List.map aux tyl)
+      Tvar tv -> Base.Tvar tv
+    | Tarrow (ty1, ty2) -> Base.Tarrow (aux ty1, aux ty2)
+    | Ttuple tyl -> Base.Ttuple (List.map aux tyl)
     | Tconstr (tcsr, tyl) ->
-        Types.Tconstr(begin match tcsr with
+        Base.Tconstr(begin match tcsr with
                           Ref_local ltcs -> List.assq ltcs subst
                         | Ref_global tcs -> tcs
                       end,

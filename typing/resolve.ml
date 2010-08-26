@@ -2,7 +2,7 @@ type token = Parser.token
 
 open Asttypes
 open Misc
-open Types
+open Base
 open Parsetree
 open Typedtree
 open Typedtree_aux

@@ -1,6 +1,6 @@
 (* Mutable types, useful for type inference. *)
 
-open Types
+open Base
 open Misc
 open Btype
 

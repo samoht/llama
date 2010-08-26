@@ -11,7 +11,7 @@
 
 (* $Id: odoc_types.mli 10480 2010-05-31 11:52:13Z guesdon $ *)
 
-(** Types for the information collected in comments. *)
+(** Base for the information collected in comments. *)
 
 (** The differents kinds of element references. *)
 type ref_kind =

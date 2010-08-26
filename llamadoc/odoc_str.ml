@@ -25,20 +25,20 @@ let string_of_variance t (co,cn) =
     ""
 let rec is_arrow_type t =
   match t with
-    Types.Tarrow _ -> true
-  | Types.Ttuple _
-  | Types.Tconstr _
-  | Types.Tvar _ -> false
+    Base.Tarrow _ -> true
+  | Base.Ttuple _
+  | Base.Tconstr _
+  | Base.Tvar _ -> false
 
 let raw_string_of_type_list sep type_list =
   let buf = Buffer.create 256 in
   let fmt = Format.formatter_of_buffer buf in
   let rec need_parent t =
     match t with
-      Types.Tarrow _ | Types.Ttuple _ -> true
-    | Types.Tconstr _ ->
+      Base.Tarrow _ | Base.Ttuple _ -> true
+    | Base.Tconstr _ ->
         false
-    | Types.Tvar _ -> false
+    | Base.Tvar _ -> false
   in
   let print_one_type variance t =
     if need_parent t then

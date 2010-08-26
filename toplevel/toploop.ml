@@ -19,7 +19,7 @@ open Format
 open Config
 open Misc
 open Parsetree
-open Types
+open Base
 open Typedtree
 open Outcometree
 

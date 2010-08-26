@@ -1,7 +1,7 @@
 (* The abstract syntax for the language *)
 
 open Asttypes
-open Types
+open Base
 
 type user_type_variable =
   { utv_name : string;
