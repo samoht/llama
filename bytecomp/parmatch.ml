@@ -17,8 +17,8 @@
 open Misc
 open Asttypes
 open Types
+open Mutable_type
 open Pmc_pattern
-open Context
 
 (*************************************)
 (* Utilities for building patterns   *)
@@ -28,17 +28,17 @@ let make_pat desc ty tenv =
   {pat_desc = desc; pat_loc = Location.none;
    pat_type = ty ; pat_env = tenv }
 
-let omega = make_pat Tpat_any Ctype.none Env.empty
+let omega = make_pat Tpat_any invalid_mutable_type Env.empty
 
 let extra_pat =
-  make_pat (Tpat_var (Ident.create "+")) Ctype.none Env.empty
+  make_pat (Tpat_var (Ident.create "+")) invalid_mutable_type Env.empty
 
 let rec omegas i =
   if i <= 0 then [] else omega :: omegas (i-1)
 
 let omega_list l = List.map (fun _ -> omega) l
 
-let zero = make_pat (Tpat_constant (Const_int 0)) Ctype.none Env.empty
+let zero = make_pat (Tpat_constant (Const_int 0)) invalid_mutable_type Env.empty
 
 (***********************)
 (* Compatibility check *)
@@ -115,9 +115,9 @@ and compats ps qs = match ps,qs with
 exception Empty (* Empty pattern *)
 
 let get_type_path ty =
-  let ty = Ctype.expand_head ty in
+  let ty = Mutable_type.expand_head ty in
   match ty with
-  | LTconstr (path,_) -> path
+  | Mutable_type.Mconstr (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
 
 
@@ -562,7 +562,7 @@ let close_variant env row =
       row.row_name row.row_fields in
   if not row.row_closed || nm != row.row_name then begin
     (* this unification cannot fail *)
-    Ctype.unify env row.row_more
+    Mutable_type.unify env row.row_more
       (Btype.newgenty
          (Tvariant {row with row_fields = []; row_more = Btype.newgenvar();
                     row_closed = true; row_name = nm}))
@@ -572,7 +572,7 @@ let close_variant env row =
 let row_of_pat pat =
   assert false
 (*
-  match Ctype.expand_head pat.pat_env pat.pat_type with
+  match Mutable_type.expand_head pat.pat_env pat.pat_type with
     {desc = Tvariant row} -> Btype.row_repr row
   | _ -> assert false
 *)
@@ -690,7 +690,7 @@ let build_other ext env =  match env with
   ::_ ->
     make_pat
       (Tpat_var (Ident.create "*exception*"))
-      Ctype.none Env.empty
+      invalid_mutable_type Env.empty
 | ({pat_desc = Tpat_construct (_,_)} as p,_) :: _ ->
     begin match ext with
     | Some ext when ext == (get_type_path p.pat_type) ->

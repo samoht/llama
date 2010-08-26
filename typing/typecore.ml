@@ -6,20 +6,20 @@ open Types;;
 open Typedtree;;
 open Typedtree_aux
 open Btype;;
-open Ctype;;
+open Mutable_type;;
 open Asttypes;;
 open Context;;
 
 type error =
   | Incomplete_format of string
   | Bad_conversion of string * int * char
-  | Label_mismatch of label * local_type * local_type
+  | Label_mismatch of label * mutable_type * mutable_type
   | Label_multiply_defined of label
   | Label_missing of label list
   | Label_not_mutable of label
-  | Pattern_type_clash of local_type * local_type
-  | Expr_type_clash of local_type * local_type
-  | Apply_non_function of local_type
+  | Pattern_type_clash of mutable_type * mutable_type
+  | Expr_type_clash of mutable_type * mutable_type
+  | Apply_non_function of mutable_type
 
 exception Error of Location.t * error
 
@@ -29,18 +29,18 @@ let type_of_type_expression typexp =
   let rec type_of typexp =
     match typexp.te_desc with
         Ttyp_var utv ->
-          if utv.utv_type == Context.no_type then
-            let ty = LTvar(newtyvar()) in
+          if utv.utv_type == invalid_mutable_type then
+            let ty = Mvar(newtyvar()) in
             utv.utv_type <- ty;
             ty
           else
             utv.utv_type
       | Ttyp_arrow(arg1, arg2) ->
-          LTarrow(type_of arg1, type_of arg2)
+          Marrow(type_of arg1, type_of arg2)
       | Ttyp_tuple argl ->
-          LTtuple(List.map type_of argl)
+          Mtuple(List.map type_of argl)
       | Ttyp_constr(tcs, args) ->
-          LTconstr (tcs, List.map type_of args)
+          Mconstr (tcs, List.map type_of args)
   in
   let ty = type_of typexp in
   typexp.te_type <- ty;
@@ -49,13 +49,13 @@ let type_of_type_expression typexp =
 (* Typecore of constants *)
 
 let type_of_constant = function
-    Const_int _ -> Ctype.type_int
-  | Const_float _ -> Ctype.type_float
-  | Const_string _ -> Ctype.type_string
-  | Const_char _ -> Ctype.type_char
-  | Const_int32 _ -> Ctype.type_int32
-  | Const_int64 _ -> Ctype.type_int64
-  | Const_nativeint _ -> Ctype.type_nativeint
+    Const_int _ -> mutable_type_int
+  | Const_float _ -> mutable_type_float
+  | Const_string _ -> mutable_type_string
+  | Const_char _ -> mutable_type_char
+  | Const_int32 _ -> mutable_type_int32
+  | Const_int64 _ -> mutable_type_int64
+  | Const_nativeint _ -> mutable_type_nativeint
 ;;
 
 (* Enables warnings *)
@@ -76,12 +76,12 @@ let rec tpat (pat, ty) =
     Tpat_any ->
       ()
   | Tpat_var v ->
-      if v.val_type = Context.no_type then
+      if v.val_type = invalid_mutable_type then
         v.val_type <- ty
       else
         unify_pat pat ty v.val_type
   | Tpat_alias(pat, v) ->
-      if v.val_type = Context.no_type then
+      if v.val_type = invalid_mutable_type then
         v.val_type <- ty
       else
         unify_pat pat ty v.val_type;
@@ -92,7 +92,7 @@ let rec tpat (pat, ty) =
       begin try
         tpat_list patl (filter_product (List.length patl) ty)
       with Unify ->
-        let expty = LTtuple(List.map ltvar (newtyvars (List.length patl))) in
+        let expty = Mtuple(new_type_vars (List.length patl)) in
         raise (Error(pat.pat_loc, Pattern_type_clash(ty, expty)))
       end
   | Tpat_construct(cs, args) ->
@@ -174,7 +174,7 @@ and is_nonexpansive_opt = function
 
 let type_format loc fmt =
 
-  let ty_arrow gty ty = LTarrow(gty, ty) in
+  let ty_arrow gty ty = Marrow(gty, ty) in
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -241,7 +241,7 @@ let type_format loc fmt =
         match fmt.[j] with
         | '*' ->
           let ty_uresult, ty_result = scan i (j + 1) in
-          ty_uresult, ty_arrow Ctype.type_int ty_result
+          ty_uresult, ty_arrow mutable_type_int ty_result
         | '-' | '+' -> scan_decimal_string scan i (j + 1)
         | _ -> scan_decimal_string scan i j
       and scan_precision i j =
@@ -269,15 +269,15 @@ let type_format loc fmt =
         if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
-        | 's' | 'S' -> conversion j Ctype.type_string
+        | 's' | 'S' -> conversion j mutable_type_string
         | '[' ->
           let j = range_closing_index fmt j in
-          conversion j Ctype.type_string
-        | 'c' | 'C' -> conversion j Ctype.type_char
+          conversion j mutable_type_string
+        | 'c' | 'C' -> conversion j mutable_type_char
         | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
-          conversion j Ctype.type_int
-        | 'f' | 'e' | 'E' | 'g' | 'G' | 'F' -> conversion j Ctype.type_float
-        | 'B' | 'b' -> conversion j Ctype.type_bool
+          conversion j mutable_type_int
+        | 'f' | 'e' | 'E' | 'g' | 'G' | 'F' -> conversion j mutable_type_float
+        | 'B' | 'b' -> conversion j mutable_type_bool
         | 'a' | 'r' as conv ->
           let conversion =
             if conv = 'a' then conversion_a else conversion_r in
@@ -285,9 +285,9 @@ let type_format loc fmt =
           let j = j + 1 in
           if j >= len then conversion (j - 1) ty_e ty_e else begin
             match fmt.[j] with
-(*            | 'a' | 'A' -> conversion j ty_e (Ctype.type_array ty_e)
-            | 'l' | 'L' -> conversion j ty_e (Ctype.type_list ty_e)
-            | 'o' | 'O' -> conversion j ty_e (Ctype.type_option ty_e)*)
+(*            | 'a' | 'A' -> conversion j ty_e (mutable_type_array ty_e)
+            | 'l' | 'L' -> conversion j ty_e (mutable_type_list ty_e)
+            | 'o' | 'O' -> conversion j ty_e (mutable_type_option ty_e)*)
             | _ -> conversion (j - 1) ty_e ty_e end
 (*      | 'r' ->
           let ty_e = newvar () in
@@ -301,16 +301,16 @@ let type_format loc fmt =
         | 't' -> conversion j (ty_arrow ty_input ty_aresult)
         | 'l' | 'n' | 'L' as c ->
           let j = j + 1 in
-          if j >= len then conversion (j - 1) Ctype.type_int else begin
+          if j >= len then conversion (j - 1) mutable_type_int else begin
             match fmt.[j] with
             | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' ->
               let ty_arg =
                 match c with
-                | 'l' -> Ctype.type_int32
-                | 'n' -> Ctype.type_nativeint
-                | _ -> Ctype.type_int64 in
+                | 'l' -> mutable_type_int32
+                | 'n' -> mutable_type_nativeint
+                | _ -> mutable_type_int64 in
               conversion j ty_arg
-            | c -> conversion (j - 1) Ctype.type_int
+            | c -> conversion (j - 1) mutable_type_int
           end
 (*
         | '{' | '(' as c ->
@@ -332,7 +332,7 @@ let type_format loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    LTconstr
+    Mconstr
       (Predef.tcs_format6,
        [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
@@ -359,7 +359,7 @@ let rec type_expr expr =
   | Texp_constant cst ->
       type_of_constant cst
   | Texp_tuple(args) ->
-      LTtuple(List.map type_expr args)
+      Mtuple(List.map type_expr args)
   | Texp_construct(cs, args) ->
       let (ty_args, ty_res) = instantiate_constructor cs in
       List.iter2 type_expect args ty_args;
@@ -397,41 +397,41 @@ let rec type_expr expr =
         type_pattern (pat, ty_arg);
         type_expect action ty_res in
       List.iter tcase matching;
-      LTarrow(ty_arg, ty_res)
+      Marrow(ty_arg, ty_res)
   | Texp_try (body, matching) ->
       let ty = type_expr body in
       List.iter
         (fun (pat, expr) ->
-           type_pattern (pat, Ctype.type_exn);
+           type_pattern (pat, mutable_type_exn);
           type_expect expr ty)
         matching;
       ty
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expr  e2
   | Texp_ifthenelse (cond, ifso, ifnot) ->
-      type_expect cond Ctype.type_bool;
+      type_expect cond mutable_type_bool;
       begin match ifnot with
         | None ->
-            type_expect ifso Ctype.type_unit;
-            Ctype.type_unit
+            type_expect ifso mutable_type_unit;
+            mutable_type_unit
         | Some ifnot ->
             let ty = type_expr ifso in
             type_expect ifnot ty;
             ty
       end
   | Texp_when (cond, act) ->
-      type_expect cond Ctype.type_bool;
+      type_expect cond mutable_type_bool;
       type_expr act
   | Texp_while (cond, body) ->
-      type_expect cond Ctype.type_bool;
+      type_expect cond mutable_type_bool;
       type_statement body;
-      Ctype.type_unit
+      mutable_type_unit
   | Texp_for (id, start, stop, up_flag, body) ->
-      id.val_type <- Ctype.type_int;
-      type_expect start Ctype.type_int;
-      type_expect stop Ctype.type_int;
+      id.val_type <- mutable_type_int;
+      type_expect start mutable_type_int;
+      type_expect stop mutable_type_int;
       type_statement body;
-      Ctype.type_unit
+      mutable_type_unit
   | Texp_constraint (e, ty_expr) ->
       let ty' = type_of_type_expression ty_expr in
       type_expect e ty';
@@ -439,7 +439,7 @@ let rec type_expr expr =
   | Texp_array elist ->
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
-      Ctype.type_array ty_arg
+      mutable_type_array ty_arg
   | Texp_record (lbl_exp_list, exten) ->
       let ty = new_type_var() in
       List.iter
@@ -477,10 +477,10 @@ let rec type_expr expr =
       if not lbl.lbl_mut then raise(Error(expr.exp_loc, Label_not_mutable lbl));
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
-      Ctype.type_unit
+      mutable_type_unit
   | Texp_assert e ->
-      type_expect e Ctype.type_bool;
-      Ctype.type_unit
+      type_expect e mutable_type_bool;
+      mutable_type_unit
   | Texp_assertfalse ->
       new_type_var ()
   in
@@ -496,10 +496,10 @@ and type_expect exp expected_ty =
       let actual_ty =
         match expand_head expected_ty with
           (* Hack for format strings *)
-          LTconstr(cstr, _) when cstr == Predef.tcs_format6 ->
+          Mconstr(cstr, _) when cstr == Predef.tcs_format6 ->
             type_format exp.exp_loc s
         | _ ->
-            Ctype.type_string in
+            mutable_type_string in
       unify_expr exp expected_ty actual_ty
   | Texp_let(rec_flag, pat_expr_list, body) ->
       type_let_decl rec_flag pat_expr_list;
@@ -507,7 +507,7 @@ and type_expect exp expected_ty =
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expect e2 expected_ty
   | Texp_ifthenelse (cond, ifso, Some ifnot) ->
-      type_expect cond Ctype.type_bool;
+      type_expect cond mutable_type_bool;
       type_expect ifso expected_ty;
       type_expect ifnot expected_ty
   | Texp_tuple el ->
@@ -545,10 +545,10 @@ and type_let_decl rec_flag pat_expr_list =
 and type_statement expr =
   let ty = type_expr expr in
   match repr ty with
-  | LTarrow(_,_) ->
+  | Marrow(_,_) ->
       Location.prerr_warning expr.exp_loc Warnings.Partial_application
-  | LTvar _ -> ()
-  | LTconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
+  | Mvar _ -> ()
+  | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Location.prerr_warning expr.exp_loc Warnings.Statement_type
 
@@ -561,8 +561,8 @@ let report_unification_error ppf t1 t2 txt1 txt2 =
   let type_expansion ppf t =
     let t = repr t in
     let t' = expand_head t in
-    if t == t' then local_type ppf t
-    else fprintf ppf "@[<2>%a@ =@ %a@]" local_type t local_type t'
+    if t == t' then mutable_type ppf t
+    else fprintf ppf "@[<2>%a@ =@ %a@]" mutable_type t mutable_type t'
   in
   fprintf ppf
     "@[<v>\
@@ -610,7 +610,7 @@ let report_error ppf = function
            fprintf ppf "but an expression was expected of type")
   | Apply_non_function typ ->
       begin match repr typ with
-        LTarrow _ ->
+        Marrow _ ->
           fprintf ppf "This function is applied to too many arguments;@ ";
           fprintf ppf "maybe you forgot a `;'"
       | _ ->

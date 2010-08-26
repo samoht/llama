@@ -1,21 +1,10 @@
 open Longident
 open Types
-
-type local_type =
-  | LTvar of type_variable
-  | LTarrow of local_type * local_type
-  | LTtuple of local_type list
-  | LTconstr of type_constructor * local_type list
-
-and type_variable = {
-  mutable forward : local_type option }
-
-let no_type = LTtuple []
-let ltvar v = LTvar v
+open Mutable_type
 
 type local_value = {
   val_name : string;
-  mutable val_type : local_type }
+  mutable val_type : mutable_type }
 
 type value_reference =
     Ref_local of local_value

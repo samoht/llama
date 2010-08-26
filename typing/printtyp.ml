@@ -171,44 +171,44 @@ let signature ppf sg =
   fprintf ppf "%a" print_signature (tree_of_signature sg)
 
 (* ---------------------------------------------------------------------- *)
-(* local types                                                            *)
+(* mutable types                                                          *)
 (* ---------------------------------------------------------------------- *)
 
-open Context
+open Mutable_type
 
-let local_names = ref ([] : (Context.type_variable * string) list)
-let local_counter = ref 0
-let reset_local_names () = local_names := []
-let new_local_name () =
-  let name = int_to_alpha !local_counter in
-  incr local_counter;
+let mutable_names = ref ([] : (mutable_type_variable * string) list)
+let mutable_counter = ref 0
+let reset_mutable_names () = mutable_names := []
+let new_mutable_name () =
+  let name = int_to_alpha !mutable_counter in
+  incr mutable_counter;
   name
-let name_of_local_type tv =
-  try List.assq tv !local_names with Not_found ->
-    let name = new_local_name () in
-    local_names := (tv, name) :: !local_names;
+let name_of_mutable_type tv =
+  try List.assq tv !mutable_names with Not_found ->
+    let name = new_mutable_name () in
+    mutable_names := (tv, name) :: !mutable_names;
     name
 
-let rec tree_of_local_type ty =
+let rec tree_of_mutable_type ty =
   begin match ty with
-    | LTvar tv ->
+    | Mvar tv ->
         begin match tv.forward with
           | None ->
-              Otyp_var (true, name_of_local_type tv)
+              Otyp_var (true, name_of_mutable_type tv)
           | Some ty ->
-              tree_of_local_type ty
+              tree_of_mutable_type ty
         end
-    | LTarrow (ty1, ty2) ->
-        Otyp_arrow ("", tree_of_local_type ty1, tree_of_local_type ty2)
-    | LTtuple tyl ->
-        Otyp_tuple (tree_of_local_type_list tyl)
-    | LTconstr (tcs, tyl) ->
-        Otyp_constr (tree_of_type_constructor tcs, tree_of_local_type_list tyl)
+    | Marrow (ty1, ty2) ->
+        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2)
+    | Mtuple tyl ->
+        Otyp_tuple (tree_of_mutable_type_list tyl)
+    | Mconstr (tcs, tyl) ->
+        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
   end
 
-and tree_of_local_type_list tyl =
-  List.map tree_of_local_type tyl
+and tree_of_mutable_type_list tyl =
+  List.map tree_of_mutable_type tyl
 
-let local_type ppf ty =
-  !Oprint.out_type ppf (tree_of_local_type ty)
+let mutable_type ppf ty =
+  !Oprint.out_type ppf (tree_of_mutable_type ty)
 

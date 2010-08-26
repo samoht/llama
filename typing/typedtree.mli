@@ -5,13 +5,13 @@ open Types
 
 type user_type_variable =
   { utv_name : string;
-    mutable utv_type : Context.local_type }
+    mutable utv_type : Mutable_type.mutable_type }
 
 type type_expression =
   { te_desc: type_expression_desc;
     te_loc: Location.t;
     te_env : Env.t;
-    mutable te_type : Context.local_type }
+    mutable te_type : Mutable_type.mutable_type }
 
 and type_expression_desc =
     Ttyp_var of user_type_variable
@@ -23,7 +23,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env : Env.t;
-    mutable pat_type: Context.local_type }
+    mutable pat_type: Mutable_type.mutable_type }
 
 and pattern_desc =
     Tpat_any
@@ -41,7 +41,7 @@ type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
     exp_env : Context.t;
-    mutable exp_type: Context.local_type }
+    mutable exp_type: Mutable_type.mutable_type }
 
 and expression_desc =
     Texp_ident of Context.value_reference

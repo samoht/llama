@@ -146,14 +146,14 @@ let match_printer_type ppf desc typename =
     with Not_found ->
       fprintf ppf "Cannot find type Topdirs.%s.@." typename;
       raise Exit in
-  Ctype.init_def(Ident.current_time());
-  Ctype.begin_def();
-  let ty_arg = Ctype.newvar() in
-  Ctype.unify !toplevel_env
-    (Ctype.newconstr printer_type [ty_arg])
-    (Ctype.instance desc.val_type);
-  Ctype.end_def();
-  Ctype.generalize ty_arg;
+  Mutable_type.init_def(Ident.current_time());
+  Mutable_type.begin_def();
+  let ty_arg = Mutable_type.newvar() in
+  Mutable_type.unify !toplevel_env
+    (Mutable_type.newconstr printer_type [ty_arg])
+    (Mutable_type.instance desc.val_type);
+  Mutable_type.end_def();
+  Mutable_type.generalize ty_arg;
   ty_arg
 *)
 
@@ -165,14 +165,14 @@ let find_printer_type ppf lid =
     let (ty_arg, is_old_style) =
       try
         (match_printer_type ppf desc "printer_type_new", false)
-      with Ctype.Unify _ ->
+      with Mutable_type.Unify _ ->
         (match_printer_type ppf desc "printer_type_old", true) in
     (ty_arg, path, is_old_style)
   with
   | Not_found ->
       fprintf ppf "Unbound value %a.@." Printtyp.longident lid;
       raise Exit
-  | Ctype.Unify _ ->
+  | Mutable_type.Unify _ ->
       fprintf ppf "%a has a wrong type for a printing function.@."
       Printtyp.longident lid;
       raise Exit

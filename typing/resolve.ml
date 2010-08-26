@@ -7,6 +7,7 @@ open Parsetree
 open Typedtree
 open Typedtree_aux
 open Primitive
+open Mutable_type
 
 type error =
     Unbound_type_constructor of Longident.t
@@ -89,7 +90,7 @@ let rec type_expression env te =
               begin try
                 List.assoc v !type_expr_vars
               with Not_found ->
-                let t = {utv_name=v; utv_type=Context.no_type} in
+                let t = {utv_name=v; utv_type=invalid_mutable_type} in
                 type_expr_vars := (v,t) :: !type_expr_vars; t
               end
         | Ptyp_arrow (x, y) ->
@@ -107,7 +108,7 @@ let rec type_expression env te =
       end;
     te_loc = te.ptyp_loc;
     te_env = env;
-    te_type = Context.no_type }
+    te_type = invalid_mutable_type }
 
 let typexp ctxt te = type_expression ctxt.Context.ctxt_env te
 
@@ -154,7 +155,7 @@ let global_val_type env te =
 
 let mkpatvar s =
   { Context.val_name = s;
-    Context.val_type = Context.no_type }
+    Context.val_type = invalid_mutable_type }
 
 let rec check_unique l loc =
   match l with
@@ -199,7 +200,7 @@ let pattern_gen env p =
         end;
       pat_loc = p.ppat_loc;
       pat_env = env;
-      pat_type = Context.no_type }
+      pat_type = invalid_mutable_type }
   in
   aux p
 
@@ -278,7 +279,7 @@ let rec expr env ex =
       end;
     exp_loc = ex.pexp_loc;
     exp_env = env;
-    exp_type = Context.no_type }
+    exp_type = invalid_mutable_type }
 
 
 let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =

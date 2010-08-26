@@ -11,7 +11,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env: Env.t;
-    pat_type: Context.local_type }
+    pat_type: Mutable_type.mutable_type }
 
 and pattern_desc =
     Tpat_any

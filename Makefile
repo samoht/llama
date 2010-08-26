@@ -38,22 +38,27 @@ UTILS=utils/config.cmo utils/clflags.cmo utils/misc.cmo utils/tbl.cmo utils/warn
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/syntaxerr.cmo \
  parsing/longident.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
 
-TYPING=typing/unused_var.cmo typing/primitive.cmo \
- typing/types.cmo \
- typing/predef.cmo \
- typing/modenv.cmo \
- typing/env.cmo \
- typing/btype.cmo \
- typing/subst.cmo \
- typing/oprint.cmo \
- typing/context.cmo \
- typing/type_context.cmo \
- typing/printtyp.cmo \
- typing/typedtree_aux.cmo typing/ctype.cmo \
- typing/includecore.cmo typing/includemod.cmo \
- typing/resolve.cmo \
- typing/typecore.cmo \
- typing/typedecl.cmo typing/typemod.cmo
+TYPING=\
+  typing/unused_var.cmo \
+  typing/primitive.cmo \
+  typing/types.cmo \
+  typing/predef.cmo \
+  typing/modenv.cmo \
+  typing/env.cmo \
+  typing/btype.cmo \
+  typing/subst.cmo \
+  typing/oprint.cmo \
+  typing/mutable_type.cmo \
+  typing/context.cmo \
+  typing/type_context.cmo \
+  typing/printtyp.cmo \
+  typing/typedtree_aux.cmo \
+  typing/includecore.cmo \
+  typing/includemod.cmo \
+  typing/resolve.cmo \
+  typing/typecore.cmo \
+  typing/typedecl.cmo \
+  typing/typemod.cmo
 
 COMP=bytecomp/ident.cmo \
   bytecomp/lambda.cmo bytecomp/printlambda.cmo \

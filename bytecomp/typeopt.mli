@@ -16,7 +16,7 @@
 
 val has_base_type : Typedtree.expression -> Types.type_constructor -> bool
 val maybe_pointer : Typedtree.expression -> bool
-val array_kind_gen : Context.local_type -> Env.t -> Lambda.array_kind
+val array_kind_gen : Mutable_type.mutable_type -> Env.t -> Lambda.array_kind
 val array_kind : Typedtree.expression -> Lambda.array_kind
 val array_pattern_kind : Typedtree.pattern -> Lambda.array_kind
 val bigarray_kind_and_layout :

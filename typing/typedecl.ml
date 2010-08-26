@@ -4,11 +4,12 @@ open Asttypes
 open Types
 open Typedtree
 open Btype
+open Mutable_type
 open Typecore
 
 type error =
     Recursive_abbrev of string
-  | Non_generalizable of Context.local_type
+  | Non_generalizable of mutable_type
 
 exception Error of Location.t * error
 
@@ -34,20 +35,20 @@ let is_cyclic tcs =
   end
       
 let type_letdef pat_exp_list =
-  let ty_list = List.map (fun _ -> Context.LTvar(Ctype.newtyvar())) pat_exp_list in
+  let ty_list = List.map (fun _ -> Mutable_type.Mvar(Mutable_type.newtyvar())) pat_exp_list in
   List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
   List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
   List.iter2
     (fun (pat, exp) ty ->
-       if not (is_nonexpansive exp) && not (Ctype.is_closed ty) then
+       if not (is_nonexpansive exp) && not (Mutable_type.is_closed ty) then
          raise (Error(exp.exp_loc, Non_generalizable ty)))
     pat_exp_list ty_list
 
 let type_expression loc expr =
   let ty = type_expr expr in
-  if not (is_nonexpansive expr) && not (Ctype.is_closed ty) then
+  if not (is_nonexpansive expr) && not (Mutable_type.is_closed ty) then
     raise (Error(expr.exp_loc, Non_generalizable ty));
-  Ctype.generalize ty
+  Mutable_type.generalize ty
 
 let type_equation_list teq_list =
   let ltcs_list = List.map (fun teq -> teq.teq_ltcs) teq_list in
@@ -169,7 +170,7 @@ let g_structure_item str = match str.str_desc with
             let globval =
               { val_module = Modenv.get_current_module ();
                 val_name = locval.Context.val_name;
-                val_type = Ctype.generalize locval.Context.val_type;
+                val_type = Mutable_type.generalize locval.Context.val_type;
                 val_kind = Val_reg }
             in
             locval, globval
@@ -210,4 +211,4 @@ let report_error ppf = function
   | Non_generalizable typ ->
       fprintf ppf
         "@[The type of this expression,@ %a,@ \
-           contains type variables that cannot be generalized@]" local_type typ
+           contains type variables that cannot be generalized@]" mutable_type typ
