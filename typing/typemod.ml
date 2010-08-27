@@ -14,7 +14,7 @@ let process_structure_item env pstr =
 
 let process_signature_item env psig =
   let tsig = Resolve.temporary_signature_item env psig in
-  Permanent.signature_item env tsig
+  Permanent.signature_items env tsig
 
 let rec process_structure env = function
     [] ->
@@ -38,7 +38,8 @@ let rec structure_aux = function
   | Str_eval _ :: rem -> structure_aux rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
   | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
-  | Str_type tcs_list :: rem -> Permanent.make_types tcs_list @ structure_aux rem
+  | Str_type tcs_list :: rem ->
+      Permanent.signature_items_of_type_constructors tcs_list @ structure_aux rem
   | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
   | Str_open _ :: rem -> structure_aux rem
 
