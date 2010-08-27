@@ -92,15 +92,15 @@ let type_equation_list teq_list =
                    name_args_list)
           | Teq_record name_mut_arg_list ->
               Tcs_record
-                (Resolve.mapi
-                   begin fun pos (name, mut, arg) ->
-                     { lbl_tcs = tcs;
-                       lbl_name = name;
-                       lbl_arg = type_of_local_type subst arg;
-                       lbl_mut = (mut = Mutable);
-                       lbl_pos = pos }
-                   end
-                   name_mut_arg_list)
+                (let rec aux pos = function
+                     [] -> []
+                   | (name, mut, arg) :: tl ->
+                       { lbl_tcs = tcs;
+                         lbl_name = name;
+                         lbl_arg = type_of_local_type subst arg;
+                         lbl_mut = (mut = Mutable);
+                         lbl_pos = pos } :: aux (succ pos) tl
+                 in aux 0 name_mut_arg_list)
           | Teq_abbrev arg ->
               Tcs_abbrev (type_of_local_type subst arg)
         end
