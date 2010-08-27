@@ -1,11 +1,6 @@
-open Typecore
-open Parsetree
-open Typedtree
-open Primitive
-open Typedecl
-open Base
-open Format
 open Misc
+open Base
+open Typedtree
 
 type error =
   | Interface_not_compiled of string
@@ -46,7 +41,7 @@ let rec structure_aux = function
   | Str_eval _ :: rem -> structure_aux rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
   | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
-  | Str_type tcs_list :: rem -> make_sig_types tcs_list @ structure_aux rem
+  | Str_type tcs_list :: rem -> Typedecl.make_sig_types tcs_list @ structure_aux rem
   | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
   | Str_open _ :: rem -> structure_aux rem
 
@@ -60,7 +55,7 @@ let type_implementation sourcefile outputprefix modulename env str =
   let simple_sg = (* simplify_signature *) sg in
 (*   Typecore.force_delayed_checks (); *)
   if !Clflags.print_types then begin
-    fprintf std_formatter "%a@." Printtyp.signature simple_sg;
+    Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
     (gstr, Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
@@ -86,6 +81,7 @@ let type_implementation sourcefile outputprefix modulename env str =
 
 (* Error report *)
 
+open Format
 open Printtyp
 
 let report_error ppf = function

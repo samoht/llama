@@ -128,7 +128,7 @@ external string_to_format :
 external format_to_string :
  ('a, 'b, 'c, 'd, 'e, 'f) format6 -> string = "%identity"
 
-let type_format loc fmt =
+let formatstring loc fmt =
 
   let ty_arrow gty ty = Marrow(gty, ty) in
 
@@ -322,22 +322,22 @@ and expression_aux exp =
         in
         type_args ty_fct args
     | Texp_let (_, pat_exp_list, body) ->
-        type_let pat_exp_list;
+        bindings pat_exp_list;
         expression body
     | Texp_match (item, pat_exp_list) ->
         let ty_arg = expression item in
         let ty_res = new_type_var () in
-        type_cases ty_arg ty_res pat_exp_list;
+        caselist ty_arg ty_res pat_exp_list;
         ty_res
     | Texp_function pat_exp_list ->
         let ty_arg = new_type_var () in
         let ty_res = new_type_var () in
-        type_cases ty_arg ty_res pat_exp_list;
+        caselist ty_arg ty_res pat_exp_list;
         Marrow (ty_arg, ty_res)
     | Texp_try (body, pat_exp_list) ->
         let ty_arg = new_type_var () in
         let ty_res = expression body in
-        type_cases ty_arg ty_res pat_exp_list;
+        caselist ty_arg ty_res pat_exp_list;
         ty_res
     | Texp_sequence (e1, e2) ->
         statement e1; expression e2
@@ -404,7 +404,7 @@ and expression_aux exp =
 and expression_expect exp expected_ty =
   match exp.exp_desc with
     | Texp_let (_, pat_exp_list, body) ->
-        type_let pat_exp_list;
+        bindings pat_exp_list;
         expression_expect body expected_ty
     | Texp_sequence (e1, e2) ->
         statement e1;
@@ -417,7 +417,7 @@ and expression_expect exp expected_ty =
                 let ty =
                   match expand_head expected_ty with
                       Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
-                        type_format exp.exp_loc s
+                        formatstring exp.exp_loc s
                     | _ ->
                         type_string in
                 unify exp.exp_type ty;
@@ -433,13 +433,13 @@ and expression_expect exp expected_ty =
 
 (* Typing of "let" definitions *)
 
-and type_let pat_exp_list =
+and bindings pat_exp_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_exp_list;
   List.iter (fun (pat, exp) -> expression_expect exp pat.pat_type) pat_exp_list
 
 (* Typing of match cases *)
 
-and type_cases ty_arg ty_res pat_exp_list =
+and caselist ty_arg ty_res pat_exp_list =
   List.iter (fun (pat, _) -> pattern_expect pat ty_arg) pat_exp_list;
   List.iter (fun (_, exp) -> expression_expect exp ty_res) pat_exp_list;
 

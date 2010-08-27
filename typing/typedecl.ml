@@ -5,7 +5,6 @@ open Base
 open Typedtree
 open Context
 open Mutable_type
-open Typecore
 open Pseudoenv
 
 type error =
@@ -36,16 +35,16 @@ let is_cyclic tcs =
   end
       
 let type_letdef pat_exp_list =
-  type_let pat_exp_list;
+  Typecore.bindings pat_exp_list;
   List.iter
     (fun (pat, exp) ->
-       if not (is_nonexpansive exp) && not (is_closed pat.pat_type) then
+       if not (Typecore.is_nonexpansive exp) && not (is_closed pat.pat_type) then
          raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
     pat_exp_list
 
 let type_expression loc expr =
   let ty = Typecore.expression expr in
-  if not (is_nonexpansive expr) && not (is_closed ty) then
+  if not (Typecore.is_nonexpansive expr) && not (is_closed ty) then
     raise (Error(expr.exp_loc, Non_generalizable ty));
   generalize ty
 
