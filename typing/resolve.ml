@@ -5,7 +5,6 @@ open Misc
 open Base
 open Parsetree
 open Typedtree
-open Typedtree_aux
 open Primitive
 open Mutable_type
 open Context
@@ -25,6 +24,20 @@ type error =
   | Constructor_arity_mismatch of Longident.t * int * int
 
 exception Error of Location.t * error
+
+let rec free_vars_of_pat pat =
+  match pat.pat_desc with
+    Tpat_any -> []
+  | Tpat_var v -> [v]
+  | Tpat_alias(pat,v) -> v :: free_vars_of_pat pat
+  | Tpat_constant _ -> []
+  | Tpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
+  | Tpat_construct(_, pats) -> List.flatten (List.map free_vars_of_pat pats)
+  | Tpat_record lbl_pat_list ->
+      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
+  | Tpat_array patl -> List.flatten (List.map free_vars_of_pat patl)
+  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1
+  | Tpat_constraint(pat, _) -> free_vars_of_pat pat
 
 let type_expr_vars = ref ([] : (string * mutable_type) list);;
 let reset_type_expression_vars () = type_expr_vars := []

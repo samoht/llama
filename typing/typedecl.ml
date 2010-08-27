@@ -158,7 +158,7 @@ let g_structure_item str = match str.str_desc with
   | Tstr_value (rec_flag, pat_exp_list) ->
       let localvals =
         List.flatten (List.map (fun (pat, _) ->
-                                  Typedtree_aux.free_vars_of_pat pat) pat_exp_list) in
+                                  Resolve.free_vars_of_pat pat) pat_exp_list) in
       let m =
         List.map
           begin fun locval ->

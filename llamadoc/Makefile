@@ -128,7 +128,7 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/context.cmo \
  $(LLAMASRCDIR)/typing/pseudoenv.cmo \
  $(LLAMASRCDIR)/typing/printtyp.cmo \
- $(LLAMASRCDIR)/typing/typedtree_aux.cmo $(LLAMASRCDIR)/typing/mutable_type.cmo \
+ $(LLAMASRCDIR)/typing/mutable_type.cmo \
  $(LLAMASRCDIR)/typing/includecore.cmo $(LLAMASRCDIR)/typing/includemod.cmo \
  $(LLAMASRCDIR)/typing/resolve.cmo \
  $(LLAMASRCDIR)/typing/typecore.cmo \

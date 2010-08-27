@@ -2,7 +2,6 @@ open Misc
 open Asttypes
 open Base
 open Typedtree
-open Typedtree_aux
 open Mutable_type
 open Context
 

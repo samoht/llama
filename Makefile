@@ -51,7 +51,6 @@ TYPING=\
   typing/context.cmo \
   typing/pseudoenv.cmo \
   typing/printtyp.cmo \
-  typing/typedtree_aux.cmo \
   typing/resolve.cmo \
   typing/typecore.cmo \
   typing/typedecl.cmo \
