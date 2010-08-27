@@ -166,7 +166,7 @@ and unify_list tyl1 tyl2 =
     | ty1::rest1, ty2::rest2 -> unify ty1 ty2; unify_list rest1 rest2
     | _ -> raise Unify
 
-(* Three special cases of unification (really needed?) *)
+(* Special cases of unification (xxx not needed) *)
 
 let rec filter_arrow ty =
   let ty = repr ty in
@@ -196,17 +196,3 @@ let rec filter_product arity ty =
       filter_product arity (apply tcs.tcs_params body args)
   | _ ->
       raise Unify
-
-let rec filter_array ty =
-  let ty = repr ty in
-  match ty with
-      Mvar v ->
-        let ty = new_type_var () in
-        v.link <- Some(Mconstr(Predef.tcs_array, [ty]));
-        ty
-    | Mconstr(tcs,[arg]) when tcs == Predef.tcs_array ->
-        arg
-    | Mconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-        filter_array (apply tcs.tcs_params body args)
-    | _ ->
-        raise Unify

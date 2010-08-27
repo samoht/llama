@@ -36,20 +36,19 @@ let is_cyclic tcs =
   end
       
 let type_letdef pat_exp_list =
-  let ty_list = List.map (fun _ -> Mutable_type.new_type_var()) pat_exp_list in
-  List.iter2 (fun (pat, _) ty -> type_pattern (pat, ty)) pat_exp_list ty_list;
-  List.iter2 (fun (pat, exp) ty -> type_expect exp ty) pat_exp_list ty_list;
-  List.iter2
-    (fun (pat, exp) ty ->
-       if not (is_nonexpansive exp) && not (Mutable_type.is_closed ty) then
-         raise (Error(exp.exp_loc, Non_generalizable ty)))
-    pat_exp_list ty_list
+  List.iter (fun (pat, _) -> type_pattern pat) pat_exp_list;
+  List.iter (fun (pat, exp) -> type_expect exp pat.pat_type) pat_exp_list;
+  List.iter
+    (fun (pat, exp) ->
+       if not (is_nonexpansive exp) && not (is_closed pat.pat_type) then
+         raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
+    pat_exp_list
 
 let type_expression loc expr =
   let ty = type_expr expr in
-  if not (is_nonexpansive expr) && not (Mutable_type.is_closed ty) then
+  if not (is_nonexpansive expr) && not (is_closed ty) then
     raise (Error(expr.exp_loc, Non_generalizable ty));
-  Mutable_type.generalize ty
+  generalize ty
 
 let type_equation_list teq_list =
   let ltcs_list = List.map (fun teq -> teq.teq_ltcs) teq_list in

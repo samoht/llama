@@ -31,68 +31,61 @@ let type_of_constant = function
   | Const_int64 _ -> mutable_type_int64
   | Const_nativeint _ -> mutable_type_nativeint
 
-(* Typecore of patterns *)
+(* ---------------------------------------------------------------------- *)
+(* Patterns.                                                              *)
+(* ---------------------------------------------------------------------- *)
 
-let unify_pat pat expected_ty actual_ty =
+let unify_pattern pat expected_ty =
   try
-    unify expected_ty actual_ty
+    unify pat.pat_type expected_ty
   with Unify ->
-    raise (Error (pat.pat_loc, Pattern_type_clash (actual_ty, expected_ty)))
+    raise (Error (pat.pat_loc, Pattern_type_clash (pat.pat_type, expected_ty)))
 
-let rec type_pattern (pat, ty) =
-  unify pat.pat_type ty;
+let rec type_pattern pat =
   match pat.pat_desc with
-    Tpat_any ->
-      ()
-  | Tpat_var v ->
-      unify_pat pat v.lval_type ty
-  | Tpat_alias(pat, v) ->
-      unify_pat pat v.lval_type ty;
-      type_pattern (pat, ty)
-  | Tpat_constant cst ->
-      unify_pat pat ty (type_of_constant cst)
-  | Tpat_tuple(patl) ->
-      begin try
-        type_pattern_list patl (filter_product (List.length patl) ty)
-      with Unify ->
-        let expty = Mtuple(new_type_vars (List.length patl)) in
-        raise (Error(pat.pat_loc, Pattern_type_clash(ty, expty)))
-      end
-  | Tpat_construct(cs, args) ->
-      let (ty_args, ty_res) = instantiate_constructor cs in
-      unify_pat pat ty ty_res;
-      List.iter2
-        (fun arg ty_arg ->
-           type_pattern (arg, ty_arg))
-        args ty_args
-  | Tpat_record lbl_pat_list ->
-      let rec tpat_lbl = function
-        [] -> ()
-      | (lbl,p) :: rest ->
-          let (ty_res, ty_arg) = instantiate_label lbl in
-          unify_pat pat ty ty_res;
-          type_pattern (p, ty_arg);
-          tpat_lbl rest
-      in
-        tpat_lbl lbl_pat_list
-  | Tpat_array patl ->
-      let ty_arg = filter_array ty in
-      List.iter (fun p -> type_pattern (p, ty_arg)) patl
-  | Tpat_or(pat1, pat2) ->
-      type_pattern (pat1, ty);
-      type_pattern (pat2, ty)
-  | Tpat_constraint(pat, ty') ->
-      type_pattern (pat, ty');
-      unify_pat pat ty ty'
-
-and type_pattern_list pats tys = match pats, tys with
-    [], [] ->
-      ()
-  | (pat::patl), (ty::tyl) ->
-      type_pattern (pat, ty);
-      type_pattern_list patl tyl
-  | _, _ ->
-      fatal_error "type_pattern: arity error"
+      Tpat_any ->
+        ()
+    | Tpat_var v ->
+        unify_pattern pat v.lval_type
+    | Tpat_alias (pat', v) ->
+        unify_pattern pat pat'.pat_type;
+        type_pattern pat';
+        unify_pattern pat v.lval_type
+    | Tpat_constant c ->
+        unify_pattern pat (type_of_constant c)
+    | Tpat_tuple patl ->
+        List.iter type_pattern patl;
+        let ty = Mtuple (List.map (fun pat -> pat.pat_type) patl) in
+        unify_pattern pat ty
+    | Tpat_construct (cs, args) ->
+        let (ty_args, ty_res) = instantiate_constructor cs in
+        List.iter2
+          (fun arg ty_arg -> type_pattern arg; unify_pattern arg ty_arg)
+          args ty_args;
+        unify_pattern pat ty_res
+    | Tpat_record lbl_arg_list ->
+        let ty = new_type_var () in
+        List.iter
+          (fun (lbl, arg) ->
+             let (ty_res, ty_arg) = instantiate_label lbl in
+             unify ty_res ty;
+             type_pattern arg;
+             unify_pattern arg ty_arg) lbl_arg_list;
+        unify_pattern pat ty
+    | Tpat_array patl ->
+        List.iter type_pattern patl;
+        let ty = new_type_var () in
+        List.iter (fun pat -> unify_pattern pat ty) patl;
+        unify_pattern pat (mutable_type_array ty)
+    | Tpat_or (pat1, pat2) ->
+        type_pattern pat1;
+        type_pattern pat2;
+        unify_pattern pat2 pat1.pat_type;
+        unify_pattern pat pat1.pat_type
+    | Tpat_constraint (pat', ty) ->
+        type_pattern pat';
+        unify_pattern pat' ty;
+        unify_pattern pat pat'.pat_type
 
 (* Check if an expression is non-expansive, that is, the result of its 
    evaluation cannot contain newly created mutable objects. *)
@@ -115,10 +108,11 @@ let rec is_nonexpansive expr =
       is_nonexpansive ifso && is_nonexpansive_opt ifnot
   | Texp_constraint(e, ty) -> is_nonexpansive e
   | Texp_array [] -> true
-  | Texp_record (lbl_expr_list, exten) ->
+  | Texp_record (lbl_expr_list, opt_init_exp) ->
       List.forall (fun (lbl, expr) ->
                   not lbl.lbl_mut && is_nonexpansive expr)
-              lbl_expr_list (* xxx exten *)
+              lbl_expr_list &&
+        is_nonexpansive_opt opt_init_exp
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_when(cond, act) -> is_nonexpansive act
   | _ -> false
@@ -324,35 +318,29 @@ let rec type_expr expr =
           type_expect arg1 ty1;
           type_args ty2 argl in
       type_args ty_fct args
-  | Texp_let(rec_flag, pat_expr_list, body) ->
-      type_let_decl rec_flag pat_expr_list;
+  | Texp_let(_, pat_exp_list, body) ->
+      type_let pat_exp_list;
       type_expr body
-  | Texp_match (item, matching) ->
+  | Texp_match (item, pat_exp_list) ->
       let ty_arg = type_expr item in
-      let ty_res = new_type_var() in
-      let tcase (pat, action) =
-        type_pattern (pat, ty_arg);
-        type_expect action ty_res in
-      List.iter tcase matching;
+      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
+      let ty_res = new_type_var () in
+      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
       ty_res
   | Texp_function [] ->
       fatal_error "type_expr: empty matching"
-  | Texp_function matching ->
-      let ty_arg = new_type_var() in
-      let ty_res = new_type_var() in
-      let tcase (pat, action) =
-        type_pattern (pat, ty_arg);
-        type_expect action ty_res in
-      List.iter tcase matching;
-      Marrow(ty_arg, ty_res)
-  | Texp_try (body, matching) ->
-      let ty = type_expr body in
-      List.iter
-        (fun (pat, expr) ->
-           type_pattern (pat, mutable_type_exn);
-          type_expect expr ty)
-        matching;
-      ty
+  | Texp_function pat_exp_list ->
+      let ty_arg = new_type_var () in
+      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
+      let ty_res = new_type_var () in
+      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+      Marrow (ty_arg, ty_res)
+  | Texp_try (body, pat_exp_list) ->
+      let ty_res = type_expr body in
+      let ty_arg = new_type_var () in
+      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
+      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+      ty_res
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expr  e2
   | Texp_ifthenelse (cond, ifso, ifnot) ->
@@ -447,8 +435,8 @@ and type_expect exp expected_ty =
         | _ ->
             mutable_type_string in
       unify_expr exp expected_ty actual_ty
-  | Texp_let(rec_flag, pat_expr_list, body) ->
-      type_let_decl rec_flag pat_expr_list;
+  | Texp_let(_, pat_exp_list, body) ->
+      type_let pat_exp_list;
       type_expect body expected_ty
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expect e2 expected_ty
@@ -469,16 +457,9 @@ and type_expect exp expected_ty =
   
 (* Typecore of "let" definitions *)
 
-and type_let_decl rec_flag pat_expr_list =
-  let ty_list =
-    List.map (fun (pat, expr) -> new_type_var()) pat_expr_list in
-  type_pattern_list (List.map (fun (pat, expr) -> pat) pat_expr_list) ty_list;
-  List.iter2
-    (fun (pat, exp) ty ->
-        type_expect exp ty)
-    pat_expr_list ty_list;
-    List.map2 (fun (pat, expr) ty -> (is_nonexpansive expr, ty))
-         pat_expr_list ty_list
+and type_let pat_exp_list =
+  List.iter (fun (pat, _) -> type_pattern pat) pat_exp_list;
+  List.iter (fun (pat, exp) -> type_expect exp pat.pat_type) pat_exp_list
 
 (* Typecore of statements (expressions whose values are ignored) *)
 
