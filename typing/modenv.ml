@@ -142,10 +142,10 @@ let map_signature memo f = List.map (map_signature_item memo f)
 (* ---------------------------------------------------------------------- *)
 
 type pers_type =
-    Pvar of type_variable
-  | Parrow of pers_type * pers_type
-  | Ptuple of pers_type list
-  | Pconstr of type_constructor_reference * pers_type list
+    Pers_param of type_parameter
+  | Pers_arrow of pers_type * pers_type
+  | Pers_tuple of pers_type list
+  | Pers_constr of type_constructor_reference * pers_type list
 and pers_type_constructor = pers_type gen_type_constructor
 and type_constructor_reference =
     Internal of pers_type_constructor
@@ -155,14 +155,14 @@ type pers_signature = pers_type gen_signature
 let map_signature_for_save modid l =
   let memo = ref ([] : (type_constructor * pers_type_constructor) list) in
   let rec f = function
-      Tvar tv -> Pvar tv
-    | Tarrow (ty1, ty2) -> Parrow (f ty1, f ty2)
-    | Ttuple tyl -> Ptuple (List.map f tyl)
+      Tparam param -> Pers_param param
+    | Tarrow (ty1, ty2) -> Pers_arrow (f ty1, f ty2)
+    | Ttuple tyl -> Pers_tuple (List.map f tyl)
     | Tconstr (tcs, tyl) ->
         let tcsr =
           if tcs.tcs_module = modid then Internal (map_type_constructor memo f tcs)
           else External (tcs.tcs_module, tcs.tcs_name) in
-        Pconstr (tcsr, List.map f tyl) in
+        Pers_constr (tcsr, List.map f tyl) in
   map_signature memo f l
 
 let save_signature_with_imports sg modname filename imports =
@@ -196,10 +196,10 @@ let save_signature sg modname filename =
 let rec map_signature_for_load l =
   let memo = ref ([] : (pers_type_constructor * type_constructor) list) in
   let rec f = function
-      Pvar tv -> Tvar tv
-    | Parrow (ty1, ty2) -> Tarrow (f ty1, f ty2)
-    | Ptuple tyl -> Ttuple (List.map f tyl)
-    | Pconstr (tcsr, tyl) ->
+      Pers_param tv -> Tparam tv
+    | Pers_arrow (ty1, ty2) -> Tarrow (f ty1, f ty2)
+    | Pers_tuple tyl -> Ttuple (List.map f tyl)
+    | Pers_constr (tcsr, tyl) ->
         let tcs =
           match tcsr with
               Internal tcs -> map_type_constructor memo f tcs

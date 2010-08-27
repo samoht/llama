@@ -43,8 +43,8 @@ let value ppf v = qualid ppf (val_qualid v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tvar tv ->
-      Otyp_var (false, tv.tv_name)
+    Tparam param ->
+      Otyp_var (false, param.param_name)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
@@ -96,8 +96,8 @@ let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
 (* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =
-  let params = List.map (function Tvar tv -> tv | _ -> assert false) tcs.tcs_params in
-  let params = List.map (fun tv -> tv.tv_name, (true, true)) params in
+  let params = List.map (function Tparam param -> param | _ -> assert false) tcs.tcs_params in
+  let params = List.map (fun param -> param.param_name, (true, true)) params in
   tcs.tcs_name,
   params,
   begin match tcs.tcs_kind with

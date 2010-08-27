@@ -8,8 +8,8 @@ type mutable_type =
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
-and mutable_type_variable = {
-  mutable link : mutable_type option }
+and mutable_type_variable =
+  { mutable link : mutable_type option }  (* compared with (==) *)
 
 let new_type_var() = Mvar { link = None }
 let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
@@ -31,7 +31,7 @@ let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
 (* ---------------------------------------------------------------------- *)
 
 let rec instantiate_type subst = function
-    Tvar tv ->
+    Tparam tv ->
       begin try
         List.assq tv !subst
       with Not_found ->
@@ -102,10 +102,10 @@ let rec repr = function
   | ty -> ty
 
 let apply params body args =
-  let params = List.map (function Tvar tv -> tv | _ -> assert false) params in
+  let params = List.map (function Tparam tv -> tv | _ -> assert false) params in
   let subst = List.combine params args in
   let rec aux = function
-      Tvar tv -> List.assq tv subst
+      Tparam tv -> List.assq tv subst
     | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
     | Ttuple tyl -> Mtuple (List.map aux tyl)
     | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map aux tyl)

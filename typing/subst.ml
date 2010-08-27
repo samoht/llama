@@ -21,7 +21,7 @@ let type_constructor s tcs =
 
 let rec core_type s ty =
   begin match ty with
-    | Tvar _ -> ty
+    | Tparam _ -> ty
     | Tarrow (tyl, tyr) -> Tarrow (core_type s tyl, core_type s tyr)
     | Ttuple l -> Ttuple (List.map (core_type s) l)
     | Tconstr (c, l) -> Tconstr (type_constructor s c, List.map (core_type s)l)

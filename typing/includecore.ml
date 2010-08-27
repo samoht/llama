@@ -96,7 +96,7 @@ let labels s params lbl1 lbl2 =
 
 let type_constructors s tcs1 tcs2 =
   if tcs_arity tcs1 <> tcs_arity tcs2 then [Arity] else
-  let f = function Tvar tv -> tv | _ -> assert false in
+  let f = function Tparam tv -> tv | _ -> assert false in
   let corresp = List.combine (List.map f tcs1.tcs_params) (List.map f tcs2.tcs_params) in
   begin match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->

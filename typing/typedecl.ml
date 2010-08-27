@@ -20,7 +20,7 @@ let is_cyclic tcs =
   begin match tcs.tcs_kind with
       Tcs_abbrev body ->
         let rec is_acyclic seen = function
-            Tvar _ -> true
+            Tparam _ -> true
           | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
           | Ttuple tyl -> List.forall (is_acyclic seen) tyl
           | Tconstr (tcs, tyl) ->
@@ -58,7 +58,7 @@ let type_equation_list teq_list =
       begin fun ltcs ->
         { tcs_module = !Modenv.current_module;
           tcs_name =  ltcs.Pseudoenv.ltcs_name;
-          tcs_params = List.map (fun tv -> Tvar tv) ltcs.Pseudoenv.ltcs_params;
+          tcs_params = List.map (fun tv -> Tparam tv) ltcs.Pseudoenv.ltcs_params;
           tcs_kind = Tcs_abstract }
       end
       ltcs_list

@@ -1,11 +1,11 @@
-(* A pseudoenv is an Env.t extended by some type variables and local
+(* A pseudoenv is an Env.t extended by some type parameters and local
 type constructors *)
 
 open Longident
 open Base
 
 type local_type =
-    Lvar of type_variable
+    Lparam of type_parameter
   | Larrow of local_type * local_type
   | Ltuple of local_type list
   | Lconstr of type_constructor_reference * local_type list
@@ -17,11 +17,11 @@ and type_constructor_reference =
 and local_type_constructor = {
   ltcs_name : string;
   ltcs_arity : int;
-  ltcs_params : type_variable list }
+  ltcs_params : type_parameter list }
 
 let type_of_local_type subst =
   let rec aux = function
-      Lvar tv -> Tvar tv
+      Lparam param -> Tparam param
     | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
     | Lconstr (tcsr, tyl) ->
@@ -34,11 +34,11 @@ let type_of_local_type subst =
 
 type pseudoenv = {
   pseudoenv_env : Env.t;
-  pseudoenv_type_variables : (string, type_variable) Tbl.t;
+  pseudoenv_type_parameters : (string, type_parameter) Tbl.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t }
 
-let pseudoenv_lookup_type_variable name pseudoenv =
-  Tbl.find name pseudoenv.pseudoenv_type_variables
+let pseudoenv_lookup_type_parameter name pseudoenv =
+  Tbl.find name pseudoenv.pseudoenv_type_parameters
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   try
@@ -48,10 +48,10 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
   with Not_found ->
     Ref_global(Env.lookup_type lid pseudoenv.pseudoenv_env)
 
-let pseudoenv_add_type_variable tv pseudoenv =
+let pseudoenv_add_type_parameter tv pseudoenv =
   { pseudoenv with
-      pseudoenv_type_variables =
-      Tbl.add tv.tv_name tv pseudoenv.pseudoenv_type_variables }
+      pseudoenv_type_parameters =
+      Tbl.add tv.param_name tv pseudoenv.pseudoenv_type_parameters }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
@@ -60,5 +60,5 @@ let pseudoenv_add_type_constructor ltcs pseudoenv =
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
-  pseudoenv_type_variables = Tbl.empty;
+  pseudoenv_type_parameters = Tbl.empty;
   pseudoenv_type_constructors = Tbl.empty }

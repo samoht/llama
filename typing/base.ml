@@ -22,8 +22,10 @@ type rec_status =
 
 (* ---------------------------------------------------------------------- *)
 (* Types representing the essential global entities.                      *)
-(* Generic so they can be used in-memory or on disk.                      *)
 (* ---------------------------------------------------------------------- *)
+
+(* these get compared with (==) *)
+(* They are generic so they can be used in-memory or on disk. *)
 
 (* TODO: pull in descriptive comments from ocaml *)
 
@@ -72,13 +74,13 @@ type 'ty gen_signature = 'ty gen_signature_item list
 (* Specialization to the in-memory case.                                  *)
 (* ---------------------------------------------------------------------- *)
 
-type type_variable = { tv_name : string }
-
 type llama_type =
-    Tvar of type_variable
+    Tparam of type_parameter
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
+
+and type_parameter = { param_name : string }  (* compared with (==) *)
 
 and type_constructor = llama_type gen_type_constructor
 
@@ -111,7 +113,7 @@ let int_to_alpha i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let mkparam i = Tvar { tv_name = int_to_alpha i }
+let mkparam i = Tparam { param_name = int_to_alpha i }
 let mkparams n =
   let rec aux i = if i < n then mkparam i :: aux (i+1) else [] in
   aux 0

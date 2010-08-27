@@ -18,7 +18,7 @@ type error =
   | Unbound_label of Longident.t
   | Unbound_module of string
   | Repeated_parameter
-  | Unbound_type_variable of string
+  | Unbound_type_parameter of string
   | Multiply_bound_variable of string
   | Orpat_vars of string
   | Type_arity_mismatch of Longident.t * int * int
@@ -78,9 +78,9 @@ let lookup_type_constructor tctxt lid loc =
   try pseudoenv_lookup_type_constructor lid tctxt
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
-let lookup_type_variable tctxt name loc =
-  try pseudoenv_lookup_type_variable name tctxt
-  with Not_found -> raise (Error (loc, Unbound_type_variable name))
+let lookup_parameter tctxt name loc =
+  try pseudoenv_lookup_type_parameter name tctxt
+  with Not_found -> raise (Error (loc, Unbound_type_parameter name))
 
 (* ---------------------------------------------------------------------- *)
 
@@ -110,20 +110,20 @@ let typexp ctxt te = type_expression ctxt.ctxt_env te
 
 let rec global_type ctxt te =
   begin match te.ptyp_desc with
-    | Ptyp_var name -> Pseudoenv.Lvar (lookup_type_variable ctxt name te.ptyp_loc)
-    | Ptyp_arrow (ty1, ty2) -> Pseudoenv.Larrow (global_type ctxt ty1, global_type ctxt ty2)
-    | Ptyp_tuple tyl -> Pseudoenv.Ltuple (List.map (global_type ctxt) tyl)
+    | Ptyp_var name -> Lparam (lookup_parameter ctxt name te.ptyp_loc)
+    | Ptyp_arrow (ty1, ty2) -> Larrow (global_type ctxt ty1, global_type ctxt ty2)
+    | Ptyp_tuple tyl -> Ltuple (List.map (global_type ctxt) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcsr = lookup_type_constructor ctxt lid te.ptyp_loc in
         let arity =
           match tcsr with
-              Pseudoenv.Ref_local ltcs -> ltcs.Pseudoenv.ltcs_arity
-            | Pseudoenv.Ref_global tcs -> tcs_arity tcs
+              Ref_local ltcs -> ltcs.ltcs_arity
+            | Ref_global tcs -> tcs_arity tcs
         in
         if List.length tyl <> arity then
           raise(Error(te.ptyp_loc, 
                       Type_arity_mismatch(lid, arity, List.length tyl)));
-        Pseudoenv.Lconstr (tcsr, List.map (global_type ctxt) tyl)
+        Lconstr (tcsr, List.map (global_type ctxt) tyl)
   end
 
 let global_val_type env te =
@@ -133,7 +133,7 @@ let global_val_type env te =
       | Ptyp_var name ->
           begin try List.assoc name !tctxt
           with Not_found ->
-            let ty = Tvar{tv_name=name} in
+            let ty = Tparam{param_name=name} in
             tctxt:=(name,ty):: !tctxt;
             ty
           end
@@ -320,9 +320,9 @@ let type_equation_list env pteq_list =
   let ltcs_list =
     List.map
       begin fun pteq ->
-        { Pseudoenv.ltcs_name = pteq.pteq_name;
-          Pseudoenv.ltcs_arity = List.length pteq.pteq_params;
-          Pseudoenv.ltcs_params = List.map (fun name -> {tv_name=name}) pteq.pteq_params }
+        { ltcs_name = pteq.pteq_name;
+          ltcs_arity = List.length pteq.pteq_params;
+          ltcs_params = List.map (fun name -> {param_name=name}) pteq.pteq_params }
       end
       pteq_list
   in
@@ -336,7 +336,7 @@ let type_equation_list env pteq_list =
     begin fun pteq ltcs ->
       let ctxt =
         List.fold_left
-          (fun ctxt tv -> pseudoenv_add_type_variable tv ctxt) ctxt ltcs.ltcs_params
+          (fun ctxt tv -> pseudoenv_add_type_parameter tv ctxt) ctxt ltcs.ltcs_params
       in
       { teq_ltcs = ltcs;
         teq_kind = type_equation_kind ctxt pteq.pteq_kind;
@@ -413,7 +413,7 @@ let report_error ppf = function
       fprintf ppf "Unbound value %a" longident lid
   | Repeated_parameter ->
       fprintf ppf "A type parameter occurs several times"
-  | Unbound_type_variable name ->
+  | Unbound_type_parameter name ->
       fprintf ppf "Unbound type parameter %s" name
   | Multiply_bound_variable name ->
       fprintf ppf "Variable %s is bound several times in this matching" name

@@ -566,7 +566,7 @@ let close_variant env row =
     (* this unification cannot fail *)
     Mutable_type.unify env row.row_more
       (Typeutil.newgenty
-         (Tvariant {row with row_fields = []; row_more = Typeutil.newgenvar();
+         (Tparamiant {row with row_fields = []; row_more = Typeutil.newgenvar();
                     row_closed = true; row_name = nm}))
   end
 *)
@@ -575,7 +575,7 @@ let row_of_pat pat =
   assert false
 (*
   match Mutable_type.expand_head pat.pat_env pat.pat_type with
-    {desc = Tvariant row} -> Typeutil.row_repr row
+    {desc = Tparamiant row} -> Typeutil.row_repr row
   | _ -> assert false
 *)
 
