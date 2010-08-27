@@ -304,7 +304,7 @@ let rec type_expr expr =
     Texp_ident vref ->
       begin match vref with
         | Ref_local lv -> lv.lval_type
-        | Ref_global v -> instantiate_one_type v.val_type
+        | Ref_global v -> instantiate_type v.val_type
       end
   | Texp_constant cst ->
       type_of_constant cst

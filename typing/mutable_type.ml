@@ -30,35 +30,44 @@ let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
 (* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
 
-let rec instantiate_type subst = function
-    Tparam tv ->
-      begin try
-        List.assq tv !subst
-      with Not_found ->
-        let mv = new_type_var () in
-        subst := (tv, mv) :: !subst;
-        mv
-      end
-  | Tarrow (ty1, ty2) ->
-      Marrow (instantiate_type subst ty1, instantiate_type subst ty2)
-  | Ttuple tyl ->
-      Mtuple (List.map (instantiate_type subst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Mconstr (tcs, List.map (instantiate_type subst) tyl)
+let instantiate_type_aux inst =
+  let rec aux = function
+      Tparam tv -> List.assq tv inst
+    | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
+    | Ttuple tyl -> Mtuple (List.map aux tyl)
+    | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map aux tyl)
+  in aux
 
-let instantiate_one_type ty =
-  instantiate_type (ref []) ty
+let instantiate_type ty =
+  let rec aux accum = function
+      Tparam param ->
+        if List.mem_assq param accum then
+          accum
+        else
+          (param, new_type_var ()) :: accum
+    | Tarrow (ty1, ty2) ->
+        aux (aux accum ty1) ty2
+    | Ttuple tyl | Tconstr (_, tyl) ->
+        List.fold_left aux accum tyl in
+  instantiate_type_aux (aux [] ty) ty
+
+let make_instantiation tcs =
+  List.map (function
+                Tparam param -> (param, new_type_var ())
+              | _ -> assert false) tcs.tcs_params
 
 let instantiate_constructor cs =
-  let subst = ref [] in
-  let ty_args = List.map (instantiate_type subst) cs.cs_args in
-  let ty_res = instantiate_type subst (cs_res cs) in
-  (ty_args, ty_res)
+  let tcs = cs.cs_tcs in
+  let subst = make_instantiation tcs in
+  let ty_args = List.map (instantiate_type_aux subst) cs.cs_args in
+  let ty_res = Mconstr (tcs, List.map snd subst) in
+  ty_args, ty_res
 
 let instantiate_label lbl =
-  let subst = ref [] in
-  let ty_res = instantiate_type subst (lbl_res lbl) in
-  let ty_arg = instantiate_type subst lbl.lbl_arg in
+  let tcs = lbl.lbl_tcs in
+  let subst = make_instantiation tcs in
+  let ty_res = Mconstr (tcs, List.map snd subst) in
+  let ty_arg = instantiate_type_aux subst lbl.lbl_arg in
   ty_res, ty_arg
 
 (* ---------------------------------------------------------------------- *)
