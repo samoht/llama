@@ -7,25 +7,6 @@ open Context
 open Mutable_type
 open Pseudoenv
 
-type error =
-  | Non_generalizable of mutable_type
-
-exception Error of Location.t * error
-
-let type_letdef pat_exp_list =
-  Typecore.bindings pat_exp_list;
-  List.iter
-    (fun (pat, exp) ->
-       if not (Typecore.is_nonexpansive exp) && not (is_closed pat.pat_type) then
-         raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
-    pat_exp_list
-
-let type_expression loc expr =
-  let ty = Typecore.expression expr in
-  if not (Typecore.is_nonexpansive expr) && not (is_closed ty) then
-    raise (Error(expr.exp_loc, Non_generalizable ty));
-  generalize ty
-
 let type_declarations decl_list =
   let ltcs_list = List.map (fun decl -> decl.type_ltcs) decl_list in
   let tcs_list =
@@ -99,11 +80,6 @@ let do_exception name args =
     cs_tag = Tag_exception;
   }
 
-let structure_item env str = match str.str_desc with
-    Tstr_eval exp -> ignore (Typecore.expression exp)
-  | Tstr_value (_, pat_exp_list) -> type_letdef pat_exp_list
-  | _ -> ()
-
 let make_sig_types tcs_list =
   Sig_type (List.hd tcs_list, Rec_first) ::
     List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
@@ -124,10 +100,6 @@ let signature_item env sg = match sg.sig_desc with
       [Sig_exception cs], Env.add_exception cs env
   | Tsig_open (_, csig) ->
       [], Env.add_signature csig env
-
-(* ---------------------------------------------------------------------- *)
-(* Globalization.                                                         *)
-(* ---------------------------------------------------------------------- *)
 
 let g_structure_item str = match str.str_desc with
     Tstr_eval exp ->
@@ -169,13 +141,7 @@ let extend env = function
   | Str_open csig ->
       Env.add_signature csig env
 
-(**** Error report ****)
-
-open Format
-open Printtyp
-
-let report_error ppf = function
-  | Non_generalizable typ ->
-      fprintf ppf
-        "@[The type of this expression,@ %a,@ \
-           contains type variables that cannot be generalized@]" mutable_type typ
+let structure_item env str =
+  let str = g_structure_item str in
+  let env = extend env str in
+  str, env

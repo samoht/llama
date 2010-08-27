@@ -11,6 +11,7 @@ type error =
   | Pattern_type_clash of mutable_type * mutable_type
   | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
+  | Non_generalizable of mutable_type
 
 exception Error of Location.t * error
 
@@ -456,6 +457,32 @@ and statement expr =
       Location.prerr_warning expr.exp_loc Warnings.Statement_type
 
 (* ---------------------------------------------------------------------- *)
+(* Signature items and structure items.                                   *)
+(* ---------------------------------------------------------------------- *)
+
+let top_bindings pat_exp_list =
+  bindings pat_exp_list;
+  List.iter
+    (fun (pat, exp) ->
+       if not (is_nonexpansive exp) && not (is_closed pat.pat_type) then
+         raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
+    pat_exp_list
+
+let signature_item sg = ()
+
+let structure_item str =
+  match str.str_desc with
+      Tstr_eval exp -> ignore (expression exp)
+    | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
+    | _ -> ()
+
+let toplevel_eval exp =
+  let ty = expression exp in
+  if not (is_nonexpansive exp) && not (is_closed ty) then
+    raise (Error (exp.exp_loc, Non_generalizable ty));
+  generalize ty
+
+(* ---------------------------------------------------------------------- *)
 
 (* Error report *)
 
@@ -501,3 +528,7 @@ let report_error ppf = function
           fprintf ppf
             "This expression is not a function; it cannot be applied"
       end
+  | Non_generalizable typ ->
+      fprintf ppf
+        "@[The type of this expression,@ %a,@ \
+           contains type variables that cannot be generalized@]" mutable_type typ

@@ -214,11 +214,10 @@ let execute_phrase print_outcome ppf phr =
       let str = Resolve.structure_item oldenv sstr in
       let tyopt =
         match str.str_desc with
-            Tstr_eval e -> Some (Typedecl.type_expression sstr.pstr_loc e)
-          | _ -> Typedecl.structure_item oldenv str; None
+            Tstr_eval e -> Some (Typecore.toplevel_eval e)
+          | _ -> Typecore.structure_item str; None
       in
-      let str = Typedecl.g_structure_item str in
-      let newenv = Typedecl.extend oldenv str in
+      let str, newenv = Typedecl.structure_item oldenv str in
       let sg = Typemod.structure_aux [str] in
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();

@@ -9,13 +9,13 @@ exception Error of Location.t * error
 
 let process_structure_item env pstr =
   let str = Resolve.structure_item env pstr in
-  Typedecl.structure_item env str;
-  let gstr = Typedecl.g_structure_item str in
-  let env = Typedecl.extend env gstr in
-  gstr, env
+  Typecore.structure_item str;
+  let str, env = Typedecl.structure_item env str in
+  str, env
 
 let process_signature_item env psig =
   let tsig = Resolve.signature_item env psig in
+  Typecore.signature_item tsig;
   let sg, env = Typedecl.signature_item env tsig in
   tsig, sg, env
 
