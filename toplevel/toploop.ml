@@ -47,7 +47,7 @@ let setvalue name v =
 (* Return the value referred to by a path *)
 
 let eval_exception cs =
-  begin match cs.cs_module with
+  match cs.cs_module with
       Module_builtin ->
         Symtable.get_global_value (Ident.of_exception cs)
     | Module name ->
@@ -59,9 +59,25 @@ let eval_exception cs =
         try
           Hashtbl.find toplevel_value_bindings name
         with Not_found ->
-          assert false
-  end
-let _ = Printer.fwd_eval_exception := eval_exception
+          fatal_error "Toploop.eval_exception"
+
+let _ = Printer.ref_eval_exception := eval_exception
+
+let eval_value v =
+  match v.val_module with
+      Module_builtin ->
+        Symtable.get_global_value (Ident.of_value v)
+    | Module name ->
+        Obj.field
+          (Symtable.get_global_value (Ident.of_module_name name))
+          (Modenv.lookup_value_position v)
+    | Module_toplevel ->
+        let name = Translmod.toplevel_name (Ident.of_value v) in (* ? *)
+        try
+          Hashtbl.find toplevel_value_bindings name
+        with Not_found ->
+          fatal_error "Toploop.eval_value"
+
 (*
 let rec eval_path = function
   | Pident id ->

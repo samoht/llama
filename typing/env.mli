@@ -15,7 +15,7 @@ val add_signature : signature -> t -> t
 
 (* Using environments *)
 
-val lookup_type : Longident.t -> t -> type_constructor
+val lookup_type_constructor : Longident.t -> t -> type_constructor
 val lookup_constructor : Longident.t -> t -> constructor
 val lookup_label : Longident.t -> t -> label
 val lookup_value : Longident.t -> t -> value

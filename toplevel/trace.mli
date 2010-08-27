@@ -19,14 +19,14 @@ open Format
 type codeptr
 
 type traced_function =
-  { path: Base.qualified_id;           (* Name under which it is traced *)
+  { path: Base.value;                   (* Name under which it is traced *)
     closure: Obj.t;                     (* Its function closure (patched) *)
     actual_code: codeptr;               (* Its original code pointer *)
     instrumented_fun: codeptr -> Obj.t -> Obj.t -> Obj.t }
                                         (* Printing function *)
 
 val traced_functions: traced_function list ref
-val is_traced: Obj.t -> Base.qualified_id option
+val is_traced: Obj.t -> Base.value option
 val get_code_pointer: Obj.t -> codeptr
 val set_code_pointer: Obj.t -> codeptr -> unit
 val instrument_closure:

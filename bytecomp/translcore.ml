@@ -535,9 +535,9 @@ let rec transl_exp e =
 
 and transl_exp0 e =
   match e.exp_desc with
-    Texp_ident (Context.Ref_local lv) ->
-      Lvar (Ident.of_local_value lv)
-  | Texp_ident (Context.Ref_global v) ->
+    Texp_ident (Context.Local_value lval) ->
+      Lvar (Ident.of_local_value lval)
+  | Texp_ident (Context.Global_value v) ->
       begin match v with
         | {val_kind = Val_prim p} ->
             transl_primitive p
@@ -555,7 +555,7 @@ and transl_exp0 e =
             transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
       in
       Lfunction(kind, params, body)
-  | Texp_apply({exp_desc = Texp_ident(Context.Ref_global(v))}, oargs)
+  | Texp_apply({exp_desc = Texp_ident(Context.Global_value(v))}, oargs)
       when (match v.val_kind with 
               | Val_prim p -> List.length oargs >= p.prim_arity
               | _ -> false) ->

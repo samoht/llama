@@ -17,7 +17,7 @@
 open Base
 open Format
 
-val fwd_eval_exception : (constructor -> Obj.t) ref
+val ref_eval_exception : (constructor -> Obj.t) ref
 
     val install_printer :
           value -> llama_type -> (formatter -> Obj.t -> unit) -> unit

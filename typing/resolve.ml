@@ -29,7 +29,7 @@ type error =
 
 exception Error of Location.t * error
 
-(* NB: we do not unify *)
+(* NB: this module does no unification *)
 type mutable_type = Mutable_type.mutable_type
 let new_type_var = Mutable_type.new_type_var
 
@@ -111,8 +111,8 @@ let lookup_module name loc =
   try Modenv.lookup_signature name
   with Not_found -> raise (Error (loc, Unbound_module name))
 
-let lookup_global_type_constructor env lid loc =
-  try Env.lookup_type lid env
+let lookup_type_constructor env lid loc =
+  try Env.lookup_type_constructor lid env
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
 let lookup_constructor env lid loc =
@@ -127,7 +127,7 @@ let lookup_value ctxt lid loc =
   try context_lookup_value lid ctxt
   with Not_found -> raise (Error (loc, Unbound_value lid))
 
-let lookup_type_constructor pseudoenv lid loc =
+let lookup_general_type_constructor pseudoenv lid loc =
   try pseudoenv_lookup_type_constructor lid pseudoenv
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
@@ -156,7 +156,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) ->
-          let tcs = lookup_global_type_constructor env lid ty.ptyp_loc in
+          let tcs = lookup_type_constructor env lid ty.ptyp_loc in
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
@@ -174,7 +174,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcs = lookup_type_constructor pseudoenv lid ty.ptyp_loc in
+        let tcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         let arity =
           match tcs with
               Local_type_constructor ltcs -> ltcs.ltcs_arity
@@ -188,7 +188,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
-let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a) *)
+let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
         begin try
@@ -203,11 +203,11 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a) *)
     | Ptyp_tuple tyl ->
         Mutable_type.Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcs = lookup_global_type_constructor env lid ty.ptyp_loc in
+        let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mutable_type.Mconstr (lookup_global_type_constructor env lid ty.ptyp_loc,
+        Mutable_type.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
                               List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)

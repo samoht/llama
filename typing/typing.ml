@@ -290,10 +290,10 @@ let rec expression exp =
 
 and expression_aux exp =
   match exp.exp_desc with
-      Texp_ident v ->
-        begin match v with
-            Ref_local lval -> lval.lval_type
-          | Ref_global gval -> instantiate_one_type gval.val_type
+      Texp_ident genval ->
+        begin match genval with
+            Local_value lval -> lval.lval_type
+          | Global_value v -> instantiate_one_type v.val_type
         end
     | Texp_constant c ->
         constant c

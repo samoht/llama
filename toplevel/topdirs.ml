@@ -138,36 +138,27 @@ type 'a printer_type_new = Format.formatter -> 'a -> unit
 type 'a printer_type_old = 'a -> unit
 
 let match_printer_type ppf desc typename =
-  assert false
-(*
-  let printer_type =
+  let printer_tcs =
     try
-      Env.lookup_type (Ldot(Lident "Topdirs", typename)) !toplevel_env
+      Env.lookup_type_constructor (Ldot("Topdirs", typename)) !toplevel_env
     with Not_found ->
       fprintf ppf "Cannot find type Topdirs.%s.@." typename;
       raise Exit in
-  Mutable_type.init_def(Ident.current_time());
-  Mutable_type.begin_def();
-  let ty_arg = Mutable_type.newvar() in
-  Mutable_type.unify !toplevel_env
-    (Mutable_type.newconstr printer_type [ty_arg])
-    (Mutable_type.instance desc.val_type);
-  Mutable_type.end_def();
-  Mutable_type.generalize ty_arg;
-  ty_arg
-*)
+  let ty_arg = Mutable_type.new_type_var() in
+  Mutable_type.unify
+    (Mutable_type.Mconstr (printer_tcs, [ty_arg]))
+    (Mutable_type.instantiate_one_type desc.val_type);
+  Mutable_type.generalize ty_arg
 
 let find_printer_type ppf lid =
-  assert false
-(*
   try
-    let (path, desc) = Env.lookup_value lid !toplevel_env in
+    let v = Env.lookup_value lid !toplevel_env in
     let (ty_arg, is_old_style) =
       try
-        (match_printer_type ppf desc "printer_type_new", false)
+        (match_printer_type ppf v "printer_type_new", false)
       with Mutable_type.Unify _ ->
-        (match_printer_type ppf desc "printer_type_old", true) in
-    (ty_arg, path, is_old_style)
+        (match_printer_type ppf v "printer_type_old", true) in
+    (ty_arg, v, is_old_style)
   with
   | Not_found ->
       fprintf ppf "Unbound value %a.@." Printtyp.longident lid;
@@ -176,22 +167,18 @@ let find_printer_type ppf lid =
       fprintf ppf "%a has a wrong type for a printing function.@."
       Printtyp.longident lid;
       raise Exit
-*)
 
 let dir_install_printer ppf lid =
-  assert false
-(*
   try
-    let (ty_arg, path, is_old_style) = find_printer_type ppf lid in
-    let v = eval_path path in
+    let (ty_arg, v, is_old_style) = find_printer_type ppf lid in
+    let o = eval_value v in
     let print_function =
       if is_old_style then
-        (fun formatter repr -> Obj.obj v (Obj.obj repr))
+        (fun formatter repr -> Obj.obj o (Obj.obj repr))
       else
-        (fun formatter repr -> Obj.obj v formatter (Obj.obj repr)) in
-    install_printer path ty_arg print_function
+        (fun formatter repr -> Obj.obj o formatter (Obj.obj repr)) in
+    install_printer v ty_arg print_function
   with Exit -> ()
-*)
 
 let dir_remove_printer ppf lid =
   try
@@ -217,34 +204,32 @@ let tracing_function_ptr =
     (Obj.repr (fun arg -> print_trace (current_environment()) arg))
 
 let dir_trace ppf lid =
-  assert false
-(*
   try
-    let (path, desc) = Env.lookup_value lid !toplevel_env in
+    let v = Env.lookup_value lid !toplevel_env in
     (* Check if this is a primitive *)
-    match desc.val_kind with
+    match v.val_kind with
     | Val_prim p ->
         fprintf ppf "%a is an external function and cannot be traced.@."
         Printtyp.longident lid
     | _ ->
-        let clos = eval_path path in
+        let clos = Toploop.eval_value v in
         (* Nothing to do if it's not a closure *)
         if Obj.is_block clos
         && (Obj.tag clos = Obj.closure_tag || Obj.tag clos = Obj.infix_tag)
         then begin
         match is_traced clos with
-        | Some opath ->
+        | Some ov ->
             fprintf ppf "%a is already traced (under the name %a).@."
-            Printtyp.path path
-            Printtyp.path opath
+            Printtyp.value v
+            Printtyp.value ov
         | None ->
             (* Instrument the old closure *)
             traced_functions :=
-              { path = path;
+              { path = v;
                 closure = clos;
                 actual_code = get_code_pointer clos;
                 instrumented_fun =
-                  instrument_closure !toplevel_env lid ppf desc.val_type }
+                  instrument_closure !toplevel_env lid ppf v.val_type }
               :: !traced_functions;
             (* Redirect the code field of the closure to point
                to the instrumentation function *)
@@ -253,19 +238,16 @@ let dir_trace ppf lid =
         end else fprintf ppf "%a is not a function.@." Printtyp.longident lid
   with
   | Not_found -> fprintf ppf "Unbound value %a.@." Printtyp.longident lid
-*)
 
 let dir_untrace ppf lid =
-  assert false
-(*
   try
-    let (path, desc) = Env.lookup_value lid !toplevel_env in
+    let v = Env.lookup_value lid !toplevel_env in
     let rec remove = function
     | [] ->
         fprintf ppf "%a was not traced.@." Printtyp.longident lid;
         []
     | f :: rem ->
-        if Path.same f.path path then begin
+        if f.path == v then begin
           set_code_pointer f.closure f.actual_code;
           fprintf ppf "%a is no longer traced.@." Printtyp.longident lid;
           rem
@@ -273,18 +255,14 @@ let dir_untrace ppf lid =
     traced_functions := remove !traced_functions
   with
   | Not_found -> fprintf ppf "Unbound value %a.@." Printtyp.longident lid
-*)
 
 let dir_untrace_all ppf () =
-  assert false
-(*
   List.iter
     (fun f ->
       set_code_pointer f.closure f.actual_code;
-      fprintf ppf "%a is no longer traced.@." Printtyp.path f.path)
+      fprintf ppf "%a is no longer traced.@." Printtyp.value f.path)
     !traced_functions;
   traced_functions := []
-*)
 
 let parse_warnings ppf iserr s =
   try Warnings.parse_options iserr s

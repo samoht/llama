@@ -23,7 +23,7 @@ open Toploop
 type codeptr = Obj.t
 
 type traced_function =
-  { path: qualified_id;                 (* Name under which it is traced *)
+  { path: Base.value;                   (* Name under which it is traced *)
     closure: Obj.t;                     (* Its function closure (patched) *)
     actual_code: codeptr;               (* Its original code pointer *)
     instrumented_fun: codeptr -> Obj.t -> Obj.t -> Obj.t }

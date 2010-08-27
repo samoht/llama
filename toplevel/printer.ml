@@ -20,7 +20,7 @@ open Longident
 open Base
 open Outcometree
 
-let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
+let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
 
     (* Given an exception value, we cannot recover its type,
        hence we cannot print its arguments in general.
@@ -256,7 +256,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
         (* Make sure this is the right exception and not an homonym,
            by evaluating the exception found and comparing with the
            identifier contained in the exception bucket *)
-        if Obj.field bucket 0 != !fwd_eval_exception cstr
+        if Obj.field bucket 0 != !ref_eval_exception cstr
         then raise Not_found;
         tree_of_constr_with_args
            (fun x -> Oide_ident x.cs_name) cstr 1 depth bucket cstr.cs_args

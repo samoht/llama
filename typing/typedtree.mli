@@ -2,9 +2,9 @@
 
 open Asttypes
 open Base
-open Pseudoenv
-open Context
 open Mutable_type
+open Context
+open Pseudoenv
 
 type pattern =
   { pat_desc: pattern_desc;
@@ -31,7 +31,7 @@ type expression =
     exp_type: mutable_type }
 
 and expression_desc =
-    Texp_ident of value_reference
+    Texp_ident of general_value
   | Texp_constant of constant
   | Texp_let of rec_flag * (pattern * expression) list * expression
   | Texp_function of (pattern * expression) list

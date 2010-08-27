@@ -22,10 +22,10 @@ let lookup proj1 get_fun lid env =
   | Ldot(mn, s) ->
       get_fun (Module mn) s
 
-let lookup_value = lookup (fun env -> env.values) Modenv.lookup_value
+let lookup_type_constructor = lookup (fun env -> env.types) Modenv.lookup_type_constructor
 let lookup_constructor = lookup (fun env -> env.constrs) Modenv.lookup_constructor
 let lookup_label = lookup (fun env -> env.labels) Modenv.lookup_label
-let lookup_type = lookup (fun env -> env.types) Modenv.lookup_type_constructor
+let lookup_value = lookup (fun env -> env.values) Modenv.lookup_value
 
 let add_value v env =
   { types = env.types;
