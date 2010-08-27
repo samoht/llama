@@ -53,16 +53,16 @@ and expression_desc =
   | Texp_assertfalse
   | Texp_constraint of expression * mutable_type
 
-type type_equation = {
-  teq_ltcs : local_type_constructor;
-  teq_kind : type_equation_kind;
-  teq_loc : Location.t }
+type type_declaration = {
+  type_ltcs : local_type_constructor;
+  type_kind : type_kind;
+  type_loc : Location.t }
 
-and type_equation_kind =
-    Teq_abstract
-  | Teq_variant of (string * local_type list) list
-  | Teq_record of (string * mutable_flag * local_type) list
-  | Teq_abbrev of local_type
+and type_kind =
+    Type_abstract
+  | Type_variant of (string * local_type list) list
+  | Type_record of (string * mutable_flag * local_type) list
+  | Type_abbrev of local_type
 
 type signature_item =
   { sig_desc: signature_item_desc;
@@ -71,7 +71,7 @@ type signature_item =
 and signature_item_desc =
     Tsig_value of string * llama_type
   | Tsig_primitive of string * llama_type * Primitive.description
-  | Tsig_type of type_equation list
+  | Tsig_type of type_declaration list
   | Tsig_exception of string * local_type list
   | Tsig_open of string * compiled_signature
 
@@ -83,7 +83,7 @@ and structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of string * llama_type * Primitive.description
-  | Tstr_type of type_equation list
+  | Tstr_type of type_declaration list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * compiled_signature
 

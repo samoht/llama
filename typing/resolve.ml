@@ -6,7 +6,6 @@ open Base
 open Parsetree
 open Typedtree
 open Primitive
-open Mutable_type
 open Context
 open Pseudoenv
 
@@ -26,8 +25,13 @@ type error =
   | Label_multiply_defined of label
   | Label_missing of label list
   | Label_not_mutable of label
+  | Recursive_abbrev of string
 
 exception Error of Location.t * error
+
+(* NB: we do not unify *)
+type mutable_type = Mutable_type.mutable_type
+let new_type_var = Mutable_type.new_type_var
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities for checking things.                                         *)
@@ -170,16 +174,16 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcsr = lookup_type_constructor pseudoenv lid ty.ptyp_loc in
+        let tcs = lookup_type_constructor pseudoenv lid ty.ptyp_loc in
         let arity =
-          match tcsr with
-              Ref_local ltcs -> ltcs.ltcs_arity
-            | Ref_global tcs -> tcs_arity tcs
+          match tcs with
+              Local_type_constructor ltcs -> ltcs.ltcs_arity
+            | Global_type_constructor gtcs -> tcs_arity gtcs
         in
         if List.length tyl <> arity then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, arity, List.length tyl)));
-        Lconstr (tcsr, List.map (local_type pseudoenv) tyl)
+        Lconstr (tcs, List.map (local_type pseudoenv) tyl)
 
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
@@ -195,16 +199,16 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a) *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Marrow (mutable_type env ty1, mutable_type env ty2)
+        Mutable_type.Marrow (mutable_type env ty1, mutable_type env ty2)
     | Ptyp_tuple tyl ->
-        Mtuple (List.map (mutable_type env) tyl)
+        Mutable_type.Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_global_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mconstr (lookup_global_type_constructor env lid ty.ptyp_loc,
-                 List.map (mutable_type env) tyl)
+        Mutable_type.Mconstr (lookup_global_type_constructor env lid ty.ptyp_loc,
+                              List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -356,14 +360,61 @@ let rec expr ctxt ex =
     exp_type = new_type_var() }
 
 (* ---------------------------------------------------------------------- *)
-(* Resolution of type declarations.                                       *)
+(* Type declarations.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let constructor ctxt tcs n idx_const idx_block idx (name, typexps, _) =
-  (name, List.map (local_type ctxt) typexps)
+let type_kind ctxt = function
+    Ptype_abstract ->
+      Type_abstract
+  | Ptype_abbrev ty ->
+      Type_abbrev (local_type ctxt ty)
+  | Ptype_variant cs_list ->
+      Type_variant (List.map (fun (name, tyl, _) -> (name, List.map (local_type ctxt) tyl)) cs_list)
+  | Ptype_record lbl_list ->
+      Type_record (List.map (fun (name, mut, ty, _) -> (name, mut, local_type ctxt ty)) lbl_list)
 
-let label ctxt tcs pos (name, mut, typexp, _) =
-  (name, local_type ctxt typexp)
+let type_declarations env pdecl_list =
+  let ltcs_list =
+    List.map
+      begin fun pdecl ->
+        if find_duplicate pdecl.ptype_params <> None then
+          raise (Error (pdecl.ptype_loc, Repeated_parameter));
+        { ltcs_name = pdecl.ptype_name;
+          ltcs_arity = List.length pdecl.ptype_params;
+          ltcs_params = List.map (fun name -> { param_name=name }) pdecl.ptype_params }
+      end pdecl_list
+  in
+  let pseudoenv = pseudoenv_create env in
+  let pseudoenv =
+    List.fold_left
+      (fun pseudoenv ltcs -> pseudoenv_add_type_constructor ltcs pseudoenv)
+      pseudoenv ltcs_list
+  in
+  let decl_list =
+    List.map2
+      begin fun pdecl ltcs ->
+        let pseudoenv =
+          List.fold_left
+            (fun pseudoenv tv -> pseudoenv_add_parameter tv pseudoenv) pseudoenv ltcs.ltcs_params
+        in
+        { type_ltcs = ltcs;
+          type_kind = type_kind pseudoenv pdecl.ptype_kind;
+          type_loc = pdecl.ptype_loc }
+      end pdecl_list ltcs_list
+  in
+  List.iter
+    begin fun decl ->
+      match decl.type_kind with
+          Type_abbrev ty ->
+            if occurs_in_expansion decl.type_ltcs ty then
+              raise (Error (decl.type_loc, Recursive_abbrev decl.type_ltcs.ltcs_name))
+        | _ -> ()
+    end decl_list;
+  decl_list
+
+(* ---------------------------------------------------------------------- *)
+(* Signature and structure items.                                         *)
+(* ---------------------------------------------------------------------- *)
 
 let primitive decl ty =
   let rec arity ty =
@@ -371,50 +422,6 @@ let primitive decl ty =
         Ptyp_arrow (_, ty) -> succ (arity ty)
       | _ -> 0 in
   Primitive.parse_declaration (arity ty) decl
-
-let type_equation_kind ctxt = function
-    Pteq_abstract ->
-      Teq_abstract
-  | Pteq_abbrev te ->
-      Teq_abbrev (local_type ctxt te)
-  | Pteq_variant l ->
-      Teq_variant (List.map (fun (name, tyl, _) -> (name, List.map (local_type ctxt) tyl)) l)
-  | Pteq_record l ->
-      Teq_record (List.map (fun (name, mut, ty, _) -> (name, mut, local_type ctxt ty)) l)
-
-let type_equation_list env pteq_list =
-  let ltcs_list =
-    List.map
-      begin fun pteq ->
-        if find_duplicate pteq.pteq_params <> None then
-          raise (Error (pteq.pteq_loc, Repeated_parameter));
-        { ltcs_name = pteq.pteq_name;
-          ltcs_arity = List.length pteq.pteq_params;
-          ltcs_params = List.map (fun name -> {param_name=name}) pteq.pteq_params }
-      end
-      pteq_list
-  in
-  let ctxt = pseudoenv_create env in
-  let ctxt =
-    List.fold_left
-      (fun ctxt ltcs -> pseudoenv_add_type_constructor ltcs ctxt)
-      ctxt ltcs_list
-  in
-  List.map2
-    begin fun pteq ltcs ->
-      let ctxt =
-        List.fold_left
-          (fun ctxt tv -> pseudoenv_add_parameter tv ctxt) ctxt ltcs.ltcs_params
-      in
-      { teq_ltcs = ltcs;
-        teq_kind = type_equation_kind ctxt pteq.pteq_kind;
-        teq_loc = pteq.pteq_loc }
-    end
-    pteq_list ltcs_list
-
-(* ---------------------------------------------------------------------- *)
-(* Resolution of signature items.                                         *)
-(* ---------------------------------------------------------------------- *)
 
 let signature_item env psig =
   reset_type_variables();
@@ -424,20 +431,16 @@ let signature_item env psig =
         mk (Tsig_value (s, llama_type env te))
     | Psig_primitive(id,te,pr) ->
         mk (Tsig_primitive (id, llama_type env te, primitive pr te))
-    | Psig_type pteql ->
-        let teql = type_equation_list env pteql in
-        mk (Tsig_type teql)
+    | Psig_type pdecls ->
+        let decls = type_declarations env pdecls in
+        mk (Tsig_type decls)
     | Psig_exception (name, args) ->
-        let ctxt = pseudoenv_create env in
-        mk (Tsig_exception (name, List.map (local_type ctxt) args))
+        let pseudoenv = pseudoenv_create env in
+        mk (Tsig_exception (name, List.map (local_type pseudoenv) args))
     | Psig_open name ->
         mk (Tsig_open (name, lookup_module name psig.psig_loc))
 
-(* ---------------------------------------------------------------------- *)
-(* Resolution of structure items.                                         *)
-(* ---------------------------------------------------------------------- *)
-
-let letdef env rec_flag pat_exp_list =
+let top_bindings env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
   let localvals = List.flatten (List.map bound_local_values pat_list) in
   let enter_localvals ctxt = List.fold_left (fun ctxt v -> context_add_value v ctxt) ctxt localvals in
@@ -456,16 +459,16 @@ let structure_item env pstr =
         let exp = expr (context_create env) exp in
         mk (Tstr_eval exp)
     | Pstr_value(rec_flag, pat_exp_list) ->
-        let pat_exp_list = letdef env rec_flag pat_exp_list in
+        let pat_exp_list = top_bindings env rec_flag pat_exp_list in
         mk (Tstr_value(rec_flag, pat_exp_list))
     | Pstr_primitive(id,te,pr) ->
         mk (Tstr_primitive (id, llama_type env te, primitive pr te))
-    | Pstr_type (pteql) ->
-        let teql = type_equation_list env pteql in
-        mk (Tstr_type (teql))
+    | Pstr_type pdecls ->
+        let decls = type_declarations env pdecls in
+        mk (Tstr_type decls)
     | Pstr_exception (name, args) ->
-        let ctxt = pseudoenv_create env in
-        mk (Tstr_exception (name, List.map (local_type ctxt) args))
+        let pseudoenv = pseudoenv_create env in
+        mk (Tstr_exception (name, List.map (local_type pseudoenv) args))
     | Pstr_open name ->
         mk (Tstr_open (name, lookup_module name pstr.pstr_loc))
 
@@ -519,3 +522,5 @@ let report_error ppf = function
         print_labels labels
   | Label_not_mutable lbl ->
       fprintf ppf "The record field label %a is not mutable" label lbl
+  | Recursive_abbrev s ->
+      fprintf ppf "The type abbreviation %s is cyclic" s

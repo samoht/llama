@@ -108,9 +108,9 @@ open Odoc_types
 
     let name_comment_from_type_kind pos_end pos_limit tk =
       match tk with
-        Parsetree.Pteq_abstract _ | Parsetree.Pteq_abbrev _ ->
+        Parsetree.Ptype_abstract _ | Parsetree.Ptype_abbrev _ ->
           (0, [])
-      | Parsetree.Pteq_variant cons_core_type_list_list ->
+      | Parsetree.Ptype_variant cons_core_type_list_list ->
           let rec f acc cons_core_type_list_list =
             match cons_core_type_list_list with
               [] ->
@@ -133,7 +133,7 @@ open Odoc_types
           in
           f [] cons_core_type_list_list
 
-      | Parsetree.Pteq_record name_mutable_type_list (* of (string * mutable_flag * core_type) list*) ->
+      | Parsetree.Ptype_record name_mutable_type_list (* of (string * mutable_flag * core_type) list*) ->
           let rec f = function
               [] ->
                 []
@@ -320,7 +320,7 @@ open Odoc_types
             let new_env =
               List.fold_left
                 (fun acc_env decl ->
-                  let name = decl.Parsetree.pteq_name in
+                  let name = decl.Parsetree.ptype_name in
                   let complete_name = Odoc_name.concat current_module_name name in
                   Odoc_env.add_type acc_env complete_name
                 )
@@ -332,25 +332,25 @@ open Odoc_types
                 [] ->
                   (acc_maybe_more, [])
               | (type_decl) :: q ->
-                  let name = type_decl.Parsetree.pteq_name in
+                  let name = type_decl.Parsetree.ptype_name in
                   let (assoc_com, ele_comments) =
                     if first then
                       (comment_opt, [])
                     else
                       get_comments_in_module
                         last_pos
-                        type_decl.Parsetree.pteq_loc.Location.loc_start.Lexing.pos_cnum
+                        type_decl.Parsetree.ptype_loc.Location.loc_start.Lexing.pos_cnum
                   in
                   let pos_limit2 =
                     match q with
                       [] -> pos_limit
-                    | (td) :: _ -> td.Parsetree.pteq_loc.Location.loc_start.Lexing.pos_cnum
+                    | (td) :: _ -> td.Parsetree.ptype_loc.Location.loc_start.Lexing.pos_cnum
                   in
                   let (maybe_more, name_comment_list) =
                     name_comment_from_type_kind
-                      type_decl.Parsetree.pteq_loc.Location.loc_end.Lexing.pos_cnum
+                      type_decl.Parsetree.ptype_loc.Location.loc_end.Lexing.pos_cnum
                       pos_limit2
-                      type_decl.Parsetree.pteq_kind
+                      type_decl.Parsetree.ptype_kind
                   in
                   print_DEBUG ("Type "^name^" : "^(match assoc_com with None -> "sans commentaire" | Some c -> Odoc_misc.string_of_info c));
                   let f_DEBUG (name, c_opt) = print_DEBUG ("constructor/field "^name^": "^(match c_opt with None -> "sans commentaire" | Some c -> Odoc_misc.string_of_info c)) in
@@ -363,8 +363,8 @@ open Odoc_types
                   in
                   (* get the type kind with the associated comments *)
                   let type_kind = get_type_kind new_env name_comment_list sig_type_decl.Base.tcs_kind in
-                  let loc_start = type_decl.Parsetree.pteq_loc.Location.loc_start.Lexing.pos_cnum in
-                  let new_end = type_decl.Parsetree.pteq_loc.Location.loc_end.Lexing.pos_cnum + maybe_more in
+                  let loc_start = type_decl.Parsetree.ptype_loc.Location.loc_start.Lexing.pos_cnum in
+                  let new_end = type_decl.Parsetree.ptype_loc.Location.loc_end.Lexing.pos_cnum + maybe_more in
                   (* associate the comments to each constructor and build the [Type.t_type] *)
                   let new_type =
                     {

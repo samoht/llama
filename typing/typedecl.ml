@@ -8,32 +8,10 @@ open Mutable_type
 open Pseudoenv
 
 type error =
-    Recursive_abbrev of string
   | Non_generalizable of mutable_type
 
 exception Error of Location.t * error
 
-(* Check whether a type constructor is a recursive abbrev *)
-
-let is_cyclic tcs =
-  begin match tcs.tcs_kind with
-      Tcs_abbrev body ->
-        let rec is_acyclic seen = function
-            Tparam _ -> true
-          | Tarrow (ty1, ty2) -> is_acyclic seen ty1 && is_acyclic seen ty2
-          | Ttuple tyl -> List.forall (is_acyclic seen) tyl
-          | Tconstr (tcs, tyl) ->
-              not (List.memq tcs seen) &&
-                begin match tcs.tcs_kind with
-                    Tcs_abbrev body -> is_acyclic (tcs :: seen) body
-                  | _ -> true
-                end &&
-                List.forall (is_acyclic seen) tyl
-        in
-        not (is_acyclic [tcs] body)
-    | _ -> false
-  end
-      
 let type_letdef pat_exp_list =
   Typecore.bindings pat_exp_list;
   List.iter
@@ -48,8 +26,8 @@ let type_expression loc expr =
     raise (Error(expr.exp_loc, Non_generalizable ty));
   generalize ty
 
-let type_equation_list teq_list =
-  let ltcs_list = List.map (fun teq -> teq.teq_ltcs) teq_list in
+let type_declarations decl_list =
+  let ltcs_list = List.map (fun decl -> decl.type_ltcs) decl_list in
   let tcs_list =
     List.map
       begin fun ltcs ->
@@ -62,11 +40,11 @@ let type_equation_list teq_list =
   in
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
-    begin fun tcs teq ->
+    begin fun tcs decl ->
       tcs.tcs_kind <-
-        begin match teq.teq_kind with
-            Teq_abstract _ -> Tcs_abstract
-          | Teq_variant name_args_list ->
+        begin match decl.type_kind with
+            Type_abstract _ -> Tcs_abstract
+          | Type_variant name_args_list ->
               let idx_const = ref 0 in
               let idx_block = ref 0 in
               let postincr idx = let n = !idx in incr idx; n in
@@ -89,7 +67,7 @@ let type_equation_list teq_list =
                      }
                    end
                    name_args_list)
-          | Teq_record name_mut_arg_list ->
+          | Type_record name_mut_arg_list ->
               Tcs_record
                 (let rec aux pos = function
                      [] -> []
@@ -100,11 +78,11 @@ let type_equation_list teq_list =
                          lbl_mut = (mut = Mutable);
                          lbl_pos = pos } :: aux (succ pos) tl
                  in aux 0 name_mut_arg_list)
-          | Teq_abbrev arg ->
+          | Type_abbrev arg ->
               Tcs_abbrev (type_of_local_type subst arg)
         end
     end
-    tcs_list teq_list;
+    tcs_list decl_list;
   tcs_list
 
 let make_value name ty kind =
@@ -137,8 +115,8 @@ let signature_item env sg = match sg.sig_desc with
   | Tsig_primitive (name, ty, prim) ->
       let v = make_value name ty (Val_prim prim) in
       [Sig_value v], Env.add_value v env
-  | Tsig_type teq_list ->
-      let tcs_list = type_equation_list teq_list in
+  | Tsig_type decls ->
+      let tcs_list = type_declarations decls in
       make_sig_types tcs_list,
       List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
   | Tsig_exception (name, args) ->
@@ -170,8 +148,8 @@ let g_structure_item str = match str.str_desc with
       Str_value (rec_flag, pat_exp_list, lval_val_pairs)
   | Tstr_primitive (name, ty, prim) ->
       Str_primitive (make_value name ty (Val_prim prim))
-  | Tstr_type teq_list ->
-      Str_type (type_equation_list teq_list)
+  | Tstr_type decls ->
+      Str_type (type_declarations decls)
   | Tstr_exception (name, args) ->
       Str_exception (do_exception name args)
   | Tstr_open (_, csig) ->
@@ -197,8 +175,6 @@ open Format
 open Printtyp
 
 let report_error ppf = function
-  | Recursive_abbrev s ->
-      fprintf ppf "The type abbreviation %s is cyclic" s
   | Non_generalizable typ ->
       fprintf ppf
         "@[The type of this expression,@ %a,@ \

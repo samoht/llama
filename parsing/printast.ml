@@ -234,26 +234,26 @@ and expression i ppf x =
 *)
 
 and type_equation i ppf x =
-  line i ppf "type_equation %a\n" fmt_location x.pteq_loc;
+  line i ppf "type_equation %a\n" fmt_location x.ptype_loc;
   let i = i+1 in
-  line i ppf "pteq_name = %s\n" x.pteq_name;
-  line i ppf "pteq_params =\n";
-  list (i+1) string ppf x.pteq_params;
-  line i ppf "pteq_kind =\n";
-  type_kind (i+1) ppf x.pteq_kind
+  line i ppf "ptype_name = %s\n" x.ptype_name;
+  line i ppf "ptype_params =\n";
+  list (i+1) string ppf x.ptype_params;
+  line i ppf "ptype_kind =\n";
+  type_kind (i+1) ppf x.ptype_kind
 
 and type_kind i ppf x =
   match x with
-  | Pteq_abstract ->
-      line i ppf "Pteq_abstract\n"
-  | Pteq_variant l ->
-      line i ppf "Pteq_variant\n";
+  | Ptype_abstract ->
+      line i ppf "Ptype_abstract\n"
+  | Ptype_variant l ->
+      line i ppf "Ptype_variant\n";
       list (i+1) string_x_core_type_list_x_location ppf l;
-  | Pteq_record l ->
-      line i ppf "Pteq_record\n";
+  | Ptype_record l ->
+      line i ppf "Ptype_record\n";
       list (i+1) string_x_mutable_flag_x_core_type_x_location ppf l;
-  | Pteq_abbrev t ->
-      line i ppf "Pteq_abbrev\n";
+  | Ptype_abbrev t ->
+      line i ppf "Ptype_abbrev\n";
       core_type (i+1) ppf t;
 
 and exception_declaration i ppf x = list i core_type ppf x

@@ -63,7 +63,7 @@
          [pos_limit] is the position of the last char we could use to look for a comment,
          i.e. usually the beginning on the next element.*)
       val name_comment_from_type_kind :
-          int -> int -> Parsetree.type_equation_kind -> int * (string * Odoc_types.info option) list
+          int -> int -> Parsetree.type_kind -> int * (string * Odoc_types.info option) list
 
       (** This function converts a [Base.type_kind] into a [Odoc_type.type_kind],
          by associating the comment found in the parsetree of each constructor/field, if any.*)

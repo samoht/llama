@@ -49,14 +49,14 @@ let add_opt add_fn bv = function
 
 let add_type_declaration bv pdecl =
   let rec add_tkind = function
-    Pteq_abstract _ -> ()
-  | Pteq_variant cstrs ->
+    Ptype_abstract _ -> ()
+  | Ptype_variant cstrs ->
       List.iter (fun (c, args, _) -> List.iter (add_type bv) args) cstrs
-  | Pteq_record lbls ->
+  | Ptype_record lbls ->
       List.iter (fun (l, mut, ty, _) -> add_type bv ty) lbls
-  | Pteq_abbrev ty ->
+  | Ptype_abbrev ty ->
       add_type bv ty in
-  add_tkind pdecl.pteq_kind
+  add_tkind pdecl.ptype_kind
 
 let rec add_pattern bv pat =
   match pat.ppat_desc with

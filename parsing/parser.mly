@@ -677,22 +677,22 @@ type_declarations:
 
 type_declaration:
     type_parameters LIDENT type_kind
-      { { pteq_name = $2;
-          pteq_params = $1;
-          pteq_kind = $3;
-          pteq_loc = symbol_rloc() } }
+      { { ptype_name = $2;
+          ptype_params = $1;
+          ptype_kind = $3;
+          ptype_loc = symbol_rloc() } }
 ;
 type_kind:
     /* empty */
-      { Pteq_abstract }
+      { Ptype_abstract }
   | EQUAL core_type
-      { Pteq_abbrev $2 }
+      { Ptype_abbrev $2 }
   | EQUAL constructor_declarations
-      { Pteq_variant(List.rev $2) }
+      { Ptype_variant(List.rev $2) }
   | EQUAL BAR constructor_declarations
-      { Pteq_variant(List.rev $3) }
+      { Ptype_variant(List.rev $3) }
   | EQUAL LBRACE label_declarations opt_semi RBRACE
-      { Pteq_record(List.rev $3) }
+      { Ptype_record(List.rev $3) }
 ;
 type_parameters:
     /*empty*/                                   { [] }

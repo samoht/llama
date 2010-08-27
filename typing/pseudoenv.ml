@@ -8,11 +8,11 @@ type local_type =
     Lparam of type_parameter
   | Larrow of local_type * local_type
   | Ltuple of local_type list
-  | Lconstr of type_constructor_reference * local_type list
+  | Lconstr of general_type_constructor * local_type list
 
-and type_constructor_reference =
-    Ref_local of local_type_constructor
-  | Ref_global of type_constructor
+and general_type_constructor =
+    Local_type_constructor of local_type_constructor
+  | Global_type_constructor of type_constructor
 
 and local_type_constructor = {
   ltcs_name : string;
@@ -26,8 +26,8 @@ let type_of_local_type subst =
     | Ltuple tyl -> Ttuple (List.map aux tyl)
     | Lconstr (tcsr, tyl) ->
         Tconstr (begin match tcsr with
-                     Ref_local ltcs -> List.assq ltcs subst
-                   | Ref_global tcs -> tcs
+                     Local_type_constructor ltcs -> List.assq ltcs subst
+                   | Global_type_constructor tcs -> tcs
                  end,
                  List.map aux tyl)
   in aux
@@ -41,12 +41,15 @@ let pseudoenv_lookup_parameter name pseudoenv =
   Tbl.find name pseudoenv.pseudoenv_parameters
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
-  try
-    match lid with
-        Lident name -> Ref_local(Tbl.find name pseudoenv.pseudoenv_type_constructors)
-      | Ldot _ -> raise Not_found
-  with Not_found ->
-    Ref_global(Env.lookup_type lid pseudoenv.pseudoenv_env)
+  let look_global () =
+    Global_type_constructor (Env.lookup_type lid pseudoenv.pseudoenv_env)
+  in
+  match lid with
+      Lident name ->
+        begin try Local_type_constructor (Tbl.find name pseudoenv.pseudoenv_type_constructors)
+        with Not_found -> look_global ()
+        end
+    | Ldot _ -> look_global ()
 
 let pseudoenv_add_parameter tv pseudoenv =
   { pseudoenv with
@@ -62,3 +65,15 @@ let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
   pseudoenv_parameters = Tbl.empty }
+
+let occurs_in_expansion ltcs =
+  let rec aux = function
+      Lparam _ -> false
+    | Larrow (ty1, ty2) -> aux ty1 || aux ty2
+    | Ltuple tyl -> List.exists aux tyl
+    | Lconstr (tcs, tyl) ->
+        begin match tcs with
+            Local_type_constructor ltcs' -> ltcs == ltcs'
+          | Global_type_constructor _ -> false
+        end || List.exists aux tyl
+  in aux
