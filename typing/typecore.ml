@@ -14,7 +14,7 @@ type error =
   | Label_missing of label list
   | Label_not_mutable of label
   | Pattern_type_clash of mutable_type * mutable_type
-  | Expr_type_clash of mutable_type * mutable_type
+  | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
 
 exception Error of Location.t * error
@@ -291,12 +291,11 @@ let type_format loc fmt =
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let unify_expr expr expected_ty actual_ty =
+let unify_expression exp expected_ty =
   try
-    unify expected_ty actual_ty
+    unify exp.exp_type expected_ty
   with Unify ->
-    raise(Error(expr.exp_loc,
-                Expr_type_clash(actual_ty, expected_ty)))
+    raise (Error (exp.exp_loc, Expression_type_clash (exp.exp_type, expected_ty)))
 
 let rec type_expr expr =
   let inferred_ty =
@@ -332,28 +331,25 @@ let rec type_expr expr =
           type_expect arg1 ty1;
           type_args ty2 argl in
       type_args ty_fct args
-  | Texp_let(_, pat_exp_list, body) ->
+  | Texp_let (_, pat_exp_list, body) ->
       type_let pat_exp_list;
       type_expr body
   | Texp_match (item, pat_exp_list) ->
       let ty_arg = type_expr item in
-      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
       let ty_res = new_type_var () in
-      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+      type_cases ty_arg ty_res pat_exp_list;
       ty_res
   | Texp_function [] ->
       fatal_error "type_expr: empty matching"
   | Texp_function pat_exp_list ->
       let ty_arg = new_type_var () in
-      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
       let ty_res = new_type_var () in
-      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+      type_cases ty_arg ty_res pat_exp_list;
       Marrow (ty_arg, ty_res)
   | Texp_try (body, pat_exp_list) ->
-      let ty_res = type_expr body in
       let ty_arg = new_type_var () in
-      List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
-      List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+      let ty_res = type_expr body in
+      type_cases ty_arg ty_res pat_exp_list;
       ty_res
   | Texp_sequence (e1, e2) ->
       type_statement e1; type_expr  e2
@@ -435,11 +431,11 @@ let rec type_expr expr =
   unify expr.exp_type inferred_ty;
   inferred_ty
 
-(* Typecore of an expression with an expected type.
+(* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and type_expect exp expected_ty =
-  match exp.exp_desc with
+  begin match exp.exp_desc with
       Texp_constant(Const_string s) ->
         let actual_ty =
           match expand_head expected_ty with
@@ -448,7 +444,7 @@ and type_expect exp expected_ty =
                 type_format exp.exp_loc s
             | _ ->
                 mutable_type_string in
-        unify_expr exp expected_ty actual_ty
+        unify expected_ty actual_ty
     | Texp_let (_, pat_exp_list, body) ->
         type_let pat_exp_list;
         type_expect body expected_ty
@@ -457,16 +453,24 @@ and type_expect exp expected_ty =
         type_expect e2 expected_ty
 (* xxx: ocaml adds Texp_construct, Texp_function, Texp_when *)
 (* xxx: caml light adds Texp_ifthenelse, Texp_tuple *)
-  | _ ->
-      unify_expr exp expected_ty (type_expr exp)
+    | _ ->
+        ignore (type_expr exp)
+  end;
+  unify_expression exp expected_ty
 
-(* "let" definitions *)
+(* Typing of "let" definitions *)
 
 and type_let pat_exp_list =
   List.iter (fun (pat, _) -> type_pattern pat) pat_exp_list;
   List.iter (fun (pat, exp) -> type_expect exp pat.pat_type) pat_exp_list
 
-(* Statements (expressions whose values are ignored) *)
+(* Typing of match cases *)
+
+and type_cases ty_arg ty_res pat_exp_list =
+  List.iter (fun (pat, _) -> type_pattern pat; unify_pattern pat ty_arg) pat_exp_list;
+  List.iter (fun (_, exp) -> type_expect exp ty_res) pat_exp_list;
+
+(* Typing of statements (expressions whose values are ignored) *)
 
 and type_statement expr =
   let ty = type_expr expr in
@@ -525,7 +529,7 @@ let report_error ppf = function
            fprintf ppf "This pattern matches values of type")
         (function ppf ->
            fprintf ppf "but a pattern was expected which matches values of type")
-  | Expr_type_clash (actual_ty, expected_ty) ->
+  | Expression_type_clash (actual_ty, expected_ty) ->
       report_unification_error ppf actual_ty expected_ty
         (function ppf ->
            fprintf ppf "This expression has type")
