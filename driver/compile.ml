@@ -83,10 +83,10 @@ let interface ppf sourcefile outputprefix =
     let ast =
       Pparse.file ppf inputfile Parse.interface ast_intf_magic_number in
     if !Clflags.dump_parsetree then fprintf ppf "%a@." Printast.interface ast;
-    let sg = Typemod.transl_signature (initial_env()) ast in
+    let sg = Typemain.signature (initial_env()) ast in
     if !Clflags.print_types then
       fprintf std_formatter "%a@." Printtyp.signature sg;
-(*                                   (Typemod.simplify_signature sg);*)
+(*                                   (Typemain.simplify_signature sg);*)
     Warnings.check_fatal ();
     if not !Clflags.print_types then
       Modenv.save_signature sg modulename (outputprefix ^ ".cmi");
@@ -116,7 +116,7 @@ let implementation ppf sourcefile outputprefix =
     try ignore(
       Pparse.file ppf inputfile Parse.implementation ast_impl_magic_number
       ++ print_if ppf Clflags.dump_parsetree Printast.implementation
-      ++ Typemod.type_implementation sourcefile outputprefix modulename env)
+      ++ Typemain.implementation sourcefile outputprefix modulename env)
     with x ->
       Pparse.remove_preprocessed_if_ast inputfile;
       raise x
@@ -127,7 +127,7 @@ let implementation ppf sourcefile outputprefix =
       Pparse.file ppf inputfile Parse.implementation ast_impl_magic_number
       ++ print_if ppf Clflags.dump_parsetree Printast.implementation
       ++ Unused_var.warn ppf
-      ++ Typemod.type_implementation sourcefile outputprefix modulename env
+      ++ Typemain.implementation sourcefile outputprefix modulename env
       ++ Translmod.transl_implementation modulename
       ++ print_if ppf Clflags.dump_rawlambda Printlambda.lambda
       ++ Simplif.simplify_lambda

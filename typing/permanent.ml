@@ -1,3 +1,7 @@
+(* Convert temporary signature and structure items to their permanent
+counterparts, creating global entities (type constructors, values, etc.)
+in the process. *)
+
 open Asttypes
 open Base
 open Context

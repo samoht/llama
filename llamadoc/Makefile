@@ -134,7 +134,7 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/resolve.cmo \
  $(LLAMASRCDIR)/typing/typify.cmo \
  $(LLAMASRCDIR)/typing/permanent.cmo \
- $(LLAMASRCDIR)/typing/typemod.cmo
+ $(LLAMASRCDIR)/typing/typemain.cmo
 
 LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
 	$(LLAMASRCDIR)/utils/tbl.cmo \

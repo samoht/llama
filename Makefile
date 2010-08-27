@@ -57,7 +57,7 @@ TYPING=\
   typing/subst.cmo \
   typing/includecore.cmo \
   typing/includemod.cmo \
-  typing/typemod.cmo
+  typing/typemain.cmo
 
 COMP=bytecomp/ident.cmo \
   bytecomp/lambda.cmo bytecomp/printlambda.cmo \

@@ -41,8 +41,8 @@ let report_error ppf exn =
   | Includemod.Error err ->
       Location.print_error_cur_file ppf;
       Includemod.report_error ppf err
-  | Typemod.Error(loc, err) ->
-      Location.print_error ppf loc; Typemod.report_error ppf err
+  | Typemain.Error(loc, err) ->
+      Location.print_error ppf loc; Typemain.report_error ppf err
   | Translcore.Error(loc, err) ->
       Location.print_error ppf loc; Translcore.report_error ppf err
   | Translmod.Error(loc, err) ->

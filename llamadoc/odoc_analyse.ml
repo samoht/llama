@@ -114,7 +114,7 @@ let process_implementation_file ppf sourcefile =
   let env = initial_env () in
   try
     let parsetree = parse_file inputfile Parse.implementation ast_impl_magic_number in
-    let typedtree = Typemod.type_implementation sourcefile prefixname modulename env parsetree in
+    let typedtree = Typemain.implementation sourcefile prefixname modulename env parsetree in
     (Some (parsetree, typedtree), inputfile)
   with
     e ->
@@ -139,7 +139,7 @@ let process_interface_file ppf sourcefile =
   Modenv.current_module := Base.Module modulename;
   let inputfile = preprocess sourcefile in
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
-  let sg = Typemod.transl_signature (initial_env()) ast in
+  let sg = Typemain.signature (initial_env()) ast in
   Warnings.check_fatal ();
   (ast, sg, inputfile)
 
@@ -176,8 +176,8 @@ let process_error exn =
   | Includemod.Error err ->
       Location.print_error_cur_file ppf;
       Includemod.report_error ppf err
-  | Typemod.Error(loc, err) ->
-      Location.print_error ppf loc; Typemod.report_error ppf err
+  | Typemain.Error(loc, err) ->
+      Location.print_error ppf loc; Typemain.report_error ppf err
   | Translcore.Error(loc, err) ->
       Location.print_error ppf loc; Translcore.report_error ppf err
   | Sys_error msg ->

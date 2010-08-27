@@ -234,7 +234,7 @@ let execute_phrase print_outcome ppf phr =
           | _ -> Typify.temporary_structure_item tstr; None
       in
       let str, newenv = Permanent.structure_item oldenv tstr in
-      let sg = Typemod.structure_aux [str] in
+      let sg = Typemain.signature_of_structure [str] in
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();
       begin try
@@ -252,7 +252,7 @@ let execute_phrase print_outcome ppf phr =
                     Ophr_eval (outv, ty)
 (*                | [] -> Ophr_signature [] *)
                 | _ -> Ophr_signature (item_list newenv sg)
-(*                                             (Typemod.simplify_signature sg)) *)
+(*                                             (Typemain.simplify_signature sg)) *)
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;
