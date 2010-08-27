@@ -26,50 +26,47 @@ type error =
 exception Error of Location.t * error
 
 (* ---------------------------------------------------------------------- *)
-(* Free variables.                                                        *)
+(* Pattern utilities.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let rec var_names_of_pat pat =
+let rec bound_names pat =
   match pat.ppat_desc with
-    Ppat_any -> []
-  | Ppat_var v -> [v]
-  | Ppat_alias(pat,v) -> v :: var_names_of_pat pat
-  | Ppat_constant _ -> []
-  | Ppat_tuple patl -> List.flatten (List.map var_names_of_pat patl)
-  | Ppat_construct (_, None) -> []
-  | Ppat_construct(_, Some pat) -> var_names_of_pat pat
-  | Ppat_array patl -> List.flatten (List.map var_names_of_pat patl)
-  | Ppat_or(pat1, pat2) ->
-      let l1 = List.sort compare (var_names_of_pat pat1) in
-      let l2 = List.sort compare (var_names_of_pat pat2) in
-      if l1 <> l2 then begin
-        let id =
-          try List.find (fun id -> not (List.mem id l2)) l1
-          with Not_found -> List.find (fun id -> not (List.mem id l1)) l2
-        in
-        raise(Error(pat.ppat_loc, Orpat_vars id))
-      end;
-      l1
-  | Ppat_constraint(pat, _) -> var_names_of_pat pat
-  | Ppat_record lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> var_names_of_pat pat) lbl_pat_list)
+      Ppat_any -> []
+    | Ppat_var name -> [name]
+    | Ppat_alias (pat, name) -> name :: bound_names pat
+    | Ppat_constant _ -> []
+    | Ppat_tuple patl -> List.flatten (List.map bound_names patl)
+    | Ppat_construct (_, None) -> []
+    | Ppat_construct (_, Some pat) -> bound_names pat
+    | Ppat_array patl -> List.flatten (List.map bound_names patl)
+    | Ppat_or (pat1, pat2) ->
+        let names1 = List.sort compare (bound_names pat1) in
+        let names2 = List.sort compare (bound_names pat2) in
+        if names1 = names2 then names1 else
+          let bad_name =
+            try List.find (fun name -> not (List.mem name names2)) names1
+            with Not_found -> List.find (fun name -> not (List.mem name names1)) names2 in
+          raise (Error (pat.ppat_loc, Orpat_vars bad_name))
+    | Ppat_constraint(pat, _) -> bound_names pat
+    | Ppat_record lbl_pat_list ->
+        List.flatten (List.map (fun (lbl, pat) -> bound_names pat) lbl_pat_list)
 
-let rec free_vars_of_pat pat =
+let rec bound_local_values pat =
   match pat.pat_desc with
-    Tpat_any -> []
-  | Tpat_var v -> [v]
-  | Tpat_alias(pat,v) -> v :: free_vars_of_pat pat
-  | Tpat_constant _ -> []
-  | Tpat_tuple patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Tpat_construct(_, pats) -> List.flatten (List.map free_vars_of_pat pats)
-  | Tpat_record lbl_pat_list ->
-      List.flatten (List.map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list)
-  | Tpat_array patl -> List.flatten (List.map free_vars_of_pat patl)
-  | Tpat_or(pat1, pat2) -> free_vars_of_pat pat1
-  | Tpat_constraint(pat, _) -> free_vars_of_pat pat
+      Tpat_any -> []
+    | Tpat_var v -> [v]
+    | Tpat_alias(pat,v) -> v :: bound_local_values pat
+    | Tpat_constant _ -> []
+    | Tpat_tuple patl -> List.flatten (List.map bound_local_values patl)
+    | Tpat_construct(_, pats) -> List.flatten (List.map bound_local_values pats)
+    | Tpat_record lbl_pat_list ->
+        List.flatten (List.map (fun (lbl,pat) -> bound_local_values pat) lbl_pat_list)
+    | Tpat_array patl -> List.flatten (List.map bound_local_values patl)
+    | Tpat_or(pat1, pat2) -> bound_local_values pat1
+    | Tpat_constraint(pat, _) -> bound_local_values pat
 
 (* ---------------------------------------------------------------------- *)
-(* Lookups.                                                               *)
+(* Lookup utilities.                                                      *)
 (* ---------------------------------------------------------------------- *)
 
 let lookup_module name loc =
@@ -104,61 +101,16 @@ let lookup_type_parameter pseudoenv name loc =
 (* Resolution of type expressions.                                        *)
 (* ---------------------------------------------------------------------- *)
 
-let type_variables = ref ([] : (string * mutable_type) list);;
-let reset_type_variables () = type_variables := []
-
-let rec mutable_type env te =
-  begin match te.ptyp_desc with
-      Ptyp_var v ->
-        begin try
-          List.assoc v !type_variables
-        with Not_found ->
-          let ty = new_type_var() in
-          type_variables := (v,ty) :: !type_variables; ty
-        end
-    | Ptyp_arrow (x, y) ->
-        Marrow (mutable_type env x, mutable_type env y)
-    | Ptyp_tuple l ->
-        Mtuple (List.map (mutable_type env) l)
-    | Ptyp_constr (lid, l) ->
-        let tcs = lookup_global_type_constructor env lid te.ptyp_loc in
-        if List.length l <> tcs_arity tcs then
-          raise(Error(te.ptyp_loc, 
-                      Type_arity_mismatch(lid, tcs_arity tcs, List.length l)));
-        Mconstr (lookup_global_type_constructor env lid te.ptyp_loc,
-                 List.map (mutable_type env) l)
-  end
-
-let typexp ctxt te = mutable_type ctxt.ctxt_env te
-
-let rec local_type ctxt te =
-  begin match te.ptyp_desc with
-    | Ptyp_var name -> Lparam (lookup_type_parameter ctxt name te.ptyp_loc)
-    | Ptyp_arrow (ty1, ty2) -> Larrow (local_type ctxt ty1, local_type ctxt ty2)
-    | Ptyp_tuple tyl -> Ltuple (List.map (local_type ctxt) tyl)
-    | Ptyp_constr (lid, tyl) ->
-        let tcsr = lookup_type_constructor ctxt lid te.ptyp_loc in
-        let arity =
-          match tcsr with
-              Ref_local ltcs -> ltcs.ltcs_arity
-            | Ref_global tcs -> tcs_arity tcs
-        in
-        if List.length tyl <> arity then
-          raise(Error(te.ptyp_loc, 
-                      Type_arity_mismatch(lid, arity, List.length tyl)));
-        Lconstr (tcsr, List.map (local_type ctxt) tyl)
-  end
-
-let llama_type env te =
+let llama_type env ty =  (* val foo : 'a -> 'a *)
   let params = ref [] in
-  let rec aux texp =
-    begin match texp.ptyp_desc with
+  let rec aux ty =
+    begin match ty.ptyp_desc with
         Ptyp_var name ->
           begin try
             List.assoc name !params
           with Not_found ->
-            let ty = Tparam { param_name=name } in
-            params := (name,ty) :: !params;
+            let ty = Tparam { param_name = name } in
+            params := (name, ty) :: !params;
             ty
           end
       | Ptyp_arrow (ty1, ty2) ->
@@ -166,14 +118,59 @@ let llama_type env te =
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) ->
-          let tcs = lookup_global_type_constructor env lid te.ptyp_loc in
+          let tcs = lookup_global_type_constructor env lid ty.ptyp_loc in
           if List.length tyl <> tcs_arity tcs then
-            raise(Error(te.ptyp_loc, 
-                        Type_arity_mismatch(lid, tcs_arity tcs, List.length tyl)));
+            raise (Error (ty.ptyp_loc, 
+                          Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
           Tconstr (tcs, List.map aux tyl)
     end
   in
-  aux te
+  aux ty
+
+let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
+  match ty.ptyp_desc with
+      Ptyp_var name ->
+        Lparam (lookup_type_parameter pseudoenv name ty.ptyp_loc)
+    | Ptyp_arrow (ty1, ty2) ->
+        Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2)
+    | Ptyp_tuple tyl ->
+        Ltuple (List.map (local_type pseudoenv) tyl)
+    | Ptyp_constr (lid, tyl) ->
+        let tcsr = lookup_type_constructor pseudoenv lid ty.ptyp_loc in
+        let arity =
+          match tcsr with
+              Ref_local ltcs -> ltcs.ltcs_arity
+            | Ref_global tcs -> tcs_arity tcs
+        in
+        if List.length tyl <> arity then
+          raise (Error (ty.ptyp_loc, 
+                        Type_arity_mismatch (lid, arity, List.length tyl)));
+        Lconstr (tcsr, List.map (local_type pseudoenv) tyl)
+
+let type_variables = ref ([] : (string * mutable_type) list);;
+let reset_type_variables () = type_variables := []
+
+let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a) *)
+  match ty.ptyp_desc with
+      Ptyp_var name ->
+        begin try
+          List.assoc name !type_variables
+        with Not_found ->
+          let ty = new_type_var () in
+          type_variables := (name, ty) :: !type_variables;
+          ty
+        end
+    | Ptyp_arrow (ty1, ty2) ->
+        Marrow (mutable_type env ty1, mutable_type env ty2)
+    | Ptyp_tuple tyl ->
+        Mtuple (List.map (mutable_type env) tyl)
+    | Ptyp_constr (lid, tyl) ->
+        let tcs = lookup_global_type_constructor env lid ty.ptyp_loc in
+        if List.length tyl <> tcs_arity tcs then
+          raise (Error (ty.ptyp_loc, 
+                        Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
+        Mconstr (lookup_global_type_constructor env lid ty.ptyp_loc,
+                 List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -183,28 +180,26 @@ let new_local_value name =
   { lval_name = name;
     lval_type = new_type_var () }
 
-let rec check_unique l loc =
-  match l with
-    | [] | [_] -> ()
-    | (hd::(hd'::_ as tl)) ->
-        if hd = hd' then raise (Error (loc, Multiply_bound_variable hd));
-        check_unique tl loc
-
-let pattern env p =
-  let vars = List.sort compare (var_names_of_pat p) in
-  check_unique vars p.ppat_loc;
-  let vals = List.map new_local_value vars in
-  let varmap = List.combine vars vals in
-  let rec aux p =
+let pattern env pat =
+  let names = List.sort compare (bound_names pat) in
+  let rec check = function
+      [] | [_] -> ()
+    | (hd :: (hd' :: _ as tl)) ->
+        if hd = hd' then raise (Error (pat.ppat_loc, Multiply_bound_variable hd));
+        check tl
+  in
+  check names;
+  let values = List.map (fun name -> (name, new_local_value name)) names in
+  let rec aux pat =
     { pat_desc =
-        begin match p.ppat_desc with
-          | Ppat_any -> Tpat_any
-          | Ppat_var s -> Tpat_var (List.assoc s varmap)
-          | Ppat_alias (p, s) -> Tpat_alias (aux p, List.assoc s varmap)
+        begin match pat.ppat_desc with
+            Ppat_any -> Tpat_any
+          | Ppat_var s -> Tpat_var (List.assoc s values)
+          | Ppat_alias (p, s) -> Tpat_alias (aux p, List.assoc s values)
           | Ppat_constant c -> Tpat_constant c
           | Ppat_tuple l -> Tpat_tuple (List.map aux l)
           | Ppat_construct (lid,sarg) ->
-              let cs = lookup_constructor env lid p.ppat_loc in
+              let cs = lookup_constructor env lid pat.ppat_loc in
               let arity = cs_arity cs in
               let sargs =
                 match sarg with
@@ -215,20 +210,20 @@ let pattern env p =
                   | Some sp -> [sp]
               in
               if List.length sargs <> cs_arity cs then
-                raise(Error(p.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
+                raise(Error(pat.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
                                                                    List.length sargs)));
               Tpat_construct (cs, List.map aux sargs)
-          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li p.ppat_loc, aux p)) l)
+          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li pat.ppat_loc, aux p)) l)
           | Ppat_array l -> Tpat_array (List.map aux l)
           | Ppat_or (p1, p2) ->
               Tpat_or (aux p1, aux p2)
           | Ppat_constraint (p, te) -> Tpat_constraint (aux p, mutable_type env te)
         end;
-      pat_loc = p.ppat_loc;
+      pat_loc = pat.ppat_loc;
       pat_env = env;
-      pat_type = new_type_var() }
+      pat_type = new_type_var () }
   in
-  aux p
+  aux pat
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of expressions.                                             *)
@@ -237,7 +232,7 @@ let pattern env p =
 let ext env v = context_add_value v env
 
 let extend_env env pat =
-  List.fold_left ext env (free_vars_of_pat pat)
+  List.fold_left ext env (bound_local_values pat)
 
 let rec expr ctxt ex =
   { exp_desc =
@@ -296,7 +291,7 @@ let rec expr ctxt ex =
             let v = new_local_value s in
             let big_ctxt = ext ctxt v in
             Texp_for(v,expr ctxt e1,expr ctxt e2,b,expr big_ctxt e3)
-        | Pexp_constraint(e,te) -> Texp_constraint(expr ctxt e,typexp ctxt te)
+        | Pexp_constraint(e,te) -> Texp_constraint(expr ctxt e,mutable_type ctxt.ctxt_env te)
         | Pexp_array l -> Texp_array(List.map (expr ctxt) l)
         | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label ctxt.ctxt_env li ex.pexp_loc,expr ctxt e) l, match o with None -> None | Some e -> Some (expr ctxt e))
         | Pexp_field (e,li) -> Texp_field(expr ctxt e,lookup_label ctxt.ctxt_env li ex.pexp_loc)
@@ -391,7 +386,7 @@ let signature_item env psig =
 
 let letdef env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
-  let localvals = List.flatten (List.map free_vars_of_pat pat_list) in
+  let localvals = List.flatten (List.map bound_local_values pat_list) in
   let enter_localvals ctxt = List.fold_left (fun ctxt v -> context_add_value v ctxt) ctxt localvals in
   let ctxt = context_create env in
   let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
