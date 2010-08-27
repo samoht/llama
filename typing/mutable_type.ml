@@ -30,27 +30,24 @@ let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
 (* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
 
-let instantiate_type_aux inst =
-  let rec aux = function
-      Tparam tv -> List.assq tv inst
-    | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
-    | Ttuple tyl -> Mtuple (List.map aux tyl)
-    | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map aux tyl)
-  in
-  aux
+let rec instantiate_type inst = function
+    Tparam tv -> List.assq tv inst
+  | Tarrow (ty1, ty2) -> Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
+  | Ttuple tyl -> Mtuple (List.map (instantiate_type inst) tyl)
+  | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map (instantiate_type inst) tyl)
 
-let instantiate_type ty =
-  let rec aux accum = function
+let instantiate_one_type ty =
+  let rec make_inst accum = function
       Tparam param ->
         if List.mem_assq param accum then
           accum
         else
           (param, new_type_var ()) :: accum
     | Tarrow (ty1, ty2) ->
-        aux (aux accum ty1) ty2
+        make_inst (make_inst accum ty1) ty2
     | Ttuple tyl | Tconstr (_, tyl) ->
-        List.fold_left aux accum tyl in
-  instantiate_type_aux (aux [] ty) ty
+        List.fold_left make_inst accum tyl in
+  instantiate_type (make_inst [] ty) ty
 
 let instantiate_type_constructor tcs =
   let inst =
@@ -61,12 +58,12 @@ let instantiate_type_constructor tcs =
 
 let instantiate_constructor cs =
   let inst, ty_res = instantiate_type_constructor cs.cs_tcs in
-  let ty_args = List.map (instantiate_type_aux inst) cs.cs_args in
+  let ty_args = List.map (instantiate_type inst) cs.cs_args in
   ty_args, ty_res
 
 let instantiate_label lbl =
   let inst, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
+  let ty_arg = instantiate_type inst lbl.lbl_arg in
   ty_res, ty_arg
 
 (* ---------------------------------------------------------------------- *)

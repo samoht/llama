@@ -42,11 +42,11 @@ let rec type_pattern pat =
     match pat.pat_desc with
         Tpat_any ->
           new_type_var ()
-      | Tpat_var v ->
-          v.lval_type
-      | Tpat_alias (pat', v) ->
+      | Tpat_var lval ->
+          lval.lval_type
+      | Tpat_alias (pat', lval) ->
           type_pattern pat';
-          unify_pattern pat' v.lval_type;
+          unify_pattern pat' lval.lval_type;
           pat'.pat_type
       | Tpat_constant c ->
           type_of_constant c
@@ -63,7 +63,7 @@ let rec type_pattern pat =
           let inst, ty_res = instantiate_type_constructor tcs in
           List.iter
             (fun (lbl, arg) ->
-               let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
+               let ty_arg = instantiate_type inst lbl.lbl_arg in
                unify_pattern arg ty_arg) lbl_arg_list;
           ty_res
       | Tpat_array patl ->
@@ -92,29 +92,29 @@ let rec type_pattern pat =
 
 let rec is_nonexpansive expr =
   match expr.exp_desc with
-    Texp_ident id -> true
-  | Texp_constant sc -> true
-  | Texp_tuple el -> List.forall is_nonexpansive el
-  | Texp_construct(cstr, l) -> List.forall is_nonexpansive l
-  | Texp_let(rec_flag, bindings, body) ->
-      List.forall (fun (pat, expr) -> is_nonexpansive expr) bindings &&
-      is_nonexpansive body
-  | Texp_function pat_expr_list -> true
-  | Texp_try(body, pat_expr_list) ->
-      is_nonexpansive body &&
-      List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
-  | Texp_sequence(e1, e2) -> is_nonexpansive e2
-  | Texp_ifthenelse(cond, ifso, ifnot) ->
-      is_nonexpansive ifso && is_nonexpansive_opt ifnot
-  | Texp_constraint(e, ty) -> is_nonexpansive e
-  | Texp_array [] -> true
-  | Texp_record (tcs, lbl_expr_list, opt_init_exp) ->
-      List.forall (fun (lbl, expr) ->
-                     not lbl.lbl_mut && is_nonexpansive expr) lbl_expr_list &&
-        is_nonexpansive_opt opt_init_exp
-  | Texp_field(e, lbl) -> is_nonexpansive e
-  | Texp_when(cond, act) -> is_nonexpansive act
-  | _ -> false
+      Texp_ident id -> true
+    | Texp_constant sc -> true
+    | Texp_tuple el -> List.forall is_nonexpansive el
+    | Texp_construct (cstr, l) -> List.forall is_nonexpansive l
+    | Texp_let (rec_flag, bindings, body) ->
+        List.forall (fun (pat, expr) -> is_nonexpansive expr) bindings &&
+          is_nonexpansive body
+    | Texp_function pat_expr_list -> true
+    | Texp_try (body, pat_expr_list) ->
+        is_nonexpansive body &&
+          List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
+    | Texp_sequence (e1, e2) -> is_nonexpansive e2
+    | Texp_ifthenelse(cond, ifso, ifnot) ->
+        is_nonexpansive ifso && is_nonexpansive_opt ifnot
+    | Texp_constraint(e, ty) -> is_nonexpansive e
+    | Texp_array [] -> true
+    | Texp_record (tcs, lbl_expr_list, opt_init_exp) ->
+        List.forall (fun (lbl, expr) ->
+                       not lbl.lbl_mut && is_nonexpansive expr) lbl_expr_list &&
+          is_nonexpansive_opt opt_init_exp
+    | Texp_field (e, lbl) -> is_nonexpansive e
+    | Texp_when (cond, act) -> is_nonexpansive act
+    | _ -> false
 
 and is_nonexpansive_opt = function
     None -> true
@@ -297,7 +297,7 @@ let rec type_expr expr =
     Texp_ident vref ->
       begin match vref with
         | Ref_local lv -> lv.lval_type
-        | Ref_global v -> instantiate_type v.val_type
+        | Ref_global v -> instantiate_one_type v.val_type
       end
   | Texp_constant cst ->
       type_of_constant cst
@@ -382,7 +382,7 @@ let rec type_expr expr =
       let inst, ty_res = instantiate_type_constructor tcs in
       List.iter
         (fun (lbl, exp) ->
-           let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
+           let ty_arg = instantiate_type inst lbl.lbl_arg in
            type_expect exp ty_arg) lbl_exp_list;
       begin match opt_init with
           None -> ()

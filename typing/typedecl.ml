@@ -156,22 +156,19 @@ let g_structure_item str = match str.str_desc with
     Tstr_eval exp ->
       Str_eval exp
   | Tstr_value (rec_flag, pat_exp_list) ->
-      let localvals =
+      let lvals =
         List.flatten (List.map (fun (pat, _) ->
                                   Resolve.bound_local_values pat) pat_exp_list) in
-      let m =
+      let lval_val_pairs =
         List.map
-          begin fun locval ->
-            let globval =
-              { val_module = !Modenv.current_module;
-                val_name = locval.lval_name;
-                val_type = generalize locval.lval_type;
-                val_kind = Val_reg }
-            in
-            locval, globval
-          end localvals
-      in
-      Str_value (rec_flag, pat_exp_list, m)
+          (fun lval ->
+             let gval =
+               { val_module = !Modenv.current_module;
+                 val_name = lval.lval_name;
+                 val_type = generalize lval.lval_type;
+                 val_kind = Val_reg } in
+             lval, gval) lvals in
+      Str_value (rec_flag, pat_exp_list, lval_val_pairs)
   | Tstr_primitive (name, ty, prim) ->
       Str_primitive (make_value name ty (Val_prim prim))
   | Tstr_type teq_list ->
