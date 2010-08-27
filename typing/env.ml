@@ -42,7 +42,7 @@ let add_exception cs env =
 let add_type_constructor tcs env =
   let name = tcs.tcs_name in
   match tcs.tcs_kind with
-      Tcs_sum cstrs ->
+      Tcs_variant cstrs ->
         { env with types = Tbl.add name tcs env.types;
             constrs =
             List.fold_right

@@ -37,7 +37,7 @@ type 'ty gen_type_constructor =
 
 and 'ty gen_type_constructor_kind =
     Tcs_abstract
-  | Tcs_sum of 'ty gen_constructor list
+  | Tcs_variant of 'ty gen_constructor list
   | Tcs_record of 'ty gen_label list
   | Tcs_abbrev of 'ty
 
@@ -121,7 +121,7 @@ let mkparams n =
 
 let get_constructors tcs =
   match tcs.tcs_kind with
-      Tcs_sum cs_list -> cs_list
+      Tcs_variant cs_list -> cs_list
     | _ -> failwith "Base.get_constructors"
 
 let get_labels tcs =

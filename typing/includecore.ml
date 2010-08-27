@@ -101,7 +101,7 @@ let type_constructors s tcs1 tcs2 =
   begin match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->
         []
-    | Tcs_sum cstrs1, Tcs_sum cstrs2 ->
+    | Tcs_variant cstrs1, Tcs_variant cstrs2 ->
         compare_variants s corresp 0 cstrs1 cstrs2
     | Tcs_record lbls1, Tcs_record lbls2 ->
         compare_records s corresp 1 lbls1 lbls2

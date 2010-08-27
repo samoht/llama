@@ -1230,10 +1230,10 @@ let newline_to_indented_br s =
       bs b
         (match t.ty_manifest, t.ty_kind with
           None, Tcs_abstract -> "<pre>"
-        | None, Tcs_sum _
+        | None, Tcs_variant _
         | None, Tcs_record _ -> "<br><code>"
         | Some _, Tcs_abstract -> "<pre>"
-        | Some _, Tcs_sum _
+        | Some _, Tcs_variant _
         | Some _, Tcs_record _ -> "<pre>"
         );
       bp b "<span id=\"%s\">" (naming_type_target t);
@@ -1252,7 +1252,7 @@ let newline_to_indented_br s =
       );
       (match t.ty_kind with
         Tcs_abstract -> bs b "</pre>"
-      | Tcs_sum l ->
+      | Tcs_variant l ->
           bs b "= ";
           bs b
             (

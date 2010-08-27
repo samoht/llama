@@ -197,7 +197,7 @@ let fwd_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
                       (Typeutil.apply tcs.tcs_params body ty_list)
-                | {tcs_kind = Tcs_sum constr_list} ->
+                | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
                       then Tag_block(Obj.tag obj)

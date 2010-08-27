@@ -216,7 +216,7 @@ let merge_types merge_options mli ml =
     Tcs_abstract, _ ->
       ()
 
-  | Tcs_sum l1, Tcs_sum l2 ->
+  | Tcs_variant l1, Tcs_variant l2 ->
       let f cons =
         try
           let cons2 = List.find

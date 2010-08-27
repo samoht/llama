@@ -156,7 +156,7 @@ open Odoc_types
         Base.Tcs_abstract | Base.Tcs_abbrev _ ->
           Odoc_type.Tcs_abstract
 
-      | Base.Tcs_sum l ->
+      | Base.Tcs_variant l ->
           let f cs =
             let constructor_name = cs.Base.cs_name in
             let type_expr_list = cs.Base.cs_args in
@@ -173,7 +173,7 @@ open Odoc_types
               vc_text = comment_opt
             }
           in
-          Odoc_type.Tcs_sum (List.map f l)
+          Odoc_type.Tcs_variant (List.map f l)
 
       | Base.Tcs_record l ->
           let f lbl =

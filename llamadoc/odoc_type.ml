@@ -31,7 +31,7 @@ type record_field = {
 (** The various kinds of type. *)
 type type_kind =
     Tcs_abstract
-  | Tcs_sum of variant_constructor list
+  | Tcs_variant of variant_constructor list
                    (** constructors *)
   | Tcs_record of record_field list
                    (** fields *)

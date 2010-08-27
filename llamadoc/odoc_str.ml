@@ -120,7 +120,7 @@ let string_of_type t =
   (match t.Odoc_type.ty_kind with
     Odoc_type.Tcs_abstract ->
       ""
-  | Odoc_type.Tcs_sum l ->
+  | Odoc_type.Tcs_variant l ->
       "="^"\n"^
       (String.concat ""
          (List.map

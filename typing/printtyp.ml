@@ -103,7 +103,7 @@ let rec tree_of_type_decl tcs =
   begin match tcs.tcs_kind with
       Tcs_abstract ->
         Otyp_abstract
-    | Tcs_sum cs_list ->
+    | Tcs_variant cs_list ->
         Otyp_sum (List.map tree_of_constructor_description cs_list)
     | Tcs_record lbl_list ->
         Otyp_record (List.map tree_of_label_description lbl_list)

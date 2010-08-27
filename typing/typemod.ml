@@ -10,14 +10,12 @@ exception Error of Location.t * error
 let process_structure_item env pstr =
   let str = Resolve.structure_item env pstr in
   Typing.structure_item str;
-  let str, env = Typedecl.structure_item env str in
-  str, env
+  Typedecl.structure_item env str
 
 let process_signature_item env psig =
-  let tsig = Resolve.signature_item env psig in
-  Typing.signature_item tsig;
-  let sg, env = Typedecl.signature_item env tsig in
-  tsig, sg, env
+  let sg = Resolve.signature_item env psig in
+  Typing.signature_item sg;
+  Typedecl.signature_item env sg
 
 let rec process_structure env = function
     [] ->
@@ -29,11 +27,11 @@ let rec process_structure env = function
 
 let rec process_signature env = function
     [] ->
-      [], [], env
+      [], env
   | hd :: tl ->
-      let hd, hd_gens, env = process_signature_item env hd in
-      let tl, tl_gens, env = process_signature env tl in
-      hd :: tl, hd_gens @ tl_gens, env
+      let hd_out, env = process_signature_item env hd in
+      let tl_out, env = process_signature env tl in
+      hd_out @ tl_out, env
 
 (* xxx: integrate with simplification? *)
 let rec structure_aux = function
@@ -41,19 +39,17 @@ let rec structure_aux = function
   | Str_eval _ :: rem -> structure_aux rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
   | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
-  | Str_type tcs_list :: rem -> Typedecl.make_sig_types tcs_list @ structure_aux rem
+  | Str_type tcs_list :: rem -> Typedecl.make_types tcs_list @ structure_aux rem
   | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
   | Str_open _ :: rem -> structure_aux rem
 
 let transl_signature env psig =
-  let _tsig, prsig, _env = process_signature env psig in
-  prsig
+  fst (process_signature env psig)
 
 let type_implementation sourcefile outputprefix modulename env str =
   let gstr, _env = process_structure env str in
   let sg = structure_aux gstr in
   let simple_sg = (* simplify_signature *) sg in
-(*   Typing.force_delayed_checks (); *)
   if !Clflags.print_types then begin
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
     (gstr, Coerce_none)   (* result is ignored by Compile.implementation *)

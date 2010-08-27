@@ -130,7 +130,7 @@ let type_deps t =
   in
   (match t.Odoc_type.ty_kind with
     Odoc_type.Tcs_abstract -> ()
-  | Odoc_type.Tcs_sum cl ->
+  | Odoc_type.Tcs_variant cl ->
       List.iter
         (fun c ->
           List.iter

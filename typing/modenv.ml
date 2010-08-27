@@ -65,7 +65,7 @@ let make_cached_module sg crcs =
         | Sig_type (tcs,_) ->
             type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
             begin match tcs.tcs_kind with
-              | Tcs_sum cstrs ->
+              | Tcs_variant cstrs ->
                   List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
               | Tcs_record lbls ->
                   List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
@@ -104,7 +104,7 @@ let rec map_type_constructor memo f tcs =
 
 and map_type_constructor_kind memo f = function
     Tcs_abstract -> Tcs_abstract
-  | Tcs_sum cs_list -> Tcs_sum (List.map (map_constructor memo f) cs_list)
+  | Tcs_variant cs_list -> Tcs_variant (List.map (map_constructor memo f) cs_list)
   | Tcs_record lbl_list -> Tcs_record (List.map (map_label memo f) lbl_list)
   | Tcs_abbrev ty -> Tcs_abbrev (f ty)
 
