@@ -34,11 +34,11 @@ let type_of_local_type subst =
 
 type pseudoenv = {
   pseudoenv_env : Env.t;
-  pseudoenv_type_parameters : (string, type_parameter) Tbl.t;
-  pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t }
+  pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
+  pseudoenv_parameters : (string, type_parameter) Tbl.t }
 
-let pseudoenv_lookup_type_parameter name pseudoenv =
-  Tbl.find name pseudoenv.pseudoenv_type_parameters
+let pseudoenv_lookup_parameter name pseudoenv =
+  Tbl.find name pseudoenv.pseudoenv_parameters
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   try
@@ -48,10 +48,10 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
   with Not_found ->
     Ref_global(Env.lookup_type lid pseudoenv.pseudoenv_env)
 
-let pseudoenv_add_type_parameter tv pseudoenv =
+let pseudoenv_add_parameter tv pseudoenv =
   { pseudoenv with
-      pseudoenv_type_parameters =
-      Tbl.add tv.param_name tv pseudoenv.pseudoenv_type_parameters }
+      pseudoenv_parameters =
+      Tbl.add tv.param_name tv pseudoenv.pseudoenv_parameters }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
@@ -60,5 +60,5 @@ let pseudoenv_add_type_constructor ltcs pseudoenv =
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
-  pseudoenv_type_parameters = Tbl.empty;
-  pseudoenv_type_constructors = Tbl.empty }
+  pseudoenv_type_constructors = Tbl.empty;
+  pseudoenv_parameters = Tbl.empty }

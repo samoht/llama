@@ -36,7 +36,8 @@ let instantiate_type_aux inst =
     | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
     | Ttuple tyl -> Mtuple (List.map aux tyl)
     | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map aux tyl)
-  in aux
+  in
+  aux
 
 let instantiate_type ty =
   let rec aux accum = function
@@ -51,23 +52,21 @@ let instantiate_type ty =
         List.fold_left aux accum tyl in
   instantiate_type_aux (aux [] ty) ty
 
-let make_instantiation tcs =
-  List.map (function
-                Tparam param -> (param, new_type_var ())
-              | _ -> assert false) tcs.tcs_params
+let instantiate_type_constructor tcs =
+  let inst =
+    List.map (function
+                  Tparam param -> (param, new_type_var ())
+                | _ -> assert false) tcs.tcs_params in
+  inst, Mconstr (tcs, List.map snd inst)
 
 let instantiate_constructor cs =
-  let tcs = cs.cs_tcs in
-  let subst = make_instantiation tcs in
-  let ty_args = List.map (instantiate_type_aux subst) cs.cs_args in
-  let ty_res = Mconstr (tcs, List.map snd subst) in
+  let inst, ty_res = instantiate_type_constructor cs.cs_tcs in
+  let ty_args = List.map (instantiate_type_aux inst) cs.cs_args in
   ty_args, ty_res
 
 let instantiate_label lbl =
-  let tcs = lbl.lbl_tcs in
-  let subst = make_instantiation tcs in
-  let ty_res = Mconstr (tcs, List.map snd subst) in
-  let ty_arg = instantiate_type_aux subst lbl.lbl_arg in
+  let inst, ty_res = instantiate_type_constructor lbl.lbl_tcs in
+  let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
   ty_res, ty_arg
 
 (* ---------------------------------------------------------------------- *)

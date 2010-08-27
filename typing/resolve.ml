@@ -17,13 +17,47 @@ type error =
   | Unbound_label of Longident.t
   | Unbound_module of string
   | Repeated_parameter
-  | Unbound_type_parameter of string
+  | Unbound_parameter of string
   | Multiply_bound_variable of string
   | Orpat_vars of string
   | Type_arity_mismatch of Longident.t * int * int
   | Constructor_arity_mismatch of Longident.t * int * int
+  | Label_mismatch of label * type_constructor
+  | Label_multiply_defined of label
+  | Label_missing of label list
+  | Label_not_mutable of label
 
 exception Error of Location.t * error
+
+(* ---------------------------------------------------------------------- *)
+(* Utilities for checking things.                                         *)
+(* ---------------------------------------------------------------------- *)
+
+let check_labels loc expect_all lbls =
+  let tcs =
+    match lbls with
+        [] -> fatal_error "check_labels"
+      | (lbl :: _) -> lbl.lbl_tcs
+  in
+  let seen = Array.make (List.length (labels_of_type tcs)) false in
+  List.iter
+    (fun lbl ->
+       if lbl.lbl_tcs != tcs then raise (Error (loc, Label_mismatch (lbl, tcs)));
+       let pos = lbl.lbl_pos in
+       if seen.(pos) then raise (Error (loc, Label_multiply_defined lbl));
+       seen.(pos) <- true) lbls;
+  if expect_all then begin
+    let unseen = List.filter (fun lbl -> not seen.(lbl.lbl_pos)) (labels_of_type tcs) in
+    if unseen <> [] then raise (Error (loc, Label_missing unseen))
+  end;
+  tcs
+
+let find_duplicate l =
+  let l = List.sort compare l in
+  let rec aux = function
+      [] | [_] -> None
+    | (hd :: (hd' :: _ as tl)) -> if hd = hd' then Some hd else aux tl in
+  aux l
 
 (* ---------------------------------------------------------------------- *)
 (* Pattern utilities.                                                     *)
@@ -59,10 +93,10 @@ let rec bound_local_values pat =
     | Tpat_constant _ -> []
     | Tpat_tuple patl -> List.flatten (List.map bound_local_values patl)
     | Tpat_construct(_, pats) -> List.flatten (List.map bound_local_values pats)
-    | Tpat_record lbl_pat_list ->
+    | Tpat_record (_, lbl_pat_list) ->
         List.flatten (List.map (fun (lbl,pat) -> bound_local_values pat) lbl_pat_list)
     | Tpat_array patl -> List.flatten (List.map bound_local_values patl)
-    | Tpat_or(pat1, pat2) -> bound_local_values pat1
+    | Tpat_or (pat1, pat2) -> bound_local_values pat1
     | Tpat_constraint(pat, _) -> bound_local_values pat
 
 (* ---------------------------------------------------------------------- *)
@@ -93,9 +127,9 @@ let lookup_type_constructor pseudoenv lid loc =
   try pseudoenv_lookup_type_constructor lid pseudoenv
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
-let lookup_type_parameter pseudoenv name loc =
-  try pseudoenv_lookup_type_parameter name pseudoenv
-  with Not_found -> raise (Error (loc, Unbound_type_parameter name))
+let lookup_parameter pseudoenv name loc =
+  try pseudoenv_lookup_parameter name pseudoenv
+  with Not_found -> raise (Error (loc, Unbound_parameter name))
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of type expressions.                                        *)
@@ -130,7 +164,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
 let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
-        Lparam (lookup_type_parameter pseudoenv name ty.ptyp_loc)
+        Lparam (lookup_parameter pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
         Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2)
     | Ptyp_tuple tyl ->
@@ -181,14 +215,11 @@ let new_local_value name =
     lval_type = new_type_var () }
 
 let pattern env pat =
-  let names = List.sort compare (bound_names pat) in
-  let rec check = function
-      [] | [_] -> ()
-    | (hd :: (hd' :: _ as tl)) ->
-        if hd = hd' then raise (Error (pat.ppat_loc, Multiply_bound_variable hd));
-        check tl
-  in
-  check names;
+  let names = bound_names pat in
+  begin match find_duplicate names with
+      None -> ()
+    | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
+  end;
   let values = List.map (fun name -> (name, new_local_value name)) names in
   let rec aux pat =
     { pat_desc =
@@ -213,7 +244,12 @@ let pattern env pat =
                 raise(Error(pat.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
                                                                    List.length sargs)));
               Tpat_construct (cs, List.map aux sargs)
-          | Ppat_record l -> Tpat_record (List.map (fun (li,p) -> (lookup_label env li pat.ppat_loc, aux p)) l)
+          | Ppat_record lbl_pat_list ->
+              let lbl_pat_list =
+                List.map (fun (lbl, pat) ->
+                            lookup_label env lbl pat.ppat_loc, aux pat) lbl_pat_list in
+              let tcs = check_labels pat.ppat_loc false (List.map fst lbl_pat_list) in
+              Tpat_record (tcs, lbl_pat_list)
           | Ppat_array l -> Tpat_array (List.map aux l)
           | Ppat_or (p1, p2) ->
               Tpat_or (aux p1, aux p2)
@@ -293,9 +329,24 @@ let rec expr ctxt ex =
             Texp_for(v,expr ctxt e1,expr ctxt e2,b,expr big_ctxt e3)
         | Pexp_constraint(e,te) -> Texp_constraint(expr ctxt e,mutable_type ctxt.ctxt_env te)
         | Pexp_array l -> Texp_array(List.map (expr ctxt) l)
-        | Pexp_record (l,o) -> Texp_record(List.map (fun (li,e) -> lookup_label ctxt.ctxt_env li ex.pexp_loc,expr ctxt e) l, match o with None -> None | Some e -> Some (expr ctxt e))
+        | Pexp_record (lbl_exp_list, opt_init) ->
+            let lbl_exp_list =
+              List.map
+                (fun (lbl, exp) ->
+                   (lookup_label ctxt.ctxt_env lbl ex.pexp_loc,
+                    expr ctxt exp)) lbl_exp_list in
+            let tcs = check_labels ex.pexp_loc (opt_init = None) (List.map fst lbl_exp_list) in
+            let opt_init =
+              match opt_init with
+                  None -> None
+                | Some init -> Some (expr ctxt init)
+            in
+            Texp_record (tcs, lbl_exp_list, opt_init)
         | Pexp_field (e,li) -> Texp_field(expr ctxt e,lookup_label ctxt.ctxt_env li ex.pexp_loc)
-        | Pexp_setfield(e,li,e2) -> Texp_setfield(expr ctxt e, lookup_label ctxt.ctxt_env li ex.pexp_loc, expr ctxt e2)
+        | Pexp_setfield(e,li,e2) ->
+            let lbl = lookup_label ctxt.ctxt_env li ex.pexp_loc in
+            if not lbl.lbl_mut then raise(Error(ex.pexp_loc, Label_not_mutable lbl));
+            Texp_setfield(expr ctxt e, lbl, expr ctxt e2)
         | Pexp_assert e -> Texp_assert (expr ctxt e)
         | Pexp_assertfalse -> Texp_assertfalse
         | Pexp_when(e1,e2) -> Texp_when(expr ctxt e1,expr ctxt e2)
@@ -335,6 +386,8 @@ let type_equation_list env pteq_list =
   let ltcs_list =
     List.map
       begin fun pteq ->
+        if find_duplicate pteq.pteq_params <> None then
+          raise (Error (pteq.pteq_loc, Repeated_parameter));
         { ltcs_name = pteq.pteq_name;
           ltcs_arity = List.length pteq.pteq_params;
           ltcs_params = List.map (fun name -> {param_name=name}) pteq.pteq_params }
@@ -351,7 +404,7 @@ let type_equation_list env pteq_list =
     begin fun pteq ltcs ->
       let ctxt =
         List.fold_left
-          (fun ctxt tv -> pseudoenv_add_type_parameter tv ctxt) ctxt ltcs.ltcs_params
+          (fun ctxt tv -> pseudoenv_add_parameter tv ctxt) ctxt ltcs.ltcs_params
       in
       { teq_ltcs = ltcs;
         teq_kind = type_equation_kind ctxt pteq.pteq_kind;
@@ -416,7 +469,9 @@ let structure_item env pstr =
     | Pstr_open name ->
         mk (Tstr_open (name, lookup_module name pstr.pstr_loc))
 
-(* Error report *)
+(* ---------------------------------------------------------------------- *)
+(* Error report.                                                          *)
+(* ---------------------------------------------------------------------- *)
 
 open Format
 open Printtyp
@@ -434,7 +489,7 @@ let report_error ppf = function
       fprintf ppf "Unbound value %a" longident lid
   | Repeated_parameter ->
       fprintf ppf "A type parameter occurs several times"
-  | Unbound_type_parameter name ->
+  | Unbound_parameter name ->
       fprintf ppf "Unbound type parameter %s" name
   | Multiply_bound_variable name ->
       fprintf ppf "Variable %s is bound several times in this matching" name
@@ -450,3 +505,17 @@ let report_error ppf = function
        "@[The constructor %a@ expects %i argument(s),@ \
         but is applied here to %i argument(s)@]"
        longident lid expected provided
+  | Label_mismatch(lbl, expected_tcs) ->
+      fprintf ppf
+        "@[The record field label %a@ belongs to the type constructor %a@ \
+         but is mixed here with labels of type %a@]"
+        label lbl type_constructor lbl.lbl_tcs type_constructor expected_tcs
+  | Label_multiply_defined lbl ->
+      fprintf ppf "The record field label %a is defined several times"
+        label lbl
+  | Label_missing labels ->
+      let print_labels ppf = List.iter (fun lbl -> fprintf ppf "@ %s" lbl.lbl_name) in
+      fprintf ppf "@[<hov>Some record field labels are undefined:%a@]"
+        print_labels labels
+  | Label_not_mutable lbl ->
+      fprintf ppf "The record field label %a is not mutable" label lbl

@@ -8,10 +8,6 @@ open Context
 type error =
   | Incomplete_format of string
   | Bad_conversion of string * int * char
-  | Label_mismatch of label * mutable_type * mutable_type
-  | Label_multiply_defined of label
-  | Label_missing of label list
-  | Label_not_mutable of label
   | Pattern_type_clash of mutable_type * mutable_type
   | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
@@ -62,15 +58,14 @@ let rec type_pattern pat =
           let (ty_args, ty_res) = instantiate_constructor cs in
           List.iter2 (fun arg ty_arg -> unify_pattern arg ty_arg) args ty_args;
           ty_res
-      | Tpat_record lbl_arg_list ->
+      | Tpat_record (tcs, lbl_arg_list) ->
           List.iter (fun (_, arg) -> type_pattern arg) lbl_arg_list;
-          let ty = new_type_var () in
+          let inst, ty_res = instantiate_type_constructor tcs in
           List.iter
             (fun (lbl, arg) ->
-               let (ty_res, ty_arg) = instantiate_label lbl in
-               unify ty ty_res;
+               let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
                unify_pattern arg ty_arg) lbl_arg_list;
-          ty
+          ty_res
       | Tpat_array patl ->
           List.iter type_pattern patl;
           let ty = new_type_var () in
@@ -113,10 +108,9 @@ let rec is_nonexpansive expr =
       is_nonexpansive ifso && is_nonexpansive_opt ifnot
   | Texp_constraint(e, ty) -> is_nonexpansive e
   | Texp_array [] -> true
-  | Texp_record (lbl_expr_list, opt_init_exp) ->
+  | Texp_record (tcs, lbl_expr_list, opt_init_exp) ->
       List.forall (fun (lbl, expr) ->
-                  not lbl.lbl_mut && is_nonexpansive expr)
-              lbl_expr_list &&
+                     not lbl.lbl_mut && is_nonexpansive expr) lbl_expr_list &&
         is_nonexpansive_opt opt_init_exp
   | Texp_field(e, lbl) -> is_nonexpansive e
   | Texp_when(cond, act) -> is_nonexpansive act
@@ -384,41 +378,23 @@ let rec type_expr expr =
       let ty_arg = new_type_var() in
       List.iter (fun e -> type_expect e ty_arg) elist;
       mutable_type_array ty_arg
-  | Texp_record (lbl_exp_list, exten) ->
-      let ty = new_type_var() in
+  | Texp_record (tcs, lbl_exp_list, opt_init) ->
+      let inst, ty_res = instantiate_type_constructor tcs in
       List.iter
         (fun (lbl, exp) ->
-          let (ty_res, ty_arg) = instantiate_label lbl in
-          begin try unify ty ty_res
-          with Unify ->
-            raise(Error(expr.exp_loc,
-                        Label_mismatch(lbl, ty_res, ty)))
-          end;
-          type_expect exp ty_arg)
-        lbl_exp_list;
-      begin match exten with
+           let ty_arg = instantiate_type_aux inst lbl.lbl_arg in
+           type_expect exp ty_arg) lbl_exp_list;
+      begin match opt_init with
           None -> ()
-        | Some exten -> type_expect exten ty
+        | Some init -> type_expect init ty_res
       end;
-      let fields =
-        match lbl_exp_list with [] -> assert false
-        | (lbl,_)::_ -> labels_of_type lbl.lbl_tcs in
-      let num_fields = List.length fields in
-      if exten = None && List.length lbl_exp_list <> num_fields then begin
-        let is_missing lbl = List.forall (fun (lbl', _) -> lbl != lbl') lbl_exp_list in
-        let missing = List.filter is_missing fields in
-        raise(Error(expr.exp_loc, Label_missing missing))
-      end
-      else if exten <> None && List.length lbl_exp_list = num_fields then
-        Location.prerr_warning expr.exp_loc Warnings.Useless_record_with;
-      ty
+      ty_res
   | Texp_field (e, lbl) ->
       let (ty_res, ty_arg) = instantiate_label lbl in
       type_expect e ty_res;
       ty_arg      
   | Texp_setfield (e1, lbl, e2) ->
       let (ty_res, ty_arg) = instantiate_label lbl in
-      if not lbl.lbl_mut then raise(Error(expr.exp_loc, Label_not_mutable lbl));
       type_expect e1 ty_res;
       type_expect e2 ty_arg;
       mutable_type_unit
@@ -507,22 +483,6 @@ let report_error ppf = function
       fprintf ppf
         "Bad conversion %%%c, at char number %d \
          in format string ``%s''" c i fmt
-  | Label_mismatch(lbl, actual_ty, expected_ty) ->
-      report_unification_error ppf actual_ty expected_ty
-        (function ppf ->
-           fprintf ppf "The record field label %a@ belongs to the type"
-                   label lbl)
-        (function ppf ->
-           fprintf ppf "but is mixed here with labels of type")
-  | Label_multiply_defined lbl ->
-      fprintf ppf "The record field label %a is defined several times"
-        label lbl
-  | Label_missing labels ->
-      let print_labels ppf = List.iter (fun lbl -> fprintf ppf "@ %s" lbl.lbl_name) in
-      fprintf ppf "@[<hov>Some record field labels are undefined:%a@]"
-        print_labels labels
-  | Label_not_mutable lbl ->
-      fprintf ppf "The record field label %a is not mutable" label lbl
   | Pattern_type_clash (actual_ty, expected_ty) ->
       report_unification_error ppf actual_ty expected_ty
         (function ppf ->

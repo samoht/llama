@@ -647,10 +647,8 @@ and transl_exp0 e =
             Lprim(Pmakeblock(0, Immutable),
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
-  | Texp_record ((lbl1, _) :: _ as lbl_expr_list, opt_init_expr) ->
-      transl_record (labels_of_type lbl1.lbl_tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
-  | Texp_record ([], _) ->
-      fatal_error "Translcore.transl_exp: bad Texp_record"
+  | Texp_record (tcs, lbl_expr_list, opt_init_expr) ->
+      transl_record (labels_of_type tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_field(arg, lbl) ->
       let access = Pfield lbl.lbl_pos in
 (*
