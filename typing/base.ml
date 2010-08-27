@@ -90,9 +90,9 @@ type label = llama_type gen_label
 
 type value = llama_type gen_value
 
-type compiled_signature_item = llama_type gen_signature_item
+type signature_item = llama_type gen_signature_item
 
-type compiled_signature = llama_type gen_signature
+type signature = llama_type gen_signature
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)

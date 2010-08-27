@@ -13,7 +13,7 @@ exception Error of error
 (* ---------------------------------------------------------------------- *)
 
 type cached_module =
-  { mod_sig : compiled_signature;
+  { mod_sig : signature;
     mod_crcs : (string * Digest.t) list;
     mod_values: (string, value) Tbl.t;
     mod_constrs: (string, constructor) Tbl.t;

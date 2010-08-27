@@ -56,10 +56,10 @@ let simplify_structure_coercion cc =
   | [] ->
       true
   | (n, c) :: rem ->
-      n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem in
+      n = pos && c = Coerce_none && is_identity_coercion (pos + 1) rem in
   if is_identity_coercion 0 cc
-  then Tcoerce_none
-  else Tcoerce_structure cc
+  then Coerce_none
+  else Coerce_structure cc
 
 let rec signatures subst sig1 sig2 =
   (* Build a table of the components of sig1, along with their positions.
@@ -122,7 +122,7 @@ and signature_components subst = function
   | (Sig_exception(excdecl1), Sig_exception(excdecl2), pos)
     :: rem ->
       exception_declarations subst excdecl1 excdecl2;
-      (pos, Tcoerce_none) :: signature_components subst rem
+      (pos, Coerce_none) :: signature_components subst rem
   | _ ->
       assert false
 

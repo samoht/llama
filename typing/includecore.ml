@@ -10,10 +10,10 @@ let values s vd1 vd2 =
   if Typeutil.moregeneral vd1.val_type (Subst.core_type s vd2.val_type) then begin
     match (vd1.val_kind, vd2.val_kind) with
         (Val_prim (p1), Val_prim (p2)) ->
-          if p1 = p2 then Tcoerce_none else raise Dont_match
-      | (Val_prim p, _) -> Tcoerce_primitive p
+          if p1 = p2 then Coerce_none else raise Dont_match
+      | (Val_prim p, _) -> Coerce_primitive p
       | (_, Val_prim (p)) -> raise Dont_match
-      | (_, _) -> Tcoerce_none
+      | (_, _) -> Coerce_none
   end else
     raise Dont_match
 

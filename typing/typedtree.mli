@@ -73,7 +73,7 @@ and signature_item_desc =
   | Tsig_primitive of string * llama_type * Primitive.description
   | Tsig_type of type_declaration list
   | Tsig_exception of string * local_type list
-  | Tsig_open of string * compiled_signature
+  | Tsig_open of string * Base.signature
 
 type structure_item =
   { str_desc: structure_item_desc;
@@ -85,7 +85,7 @@ and structure_item_desc =
   | Tstr_primitive of string * llama_type * Primitive.description
   | Tstr_type of type_declaration list
   | Tstr_exception of string * local_type list
-  | Tstr_open of string * compiled_signature
+  | Tstr_open of string * Base.signature
 
 type signature = signature_item list
 
@@ -99,11 +99,11 @@ type processed_structure_item =
   | Str_primitive of value
   | Str_type of type_constructor list
   | Str_exception of constructor
-  | Str_open of compiled_signature
+  | Str_open of Base.signature
 
 type processed_structure = processed_structure_item list
 
 type module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_primitive of Primitive.description
+    Coerce_none
+  | Coerce_structure of (int * module_coercion) list
+  | Coerce_primitive of Primitive.description

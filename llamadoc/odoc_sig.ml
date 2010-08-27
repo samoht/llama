@@ -38,7 +38,7 @@ open Odoc_types
       | ER of string
       | P of string
 
-    type tab = (ele, Base.compiled_signature_item) Hashtbl.t
+    type tab = (ele, Base.signature_item) Hashtbl.t
 
     let add_to_hash table signat =
       match signat with
@@ -425,7 +425,7 @@ open Odoc_types
 
 
     let analyse_signature source_file input_file
-        (ast : Parsetree.signature) (signat : Base.compiled_signature) =
+        (ast : Parsetree.signature) (signat : Base.signature) =
       let complete_source_file =
         try
           let curdir = Sys.getcwd () in

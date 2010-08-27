@@ -1,6 +1,6 @@
 open Base
 
-val lookup_signature : string -> compiled_signature
+val lookup_signature : string -> signature
 val lookup_type_constructor : module_id -> string -> type_constructor
 val lookup_constructor : module_id -> string -> constructor
 val lookup_label : module_id -> string -> label
@@ -16,12 +16,12 @@ val imported_units: unit -> (string * Digest.t) list
 
 (* Read, save a signature to/from a file *)
 
-val read_signature: string -> string -> compiled_signature
+val read_signature: string -> string -> signature
         (* Arguments: module name, file name. Results: signature. *)
-val save_signature: compiled_signature -> string -> string -> unit
+val save_signature: signature -> string -> string -> unit
         (* Arguments: signature, module name, file name. *)
 val save_signature_with_imports:
-            compiled_signature -> string -> string -> (string * Digest.t) list -> unit
+            signature -> string -> string -> (string * Digest.t) list -> unit
         (* Arguments: signature, module name, file name,
            imported units with their CRCs. *)
 

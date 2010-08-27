@@ -15,11 +15,11 @@
 
 (** The functions used to retrieve information from a signature. *)
       type ele
-      type tab = (ele, Base.compiled_signature_item) Hashtbl.t
+      type tab = (ele, Base.signature_item) Hashtbl.t
 
       (** Create a table from a signature. This table is used by some
          of the search functions below. *)
-      val table : Base.compiled_signature -> tab
+      val table : Base.signature -> tab
 
       (** This function returns the type expression for the value whose name is given,
          in the given signature.
@@ -83,4 +83,4 @@
          and in the signature for types information. *)
       val analyse_signature :
         string -> string ->
-        Parsetree.signature -> Base.compiled_signature -> Odoc_module.t_module
+        Parsetree.signature -> Base.signature -> Odoc_module.t_module

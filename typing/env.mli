@@ -11,7 +11,7 @@ val initial : t  (* builtins but not Pervasives *)
 val add_type_constructor : type_constructor -> t -> t
 val add_value : value -> t -> t
 val add_exception : constructor -> t -> t
-val add_signature : compiled_signature -> t -> t
+val add_signature : signature -> t -> t
 
 (* Using environments *)
 

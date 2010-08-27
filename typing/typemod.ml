@@ -56,7 +56,7 @@ let type_implementation sourcefile outputprefix modulename env str =
 (*   Typecore.force_delayed_checks (); *)
   if !Clflags.print_types then begin
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
-    (gstr, Tcoerce_none)   (* result is ignored by Compile.implementation *)
+    (gstr, Coerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
