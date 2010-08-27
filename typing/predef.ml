@@ -26,7 +26,7 @@ let tcs_lazy_t = mkabs "lazy_t" [] true
 
 (* sum types *)
 
-let rec tcs_unit =
+let rec tcs_unit : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "unit";
     tcs_params = [];
@@ -36,11 +36,10 @@ and cs_void =
   { cs_tcs = tcs_unit;
     cs_module = Module_builtin;
     cs_name = "()";
-    cs_res = Tconstr (tcs_unit, []);
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
-let rec tcs_bool =
+let rec tcs_bool : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "bool";
     tcs_params = [];
@@ -50,7 +49,6 @@ and cs_false =
   { cs_tcs = tcs_bool;
     cs_module = Module_builtin;
     cs_name = "false";
-    cs_res = Tconstr (tcs_bool, []);
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
@@ -58,7 +56,6 @@ and cs_true =
   { cs_tcs = tcs_bool;
     cs_module = Module_builtin;
     cs_name = "true";
-    cs_res = Tconstr (tcs_bool, []);
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
@@ -74,7 +71,6 @@ and cs_nil =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "[]";
-    cs_res = Tconstr(tcs_list, [list_param]);
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
@@ -82,7 +78,6 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_res = Tconstr(tcs_list, [list_param]);
     cs_args = [list_param;Tconstr(tcs_list,[list_param])];
     cs_tag = Tag_block 0 }
 
@@ -98,7 +93,6 @@ and cs_none =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "None";
-    cs_res = Tconstr (tcs_option, [option_param]);
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
@@ -106,7 +100,6 @@ and cs_some =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_res = Tconstr (tcs_option, [option_param]);
     cs_args = [option_param];
     cs_tag = Tag_block 0 }
 
@@ -144,7 +137,6 @@ let mkexn name tyl =
   { cs_tcs = tcs_exn;
     cs_module = Module_builtin;
     cs_name = name;
-    cs_res = type_exn;
     cs_args = tyl;
     cs_tag = Tag_exception }
   

@@ -112,14 +112,12 @@ and map_constructor memo f cs =
   { cs_tcs = map_type_constructor memo f cs.cs_tcs;
     cs_module = cs.cs_module;
     cs_name = cs.cs_name;
-    cs_res = f cs.cs_res;
     cs_args = List.map f cs.cs_args;
     cs_tag = cs.cs_tag }
 
 and map_label memo f lbl =
   { lbl_tcs = map_type_constructor memo f lbl.lbl_tcs;
     lbl_name = lbl.lbl_name;
-    lbl_res = f lbl.lbl_res;
     lbl_arg = f lbl.lbl_arg;
     lbl_mut = lbl.lbl_mut;
     lbl_pos = lbl.lbl_pos }

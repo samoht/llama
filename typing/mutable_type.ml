@@ -52,12 +52,12 @@ let instantiate_one_type ty =
 let instantiate_constructor cs =
   let subst = ref [] in
   let ty_args = List.map (instantiate_type subst) cs.cs_args in
-  let ty_res = instantiate_type subst cs.cs_res in
+  let ty_res = instantiate_type subst (cs_res cs) in
   (ty_args, ty_res)
 
 let instantiate_label lbl =
   let subst = ref [] in
-  let ty_res = instantiate_type subst lbl.lbl_res in
+  let ty_res = instantiate_type subst (lbl_res lbl) in
   let ty_arg = instantiate_type subst lbl.lbl_arg in
   ty_res, ty_arg
 

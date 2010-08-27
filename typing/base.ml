@@ -45,14 +45,12 @@ and 'ty gen_constructor =
   { mutable cs_tcs : 'ty gen_type_constructor;
     cs_module : module_id;
     cs_name : string;
-    cs_res : 'ty;
     cs_args : 'ty list;
     cs_tag : constructor_tag }
 
 and 'ty gen_label =
   { lbl_tcs : 'ty gen_type_constructor;
     lbl_name : string;
-    lbl_res : 'ty;
     lbl_arg : 'ty;
     lbl_mut : bool;
     lbl_pos : int }
@@ -103,10 +101,13 @@ type compiled_signature = llama_type gen_signature
 type qualified_id = module_id * string
 let tcs_qualid tcs = (tcs.tcs_module, tcs.tcs_name)
 let tcs_arity tcs = List.length tcs.tcs_params
+let tcs_res tcs = Tconstr (tcs, tcs.tcs_params)
 let cs_qualid cs = (cs.cs_module, cs.cs_name)
 let cs_arity cs = List.length cs.cs_args
+let cs_res cs = tcs_res cs.cs_tcs
 let lbl_module lbl = lbl.lbl_tcs.tcs_module
 let lbl_qualid lbl = (lbl_module lbl, lbl.lbl_name)
+let lbl_res lbl = tcs_res lbl.lbl_tcs
 let val_qualid v = (v.val_module, v.val_name)
 
 let int_to_alpha i =

@@ -92,7 +92,7 @@ let exceptions s cs1 cs2 =
 
 let labels s params lbl1 lbl2 =
   lbl1.lbl_name = lbl2.lbl_name &&
-  Typeutil.equiv params lbl1.lbl_res (Subst.core_type s lbl2.lbl_res)
+  Typeutil.equiv params (lbl_res lbl1) (Subst.core_type s (lbl_res lbl2))
 
 let type_constructors s tcs1 tcs2 =
   if tcs_arity tcs1 <> tcs_arity tcs2 then [Arity] else

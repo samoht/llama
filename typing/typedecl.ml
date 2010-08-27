@@ -64,7 +64,6 @@ let type_equation_list teq_list =
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
     begin fun tcs teq ->
-      let ty_res = Tconstr (tcs, tcs.tcs_params) in
       tcs.tcs_kind <-
         begin match teq.teq_kind with
             Teq_abstract _ -> Tcs_abstract
@@ -82,7 +81,6 @@ let type_equation_list teq_list =
                      { cs_tcs = tcs;
                        cs_module = tcs.tcs_module;
                        cs_name = name;
-                       cs_res = ty_res;
                        cs_args = List.map (type_of_local_type subst) args;
                        cs_tag =
                          if args=[] then
@@ -98,7 +96,6 @@ let type_equation_list teq_list =
                    begin fun pos (name, mut, arg) ->
                      { lbl_tcs = tcs;
                        lbl_name = name;
-                       lbl_res = ty_res;
                        lbl_arg = type_of_local_type subst arg;
                        lbl_mut = (mut = Mutable);
                        lbl_pos = pos }
@@ -121,7 +118,6 @@ let do_exception name args =
   { cs_tcs = Predef.tcs_exn;
     cs_module = !Modenv.current_module;
     cs_name = name;
-    cs_res = Predef.type_exn;
     cs_args = List.map (type_of_local_type []) args;
     cs_tag = Tag_exception;
   }
