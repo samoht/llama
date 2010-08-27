@@ -43,50 +43,51 @@ let unify_pattern pat expected_ty =
     raise (Error (pat.pat_loc, Pattern_type_clash (pat.pat_type, expected_ty)))
 
 let rec type_pattern pat =
-  match pat.pat_desc with
-      Tpat_any ->
-        ()
-    | Tpat_var v ->
-        unify_pattern pat v.lval_type
-    | Tpat_alias (pat', v) ->
-        unify_pattern pat pat'.pat_type;
-        type_pattern pat';
-        unify_pattern pat v.lval_type
-    | Tpat_constant c ->
-        unify_pattern pat (type_of_constant c)
-    | Tpat_tuple patl ->
-        List.iter type_pattern patl;
-        let ty = Mtuple (List.map (fun pat -> pat.pat_type) patl) in
-        unify_pattern pat ty
-    | Tpat_construct (cs, args) ->
-        let (ty_args, ty_res) = instantiate_constructor cs in
-        List.iter2
-          (fun arg ty_arg -> type_pattern arg; unify_pattern arg ty_arg)
-          args ty_args;
-        unify_pattern pat ty_res
-    | Tpat_record lbl_arg_list ->
-        let ty = new_type_var () in
-        List.iter
-          (fun (lbl, arg) ->
-             let (ty_res, ty_arg) = instantiate_label lbl in
-             unify ty_res ty;
-             type_pattern arg;
-             unify_pattern arg ty_arg) lbl_arg_list;
-        unify_pattern pat ty
-    | Tpat_array patl ->
-        List.iter type_pattern patl;
-        let ty = new_type_var () in
-        List.iter (fun pat -> unify_pattern pat ty) patl;
-        unify_pattern pat (mutable_type_array ty)
-    | Tpat_or (pat1, pat2) ->
-        type_pattern pat1;
-        type_pattern pat2;
-        unify_pattern pat2 pat1.pat_type;
-        unify_pattern pat pat1.pat_type
-    | Tpat_constraint (pat', ty) ->
-        type_pattern pat';
-        unify_pattern pat' ty;
-        unify_pattern pat pat'.pat_type
+  let inferred_ty =
+    match pat.pat_desc with
+        Tpat_any ->
+          new_type_var ()
+      | Tpat_var v ->
+          v.lval_type
+      | Tpat_alias (pat', v) ->
+          type_pattern pat';
+          unify_pattern pat' v.lval_type;
+          pat'.pat_type
+      | Tpat_constant c ->
+          type_of_constant c
+      | Tpat_tuple patl ->
+          List.iter type_pattern patl;
+          Mtuple (List.map (fun pat -> pat.pat_type) patl)
+      | Tpat_construct (cs, args) ->
+          List.iter type_pattern args;
+          let (ty_args, ty_res) = instantiate_constructor cs in
+          List.iter2 (fun arg ty_arg -> unify_pattern arg ty_arg) args ty_args;
+          ty_res
+      | Tpat_record lbl_arg_list ->
+          List.iter (fun (_, arg) -> type_pattern arg) lbl_arg_list;
+          let ty = new_type_var () in
+          List.iter
+            (fun (lbl, arg) ->
+               let (ty_res, ty_arg) = instantiate_label lbl in
+               unify ty ty_res;
+               unify_pattern arg ty_arg) lbl_arg_list;
+          ty
+      | Tpat_array patl ->
+          List.iter type_pattern patl;
+          let ty = new_type_var () in
+          List.iter (fun pat -> unify_pattern pat ty) patl;
+          mutable_type_array ty
+      | Tpat_or (pat1, pat2) ->
+          type_pattern pat1;
+          type_pattern pat2;
+          unify_pattern pat2 pat1.pat_type;
+          pat1.pat_type
+      | Tpat_constraint (pat', ty) ->
+          type_pattern pat';
+          unify_pattern pat' ty;
+          pat'.pat_type
+  in
+  unify_pattern pat inferred_ty
 
 (* ---------------------------------------------------------------------- *)
 (* Value restriction.                                                     *)
