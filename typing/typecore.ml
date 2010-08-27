@@ -37,7 +37,7 @@ let unify_pat pat expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with Unify ->
-    raise(Error(pat.pat_loc, Pattern_type_clash(actual_ty, expected_ty)))
+    raise (Error (pat.pat_loc, Pattern_type_clash (actual_ty, expected_ty)))
 
 let rec type_pattern (pat, ty) =
   unify pat.pat_type ty;
@@ -127,7 +127,13 @@ and is_nonexpansive_opt = function
     None -> true
   | Some e -> is_nonexpansive e
 
-(* Typecore of printf formats *)
+(* Typing of printf formats.
+   (Handling of * modifiers contributed by Thorsten Ohl.) *)
+
+external string_to_format :
+ string -> ('a, 'b, 'c, 'd, 'e, 'f) format6 = "%identity"
+external format_to_string :
+ ('a, 'b, 'c, 'd, 'e, 'f) format6 -> string = "%identity"
 
 let type_format loc fmt =
 
@@ -240,21 +246,7 @@ let type_format loc fmt =
             if conv = 'a' then conversion_a else conversion_r in
           let ty_e = new_type_var () in
           let j = j + 1 in
-          if j >= len then conversion (j - 1) ty_e ty_e else begin
-            match fmt.[j] with
-(*            | 'a' | 'A' -> conversion j ty_e (mutable_type_array ty_e)
-            | 'l' | 'L' -> conversion j ty_e (mutable_type_list ty_e)
-            | 'o' | 'O' -> conversion j ty_e (mutable_type_option ty_e)*)
-            | _ -> conversion (j - 1) ty_e ty_e end
-(*      | 'r' ->
-          let ty_e = newvar () in
-          let j = j + 1 in
-          if j >= len then conversion_r (j - 1) ty_e ty_e else begin
-            match fmt.[j] with
-            | 'a' | 'A' -> conversion_r j ty_e (Pref.type_array ty_e)
-            | 'l' | 'L' -> conversion_r j ty_e (Pref.type_list ty_e)
-            | 'o' | 'O' -> conversion_r j ty_e (Pref.type_option ty_e)
-            | _ -> conversion_r (j - 1) ty_e ty_e end *)
+          conversion (j - 1) ty_e ty_e
         | 't' -> conversion j (ty_arrow ty_input ty_aresult)
         | 'l' | 'n' | 'L' as c ->
           let j = j + 1 in
@@ -269,14 +261,13 @@ let type_format loc fmt =
               conversion j ty_arg
             | c -> conversion (j - 1) mutable_type_int
           end
-(*
         | '{' | '(' as c ->
           let j = j + 1 in
           if j >= len then raise (incomplete_format fmt) else
           let sj =
             Printf_tformat.sub_format
               (fun fmt -> raise (incomplete_format (format_to_string fmt)))
-              (fun fmt -> raise (bad_conversion (format_to_string fmt)))
+              (fun fmt i c -> raise (bad_conversion (format_to_string fmt) i c))
               c (string_to_format fmt) j in
           let sfmt = String.sub fmt j (sj - 2 - j) in
           let ty_sfmt = type_in_format sfmt in
@@ -284,7 +275,6 @@ let type_format loc fmt =
           | '{' -> conversion (sj - 1) ty_sfmt
           | _ -> incr meta; conversion (j - 1) ty_sfmt end
         | ')' when !meta > 0 -> decr meta; scan_format (j + 1)
-*)
         | c -> raise (bad_conversion fmt i c) in
       scan_flags i j in
 
