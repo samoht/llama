@@ -8,23 +8,23 @@ type mutable_type =
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
-and mutable_type_variable =
-  { mutable link : mutable_type option }  (* compared with (==) *)
+and mutable_type_variable =  (* compared with (==) *)
+  { mutable link : mutable_type option }
 
 let new_type_var() = Mvar { link = None }
 let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
 
-let mutable_type_unit = Mconstr(Predef.tcs_unit, [])
-let mutable_type_bool = Mconstr(Predef.tcs_bool, [])
-let mutable_type_int = Mconstr(Predef.tcs_int, [])
-let mutable_type_float = Mconstr(Predef.tcs_float, [])
-let mutable_type_string = Mconstr(Predef.tcs_string, [])
-let mutable_type_char = Mconstr(Predef.tcs_char, [])
-let mutable_type_int32 = Mconstr(Predef.tcs_int32, [])
-let mutable_type_int64 = Mconstr(Predef.tcs_int64, [])
-let mutable_type_nativeint = Mconstr(Predef.tcs_nativeint, [])
-let mutable_type_exn = Mconstr(Predef.tcs_exn, [])
-let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
+let type_unit = Mconstr(Predef.tcs_unit, [])
+let type_bool = Mconstr(Predef.tcs_bool, [])
+let type_int = Mconstr(Predef.tcs_int, [])
+let type_float = Mconstr(Predef.tcs_float, [])
+let type_string = Mconstr(Predef.tcs_string, [])
+let type_char = Mconstr(Predef.tcs_char, [])
+let type_int32 = Mconstr(Predef.tcs_int32, [])
+let type_int64 = Mconstr(Predef.tcs_int64, [])
+let type_nativeint = Mconstr(Predef.tcs_nativeint, [])
+let type_exn = Mconstr(Predef.tcs_exn, [])
+let type_array ty = Mconstr(Predef.tcs_array, [ty])
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)

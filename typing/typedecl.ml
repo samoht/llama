@@ -44,7 +44,7 @@ let type_letdef pat_exp_list =
     pat_exp_list
 
 let type_expression loc expr =
-  let ty = type_expr expr in
+  let ty = Typecore.expression expr in
   if not (is_nonexpansive expr) && not (is_closed ty) then
     raise (Error(expr.exp_loc, Non_generalizable ty));
   generalize ty
@@ -123,7 +123,7 @@ let do_exception name args =
   }
 
 let structure_item env str = match str.str_desc with
-    Tstr_eval exp -> ignore (type_expr exp)
+    Tstr_eval exp -> ignore (Typecore.expression exp)
   | Tstr_value (_, pat_exp_list) -> type_letdef pat_exp_list
   | _ -> ()
 

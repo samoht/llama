@@ -114,42 +114,36 @@ typing/pseudoenv.cmo: utils/tbl.cmi parsing/longident.cmi typing/env.cmi \
     typing/base.cmo
 typing/pseudoenv.cmx: utils/tbl.cmx parsing/longident.cmx typing/env.cmx \
     typing/base.cmx
-typing/resolve.cmo: typing/typedtree_aux.cmo typing/typedtree.cmi \
-    typing/pseudoenv.cmo typing/printtyp.cmo typing/primitive.cmi \
-    parsing/parsetree.cmi parsing/parser.cmi typing/mutable_type.cmo \
-    typing/modenv.cmi utils/misc.cmi parsing/longident.cmi \
-    parsing/location.cmi typing/env.cmi typing/context.cmo typing/base.cmo \
-    parsing/asttypes.cmi
-typing/resolve.cmx: typing/typedtree_aux.cmx typing/typedtree.cmi \
-    typing/pseudoenv.cmx typing/printtyp.cmx typing/primitive.cmx \
-    parsing/parsetree.cmi parsing/parser.cmx typing/mutable_type.cmx \
-    typing/modenv.cmx utils/misc.cmx parsing/longident.cmx \
-    parsing/location.cmx typing/env.cmx typing/context.cmx typing/base.cmx \
-    parsing/asttypes.cmi
+typing/resolve.cmo: typing/typedtree.cmi typing/pseudoenv.cmo \
+    typing/printtyp.cmo typing/primitive.cmi parsing/parsetree.cmi \
+    typing/mutable_type.cmo typing/modenv.cmi utils/misc.cmi \
+    parsing/longident.cmi parsing/location.cmi typing/env.cmi \
+    typing/context.cmo typing/base.cmo parsing/asttypes.cmi
+typing/resolve.cmx: typing/typedtree.cmi typing/pseudoenv.cmx \
+    typing/printtyp.cmx typing/primitive.cmx parsing/parsetree.cmi \
+    typing/mutable_type.cmx typing/modenv.cmx utils/misc.cmx \
+    parsing/longident.cmx parsing/location.cmx typing/env.cmx \
+    typing/context.cmx typing/base.cmx parsing/asttypes.cmi
 typing/subst.cmo: typing/base.cmo
 typing/subst.cmx: typing/base.cmx
-typing/typecore.cmo: utils/warnings.cmi typing/typedtree_aux.cmo \
-    typing/typedtree.cmi typing/printtyp.cmo typing/predef.cmo \
-    typing/mutable_type.cmo utils/misc.cmi parsing/location.cmi \
-    typing/context.cmo typing/base.cmo parsing/asttypes.cmi
-typing/typecore.cmx: utils/warnings.cmx typing/typedtree_aux.cmx \
-    typing/typedtree.cmi typing/printtyp.cmx typing/predef.cmx \
-    typing/mutable_type.cmx utils/misc.cmx parsing/location.cmx \
-    typing/context.cmx typing/base.cmx parsing/asttypes.cmi
-typing/typedecl.cmo: typing/typedtree_aux.cmo typing/typedtree.cmi \
-    typing/typecore.cmo typing/resolve.cmo typing/pseudoenv.cmo \
+typing/typecore.cmo: utils/warnings.cmi typing/typedtree.cmi \
     typing/printtyp.cmo typing/predef.cmo typing/mutable_type.cmo \
-    typing/modenv.cmi parsing/location.cmi typing/env.cmi typing/context.cmo \
-    typing/base.cmo parsing/asttypes.cmi
-typing/typedecl.cmx: typing/typedtree_aux.cmx typing/typedtree.cmi \
-    typing/typecore.cmx typing/resolve.cmx typing/pseudoenv.cmx \
+    utils/misc.cmi parsing/location.cmi typing/context.cmo typing/base.cmo \
+    parsing/asttypes.cmi
+typing/typecore.cmx: utils/warnings.cmx typing/typedtree.cmi \
     typing/printtyp.cmx typing/predef.cmx typing/mutable_type.cmx \
-    typing/modenv.cmx parsing/location.cmx typing/env.cmx typing/context.cmx \
-    typing/base.cmx parsing/asttypes.cmi
-typing/typedtree_aux.cmo: typing/typedtree.cmi parsing/location.cmi \
-    typing/base.cmo parsing/asttypes.cmi
-typing/typedtree_aux.cmx: typing/typedtree.cmi parsing/location.cmx \
-    typing/base.cmx parsing/asttypes.cmi
+    utils/misc.cmx parsing/location.cmx typing/context.cmx typing/base.cmx \
+    parsing/asttypes.cmi
+typing/typedecl.cmo: typing/typedtree.cmi typing/typecore.cmo \
+    typing/resolve.cmo typing/pseudoenv.cmo typing/printtyp.cmo \
+    typing/predef.cmo typing/mutable_type.cmo typing/modenv.cmi \
+    parsing/location.cmi typing/env.cmi typing/context.cmo typing/base.cmo \
+    parsing/asttypes.cmi
+typing/typedecl.cmx: typing/typedtree.cmi typing/typecore.cmx \
+    typing/resolve.cmx typing/pseudoenv.cmx typing/printtyp.cmx \
+    typing/predef.cmx typing/mutable_type.cmx typing/modenv.cmx \
+    parsing/location.cmx typing/env.cmx typing/context.cmx typing/base.cmx \
+    parsing/asttypes.cmi
 typing/typemod.cmo: typing/typedtree.cmi typing/typedecl.cmo \
     typing/typecore.cmo typing/resolve.cmo typing/printtyp.cmo \
     typing/primitive.cmi parsing/parsetree.cmi typing/modenv.cmi \
