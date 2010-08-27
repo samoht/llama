@@ -35,12 +35,12 @@ let type_of_constant = function
 
 let unify_pat pat expected_ty actual_ty =
   try
-    unify (expected_ty, actual_ty)
+    unify expected_ty actual_ty
   with Unify ->
     raise(Error(pat.pat_loc, Pattern_type_clash(actual_ty, expected_ty)))
 
 let rec type_pattern (pat, ty) =
-  unify (pat.pat_type, ty);
+  unify pat.pat_type ty;
   match pat.pat_desc with
     Tpat_any ->
       ()
@@ -299,7 +299,7 @@ let type_format loc fmt =
 
 let unify_expr expr expected_ty actual_ty =
   try
-    unify (expected_ty, actual_ty)
+    unify expected_ty actual_ty
   with Unify ->
     raise(Error(expr.exp_loc,
                 Expr_type_clash(actual_ty, expected_ty)))
@@ -384,7 +384,7 @@ let rec type_expr expr =
       type_statement body;
       mutable_type_unit
   | Texp_for (id, start, stop, up_flag, body) ->
-      unify (id.lval_type, mutable_type_int);
+      unify id.lval_type mutable_type_int;
       type_expect start mutable_type_int;
       type_expect stop mutable_type_int;
       type_statement body;
@@ -401,7 +401,7 @@ let rec type_expr expr =
       List.iter
         (fun (lbl, exp) ->
           let (ty_res, ty_arg) = instantiate_label lbl in
-          begin try unify (ty, ty_res)
+          begin try unify ty ty_res
           with Unify ->
             raise(Error(expr.exp_loc,
                         Label_mismatch(lbl, ty_res, ty)))
@@ -440,7 +440,7 @@ let rec type_expr expr =
   | Texp_assertfalse ->
       new_type_var ()
   in
-  unify (expr.exp_type, inferred_ty);
+  unify expr.exp_type inferred_ty;
   inferred_ty
 
 (* Typecore of an expression with an expected type.

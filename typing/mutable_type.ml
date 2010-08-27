@@ -1,4 +1,4 @@
-(* Mutable types, useful for type inference. *)
+(* Mutable types: useful for type inference. *)
 
 open Base
 
@@ -27,7 +27,7 @@ let mutable_type_exn = Mconstr(Predef.tcs_exn, [])
 let mutable_type_array ty = Mconstr(Predef.tcs_array, [ty])
 
 (* ---------------------------------------------------------------------- *)
-(* instantiation (immutable -> mutable)                                   *)
+(* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
 
 let rec instantiate_type subst = function
@@ -62,7 +62,7 @@ let instantiate_label lbl =
   ty_res, ty_arg
 
 (* ---------------------------------------------------------------------- *)
-(* Generalization (mutable -> immutable)                                  *)
+(* Generalization (mutable -> immutable).                                 *)
 (* ---------------------------------------------------------------------- *)
 
 let is_closed, generalize =
@@ -94,7 +94,7 @@ let is_closed, generalize =
   in is_closed, generalize
 
 (* ---------------------------------------------------------------------- *)
-(* expansion of abbreviations                                             *)
+(* Expansion of abbreviations.                                            *)
 (* ---------------------------------------------------------------------- *)
 
 let rec repr = function
@@ -118,66 +118,63 @@ let rec expand_head = function
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
-(* unification                                                            *)
+(* Unification.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-exception Unify
-
-let rec occur_check v = function
+let rec occurs v = function
     Mvar tv ->
       begin match tv.link with
         | None -> tv == v
-        | Some ty -> occur_check v ty
+        | Some ty -> occurs v ty
       end
   | Marrow (ty1, ty2) ->
-      occur_check v ty1 || occur_check v ty2
+      occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
-      List.exists (occur_check v) tyl
+      List.exists (occurs v) tyl
   | Mconstr (tcs, tyl) ->
-      List.exists (occur_check v) tyl
+      List.exists (occurs v) tyl
 
-(* Unification *)
+exception Unify
 
-let rec unify (ty1, ty2) =
+let rec unify ty1 ty2 =
   let ty1 = repr ty1 in
   let ty2 = repr ty2 in
-  begin match ty1, ty2 with
-      Mvar tv1, Mvar tv2 ->
-        if tv1 == tv2 then () else
-          tv1.link <- Some ty2
-    | Mvar tv1, _ when not (occur_check tv1 ty2) ->
-        tv1.link <- Some ty2
-    | _, Mvar tv2 when not (occur_check tv2 ty1) ->
-        tv2.link <- Some ty1
-    | Marrow(t1arg, t1res), Marrow(t2arg, t2res) ->
-        unify (t1arg, t2arg);
-        unify (t1res, t2res)
+  match ty1, ty2 with
+      Mvar v1, Mvar v2 when v1 == v2 ->
+        ()
+    | Mvar v1, _ when not (occurs v1 ty2) ->
+        v1.link <- Some ty2
+    | _, Mvar v2 when not (occurs v2 ty1) ->
+        v2.link <- Some ty1
+    | Marrow (t1arg, t1res), Marrow(t2arg, t2res) ->
+        unify t1arg t2arg;
+        unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
-        unify_list (tyl1, tyl2)
+        unify_list tyl1 tyl2
     | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
-        unify (apply tcs1.tcs_params body1 tyl1, ty2)
+        unify (apply tcs1.tcs_params body1 tyl1) ty2
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
-        unify (ty1, apply tcs2.tcs_params body2 tyl2)
+        unify ty1 (apply tcs2.tcs_params body2 tyl2)
     | Mconstr (tcs1, tyl1), Mconstr (tcs2, tyl2) when tcs1 == tcs2 ->
-        unify_list (tyl1, tyl2)
+        unify_list tyl1 tyl2
     | _ ->
         raise Unify
-  end
 
-and unify_list = function
-    [], [] -> ()
-  | ty1::rest1, ty2::rest2 -> unify(ty1,ty2); unify_list(rest1,rest2)
-  | _ -> raise Unify
+and unify_list tyl1 tyl2 =
+  match tyl1, tyl2 with
+      [], [] -> ()
+    | ty1::rest1, ty2::rest2 -> unify ty1 ty2; unify_list rest1 rest2
+    | _ -> raise Unify
 
 (* Three special cases of unification (really needed?) *)
 
 let rec filter_arrow ty =
   let ty = repr ty in
   match ty with
-    Mvar tv ->
+    Mvar v ->
       let ty1 = new_type_var () in
       let ty2 = new_type_var () in
-      tv.link <- Some(Marrow(ty1, ty2));
+      v.link <- Some(Marrow(ty1, ty2));
       (ty1, ty2)
   | Marrow(ty1, ty2) ->
       (ty1, ty2)
@@ -185,14 +182,13 @@ let rec filter_arrow ty =
       filter_arrow (apply tcs.tcs_params body args)
   | _ ->
       raise Unify
-;;
 
 let rec filter_product arity ty =
   let ty = repr ty in
   match ty with
-    Mvar tv ->
+    Mvar v ->
       let tyl = new_type_vars arity in
-      tv.link <- Some(Mtuple tyl);
+      v.link <- Some(Mtuple tyl);
       tyl
   | Mtuple tyl ->
       if List.length tyl == arity then tyl else raise Unify
@@ -200,14 +196,13 @@ let rec filter_product arity ty =
       filter_product arity (apply tcs.tcs_params body args)
   | _ ->
       raise Unify
-;;
 
 let rec filter_array ty =
   let ty = repr ty in
   match ty with
-      Mvar tv ->
+      Mvar v ->
         let ty = new_type_var () in
-        tv.link <- Some(Mconstr(Predef.tcs_array, [ty]));
+        v.link <- Some(Mconstr(Predef.tcs_array, [ty]));
         ty
     | Mconstr(tcs,[arg]) when tcs == Predef.tcs_array ->
         arg
