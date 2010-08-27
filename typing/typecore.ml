@@ -504,12 +504,7 @@ let report_unification_error ppf t1 t2 txt1 txt2 =
     if t == t' then mutable_type ppf t
     else fprintf ppf "@[<2>%a@ =@ %a@]" mutable_type t mutable_type t'
   in
-  fprintf ppf
-    "@[<v>\
-          @[%t@;<1 2>%a@ \
-            %t@;<1 2>%a\
-          @]\
-         @]"
+  fprintf ppf "@[%t@;<1 2>%a@ %t@;<1 2>%a@]"
     txt1 type_expansion t1
     txt2 type_expansion t2
 

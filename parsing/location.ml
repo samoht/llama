@@ -182,7 +182,6 @@ let print ppf loc =
 let print_error ppf loc =
   print ppf loc;
   fprintf ppf "Error: ";
-  pp_print_flush ppf ()
 ;;
 
 let print_error_cur_file ppf = print_error ppf (in_file !input_name);;
