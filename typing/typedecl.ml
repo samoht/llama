@@ -36,8 +36,7 @@ let is_cyclic tcs =
   end
       
 let type_letdef pat_exp_list =
-  List.iter (fun (pat, _) -> type_pattern pat) pat_exp_list;
-  List.iter (fun (pat, exp) -> type_expect exp pat.pat_type) pat_exp_list;
+  type_let pat_exp_list;
   List.iter
     (fun (pat, exp) ->
        if not (is_nonexpansive exp) && not (is_closed pat.pat_type) then

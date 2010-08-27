@@ -1,12 +1,9 @@
-(* originally derived from Caml Light's typing.ml *)
-
 open Misc
 open Asttypes
 open Base
 open Typedtree
 open Typedtree_aux
 open Mutable_type
-open Asttypes
 open Context
 
 type error =
@@ -21,6 +18,10 @@ type error =
   | Apply_non_function of mutable_type
 
 exception Error of Location.t * error
+
+(* ---------------------------------------------------------------------- *)
+(* Constants.                                                             *)
+(* ---------------------------------------------------------------------- *)
 
 let type_of_constant = function
     Const_int _ -> mutable_type_int
@@ -87,6 +88,10 @@ let rec type_pattern pat =
         unify_pattern pat' ty;
         unify_pattern pat pat'.pat_type
 
+(* ---------------------------------------------------------------------- *)
+(* Value restriction.                                                     *)
+(* ---------------------------------------------------------------------- *)
+
 (* Check if an expression is non-expansive, that is, the result of its 
    evaluation cannot contain newly created mutable objects. *)
 
@@ -121,8 +126,11 @@ and is_nonexpansive_opt = function
     None -> true
   | Some e -> is_nonexpansive e
 
-(* Typing of printf formats.
-   (Handling of * modifiers contributed by Thorsten Ohl.) *)
+(* ---------------------------------------------------------------------- *)
+(* Printf formats.                                                        *)
+(* ---------------------------------------------------------------------- *)
+
+(* Handling of * modifiers contributed by Thorsten Ohl. *)
 
 external string_to_format :
  string -> ('a, 'b, 'c, 'd, 'e, 'f) format6 = "%identity"
@@ -279,7 +287,9 @@ let type_format loc fmt =
   in
   type_in_format fmt
 
-(* Typecore of expressions *)
+(* ---------------------------------------------------------------------- *)
+(* Expressions.                                                           *)
+(* ---------------------------------------------------------------------- *)
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -287,7 +297,6 @@ let unify_expr expr expected_ty actual_ty =
   with Unify ->
     raise(Error(expr.exp_loc,
                 Expr_type_clash(actual_ty, expected_ty)))
-;;
 
 let rec type_expr expr =
   let inferred_ty =
@@ -310,11 +319,16 @@ let rec type_expr expr =
       let rec type_args ty_res = function
         [] -> ty_res
       | arg1 :: argl ->
-          let (ty1, ty2) =
-            try
-              filter_arrow ty_res
-            with Unify ->
-              raise(Error(expr.exp_loc, Apply_non_function(ty_fct))) in
+          let ty1, ty2 =
+            match expand_head ty_res with
+                Mvar v ->
+                  let ty1 = new_type_var () in
+                  let ty2 = new_type_var () in
+                  v.link <- Some (Marrow (ty1, ty2));
+                  ty1, ty2
+              | Marrow (ty1, ty2) -> ty1, ty2
+              | _ -> raise(Error(expr.exp_loc, Apply_non_function (expand_head ty_fct)))
+          in
           type_expect arg1 ty1;
           type_args ty2 argl in
       type_args ty_fct args
@@ -426,42 +440,33 @@ let rec type_expr expr =
 
 and type_expect exp expected_ty =
   match exp.exp_desc with
-    Texp_constant(Const_string s) ->
-      let actual_ty =
-        match expand_head expected_ty with
-          (* Hack for format strings *)
-          Mconstr(cstr, _) when cstr == Predef.tcs_format6 ->
-            type_format exp.exp_loc s
-        | _ ->
-            mutable_type_string in
-      unify_expr exp expected_ty actual_ty
-  | Texp_let(_, pat_exp_list, body) ->
-      type_let pat_exp_list;
-      type_expect body expected_ty
-  | Texp_sequence (e1, e2) ->
-      type_statement e1; type_expect e2 expected_ty
-  | Texp_ifthenelse (cond, ifso, Some ifnot) ->
-      type_expect cond mutable_type_bool;
-      type_expect ifso expected_ty;
-      type_expect ifnot expected_ty
-  | Texp_tuple el ->
-      begin try
-        List.iter2 (type_expect)
-                 el (filter_product (List.length el) expected_ty)
-      with Unify ->
-        unify_expr exp expected_ty (type_expr exp)
-      end
-(* To do: try...with, match...with ? *)
+      Texp_constant(Const_string s) ->
+        let actual_ty =
+          match expand_head expected_ty with
+              (* Terrible hack for format strings *)
+              Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
+                type_format exp.exp_loc s
+            | _ ->
+                mutable_type_string in
+        unify_expr exp expected_ty actual_ty
+    | Texp_let (_, pat_exp_list, body) ->
+        type_let pat_exp_list;
+        type_expect body expected_ty
+    | Texp_sequence (e1, e2) ->
+        type_statement e1;
+        type_expect e2 expected_ty
+(* xxx: ocaml adds Texp_construct, Texp_function, Texp_when *)
+(* xxx: caml light adds Texp_ifthenelse, Texp_tuple *)
   | _ ->
       unify_expr exp expected_ty (type_expr exp)
-  
-(* Typecore of "let" definitions *)
+
+(* "let" definitions *)
 
 and type_let pat_exp_list =
   List.iter (fun (pat, _) -> type_pattern pat) pat_exp_list;
   List.iter (fun (pat, exp) -> type_expect exp pat.pat_type) pat_exp_list
 
-(* Typecore of statements (expressions whose values are ignored) *)
+(* Statements (expressions whose values are ignored) *)
 
 and type_statement expr =
   let ty = type_expr expr in
@@ -472,6 +477,8 @@ and type_statement expr =
   | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Location.prerr_warning expr.exp_loc Warnings.Statement_type
+
+(* ---------------------------------------------------------------------- *)
 
 (* Error report *)
 

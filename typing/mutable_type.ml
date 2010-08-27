@@ -165,34 +165,3 @@ and unify_list tyl1 tyl2 =
       [], [] -> ()
     | ty1::rest1, ty2::rest2 -> unify ty1 ty2; unify_list rest1 rest2
     | _ -> raise Unify
-
-(* Special cases of unification (xxx not needed) *)
-
-let rec filter_arrow ty =
-  let ty = repr ty in
-  match ty with
-    Mvar v ->
-      let ty1 = new_type_var () in
-      let ty2 = new_type_var () in
-      v.link <- Some(Marrow(ty1, ty2));
-      (ty1, ty2)
-  | Marrow(ty1, ty2) ->
-      (ty1, ty2)
-  | Mconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-      filter_arrow (apply tcs.tcs_params body args)
-  | _ ->
-      raise Unify
-
-let rec filter_product arity ty =
-  let ty = repr ty in
-  match ty with
-    Mvar v ->
-      let tyl = new_type_vars arity in
-      v.link <- Some(Mtuple tyl);
-      tyl
-  | Mtuple tyl ->
-      if List.length tyl == arity then tyl else raise Unify
-  | Mconstr({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-      filter_product arity (apply tcs.tcs_params body args)
-  | _ ->
-      raise Unify
