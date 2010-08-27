@@ -34,7 +34,7 @@ let constant = function
 
 let rec pattern pat =
   let ty = pattern_aux pat in
-  (try unify pat.pat_type ty with Unify -> fatal_error "Typecore.pattern");
+  (try unify pat.pat_type ty with Unify -> fatal_error "Typing.pattern");
   pat.pat_type
 
 and pattern_aux pat =
@@ -285,7 +285,7 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty = expression_aux exp in
-  (try unify exp.exp_type ty with Unify -> fatal_error "Typecore.expression");
+  (try unify exp.exp_type ty with Unify -> fatal_error "Typing.expression");
   ty
 
 and expression_aux exp =

@@ -214,8 +214,8 @@ let execute_phrase print_outcome ppf phr =
       let str = Resolve.structure_item oldenv sstr in
       let tyopt =
         match str.str_desc with
-            Tstr_eval e -> Some (Typecore.toplevel_eval e)
-          | _ -> Typecore.structure_item str; None
+            Tstr_eval e -> Some (Typing.toplevel_eval e)
+          | _ -> Typing.structure_item str; None
       in
       let str, newenv = Typedecl.structure_item oldenv str in
       let sg = Typemod.structure_aux [str] in

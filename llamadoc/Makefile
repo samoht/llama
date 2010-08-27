@@ -129,11 +129,12 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/pseudoenv.cmo \
  $(LLAMASRCDIR)/typing/printtyp.cmo \
  $(LLAMASRCDIR)/typing/mutable_type.cmo \
- $(LLAMASRCDIR)/typing/includecore.cmo $(LLAMASRCDIR)/typing/includemod.cmo \
+ $(LLAMASRCDIR)/typing/includecore.cmo \
+ $(LLAMASRCDIR)/typing/includemod.cmo \
  $(LLAMASRCDIR)/typing/resolve.cmo \
- $(LLAMASRCDIR)/typing/typecore.cmo \
- $(LLAMASRCDIR)/typing/typedecl.cmo $(LLAMASRCDIR)/typing/typemod.cmo
-
+ $(LLAMASRCDIR)/typing/typing.cmo \
+ $(LLAMASRCDIR)/typing/typedecl.cmo \
+ $(LLAMASRCDIR)/typing/typemod.cmo
 
 LLAMACMOFILES=$(LLAMASRCDIR)/parsing/printast.cmo \
 	$(LLAMASRCDIR)/utils/tbl.cmo \

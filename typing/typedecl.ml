@@ -1,4 +1,4 @@
-(* Typecore toplevel phrases *)
+(* Typing toplevel phrases *)
 
 open Asttypes
 open Base

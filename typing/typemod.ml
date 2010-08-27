@@ -9,13 +9,13 @@ exception Error of Location.t * error
 
 let process_structure_item env pstr =
   let str = Resolve.structure_item env pstr in
-  Typecore.structure_item str;
+  Typing.structure_item str;
   let str, env = Typedecl.structure_item env str in
   str, env
 
 let process_signature_item env psig =
   let tsig = Resolve.signature_item env psig in
-  Typecore.signature_item tsig;
+  Typing.signature_item tsig;
   let sg, env = Typedecl.signature_item env tsig in
   tsig, sg, env
 
@@ -53,7 +53,7 @@ let type_implementation sourcefile outputprefix modulename env str =
   let gstr, _env = process_structure env str in
   let sg = structure_aux gstr in
   let simple_sg = (* simplify_signature *) sg in
-(*   Typecore.force_delayed_checks (); *)
+(*   Typing.force_delayed_checks (); *)
   if !Clflags.print_types then begin
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
     (gstr, Coerce_none)   (* result is ignored by Compile.implementation *)

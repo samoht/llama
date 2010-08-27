@@ -34,8 +34,8 @@ let report_error ppf exn =
   | Modenv.Error err ->
       Location.print_error_cur_file ppf;
       Modenv.report_error ppf err
-  | Typecore.Error(loc, err) ->
-      Location.print_error ppf loc; Typecore.report_error ppf err
+  | Typing.Error(loc, err) ->
+      Location.print_error ppf loc; Typing.report_error ppf err
   | Resolve.Error(loc, err) ->
       Location.print_error ppf loc; Resolve.report_error ppf err
   | Includemod.Error err ->

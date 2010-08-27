@@ -52,7 +52,7 @@ TYPING=\
   typing/pseudoenv.cmo \
   typing/printtyp.cmo \
   typing/resolve.cmo \
-  typing/typecore.cmo \
+  typing/typing.cmo \
   typing/typedecl.cmo \
   typing/subst.cmo \
   typing/includecore.cmo \
