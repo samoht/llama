@@ -8,14 +8,13 @@ type error =
 exception Error of Location.t * error
 
 let process_structure_item env pstr =
-  let str = Resolve.structure_item env pstr in
-  Typing.structure_item str;
-  Typedecl.structure_item env str
+  let tstr = Resolve.temporary_structure_item env pstr in
+  Typify.temporary_structure_item tstr;
+  Permanent.structure_item env tstr
 
 let process_signature_item env psig =
-  let sg = Resolve.signature_item env psig in
-  Typing.signature_item sg;
-  Typedecl.signature_item env sg
+  let tsig = Resolve.temporary_signature_item env psig in
+  Permanent.signature_item env tsig
 
 let rec process_structure env = function
     [] ->
@@ -39,7 +38,7 @@ let rec structure_aux = function
   | Str_eval _ :: rem -> structure_aux rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ structure_aux rem
   | Str_primitive v :: rem -> Sig_value v :: structure_aux rem
-  | Str_type tcs_list :: rem -> Typedecl.make_types tcs_list @ structure_aux rem
+  | Str_type tcs_list :: rem -> Permanent.make_types tcs_list @ structure_aux rem
   | Str_exception cs :: rem -> Sig_exception cs :: structure_aux rem
   | Str_open _ :: rem -> structure_aux rem
 

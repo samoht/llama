@@ -6,7 +6,7 @@ odoc.cmx: ../typing/typedtree.cmi odoc_messages.cmx odoc_info.cmx \
     odoc_html.cmx odoc_global.cmx odoc_config.cmx odoc_args.cmx \
     odoc_analyse.cmx ../utils/misc.cmx ../utils/config.cmx \
     ../utils/clflags.cmx
-odoc_analyse.cmo: ../utils/warnings.cmi ../typing/typing.cmo \
+odoc_analyse.cmo: ../utils/warnings.cmi ../typing/typify.cmo \
     ../typing/typemod.cmo ../typing/typedtree.cmi ../bytecomp/translcore.cmi \
     ../parsing/syntaxerr.cmi ../parsing/parse.cmi odoc_types.cmi \
     odoc_text.cmi odoc_sig.cmi odoc_module.cmo odoc_misc.cmi \
@@ -15,7 +15,7 @@ odoc_analyse.cmo: ../utils/warnings.cmi ../typing/typing.cmo \
     ../parsing/location.cmi ../parsing/lexer.cmi ../typing/includemod.cmo \
     ../typing/env.cmi ../utils/config.cmi ../utils/clflags.cmi \
     ../utils/ccomp.cmi ../typing/base.cmo odoc_analyse.cmi
-odoc_analyse.cmx: ../utils/warnings.cmx ../typing/typing.cmx \
+odoc_analyse.cmx: ../utils/warnings.cmx ../typing/typify.cmx \
     ../typing/typemod.cmx ../typing/typedtree.cmi ../bytecomp/translcore.cmx \
     ../parsing/syntaxerr.cmx ../parsing/parse.cmx odoc_types.cmx \
     odoc_text.cmx odoc_sig.cmx odoc_module.cmx odoc_misc.cmx \

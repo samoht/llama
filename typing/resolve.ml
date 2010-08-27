@@ -413,7 +413,7 @@ let type_declarations env pdecl_list =
   decl_list
 
 (* ---------------------------------------------------------------------- *)
-(* Signature and structure items.                                         *)
+(* Temporary signature and structure items.                               *)
 (* ---------------------------------------------------------------------- *)
 
 let primitive decl ty =
@@ -423,54 +423,54 @@ let primitive decl ty =
       | _ -> 0 in
   Primitive.parse_declaration (arity ty) decl
 
-let signature_item env psig =
+let temporary_signature_item env psig =
   reset_type_variables();
-  let mk desc = { sig_loc = psig.psig_loc; sig_desc = desc } in
   match psig.psig_desc with
       Psig_value (s, te) ->
-        mk (Tsig_value (s, llama_type env te))
+        Tsig_value (s, llama_type env te)
     | Psig_primitive(id,te,pr) ->
-        mk (Tsig_primitive (id, llama_type env te, primitive pr te))
+        Tsig_primitive (id, llama_type env te, primitive pr te)
     | Psig_type pdecls ->
         let decls = type_declarations env pdecls in
-        mk (Tsig_type decls)
+        Tsig_type decls
     | Psig_exception (name, args) ->
         let pseudoenv = pseudoenv_create env in
-        mk (Tsig_exception (name, List.map (local_type pseudoenv) args))
+        Tsig_exception (name, List.map (local_type pseudoenv) args)
     | Psig_open name ->
-        mk (Tsig_open (name, lookup_module name psig.psig_loc))
+        Tsig_open (name, lookup_module name psig.psig_loc)
 
 let top_bindings env rec_flag pat_exp_list =
   let pat_list = List.map (fun (pat, exp) -> pattern env pat) pat_exp_list in
-  let localvals = List.flatten (List.map bound_local_values pat_list) in
-  let enter_localvals ctxt = List.fold_left (fun ctxt v -> context_add_value v ctxt) ctxt localvals in
   let ctxt = context_create env in
-  let ctxt = if rec_flag = Recursive then enter_localvals ctxt else ctxt in
-  let pat_exp_list =
-    List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
+  let ctxt =
+    match rec_flag with
+        Recursive ->
+          let lvals = List.flatten (List.map bound_local_values pat_list) in
+          List.fold_left (fun ctxt lval -> context_add_value lval ctxt) ctxt lvals
+      | Nonrecursive ->
+         ctxt
   in
-  pat_exp_list
+  List.map2 (fun pat (_, exp) -> pat, expr ctxt exp) pat_list pat_exp_list
 
-let structure_item env pstr =
+let temporary_structure_item env pstr =
   reset_type_variables();
-  let mk desc = { str_loc = pstr.pstr_loc; str_desc = desc } in
   match pstr.pstr_desc with
       Pstr_eval exp ->
         let exp = expr (context_create env) exp in
-        mk (Tstr_eval exp)
+        Tstr_eval exp
     | Pstr_value(rec_flag, pat_exp_list) ->
         let pat_exp_list = top_bindings env rec_flag pat_exp_list in
-        mk (Tstr_value(rec_flag, pat_exp_list))
+        Tstr_value(rec_flag, pat_exp_list)
     | Pstr_primitive(id,te,pr) ->
-        mk (Tstr_primitive (id, llama_type env te, primitive pr te))
+        Tstr_primitive (id, llama_type env te, primitive pr te)
     | Pstr_type pdecls ->
         let decls = type_declarations env pdecls in
-        mk (Tstr_type decls)
+        Tstr_type decls
     | Pstr_exception (name, args) ->
         let pseudoenv = pseudoenv_create env in
-        mk (Tstr_exception (name, List.map (local_type pseudoenv) args))
+        Tstr_exception (name, List.map (local_type pseudoenv) args)
     | Pstr_open name ->
-        mk (Tstr_open (name, lookup_module name pstr.pstr_loc))
+        Tstr_open (name, lookup_module name pstr.pstr_loc)
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)

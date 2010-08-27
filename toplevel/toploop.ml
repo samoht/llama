@@ -227,13 +227,13 @@ let execute_phrase print_outcome ppf phr =
   | Ptop_def sstr ->
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf [sstr] in
-      let str = Resolve.structure_item oldenv sstr in
+      let tstr = Resolve.temporary_structure_item oldenv sstr in
       let tyopt =
-        match str.str_desc with
-            Tstr_eval e -> Some (Typing.toplevel_eval e)
-          | _ -> Typing.structure_item str; None
+        match tstr with
+            Tstr_eval e -> Some (Typify.toplevel_eval e)
+          | _ -> Typify.temporary_structure_item tstr; None
       in
-      let str, newenv = Typedecl.structure_item oldenv str in
+      let str, newenv = Permanent.structure_item oldenv tstr in
       let sg = Typemod.structure_aux [str] in
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();

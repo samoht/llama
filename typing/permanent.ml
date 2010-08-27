@@ -76,50 +76,48 @@ let make_types tcs_list =
   Sig_type (List.hd tcs_list, Rec_first) ::
     List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
 
-let signature_item env sg =
-  match sg.sig_desc with
-      Tsig_value (name, ty) ->
-        let v = make_value name ty Val_reg in
-        [Sig_value v], Env.add_value v env
-    | Tsig_primitive (name, ty, prim) ->
-        let v = make_value name ty (Val_prim prim) in
-        [Sig_value v], Env.add_value v env
-    | Tsig_type decls ->
-        let tcs_list = type_declarations decls in
-        make_types tcs_list,
-        List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
-    | Tsig_exception (name, args) ->
-        let cs = make_exception name args in
-        [Sig_exception cs], Env.add_exception cs env
-    | Tsig_open (_, csig) ->
-        [], Env.add_signature csig env
+let signature_item env = function
+    Tsig_value (name, ty) ->
+      let v = make_value name ty Val_reg in
+      [Sig_value v], Env.add_value v env
+  | Tsig_primitive (name, ty, prim) ->
+      let v = make_value name ty (Val_prim prim) in
+      [Sig_value v], Env.add_value v env
+  | Tsig_type decls ->
+      let tcs_list = type_declarations decls in
+      make_types tcs_list,
+      List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
+  | Tsig_exception (name, args) ->
+      let cs = make_exception name args in
+      [Sig_exception cs], Env.add_exception cs env
+  | Tsig_open (_, csig) ->
+      [], Env.add_signature csig env
 
-let structure_item_aux str =
-  match str.str_desc with
-      Tstr_eval exp ->
-        Str_eval exp
-    | Tstr_value (rec_flag, pat_exp_list) ->
-        let lvals =
-          List.flatten (List.map (fun (pat, _) ->
-                                    Resolve.bound_local_values pat) pat_exp_list) in
-        let lval_val_pairs =
-          List.map
-            (fun lval ->
-               let gval =
-                 { val_module = !Modenv.current_module;
-                   val_name = lval.lval_name;
-                   val_type = generalize lval.lval_type;
-                   val_kind = Val_reg } in
-               lval, gval) lvals in
-        Str_value (rec_flag, pat_exp_list, lval_val_pairs)
-    | Tstr_primitive (name, ty, prim) ->
-        Str_primitive (make_value name ty (Val_prim prim))
-    | Tstr_type decls ->
-        Str_type (type_declarations decls)
-    | Tstr_exception (name, args) ->
-        Str_exception (make_exception name args)
-    | Tstr_open (_, csig) ->
-        Str_open csig
+let structure_item_aux = function
+    Tstr_eval exp ->
+      Str_eval exp
+  | Tstr_value (rec_flag, pat_exp_list) ->
+      let lvals =
+        List.flatten (List.map (fun (pat, _) ->
+                                  Resolve.bound_local_values pat) pat_exp_list) in
+      let lval_val_pairs =
+        List.map
+          (fun lval ->
+             let gval =
+               { val_module = !Modenv.current_module;
+                 val_name = lval.lval_name;
+                 val_type = generalize lval.lval_type;
+                 val_kind = Val_reg } in
+             lval, gval) lvals in
+      Str_value (rec_flag, pat_exp_list, lval_val_pairs)
+  | Tstr_primitive (name, ty, prim) ->
+      Str_primitive (make_value name ty (Val_prim prim))
+  | Tstr_type decls ->
+      Str_type (type_declarations decls)
+  | Tstr_exception (name, args) ->
+      Str_exception (make_exception name args)
+  | Tstr_open (_, csig) ->
+      Str_open csig
 
 let extend_for_structure_item env = function
     Str_eval _ ->

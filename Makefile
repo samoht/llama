@@ -52,8 +52,8 @@ TYPING=\
   typing/pseudoenv.cmo \
   typing/printtyp.cmo \
   typing/resolve.cmo \
-  typing/typing.cmo \
-  typing/typedecl.cmo \
+  typing/typify.cmo \
+  typing/permanent.cmo \
   typing/subst.cmo \
   typing/includecore.cmo \
   typing/includemod.cmo \

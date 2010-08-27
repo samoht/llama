@@ -34,7 +34,7 @@ let constant = function
 
 let rec pattern pat =
   let ty = pattern_aux pat in
-  (try unify pat.pat_type ty with Unify -> fatal_error "Typing.pattern");
+  (try unify pat.pat_type ty with Unify -> fatal_error "Typify.pattern");
   pat.pat_type
 
 and pattern_aux pat =
@@ -285,7 +285,7 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty = expression_aux exp in
-  (try unify exp.exp_type ty with Unify -> fatal_error "Typing.expression");
+  (try unify exp.exp_type ty with Unify -> fatal_error "Typify.expression");
   ty
 
 and expression_aux exp =
@@ -399,7 +399,7 @@ and expression_aux exp =
     | Texp_assertfalse ->
         new_type_var ()
 
-(* Typing of an expression with an expected type.
+(* Typify of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and expression_expect exp expected_ty =
@@ -432,19 +432,19 @@ and expression_expect exp expected_ty =
           raise (Error (exp.exp_loc, Expression_type_clash (ty, expected_ty)))
         end
 
-(* Typing of "let" definitions *)
+(* Typify of "let" definitions *)
 
 and bindings pat_exp_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_exp_list;
   List.iter (fun (pat, exp) -> expression_expect exp pat.pat_type) pat_exp_list
 
-(* Typing of match cases *)
+(* Typify of match cases *)
 
 and caselist ty_arg ty_res pat_exp_list =
   List.iter (fun (pat, _) -> pattern_expect pat ty_arg) pat_exp_list;
   List.iter (fun (_, exp) -> expression_expect exp ty_res) pat_exp_list;
 
-(* Typing of statements (expressions whose values are ignored) *)
+(* Typify of statements (expressions whose values are ignored) *)
 
 and statement expr =
   let ty = expression expr in
@@ -457,7 +457,7 @@ and statement expr =
       Location.prerr_warning expr.exp_loc Warnings.Statement_type
 
 (* ---------------------------------------------------------------------- *)
-(* Signature items and structure items.                                   *)
+(* Temporary structure items and toplevel evals.                          *)
 (* ---------------------------------------------------------------------- *)
 
 let top_bindings pat_exp_list =
@@ -468,13 +468,10 @@ let top_bindings pat_exp_list =
          raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
     pat_exp_list
 
-let signature_item sg = ()
-
-let structure_item str =
-  match str.str_desc with
-      Tstr_eval exp -> ignore (expression exp)
-    | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
-    | _ -> ()
+let temporary_structure_item = function
+    Tstr_eval exp -> ignore (expression exp)
+  | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
+  | _ -> ()
 
 let toplevel_eval exp =
   let ty = expression exp in

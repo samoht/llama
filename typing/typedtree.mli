@@ -64,44 +64,30 @@ and type_kind =
   | Type_record of (string * mutable_flag * local_type) list
   | Type_abbrev of local_type
 
-type signature_item =
-  { sig_desc: signature_item_desc;
-    sig_loc: Location.t }
-
-and signature_item_desc =
+type temporary_signature_item =
     Tsig_value of string * llama_type
   | Tsig_primitive of string * llama_type * Primitive.description
   | Tsig_type of type_declaration list
   | Tsig_exception of string * local_type list
-  | Tsig_open of string * Base.signature
+  | Tsig_open of string * signature
 
-type structure_item =
-  { str_desc: structure_item_desc;
-    str_loc: Location.t }
-
-and structure_item_desc =
+type temporary_structure_item =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of string * llama_type * Primitive.description
   | Tstr_type of type_declaration list
   | Tstr_exception of string * local_type list
-  | Tstr_open of string * Base.signature
+  | Tstr_open of string * signature
 
-type signature = signature_item list
-
-type structure = structure_item list
-
-(* for the compiler *)
-
-type processed_structure_item =
+type structure_item =
     Str_eval of expression
   | Str_value of rec_flag * (pattern * expression) list * (local_value * value) list
   | Str_primitive of value
   | Str_type of type_constructor list
   | Str_exception of constructor
-  | Str_open of Base.signature
+  | Str_open of signature
 
-type processed_structure = processed_structure_item list
+type structure = structure_item list
 
 type module_coercion =
     Coerce_none
