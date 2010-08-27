@@ -96,11 +96,11 @@ let count_constructors tcs =
         | Tag_exception _ -> assert false
       end
     end
-    (constructors_of_type tcs);
+    (get_constructors tcs);
   !a, !b
 
 let calc_lbl_all lbl =
-  Array.of_list (labels_of_type lbl.lbl_tcs)
+  Array.of_list (get_labels lbl.lbl_tcs)
 
 let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
 

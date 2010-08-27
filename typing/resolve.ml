@@ -39,7 +39,7 @@ let check_labels loc expect_all lbls =
         [] -> fatal_error "check_labels"
       | (lbl :: _) -> lbl.lbl_tcs
   in
-  let seen = Array.make (List.length (labels_of_type tcs)) false in
+  let seen = Array.make (List.length (get_labels tcs)) false in
   List.iter
     (fun lbl ->
        if lbl.lbl_tcs != tcs then raise (Error (loc, Label_mismatch (lbl, tcs)));
@@ -47,7 +47,7 @@ let check_labels loc expect_all lbls =
        if seen.(pos) then raise (Error (loc, Label_multiply_defined lbl));
        seen.(pos) <- true) lbls;
   if expect_all then begin
-    let unseen = List.filter (fun lbl -> not seen.(lbl.lbl_pos)) (labels_of_type tcs) in
+    let unseen = List.filter (fun lbl -> not seen.(lbl.lbl_pos)) (get_labels tcs) in
     if unseen <> [] then raise (Error (loc, Label_missing unseen))
   end;
   tcs

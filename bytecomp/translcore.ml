@@ -648,7 +648,7 @@ and transl_exp0 e =
                   [Lconst(Const_base(Const_int tag)); lam])
       end *)
   | Texp_record (tcs, lbl_expr_list, opt_init_expr) ->
-      transl_record (labels_of_type tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
+      transl_record (get_labels tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_field(arg, lbl) ->
       let access = Pfield lbl.lbl_pos in
 (*
