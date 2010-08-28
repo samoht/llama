@@ -757,45 +757,7 @@ and transl_apply lam sargs loc =
     | lexp ->
         Lapply(lexp, args, loc)
   in
-  let rec build_apply lam args = function
-      (None, optional) :: l ->
-        let defs = ref [] in
-        let protect name lam =
-          match lam with
-            Lvar _ | Lconst _ -> lam
-          | _ ->
-              let id = Ident.create name in
-              defs := (id, lam) :: !defs;
-              Lvar id
-        in
-        let args, args' =
-          if List.forall (fun (_,opt) -> opt = Optional) args then [], args
-          else args, [] in
-        let lam =
-          if args = [] then lam else lapply lam (List.rev_map fst args) in
-        let handle = protect "func" lam
-        and l = List.map (fun (arg, opt) -> may_map (protect "arg") arg, opt) l
-        and id_arg = Ident.create "param" in
-        let body =
-          match build_apply handle ((Lvar id_arg, optional)::args') l with
-            Lfunction(Curried, ids, lam) ->
-              Lfunction(Curried, id_arg::ids, lam)
-          | Levent(Lfunction(Curried, ids, lam), _) ->
-              Lfunction(Curried, id_arg::ids, lam)
-          | lam ->
-              Lfunction(Curried, [id_arg], lam)
-        in
-        List.fold_left
-          (fun body (id, lam) -> Llet(Strict, id, lam, body))
-          body !defs
-    | (Some arg, optional) :: l ->
-        build_apply lam ((arg, optional) :: args) l
-    | [] ->
-        lapply lam (List.rev_map fst args)
-  in
-(*  build_apply lam [] (List.map (fun (x,o) -> may_map transl_exp x, o) sargs)*)
-  let compat arg = (Some arg, Required) in
-  build_apply lam [] (List.map compat (List.map transl_exp sargs))
+  lapply lam (List.map transl_exp sargs)
 
 and transl_function loc untuplify_fn repr pat_expr_list =
   let pat_expr_list = Pmc_pattern.import_cases pat_expr_list in

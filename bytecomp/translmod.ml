@@ -24,11 +24,6 @@ open Primitive
 open Lambda
 open Translcore
 
-type error =
-  Circular_dependency of Ident.t
-
-exception Error of Location.t * error
-
 (* Compile a coercion *)
 
 let rec apply_coercion restr arg =
@@ -112,16 +107,9 @@ let rec transl_structure fields cc x =
   | Str_open _ :: rem ->
       transl_structure fields cc rem
 
-(* Update forward declaration in Translcore *)
-(*
-let _ =
-  Translcore.transl_module := transl_module
-*)
-
 (* Compile an implementation *)
 
 let transl_implementation module_name (str, cc) =
-(*reset_labels (); *)
   primitive_declarations := [];
   let module_id = Ident.of_module (Base.Module module_name) in
   Lprim(Psetglobal module_id,
@@ -259,7 +247,6 @@ let build_ident_map restr idlist =
    (for the native-code compiler). *)
 
 let transl_store_gen module_name (str, restr) topl =
-(*  reset_labels ();*)
   primitive_declarations := [];
   let module_id = Ident.of_module (Base.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
@@ -338,7 +325,6 @@ let transl_toplevel_item_and_close itm =
   close_toplevel_term ((*transl_label_init*) (transl_toplevel_item itm))
 
 let transl_toplevel_definition str =
-(*  reset_labels ();*)
   make_sequence transl_toplevel_item_and_close str
 
 (* Compile the initialization code for a packed library *)
@@ -386,16 +372,3 @@ let transl_store_package component_names target_name coercion =
                   apply_coercion cc (get_component id.(src))]))
          0 pos_cc_list)
   | _ -> assert false
-
-(* Error report *)
-
-open Format
-
-let report_error ppf = assert false
-(*
- function
-    Circular_dependency id ->
-      fprintf ppf
-        "@[Cannot safely evaluate the definition@ of the recursively-defined module %a@]"
-        Printtyp.ident id
-*)

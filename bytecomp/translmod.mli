@@ -32,10 +32,3 @@ val toplevel_name: Ident.t -> string
 val nat_toplevel_name: Ident.t -> Ident.t * int
 
 val primitive_declarations: Primitive.description list ref
-
-type error =
-  Circular_dependency of Ident.t
-
-exception Error of Location.t * error
-
-val report_error: Format.formatter -> error -> unit

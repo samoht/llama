@@ -45,8 +45,6 @@ let report_error ppf exn =
       Location.print_error ppf loc; Typemain.report_error ppf err
   | Translcore.Error(loc, err) ->
       Location.print_error ppf loc; Translcore.report_error ppf err
-  | Translmod.Error(loc, err) ->
-      Location.print_error ppf loc; Translmod.report_error ppf err
   | Symtable.Error code ->
       Location.print_error_cur_file ppf;
       Symtable.report_error ppf code
