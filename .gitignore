@@ -2,6 +2,7 @@
 *.cmo
 /llama
 /llamac
+/expunge
 boot/camlheader
 boot/libcamlrun.a
 boot/llamarun
