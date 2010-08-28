@@ -250,15 +250,12 @@ let transl_store_gen module_name (str, restr) topl =
   primitive_declarations := [];
   let module_id = Ident.of_module (Base.Module module_name) in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
-(* xxx
-  let _f = function
-    | [ Tstr_eval expr ] when topl ->
+  let f = function
+    | [ Str_eval expr ] when topl ->
         assert (size = 0);
         subst_lambda !transl_store_subst (transl_exp expr)
     | str -> transl_store_structure module_id map prims str in
-  transl_store_label_init module_id size f str
-  size, transl_label_init (transl_store_structure module_id map prims str)*)
-  size, transl_store_structure module_id map prims str
+  size, f str
 
 let transl_store_phrases module_name str =
   transl_store_gen module_name (str,Include.Tcoerce_none) true
@@ -277,11 +274,7 @@ let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
 let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
 
 let aliased_idents = ref (Ident.empty : (Ident.t, string) Tbl.t)
-(*
-let set_toplevel_unique_name id =
-  aliased_idents :=
-    Ident.add id (Ident.unique_toplevel_name id) !aliased_idents
-*)
+
 let toplevel_name id =
   try Ident.find_same id !aliased_idents
   with Not_found -> Ident.name id
