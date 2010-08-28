@@ -261,11 +261,9 @@ let process_file ppf sourcefile =
            incr Odoc_global.errors ;
            None
        | e ->
-           raise e
-(* xxx
            process_error e ;
            incr Odoc_global.errors ;
-           None*)
+           None
       )
   | Odoc_args.Text_file file ->
       Location.input_name := file;

@@ -23,8 +23,6 @@ open Lambda
 open Context
 open Mutable_type
 
-(* llama xxx: these fns don't need an env *)
-
 let has_base_type exp base_tcs =
   match expand_head exp.exp_type with
   | Mconstr(tcs, _) -> tcs == base_tcs

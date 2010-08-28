@@ -85,8 +85,6 @@ let rec print_list pr sep ppf =
   | [a] -> pr ppf a
   | a :: l -> pr ppf a; sep ppf; print_list pr sep ppf l
 
-let type_parameter ppf x = pp_print_string ppf "'x" (* xxx *)
-
 (* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =

@@ -1,8 +1,6 @@
 open Base
 open Longident
 
-(* xxx: why not use Map? *)
-
 type t = {
   values: (string, value) Tbl.t;
   constrs: (string, constructor) Tbl.t;

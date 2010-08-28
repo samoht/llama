@@ -56,13 +56,12 @@ type 'a ord = 'a -> 'a -> int
        [m], except for [x] which is unbound in the returned map. *)
 (*
     val merge:
-         ('a -> 'b option -> 'c option -> 'c option) -> ('a, 'b) t -> ('a, 'c) t -> ('a, 'c) t
+         ('key -> 'a option -> 'b option -> 'c option) -> ('key, 'a) t -> ('key, 'b) t -> ('key, 'c) t
     (** [merge f m1 m2] computes a map whose keys is a subset of keys of [m1]
         and of [m2]. The presence of each such binding, and the corresponding
         value, is determined with the function [f].
      *)
 *)
-
     val compare: ('b -> 'b -> int) -> ('a, 'b) t -> ('a, 'b) t -> int
     (** Total ordering between maps.  The first argument is a total ordering
         used to compare data associated with equal keys in the two maps. *)

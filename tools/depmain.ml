@@ -170,17 +170,9 @@ let is_ast_file ic ast_magic =
   with End_of_file -> false
 
 let parse_use_file ic =
-  if is_ast_file ic Config.ast_impl_magic_number then
-    assert false (* xxx *)
-(*
-    let _source_file = input_value ic in
-    [Ptop_def (input_value ic : Parsetree.structure)]
-*)
-  else begin
-    seek_in ic 0;
-    let lb = Lexing.from_channel ic in
-    Parse.use_file lb
-  end
+  seek_in ic 0;
+  let lb = Lexing.from_channel ic in
+  Parse.use_file lb
 
 let parse_interface ic =
   if is_ast_file ic Config.ast_intf_magic_number then

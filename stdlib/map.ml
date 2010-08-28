@@ -220,14 +220,14 @@ type ('key, 'a) t =
             let (ll, pres, rl) = split x l in (ll, pres, join rl v d r)
           else
             let (lr, pres, rr) = split x r in (join l v d lr, pres, rr)
-(* xxx: moregeneral bug
+(*
     let rec merge f s1 s2 =
       match (s1, s2) with
-        (Empty, Empty) -> s1
-      | (Node (l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
+        (Empty _, Empty _) -> s1
+      | (Node (_, l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
           let (l2, d2, r2) = split v1 s2 in
           concat_or_join (merge f l1 l2) v1 (f v1 (Some d1) d2) (merge f r1 r2)
-      | (_, Node (l2, v2, d2, r2, h2)) ->
+      | (_, Node (_, l2, v2, d2, r2, h2)) ->
           let (l1, d1, r1) = split v2 s1 in
           concat_or_join (merge f l1 l2) v2 (f v2 d1 (Some d2)) (merge f r1 r2)
       | _ ->

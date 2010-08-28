@@ -101,7 +101,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       | [] ->
           raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Typeutil.moregeneral sch ty (* xxx *)
+          if Typeutil.moregeneral sch ty
           then printer
           else find remainder
       in find !printers
