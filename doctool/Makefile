@@ -103,8 +103,12 @@ OBJS=\
 
 # main stuff
 
+all: llamadoc
+.PHONY: all
+
 llamadoc: $(OBJS)
 	$(CAMLC) $(LINKFLAGS) -o $@ $(CAMLOBJS) $(OBJS)
+
 install:
 	cp llamadoc $(BINDIR)/llamadoc$(EXE)
 .PHONY: install

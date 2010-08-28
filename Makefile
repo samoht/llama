@@ -85,7 +85,7 @@ EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   bytecomp/ident.cmo bytecomp/runtimedef.cmo bytecomp/bytesections.cmo \
   bytecomp/dll.cmo bytecomp/meta.cmo bytecomp/symtable.cmo toplevel/expunge.cmo
 
-defaultentry: all
+defaultentry: world
 
 # Recompile the system using the bootstrap compiler
 all: runtime llamac llamalex llamayacc llamatools library llama llamadoc
