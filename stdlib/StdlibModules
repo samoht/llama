@@ -4,13 +4,11 @@
 
 STDLIB_MODULES=\
   arg \
+  arity_status \
   array \
-  arrayLabels \
+  big_int \
   buffer \
   callback \
-  camlinternalLazy \
-  camlinternalMod \
-  camlinternalOO \
   char \
   complex \
   digest \
@@ -24,27 +22,27 @@ STDLIB_MODULES=\
   lazy \
   lexing \
   list \
-  listLabels \
   map \
   marshal \
-  moreLabels \
   nativeint \
+  num \
   obj \
-  oo \
   parsing \
   pervasives \
   printexc \
   printf \
+  printf_sformat \
+  printf_tformat \
   queue \
   random \
+  random_state \
   scanf \
   set \
   sort \
   stack \
-  stdLabels \
   str \
   stream \
   string \
-  stringLabels \
   sys \
+  unix \
   weak

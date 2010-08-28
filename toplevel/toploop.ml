@@ -250,9 +250,8 @@ let execute_phrase print_outcome ppf phr =
                     let outv = outval_of_value newenv v typ in
                     let ty = Printtyp.tree_of_type typ in
                     Ophr_eval (outv, ty)
-(*                | [] -> Ophr_signature [] *)
-                | _ -> Ophr_signature (item_list newenv sg)
-(*                                             (Typemain.simplify_signature sg)) *)
+                | _ -> Ophr_signature (item_list newenv
+                                             (Typemain.simplify_signature sg))
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;
@@ -334,7 +333,11 @@ let use_silently ppf name =
 
 let first_line = ref true
 let got_eof = ref false;;
-
+(*
+let rec ledit_input_char chan =
+  let s = Ledit.input_char char in
+  if String.length = 1 then s.[0] else ledit_input_char chan
+*)
 let read_input_default prompt buffer len =
   output_string Pervasives.stdout prompt; flush Pervasives.stdout;
   let i = ref 0 in
@@ -423,19 +426,18 @@ let loop ppf =
   Sys.catch_break true;
   load_llamainit ppf;
   while true do
-(*    let snap = Typeutil.snapshot () in *)
     try
       Lexing.flush_input lb;
-(*      Location.reset();*)
+(*       Location.reset(); *)
       first_line := true;
       let phr = try !parse_toplevel_phrase lb with Exit -> raise PPerror in
       if !Clflags.dump_parsetree then Printast.top_phrase ppf phr;
       ignore(execute_phrase true ppf phr)
     with
     | End_of_file -> exit 0
-    | Sys.Break -> fprintf ppf "Interrupted.@." (* ; Typeutil.backtrack snap*)
+    | Sys.Break -> fprintf ppf "Interrupted.@."
     | PPerror -> ()
-    | x -> Errors.report_error ppf x (* ; Typeutil.backtrack snap*)
+    | x -> Errors.report_error ppf x
   done
 
 (* Execute a script *)
