@@ -6,25 +6,25 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params b : type_constructor =
+let mkabs name params : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
     tcs_params = params;
     tcs_kind = Tcs_abstract }
 
-let tcs_int = mkabs "int" [] true
-let tcs_char = mkabs "char" [] true
-let tcs_string = mkabs "string" [] true
-let tcs_float = mkabs "float" [] false
-let tcs_exn = mkabs "exn" [] false
-let tcs_array = mkabs "array" [mkparam 0] true
-let tcs_format6 = mkabs "format6" (mkparams 6) false
-let tcs_nativeint = mkabs "nativeint" [] true
-let tcs_int32 = mkabs "int32" [] true
-let tcs_int64 = mkabs "int64" [] true
-let tcs_lazy_t = mkabs "lazy_t" [] true
+let tcs_int = mkabs "int" []
+let tcs_char = mkabs "char" []
+let tcs_string = mkabs "string" []
+let tcs_float = mkabs "float" []
+let tcs_exn = mkabs "exn" []
+let tcs_array = mkabs "array" [new_standard_parameter 0]
+let tcs_format6 = mkabs "format6" (new_standard_parameters 6)
+let tcs_nativeint = mkabs "nativeint" []
+let tcs_int32 = mkabs "int32" []
+let tcs_int64 = mkabs "int64" []
+let tcs_lazy_t = mkabs "lazy_t" []
 
-(* sum types *)
+(* variant types *)
 
 let rec tcs_unit : type_constructor =
   { tcs_module = Module_builtin;
@@ -59,12 +59,12 @@ and cs_true =
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
-let list_param = mkparam 0
+let param_list = new_standard_parameter 0
 
 let rec tcs_list =
   { tcs_module = Module_builtin;
     tcs_name = "list";
-    tcs_params = [ list_param ];
+    tcs_params = [ param_list ];
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -78,15 +78,15 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [list_param;Tconstr(tcs_list,[list_param])];
+    cs_args = [ param_list; Tconstr (tcs_list, [param_list]) ];
     cs_tag = Tag_block 0 }
 
-let option_param = mkparam 0
+let param_option = new_standard_parameter 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;
     tcs_name = "option";
-    tcs_params = [ option_param ];
+    tcs_params = [ param_option ];
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
@@ -100,10 +100,10 @@ and cs_some =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [option_param];
+    cs_args = [ param_option ];
     cs_tag = Tag_block 0 }
 
-(* list them *)
+(* all together now *)
 
 let type_constructors =
   [ tcs_int; tcs_char; tcs_string; tcs_float; tcs_bool; tcs_unit;
@@ -154,7 +154,7 @@ let cs_assert_failure = mkexn "Assert_failure" [type_string; type_int; type_int]
 let cs_undefined_recursive_module =
   mkexn "Undefined_recursive_module" [type_string; type_int; type_int]
 
-(* list them *)
+(* all together now *)
 
 let exceptions =
   [ cs_out_of_memory; cs_sys_error; cs_failure; cs_invalid_argument;
@@ -162,6 +162,8 @@ let exceptions =
     cs_stack_overflow; cs_sys_blocked_io; cs_assert_failure;
     cs_undefined_recursive_module
   ]
+
+(* helper *)
 
 let find_exception name = List.find (fun cs -> cs.cs_name = name) exceptions
 

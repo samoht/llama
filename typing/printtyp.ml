@@ -4,42 +4,40 @@ open Base
 open Outcometree
 open Oprint
 
-(* Print a long identifier *)
+(* ---------------------------------------------------------------------- *)
+(* Identifiers and named entities.                                        *)
+(* ---------------------------------------------------------------------- *)
 
 let longident ppf = function
-  | Lident s -> fprintf ppf "%s" s
-  | Ldot(p, s) -> fprintf ppf "%s.%s" p s
+    Lident name -> pp_print_string ppf name
+  | Ldot (modname, name) -> fprintf ppf "%s.%s" modname name
 
-(* ---------------------------------------------------------------------- *)
-(* Printing of identifiers, named entities, and references.               *)
-(* ---------------------------------------------------------------------- *)
+let tree_of_longident = function
+    Lident name -> Oide_ident name
+  | Ldot (modname, name) -> Oide_dot (Oide_ident modname, name)
 
-let tree_of_qualid (modid, name) =
+let make_longident modid name =
   match modid with
-    | Module_builtin | Module_toplevel ->
-        Oide_ident name
-    | Module modname ->
-        Oide_dot (Oide_ident modname, name)
+      Module_builtin | Module_toplevel -> Longident.Lident name
+    | Module modname -> Longident.Ldot (modname, name)
 
-let tree_of_type_constructor tcs = tree_of_qualid (tcs_qualid tcs)
-let tree_of_constructor cs = tree_of_qualid (cs_qualid cs)
-let tree_of_label lbl = tree_of_qualid (lbl_qualid lbl)
-let tree_of_value v = tree_of_qualid (val_qualid v)
+let tcs_longident tcs = make_longident tcs.tcs_module tcs.tcs_name
+let cs_longident cs = make_longident cs.cs_module cs.cs_name
+let lbl_longident lbl = make_longident (lbl_module lbl) lbl.lbl_name
+let val_longident v = make_longident v.val_module v.val_name
 
-let qualid ppf (modid, name) =
-  match modid with
-    | Module_builtin | Module_toplevel ->
-        pp_print_string ppf name
-    | Module modname ->
-        fprintf ppf "%s.%s" modname name
+let type_constructor ppf tcs = longident ppf (tcs_longident tcs)
+let constructor ppf cs = longident ppf (cs_longident cs)
+let label ppf lbl = longident ppf (lbl_longident lbl)
+let value ppf v = longident ppf (val_longident v)
 
-let type_constructor ppf tcs = qualid ppf (tcs_qualid tcs)
-let constructor ppf cs = qualid ppf (cs_qualid cs)
-let label ppf lbl = qualid ppf (lbl_qualid lbl)
-let value ppf v = qualid ppf (val_qualid v)
+let tree_of_type_constructor tcs = tree_of_longident (tcs_longident tcs)
+let tree_of_constructor cs = tree_of_longident (cs_longident cs)
+let tree_of_label lbl = tree_of_longident (lbl_longident lbl)
+let tree_of_value v = tree_of_longident (val_longident v)
 
 (* ---------------------------------------------------------------------- *)
-(* Conversion of types to output trees.                                   *)
+(* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
@@ -54,10 +52,6 @@ let rec tree_of_type = function
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl
-
-(* ---------------------------------------------------------------------- *)
-(* Printing of types.                                                     *)
-(* ---------------------------------------------------------------------- *)
 
 let llama_type ppf ty =
   !out_type ppf (tree_of_type ty)
@@ -180,7 +174,7 @@ let mutable_names = ref ([] : (mutable_type_variable * string) list)
 let mutable_counter = ref 0
 let reset_mutable_names () = mutable_names := []
 let new_mutable_name () =
-  let name = int_to_alpha !mutable_counter in
+  let name = standard_name !mutable_counter in
   incr mutable_counter;
   name
 let name_of_mutable_type tv =

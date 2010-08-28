@@ -85,7 +85,7 @@ let is_closed, generalize =
   let is_closed ty = (variables ty = []) in
   let generalize ty =
     let vars = variables ty in
-    let subst = List.combine vars (mkparams (List.length vars)) in
+    let subst = List.combine vars (new_standard_parameters (List.length vars)) in
     let rec aux = function
         Mvar tv ->
           begin match tv.link with

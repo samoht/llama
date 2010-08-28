@@ -113,22 +113,6 @@ let lbl_module lbl = lbl.lbl_tcs.tcs_module      (* Defining module *)
      exceptions. *)
 let lbl_res lbl = tcs_res lbl.lbl_tcs            (* Type of the result *)
 
-(* TODO: just use longidents everywhere. *)
-type qualified_id = module_id * string
-let tcs_qualid tcs = (tcs.tcs_module, tcs.tcs_name)
-let cs_qualid cs = (cs.cs_module, cs.cs_name)
-let lbl_qualid lbl = (lbl_module lbl, lbl.lbl_name)
-let val_qualid v = (v.val_module, v.val_name)
-
-let int_to_alpha i =
-  if i < 26
-  then String.make 1 (char_of_int (i+97))
-  else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let mkparam i = Tparam { param_name = int_to_alpha i }
-let mkparams n =
-  let rec aux i = if i < n then mkparam i :: aux (i+1) else [] in
-  aux 0
-
 let get_constructors tcs =
   match tcs.tcs_kind with
       Tcs_variant cs_list -> cs_list
@@ -137,3 +121,13 @@ let get_labels tcs =
   match tcs.tcs_kind with
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
+
+let standard_name i =
+  if i < 26
+  then String.make 1 (char_of_int (i+97))
+  else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
+let new_parameter name = Tparam { param_name = name }
+let new_standard_parameter i = new_parameter (standard_name i)
+let new_standard_parameters n =
+  let rec aux i = if i < n then new_standard_parameter i :: aux (succ i) else [] in
+  aux 0
