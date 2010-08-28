@@ -400,7 +400,7 @@ alldepend::
 
 # The documentation generator
 
-llamadoc: llamac llamayacc llamalex
+llamadoc: llamac llamayacc llamalex llamatools
 	cd doctool && $(MAKE) all
 
 partialclean::
