@@ -13,7 +13,96 @@
 
 # $Id: Makefile 9547 2010-01-22 12:48:24Z doligez $
 
-include Makefile.shared
+# ---------------------------------------------------------------------- #
+# Was: Makefile.shared                                                   #
+# ---------------------------------------------------------------------- #
+
+include ../config/Makefile
+RUNTIME=../boot/llamarun
+COMPILER=../llamac
+CAMLC=$(RUNTIME) $(COMPILER)
+COMPFLAGS=-strict-sequence -g -warn-error A -nostdlib
+OPTCOMPILER=../llamaopt
+CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
+OPTCOMPFLAGS=-warn-error A -nostdlib -g
+CAMLDEP=../boot/llamarun ../tools/llamadep
+
+OBJS=pervasives.cmo $(OTHERS)
+OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
+  hashtbl.cmo sort.cmo marshal.cmo obj.cmo \
+  int32.cmo int64.cmo nativeint.cmo \
+  lexing.cmo parsing.cmo \
+  set.cmo map.cmo \
+  stack.cmo queue.cmo \
+  lazy.cmo stream.cmo \
+  buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
+  arg.cmo printexc.cmo gc.cmo \
+  digest.cmo random_state.cmo random.cmo callback.cmo \
+  genlex.cmo weak.cmo \
+  filename.cmo complex.cmo scanning.cmo str.cmo \
+  int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
+  ratio.cmo num.cmo arith_status.cmo \
+  unix.cmo # scanf.cmo
+
+all: stdlib.cma std_exit.cmo camlheader camlheader_ur
+
+install:
+	cp stdlib.cma std_exit.cmo *.cmi *.mli *.ml camlheader camlheader_ur $(LIBDIR)
+
+stdlib.cma: $(OBJS)
+	$(CAMLC) -a -o stdlib.cma $(OBJS)
+
+stdlib.cmxa: $(OBJS:.cmo=.cmx)
+	$(CAMLOPT) -a -o stdlib.cmxa $(OBJS:.cmo=.cmx)
+
+sys.ml: sys.mlp ../VERSION
+	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
+
+clean::
+	rm -f sys.ml
+
+clean::
+	rm -f camlheader camlheader_ur
+
+.SUFFIXES: .mli .ml .cmi .cmo .cmx .p.cmx
+
+.mli.cmi:
+	$(CAMLC) $(COMPFLAGS) `./Compflags $@` -c $<
+
+.ml.cmo:
+	$(CAMLC) $(COMPFLAGS) `./Compflags $@` -c $<
+
+.ml.cmx:
+	$(CAMLOPT) $(OPTCOMPFLAGS) `./Compflags $@` -c $<
+
+.ml.p.cmx:
+	$(CAMLOPT) $(OPTCOMPFLAGS) `./Compflags $@` -p -c -o $*.p.cmx $<
+
+# Dependencies on the compiler
+$(OBJS) std_exit.cmo: $(COMPILER)
+$(OBJS:.cmo=.cmi) std_exit.cmi: $(COMPILER)
+$(OBJS:.cmo=.cmx) std_exit.cmx: $(OPTCOMPILER)
+$(OBJS:.cmo=.p.cmx) std_exit.p.cmx: $(OPTCOMPILER)
+
+# Dependencies on Pervasives (not tracked by llamadep)
+$(OBJS) std_exit.cmo: pervasives.cmi
+$(OTHERS:.cmo=.cmi) std_exit.cmi: pervasives.cmi
+$(OBJS:.cmo=.cmx) std_exit.cmx: pervasives.cmi
+$(OBJS:.cmo=.p.cmx) std_exit.p.cmx: pervasives.cmi
+$(OTHERS:.cmo=.cmx) std_exit.cmx: pervasives.cmx
+$(OTHERS:.cmo=.p.cmx) std_exit.p.cmx: pervasives.cmx
+
+clean::
+	rm -f *.cm* *.$(O) *.$(A)
+	rm -f *~
+
+include .depend
+
+depend:
+	$(CAMLDEP) *.mli *.ml > .depend
+	$(CAMLDEP) *.ml | sed -e 's/\.cmx/.p.cmx/g' >>.depend
+
+# ---------------------------------------------------------------------- #
 
 allopt: stdlib.cmxa std_exit.cmx allopt-$(PROFILING)
 

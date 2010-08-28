@@ -188,7 +188,7 @@ let rec tree_of_mutable_type ty =
     | Mvar tv ->
         begin match tv.link with
           | None ->
-              Otyp_var (true, name_of_mutable_type tv)
+              Otyp_var (false, name_of_mutable_type tv)
           | Some ty ->
               tree_of_mutable_type ty
         end

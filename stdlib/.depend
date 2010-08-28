@@ -41,6 +41,7 @@ str.cmi:
 stream.cmi:
 string.cmi:
 sys.cmi:
+unix.cmi:
 weak.cmi:
 weak_hashtbl.cmi:
 arg.cmo: sys.cmi string.cmi printf.cmi list.cmi buffer.cmi array.cmi arg.cmi
@@ -157,6 +158,10 @@ test.cmo:
 test.cmx:
 test2.cmo: list.cmi
 test2.cmx: list.cmx
+unix.cmo: sys.cmi string.cmi list.cmi hashtbl.cmi callback.cmi array.cmi \
+    unix.cmi
+unix.cmx: sys.cmx string.cmx list.cmx hashtbl.cmx callback.cmx array.cmx \
+    unix.cmi
 weak.cmo: obj.cmi weak.cmi
 weak.cmx: obj.cmx weak.cmi
 weak_hashtbl.cmo: weak.cmi sys.cmi pervasives.cmi obj.cmi hashtbl.cmi \
@@ -277,6 +282,10 @@ test.cmo:
 test.p.cmx:
 test2.cmo: list.cmi
 test2.p.cmx: list.p.cmx
+unix.cmo: sys.cmi string.cmi list.cmi hashtbl.cmi callback.cmi array.cmi \
+    unix.cmi
+unix.p.cmx: sys.p.cmx string.p.cmx list.p.cmx hashtbl.p.cmx callback.p.cmx array.p.cmx \
+    unix.cmi
 weak.cmo: obj.cmi weak.cmi
 weak.p.cmx: obj.p.cmx weak.cmi
 weak_hashtbl.cmo: weak.cmi sys.cmi pervasives.cmi obj.cmi hashtbl.cmi \

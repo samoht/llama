@@ -748,7 +748,7 @@ let make_setp stp char_set =
     end
 ;;
 
-let setp_table = Hashtbl.create 7;;
+let setp_table : (char_set, (char list, char -> int) Hashtbl.t) Hashtbl.t = Hashtbl.create 7;;
 
 let add_setp stp char_set setp =
   let char_set_tbl =
