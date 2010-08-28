@@ -414,7 +414,7 @@ let initialize_toplevel_env () =
 exception PPerror
 
 let loop ppf =
-  fprintf ppf "        Llama version %s@.@." Config.version;
+  fprintf ppf "        Llama Light version %s@.@." Config.version;
   Modenv.current_module := Module_toplevel;
   initialize_toplevel_env ();
   let lb = Lexing.from_function refill_lexbuf in
