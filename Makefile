@@ -93,7 +93,10 @@ OPTDRIVER= driver/pparse.cmo driver/opterrors.cmo driver/optcompile.cmo \
   driver/main_args.cmo driver/optmain.cmo
 
 TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
-  driver/main_args.cmo toplevel/printer.cmo toplevel/toploop.cmo \
+  driver/main_args.cmo \
+  toplevel/ledit_fstream.cmo toplevel/ledit_cursor.cmo \
+  toplevel/ledit_char.cmo toplevel/ledit_string.cmo toplevel/ledit.cmo \
+  toplevel/printer.cmo toplevel/toploop.cmo \
   toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
 
 TOPLEVELLIB=toplevel/toplevellib.cma

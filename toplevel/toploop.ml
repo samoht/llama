@@ -333,18 +333,18 @@ let use_silently ppf name =
 
 let first_line = ref true
 let got_eof = ref false;;
-(*
+
 let rec ledit_input_char chan =
-  let s = Ledit.input_char char in
-  if String.length = 1 then s.[0] else ledit_input_char chan
-*)
+  let s = Ledit.input_char chan in
+  if String.length s = 1 then s.[0] else ledit_input_char chan
+
 let read_input_default prompt buffer len =
   output_string Pervasives.stdout prompt; flush Pervasives.stdout;
   let i = ref 0 in
   try
     while true do
       if !i >= len then raise Exit;
-      let c = input_char Pervasives.stdin in
+      let c = ledit_input_char Pervasives.stdin in
       buffer.[!i] <- c;
       incr i;
       if c = '\n' then raise Exit;

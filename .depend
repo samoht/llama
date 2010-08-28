@@ -177,8 +177,7 @@ bytecomp/translcore.cmi: typing/typedtree.cmi typing/primitive.cmi \
     parsing/location.cmi bytecomp/lambda.cmi bytecomp/ident.cmo \
     typing/base.cmo parsing/asttypes.cmi
 bytecomp/translmod.cmi: typing/typedtree.cmi typing/primitive.cmi \
-    parsing/location.cmi bytecomp/lambda.cmi typing/include.cmo \
-    bytecomp/ident.cmo
+    bytecomp/lambda.cmi typing/include.cmo bytecomp/ident.cmo
 bytecomp/typeopt.cmi: typing/typedtree.cmi typing/mutable_type.cmo \
     bytecomp/lambda.cmi typing/env.cmi typing/base.cmo
 bytecomp/bytegen.cmo: bytecomp/switch.cmi typing/primitive.cmi utils/misc.cmi \
@@ -292,16 +291,18 @@ bytecomp/symtable.cmx: utils/tbl.cmx bytecomp/runtimedef.cmx \
     utils/clflags.cmx bytecomp/bytesections.cmx parsing/asttypes.cmi \
     bytecomp/symtable.cmi
 bytecomp/translcore.cmo: bytecomp/typeopt.cmi typing/typedtree.cmi \
-    typing/primitive.cmi typing/predef.cmo bytecomp/pmc_pattern.cmo \
-    bytecomp/parmatch.cmi utils/misc.cmi bytecomp/matching.cmi \
-    parsing/location.cmi bytecomp/lambda.cmi bytecomp/ident.cmo \
-    typing/context.cmo utils/clflags.cmi typing/base.cmo parsing/asttypes.cmi \
+    typing/printtyp.cmo typing/primitive.cmi typing/predef.cmo \
+    bytecomp/pmc_pattern.cmo bytecomp/parmatch.cmi utils/misc.cmi \
+    bytecomp/matching.cmi parsing/longident.cmi parsing/location.cmi \
+    bytecomp/lambda.cmi bytecomp/ident.cmo typing/context.cmo \
+    utils/clflags.cmi typing/base.cmo parsing/asttypes.cmi \
     bytecomp/translcore.cmi
 bytecomp/translcore.cmx: bytecomp/typeopt.cmx typing/typedtree.cmi \
-    typing/primitive.cmx typing/predef.cmx bytecomp/pmc_pattern.cmx \
-    bytecomp/parmatch.cmx utils/misc.cmx bytecomp/matching.cmx \
-    parsing/location.cmx bytecomp/lambda.cmx bytecomp/ident.cmx \
-    typing/context.cmx utils/clflags.cmx typing/base.cmx parsing/asttypes.cmi \
+    typing/printtyp.cmx typing/primitive.cmx typing/predef.cmx \
+    bytecomp/pmc_pattern.cmx bytecomp/parmatch.cmx utils/misc.cmx \
+    bytecomp/matching.cmx parsing/longident.cmx parsing/location.cmx \
+    bytecomp/lambda.cmx bytecomp/ident.cmx typing/context.cmx \
+    utils/clflags.cmx typing/base.cmx parsing/asttypes.cmi \
     bytecomp/translcore.cmi
 bytecomp/translmod.cmo: typing/typedtree.cmi bytecomp/translcore.cmi \
     utils/tbl.cmi typing/primitive.cmi utils/misc.cmi parsing/longident.cmi \
@@ -341,17 +342,15 @@ driver/compile.cmx: utils/warnings.cmx typing/unused_var.cmx \
     typing/env.cmx bytecomp/emitcode.cmx utils/config.cmx utils/clflags.cmx \
     utils/ccomp.cmx bytecomp/bytegen.cmx typing/base.cmx driver/compile.cmi
 driver/errors.cmo: utils/warnings.cmi typing/typify.cmo typing/typemain.cmo \
-    bytecomp/translmod.cmi bytecomp/translcore.cmi parsing/syntaxerr.cmi \
-    bytecomp/symtable.cmi typing/resolve.cmo driver/pparse.cmi \
-    typing/modenv.cmi parsing/location.cmi parsing/lexer.cmi \
-    typing/include.cmo bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi \
-    driver/errors.cmi
+    bytecomp/translcore.cmi parsing/syntaxerr.cmi bytecomp/symtable.cmi \
+    typing/resolve.cmo driver/pparse.cmi typing/modenv.cmi \
+    parsing/location.cmi parsing/lexer.cmi typing/include.cmo \
+    bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi driver/errors.cmi
 driver/errors.cmx: utils/warnings.cmx typing/typify.cmx typing/typemain.cmx \
-    bytecomp/translmod.cmx bytecomp/translcore.cmx parsing/syntaxerr.cmx \
-    bytecomp/symtable.cmx typing/resolve.cmx driver/pparse.cmx \
-    typing/modenv.cmx parsing/location.cmx parsing/lexer.cmx \
-    typing/include.cmx bytecomp/bytelink.cmx bytecomp/bytelibrarian.cmx \
-    driver/errors.cmi
+    bytecomp/translcore.cmx parsing/syntaxerr.cmx bytecomp/symtable.cmx \
+    typing/resolve.cmx driver/pparse.cmx typing/modenv.cmx \
+    parsing/location.cmx parsing/lexer.cmx typing/include.cmx \
+    bytecomp/bytelink.cmx bytecomp/bytelibrarian.cmx driver/errors.cmi
 driver/main.cmo: utils/warnings.cmi utils/misc.cmi driver/main_args.cmi \
     driver/errors.cmi utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     bytecomp/bytelink.cmi bytecomp/bytelibrarian.cmi driver/main.cmi
@@ -364,6 +363,11 @@ driver/pparse.cmo: utils/misc.cmi parsing/location.cmi utils/clflags.cmi \
     utils/ccomp.cmi driver/pparse.cmi
 driver/pparse.cmx: utils/misc.cmx parsing/location.cmx utils/clflags.cmx \
     utils/ccomp.cmx driver/pparse.cmi
+toplevel/ledit.cmi:
+toplevel/ledit_char.cmi:
+toplevel/ledit_cursor.cmi:
+toplevel/ledit_fstream.cmi:
+toplevel/ledit_string.cmi: toplevel/ledit_char.cmi
 toplevel/printer.cmi: typing/outcometree.cmi typing/env.cmi typing/base.cmo
 toplevel/topdirs.cmi: parsing/longident.cmi
 toplevel/toploop.cmi: utils/warnings.cmi parsing/parsetree.cmi \
@@ -371,6 +375,22 @@ toplevel/toploop.cmi: utils/warnings.cmi parsing/parsetree.cmi \
     typing/env.cmi typing/base.cmo
 toplevel/topmain.cmi:
 toplevel/trace.cmi: parsing/longident.cmi typing/env.cmi typing/base.cmo
+toplevel/expunge.cmo: bytecomp/symtable.cmi bytecomp/runtimedef.cmi \
+    utils/misc.cmi bytecomp/ident.cmo bytecomp/bytesections.cmi
+toplevel/expunge.cmx: bytecomp/symtable.cmx bytecomp/runtimedef.cmx \
+    utils/misc.cmx bytecomp/ident.cmx bytecomp/bytesections.cmx
+toplevel/ledit.cmo: toplevel/ledit_string.cmi toplevel/ledit_fstream.cmi \
+    toplevel/ledit_char.cmi toplevel/ledit.cmi
+toplevel/ledit.cmx: toplevel/ledit_string.cmx toplevel/ledit_fstream.cmx \
+    toplevel/ledit_char.cmx toplevel/ledit.cmi
+toplevel/ledit_char.cmo: toplevel/ledit_char.cmi
+toplevel/ledit_char.cmx: toplevel/ledit_char.cmi
+toplevel/ledit_cursor.cmo: toplevel/ledit_cursor.cmi
+toplevel/ledit_cursor.cmx: toplevel/ledit_cursor.cmi
+toplevel/ledit_fstream.cmo: toplevel/ledit_fstream.cmi
+toplevel/ledit_fstream.cmx: toplevel/ledit_fstream.cmi
+toplevel/ledit_string.cmo: toplevel/ledit_char.cmi toplevel/ledit_string.cmi
+toplevel/ledit_string.cmx: toplevel/ledit_char.cmx toplevel/ledit_string.cmi
 toplevel/printer.cmo: typing/typeutil.cmo typing/printtyp.cmo \
     typing/predef.cmo typing/outcometree.cmi utils/misc.cmi \
     parsing/longident.cmi typing/env.cmi typing/base.cmo toplevel/printer.cmi
