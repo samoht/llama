@@ -17,6 +17,8 @@
 
 type 'a ord = 'a -> 'a -> int
 
+exception Incompatible
+
 type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
 
     (* Sets are represented by balanced binary trees (the heights of the
@@ -25,6 +27,9 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
     let comparator = function
         Empty cmp -> cmp
       | Node(cmp, _, _, _, _) -> cmp
+
+    let check_compatible s1 s2 =
+      if comparator s1 != comparator s2 then raise Incompatible
 
     let height = function
         Empty _ -> 0
@@ -189,6 +194,8 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
               join (union l1 l2) v2 (union r1 r2)
             end
 
+    let union s1 s2 = check_compatible s1 s2; union s1 s2
+
     let rec inter s1 s2 =
       match (s1, s2) with
         (Empty _, _) -> s1
@@ -200,6 +207,8 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
           | (l2, true, r2) ->
               join (inter l1 l2) v1 (inter r1 r2)
 
+    let inter s1 s2 = check_compatible s1 s2; inter s1 s2
+
     let rec diff s1 s2 =
       match (s1, s2) with
         (Empty _, _) -> s1
@@ -210,6 +219,8 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
               join (diff l1 l2) v1 (diff r1 r2)
           | (l2, true, r2) ->
               concat (diff l1 l2) (diff r1 r2)
+
+    let diff s1 s2 = check_compatible s1 s2; diff s1 s2
 
     type 'elt enumeration = End | More of 'elt * 'elt t * 'elt enumeration
 
@@ -230,6 +241,7 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
           else compare_aux cmp (cons_enum r1 e1) (cons_enum r2 e2)
 
     let compare s1 s2 =
+      check_compatible s1 s2;
       let cmp1 = comparator s1 in
       let cmp2 = comparator s2 in
       if cmp1 != cmp2 then invalid_arg "Set.compare";
@@ -252,6 +264,8 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
             subset (Node (cmp, l1, v1, Empty cmp, 0)) l2 && subset r1 s2
           else
             subset (Node (cmp, Empty cmp, v1, r1, 0)) r2 && subset l1 s2
+
+    let subset s1 s2 = check_compatible s1 s2; subset s1 s2
 
     let rec iter f = function
         Empty _ -> ()
@@ -297,5 +311,3 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
       elements_aux [] s
 
     let choose = min_elt
-
-
