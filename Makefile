@@ -54,9 +54,7 @@ TYPING=\
   typing/resolve.cmo \
   typing/typify.cmo \
   typing/permanent.cmo \
-  typing/subst.cmo \
-  typing/includecore.cmo \
-  typing/includemod.cmo \
+  typing/include.cmo \
   typing/typemain.cmo
 
 COMP=bytecomp/ident.cmo \

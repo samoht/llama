@@ -33,13 +33,13 @@ exception Error of Location.t * error
 
 let rec apply_coercion restr arg =
   match restr with
-    Coerce_none ->
+    Include.Coerce_none ->
       arg
-  | Coerce_structure pos_cc_list ->
+  | Include.Coerce_structure pos_cc_list ->
       name_lambda arg (fun id ->
         Lprim(Pmakeblock(0, Immutable),
               List.map (apply_coercion_field id) pos_cc_list))
-  | Coerce_primitive p ->
+  | Include.Coerce_primitive p ->
       transl_primitive p
 
 and apply_coercion_field id (pos, cc) =
@@ -51,14 +51,14 @@ and apply_coercion_field id (pos, cc) =
 
 let rec compose_coercions c1 c2 =
   match (c1, c2) with
-    (Coerce_none, c2) -> c2
-  | (c1, Coerce_none) -> c1
-  | (Coerce_structure pc1, Coerce_structure pc2) ->
+    (Include.Coerce_none, c2) -> c2
+  | (c1, Include.Coerce_none) -> c1
+  | (Include.Coerce_structure pc1, Include.Coerce_structure pc2) ->
       let v2 = Array.of_list pc2 in
-      Coerce_structure
+      Include.Coerce_structure
         (List.map
-          (function (p1, Coerce_primitive p) ->
-                      (p1, Coerce_primitive p)
+          (function (p1, Include.Coerce_primitive p) ->
+                      (p1, Include.Coerce_primitive p)
                   | (p1, c1) ->
                       let (p2, c2) = v2.(p1) in (p2, compose_coercions c1 c2))
              pc1)
@@ -78,16 +78,16 @@ let rec transl_structure fields cc x =
   match x with
     [] ->
       begin match cc with
-        Coerce_none ->
+        Include.Coerce_none ->
           Lprim(Pmakeblock(0, Immutable),
                 List.map (fun id -> Lvar id) (List.rev fields))
-      | Coerce_structure pos_cc_list ->
+      | Include.Coerce_structure pos_cc_list ->
           let v = Array.of_list (List.rev fields) in
           Lprim(Pmakeblock(0, Immutable),
                 List.map
                   (fun (pos, cc) ->
                     match cc with
-                      Coerce_primitive p -> transl_primitive p
+                      Include.Coerce_primitive p -> transl_primitive p
                     | _ -> apply_coercion cc (Lvar v.(pos)))
                   pos_cc_list)
       | _ ->
@@ -189,7 +189,7 @@ let transl_store_structure glob map prims str =
     try
       let (pos, cc) = Ident.find_same id map in
       match cc with
-        Coerce_none ->
+        Include.Coerce_none ->
           Ident.add id (Lprim(Pfield pos, [Lprim(Pgetglobal glob, [])])) subst
       | _ ->
           if may_coerce then subst else assert false
@@ -236,16 +236,16 @@ let build_ident_map restr idlist =
     [] ->
       (map, prims, pos)
   | id :: rem ->
-      natural_map (pos+1) (Ident.add id (pos, Coerce_none) map) prims rem in
+      natural_map (pos+1) (Ident.add id (pos, Include.Coerce_none) map) prims rem in
   match restr with
-    Coerce_none ->
+    Include.Coerce_none ->
       natural_map 0 Ident.empty [] idlist
-  | Coerce_structure pos_cc_list ->
+  | Include.Coerce_structure pos_cc_list ->
       let idarray = Array.of_list idlist in
       let rec export_map pos map prims undef = function
         [] ->
           natural_map pos map prims undef
-      | (source_pos, Coerce_primitive p) :: rem ->
+      | (source_pos, Include.Coerce_primitive p) :: rem ->
           export_map (pos + 1) map ((pos, p) :: prims) undef rem
       | (source_pos, cc) :: rem ->
           let id = idarray.(source_pos) in
@@ -274,7 +274,7 @@ let transl_store_gen module_name (str, restr) topl =
   size, transl_store_structure module_id map prims str
 
 let transl_store_phrases module_name str =
-  transl_store_gen module_name (str,Coerce_none) true
+  transl_store_gen module_name (str,Include.Coerce_none) true
 
 let transl_store_implementation module_name (str, restr) =
   let s = !transl_store_subst in
@@ -350,9 +350,9 @@ let get_component = function
 let transl_package component_names target_name coercion =
   let components =
     match coercion with
-      Coerce_none ->
+      Include.Coerce_none ->
         List.map get_component component_names
-    | Coerce_structure pos_cc_list ->
+    | Include.Coerce_structure pos_cc_list ->
         let g = Array.of_list component_names in
         List.map
           (fun (pos, cc) -> apply_coercion cc (get_component g.(pos)))
@@ -368,7 +368,7 @@ let transl_package component_names target_name coercion =
 
 let transl_store_package component_names target_name coercion =
   match coercion with
-    Coerce_none ->
+    Include.Coerce_none ->
       (List.length component_names,
        make_sequence
          (fun pos id ->
@@ -376,7 +376,7 @@ let transl_store_package component_names target_name coercion =
                  [Lprim(Pgetglobal target_name, []);
                   get_component id]))
          0 component_names)
-  | Coerce_structure pos_cc_list ->
+  | Include.Coerce_structure pos_cc_list ->
       let id = Array.of_list component_names in
       (List.length pos_cc_list,
        make_sequence

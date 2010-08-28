@@ -123,14 +123,12 @@ TYPING=$(LLAMASRCDIR)/typing/unused_var.cmo \
  $(LLAMASRCDIR)/typing/modenv.cmo \
  $(LLAMASRCDIR)/typing/env.cmo \
  $(LLAMASRCDIR)/typing/typeutil.cmo \
- $(LLAMASRCDIR)/typing/subst.cmo \
  $(LLAMASRCDIR)/typing/oprint.cmo \
  $(LLAMASRCDIR)/typing/context.cmo \
  $(LLAMASRCDIR)/typing/pseudoenv.cmo \
  $(LLAMASRCDIR)/typing/printtyp.cmo \
  $(LLAMASRCDIR)/typing/mutable_type.cmo \
- $(LLAMASRCDIR)/typing/includecore.cmo \
- $(LLAMASRCDIR)/typing/includemod.cmo \
+ $(LLAMASRCDIR)/typing/include.cmo \
  $(LLAMASRCDIR)/typing/resolve.cmo \
  $(LLAMASRCDIR)/typing/typify.cmo \
  $(LLAMASRCDIR)/typing/permanent.cmo \

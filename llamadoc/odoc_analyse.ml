@@ -167,15 +167,9 @@ let process_error exn =
       Modenv.report_error ppf err
   | Typify.Error(loc, err) ->
       Location.print_error ppf loc; Typify.report_error ppf err
-(*
-  | Typetexp.Error(loc, err) ->
-      Location.print_error ppf loc; Typetexp.report_error ppf err
-  | Permanent.Error(loc, err) ->
-      Location.print_error ppf loc; Permanent.report_error ppf err
-*)
-  | Includemod.Error err ->
+  | Include.Error err ->
       Location.print_error_cur_file ppf;
-      Includemod.report_error ppf err
+      Include.report_error ppf err
   | Typemain.Error(loc, err) ->
       Location.print_error ppf loc; Typemain.report_error ppf err
   | Translcore.Error(loc, err) ->

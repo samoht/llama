@@ -38,9 +38,9 @@ let report_error ppf exn =
       Location.print_error ppf loc; Typify.report_error ppf err
   | Resolve.Error(loc, err) ->
       Location.print_error ppf loc; Resolve.report_error ppf err
-  | Includemod.Error err ->
+  | Include.Error err ->
       Location.print_error_cur_file ppf;
-      Includemod.report_error ppf err
+      Include.report_error ppf err
   | Typemain.Error(loc, err) ->
       Location.print_error ppf loc; Typemain.report_error ppf err
   | Translcore.Error(loc, err) ->

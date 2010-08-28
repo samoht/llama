@@ -72,7 +72,7 @@ let implementation sourcefile outputprefix modulename env pstr =
   let simple_sg = simplify_signature sg in
   if !Clflags.print_types then begin
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
-    (str, Coerce_none)   (* result is ignored by Compile.implementation *)
+    (str, Include.Coerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
@@ -83,11 +83,11 @@ let implementation sourcefile outputprefix modulename env pstr =
         with Not_found ->
           raise(Error(Location.none, Interface_not_compiled sourceintf)) in
       let dclsig = Modenv.read_signature modulename intf_file in
-      let coercion = Includemod.compunit (Module modulename) sourcefile sg intf_file dclsig in
+      let coercion = Include.compunit (Module modulename) sourcefile sg intf_file dclsig in
       (str, coercion)
     end else begin
       let coercion =
-        Includemod.compunit (Module modulename) sourcefile sg
+        Include.compunit (Module modulename) sourcefile sg
                             "(inferred signature)" simple_sg in
       if not !Clflags.dont_write_files then
         Modenv.save_signature simple_sg modulename (outputprefix ^ ".cmi");

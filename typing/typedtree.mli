@@ -88,8 +88,3 @@ type structure_item =
   | Str_open of signature
 
 type structure = structure_item list
-
-type module_coercion =
-    Coerce_none
-  | Coerce_structure of (int * module_coercion) list
-  | Coerce_primitive of Primitive.description
