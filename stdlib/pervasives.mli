@@ -844,9 +844,8 @@ external decr : int ref -> unit = "%decr"
 
 (** {6 Operations on format strings} *)
 
-(** Format strings are used to read and print data using formatted input
-    functions in module {!Scanf} and formatted output in modules {!Printf} and
-    {!Format}. *)
+(** Format strings are used to print data using formatted output
+    functions in modules {!Printf} and {!Format}. *)
 
 (** Format strings have a general and highly polymorphic type
     [('a, 'b, 'c, 'd, 'e, 'f) format6]. Type [format6] is built in.

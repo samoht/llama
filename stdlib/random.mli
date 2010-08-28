@@ -63,7 +63,7 @@ val bool : unit -> bool
 
 (** {6 Advanced functions} *)
 
-(** The functions from module [Random_state] manipulate the current state
+(** These functions manipulate the current state
     of the random generator explicitely.
     This allows using one or several deterministic PRNGs,
     even in a multi-threaded program, without interference from

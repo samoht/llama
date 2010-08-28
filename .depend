@@ -402,15 +402,13 @@ toplevel/topdirs.cmo: utils/warnings.cmi toplevel/trace.cmi \
     bytecomp/opcodes.cmo typing/mutable_type.cmo typing/modenv.cmi \
     utils/misc.cmi bytecomp/meta.cmi parsing/longident.cmi typing/env.cmi \
     bytecomp/dll.cmi utils/consistbl.cmi utils/config.cmi \
-    bytecomp/cmo_format.cmi utils/clflags.cmi typing/base.cmo \
-    toplevel/topdirs.cmi
+    bytecomp/cmo_format.cmi typing/base.cmo toplevel/topdirs.cmi
 toplevel/topdirs.cmx: utils/warnings.cmx toplevel/trace.cmx \
     toplevel/toploop.cmx bytecomp/symtable.cmx typing/printtyp.cmx \
     bytecomp/opcodes.cmx typing/mutable_type.cmx typing/modenv.cmx \
     utils/misc.cmx bytecomp/meta.cmx parsing/longident.cmx typing/env.cmx \
     bytecomp/dll.cmx utils/consistbl.cmx utils/config.cmx \
-    bytecomp/cmo_format.cmi utils/clflags.cmx typing/base.cmx \
-    toplevel/topdirs.cmi
+    bytecomp/cmo_format.cmi typing/base.cmx toplevel/topdirs.cmi
 toplevel/toploop.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/typify.cmo typing/typemain.cmo typing/typedtree.cmi \
     bytecomp/translmod.cmi bytecomp/symtable.cmi bytecomp/simplif.cmi \

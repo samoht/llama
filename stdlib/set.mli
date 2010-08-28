@@ -22,7 +22,7 @@
    logarithmic in the size of the set, for instance.
 *)
 
-type 'a ord = 'a -> 'a -> int
+type 'elt ord = 'elt -> 'elt -> int
   (** A total ordering function over the set elements.
       This is a two-argument function [f] such that
       [f e1 e2] is zero if the elements [e1] and [e2] are equal,
@@ -68,17 +68,17 @@ val diff: 'elt t -> 'elt t -> 'elt t
 val compare: 'elt t -> 'elt t -> int
   (** Total ordering between sets. Can be used as the ordering function
       for doing sets of sets.
-      It raises {!Set.Incompatible} if the sets use different orderings. *)
+      Raises {!Set.Incompatible} if the sets use different orderings. *)
 
 val equal: 'elt t -> 'elt t -> bool
   (** [equal s1 s2] tests whether the sets [s1] and [s2] are
       equal, that is, contain equal elements.
-      It raises {!Set.Incompatible} if the sets use different orderings. *)
+      Raises {!Set.Incompatible} if the sets use different orderings. *)
 
 val subset: 'elt t -> 'elt t -> bool
   (** [subset s1 s2] tests whether the set [s1] is a subset of
       the set [s2].
-      It raises {!Set.Incompatible} if the sets use different orderings. *)
+      Raises {!Set.Incompatible} if the sets use different orderings. *)
 
 val iter: ('elt -> unit) -> 'elt t -> unit
   (** [iter f s] applies [f] in turn to all elements of [s].

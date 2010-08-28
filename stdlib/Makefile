@@ -34,7 +34,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random_state.cmo random.cmo callback.cmo \
-  genlex.cmo weak.cmo \
+  genlex.cmo weak.cmo weak_hash.cmo \
   filename.cmo complex.cmo scanning.cmo str.cmo \
   int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
   ratio.cmo num.cmo arith_status.cmo \
@@ -142,3 +142,11 @@ camlheader camlheader_ur: header.c ../config/Makefile
 
 .PHONY: all allopt allopt-noprof allopt-prof install installopt
 .PHONY: installopt-default installopt-noprof installopt-prof clean depend
+
+# Assumes an installed system.
+ref:
+	mkdir -p libref
+	llamadoc -sort -html -d libref *.mli
+refclean:
+	rm -rf libref
+.PHONY: ref refclean

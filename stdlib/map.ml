@@ -19,9 +19,14 @@ type ('key, 'a) t =
     Empty of 'key ord
   | Node of 'key ord * ('key, 'a) t * 'key * 'a * ('key, 'a) t * int
 
+exception Incompatible
+
     let comparator = function
         Empty cmp -> cmp
       | Node(cmp,_,_,_,_,_) -> cmp
+
+    let check_compatible m1 m2 =
+      if comparator m1 != comparator m2 then raise Incompatible
 
     let height = function
         Empty _ -> 0
@@ -233,6 +238,8 @@ type ('key, 'a) t =
       | _ ->
           assert false
 
+    let merge f m1 m2 = check_compatible m1 m2; merge f m1 m2
+
     type ('key, 'a) enumeration = End | More of 'key * 'a * ('key, 'a) t * ('key, 'a) enumeration
 
     let rec cons_enum m e =
@@ -241,6 +248,7 @@ type ('key, 'a) t =
       | Node(_, l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
 
     let compare cmp m1 m2 =
+      check_compatible m1 m2;
       let rec compare_aux e1 e2 =
           match (e1, e2) with
           (End, End) -> 0
@@ -255,6 +263,7 @@ type ('key, 'a) t =
       in compare_aux (cons_enum m1 End) (cons_enum m2 End)
 
     let equal cmp m1 m2 =
+      check_compatible m1 m2;
       let rec equal_aux e1 e2 =
           match (e1, e2) with
           (End, End) -> true
