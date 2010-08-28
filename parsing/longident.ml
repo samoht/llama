@@ -1,6 +1,10 @@
 type t =
-  | Lident of string
+    Lident of string
   | Ldot of string * string
+
+let name = function
+    Lident name -> name
+  | Ldot (modname, name) -> modname ^ "." ^ name
 
 let rec split_at_dots s pos =
   try

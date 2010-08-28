@@ -449,7 +449,6 @@ let extract_float = function
 
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
-(* xxx no need to duplicate idents? *)
 let rec name_pattern default = function
     [] -> default
   | (p, e) :: rem ->
@@ -521,19 +520,6 @@ let rec cut n l =
 (* Translation of expressions *)
 
 let rec transl_exp e =
-  transl_exp0 e
-(*
-  let eval_once =
-    (* Whether classes for immediate objects must be cached *)
-    match e.exp_desc with
-      Texp_function _ | Texp_for _ | Texp_while _ -> false
-    | _ -> true
-  in
-  if eval_once then transl_exp0 e else
-  Translobj.oo_wrap e.exp_env true transl_exp0 e
-*)
-
-and transl_exp0 e =
   match e.exp_desc with
     Texp_ident (Context.Local_value lval) ->
       Lvar (Ident.of_local_value lval)
@@ -634,19 +620,6 @@ and transl_exp0 e =
       | Tag_exception ->
           Lprim(Pmakeblock(0, Immutable), transl_exception cstr :: ll)
       end
-(*| Texp_variant(l, arg) ->
-      let tag = Typeutil.hash_variant l in
-      begin match arg with
-        None -> Lconst(Const_pointer tag)
-      | Some arg ->
-          let lam = transl_exp arg in
-          try
-            Lconst(Const_block(0, [Const_base(Const_int tag);
-                                   extract_constant lam]))
-          with Not_constant ->
-            Lprim(Pmakeblock(0, Immutable),
-                  [Lconst(Const_base(Const_int tag)); lam])
-      end *)
   | Texp_record (tcs, lbl_expr_list, opt_init_expr) ->
       transl_record (get_labels tcs) (*lbl1.lbl_repres*)Record_regular lbl_expr_list opt_init_expr
   | Texp_field(arg, lbl) ->
@@ -955,29 +928,10 @@ and transl_record all_labels repres lbl_expr_list opt_init_expr =
     end
   end
 
-(* Wrapper for class compilation *)
-
-(*
-let transl_exp = transl_exp_wrap
-
-let transl_let rec_flag pat_expr_list body =
-  match pat_expr_list with
-    [] -> body
-  | (_, expr) :: _ ->
-      Translobj.oo_wrap expr.exp_env false
-        (transl_let rec_flag pat_expr_list) body
-*)
-
 (* Compile an exception definition *)
 
-let transl_exception (*id path*) cs =
-(*
-  let name =
-    match path with
-      None -> Ident.name id
-    | Some p -> Path.name p in
-*)
-  let name = cs.cs_name in
+let transl_exception cs =
+  let name = Longident.name (Printtyp.cs_longident cs) in
   Lprim(Pmakeblock(0, Immutable), [Lconst(Const_base(Const_string name))])
 
 (* Error report *)
