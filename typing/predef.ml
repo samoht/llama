@@ -1,3 +1,5 @@
+(* Predefined types and exceptions. *)
+
 open Base
 
 (* ---------------------------------------------------------------------- *)
@@ -110,9 +112,7 @@ let type_constructors =
     tcs_exn; tcs_array; tcs_list; tcs_format6; tcs_option; tcs_lazy_t;
     tcs_nativeint; tcs_int32; tcs_int64 ]
 
-(* ---------------------------------------------------------------------- *)
-(* Base.                                                                 *)
-(* ---------------------------------------------------------------------- *)
+(* helpers *)
 
 let type_int = Tconstr(tcs_int, [])
 let type_char = Tconstr(tcs_char, [])
