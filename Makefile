@@ -213,7 +213,7 @@ install:
 	cp lex/llamalex $(BINDIR)/llamalex$(EXE)
 	cp yacc/llamayacc$(EXE) $(BINDIR)/llamayacc$(EXE)
 	cd tools; $(MAKE) install
-	cd llamadoc; $(MAKE) install
+	cd doctool; $(MAKE) install
 
 clean:: partialclean
 
@@ -398,16 +398,16 @@ partialclean::
 alldepend::
 	cd tools; $(MAKE) depend
 
-# Llamadoc
+# The documentation generator
 
 llamadoc: llamac llamayacc llamalex
-	cd llamadoc && $(MAKE) all
+	cd doctool && $(MAKE) all
 
 partialclean::
-	cd llamadoc && $(MAKE) clean
+	cd doctool && $(MAKE) clean
 
 alldepend::
-	cd llamadoc && $(MAKE) depend
+	cd doctool && $(MAKE) depend
 
 # Default rules
 
