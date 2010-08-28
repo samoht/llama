@@ -41,10 +41,10 @@ parsing/lexer.cmx: utils/warnings.cmx parsing/parser.cmx utils/misc.cmx \
     parsing/location.cmx parsing/lexer.cmi
 parsing/linenum.cmo: utils/misc.cmi parsing/linenum.cmi
 parsing/linenum.cmx: utils/misc.cmx parsing/linenum.cmi
-parsing/location.cmo: utils/warnings.cmi parsing/linenum.cmi \
-    parsing/location.cmi
-parsing/location.cmx: utils/warnings.cmx parsing/linenum.cmx \
-    parsing/location.cmi
+parsing/location.cmo: utils/warnings.cmi utils/terminfo.cmi \
+    parsing/linenum.cmi parsing/location.cmi
+parsing/location.cmx: utils/warnings.cmx utils/terminfo.cmx \
+    parsing/linenum.cmx parsing/location.cmi
 parsing/longident.cmo: parsing/longident.cmi
 parsing/longident.cmx: parsing/longident.cmi
 parsing/parse.cmo: parsing/syntaxerr.cmi parsing/parser.cmi \
@@ -380,9 +380,9 @@ toplevel/expunge.cmo: bytecomp/symtable.cmi bytecomp/runtimedef.cmi \
 toplevel/expunge.cmx: bytecomp/symtable.cmx bytecomp/runtimedef.cmx \
     utils/misc.cmx bytecomp/ident.cmx bytecomp/bytesections.cmx
 toplevel/ledit.cmo: toplevel/ledit_string.cmi toplevel/ledit_fstream.cmi \
-    toplevel/ledit_char.cmi toplevel/ledit.cmi
+    toplevel/ledit_cursor.cmi toplevel/ledit_char.cmi toplevel/ledit.cmi
 toplevel/ledit.cmx: toplevel/ledit_string.cmx toplevel/ledit_fstream.cmx \
-    toplevel/ledit_char.cmx toplevel/ledit.cmi
+    toplevel/ledit_cursor.cmx toplevel/ledit_char.cmx toplevel/ledit.cmi
 toplevel/ledit_char.cmo: toplevel/ledit_char.cmi
 toplevel/ledit_char.cmx: toplevel/ledit_char.cmi
 toplevel/ledit_cursor.cmo: toplevel/ledit_cursor.cmi
@@ -419,10 +419,11 @@ toplevel/toploop.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/predef.cmo typing/permanent.cmo parsing/parsetree.cmi \
     parsing/parse.cmi typing/outcometree.cmi typing/oprint.cmi \
     typing/modenv.cmi utils/misc.cmi bytecomp/meta.cmi parsing/longident.cmi \
-    parsing/location.cmi parsing/lexer.cmi bytecomp/ident.cmo \
-    driver/errors.cmi typing/env.cmi bytecomp/emitcode.cmi bytecomp/dll.cmi \
-    utils/consistbl.cmi utils/config.cmi driver/compile.cmi utils/clflags.cmi \
-    bytecomp/bytegen.cmi typing/base.cmo toplevel/toploop.cmi
+    parsing/location.cmi parsing/lexer.cmi toplevel/ledit.cmi \
+    bytecomp/ident.cmo driver/errors.cmi typing/env.cmi bytecomp/emitcode.cmi \
+    bytecomp/dll.cmi utils/consistbl.cmi utils/config.cmi driver/compile.cmi \
+    utils/clflags.cmi bytecomp/bytegen.cmi typing/base.cmo \
+    toplevel/toploop.cmi
 toplevel/toploop.cmx: utils/warnings.cmx typing/unused_var.cmx \
     typing/typify.cmx typing/typemain.cmx typing/typedtree.cmi \
     bytecomp/translmod.cmx bytecomp/symtable.cmx bytecomp/simplif.cmx \
@@ -431,10 +432,11 @@ toplevel/toploop.cmx: utils/warnings.cmx typing/unused_var.cmx \
     typing/predef.cmx typing/permanent.cmx parsing/parsetree.cmi \
     parsing/parse.cmx typing/outcometree.cmi typing/oprint.cmx \
     typing/modenv.cmx utils/misc.cmx bytecomp/meta.cmx parsing/longident.cmx \
-    parsing/location.cmx parsing/lexer.cmx bytecomp/ident.cmx \
-    driver/errors.cmx typing/env.cmx bytecomp/emitcode.cmx bytecomp/dll.cmx \
-    utils/consistbl.cmx utils/config.cmx driver/compile.cmx utils/clflags.cmx \
-    bytecomp/bytegen.cmx typing/base.cmx toplevel/toploop.cmi
+    parsing/location.cmx parsing/lexer.cmx toplevel/ledit.cmx \
+    bytecomp/ident.cmx driver/errors.cmx typing/env.cmx bytecomp/emitcode.cmx \
+    bytecomp/dll.cmx utils/consistbl.cmx utils/config.cmx driver/compile.cmx \
+    utils/clflags.cmx bytecomp/bytegen.cmx typing/base.cmx \
+    toplevel/toploop.cmi
 toplevel/topmain.cmo: utils/warnings.cmi toplevel/toploop.cmi \
     toplevel/topdirs.cmi utils/misc.cmi driver/main_args.cmi \
     driver/errors.cmi utils/config.cmi utils/clflags.cmi toplevel/topmain.cmi

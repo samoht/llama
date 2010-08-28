@@ -32,6 +32,7 @@ byterun/llamarun
 byterun/primitives
 byterun/prims.c
 byterun/version.h
+byterun/opnames.h
 byterun/*.o
 byterun/libcamlrun.a
 byterun/libcamlrun_shared.so

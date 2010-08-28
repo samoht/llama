@@ -66,7 +66,45 @@ let input_lexbuf = ref (None : lexbuf option)
 
 (* Terminal info *)
 
+let status = ref Terminfo.Uninitialised
+
 let num_loc_lines = ref 0 (* number of lines already printed after input *)
+
+(* Highlight the locations using standout mode. *)
+
+let highlight_terminfo ppf num_lines lb loc1 loc2 =
+  Format.pp_print_flush ppf ();  (* avoid mixing Format and normal output *)
+  (* Char 0 is at offset -lb.lex_abs_pos in lb.lex_buffer. *)
+  let pos0 = -lb.lex_abs_pos in
+  (* Do nothing if the buffer does not contain the whole phrase. *)
+  if pos0 < 0 then raise Exit;
+  (* Count number of lines in phrase *)
+  let lines = ref !num_loc_lines in
+  for i = pos0 to lb.lex_buffer_len - 1 do
+    if lb.lex_buffer.[i] = '\n' then incr lines
+  done;
+  (* If too many lines, give up *)
+  if !lines >= num_lines - 2 then raise Exit;
+  (* Move cursor up that number of lines *)
+  flush stdout; Terminfo.backup !lines;
+  (* Print the input, switching to standout for the location *)
+  let bol = ref false in
+  print_string "# ";
+  for pos = 0 to lb.lex_buffer_len - pos0 - 1 do
+    if !bol then (print_string "  "; bol := false);
+    if pos = loc1.loc_start.pos_cnum || pos = loc2.loc_start.pos_cnum then
+      Terminfo.standout true;
+    if pos = loc1.loc_end.pos_cnum || pos = loc2.loc_end.pos_cnum then
+      Terminfo.standout false;
+    let c = lb.lex_buffer.[pos + pos0] in
+    print_char c;
+    bol := (c = '\n')
+  done;
+  (* Make sure standout mode is over *)
+  Terminfo.standout false;
+  (* Position cursor back to original location *)
+  Terminfo.resume !num_loc_lines;
+  flush stdout
 
 (* Highlight the location by printing it again. *)
 
@@ -133,18 +171,33 @@ let highlight_dumb ppf lb loc =
 (* Highlight the location using one of the supported modes. *)
 
 let rec highlight_locations ppf loc1 loc2 =
-  match !input_lexbuf with
-      None -> false
-    | Some lb ->
-        let norepeat =
-          try Sys.getenv "TERM" = "norepeat" with Not_found -> false in
-        if norepeat then false else
-          try highlight_dumb ppf lb loc1; true
+  match !status with
+    Terminfo.Uninitialised ->
+      status := Terminfo.setup stdout; highlight_locations ppf loc1 loc2
+  | Terminfo.Bad_term ->
+      begin match !input_lexbuf with
+        None -> false
+      | Some lb ->
+          let norepeat =
+            try Sys.getenv "TERM" = "norepeat" with Not_found -> false in
+          if norepeat then false else
+            try highlight_dumb ppf lb loc1; true
+            with Exit -> false
+      end
+  | Terminfo.Good_term num_lines ->
+      begin match !input_lexbuf with
+        None -> false
+      | Some lb ->
+          try highlight_terminfo ppf num_lines lb loc1 loc2; true
           with Exit -> false
+      end
 
 (* Print the location in some way or another *)
 
 open Format
+
+let reset () =
+  num_loc_lines := 0
 
 let (msg_file, msg_line, msg_chars, msg_to, msg_colon, msg_head) =
   ("File \"", "\", line ", ", characters ", "-", ":", "")
@@ -188,13 +241,19 @@ let print_error_cur_file ppf = print_error ppf (in_file !input_name);;
 
 let print_warning loc ppf w =
   if Warnings.is_active w then begin
+    let printw ppf w =
+      let n = Warnings.print ppf w in
+      num_loc_lines := !num_loc_lines + n
+    in
     fprintf ppf "%a" print loc;
-    fprintf ppf "Warning %a@." Warnings.print w;
+    fprintf ppf "Warning %a@." printw w;
     pp_print_flush ppf ();
+    incr num_loc_lines;
   end
 ;;
 
 let prerr_warning loc w = print_warning loc err_formatter w;;
 
 let echo_eof () =
-  print_newline ()
+  print_newline ();
+  incr num_loc_lines

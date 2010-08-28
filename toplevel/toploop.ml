@@ -428,7 +428,7 @@ let loop ppf =
   while true do
     try
       Lexing.flush_input lb;
-(*       Location.reset(); *)
+      Location.reset();
       first_line := true;
       let phr = try !parse_toplevel_phrase lb with Exit -> raise PPerror in
       if !Clflags.dump_parsetree then Printast.top_phrase ppf phr;

@@ -267,9 +267,20 @@ let nerrors = ref 0;;
 let print ppf w =
   let msg = message w in
   let num = number w in
+  let newlines = ref 0 in
+  for i = 0 to String.length msg - 1 do
+    if msg.[i] = '\n' then incr newlines;
+  done;
+  let (out, flush, newline, space) =
+    Format.pp_get_all_formatter_output_functions ppf ()
+  in
+  let countnewline x = incr newlines; newline x in
+  Format.pp_set_all_formatter_output_functions ppf out flush countnewline space;
   Format.fprintf ppf "%d: %s" num msg;
   Format.pp_print_flush ppf ();
-  if error.(num) then incr nerrors
+  Format.pp_set_all_formatter_output_functions ppf out flush newline space;
+  if error.(num) then incr nerrors;
+  !newlines
 ;;
 
 exception Errors of int;;
