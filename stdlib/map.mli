@@ -29,29 +29,29 @@ type 'a ord = 'a -> 'a -> int
           [f e1 e2] is strictly negative if [e1] is smaller than [e2],
           and [f e1 e2] is strictly positive if [e1] is greater than [e2]. *)
 
-    type ('a, 'b) t
-    (** The type of maps from type ['a] to type ['b]. *)
+    type ('key, 'a) t
+    (** The type of maps from type ['key] to type ['a]. *)
 
-    val empty: ('a, 'b) t
+    val empty: ('key, 'a) t
     (** The empty map, ordered by the generic structural comparison function
         {!Pervasives.compare}. *)
 
-    val empty_custom: 'a ord -> ('a, 'b) t
+    val empty_custom: 'key ord -> ('key, 'a) t
     (** The empty map, ordered by the specified comparison function. *)
 
-    val is_empty: ('a, 'b) t -> bool
+    val is_empty: ('key, 'a) t -> bool
     (** Test whether a map is empty or not. *)
 
-    val mem: 'a -> ('a, 'b) t -> bool
+    val mem: 'key -> ('key, 'a) t -> bool
     (** [mem x m] returns [true] if [m] contains a binding for [x],
        and [false] otherwise. *)
 
-    val add: 'a -> 'b -> ('a, 'b) t -> ('a, 'b) t
+    val add: 'key -> 'a -> ('key, 'a) t -> ('key, 'a) t
     (** [add x y m] returns a map containing the same bindings as
        [m], plus a binding of [x] to [y]. If [x] was already bound
        in [m], its previous binding disappears. *)
 
-    val remove: 'a -> ('a, 'b) t -> ('a, 'b) t
+    val remove: 'key -> ('key, 'a) t -> ('key, 'a) t
     (** [remove x m] returns a map containing the same bindings as
        [m], except for [x] which is unbound in the returned map. *)
 (*
@@ -62,77 +62,77 @@ type 'a ord = 'a -> 'a -> int
         value, is determined with the function [f].
      *)
 *)
-    val compare: ('b -> 'b -> int) -> ('a, 'b) t -> ('a, 'b) t -> int
+    val compare: ('a -> 'a -> int) -> ('key, 'a) t -> ('key, 'a) t -> int
     (** Total ordering between maps.  The first argument is a total ordering
         used to compare data associated with equal keys in the two maps. *)
 
-    val equal: ('b -> 'b -> bool) -> ('a, 'b) t -> ('a, 'b) t -> bool
+    val equal: ('a -> 'a -> bool) -> ('key, 'a) t -> ('key, 'a) t -> bool
     (** [equal cmp m1 m2] tests whether the maps [m1] and [m2] are
        equal, that is, contain equal keys and associate them with
        equal data.  [cmp] is the equality predicate used to compare
        the data associated with the keys. *)
 
-    val iter: ('a -> 'b -> unit) -> ('a, 'b) t -> unit
+    val iter: ('key -> 'a -> unit) -> ('key, 'a) t -> unit
     (** [iter f m] applies [f] to all bindings in map [m].
        [f] receives the key as first argument, and the associated value
        as second argument.  The bindings are passed to [f] in increasing
        order with respect to the ordering over the type of the keys. *)
 
-    val fold: ('a -> 'b -> 'c -> 'c) -> ('a, 'b) t -> 'c -> 'c
+    val fold: ('key -> 'a -> 'c -> 'c) -> ('key, 'a) t -> 'c -> 'c
     (** [fold f m a] computes [(f kN dN ... (f k1 d1 a)...)],
        where [k1 ... kN] are the keys of all bindings in [m]
        (in increasing order), and [d1 ... dN] are the associated data. *)
 
-    val forall: ('a -> 'b -> bool) -> ('a, 'b) t -> bool
+    val forall: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
     (** [forall p m] checks if all the bindings of the map
         satisfy the predicate [p].
      *)
 
-    val exists: ('a -> 'b -> bool) -> ('a, 'b) t -> bool
+    val exists: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
     (** [exists p m] checks if at least one binding of the map
         satisfy the predicate [p].
      *)
 
-    val filter: ('a -> 'b -> bool) -> ('a, 'b) t -> ('a, 'b) t
+    val filter: ('key -> 'a -> bool) -> ('key, 'a) t -> ('key, 'a) t
     (** [filter p m] returns the map with all the bindings in [m]
         that satisfy predicate [p].
      *)
 
-    val partition: ('a -> 'b -> bool) -> ('a, 'b) t -> ('a, 'b) t * ('a, 'b) t
+    val partition: ('key -> 'a -> bool) -> ('key, 'a) t -> ('key, 'a) t * ('key, 'a) t
     (** [partition p m] returns a pair of maps [(m1, m2)], where
         [m1] contains all the bindings of [s] that satisfy the
         predicate [p], and [m2] is the map with all the bindings of
         [s] that do not satisfy [p].
      *)
 
-    val cardinal: ('a, 'b) t -> int
+    val cardinal: ('key, 'a) t -> int
     (** Return the number of bindings of a map.
      *)
 
-    val bindings: ('a, 'b) t -> ('a * 'b) list
+    val bindings: ('key, 'a) t -> ('key * 'a) list
     (** Return the list of all bindings of the given map.
        The returned list is sorted in increasing order with respect
        to the key ordering.
      *)
 
-    val min_binding: ('a, 'b) t -> ('a * 'b)
+    val min_binding: ('key, 'a) t -> ('key * 'a)
     (** Return the smallest binding of the given map
        (with respect to the key ordering), or raise
        [Not_found] if the map is empty.
      *)
 
-    val max_binding: ('a, 'b) t -> ('a * 'b)
+    val max_binding: ('key, 'a) t -> ('key * 'a)
     (** Same as {!Map.min_binding}, but returns the largest binding
         of the given map.
      *)
 
-    val choose: ('a, 'b) t -> ('a * 'b)
+    val choose: ('key, 'a) t -> ('key * 'a)
     (** Return one binding of the given map, or raise [Not_found] if
        the map is empty. Which binding is chosen is unspecified,
        but equal bindings will be chosen for equal maps.
      *)
 
-    val split: 'a -> ('a, 'b) t -> ('a, 'b) t * 'b option * ('a, 'b) t
+    val split: 'key -> ('key, 'a) t -> ('key, 'a) t * 'a option * ('key, 'a) t
     (** [split x m] returns a triple [(l, data, r)], where
           [l] is the map with all the bindings of [m] whose key
         is strictly less than [x];
@@ -142,7 +142,7 @@ type 'a ord = 'a -> 'a -> int
           or [Some v] if [m] binds [v] to [x].
      *)
 
-    val find: 'a -> ('a, 'b) t -> 'b
+    val find: 'key -> ('key, 'a) t -> 'a
     (** [find x m] returns the current binding of [x] in [m],
        or raises [Not_found] if no such binding exists. *)
 (*
