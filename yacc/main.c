@@ -188,7 +188,7 @@ void getargs(int argc, char **argv)
 
         case 'v':
             if (!strcmp (argv[i], "-version")){
-              printf ("The Objective Caml parser generator, version "
+              printf ("The Llama Light parser generator, version "
                       OCAML_VERSION "\n");
               exit (0);
             }else if (!strcmp (argv[i], "-vnum")){

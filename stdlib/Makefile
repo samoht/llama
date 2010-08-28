@@ -13,10 +13,6 @@
 
 # $Id: Makefile 9547 2010-01-22 12:48:24Z doligez $
 
-# ---------------------------------------------------------------------- #
-# Was: Makefile.shared                                                   #
-# ---------------------------------------------------------------------- #
-
 include ../config/Makefile
 RUNTIME=../boot/llamarun
 COMPILER=../llamac
