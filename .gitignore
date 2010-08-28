@@ -35,6 +35,7 @@ byterun/*.o
 byterun/libcamlrun.a
 byterun/libcamlrun_shared.so
 byterun/ld.conf
+byterun/unix/*.o
 toplevel/toplevellib.cma
 stdlib/stdlib.cma
 stdlib/std_exit.cmo
