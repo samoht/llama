@@ -389,7 +389,7 @@ clean::
 
 # Tools
 
-llamatools: llamac llamayacc llamalex
+llamatools: llamac
 	cd tools; $(MAKE) all
 
 partialclean::
