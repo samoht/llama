@@ -14,7 +14,6 @@
 
 type bytecomp_options = {
     bc_a : unit -> unit;
-    bc_annot : unit -> unit;
     bc_c : unit -> unit;
     bc_cc : string -> unit;
     bc_cclib : string -> unit;
@@ -29,23 +28,15 @@ type bytecomp_options = {
     bc_impl : string -> unit;
     bc_intf : string -> unit;
     bc_intf_suffix : string -> unit;
-    bc_labels : unit -> unit;
     bc_linkall : unit -> unit;
     bc_make_runtime : unit -> unit;
-    bc_no_app_funct : unit -> unit;
     bc_noassert : unit -> unit;
     bc_noautolink : unit -> unit;
-    bc_nolabels : unit -> unit;
     bc_nostdlib : unit -> unit;
     bc_o : string -> unit;
     bc_output_obj : unit -> unit;
-    bc_pack : unit -> unit;
     bc_pp : string -> unit;
-    bc_principal : unit -> unit;
-    bc_rectypes : unit -> unit;
     bc_strict_sequence : unit -> unit;
-    bc_thread : unit -> unit;
-    bc_vmthread : unit -> unit;
     bc_unsafe : unit -> unit;
     bc_use_runtime : string -> unit;
     bc_v : unit -> unit;
@@ -70,14 +61,9 @@ type bytecomp_options = {
 type bytetop_options = {
   bt_I : string -> unit;
   bt_init : string -> unit;
-  bt_labels : unit -> unit;
-  bt_no_app_funct : unit -> unit;
   bt_noassert : unit -> unit;
-  bt_nolabels : unit -> unit;
   bt_noprompt : unit -> unit;
   bt_nostdlib : unit -> unit;
-  bt_principal : unit -> unit;
-  bt_rectypes : unit -> unit;
   bt_strict_sequence : unit -> unit;
   bt_unsafe : unit -> unit;
   bt_version : unit -> unit;
@@ -96,14 +82,12 @@ type bytetop_options = {
 
 type optcomp_options = {
   oc_a : unit -> unit;
-  oc_annot : unit -> unit;
   oc_c : unit -> unit;
   oc_cc : string -> unit;
   oc_cclib : string -> unit;
   oc_ccopt : string -> unit;
   oc_compact : unit -> unit;
   oc_config : unit -> unit;
-  oc_for_pack : string -> unit;
   oc_g : unit -> unit;
   oc_i : unit -> unit;
   oc_I : string -> unit;
@@ -111,25 +95,18 @@ type optcomp_options = {
   oc_inline : int -> unit;
   oc_intf : string -> unit;
   oc_intf_suffix : string -> unit;
-  oc_labels : unit -> unit;
   oc_linkall : unit -> unit;
-  oc_no_app_funct : unit -> unit;
   oc_noassert : unit -> unit;
   oc_noautolink : unit -> unit;
   oc_nodynlink : unit -> unit;
-  oc_nolabels : unit -> unit;
   oc_nostdlib : unit -> unit;
   oc_o : string -> unit;
   oc_output_obj : unit -> unit;
   oc_p : unit -> unit;
-  oc_pack : unit -> unit;
   oc_pp : string -> unit;
-  oc_principal : unit -> unit;
-  oc_rectypes : unit -> unit;
   oc_strict_sequence : unit -> unit;
   oc_shared : unit -> unit;
   oc_S : unit -> unit;
-  oc_thread : unit -> unit;
   oc_unsafe : unit -> unit;
   oc_v : unit -> unit;
   oc_version : unit -> unit;
@@ -166,14 +143,9 @@ type opttop_options = {
   ot_I : string -> unit;
   ot_init : string -> unit;
   ot_inline : int -> unit;
-  ot_labels : unit -> unit;
-  ot_no_app_funct : unit -> unit;
   ot_noassert : unit -> unit;
-  ot_nolabels : unit -> unit;
   ot_noprompt : unit -> unit;
   ot_nostdlib : unit -> unit;
-  ot_principal : unit -> unit;
-  ot_rectypes : unit -> unit;
   ot_strict_sequence : unit -> unit;
   ot_S : unit -> unit;
   ot_unsafe : unit -> unit;

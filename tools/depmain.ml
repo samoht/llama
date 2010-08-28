@@ -280,7 +280,6 @@ let print_version_num () =
 ;;
 
 let _ =
-  Clflags.classic := false;
   add_to_load_path Filename.current_dir_name;
   Arg.parse [
      "-I", Arg.String add_to_load_path,

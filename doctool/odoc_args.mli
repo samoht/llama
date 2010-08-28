@@ -31,9 +31,6 @@ val doc_generator : doc_generator option ref
 (** The merge options to be used. *)
 val merge_options : Odoc_types.merge_option list ref
 
-(** Classic mode or not. *)
-val classic : bool ref
-
 (** The file used by the generators outputting only one file. *)
 val out_file : string ref
 

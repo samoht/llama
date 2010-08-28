@@ -39,13 +39,10 @@ let process_file ppf name =
   end
   else if Filename.check_suffix name !Config.interface_suffix then begin
     let opref = output_prefix name in
-    Compile.interface ppf name opref;
-    if !make_package then objfiles := (opref ^ ".cmi") :: !objfiles
+    Compile.interface ppf name opref
   end
   else if Filename.check_suffix name ".cmo"
        || Filename.check_suffix name ".cma" then
-    objfiles := name :: !objfiles
-  else if Filename.check_suffix name ".cmi" && !make_package then
     objfiles := name :: !objfiles
   else if Filename.check_suffix name ext_obj
        || Filename.check_suffix name ext_lib then
@@ -91,7 +88,6 @@ let unset r () = r := false
 open Main_args
 let options = make_bytecomp_options {
   bc_a = set make_archive;
-  bc_annot = set annotations;
   bc_c = set compile_only;
   bc_cc = (fun s -> c_compiler := Some s);
   bc_cclib = (fun s -> ccobjs := Misc.rev_split_words s @ !ccobjs);
@@ -106,24 +102,16 @@ let options = make_bytecomp_options {
   bc_impl = impl;
   bc_intf = intf;
   bc_intf_suffix = (fun s -> Config.interface_suffix := s);
-  bc_labels = unset classic;
   bc_linkall = set link_everything;
   bc_make_runtime = (fun () ->
     custom_runtime := true; make_runtime := true; link_everything := true);
-  bc_no_app_funct = unset applicative_functors;
   bc_noassert = set noassert;
-  bc_nolabels = set classic;
   bc_noautolink = set no_auto_link;
   bc_nostdlib = set no_std_include;
   bc_o = (fun s -> output_name := Some s);
   bc_output_obj = (fun () -> output_c_object := true; custom_runtime := true);
-  bc_pack = set make_package;
   bc_pp = (fun s -> preprocessor := Some s);
-  bc_principal = set principal;
-  bc_rectypes = set recursive_types;
   bc_strict_sequence = set strict_sequence;
-  bc_thread = set use_threads;
-  bc_vmthread = set use_vmthreads;
   bc_unsafe = set fast;
   bc_use_prims = (fun s -> use_prims := s);
   bc_use_runtime = (fun s -> use_runtime := s);
@@ -160,13 +148,13 @@ let main () : unit =
     Arg.parse options anonymous usage;
     if
       List.length (List.filter (fun x -> !x)
-                      [make_archive;make_package;compile_only;output_c_object])
+                      [make_archive;compile_only;output_c_object])
         > 1
     then
       if !print_types then
-        fatal "Option -i is incompatible with -pack, -a, -output-obj"
+        fatal "Option -i is incompatible with -a, -output-obj"
       else
-        fatal "Please specify at most one of -pack, -a, -c, -output-obj";
+        fatal "Please specify at most one of -a, -c, -output-obj";
 
     if !make_archive then begin
       Compile.init_path();

@@ -64,14 +64,9 @@ let options = make_bytetop_options {
     let dir = Misc.expand_directory Config.standard_library dir in
     include_dirs := dir :: !include_dirs);
   bt_init = (fun s -> init_file := Some s);
-  bt_labels = clear classic;
-  bt_no_app_funct = clear applicative_functors;
   bt_noassert = set noassert;
-  bt_nolabels = set classic;
   bt_noprompt = set noprompt;
   bt_nostdlib = set no_std_include;
-  bt_principal = set principal;
-  bt_rectypes = set recursive_types;
   bt_strict_sequence = set strict_sequence;
   bt_unsafe = set fast;
   bt_version = print_version;

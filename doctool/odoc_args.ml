@@ -75,14 +75,9 @@ let analyse_merge_options s =
   in
   analyse_option_string l s
 
-let classic = Clflags.classic
-
 let dump = ref (None : string option)
 
 let load = ref ([] : string list)
-
-(** Allow arbitrary recursive types. *)
-let recursive_types = Clflags.recursive_types
 
 let verbose = ref false
 
@@ -215,8 +210,6 @@ let options = ref [
   "-impl", Arg.String (fun s -> files := !files @ [Impl_file s]), Odoc_messages.option_impl ;
   "-intf", Arg.String (fun s -> files := !files @ [Intf_file s]), Odoc_messages.option_intf ;
   "-text", Arg.String (fun s -> files := !files @ [Text_file s]), Odoc_messages.option_text ;
-  "-rectypes", Arg.Set recursive_types, Odoc_messages.rectypes ;
-  "-nolabels", Arg.Unit (fun () -> classic := true), Odoc_messages.nolabels ;
   "-warn-error", Arg.Set Odoc_global.warn_error, Odoc_messages.werr ;
   "-hide-warnings", Arg.Clear Odoc_config.print_warnings, Odoc_messages.hide_warnings ;
   "-o", Arg.String (fun s -> out_file := s), Odoc_messages.out_file ;
@@ -225,9 +218,11 @@ let options = ref [
   "-no-stop", Arg.Set no_stop, Odoc_messages.no_stop ;
   "-no-custom-tags", Arg.Set no_custom_tags, Odoc_messages.no_custom_tags ;
   "-stars", Arg.Set remove_stars, Odoc_messages.remove_stars ;
+(*
   "-inv-merge-ml-mli", Arg.Set inverse_merge_ml_mli, Odoc_messages.inverse_merge_ml_mli ;
   "-no-module-constraint-filter", Arg.Clear filter_with_module_constraints,
   Odoc_messages.no_filter_with_module_constraints ;
+*)
 
   "-keep-code", Arg.Set keep_code, Odoc_messages.keep_code^"\n" ;
 
@@ -243,12 +238,14 @@ let options = ref [
 
 (* generators *)
   "-html", Arg.Unit (fun () -> set_doc_generator !default_html_generator), Odoc_messages.generate_html ;
+(*
   "-latex", Arg.Unit (fun () -> set_doc_generator !default_latex_generator), Odoc_messages.generate_latex ;
   "-texi", Arg.Unit (fun () -> set_doc_generator !default_texi_generator), Odoc_messages.generate_texinfo ;
   "-man", Arg.Unit (fun () -> set_doc_generator !default_man_generator), Odoc_messages.generate_man ;
   "-dot", Arg.Unit (fun () -> set_doc_generator !default_dot_generator), Odoc_messages.generate_dot ;
   "-customdir", Arg.Unit (fun () -> Printf.printf "%s\n" Odoc_config.custom_generators_path; exit 0),
   Odoc_messages.display_custom_generators_dir ;
+*)
   "-i", Arg.String (fun s -> ()), Odoc_messages.add_load_dir ;
   "-g", Arg.String (fun s -> ()), Odoc_messages.load_file ^
   "\n\n *** HTML options ***\n";
@@ -257,8 +254,7 @@ let options = ref [
   "-all-params", Arg.Set with_parameter_list, Odoc_messages.with_parameter_list ;
   "-css-style", Arg.String (fun s -> css_style := Some s), Odoc_messages.css_style ;
   "-index-only", Arg.Set index_only, Odoc_messages.index_only ;
-  "-colorize-code", Arg.Set colorize_code, Odoc_messages.colorize_code ;
-  "-short-functors", Arg.Set html_short_functors, Odoc_messages.html_short_functors ^
+  "-colorize-code", Arg.Set colorize_code, Odoc_messages.colorize_code (* ^
   "\n\n *** LaTeX options ***\n";
 
 (* latex only options *)
@@ -298,7 +294,7 @@ let options = ref [
   "-man-mini", Arg.Set man_mini, Odoc_messages.man_mini ;
   "-man-suffix", Arg.String (fun s -> man_suffix := s), Odoc_messages.man_suffix ;
   "-man-section", Arg.String (fun s -> man_section := s), Odoc_messages.man_section ;
-
+*)
 ]
 
 let add_option o =
@@ -316,16 +312,10 @@ let add_option o =
 let parse html_generator latex_generator texi_generator man_generator dot_generator =
   let anonymous f =
     let sf =
-      if Filename.check_suffix f "ml" then
-        Impl_file f
+      if Filename.check_suffix f "mli" then
+        Intf_file f
       else
-        if Filename.check_suffix f "mli" then
-          Intf_file f
-        else
-          if Filename.check_suffix f "txt" then
-            Text_file f
-          else
-            failwith (Odoc_messages.unknown_extension f)
+        failwith (Odoc_messages.unknown_extension f)
     in
     files := !files @ [sf]
   in

@@ -27,29 +27,20 @@ val link_everything : bool ref
 val custom_runtime : bool ref
 val output_c_object : bool ref
 val ccopts : string list ref
-val classic : bool ref
 val nopervasives : bool ref
 val preprocessor : string option ref
-val annotations : bool ref
-val use_threads : bool ref
-val use_vmthreads : bool ref
 val noassert : bool ref
 val verbose : bool ref
 val noprompt : bool ref
 val init_file : string option ref
 val use_prims : string ref
 val use_runtime : string ref
-val principal : bool ref
-val recursive_types : bool ref
 val strict_sequence : bool ref
-val applicative_functors : bool ref
 val make_runtime : bool ref
 val gprofile : bool ref
 val c_compiler : string option ref
 val no_auto_link : bool ref
 val dllpaths : string list ref
-val make_package : bool ref
-val for_package : string option ref
 val dump_parsetree : bool ref
 val dump_rawlambda : bool ref
 val dump_lambda : bool ref

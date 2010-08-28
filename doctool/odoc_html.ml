@@ -809,7 +809,7 @@ let newline_to_indented_br s =
                         (comments:Odoc_types.text list) (_:string) -> ())
 
     (** Init the style. *)
-    let init_style =
+    let init_style () =
       (match !Odoc_args.css_style with
         None ->
           let default_style = String.concat "\n" default_style_options in
@@ -1793,7 +1793,7 @@ let newline_to_indented_br s =
        file is [<index_prefix>.html]. *)
     let generate module_list =
       (* init the style *)
-      init_style ;
+      init_style ();
       (* init the lists of elements *)
       list_values := Odoc_search.values module_list ;
       list_exceptions := Odoc_search.exceptions module_list ;

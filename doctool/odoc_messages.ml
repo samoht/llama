@@ -14,7 +14,7 @@
 (** The messages of the application. *)
 
 let ok = "Ok"
-let software = "OCamldoc"
+let software = "Llamadoc"
 let config_version = Config.version
 let magic = config_version^""
 let message_version = software^" "^config_version
@@ -43,8 +43,8 @@ let add_load_dir = "<dir>\tAdd the given directory to the search path for custom
   "\t\tgenerators"
 let load_file = "<file.cm[o|a|xs]>\n\t\tLoad file defining a new documentation generator"
 let nolabels = "\tIgnore non-optional labels in types"
-let werr = "\tTreat ocamldoc warnings as errors"
-let hide_warnings = "\n\t\tdo not print ocamldoc warnings"
+let werr = "\tTreat llamadoc warnings as errors"
+let hide_warnings = "\n\t\tdo not print llamadoc warnings"
 let target_dir = "<dir>\tGenerate files in directory <dir>, rather than in current\n"^
   "\t\tdirectory (for man and HTML generators)"
 let dump = "<file>\tDump collected information into <file>"
@@ -61,7 +61,7 @@ let generate_dot = "\t\tGenerate dot code of top modules dependencies"
 
 let option_not_in_native_code op = "Option "^op^" not available in native code version."
 
-let default_out_file = "ocamldoc.out"
+let default_out_file = "llamadoc.out"
 let out_file =
   "<file>\tSet the ouput file name, used by texi, latex and dot generators\n"^
   "\t\t(default is "^default_out_file^")\n"^
@@ -99,7 +99,7 @@ let man_suffix = "<suffix>\n\t\tUse <suffix> for man page files "^
 
 let option_title = "<title>\tUse <title> as title for the generated documentation"
 let option_intro =
-  "<file>\tUse content of <file> as ocamldoc text to use as introduction\n"^
+  "<file>\tUse content of <file> as llamadoc text to use as introduction\n"^
   "\t\t"^(html_latex_texi_only)
 let with_parameter_list = "\tDisplay the complete list of parameters for functions and\n"^
   "\t\tmethods "^html_only
@@ -216,8 +216,8 @@ let pwarning s =
   if !Odoc_global.warn_error then incr Odoc_global.errors
 
 let bad_magic_number =
-  "Bad magic number for this ocamldoc dump!\n"^
-  "This dump was not created by this version of OCamldoc."
+  "Bad magic number for this llamadoc dump!\n"^
+  "This dump was not created by this version of Llamadoc."
 
 let not_a_module_name s = s^" is not a valid module name"
 let load_file_error f e = "Error while loading file "^f^":\n"^e
