@@ -15,11 +15,9 @@
 
 include ../config/Makefile
 
-# ---------------------------------------------------------------------- #
-# Was: ../otherlibs/unix/Makefile                                        #
-# ---------------------------------------------------------------------- #
+CC=$(BYTECC)
 
-UNIX_PRIMS=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
+UNIX=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
   chown.c chroot.c close.c closedir.c connect.c cst2constr.c cstringv.c \
   dup.c dup2.c envir.c errmsg.c execv.c execve.c execvp.c exit.c \
   fchmod.c fchown.c fcntl.c fork.c ftruncate.c \
@@ -36,14 +34,6 @@ UNIX_PRIMS=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
   time.c times.c truncate.c umask.c unixsupport.c unlink.c \
   utimes.c wait.c write.c
 
-### XXX depend?
-
-# ---------------------------------------------------------------------- #
-# Was: Makefile.common                                                   #
-# ---------------------------------------------------------------------- #
-
-CC=$(BYTECC)
-
 COMMONOBJS=\
   interp.o misc.o stacks.o fix_code.o startup.o \
   freelist.o major_gc.o minor_gc.o memory.o alloc.o roots.o globroots.o \
@@ -51,18 +41,17 @@ COMMONOBJS=\
   compare.o ints.o floats.o str.o array.o io.o extern.o intern.o \
   hash.o sys.o meta.o parsing.o gc_ctrl.o terminfo.o md5.o obj.o \
   lexing.o callback.o debugger.o weak.o compact.o finalise.o custom.o \
-  dynlink.o strstubs.o nat_stubs.o bng.o $(UNIX_PRIMS:%.c=unix/%.o)
+  dynlink.o strstubs.o nat_stubs.o bng.o $(UNIX:%.c=unix/%.o)
 
 PRIMS=\
   alloc.c array.c compare.c extern.c floats.c gc_ctrl.c hash.c \
   intern.c interp.c ints.c io.c lexing.c md5.c meta.c obj.c parsing.c \
   signals.c str.c sys.c terminfo.c callback.c weak.c finalise.c stacks.c \
-  dynlink.c backtrace.c strstubs.c nat_stubs.c $(UNIX_PRIMS:%.c=unix/%.c)
+  dynlink.c backtrace.c strstubs.c nat_stubs.c $(UNIX:%.c=unix/%.c)
 
 PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
-
 
 all:: llamarun$(EXE) ld.conf libcamlrun.$(A)
 .PHONY: all

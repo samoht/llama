@@ -85,6 +85,7 @@ EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   bytecomp/ident.cmo bytecomp/runtimedef.cmo bytecomp/bytesections.cmo \
   bytecomp/dll.cmo bytecomp/meta.cmo bytecomp/symtable.cmo toplevel/expunge.cmo
 
+# For users. There isn't really a default target for developers
 defaultentry: world
 
 # Recompile the system using the bootstrap compiler
