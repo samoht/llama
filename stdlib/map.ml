@@ -133,25 +133,25 @@ type ('key, 'a) t =
         Empty _ -> ()
       | Node(_, l, v, d, r, _) ->
           iter f l; f v d; iter f r
-(*
+
     let rec map f = function
-        Empty _ ->
-          m
-      | Node(l, v, d, r, h) ->
+        Empty cmp ->
+          Empty cmp
+      | Node(cmp, l, v, d, r, h) ->
           let l' = map f l in
           let d' = f d in
           let r' = map f r in
-          { desc = Node(l', v, d', r', h); cmp = m.cmp }
+          Node(cmp, l', v, d', r', h)
 
     let rec mapi f = function
-        Empty _ ->
-          m
-      | Node(l, v, d, r, h) ->
+        Empty cmp ->
+          Empty cmp
+      | Node(cmp, l, v, d, r, h) ->
           let l' = mapi f l in
           let d' = f v d in
           let r' = mapi f r in
-          { desc = Node(l', v, d', r', h); cmp = m.cmp }
-*)
+          Node(cmp, l', v, d', r', h)
+
     let rec fold f m accu =
       match m with
         Empty _ -> accu
@@ -220,10 +220,10 @@ type ('key, 'a) t =
             let (ll, pres, rl) = split x l in (ll, pres, join rl v d r)
           else
             let (lr, pres, rr) = split x r in (join l v d lr, pres, rr)
-(*
+
     let rec merge f s1 s2 =
       match (s1, s2) with
-        (Empty _, Empty _) -> s1
+        (Empty cmp, Empty _) -> Empty cmp
       | (Node (_, l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
           let (l2, d2, r2) = split v1 s2 in
           concat_or_join (merge f l1 l2) v1 (f v1 (Some d1) d2) (merge f r1 r2)
@@ -232,7 +232,7 @@ type ('key, 'a) t =
           concat_or_join (merge f l1 l2) v2 (f v2 d1 (Some d2)) (merge f r1 r2)
       | _ ->
           assert false
-*)
+
     type ('key, 'a) enumeration = End | More of 'key * 'a * ('key, 'a) t * ('key, 'a) enumeration
 
     let rec cons_enum m e =

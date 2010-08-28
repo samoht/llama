@@ -54,14 +54,14 @@ type 'a ord = 'a -> 'a -> int
     val remove: 'key -> ('key, 'a) t -> ('key, 'a) t
     (** [remove x m] returns a map containing the same bindings as
        [m], except for [x] which is unbound in the returned map. *)
-(*
+
     val merge:
          ('key -> 'a option -> 'b option -> 'c option) -> ('key, 'a) t -> ('key, 'b) t -> ('key, 'c) t
     (** [merge f m1 m2] computes a map whose keys is a subset of keys of [m1]
         and of [m2]. The presence of each such binding, and the corresponding
         value, is determined with the function [f].
      *)
-*)
+
     val compare: ('a -> 'a -> int) -> ('key, 'a) t -> ('key, 'a) t -> int
     (** Total ordering between maps.  The first argument is a total ordering
         used to compare data associated with equal keys in the two maps. *)
@@ -145,15 +145,14 @@ type 'a ord = 'a -> 'a -> int
     val find: 'key -> ('key, 'a) t -> 'a
     (** [find x m] returns the current binding of [x] in [m],
        or raises [Not_found] if no such binding exists. *)
-(*
-    val map: ('b -> 'c) -> ('a, 'b) t -> ('a, 'c) t
+
+    val map: ('a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
     (** [map f m] returns a map with same domain as [m], where the
        associated value [a] of all bindings of [m] has been
        replaced by the result of the application of [f] to [a].
        The bindings are passed to [f] in increasing order
        with respect to the ordering over the type of the keys. *)
 
-    val mapi: ('a -> 'b -> 'c) -> ('a, 'b) t -> ('a, 'c) t
+    val mapi: ('key -> 'a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
     (** Same as {!Map.S.map}, but the function receives as arguments both the
        key and the associated value for each binding of the map. *)
-*)
