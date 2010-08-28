@@ -72,7 +72,7 @@ let implementation sourcefile outputprefix modulename env pstr =
   let simple_sg = simplify_signature sg in
   if !Clflags.print_types then begin
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature simple_sg;
-    (str, Include.Coerce_none)   (* result is ignored by Compile.implementation *)
+    (str, Include.Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
       Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in

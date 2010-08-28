@@ -52,13 +52,23 @@ let rec subst_type subst = function
       Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl)
 
 (* ---------------------------------------------------------------------- *)
-(* Coercions (TODO: flatten this).                                        *)
+(* Coercions in the format supported by the ocaml compiler.               *)
 (* ---------------------------------------------------------------------- *)
 
 type coercion =
-    Coerce_none
-  | Coerce_structure of (int * coercion) list
-  | Coerce_primitive of Primitive.description
+    Tcoerce_none
+  | Tcoerce_structure of (int * coercion) list
+  | Tcoerce_primitive of Primitive.description
+
+let simplify_coercion cc =
+  let rec is_identity_coercion pos = function
+      [] ->
+        true
+    | (n, c) :: rem ->
+        n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem in
+  if is_identity_coercion 0 cc
+  then Tcoerce_none
+  else Tcoerce_structure cc
 
 (* ---------------------------------------------------------------------- *)
 (* Inclusion for values.                                                  *)
@@ -69,10 +79,10 @@ let values subst v1 v2 =
   if Typeutil.moregeneral v1.val_type (subst_type subst v2.val_type) then
     match v1.val_kind, v2.val_kind with
         Val_prim prim1, Val_prim prim2 ->
-          if prim1 = prim2 then Coerce_none else raise (error ())
-      | Val_prim prim, _ -> Coerce_primitive prim
+          if prim1 = prim2 then Tcoerce_none else raise (error ())
+      | Val_prim prim, _ -> Tcoerce_primitive prim
       | _, Val_prim prim -> raise (error ())
-      | _ -> Coerce_none
+      | _ -> Tcoerce_none
   else
     raise (error ())
 
@@ -163,47 +173,55 @@ let exceptions subst cs1 cs2 =
 (* Inclusion for signatures.                                              *)
 (* ---------------------------------------------------------------------- *)
 
-(* Extract name, kind and ident from a signature item *)
+(* Component identifiers *)
 
-type component_desc =
-    Component_value of string
-  | Component_type of string
+type component_id =
+    Component_type of string
+  | Component_value of string
   | Component_exception of string
 
-let item_ident_name = function
-    Sig_value v -> let s = v.val_name in s, Component_value s
-  | Sig_type (tcs, _) -> let s = tcs.tcs_name in s, Component_type s
-  | Sig_exception cs -> let s = cs.cs_name in s, Component_exception s
+let component_id = function
+    Sig_type (tcs, _) -> Component_type tcs.tcs_name
+  | Sig_value v       -> Component_value v.val_name
+  | Sig_exception cs  -> Component_exception cs.cs_name
 
-(* Simplify a structure coercion *)
+let name_of_component_id = function
+    Component_type name
+  | Component_value name
+  | Component_exception name -> name
 
-let simplify_structure_coercion cc =
-  let rec is_identity_coercion pos = function
-  | [] ->
-      true
-  | (n, c) :: rem ->
-      n = pos && c = Coerce_none && is_identity_coercion (pos + 1) rem in
-  if is_identity_coercion 0 cc
-  then Coerce_none
-  else Coerce_structure cc
+(* Build a table of the components of a signature, along with their
+   positions.  The table is indexed by kind and name of component *)
 
-let rec signatures subst sig1 sig2 =
-  (* Build a table of the components of sig1, along with their positions.
-     The table is indexed by kind and name of component *)
-  let rec build_component_table pos tbl = function
-      [] -> tbl
-    | item :: rem ->
-        let (id, name) = item_ident_name item in
-        let nextpos =
-          match item with
-            Sig_value({val_kind = Val_prim _})
-          | Sig_type _ -> pos
-          | Sig_value _
-          | Sig_exception _ -> pos+1 in
-        build_component_table nextpos
-                              (Tbl.add name (id, item, pos) tbl) rem in
-  let comps1 =
-    build_component_table 0 Tbl.empty sig1 in
+let rec build_component_table pos tbl = function
+    [] -> tbl
+  | item :: rem ->
+      let id = component_id item in
+      let nextpos =
+        match item with
+            Sig_type _ | Sig_value { val_kind = Val_prim _ } -> pos
+          | Sig_value _ | Sig_exception _ -> succ pos in
+      build_component_table nextpos (Tbl.add id (item, pos) tbl) rem
+
+let rec signature_components subst = function
+    [] -> []
+  | (Sig_value v1, Sig_value v2, pos) :: rem ->
+      let cc = values subst v1 v2 in
+      begin match v2.val_kind with
+          Val_prim _ -> signature_components subst rem
+        | _ -> (pos, cc) :: signature_components subst rem
+      end
+  | (Sig_type (tcs1, _), Sig_type (tcs2, _), pos) :: rem ->
+      type_declarations subst tcs1 tcs2;
+      signature_components subst rem
+  | (Sig_exception cs1, Sig_exception cs2, pos) :: rem ->
+      exceptions subst cs1 cs2;
+      (pos, Tcoerce_none) :: signature_components subst rem
+  | _ ->
+      assert false
+
+let signatures subst sig1 sig2 =
+  let comps1 = build_component_table 0 Tbl.empty sig1 in
   (* Pair each component of sig2 with a component of sig1,
      identifying the names along the way.
      Return a coercion list indicating, for all run-time components
@@ -213,50 +231,37 @@ let rec signatures subst sig1 sig2 =
       [] ->
         begin match unpaired with
             [] -> signature_components subst (List.rev paired)
-          | _  -> raise(Error unpaired)
+          | _  -> raise (Error unpaired)
         end
     | item2 :: rem ->
-        let (id2, name2) = item_ident_name item2 in
+        let id2 = component_id item2 in
         begin try
-          let (id1, item1, pos1) = Tbl.find name2 comps1 in
+          let (item1, pos1) = Tbl.find id2 comps1 in
           let new_subst =
-            match item2, item1 with
-                Sig_type (td2, _), Sig_type (td1, _) ->
-                  subst_add_type_constructor td2 td1 subst
+            match item1, item2 with
+                Sig_type (tcs1, _), Sig_type (tcs2, _) ->
+                  subst_add_type_constructor tcs2 tcs1 subst
               | _ ->
                   subst
           in
           pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
         with Not_found ->
-          failwith ("ERROR: unpaired: "^id2)
-(*           pair_components paired unpaired rem *)
-        end in
+          let unpaired = Missing_field (name_of_component_id id2) :: unpaired in
+          pair_components subst paired unpaired rem
+        end
+  in
   (* Do the pairing and checking, and return the final coercion *)
-  simplify_structure_coercion (pair_components subst [] [] sig2)
+  simplify_coercion (pair_components subst [] [] sig2)
 
-and signature_components subst = function
-    [] -> []
-  | (Sig_value valdecl1, Sig_value valdecl2, pos) :: rem ->
-      let cc = values subst valdecl1 valdecl2 in
-      begin match valdecl2.val_kind with
-        Val_prim _ -> signature_components subst rem
-      | _ -> (pos, cc) :: signature_components subst rem
-      end
-  | (Sig_type(tydecl1,_), Sig_type(tydecl2,_), pos) :: rem ->
-      type_declarations subst tydecl1 tydecl2;
-      signature_components subst rem
-  | (Sig_exception(excdecl1), Sig_exception(excdecl2), pos)
-    :: rem ->
-      exceptions subst excdecl1 excdecl2;
-      (pos, Coerce_none) :: signature_components subst rem
-  | _ ->
-      assert false
+(* ---------------------------------------------------------------------- *)
+(* Inclusion for compilation units.                                       *)
+(* ---------------------------------------------------------------------- *)
 
 let compunit modname impl_name impl_sig intf_name intf_sig =
   try
     signatures (identity_subst modname) impl_sig intf_sig
   with Error reasons ->
-    raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
+    raise (Error (Interface_mismatch (impl_name, intf_name) :: reasons))
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)
