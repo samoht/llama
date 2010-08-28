@@ -30,7 +30,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   lexing.cmo parsing.cmo \
   set.cmo map.cmo \
   stack.cmo queue.cmo \
-  lazy.cmo stream.cmo \
+  stream.cmo \
   buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
   arg.cmo printexc.cmo gc.cmo \
   digest.cmo random_state.cmo random.cmo callback.cmo \
@@ -38,7 +38,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   filename.cmo complex.cmo scanning.cmo str.cmo \
   int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
   ratio.cmo num.cmo arith_status.cmo \
-  unix.cmo # scanf.cmo
+  unix.cmo # lazy.cmo scanf.cmo
 
 all: stdlib.cma std_exit.cmo camlheader camlheader_ur
 

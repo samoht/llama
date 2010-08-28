@@ -22,7 +22,6 @@ and 'a data =
     Sempty
   | Scons of 'a * 'a data
   | Sapp of 'a data * 'a data
-  | Slazy of 'a data Lazy.t
   | Sgen of 'a gen
   | Sbuffio of buffio
 and 'a gen = { mutable curr : 'a option option; func : int -> 'a option }
@@ -69,7 +68,6 @@ let rec get_data count d = match d with
        let r = Obj.magic (String.unsafe_get b.buff b.ind) in
        (* Warning: anyone using g thinks that an item has been read *)
        b.ind <- succ b.ind; Scons(r, d)
- | Slazy f -> get_data count (Lazy.force f)
 ;;
 
 let rec peek s =
@@ -83,7 +81,6 @@ let rec peek s =
      | Sempty -> None
      | _ -> assert false
      end
- | Slazy f -> set_data s (Lazy.force f); peek s
  | Sgen {curr = Some a} -> a
  | Sgen g -> let x = g.func s.count in g.curr <- Some x; x
  | Sbuffio b ->
@@ -155,21 +152,6 @@ let of_channel ic =
    data = Sbuffio {ic = ic; buff = String.create 4096; len = 0; ind = 0}}
 ;;
 
-(* Stream expressions builders *)
-(*
-let iapp i s = {count = 0; data = Sapp (i.data, s.data)};;
-let icons i s = {count = 0; data = Scons (i, s.data)};;
-let ising i = {count = 0; data = Scons (i, Sempty)};;
-
-let lapp f s =
-  {count = 0; data = Slazy (lazy(Sapp ((f ()).data, s.data)))}
-;;
-let lcons f s = {count = 0; data = Slazy (lazy(Scons (f (), s.data)))};;
-let lsing f = {count = 0; data = Slazy (lazy(Scons (f (), Sempty)))};;
-
-let sempty = {count = 0; data = Sempty};;
-let slazy f = {count = 0; data = Slazy (lazy(f ()).data)};;
-*)
 (* For debugging use *)
 
 let rec dump f s =
@@ -194,7 +176,6 @@ and dump_data f =
       print_string ", ";
       dump_data f d2;
       print_string ")"
-  | Slazy _ -> print_string "Slazy"
   | Sgen _ -> print_string "Sgen"
   | Sbuffio b -> print_string "Sbuffio"
 ;;

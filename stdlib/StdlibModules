@@ -4,7 +4,7 @@
 
 STDLIB_MODULES=\
   arg \
-  arity_status \
+  arith_status \
   array \
   big_int \
   buffer \
@@ -31,8 +31,6 @@ STDLIB_MODULES=\
   pervasives \
   printexc \
   printf \
-  printf_sformat \
-  printf_tformat \
   queue \
   random \
   random_state \

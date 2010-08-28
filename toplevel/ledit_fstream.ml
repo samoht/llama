@@ -1,16 +1,16 @@
 type 'a lazy_aux_t =
-    Closure of (unit -> 'a)
+    Suspension of (unit -> 'a)
   | Value of 'a
 type 'a lazy_t = 'a lazy_aux_t ref
 let lazy_force lz =
   match !lz with
-      Closure f -> let v = f () in lz := Value v; v
+      Suspension f -> let v = f () in lz := Value v; v
     | Value v -> v
-let lazy_from_fun f = ref (Closure f)
+let lazy_from_fun f = ref (Suspension f)
 let lazy_from_val v = ref (Value v)
 let lazy_is_val lz =
   match !lz with
-      Closure _ -> false
+      Suspension _ -> false
     | Value _ -> true
 
 (* camlp5r *)

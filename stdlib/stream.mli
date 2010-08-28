@@ -91,16 +91,5 @@ val npeek : int -> 'a t -> 'a list
 (**/**)
 
 (** {6 For system use only, not for the casual user} *)
-(*
-val iapp : 'a t -> 'a t -> 'a t
-val icons : 'a -> 'a t -> 'a t
-val ising : 'a -> 'a t
 
-val lapp : (unit -> 'a t) -> 'a t -> 'a t
-val lcons : (unit -> 'a) -> 'a t -> 'a t
-val lsing : (unit -> 'a) -> 'a t
-
-val sempty : 'a t
-val slazy : (unit -> 'a t) -> 'a t
-*)
 val dump : ('a -> unit) -> 'a t -> unit
