@@ -8,7 +8,7 @@ type type_mismatch =
   | Field_arity of string
   | Field_names of int * string * string
   | Field_missing of bool * string
-  | General
+  | Unspecified
 
 type error =
     Missing_field of string
@@ -150,12 +150,12 @@ let type_declarations subst tcs1 tcs2 =
         end
     | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
         if Typeutil.equiv corresp ty1 (subst_type subst ty2) then () else
-          raise (error General)
+          raise (error Unspecified)
     | _, Tcs_abbrev ty2 ->
         let ty1 = Tconstr (tcs2, tcs2.tcs_params) in
-        if Typeutil.equal ty1 ty2 then () else raise (error General)
+        if Typeutil.equal ty1 ty2 then () else raise (error Unspecified)
     | _ ->
-        raise (error General)
+        raise (error Unspecified)
 
 (* ---------------------------------------------------------------------- *)
 (* Inclusion for exceptions.                                              *)
@@ -291,11 +291,11 @@ let report_type_mismatch0 first second decl ppf err =
   | Field_missing (b, s) ->
       Format.fprintf ppf "The field %s is only present in %s %s"
         s (if b then second else first) decl
-  | General ->
+  | Unspecified ->
       ()
 
 let report_type_mismatch first second decl ppf err =
-  if err = General then () else
+  if err = Unspecified then () else
     Format.fprintf ppf "@ %a." (report_type_mismatch0 first second decl) err
 
 let include_err ppf = function
