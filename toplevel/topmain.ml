@@ -46,12 +46,12 @@ let file_argument name =
     end
 
 let print_version () =
-  Printf.printf "The Llama Light toplevel, version %s\n" Sys.ocaml_version;
+  Printf.printf "The Llama Light toplevel, version %s\n" Sys.llama_version;
   exit 0;
 ;;
 
 let print_version_num () =
-  Printf.printf "%s\n" Sys.ocaml_version;
+  Printf.printf "%s\n" Sys.llama_version;
   exit 0;
 ;;
 

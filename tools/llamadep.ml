@@ -275,15 +275,15 @@ let file_dependencies source_file =
 
 (* Entry point *)
 
-let usage = "Usage: ocamldep [options] <source files>\nOptions are:"
+let usage = "Usage: llamadep [options] <source files>\nOptions are:"
 
 let print_version () =
-  printf "ocamldep, version %s@." Sys.ocaml_version;
+  printf "llamadep, version %s@." Sys.llama_version;
   exit 0;
 ;;
 
 let print_version_num () =
-  printf "%s@." Sys.ocaml_version;
+  printf "%s@." Sys.llama_version;
   exit 0;
 ;;
 

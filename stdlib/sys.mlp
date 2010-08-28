@@ -83,4 +83,4 @@ let catch_break on =
 
 (* The version string is found in file ../VERSION *)
 
-let ocaml_version = "%%VERSION%%";;
+let llama_version = "%%VERSION%%";;

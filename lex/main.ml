@@ -21,15 +21,15 @@ let ml_automata = ref false
 let source_name = ref (None : string option)
 let output_name = ref (None : string option)
 
-let usage = "usage: ocamlex [options] sourcefile"
+let usage = "usage: llamalex [options] sourcefile"
 
 let print_version_string () =
-  print_string "The Objective Caml lexer generator, version ";
-  print_string Sys.ocaml_version ; print_newline();
+  print_string "The Llama Light lexer generator, version ";
+  print_string Sys.llama_version ; print_newline();
   exit 0
 
 let print_version_num () =
-  print_endline Sys.ocaml_version;
+  print_endline Sys.llama_version;
   exit 0;
 ;;
 

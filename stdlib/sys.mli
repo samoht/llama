@@ -198,9 +198,5 @@ val catch_break : bool -> unit
    terminate the program on user interrupt. *)
 
 
-val ocaml_version : string;;
-(** [ocaml_version] is the version of Objective Caml.
-    It is a string of the form ["major.minor[.patchlevel][+additional-info]"],
-    where [major], [minor], and [patchlevel] are integers, and
-    [additional-info] is an arbitrary string. The [[.patchlevel]] and
-    [[+additional-info]] parts may be absent. *)
+val llama_version : string;;
+(** [llama_version] is the version of Llama Light. *)
