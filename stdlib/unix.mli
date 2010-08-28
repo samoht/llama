@@ -357,6 +357,15 @@ val isatty : file_descr -> bool
 
 (** {6 File operations on large files} *)
 
+(** This section provides 64-bit variants of the functions
+  {!Unix.lseek} (for positioning a file descriptor),
+  {!Unix.truncate} and {!Unix.ftruncate} (for changing the size of a file),
+  and {!Unix.stat}, {!Unix.lstat} and {!Unix.fstat} (for obtaining
+  information on files).  These alternate functions represent
+  positions and sizes by 64-bit integers (type [int64]) instead of
+  regular integers (type [int]), thus allowing operating on files
+  whose sizes are greater than [max_int]. *)
+
     val lseek64 : file_descr -> int64 -> seek_command -> int64
     val truncate64 : string -> int64 -> unit
     val ftruncate64 : file_descr -> int64 -> unit
@@ -377,16 +386,6 @@ val isatty : file_descr -> bool
     val stat64 : string -> stats64
     val lstat64 : string -> stats64
     val fstat64 : file_descr -> stats64
-
-(** File operations on large files.
-  This sub-module provides 64-bit variants of the functions
-  {!Unix.lseek} (for positioning a file descriptor),
-  {!Unix.truncate} and {!Unix.ftruncate} (for changing the size of a file),
-  and {!Unix.stat}, {!Unix.lstat} and {!Unix.fstat} (for obtaining
-  information on files).  These alternate functions represent
-  positions and sizes by 64-bit integers (type [int64]) instead of
-  regular integers (type [int]), thus allowing operating on files
-  whose sizes are greater than [max_int]. *)
 
 
 (** {6 Operations on file names} *)
