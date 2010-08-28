@@ -63,13 +63,13 @@ let mk_dtypes f =
 
 let mk_for_pack_byt () =
   "-for-pack", Arg.String ignore,
-  "<ident>  Ignored (for compatibility with ocamlopt)"
+  "<ident>  Ignored (for compatibility with llamaopt)"
 ;;
 
 let mk_for_pack_opt f =
   "-for-pack", Arg.String f,
   "<ident>  Generate code that can later be `packed' with\n\
-  \     ocamlopt -pack -o <ident>.cmx"
+  \     llamaopt -pack -o <ident>.cmx"
 ;;
 
 let mk_g_byt f =

@@ -65,7 +65,7 @@ let get_input_name () = Sys.argv.(Array.length Sys.argv - 1)
 
 let warning lexbuf msg =
   let p = Lexing.lexeme_start_p lexbuf in
-  Printf.eprintf "ocamllex warning:\nFile \"%s\", line %d, character %d: %s.\n"
+  Printf.eprintf "llamalex warning:\nFile \"%s\", line %d, character %d: %s.\n"
     p.Lexing.pos_fname p.Lexing.pos_lnum
     (p.Lexing.pos_cnum - p.Lexing.pos_bol + 1) msg;
   flush stderr

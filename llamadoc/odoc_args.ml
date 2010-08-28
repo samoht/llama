@@ -141,7 +141,7 @@ let with_index = ref true
 
 let esc_8bits = ref false
 
-let info_section = ref "Objective Caml"
+let info_section = ref "Llama Light"
 
 let info_entry = ref ([] : string list)
 

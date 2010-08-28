@@ -61,7 +61,7 @@ let process_file ppf name =
     raise(Arg.Bad("don't know what to do with " ^ name))
 
 let print_version_and_library () =
-  print_string "The Objective Caml compiler, version ";
+  print_string "The Llama Light compiler, version ";
   print_string Config.version; print_newline();
   print_string "Standard library directory: ";
   print_string Config.standard_library; print_newline();
@@ -73,7 +73,7 @@ let print_version_string () =
 let print_standard_library () =
   print_string Config.standard_library; print_newline(); exit 0
 
-let usage = "Usage: ocamlc <options> <files>\nOptions are:"
+let usage = "Usage: llamac <options> <files>\nOptions are:"
 
 (* Error messages to standard error formatter *)
 let anonymous = process_file Format.err_formatter;;

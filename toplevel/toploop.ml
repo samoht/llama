@@ -386,14 +386,14 @@ let _ =
       Consistbl.set Modenv.crc_units name crc Sys.executable_name)
     crc_intfs
 
-let load_ocamlinit ppf =
+let load_llamainit ppf =
   match !Clflags.init_file with
   | Some f -> if Sys.file_exists f then ignore (use_silently ppf f)
               else fprintf ppf "Init file not found: \"%s\".@." f
   | None ->
-     if Sys.file_exists ".ocamlinit" then ignore (use_silently ppf ".ocamlinit")
+     if Sys.file_exists ".llamainit" then ignore (use_silently ppf ".llamainit")
      else try
-       let home_init = Filename.concat (Sys.getenv "HOME") ".ocamlinit" in
+       let home_init = Filename.concat (Sys.getenv "HOME") ".llamainit" in
        if Sys.file_exists home_init then ignore (use_silently ppf home_init)
      with Not_found -> ()
 ;;
@@ -421,7 +421,7 @@ let loop ppf =
   Location.input_name := "";
   Location.input_lexbuf := Some lb;
   Sys.catch_break true;
-  load_ocamlinit ppf;
+  load_llamainit ppf;
   while true do
 (*    let snap = Typeutil.snapshot () in *)
     try
