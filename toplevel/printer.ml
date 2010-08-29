@@ -182,14 +182,14 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_array (List.rev (tree_of_items [] 0))
               else
                 Oval_array []
-          | Tconstr (tcs, [ty_arg]) when tcs == Predef.tcs_lazy_t ->
 (*
+          | Tconstr (tcs, [ty_arg]) when tcs == Predef.tcs_lazy_t ->
               if Lazy.lazy_is_val (Obj.obj obj)
               then let v = tree_of_val depth (Lazy.force (Obj.obj obj)) ty_arg in
                    Oval_constr (Oide_ident "lazy", [v])
               else
-*)
               Oval_stuff "<lazy>"
+*)
           | Tconstr(tcs, ty_list) ->
               match tcs with
                 | {tcs_kind = Tcs_abstract} ->

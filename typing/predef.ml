@@ -24,7 +24,6 @@ let tcs_format6 = mkabs "format6" (new_standard_parameters 6)
 let tcs_nativeint = mkabs "nativeint" []
 let tcs_int32 = mkabs "int32" []
 let tcs_int64 = mkabs "int64" []
-let tcs_lazy_t = mkabs "lazy_t" []
 
 (* variant types *)
 
@@ -109,7 +108,7 @@ and cs_some =
 
 let type_constructors =
   [ tcs_int; tcs_char; tcs_string; tcs_float; tcs_bool; tcs_unit;
-    tcs_exn; tcs_array; tcs_list; tcs_format6; tcs_option; tcs_lazy_t;
+    tcs_exn; tcs_array; tcs_list; tcs_format6; tcs_option;
     tcs_nativeint; tcs_int32; tcs_int64 ]
 
 (* helpers *)
@@ -127,7 +126,6 @@ let type_option ty = Tconstr(tcs_option, [ty])
 let type_nativeint = Tconstr(tcs_nativeint, [])
 let type_int32 = Tconstr(tcs_int32, [])
 let type_int64 = Tconstr(tcs_int64, [])
-let type_lazy_t ty = Tconstr(tcs_lazy_t, [ty])
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
