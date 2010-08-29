@@ -1,5 +1,6 @@
 Notes on specific QPL-licensed directories:
 
-asmcomp   not used by Llama, so not included here
-debugger  not used by Llama, so not included here
+asmcomp   not included here (bc unused)
+boot      not included here (bc contains binaries only)
+debugger  not included here (bc unused)
 ocamldoc  compare with ../doctool
