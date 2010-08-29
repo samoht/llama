@@ -247,7 +247,7 @@ static int parse_command_line(char **argv)
 #endif
     case 'v':
       if (!strcmp (argv[i], "-version")){
-        printf ("The Objective Caml runtime, version " OCAML_VERSION "\n");
+        printf ("The Llama Light runtime, version " OCAML_VERSION "\n");
         exit (0);
       }else if (!strcmp (argv[i], "-vnum")){
         printf (OCAML_VERSION "\n");
