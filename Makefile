@@ -86,6 +86,8 @@ EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   bytecomp/ident.cmo bytecomp/runtimedef.cmo bytecomp/bytesections.cmo \
   bytecomp/dll.cmo bytecomp/meta.cmo bytecomp/symtable.cmo toplevel/expunge.cmo
 
+PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
+
 # For users. There isn't really a default target for developers
 defaultentry: world
 
@@ -231,7 +233,7 @@ partialclean::
 
 llama: $(TOPOBJS) expunge
 	$(CAMLC) $(LINKFLAGS) -linkall -o llama.tmp $(TOPOBJS)
-	- $(CAMLRUN) ./expunge llama.tmp llama $(STDLIB_MODULES)
+	- $(CAMLRUN) ./expunge llama.tmp llama $(PERVASIVES)
 	rm -f llama.tmp
 
 toplevel/toplevellib.cma: $(TOPLIB)
