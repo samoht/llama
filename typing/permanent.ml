@@ -9,8 +9,7 @@ open Pseudoenv
 open Typedtree
 open Mutable_type
 
-let type_constructors decl_list =
-  let ltcs_list = List.map (fun decl -> decl.type_ltcs) decl_list in
+let type_constructors ltcs_list =
   let tcs_list =
     List.map
       begin fun ltcs ->
@@ -23,11 +22,11 @@ let type_constructors decl_list =
   in
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
-    begin fun tcs decl ->
+    begin fun tcs ltcs ->
       tcs.tcs_kind <-
-        begin match decl.type_kind with
-            Type_abstract _ -> Tcs_abstract
-          | Type_variant name_args_list ->
+        begin match ltcs.ltcs_kind with
+            Ltcs_abstract _ -> Tcs_abstract
+          | Ltcs_variant name_args_list ->
               Tcs_variant
                 (let rec aux idx_const idx_block = function
                      [] -> []
@@ -44,7 +43,7 @@ let type_constructors decl_list =
                          cs_args = List.map (type_of_local_type subst) args;
                          cs_tag = tag } :: aux idx_const idx_block tl
                  in aux 0 0 name_args_list)
-          | Type_record name_mut_arg_list ->
+          | Ltcs_record name_mut_arg_list ->
               Tcs_record
                 (let rec aux pos = function
                      [] -> []
@@ -55,11 +54,11 @@ let type_constructors decl_list =
                          lbl_mut = (mut = Mutable);
                          lbl_pos = pos } :: aux (succ pos) tl
                  in aux 0 name_mut_arg_list)
-          | Type_abbrev arg ->
+          | Ltcs_abbrev arg ->
               Tcs_abbrev (type_of_local_type subst arg)
         end
     end
-    tcs_list decl_list;
+    tcs_list ltcs_list;
   tcs_list
 
 let value name ty kind =

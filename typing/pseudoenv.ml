@@ -1,6 +1,7 @@
 (* A pseudoenv is an Env.t extended by some local type constructors
 and parameters. Compare with [Context]. *)
 
+open Asttypes
 open Longident
 open Base
 
@@ -8,16 +9,23 @@ type local_type =
     Lparam of type_parameter
   | Larrow of local_type * local_type
   | Ltuple of local_type list
-  | Lconstr of general_type_constructor * local_type list
+  | Lconstr of local_or_global_type_constructor * local_type list
+
+and local_or_global_type_constructor =
+    Local_type_constructor of local_type_constructor
+  | Global_type_constructor of type_constructor
 
 and local_type_constructor = {
   ltcs_name : string;
   ltcs_arity : int;
-  ltcs_params : type_parameter list }
+  ltcs_params : type_parameter list;
+  mutable ltcs_kind : local_type_constructor_kind }
 
-and general_type_constructor =
-    Local_type_constructor of local_type_constructor
-  | Global_type_constructor of type_constructor
+and local_type_constructor_kind =
+    Ltcs_abstract
+  | Ltcs_variant of (string * local_type list) list
+  | Ltcs_record of (string * mutable_flag * local_type) list
+  | Ltcs_abbrev of local_type
 
 let type_of_local_type subst =
   let rec aux = function
@@ -63,16 +71,3 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
 
 let pseudoenv_lookup_parameter name pseudoenv =
   Tbl.find name pseudoenv.pseudoenv_parameters
-
-(* helper to check for cyclic abbreviations *)
-let occurs_in_expansion ltcs =
-  let rec aux = function
-      Lparam _ -> false
-    | Larrow (ty1, ty2) -> aux ty1 || aux ty2
-    | Ltuple tyl -> List.exists aux tyl
-    | Lconstr (tcs, tyl) ->
-        begin match tcs with
-            Local_type_constructor ltcs' -> ltcs == ltcs'
-          | Global_type_constructor _ -> false
-        end || List.exists aux tyl
-  in aux

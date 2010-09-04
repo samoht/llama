@@ -53,21 +53,10 @@ and expression_desc =
   | Texp_assertfalse
   | Texp_constraint of expression * mutable_type
 
-type type_declaration = {
-  type_ltcs : local_type_constructor;
-  type_kind : type_kind;
-  type_loc : Location.t }
-
-and type_kind =
-    Type_abstract
-  | Type_variant of (string * local_type list) list
-  | Type_record of (string * mutable_flag * local_type) list
-  | Type_abbrev of local_type
-
 type temporary_signature_item =
     Tsig_value of string * llama_type
   | Tsig_primitive of string * llama_type * Primitive.description
-  | Tsig_type of type_declaration list
+  | Tsig_type of local_type_constructor list
   | Tsig_exception of string * local_type list
   | Tsig_open of string * signature
 
@@ -75,7 +64,7 @@ type temporary_structure_item =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of string * llama_type * Primitive.description
-  | Tstr_type of type_declaration list
+  | Tstr_type of local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
 

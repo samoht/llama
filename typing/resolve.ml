@@ -386,14 +386,14 @@ and expression_aux ctxt exp =
 
 let type_kind ctxt = function
     Ptype_abstract ->
-      Type_abstract
+      Ltcs_abstract
   | Ptype_abbrev ty ->
-      Type_abbrev (local_type ctxt ty)
+      Ltcs_abbrev (local_type ctxt ty)
   | Ptype_variant cs_list ->
-      Type_variant (List.map (fun (name, tyl, _) ->
+      Ltcs_variant (List.map (fun (name, tyl, _) ->
                                 (name, List.map (local_type ctxt) tyl)) cs_list)
   | Ptype_record lbl_list ->
-      Type_record (List.map (fun (name, mut, ty, _) ->
+      Ltcs_record (List.map (fun (name, mut, ty, _) ->
                                (name, mut, local_type ctxt ty)) lbl_list)
 
 let type_declarations env pdecls =
@@ -404,7 +404,8 @@ let type_declarations env pdecls =
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
           ltcs_arity = List.length pdecl.ptype_params;
-          ltcs_params = List.map (fun name -> { param_name=name }) pdecl.ptype_params }
+          ltcs_params = List.map (fun name -> { param_name=name }) pdecl.ptype_params;
+          ltcs_kind = Ltcs_abstract }
       end pdecls
   in
   let pseudoenv =
@@ -412,27 +413,25 @@ let type_declarations env pdecls =
       (fun pseudoenv ltcs -> pseudoenv_add_type_constructor ltcs pseudoenv)
       (pseudoenv_create env) ltcs_list
   in
-  let decls =
-    List.map2
-      begin fun pdecl ltcs ->
-        let pseudoenv =
-          List.fold_left
-            (fun pseudoenv tv -> pseudoenv_add_parameter tv pseudoenv) pseudoenv ltcs.ltcs_params
-        in
-        { type_ltcs = ltcs;
-          type_kind = type_kind pseudoenv pdecl.ptype_kind;
-          type_loc = pdecl.ptype_loc }
-      end pdecls ltcs_list
-  in
-  List.iter
-    begin fun decl ->
-      match decl.type_kind with
-          Type_abbrev ty ->
-            if occurs_in_expansion decl.type_ltcs ty then
-              raise (Error (decl.type_loc, Recursive_abbrev decl.type_ltcs.ltcs_name))
-        | _ -> ()
-    end decls;
-  decls
+  List.iter2
+    (fun pdecl ltcs ->
+       let pseudoenv =
+         List.fold_left
+           (fun pseudoenv tv -> pseudoenv_add_parameter tv pseudoenv) pseudoenv ltcs.ltcs_params
+       in
+       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
+  List.iter2
+    (fun pdecl ltcs ->
+       let rec aux ltcs' =
+         match ltcs'.ltcs_kind with
+             Ltcs_abbrev (Lconstr (Local_type_constructor ltcs'', _)) ->
+               if ltcs'' == ltcs then
+                 raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name))
+               else
+                 aux ltcs''
+           | _ -> () in
+       aux ltcs) pdecls ltcs_list;
+  ltcs_list
 
 (* ---------------------------------------------------------------------- *)
 (* Temporary signature and structure items.                               *)
