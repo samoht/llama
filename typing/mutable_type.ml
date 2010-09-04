@@ -34,7 +34,7 @@ let rec instantiate_type inst = function
     Tparam tv -> List.assq tv inst
   | Tarrow (ty1, ty2) -> Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
   | Ttuple tyl -> Mtuple (List.map (instantiate_type inst) tyl)
-  | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map (instantiate_type inst) tyl)
+  | Tconstr (tcsr, tyl) -> Mconstr (tcsr.tcs, List.map (instantiate_type inst) tyl)
 
 let instantiate_one_type ty =
   let rec make_inst accum = function
@@ -57,7 +57,7 @@ let instantiate_type_constructor tcs =
   inst, Mconstr (tcs, List.map snd inst)
 
 let instantiate_constructor cs =
-  let inst, ty_res = instantiate_type_constructor cs.cs_tcs in
+  let inst, ty_res = instantiate_type_constructor (cs_tcs cs) in
   let ty_args = List.map (instantiate_type inst) cs.cs_args in
   ty_args, ty_res
 
@@ -94,7 +94,7 @@ let is_closed, generalize =
           end
       | Marrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
       | Mtuple tyl -> Ttuple (List.map aux tyl)
-      | Mconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
+      | Mconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl)
     in aux ty
   in is_closed, generalize
 
@@ -113,8 +113,8 @@ let apply params body args =
       Tparam tv -> List.assq tv subst
     | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
     | Ttuple tyl -> Mtuple (List.map aux tyl)
-    | Tconstr (tcs, tyl) -> Mconstr (tcs, List.map aux tyl)
-  in aux body
+    | Tconstr (tcsr, tyl) -> Mconstr (tcsr.tcs, List.map aux tyl) in
+  aux body
 
 let rec expand_head = function
     Mvar { link = Some ty } -> expand_head ty

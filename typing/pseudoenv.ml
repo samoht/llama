@@ -32,13 +32,13 @@ let type_of_local_type subst =
       Lparam param -> Tparam param
     | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
-    | Lconstr (tcsr, tyl) ->
-        Tconstr (begin match tcsr with
-                     Local_type_constructor ltcs -> List.assq ltcs subst
-                   | Global_type_constructor tcs -> tcs
-                 end,
-                 List.map aux tyl)
-  in aux
+    | Lconstr (gentcs, tyl) ->
+        let tcs =
+          match gentcs with
+              Local_type_constructor ltcs -> List.assq ltcs subst
+            | Global_type_constructor tcs -> tcs in
+        Tconstr ({tcs=tcs}, List.map aux tyl) in
+  aux
 
 type pseudoenv = {
   pseudoenv_env : Env.t;

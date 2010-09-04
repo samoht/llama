@@ -37,7 +37,7 @@ let type_constructors ltcs_list =
                          else
                            Tag_block idx_block, idx_const, succ idx_block
                        in
-                       { cs_tcs = tcs;
+                       { cs_tcsr = {tcs=tcs};
                          cs_module = tcs.tcs_module;
                          cs_name = name;
                          cs_args = List.map (type_of_local_type subst) args;
@@ -68,7 +68,7 @@ let value name ty kind =
     val_kind = kind }
 
 let permanent_exception name args =
-  { cs_tcs = Predef.tcs_exn;
+  { cs_tcsr = {tcs=Predef.tcs_exn};
     cs_module = !Modenv.current_module;
     cs_name = name;
     cs_args = List.map (type_of_local_type []) args;

@@ -32,6 +32,7 @@ let identity_subst modid = {
   subst_type_constructors = [] }
 
 let subst_add_type_constructor tcs1 tcs2 subst =
+  if tcs1.tcs_name = "fpclass" then print_endline"satc:fpclass";
   { subst with
       subst_type_constructors = (tcs1, tcs2) :: subst.subst_type_constructors }
 
@@ -48,8 +49,8 @@ let rec subst_type subst = function
       Tarrow (subst_type subst ty1, subst_type subst ty2)
   | Ttuple tyl ->
       Ttuple (List.map (subst_type subst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl)
+  | Tconstr ({tcs=tcs}, tyl) ->
+      Tconstr ({tcs=subst_type_constructor subst tcs}, List.map (subst_type subst) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Coercions in the format supported by the ocaml compiler.               *)
@@ -152,7 +153,7 @@ let type_declarations subst tcs1 tcs2 =
         if Typeutil.equiv corresp ty1 (subst_type subst ty2) then () else
           raise (error Unspecified)
     | _, Tcs_abbrev ty2 ->
-        let ty1 = Tconstr (tcs2, tcs2.tcs_params) in
+        let ty1 = Tconstr ({tcs=tcs2}, tcs2.tcs_params) in
         if Typeutil.equal ty1 ty2 then () else raise (error Unspecified)
     | _ ->
         raise (error Unspecified)
@@ -235,19 +236,21 @@ let signatures subst sig1 sig2 =
         end
     | item2 :: rem ->
         let id2 = component_id item2 in
-        begin try
-          let (item1, pos1) = Tbl.find id2 comps1 in
-          let new_subst =
-            match item1, item2 with
-                Sig_type (tcs1, _), Sig_type (tcs2, _) ->
-                  subst_add_type_constructor tcs2 tcs1 subst
-              | _ ->
-                  subst
-          in
-          pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
-        with Not_found ->
-          let unpaired = Missing_field (name_of_component_id id2) :: unpaired in
-          pair_components subst paired unpaired rem
+        begin match
+          try Some (Tbl.find id2 comps1) with Not_found -> None
+        with
+            Some (item1, pos1) ->
+              let new_subst =
+                match item1, item2 with
+                    Sig_type (tcs1, _), Sig_type (tcs2, _) ->
+                      subst_add_type_constructor tcs2 tcs1 subst
+                  | _ ->
+                      subst
+              in
+              pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
+          | None ->
+              let unpaired = Missing_field (name_of_component_id id2) :: unpaired in
+              pair_components subst paired unpaired rem
         end
   in
   (* Do the pairing and checking, and return the final coercion *)

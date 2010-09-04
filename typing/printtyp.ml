@@ -47,7 +47,7 @@ let rec tree_of_type = function
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
       Otyp_tuple (tree_of_type_list tyl)
-  | Tconstr (tcs, tyl) ->
+  | Tconstr ({tcs=tcs}, tyl) ->
       Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
 
 and tree_of_type_list tyl =
@@ -154,7 +154,7 @@ let tree_of_signature_item = function
   | Sig_exception cs ->
       tree_of_exception_declaration cs
 
-let tree_of_signature = List.map tree_of_signature_item
+let tree_of_signature l = List.map tree_of_signature_item l
 
 let print_signature ppf tree =
   fprintf ppf "@[<v>%a@]" !Oprint.out_signature tree

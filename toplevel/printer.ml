@@ -144,9 +144,9 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
-          | Tconstr(tcs, []) when tcs == Predef.tcs_exn ->
+          | Tconstr({tcs=tcs}, []) when tcs == Predef.tcs_exn ->
               tree_of_exception depth obj
-          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_list ->
+          | Tconstr({tcs=tcs}, [ty_arg]) when tcs == Predef.tcs_list ->
               if Obj.is_block obj then
                 match check_depth depth obj ty with
                   Some x -> x
@@ -164,7 +164,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_list (List.rev (tree_of_conses [] obj))
               else
                 Oval_list []
-          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_array ->
+          | Tconstr({tcs=tcs}, [ty_arg]) when tcs == Predef.tcs_array ->
               let length = Obj.size obj in
               if length > 0 then
                 match check_depth depth obj ty with
@@ -190,7 +190,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               else
               Oval_stuff "<lazy>"
 *)
-          | Tconstr(tcs, ty_list) ->
+          | Tconstr({tcs=tcs}, ty_list) ->
               match tcs with
                 | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"

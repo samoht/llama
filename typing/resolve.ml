@@ -156,7 +156,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-          Tconstr (tcs, List.map aux tyl)
+          Tconstr ({tcs=tcs}, List.map aux tyl)
     end
   in
   aux ty
