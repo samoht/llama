@@ -396,6 +396,25 @@ let type_kind ctxt = function
       Ltcs_record (List.map (fun (name, mut, ty, _) ->
                                (name, mut, local_type ctxt ty)) lbl_list)
 
+let is_recursive_abbrev =
+  let rec occ seen = function
+      Lparam _ -> false
+    | Larrow (ty1, ty2) -> occ seen ty1 || occ seen ty2
+    | Ltuple tyl -> List.exists (occ seen) tyl
+    | Lconstr (tcs, tyl) ->
+        begin match tcs with
+            Local_type_constructor ltcs ->
+              List.memq ltcs seen ||
+                (match ltcs.ltcs_kind with
+                     Ltcs_abbrev ty -> occ (ltcs :: seen) ty
+                   | _ -> false)
+          | Global_type_constructor _ -> false
+        end || List.exists (occ seen) tyl in
+  fun ltcs ->
+    match ltcs.ltcs_kind with
+        Ltcs_abbrev ty -> occ [ltcs] ty
+      | _ -> false
+
 let type_declarations env pdecls =
   let ltcs_list =
     List.map
@@ -422,15 +441,9 @@ let type_declarations env pdecls =
        ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->
-       let rec aux ltcs' =
-         match ltcs'.ltcs_kind with
-             Ltcs_abbrev (Lconstr (Local_type_constructor ltcs'', _)) ->
-               if ltcs'' == ltcs then
-                 raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name))
-               else
-                 aux ltcs''
-           | _ -> () in
-       aux ltcs) pdecls ltcs_list;
+       if is_recursive_abbrev ltcs then
+         raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
+    pdecls ltcs_list;
   ltcs_list
 
 (* ---------------------------------------------------------------------- *)
