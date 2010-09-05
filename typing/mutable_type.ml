@@ -11,20 +11,21 @@ type mutable_type =
 and type_variable =  (* compared with (==) *)
   { mutable link : mutable_type option }
 
-let new_type_var() = Mvar { link = None }
-let rec new_type_vars n = if n=0 then [] else new_type_var()::new_type_vars(n-1)
+let new_type_var () = Mvar { link = None }
 
-let type_unit = Mconstr(Predef.tcs_unit, [])
-let type_bool = Mconstr(Predef.tcs_bool, [])
-let type_int = Mconstr(Predef.tcs_int, [])
-let type_float = Mconstr(Predef.tcs_float, [])
-let type_string = Mconstr(Predef.tcs_string, [])
-let type_char = Mconstr(Predef.tcs_char, [])
-let type_int32 = Mconstr(Predef.tcs_int32, [])
-let type_int64 = Mconstr(Predef.tcs_int64, [])
-let type_nativeint = Mconstr(Predef.tcs_nativeint, [])
-let type_exn = Mconstr(Predef.tcs_exn, [])
-let type_array ty = Mconstr(Predef.tcs_array, [ty])
+let type_int = Mconstr (Predef.tcs_int, [])
+let type_char = Mconstr (Predef.tcs_char, [])
+let type_string = Mconstr (Predef.tcs_string, [])
+let type_float = Mconstr (Predef.tcs_float, [])
+let type_bool = Mconstr (Predef.tcs_bool, [])
+let type_unit = Mconstr (Predef.tcs_unit, [])
+let type_exn = Mconstr (Predef.tcs_exn, [])
+let type_array ty = Mconstr (Predef.tcs_array, [ty])
+let type_list ty = Mconstr (Predef.tcs_list, [ty])
+let type_option ty = Mconstr (Predef.tcs_option, [ty])
+let type_nativeint = Mconstr (Predef.tcs_nativeint, [])
+let type_int32 = Mconstr (Predef.tcs_int32, [])
+let type_int64 = Mconstr (Predef.tcs_int64, [])
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
@@ -40,18 +41,17 @@ let rec instantiate_type inst = function
   | Tconstr ({tcs=tcs}, tyl) ->
       Mconstr (tcs, List.map (instantiate_type inst) tyl)
 
+let rec add_to_instantiation inst = function
+    Tparam param ->
+      if List.mem_assq param inst then inst
+      else (param, new_type_var ()) :: inst
+  | Tarrow (ty1, ty2) ->
+      add_to_instantiation (add_to_instantiation inst ty1) ty2
+  | Ttuple tyl | Tconstr (_, tyl) ->
+      List.fold_left add_to_instantiation inst tyl
+
 let instantiate_one_type ty =
-  let rec make_inst accum = function
-      Tparam param ->
-        if List.mem_assq param accum then
-          accum
-        else
-          (param, new_type_var ()) :: accum
-    | Tarrow (ty1, ty2) ->
-        make_inst (make_inst accum ty1) ty2
-    | Ttuple tyl | Tconstr (_, tyl) ->
-        List.fold_left make_inst accum tyl in
-  instantiate_type (make_inst [] ty) ty
+  instantiate_type (add_to_instantiation [] ty) ty
 
 let instantiate_type_constructor tcs =
   let vars = List.map (fun _ -> new_type_var ()) tcs.tcs_params in
@@ -85,48 +85,42 @@ let rec generalize_type gen = function
   | Mconstr (tcs, tyl) ->
       Tconstr ({tcs=tcs}, List.map (generalize_type gen) tyl)
 
-let type_variables =
-  let rec aux accum = function
-      Mvar tv ->
-        begin match tv.link with
-            None -> if List.memq tv accum then accum else tv :: accum
-          | Some ty -> aux accum ty
-        end
-    | Marrow (ty1, ty2) ->
-        aux (aux accum ty1) ty2
-    | Mtuple tyl | Mconstr (_, tyl) ->
-        List.fold_left aux accum tyl in
-  aux []
+let rec add_to_generalization gen = function
+    Mvar tv ->
+      begin match tv.link with
+          None ->
+            if List.mem_assq tv gen then gen else
+              let param = new_standard_parameter (List.length gen) in
+              (tv, Tparam param) :: gen
+        | Some ty ->
+            add_to_generalization gen ty
+      end
+  | Marrow (ty1, ty2) ->
+      add_to_generalization (add_to_generalization gen ty1) ty2
+  | Mtuple tyl | Mconstr (_, tyl) ->
+      List.fold_left add_to_generalization gen tyl
 
-let is_closed ty = (type_variables ty = [])
+let is_closed ty =
+  add_to_generalization [] ty = []
 
 let generalize_one_type ty =
-  let vars = type_variables ty in
-  let params = new_standard_parameters (List.length vars) in
-  let gen = List.combine vars (List.map (fun param -> Tparam param) params) in
-  generalize_type gen ty
+  generalize_type (add_to_generalization [] ty) ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let rec repr = function
-    Mvar { link = Some ty } -> repr ty
+let rec type_repr = function
+    Mvar { link = Some ty } -> type_repr ty
   | ty -> ty
 
-let apply params body args =
-  let subst = List.combine params args in
-  let rec aux = function
-      Tparam tv -> List.assq tv subst
-    | Tarrow (ty1, ty2) -> Marrow (aux ty1, aux ty2)
-    | Ttuple tyl -> Mtuple (List.map aux tyl)
-    | Tconstr (tcsr, tyl) -> Mconstr (tcsr.tcs, List.map aux tyl) in
-  aux body
+let apply_abbrev params body args =
+  instantiate_type (List.combine params args) body
 
 let rec expand_head = function
     Mvar { link = Some ty } -> expand_head ty
-  | Mconstr ({tcs_params = params; tcs_kind = Tcs_abbrev body}, args) ->
-      expand_head (apply params body args)
+  | Mconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
+      expand_head (apply_abbrev params body args)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -149,8 +143,8 @@ let rec occurs v = function
 exception Unify
 
 let rec unify ty1 ty2 =
-  let ty1 = repr ty1 in
-  let ty2 = repr ty2 in
+  let ty1 = type_repr ty1 in
+  let ty2 = type_repr ty2 in
   match ty1, ty2 with
       Mvar v1, Mvar v2 when v1 == v2 ->
         ()
@@ -163,10 +157,10 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
-        unify (apply tcs1.tcs_params body1 tyl1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
-        unify ty1 (apply tcs2.tcs_params body2 tyl2)
+    | Mconstr ({tcs_params=params1; tcs_kind=Tcs_abbrev body1}, tyl1), _ ->
+        unify (apply_abbrev params1 body1 tyl1) ty2
+    | _, Mconstr ({tcs_params=params2; tcs_kind=Tcs_abbrev body2}, tyl2) ->
+        unify ty1 (apply_abbrev params2 body2 tyl2)
     | Mconstr (tcs1, tyl1), Mconstr (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list tyl1 tyl2
     | _ ->
@@ -174,6 +168,10 @@ let rec unify ty1 ty2 =
 
 and unify_list tyl1 tyl2 =
   match tyl1, tyl2 with
-      [], [] -> ()
-    | ty1::rest1, ty2::rest2 -> unify ty1 ty2; unify_list rest1 rest2
-    | _ -> raise Unify
+      [], [] ->
+        ()
+    | ty1 :: rest1, ty2 :: rest2 ->
+        unify ty1 ty2;
+        unify_list rest1 rest2
+    | _ ->
+        raise Unify

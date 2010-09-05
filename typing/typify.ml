@@ -316,7 +316,7 @@ and expression_aux exp =
                       v.link <- Some (Marrow (ty1, ty2));
                       ty1, ty2
                   | Marrow (ty1, ty2) -> ty1, ty2
-                  | _ -> raise(Error(exp.texp_loc, Apply_non_function (expand_head ty_fct)))
+                  | _ -> raise(Error(exp.texp_loc, Apply_non_function ty_fct))
               in
               expression_expect arg1 ty1;
               type_args ty2 argl
@@ -448,7 +448,7 @@ and caselist ty_arg ty_res pat_exp_list =
 
 and statement expr =
   let ty = expression expr in
-  match repr ty with
+  match type_repr ty with
   | Marrow(_,_) ->
       Location.prerr_warning expr.texp_loc Warnings.Partial_application
   | Mvar _ -> ()
@@ -489,7 +489,7 @@ open Printtyp
 
 let report_unification_error ppf t1 t2 txt1 txt2 =
   let type_expansion ppf t =
-    let t = repr t in
+    let t = type_repr t in
     let t' = expand_head t in
     if t == t' then mutable_type ppf t
     else fprintf ppf "@[<2>%a@ =@ %a@]" mutable_type t mutable_type t'
@@ -518,7 +518,7 @@ let report_error ppf = function
         (function ppf ->
            fprintf ppf "but an expression was expected of type")
   | Apply_non_function typ ->
-      begin match repr typ with
+      begin match typ with
         Marrow _ ->
           fprintf ppf "This function is applied to too many arguments;@ ";
           fprintf ppf "maybe you forgot a `;'"

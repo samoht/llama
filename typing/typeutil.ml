@@ -2,7 +2,7 @@ open Base
 
 (* Expansion of abbreviations. *)
 
-let apply params body args =
+let apply_abbrev params body args =
   let subst = List.combine params args in
   let rec aux = function
       Tparam tv -> List.assq tv subst
@@ -13,7 +13,7 @@ let apply params body args =
 
 let rec expand_head = function
     Tconstr ({tcs={tcs_params=params;tcs_kind=Tcs_abbrev body}}, args) ->
-      expand_head (apply params body args)
+      expand_head (apply_abbrev params body args)
   | ty -> ty
 
 (* Whether two types are identical, modulo expansion of abbreviations,
@@ -29,9 +29,9 @@ let equal, equiv =
       | Ttuple(t1args), Ttuple(t2args) ->
           List.forall2 (equiv_gen corresp) t1args t2args
       | Tconstr ({tcs={tcs_params=params;tcs_kind=Tcs_abbrev body}}, args), _ ->
-          equiv_gen corresp (apply params body args) ty2
+          equiv_gen corresp (apply_abbrev params body args) ty2
       | _, Tconstr ({tcs={tcs_params=params;tcs_kind=Tcs_abbrev body}}, args) ->
-          equiv_gen corresp ty1 (apply params body args)
+          equiv_gen corresp ty1 (apply_abbrev params body args)
       | Tconstr({tcs=tcs1}, tyl1), Tconstr({tcs=tcs2}, tyl2) when tcs1 == tcs2 ->
           List.forall2 (equiv_gen corresp) tyl1 tyl2
       | _ ->
@@ -53,16 +53,17 @@ let moregeneral ty1 ty2 =
           with Not_found ->
             subst := (tv, ty2) :: !subst; true
           end
-      | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+      | Tarrow (t1arg, t1res), Tarrow (t2arg, t2res) ->
           aux t1arg t2arg && aux t1res t2res
-      | Ttuple(t1args), Ttuple(t2args) ->
-          List.forall2 aux t1args t2args
+      | Ttuple tyl1, Ttuple tyl2 ->
+          List.forall2 aux tyl1 tyl2
       | Tconstr ({tcs={tcs_params=params;tcs_kind=Tcs_abbrev body}}, args), _ ->
-          aux (apply params body args) ty2
+          aux (apply_abbrev params body args) ty2
       | _, Tconstr ({tcs={tcs_params=params;tcs_kind=Tcs_abbrev body}}, args) ->
-          aux ty1 (apply params body args)
+          aux ty1 (apply_abbrev params body args)
       | Tconstr({tcs=tcs1}, tyl1), Tconstr({tcs=tcs2}, tyl2) when tcs1 == tcs2 ->
           List.forall2 aux tyl1 tyl2
       | _ ->
           false
-  in aux ty1 ty2
+  in
+  aux ty1 ty2
