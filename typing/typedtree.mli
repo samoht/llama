@@ -7,16 +7,16 @@ open Context
 open Pseudoenv
 
 type pattern =
-  { pat_desc: pattern_desc;
-    pat_loc: Location.t;
-    pat_env : Env.t;
-    pat_type: mutable_type }
+  { tpat_desc : pattern_desc;
+    tpat_loc : Location.t;
+    tpat_env : Env.t;
+    tpat_type : mutable_type }
 
 and pattern_desc =
     Tpat_any
   | Tpat_var of local_value
   | Tpat_alias of pattern * local_value
-  | Tpat_constant of constant
+  | Tpat_literal of literal
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor * pattern list
   | Tpat_record of type_constructor * (label * pattern) list
@@ -25,14 +25,14 @@ and pattern_desc =
   | Tpat_constraint of pattern * mutable_type
 
 type expression =
-  { exp_desc: expression_desc;
-    exp_loc: Location.t;
-    exp_env : context;
-    exp_type: mutable_type }
+  { texp_desc : expression_desc;
+    texp_loc : Location.t;
+    texp_ctxt : context;
+    texp_type : mutable_type }
 
 and expression_desc =
     Texp_ident of general_value
-  | Texp_constant of constant
+  | Texp_literal of literal
   | Texp_let of rec_flag * (pattern * expression) list * expression
   | Texp_function of (pattern * expression) list
   | Texp_apply of expression * expression list
@@ -54,24 +54,34 @@ and expression_desc =
   | Texp_constraint of expression * mutable_type
 
 type temporary_signature_item =
+  { tsig_desc : temporary_signature_item_desc;
+    tsig_loc : Location.t }
+
+and temporary_signature_item_desc =
     Tsig_value of string * llama_type
-  | Tsig_primitive of string * llama_type * Primitive.description
+  | Tsig_external of string * llama_type * Primitive.description
   | Tsig_type of local_type_constructor list
   | Tsig_exception of string * local_type list
   | Tsig_open of string * signature
 
 type temporary_structure_item =
+  { tstr_desc : temporary_structure_item_desc;
+    tstr_loc : Location.t }
+
+and temporary_structure_item_desc =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of string * llama_type * Primitive.description
+  | Tstr_external of string * llama_type * Primitive.description
   | Tstr_type of local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
 
+(* what the compiler sees *)
+
 type structure_item =
     Str_eval of expression
   | Str_value of rec_flag * (pattern * expression) list * (local_value * value) list
-  | Str_primitive of value
+  | Str_external of value
   | Str_type of type_constructor list
   | Str_exception of constructor
   | Str_open of signature

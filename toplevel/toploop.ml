@@ -229,7 +229,7 @@ let execute_phrase print_outcome ppf phr =
       let _ = Unused_var.warn ppf [sstr] in
       let tstr = Resolve.temporary_structure_item oldenv sstr in
       let tyopt =
-        match tstr with
+        match tstr.tstr_desc with
             Tstr_eval e -> Some (Typify.toplevel_eval e)
           | _ -> Typify.temporary_structure_item tstr; None
       in

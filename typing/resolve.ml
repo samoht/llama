@@ -68,7 +68,7 @@ let rec bound_names pat =
       Ppat_any -> []
     | Ppat_var name -> [name]
     | Ppat_alias (pat, name) -> name :: bound_names pat
-    | Ppat_constant _ -> []
+    | Ppat_literal _ -> []
     | Ppat_tuple patl -> List.flatten (List.map bound_names patl)
     | Ppat_construct (_, None) -> []
     | Ppat_construct (_, Some pat) -> bound_names pat
@@ -86,11 +86,11 @@ let rec bound_names pat =
         List.flatten (List.map (fun (lbl, pat) -> bound_names pat) lbl_pat_list)
 
 let rec bound_local_values pat =
-  match pat.pat_desc with
+  match pat.tpat_desc with
       Tpat_any -> []
     | Tpat_var v -> [v]
     | Tpat_alias(pat,v) -> v :: bound_local_values pat
-    | Tpat_constant _ -> []
+    | Tpat_literal _ -> []
     | Tpat_tuple patl -> List.flatten (List.map bound_local_values patl)
     | Tpat_construct(_, pats) -> List.flatten (List.map bound_local_values pats)
     | Tpat_record (_, lbl_pat_list) ->
@@ -104,7 +104,7 @@ let rec bound_local_values pat =
 (* ---------------------------------------------------------------------- *)
 
 let lookup_module name loc =
-  try Modenv.lookup_signature name
+  try Modenv.lookup_signature (Module name)
   with Not_found -> raise (Error (loc, Unbound_module name))
 
 let lookup_type_constructor env lid loc =
@@ -222,10 +222,10 @@ let pattern env pat =
   end;
   let values = List.map (fun name -> (name, new_local_value name)) names in
   let rec pattern pat =
-    { pat_desc = pattern_aux pat;
-      pat_loc = pat.ppat_loc;
-      pat_env = env;
-      pat_type = Mutable_type.new_type_var () }
+    { tpat_desc = pattern_aux pat;
+      tpat_loc = pat.ppat_loc;
+      tpat_env = env;
+      tpat_type = Mutable_type.new_type_var () }
   and pattern_aux pat =
     match pat.ppat_desc with
         Ppat_any ->
@@ -234,8 +234,8 @@ let pattern env pat =
           Tpat_var (List.assoc name values)
       | Ppat_alias (pat', name) ->
           Tpat_alias (pattern pat', List.assoc name values)
-      | Ppat_constant c ->
-          Tpat_constant c
+      | Ppat_literal c ->
+          Tpat_literal c
       | Ppat_tuple l ->
           Tpat_tuple (List.map pattern l)
       | Ppat_construct (lid, sarg) ->
@@ -278,17 +278,17 @@ let extend_context ctxt pat =
     ctxt (bound_local_values pat)
 
 let rec expression ctxt exp =
-  { exp_desc = expression_aux ctxt exp;
-    exp_loc = exp.pexp_loc;
-    exp_env = ctxt;
-    exp_type = Mutable_type.new_type_var () }
+  { texp_desc = expression_aux ctxt exp;
+    texp_loc = exp.pexp_loc;
+    texp_ctxt = ctxt;
+    texp_type = Mutable_type.new_type_var () }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
       Pexp_ident li ->
         Texp_ident (lookup_value ctxt li exp.pexp_loc)
-    | Pexp_constant c ->
-        Texp_constant c
+    | Pexp_literal c ->
+        Texp_literal c
     | Pexp_tuple l ->
         Texp_tuple (List.map (expression ctxt) l)
     | Pexp_construct (lid, sarg) ->
@@ -450,7 +450,7 @@ let type_declarations env pdecls =
 (* Temporary signature and structure items.                               *)
 (* ---------------------------------------------------------------------- *)
 
-let primitive decl ty =
+let external_declaration decl ty =
   let rec arity ty =
     match ty.ptyp_desc with
         Ptyp_arrow (_, ty) -> succ (arity ty)
@@ -459,20 +459,23 @@ let primitive decl ty =
 
 let temporary_signature_item env psig =
   reset_type_variables ();
-  match psig.psig_desc with
-      Psig_value (s, te) ->
-        Tsig_value (s, llama_type env te)
-    | Psig_primitive(id,te,pr) ->
-        Tsig_primitive (id, llama_type env te, primitive pr te)
-    | Psig_type pdecls ->
-        let decls = type_declarations env pdecls in
-        Tsig_type decls
-    | Psig_exception (name, args) ->
-        let pseudoenv = pseudoenv_create env in
-        Tsig_exception (name, List.map (local_type pseudoenv) args)
-    | Psig_open name ->
-        Tsig_open (name, lookup_module name psig.psig_loc)
-
+  { tsig_desc =
+      begin match psig.psig_desc with
+          Psig_value (s, te) ->
+            Tsig_value (s, llama_type env te)
+        | Psig_external(id,te,pr) ->
+            Tsig_external (id, llama_type env te, external_declaration pr te)
+        | Psig_type pdecls ->
+            let decls = type_declarations env pdecls in
+            Tsig_type decls
+        | Psig_exception (name, args) ->
+            let pseudoenv = pseudoenv_create env in
+            Tsig_exception (name, List.map (local_type pseudoenv) args)
+        | Psig_open name ->
+            Tsig_open (name, lookup_module name psig.psig_loc)
+      end;
+    tsig_loc = psig.psig_loc }
+            
 let top_bindings env rec_flag ppat_pexp_list =
   let pat_list = List.map (fun (ppat, _) -> pattern env ppat) ppat_pexp_list in
   let ctxt =
@@ -489,20 +492,23 @@ let top_bindings env rec_flag ppat_pexp_list =
 
 let temporary_structure_item env pstr =
   reset_type_variables ();
-  match pstr.pstr_desc with
-      Pstr_eval pexp ->
-        Tstr_eval (expression (context_create env) pexp)
-    | Pstr_value (rec_flag, ppat_pexp_list) ->
-        Tstr_value (rec_flag, top_bindings env rec_flag ppat_pexp_list)
-    | Pstr_primitive (name, pty, decl) ->
-        Tstr_primitive (name, llama_type env pty, primitive decl pty)
-    | Pstr_type pdecls ->
-        Tstr_type (type_declarations env pdecls)
-    | Pstr_exception (name, args) ->
-        let pseudoenv = pseudoenv_create env in
-        Tstr_exception (name, List.map (local_type pseudoenv) args)
-    | Pstr_open name ->
-        Tstr_open (name, lookup_module name pstr.pstr_loc)
+  { tstr_desc =
+      begin match pstr.pstr_desc with
+          Pstr_eval pexp ->
+            Tstr_eval (expression (context_create env) pexp)
+        | Pstr_value (rec_flag, ppat_pexp_list) ->
+            Tstr_value (rec_flag, top_bindings env rec_flag ppat_pexp_list)
+        | Pstr_external (name, pty, decl) ->
+            Tstr_external (name, llama_type env pty, external_declaration decl pty)
+        | Pstr_type pdecls ->
+            Tstr_type (type_declarations env pdecls)
+        | Pstr_exception (name, args) ->
+            let pseudoenv = pseudoenv_create env in
+            Tstr_exception (name, List.map (local_type pseudoenv) args)
+        | Pstr_open name ->
+            Tstr_open (name, lookup_module name pstr.pstr_loc)
+      end;
+    tstr_loc = pstr.pstr_loc }
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)

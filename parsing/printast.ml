@@ -40,15 +40,15 @@ let rec fmt_longident_aux f x =
 
 let fmt_longident f x = fprintf f "\"%a\"" fmt_longident_aux x;;
 
-let fmt_constant f x =
+let fmt_literal f x =
   match x with
-  | Const_int (i) -> fprintf f "Const_int %d" i;
-  | Const_char (c) -> fprintf f "Const_char %02x" (Char.code c);
-  | Const_string (s) -> fprintf f "Const_string %S" s;
-  | Const_float (s) -> fprintf f "Const_float %s" s;
-  | Const_int32 (i) -> fprintf f "Const_int32 %ld" i;
-  | Const_int64 (i) -> fprintf f "Const_int64 %Ld" i;
-  | Const_nativeint (i) -> fprintf f "Const_nativeint %nd" i;
+  | Literal_int (i) -> fprintf f "Literal_int %d" i;
+  | Literal_char (c) -> fprintf f "Literal_char %02x" (Char.code c);
+  | Literal_string (s) -> fprintf f "Literal_string %S" s;
+  | Literal_float (s) -> fprintf f "Literal_float %s" s;
+  | Literal_int32 (i) -> fprintf f "Literal_int32 %ld" i;
+  | Literal_int64 (i) -> fprintf f "Literal_int64 %Ld" i;
+  | Literal_nativeint (i) -> fprintf f "Literal_nativeint %nd" i;
 ;;
 
 let fmt_mutable_flag f x =
@@ -122,7 +122,7 @@ and pattern i ppf x =
   | Ppat_alias (p, s) ->
       line i ppf "Ppat_alias \"%s\"\n" s;
       pattern i ppf p;
-  | Ppat_constant (c) -> line i ppf "Ppat_constant %a\n" fmt_constant c;
+  | Ppat_literal (c) -> line i ppf "Ppat_literal %a\n" fmt_literal c;
   | Ppat_tuple (l) ->
       line i ppf "Ppat_tuple\n";
       list i pattern ppf l;
@@ -154,7 +154,7 @@ and expression i ppf x =
   let i = i+1 in
   match x.pexp_desc with
   | Pexp_ident (li) -> line i ppf "Pexp_ident %a\n" fmt_longident li;
-  | Pexp_constant (c) -> line i ppf "Pexp_constant %a\n" fmt_constant c;
+  | Pexp_literal (c) -> line i ppf "Pexp_literal %a\n" fmt_literal c;
   | Pexp_let (rf, l, e) ->
       line i ppf "Pexp_let %a\n" fmt_rec_flag rf;
       list i pattern_x_expression_def ppf l;
@@ -267,8 +267,8 @@ and signature_item i ppf x =
   | Psig_value (s, t) ->
       line i ppf "Psig_value \"%s\"\n" s;
       core_type i ppf t;
-  | Psig_primitive (s, t, l) ->
-      line i ppf "Psig_primitive \"%s\"\n" s;
+  | Psig_external (s, t, l) ->
+      line i ppf "Psig_external \"%s\"\n" s;
       core_type i ppf t;
       list i string ppf l;
   | Psig_type (l) ->
@@ -296,8 +296,8 @@ and structure_item i ppf x =
   | Pstr_value (rf, l) ->
       line i ppf "Pstr_value %a\n" fmt_rec_flag rf;
       list i pattern_x_expression_def ppf l;
-  | Pstr_primitive (s, t, l) ->
-      line i ppf "Pstr_primitive \"%s\"\n" s;
+  | Pstr_external (s, t, l) ->
+      line i ppf "Pstr_external \"%s\"\n" s;
       core_type i ppf t;
       list i string ppf l;
   | Pstr_type (l) ->

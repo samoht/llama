@@ -79,44 +79,46 @@ let signature_items_of_type_constructors tcs_list =
   Sig_type (List.hd tcs_list, Rec_first) ::
     List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
 
-let signature_items env = function
-    Tsig_value (name, ty) ->
-      let v = value name ty Val_reg in
-      [Sig_value v], Env.add_value v env
-  | Tsig_primitive (name, ty, prim) ->
-      let v = value name ty (Val_prim prim) in
-      [Sig_value v], Env.add_value v env
-  | Tsig_type decls ->
-      let tcs_list = type_constructors decls in
-      signature_items_of_type_constructors tcs_list,
-      List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
-  | Tsig_exception (name, args) ->
-      let cs = permanent_exception name args in
-      [Sig_exception cs], Env.add_exception cs env
-  | Tsig_open (_, csig) ->
-      [], Env.add_signature csig env
+let signature_items env tsig =
+  match tsig.tsig_desc with
+      Tsig_value (name, ty) ->
+        let v = value name ty Val_reg in
+        [Sig_value v], Env.add_value v env
+    | Tsig_external (name, ty, prim) ->
+        let v = value name ty (Val_prim prim) in
+        [Sig_value v], Env.add_value v env
+    | Tsig_type decls ->
+        let tcs_list = type_constructors decls in
+        signature_items_of_type_constructors tcs_list,
+        List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
+    | Tsig_exception (name, args) ->
+        let cs = permanent_exception name args in
+        [Sig_exception cs], Env.add_exception cs env
+    | Tsig_open (_, csig) ->
+        [], Env.add_signature csig env
 
-let structure_item env = function
-    Tstr_eval exp ->
-      Str_eval exp, env
-  | Tstr_value (rec_flag, pat_exp_list) ->
-      let lvals =
-        List.flatten (List.map (fun (pat, _) ->
-                                  Resolve.bound_local_values pat) pat_exp_list) in
-      let vals =
-        List.map (fun lval ->
-                    value lval.lval_name (generalize lval.lval_type) Val_reg) lvals in
-      Str_value (rec_flag, pat_exp_list, List.combine lvals vals),
-      List.fold_left (fun env v -> Env.add_value v env) env vals
-  | Tstr_primitive (name, ty, prim) ->
-      let v = value name ty (Val_prim prim) in
-      Str_primitive v, Env.add_value v env
-  | Tstr_type decl_list ->
-      let tcs_list = type_constructors decl_list in
-      Str_type tcs_list,
-      List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
-  | Tstr_exception (name, args) ->
-      let cs = permanent_exception name args in
-      Str_exception cs, Env.add_exception cs env
-  | Tstr_open (_, sg) ->
-      Str_open sg, Env.add_signature sg env
+let structure_item env tstr =
+  match tstr.tstr_desc with
+      Tstr_eval exp ->
+        Str_eval exp, env
+    | Tstr_value (rec_flag, pat_exp_list) ->
+        let lvals =
+          List.flatten (List.map (fun (pat, _) ->
+                                    Resolve.bound_local_values pat) pat_exp_list) in
+        let vals =
+          List.map (fun lval ->
+                      value lval.lval_name (generalize lval.lval_type) Val_reg) lvals in
+        Str_value (rec_flag, pat_exp_list, List.combine lvals vals),
+        List.fold_left (fun env v -> Env.add_value v env) env vals
+    | Tstr_external (name, ty, prim) ->
+        let v = value name ty (Val_prim prim) in
+        Str_external v, Env.add_value v env
+    | Tstr_type decl_list ->
+        let tcs_list = type_constructors decl_list in
+        Str_type tcs_list,
+        List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
+    | Tstr_exception (name, args) ->
+        let cs = permanent_exception name args in
+        Str_exception cs, Env.add_exception cs env
+    | Tstr_open (_, sg) ->
+        Str_open sg, Env.add_signature sg env

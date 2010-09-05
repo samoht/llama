@@ -16,17 +16,17 @@ type error =
 exception Error of Location.t * error
 
 (* ---------------------------------------------------------------------- *)
-(* Constants.                                                             *)
+(* Literals.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let constant = function
-    Const_int _ -> type_int
-  | Const_float _ -> type_float
-  | Const_string _ -> type_string
-  | Const_char _ -> type_char
-  | Const_int32 _ -> type_int32
-  | Const_int64 _ -> type_int64
-  | Const_nativeint _ -> type_nativeint
+let literal = function
+    Literal_int _ -> type_int
+  | Literal_float _ -> type_float
+  | Literal_string _ -> type_string
+  | Literal_char _ -> type_char
+  | Literal_int32 _ -> type_int32
+  | Literal_int64 _ -> type_int64
+  | Literal_nativeint _ -> type_nativeint
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -34,20 +34,20 @@ let constant = function
 
 let rec pattern pat =
   let ty = pattern_aux pat in
-  (try unify pat.pat_type ty with Unify -> fatal_error "Typify.pattern");
-  pat.pat_type
+  (try unify pat.tpat_type ty with Unify -> fatal_error "Typify.pattern");
+  pat.tpat_type
 
 and pattern_aux pat =
-  match pat.pat_desc with
+  match pat.tpat_desc with
       Tpat_any ->
         new_type_var ()
     | Tpat_var lval ->
         lval.lval_type
     | Tpat_alias (pat', lval) ->
         pattern_expect pat' lval.lval_type;
-        pat'.pat_type
-    | Tpat_constant c ->
-        constant c
+        pat'.tpat_type
+    | Tpat_literal c ->
+        literal c
     | Tpat_tuple patl ->
         Mtuple (List.map pattern patl)
     | Tpat_construct (cs, args) ->
@@ -78,7 +78,7 @@ and pattern_expect pat expected_ty =
   begin try
     unify ty expected_ty
   with Unify ->
-    raise (Error (pat.pat_loc, Pattern_type_clash (ty, expected_ty)))
+    raise (Error (pat.tpat_loc, Pattern_type_clash (ty, expected_ty)))
   end
 
 (* ---------------------------------------------------------------------- *)
@@ -89,9 +89,9 @@ and pattern_expect pat expected_ty =
    evaluation cannot contain newly created mutable objects. *)
 
 let rec is_nonexpansive expr =
-  match expr.exp_desc with
+  match expr.texp_desc with
       Texp_ident id -> true
-    | Texp_constant sc -> true
+    | Texp_literal sc -> true
     | Texp_tuple el -> List.forall is_nonexpansive el
     | Texp_construct (cstr, l) -> List.forall is_nonexpansive l
     | Texp_let (rec_flag, bindings, body) ->
@@ -285,18 +285,18 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty = expression_aux exp in
-  (try unify exp.exp_type ty with Unify -> fatal_error "Typify.expression");
+  (try unify exp.texp_type ty with Unify -> fatal_error "Typify.expression");
   ty
 
 and expression_aux exp =
-  match exp.exp_desc with
+  match exp.texp_desc with
       Texp_ident genval ->
         begin match genval with
             Local_value lval -> lval.lval_type
           | Global_value v -> instantiate_one_type v.val_type
         end
-    | Texp_constant c ->
-        constant c
+    | Texp_literal c ->
+        literal c
     | Texp_tuple args ->
         Mtuple (List.map expression args)
     | Texp_construct (cs, args) ->
@@ -316,7 +316,7 @@ and expression_aux exp =
                       v.link <- Some (Marrow (ty1, ty2));
                       ty1, ty2
                   | Marrow (ty1, ty2) -> ty1, ty2
-                  | _ -> raise(Error(exp.exp_loc, Apply_non_function (expand_head ty_fct)))
+                  | _ -> raise(Error(exp.texp_loc, Apply_non_function (expand_head ty_fct)))
               in
               expression_expect arg1 ty1;
               type_args ty2 argl
@@ -403,7 +403,7 @@ and expression_aux exp =
    Some constructs are treated specially to provide better error messages. *)
 
 and expression_expect exp expected_ty =
-  match exp.exp_desc with
+  match exp.texp_desc with
     | Texp_let (_, pat_exp_list, body) ->
         bindings pat_exp_list;
         expression_expect body expected_ty
@@ -413,15 +413,15 @@ and expression_expect exp expected_ty =
     | _ ->
         let ty =
           (* Terrible hack for format strings *)
-          match exp.exp_desc with
-              Texp_constant (Const_string s) ->
+          match exp.texp_desc with
+              Texp_literal (Literal_string s) ->
                 let ty =
                   match expand_head expected_ty with
                       Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
-                        formatstring exp.exp_loc s
+                        formatstring exp.texp_loc s
                     | _ ->
                         type_string in
-                unify exp.exp_type ty;
+                unify exp.texp_type ty;
                 ty
             | _ ->
                 expression exp
@@ -429,14 +429,14 @@ and expression_expect exp expected_ty =
         begin try
           unify ty expected_ty
         with Unify ->
-          raise (Error (exp.exp_loc, Expression_type_clash (ty, expected_ty)))
+          raise (Error (exp.texp_loc, Expression_type_clash (ty, expected_ty)))
         end
 
 (* Typify of "let" definitions *)
 
 and bindings pat_exp_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_exp_list;
-  List.iter (fun (pat, exp) -> expression_expect exp pat.pat_type) pat_exp_list
+  List.iter (fun (pat, exp) -> expression_expect exp pat.tpat_type) pat_exp_list
 
 (* Typify of match cases *)
 
@@ -450,11 +450,11 @@ and statement expr =
   let ty = expression expr in
   match repr ty with
   | Marrow(_,_) ->
-      Location.prerr_warning expr.exp_loc Warnings.Partial_application
+      Location.prerr_warning expr.texp_loc Warnings.Partial_application
   | Mvar _ -> ()
   | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
-      Location.prerr_warning expr.exp_loc Warnings.Statement_type
+      Location.prerr_warning expr.texp_loc Warnings.Statement_type
 
 (* ---------------------------------------------------------------------- *)
 (* Temporary structure items and toplevel evals.                          *)
@@ -464,19 +464,20 @@ let top_bindings pat_exp_list =
   bindings pat_exp_list;
   List.iter
     (fun (pat, exp) ->
-       if not (is_nonexpansive exp) && not (is_closed pat.pat_type) then
-         raise (Error (exp.exp_loc, Non_generalizable pat.pat_type)))
+       if not (is_nonexpansive exp) && not (is_closed pat.tpat_type) then
+         raise (Error (exp.texp_loc, Non_generalizable pat.tpat_type)))
     pat_exp_list
 
-let temporary_structure_item = function
-    Tstr_eval exp -> ignore (expression exp)
-  | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
-  | _ -> ()
+let temporary_structure_item tstr =
+  match tstr.tstr_desc with
+      Tstr_eval exp -> ignore (expression exp)
+    | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
+    | _ -> ()
 
 let toplevel_eval exp =
   let ty = expression exp in
   if not (is_nonexpansive exp) && not (is_closed ty) then
-    raise (Error (exp.exp_loc, Non_generalizable ty));
+    raise (Error (exp.texp_loc, Non_generalizable ty));
   generalize ty
 
 (* ---------------------------------------------------------------------- *)

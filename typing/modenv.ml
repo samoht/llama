@@ -12,22 +12,25 @@ exception Error of error
 (* Persistent structures.                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-type cached_module =
-  { mod_sig : signature;
-    mod_crcs : (string * Digest.t) list;
-    mod_values: (string, value) Tbl.t;
-    mod_constrs: (string, constructor) Tbl.t;
-    mod_labels: (string, label) Tbl.t;
-    mod_types: (string, type_constructor) Tbl.t;
-    value_positions : (string, int) Tbl.t;
-    exception_positions : (string, int) Tbl.t }
+type module_index =
+  { mod_signature : signature;
+    mod_dependencies : (string * Digest.t) list;
+    mod_values : (string, value) Tbl.t;
+    mod_constrs : (string, constructor) Tbl.t;
+    mod_labels : (string, label) Tbl.t;
+    mod_types : (string, type_constructor) Tbl.t;
+    mod_value_positions : (string, int) Tbl.t;
+    mod_exception_positions : (string, int) Tbl.t }
 
-let persistent_structures = ref (Tbl.empty : (string, cached_module) Tbl.t)
+let persistent_structures = ref (Tbl.empty : (string, module_index) Tbl.t)
+
 let crc_units = Consistbl.create()
 
 let reset_cache () =
   persistent_structures := Tbl.empty;
   Consistbl.clear crc_units
+
+let imported_units () = Consistbl.extract crc_units
 
 (* Consistency between persistent structures *)
 
@@ -41,7 +44,7 @@ let check_consistency filename crcs =
 
 (* Reading persistent structures from .cmi files *)
 
-let make_cached_module sg crcs =
+let make_module_index sg crcs =
   let type_constructors = ref Tbl.empty in
   let constructors = ref Tbl.empty in
   let labels = ref Tbl.empty in
@@ -50,42 +53,38 @@ let make_cached_module sg crcs =
   let exception_positions = ref Tbl.empty in
   let pos = ref 0 in
   List.iter
-    begin fun item ->
-      begin match item with
-        | Sig_value v ->
-            values := Tbl.add v.val_name v !values;
-            if v.val_kind = Val_reg then begin
-              value_positions := Tbl.add v.val_name !pos !value_positions;
-              incr pos
-            end
-        | Sig_exception cs ->
-            constructors := Tbl.add cs.cs_name cs !constructors;
-            exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
+    begin function
+        Sig_value v ->
+          values := Tbl.add v.val_name v !values;
+          if v.val_kind = Val_reg then begin
+            value_positions := Tbl.add v.val_name !pos !value_positions;
             incr pos
-        | Sig_type (tcs,_) ->
-            type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
-            begin match tcs.tcs_kind with
-              | Tcs_variant cstrs ->
-                  List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
-              | Tcs_record lbls ->
-                  List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
-              | _ ->
-                  ()
-            end
-      end
+          end
+      | Sig_exception cs ->
+          constructors := Tbl.add cs.cs_name cs !constructors;
+          exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
+          incr pos
+      | Sig_type (tcs,_) ->
+          type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
+          begin match tcs.tcs_kind with
+            | Tcs_variant cstrs ->
+                List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
+            | Tcs_record lbls ->
+                List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
+            | _ ->
+                ()
+          end
     end sg;
-  { mod_sig = sg;
-    mod_crcs = crcs;
+  { mod_signature = sg;
+    mod_dependencies = crcs;
     mod_values = !values;
     mod_constrs = !constructors;
     mod_labels = !labels;
     mod_types = !type_constructors;
-    value_positions = !value_positions;
-    exception_positions = !exception_positions }
+    mod_value_positions = !value_positions;
+    mod_exception_positions = !exception_positions }
 
-let cm_predef = make_cached_module Predef.signature []
-
-let imported_units () = Consistbl.extract crc_units
+let modidx_predef = make_module_index Predef.signature []
 
 (* ---------------------------------------------------------------------- *)
 (* Map operation for abstract signatures.                                 *)
@@ -174,7 +173,7 @@ let save_signature_with_imports sg modname filename imports =
     close_out oc;
     (* Enter signature in persistent table so that imported_unit()
        will also return its crc *)
-    let ps = make_cached_module sg crcs in
+    let ps = make_module_index sg crcs in
     persistent_structures := Tbl.add modname ps !persistent_structures;
     Consistbl.set crc_units modname crc filename
   with exn ->
@@ -201,23 +200,23 @@ let rec map_signature_for_load l =
   map_signature memo f l
 
 and get_type_constructor modid name =
-  let cm = cached_module modid in
+  let cm = module_index modid in
   Tbl.find name cm.mod_types
 
-and cached_module = function
+and module_index = function
     Module_builtin ->
-      cm_predef
+      modidx_predef
   | Module name ->
       begin try
         Tbl.find name !persistent_structures
       with Not_found ->
-        read_cached_module name
+        read_module_index name
           (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
       end
   | Module_toplevel ->
-      failwith "Modenv.cached_module"
+      failwith "Modenv.module_index"
 
-and read_cached_module modname filename =
+and read_module_index modname filename =
   let ic = open_in_bin filename in
   try
     let mn = (input_value ic : string) in
@@ -227,9 +226,9 @@ and read_cached_module modname filename =
     close_in ic;
     assert (mn = modname);
     check_consistency filename crcs;
-    let cm = make_cached_module mod_sig crcs in
-    persistent_structures := Tbl.add modname cm !persistent_structures;
-    cm
+    let ps = make_module_index mod_sig crcs in
+    persistent_structures := Tbl.add modname ps !persistent_structures;
+    ps
   with End_of_file | Failure _ ->
     close_in ic;
     Printf.eprintf "Corrupted compiled interface file %s.\n\
@@ -238,21 +237,26 @@ and read_cached_module modname filename =
     assert false
 
 let read_signature modname filename =
-  (read_cached_module modname filename).mod_sig
+  (read_module_index modname filename).mod_signature
 
 (* ---------------------------------------------------------------------- *)
-(* Getting                                                                *)
+(* Lookups.                                                               *)
 (* ---------------------------------------------------------------------- *)
 
-let lookup_signature name = (cached_module (Module name)).mod_sig
-let lookup_type_constructor modid name = Tbl.find name (cached_module modid).mod_types
-let lookup_constructor modid name = Tbl.find name (cached_module modid).mod_constrs
-let lookup_label modid name = Tbl.find name (cached_module modid).mod_labels
-let lookup_value modid name = Tbl.find name (cached_module modid).mod_values
+let lookup_signature modid =
+  (module_index modid).mod_signature
+let lookup_type_constructor modid name =
+  Tbl.find name (module_index modid).mod_types
+let lookup_constructor modid name =
+  Tbl.find name (module_index modid).mod_constrs
+let lookup_label modid name =
+  Tbl.find name (module_index modid).mod_labels
+let lookup_value modid name =
+  Tbl.find name (module_index modid).mod_values
 let lookup_value_position v =
-  Tbl.find v.val_name (cached_module v.val_module).value_positions
+  Tbl.find v.val_name (module_index v.val_module).mod_value_positions
 let lookup_exception_position cs =
-  Tbl.find cs.cs_name (cached_module cs.cs_module).exception_positions
+  Tbl.find cs.cs_name (module_index cs.cs_module).mod_exception_positions
 
 (* ---------------------------------------------------------------------- *)
 (* Current module.                                                        *)
@@ -260,14 +264,9 @@ let lookup_exception_position cs =
 
 let current_module = ref (Module "")
 
-let set_current_unit m =
-  current_module := m
-
-let get_current_module () = !current_module
-
 (* ---------------------------------------------------------------------- *)
-
-(* Error report *)
+(* Error report.                                                          *)
+(* ---------------------------------------------------------------------- *)
 
 open Format
 

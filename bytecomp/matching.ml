@@ -1335,7 +1335,7 @@ let get_mod_field modname field =
           let x =
             try
               let mod_ident = Module modname in
-              let env = Env.add_signature (Modenv.lookup_signature modname) Env.initial in
+              let env = Env.add_signature (Modenv.lookup_signature (Module modname)) Env.initial in
               let value =
                 try
                   Env.lookup_value (Longident.Lident field) env
@@ -1374,12 +1374,12 @@ let inline_lazy_force_cond arg loc =
             Lifthenelse(
               (* if (tag == Obj.forward_tag) then varg.(0) else ... *)
               Lprim(Pintcomp Ceq,
-                    [Lvar tag; Lconst(Const_base(Const_int Obj.forward_tag))]),
+                    [Lvar tag; Lconst(Const_base(Literal_int Obj.forward_tag))]),
               Lprim(Pfield 0, [varg]),
               Lifthenelse(
                 (* ... if (tag == Obj.lazy_tag) then Lazy.force varg else ... *)
                 Lprim(Pintcomp Ceq,
-                      [Lvar tag; Lconst(Const_base(Const_int Obj.lazy_tag))]),
+                      [Lvar tag; Lconst(Const_base(Literal_int Obj.lazy_tag))]),
                 Lapply(force_fun, [varg], loc),
                 (* ... arg *)
                   varg))))
@@ -1530,7 +1530,7 @@ let make_array_matching kind p def ctx = function
       let rec make_args pos =
         if pos >= len
         then argl
-        else (Lprim(Parrayrefu kind, [arg; Lconst(Const_base(Const_int pos))]),
+        else (Lprim(Parrayrefu kind, [arg; Lconst(Const_base(Literal_int pos))]),
               StrictOpt) :: make_args (pos + 1) in
       let def = make_default (matcher_array len) def
       and ctx = filter_ctx p ctx in
@@ -1552,7 +1552,7 @@ let float_compare s1 s2 =
 let sort_lambda_list l =
   List.sort
     (fun (x,_) (y,_) -> match x,y with
-    | Const_float f1, Const_float f2 -> float_compare f1 f2
+    | Literal_float f1, Literal_float f2 -> float_compare f1 f2
     | _, _ -> Pervasives.compare x y)
     l
 
@@ -1730,7 +1730,7 @@ let _SArg : (Lambda.primitive, Lambda.lambda) _Arg = {
   make_switch = make_switch_switcher
 }
 
-let lambda_of_int i =  Lconst (Const_base (Const_int i))
+let lambda_of_int i =  Lconst (Const_base (Literal_int i))
 
 let rec last def = function
   | [] -> def
@@ -1974,39 +1974,39 @@ let combine_constant arg cst partial ctx def
   let const_lambda_list = to_add@const_lambda_list in
   let lambda1 =
     match cst with
-    | Const_int _ ->
+    | Literal_int _ ->
         let int_lambda_list =
-          List.map (function Const_int n, l -> n,l | _ -> assert false)
+          List.map (function Literal_int n, l -> n,l | _ -> assert false)
             const_lambda_list in
         call_switcher
           lambda_of_int fail arg min_int max_int int_lambda_list
-    | Const_char _ ->
+    | Literal_char _ ->
         let int_lambda_list =
-          List.map (function Const_char c, l -> (Char.code c, l)
+          List.map (function Literal_char c, l -> (Char.code c, l)
             | _ -> assert false)
             const_lambda_list in
         call_switcher
-          (fun i -> Lconst (Const_base (Const_int i)))
+          (fun i -> Lconst (Const_base (Literal_int i)))
           fail arg 0 255 int_lambda_list
-    | Const_string _ ->
+    | Literal_string _ ->
         make_test_sequence
           fail prim_string_notequal Praise arg const_lambda_list
-    | Const_float _ ->
+    | Literal_float _ ->
         make_test_sequence
           fail
           (Pfloatcomp Cneq) (Pfloatcomp Clt)
           arg const_lambda_list
-    | Const_int32 _ ->
+    | Literal_int32 _ ->
         make_test_sequence
           fail
           (Pbintcomp(Pint32, Cneq)) (Pbintcomp(Pint32, Clt))
           arg const_lambda_list
-    | Const_int64 _ ->
+    | Literal_int64 _ ->
         make_test_sequence
           fail
           (Pbintcomp(Pint64, Cneq)) (Pbintcomp(Pint64, Clt))
           arg const_lambda_list
-    | Const_nativeint _ ->
+    | Literal_nativeint _ ->
         make_test_sequence
           fail
           (Pbintcomp(Pnativeint, Cneq)) (Pbintcomp(Pnativeint, Clt))
@@ -2080,7 +2080,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
               Lifthenelse(arg, act2, act1)
           | (n,_,_,[])  ->
               call_switcher
-                (fun i -> Lconst (Const_base (Const_int i)))
+                (fun i -> Lconst (Const_base (Literal_int i)))
                 None arg 0 (n-1) consts
           | (n, _, _, _) ->
               match same_actions nonconsts with
@@ -2094,7 +2094,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
                   Lifthenelse
                     (Lprim (Pisint, [arg]),
                      call_switcher
-                       (fun i -> Lconst (Const_base (Const_int i)))
+                       (fun i -> Lconst (Const_base (Literal_int i)))
                        None arg
                        0 (n-1) consts,
                      act) in
@@ -2105,11 +2105,11 @@ let make_test_sequence_variant_constant fail arg int_lambda_list =
   let _, (cases, actions) =
     as_interval fail min_int max_int int_lambda_list in
   Switch.test_sequence _SArg
-    (fun i -> Lconst (Const_base (Const_int i))) arg cases actions
+    (fun i -> Lconst (Const_base (Literal_int i))) arg cases actions
 
 let call_switcher_variant_constant fail arg int_lambda_list =
   call_switcher
-    (fun i -> Lconst (Const_base (Const_int i)))
+    (fun i -> Lconst (Const_base (Literal_int i)))
     fail arg min_int max_int int_lambda_list
 
 
@@ -2117,7 +2117,7 @@ let call_switcher_variant_constr fail arg int_lambda_list =
   let v = Ident.create "variant" in
   Llet(Alias, v, Lprim(Pfield 0, [arg]),
        call_switcher
-         (fun i -> Lconst (Const_base (Const_int i)))
+         (fun i -> Lconst (Const_base (Literal_int i)))
          fail (Lvar v) min_int max_int int_lambda_list)
 
 let combine_variant row arg partial ctx def (tag_lambda_list, total1, pats) =
@@ -2567,9 +2567,9 @@ let partial_function loc () =
   Lprim(Praise, [Lprim(Pmakeblock(0, Immutable),
           [transl_exception Predef.cs_match_failure;
            Lconst(Const_block(0,
-              [Const_base(Const_string fname);
-               Const_base(Const_int line);
-               Const_base(Const_int char)]))])])
+              [Const_base(Literal_string fname);
+               Const_base(Literal_int line);
+               Const_base(Literal_int char)]))])])
 
 let for_function loc repr param pat_act_list partial =
   compile_matching loc repr (partial_function loc) param pat_act_list partial

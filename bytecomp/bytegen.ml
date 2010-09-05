@@ -434,7 +434,7 @@ let rec comp_expr env exp sz cont =
       let getmethod, args' =
         if kind = Self then (Kgetmethod, met::obj::args) else
         match met with
-          Lconst(Const_base(Const_int n)) -> (Kgetpubmet n, obj::args)
+          Lconst(Const_base(Literal_int n)) -> (Kgetpubmet n, obj::args)
         | _ -> (Kgetdynmet, met::obj::args)
       in
       if is_tailcall cont then
@@ -492,15 +492,15 @@ let rec comp_expr env exp sz cont =
         let rec comp_init new_env sz = function
           | [] -> comp_nonrec new_env sz ndecl decl_size
           | (id, exp, RHS_floatblock blocksize) :: rem ->
-              Kconst(Const_base(Const_int blocksize)) ::
+              Kconst(Const_base(Literal_int blocksize)) ::
               Kccall("caml_alloc_dummy_float", 1) :: Kpush ::
               comp_init (add_var id (sz+1) new_env) (sz+1) rem
           | (id, exp, RHS_block blocksize) :: rem ->
-              Kconst(Const_base(Const_int blocksize)) ::
+              Kconst(Const_base(Literal_int blocksize)) ::
               Kccall("caml_alloc_dummy", 1) :: Kpush ::
               comp_init (add_var id (sz+1) new_env) (sz+1) rem
           | (id, exp, RHS_nonrec) :: rem ->
-              Kconst(Const_base(Const_int 0)) :: Kpush ::
+              Kconst(Const_base(Literal_int 0)) :: Kpush ::
               comp_init (add_var id (sz+1) new_env) (sz+1) rem
         and comp_nonrec new_env sz i = function
           | [] -> comp_rec new_env sz ndecl decl_size
@@ -561,17 +561,17 @@ let rec comp_expr env exp sz cont =
       end
   | Lprim(Praise, [arg]) ->
       comp_expr env arg sz (Kraise :: discard_dead_code cont)
-  | Lprim(Paddint, [arg; Lconst(Const_base(Const_int n))])
+  | Lprim(Paddint, [arg; Lconst(Const_base(Literal_int n))])
     when is_immed n ->
       comp_expr env arg sz (Koffsetint n :: cont)
-  | Lprim(Psubint, [arg; Lconst(Const_base(Const_int n))])
+  | Lprim(Psubint, [arg; Lconst(Const_base(Literal_int n))])
     when is_immed (-n) ->
       comp_expr env arg sz (Koffsetint (-n) :: cont)
   | Lprim (Poffsetint n, [arg])
     when not (is_immed n) ->
       comp_expr env arg sz
         (Kpush::
-         Kconst (Const_base (Const_int n))::
+         Kconst (Const_base (Literal_int n))::
          Kaddint::cont)
   | Lprim(Pmakearray kind, args) ->
       begin match kind with
@@ -807,7 +807,7 @@ let comp_block env exp sz cont =
   let code = comp_expr env exp sz cont in
   (* +1 because comp_expr may have pushed one more word *)
   if !max_stack_used + 1 > Config.stack_threshold then
-    Kconst(Const_base(Const_int(!max_stack_used + 1))) ::
+    Kconst(Const_base(Literal_int(!max_stack_used + 1))) ::
     Kccall("caml_ensure_stack_capacity", 1) ::
     code
   else

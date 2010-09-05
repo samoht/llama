@@ -63,7 +63,7 @@ let rec add_pattern bv pat =
     Ppat_any -> ()
   | Ppat_var _ -> ()
   | Ppat_alias(p, _) -> add_pattern bv p
-  | Ppat_constant _ -> ()
+  | Ppat_literal _ -> ()
   | Ppat_tuple pl -> List.iter (add_pattern bv) pl
   | Ppat_construct(c, op) -> add bv c; add_opt add_pattern bv op
   | Ppat_record(pl) ->
@@ -76,7 +76,7 @@ let rec add_pattern bv pat =
 let rec add_expr bv exp =
   match exp.pexp_desc with
     Pexp_ident l -> add bv l
-  | Pexp_constant _ -> ()
+  | Pexp_literal _ -> ()
   | Pexp_let(_, pel, e) -> add_pat_expr_list bv pel; add_expr bv e
   | Pexp_function pel ->
       add_pat_expr_list bv pel
@@ -104,54 +104,51 @@ let rec add_expr bv exp =
   | Pexp_when(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexp_assert (e) -> add_expr bv e
   | Pexp_assertfalse -> ()
-(*  | Pexp_lazy (e) -> add_expr bv e *)
+(*| Pexp_lazy (e) -> add_expr bv e *)
+
 and add_pat_expr_list bv pel =
   List.iter (fun (p, e) -> add_pattern bv p; add_expr bv e) pel
 
-and add_signature bv = function
-    [] -> ()
-  | item :: rem -> add_signature (add_sig_item bv item) rem
-
-and add_sig_item bv item =
+let add_sig_item bv item =
   match item.psig_desc with
     Psig_value(id, ty) ->
-      add_type bv ty; bv
-  | Psig_primitive(id, ty, _) ->
-      add_type bv ty; bv
+      add_type bv ty
+  | Psig_external(id, ty, _) ->
+      add_type bv ty
   | Psig_type dcls ->
-      List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
+      List.iter (fun (td) -> add_type_declaration bv td) dcls
   | Psig_exception(id, args) ->
-      List.iter (add_type bv) args; bv
+      List.iter (add_type bv) args
   | Psig_open lid ->
-      addmodule bv lid; bv
+      addmodule bv lid
 (*  | Psig_include mty ->
-      add_modtype bv mty; bv *)
+      add_modtype bv mty *)
 
-and add_structure bv item_list =
-  List.fold_left add_struct_item bv item_list
+let add_signature bv = List.iter (add_sig_item bv)
 
-and add_struct_item bv item =
+let add_struct_item bv item =
   match item.pstr_desc with
     Pstr_eval e ->
-      add_expr bv e; bv
+      add_expr bv e
   | Pstr_value(id, pel) ->
-      add_pat_expr_list bv pel; bv
-  | Pstr_primitive(id, ty, _) ->
-      add_type bv ty; bv
+      add_pat_expr_list bv pel
+  | Pstr_external(id, ty, _) ->
+      add_type bv ty
   | Pstr_type dcls ->
-      List.iter (fun (td) -> add_type_declaration bv td) dcls; bv
+      List.iter (fun (td) -> add_type_declaration bv td) dcls
   | Pstr_exception(id, args) ->
-      List.iter (add_type bv) args; bv
+      List.iter (add_type bv) args
 (*  | Pstr_exn_rebind(id, l) ->
-      add bv l; bv *)
+      add bv l *)
   | Pstr_open l ->
-      addmodule bv l; bv
+      addmodule bv l
 (*  | Pstr_include modl ->
-      add_module bv modl; bv *)
+      add_module bv modl *)
 
-and add_use_file bv top_phrs =
-  ignore (List.fold_left add_top_phrase bv top_phrs)
+let add_structure bv = List.iter (add_struct_item bv)
 
-and add_top_phrase bv = function
+let add_top_phrase bv = function
   | Ptop_def str -> add_struct_item bv str
-  | Ptop_dir (_, _) -> bv
+  | Ptop_dir (_, _) -> ()
+
+let add_use_file bv = List.iter (add_top_phrase bv)

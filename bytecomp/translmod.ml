@@ -95,7 +95,7 @@ let rec transl_structure fields cc x =
       let ext_fields = List.rev_map (fun (_, v) -> Ident.of_value v) m @ fields in
       transl_let rec_flag pat_expr_list
                  (transl_structure ext_fields cc rem)
-  | Str_primitive(v) :: rem ->
+  | Str_external(v) :: rem ->
       record_primitive v;
       transl_structure fields cc rem
   | Str_type(decls) :: rem ->
@@ -150,7 +150,7 @@ let transl_store_structure glob map prims str =
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
       Lsequence(subst_lambda subst lam,
                 transl_store (add_idents false ids subst) rem)
-  | Str_primitive(v) :: rem ->
+  | Str_external(v) :: rem ->
       record_primitive v;
       transl_store subst rem
   | Str_type(decls) :: rem ->
@@ -202,7 +202,7 @@ let rec defined_idents = function
   | Str_eval expr :: rem -> defined_idents rem
   | Str_value(rec_flag, pat_expr_list, m) :: rem ->
       List.map (fun (_, v) -> Ident.of_value v) m @ defined_idents rem
-  | Str_primitive _ :: rem -> defined_idents rem
+  | Str_external _ :: rem -> defined_idents rem
   | Str_type (decls) :: rem -> defined_idents rem
   | Str_exception(cs) :: rem -> Ident.of_exception cs :: defined_idents rem
   | Str_open _ :: rem -> defined_idents rem
@@ -282,13 +282,13 @@ let toplevel_name id =
 let toploop_getvalue id =
   Lapply(Lprim(Pfield toploop_getvalue_pos,
                  [Lprim(Pgetglobal toploop_ident, [])]),
-         [Lconst(Const_base(Const_string (toplevel_name id)))],
+         [Lconst(Const_base(Literal_string (toplevel_name id)))],
          Location.none)
 
 let toploop_setvalue id lam =
   Lapply(Lprim(Pfield toploop_setvalue_pos,
                  [Lprim(Pgetglobal toploop_ident, [])]),
-         [Lconst(Const_base(Const_string (toplevel_name id))); lam],
+         [Lconst(Const_base(Literal_string (toplevel_name id))); lam],
          Location.none)
 
 let toploop_setvalue_id id = toploop_setvalue id (Lvar id)
@@ -305,7 +305,7 @@ let transl_toplevel_item = function
       let idents = List.map (fun (_, v) -> Ident.of_value v) m in
       transl_let rec_flag pat_expr_list
                  (make_sequence toploop_setvalue_id idents)
-  | Str_primitive _ ->
+  | Str_external _ ->
       lambda_unit
   | Str_type(decls) ->
       lambda_unit

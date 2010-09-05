@@ -24,12 +24,12 @@ open Context
 open Mutable_type
 
 let has_base_type exp base_tcs =
-  match expand_head exp.exp_type with
+  match expand_head exp.texp_type with
   | Mconstr(tcs, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
-  match expand_head exp.exp_type with
+  match expand_head exp.texp_type with
   | Mconstr(tcs, args) ->
       not (tcs == Predef.tcs_int) &&
       not (tcs == Predef.tcs_char) &&
@@ -46,7 +46,7 @@ let maybe_pointer exp =
       end
   | _ -> true
 
-let array_element_kind env ty =
+let array_element_kind ty =
   match expand_head ty with
   | Mvar _ ->
       Pgenarray
@@ -80,19 +80,19 @@ let array_element_kind env ty =
   | _ ->
       Paddrarray
 
-let array_kind_gen ty env =
+let array_kind_gen ty =
   match expand_head ty with
   | Mconstr(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
-      array_element_kind env elt_ty
+      array_element_kind elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)
       Pgenarray
 
-let array_kind exp = array_kind_gen exp.exp_type exp.exp_env
+let array_kind exp = array_kind_gen exp.texp_type
 
-let array_pattern_kind pat = array_kind_gen pat.pat_type pat.pat_env
+let array_pattern_kind pat = array_kind_gen pat.tpat_type
 
-let bigarray_decode_type env ty tbl dfl =
+let bigarray_decode_type ty tbl dfl =
   match expand_head ty with
   | Mconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
       begin try List.assoc name tbl with Not_found -> dfl end
@@ -118,9 +118,9 @@ let layout_table =
    "fortran_layout", Pbigarray_fortran_layout]
 
 let bigarray_kind_and_layout exp =
-  match expand_head exp.exp_type with
+  match expand_head exp.texp_type with
   | Mconstr(_, [caml_type; elt_type; layout_type]) ->
-      (bigarray_decode_type exp.exp_env elt_type kind_table Pbigarray_unknown,
-       bigarray_decode_type exp.exp_env layout_type layout_table Pbigarray_unknown_layout)
+      (bigarray_decode_type elt_type kind_table Pbigarray_unknown,
+       bigarray_decode_type layout_type layout_table Pbigarray_unknown_layout)
   | _ ->
       (Pbigarray_unknown, Pbigarray_unknown_layout)

@@ -75,27 +75,27 @@ let neg_float_string f =
 
 let mkuminus name arg =
   match name, arg.pexp_desc with
-  | "-", Pexp_constant(Const_int n) ->
-      mkexp(Pexp_constant(Const_int(-n)))
-  | "-", Pexp_constant(Const_int32 n) ->
-      mkexp(Pexp_constant(Const_int32(Int32.neg n)))
-  | "-", Pexp_constant(Const_int64 n) ->
-      mkexp(Pexp_constant(Const_int64(Int64.neg n)))
-  | "-", Pexp_constant(Const_nativeint n) ->
-      mkexp(Pexp_constant(Const_nativeint(Nativeint.neg n)))
-  | ("-" | "-."), Pexp_constant(Const_float f) ->
-      mkexp(Pexp_constant(Const_float(neg_float_string f)))
+  | "-", Pexp_literal(Literal_int n) ->
+      mkexp(Pexp_literal(Literal_int(-n)))
+  | "-", Pexp_literal(Literal_int32 n) ->
+      mkexp(Pexp_literal(Literal_int32(Int32.neg n)))
+  | "-", Pexp_literal(Literal_int64 n) ->
+      mkexp(Pexp_literal(Literal_int64(Int64.neg n)))
+  | "-", Pexp_literal(Literal_nativeint n) ->
+      mkexp(Pexp_literal(Literal_nativeint(Nativeint.neg n)))
+  | ("-" | "-."), Pexp_literal(Literal_float f) ->
+      mkexp(Pexp_literal(Literal_float(neg_float_string f)))
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
 
 let mkuplus name arg =
   let desc = arg.pexp_desc in
   match name, desc with
-  | "+", Pexp_constant(Const_int _)
-  | "+", Pexp_constant(Const_int32 _)
-  | "+", Pexp_constant(Const_int64 _)
-  | "+", Pexp_constant(Const_nativeint _)
-  | ("+" | "+."), Pexp_constant(Const_float _) -> mkexp desc
+  | "+", Pexp_literal(Literal_int _)
+  | "+", Pexp_literal(Literal_int32 _)
+  | "+", Pexp_literal(Literal_int64 _)
+  | "+", Pexp_literal(Literal_nativeint _)
+  | ("+" | "+."), Pexp_literal(Literal_float _) -> mkexp desc
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
 
@@ -130,13 +130,13 @@ let array_function str name =
   Ldot(str, (if !Clflags.fast then "unsafe_" ^ name else name))
 
 let rec deep_mkrangepat c1 c2 =
-  if c1 = c2 then ghpat(Ppat_constant(Const_char c1)) else
-  ghpat(Ppat_or(ghpat(Ppat_constant(Const_char c1)),
+  if c1 = c2 then ghpat(Ppat_literal(Literal_char c1)) else
+  ghpat(Ppat_or(ghpat(Ppat_literal(Literal_char c1)),
                 deep_mkrangepat (Char.chr(Char.code c1 + 1)) c2))
 
 let rec mkrangepat c1 c2 =
   if c1 > c2 then mkrangepat c2 c1 else
-  if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
+  if c1 = c2 then mkpat(Ppat_literal(Literal_char c1)) else
   reloc_pat (deep_mkrangepat c1 c2)
 
 let syntax_error () =
@@ -358,8 +358,8 @@ structure_item:
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
-  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mkstr(Pstr_primitive($2, $4, $6)) }
+  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
+      { mkstr(Pstr_external($2, $4, $6)) }
   | TYPE type_declarations
       { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -376,8 +376,8 @@ signature:
 signature_item:
     VAL val_ident COLON core_type
       { mksig(Psig_value($2, $4)) }
-  | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
-      { mksig(Psig_primitive($2, $4, $6)) }
+  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
+      { mksig(Psig_external($2, $4, $6)) }
   | TYPE type_declarations
       { mksig(Psig_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -482,8 +482,8 @@ expr:
 simple_expr:
     val_longident
       { mkexp(Pexp_ident $1) }
-  | constant
-      { mkexp(Pexp_constant $1) }
+  | literal
+      { mkexp(Pexp_literal $1) }
   | constr_longident %prec prec_constant_constructor
       { mkexp(Pexp_construct($1, None)) }
   | LPAREN seq_expr RPAREN
@@ -618,8 +618,8 @@ simple_pattern:
       { mkpat(Ppat_var $1) }
   | UNDERSCORE
       { mkpat(Ppat_any) }
-  | signed_constant
-      { mkpat(Ppat_constant $1) }
+  | signed_literal
+      { mkpat(Ppat_literal $1) }
   | CHAR DOTDOT CHAR
       { mkrangepat $1 $3 }
   | constr_longident
@@ -661,11 +661,11 @@ lbl_pattern_list:
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
 ;
 
-/* Primitive declarations */
+/* External declarations */
 
-primitive_declaration:
+external_declaration:
     STRING                                      { [$1] }
-  | STRING primitive_declaration                { $1 :: $2 }
+  | STRING external_declaration                { $1 :: $2 }
 ;
 
 /* Type declarations */
@@ -767,29 +767,29 @@ label:
     LIDENT                                      { $1 }
 ;
 
-/* Constants */
+/* Literals */
 
-constant:
-    INT                                         { Const_int $1 }
-  | CHAR                                        { Const_char $1 }
-  | STRING                                      { Const_string $1 }
-  | FLOAT                                       { Const_float $1 }
-  | INT32                                       { Const_int32 $1 }
-  | INT64                                       { Const_int64 $1 }
-  | NATIVEINT                                   { Const_nativeint $1 }
+literal:
+    INT                                         { Literal_int $1 }
+  | CHAR                                        { Literal_char $1 }
+  | STRING                                      { Literal_string $1 }
+  | FLOAT                                       { Literal_float $1 }
+  | INT32                                       { Literal_int32 $1 }
+  | INT64                                       { Literal_int64 $1 }
+  | NATIVEINT                                   { Literal_nativeint $1 }
 ;
-signed_constant:
-    constant                                    { $1 }
-  | MINUS INT                                   { Const_int(- $2) }
-  | MINUS FLOAT                                 { Const_float("-" ^ $2) }
-  | MINUS INT32                                 { Const_int32(Int32.neg $2) }
-  | MINUS INT64                                 { Const_int64(Int64.neg $2) }
-  | MINUS NATIVEINT                             { Const_nativeint(Nativeint.neg $2) }
-  | PLUS INT                                    { Const_int $2 }
-  | PLUS FLOAT                                  { Const_float $2 }
-  | PLUS INT32                                  { Const_int32 $2 }
-  | PLUS INT64                                  { Const_int64 $2 }
-  | PLUS NATIVEINT                              { Const_nativeint $2 }
+signed_literal:
+    literal                                     { $1 }
+  | MINUS INT                                   { Literal_int(- $2) }
+  | MINUS FLOAT                                 { Literal_float("-" ^ $2) }
+  | MINUS INT32                                 { Literal_int32(Int32.neg $2) }
+  | MINUS INT64                                 { Literal_int64(Int64.neg $2) }
+  | MINUS NATIVEINT                             { Literal_nativeint(Nativeint.neg $2) }
+  | PLUS INT                                    { Literal_int $2 }
+  | PLUS FLOAT                                  { Literal_float $2 }
+  | PLUS INT32                                  { Literal_int32 $2 }
+  | PLUS INT64                                  { Literal_int64 $2 }
+  | PLUS NATIVEINT                              { Literal_nativeint $2 }
 ;
 
 /* Identifiers and long identifiers */

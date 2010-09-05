@@ -16,7 +16,7 @@ and pattern_desc =
     Tpat_any
   | Tpat_var of Ident.t
   | Tpat_alias of pattern * Ident.t
-  | Tpat_constant of constant
+  | Tpat_constant of literal
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor * pattern list
   | Tpat_variant of string * pattern option * row_desc ref
@@ -26,19 +26,19 @@ and pattern_desc =
   | Tpat_lazy of pattern
 
 let rec import pat =
-  match pat.Typedtree.pat_desc with
+  match pat.Typedtree.tpat_desc with
     Typedtree.Tpat_constraint (p, _) -> import p
   | desc ->
       { pat_desc = import_desc desc;
-        pat_loc = pat.Typedtree.pat_loc;
-        pat_env = pat.Typedtree.pat_env;
-        pat_type = pat.Typedtree.pat_type }
+        pat_loc = pat.Typedtree.tpat_loc;
+        pat_env = pat.Typedtree.tpat_env;
+        pat_type = pat.Typedtree.tpat_type }
 
 and import_desc = function
     Typedtree.Tpat_any -> Tpat_any
   | Typedtree.Tpat_var v -> Tpat_var (Ident.of_local_value v)
   | Typedtree.Tpat_alias (p, v) -> Tpat_alias (import p, Ident.of_local_value v)
-  | Typedtree.Tpat_constant c -> Tpat_constant c
+  | Typedtree.Tpat_literal c -> Tpat_constant c
   | Typedtree.Tpat_tuple lp -> Tpat_tuple (List.map import lp)
   | Typedtree.Tpat_construct (cs, lp) -> Tpat_construct (cs, List.map import lp)
   | Typedtree.Tpat_record (_,l) -> Tpat_record (List.map (fun (lbl, p) -> (lbl, import p)) l)
@@ -102,7 +102,7 @@ let count_constructors tcs =
 let calc_lbl_all lbl =
   Array.of_list (get_labels lbl.lbl_tcs)
 
-let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type pat.pat_env
+let array_pattern_kind pat = Typeopt.array_kind_gen pat.pat_type
 
 type partial = Partial | Total
 

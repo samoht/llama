@@ -65,7 +65,7 @@ let rec get_vars ((vacc, asacc) as acc) p =
   | Ppat_var v -> ((v, p.ppat_loc, ref false) :: vacc, asacc)
   | Ppat_alias (pp, v) ->
       get_vars (vacc, ((v, p.ppat_loc, ref false) :: asacc)) pp
-  | Ppat_constant _ -> acc
+  | Ppat_literal _ -> acc
   | Ppat_tuple pl -> List.fold_left get_vars acc pl
   | Ppat_construct (_, po) -> get_vars_option acc po
   | Ppat_record ipl ->
@@ -92,7 +92,7 @@ and structure_item ppf tbl s =
   match s.pstr_desc with
   | Pstr_eval e -> expression ppf tbl e;
   | Pstr_value (recflag, pel) -> let_pel ppf tbl recflag pel None;
-  | Pstr_primitive _ -> ()
+  | Pstr_external _ -> ()
   | Pstr_type _ -> ()
   | Pstr_exception _ -> ()
 (*  | Pstr_exn_rebind _ -> ()*)
@@ -106,7 +106,7 @@ and expression ppf tbl e =
       with Not_found -> ()
       end;
   | Pexp_ident _ -> ()
-  | Pexp_constant _ -> ()
+  | Pexp_literal _ -> ()
   | Pexp_let (recflag, pel, e) ->
       let_pel ppf tbl recflag pel (Some (fun ppf tbl -> expression ppf tbl e));
   | Pexp_function pel ->

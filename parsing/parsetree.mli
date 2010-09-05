@@ -22,7 +22,7 @@ and pattern_desc =
     Ppat_any
   | Ppat_var of string
   | Ppat_alias of pattern * string
-  | Ppat_constant of constant
+  | Ppat_literal of literal
   | Ppat_tuple of pattern list
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
@@ -36,7 +36,7 @@ type expression =
 
 and expression_desc =
     Pexp_ident of Longident.t
-  | Pexp_constant of constant
+  | Pexp_literal of literal
   | Pexp_let of rec_flag * (pattern * expression) list * expression
   | Pexp_function of (pattern * expression) list
   | Pexp_apply of expression * expression list
@@ -75,7 +75,7 @@ type signature_item =
 
 and signature_item_desc =
     Psig_value of string * type_expression
-  | Psig_primitive of string * type_expression * string list
+  | Psig_external of string * type_expression * string list
   | Psig_type of type_declaration list
   | Psig_exception of string * type_expression list
   | Psig_open of string
@@ -87,7 +87,7 @@ type structure_item =
 and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
-  | Pstr_primitive of string * type_expression * string list
+  | Pstr_external of string * type_expression * string list
   | Pstr_type of type_declaration list
   | Pstr_exception of string * type_expression list
   | Pstr_open of string

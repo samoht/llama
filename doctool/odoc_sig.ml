@@ -253,7 +253,7 @@ open Odoc_types
     and analyse_signature_item_desc env signat table current_module_name
         pos_start_ele pos_end_ele pos_limit comment_opt sig_item_desc =
         match sig_item_desc with
-          Parsetree.Psig_value (name_pre, _) | Parsetree.Psig_primitive (name_pre, _, _) ->
+          Parsetree.Psig_value (name_pre, _) | Parsetree.Psig_external (name_pre, _, _) ->
             let type_expr =
               try search_value table name_pre
               with Not_found ->

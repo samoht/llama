@@ -139,7 +139,7 @@ let init () =
         try Ident.of_exception (Predef.find_exception name)
         with Not_found -> fatal_error "Symtable.init" in
       let c = slot_for_setglobal id in
-      let cst = Const_block(0, [Const_base(Const_string name)]) in
+      let cst = Const_block(0, [Const_base(Literal_string name)]) in
       literal_table := (c, cst) :: !literal_table)
     Runtimedef.builtin_exceptions;
   (* Initialize the known C primitives *)
@@ -196,13 +196,13 @@ let patch_object buff patchlist =
 (* Translate structured constants *)
 
 let rec transl_const = function
-    Const_base(Const_int i) -> Obj.repr i
-  | Const_base(Const_char c) -> Obj.repr c
-  | Const_base(Const_string s) -> Obj.repr s
-  | Const_base(Const_float f) -> Obj.repr (float_of_string f)
-  | Const_base(Const_int32 i) -> Obj.repr i
-  | Const_base(Const_int64 i) -> Obj.repr i
-  | Const_base(Const_nativeint i) -> Obj.repr i
+    Const_base(Literal_int i) -> Obj.repr i
+  | Const_base(Literal_char c) -> Obj.repr c
+  | Const_base(Literal_string s) -> Obj.repr s
+  | Const_base(Literal_float f) -> Obj.repr (float_of_string f)
+  | Const_base(Literal_int32 i) -> Obj.repr i
+  | Const_base(Literal_int64 i) -> Obj.repr i
+  | Const_base(Literal_nativeint i) -> Obj.repr i
   | Const_pointer i -> Obj.repr i
   | Const_immstring s -> Obj.repr s
   | Const_block(tag, fields) ->

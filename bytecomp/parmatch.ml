@@ -40,7 +40,7 @@ let rec omegas i =
 
 let omega_list l = List.map (fun _ -> omega) l
 
-let zero = make_pat (Tpat_constant (Const_int 0)) invalid_mutable_type Env.empty
+let zero = make_pat (Tpat_constant (Literal_int 0)) invalid_mutable_type Env.empty
 
 (***********************)
 (* Compatibility check *)
@@ -138,13 +138,13 @@ let is_cons cs = (cs == Predef.cs_cons)
 let rec pretty_val ppf v = match v.pat_desc with
   | Tpat_any -> fprintf ppf "_"
   | Tpat_var x -> Ident.print ppf x
-  | Tpat_constant (Const_int i) -> fprintf ppf "%d" i
-  | Tpat_constant (Const_char c) -> fprintf ppf "%C" c
-  | Tpat_constant (Const_string s) -> fprintf ppf "%S" s
-  | Tpat_constant (Const_float f) -> fprintf ppf "%s" f
-  | Tpat_constant (Const_int32 i) -> fprintf ppf "%ldl" i
-  | Tpat_constant (Const_int64 i) -> fprintf ppf "%LdL" i
-  | Tpat_constant (Const_nativeint i) -> fprintf ppf "%ndn" i
+  | Tpat_constant (Literal_int i) -> fprintf ppf "%d" i
+  | Tpat_constant (Literal_char c) -> fprintf ppf "%C" c
+  | Tpat_constant (Literal_string s) -> fprintf ppf "%S" s
+  | Tpat_constant (Literal_float f) -> fprintf ppf "%s" f
+  | Tpat_constant (Literal_int32 i) -> fprintf ppf "%ldl" i
+  | Tpat_constant (Literal_int64 i) -> fprintf ppf "%LdL" i
+  | Tpat_constant (Literal_nativeint i) -> fprintf ppf "%ndn" i
   | Tpat_tuple vs ->
       fprintf ppf "@[(%a)@]" (pretty_vals ",") vs
   | Tpat_construct (cs,[]) ->
@@ -237,7 +237,7 @@ let simple_match p1 p2 =
       c1 == c2
   | Tpat_variant(l1, _, _), Tpat_variant(l2, _, _) ->
       l1 = l2
-  | Tpat_constant(Const_float s1), Tpat_constant(Const_float s2) ->
+  | Tpat_constant(Literal_float s1), Tpat_constant(Literal_float s2) ->
       float_of_string s1 = float_of_string s2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_tuple _, Tpat_tuple _ -> true
@@ -616,7 +616,7 @@ let full_match closing env =  match env with
           Typeutil.row_field_repr f = Rabsent || List.mem tag fields)
         row.row_fields
 *)
-| ({pat_desc = Tpat_constant(Const_char _)},_) :: _ ->
+| ({pat_desc = Tpat_constant(Literal_char _)},_) :: _ ->
     List.length env = 256
 | ({pat_desc = Tpat_constant(_)},_) :: _ -> false
 | ({pat_desc = Tpat_tuple(_)},_) :: _ -> true
@@ -737,11 +737,11 @@ let build_other ext env =  match env with
           pat other_pats
     end
 *)
-| ({pat_desc = Tpat_constant(Const_char _)} as p,_) :: _ ->
+| ({pat_desc = Tpat_constant(Literal_char _)} as p,_) :: _ ->
     let all_chars =
       List.map
         (fun (p,_) -> match p.pat_desc with
-        | Tpat_constant (Const_char c) -> c
+        | Tpat_constant (Literal_char c) -> c
         | _ -> assert false)
         env in
 
@@ -752,7 +752,7 @@ let build_other ext env =  match env with
         if List.mem ci all_chars then
           find_other (i+1) imax
         else
-          make_pat (Tpat_constant (Const_char ci)) p.pat_type p.pat_env in
+          make_pat (Tpat_constant (Literal_char ci)) p.pat_type p.pat_env in
     let rec try_chars = function
       | [] -> omega
       | (c1,c2) :: rest ->
@@ -765,37 +765,37 @@ let build_other ext env =  match env with
       [ 'a', 'z' ; 'A', 'Z' ; '0', '9' ;
         ' ', '~' ; Char.chr 0 , Char.chr 255]
 
-| ({pat_desc=(Tpat_constant (Const_int _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_int _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_int i) -> i | _ -> assert false)
-      (function i -> Tpat_constant(Const_int i))
+      (function Tpat_constant(Literal_int i) -> i | _ -> assert false)
+      (function i -> Tpat_constant(Literal_int i))
       0 succ p env
-| ({pat_desc=(Tpat_constant (Const_int32 _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_int32 _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_int32 i) -> i | _ -> assert false)
-      (function i -> Tpat_constant(Const_int32 i))
+      (function Tpat_constant(Literal_int32 i) -> i | _ -> assert false)
+      (function i -> Tpat_constant(Literal_int32 i))
       0l Int32.succ p env
-| ({pat_desc=(Tpat_constant (Const_int64 _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_int64 _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_int64 i) -> i | _ -> assert false)
-      (function i -> Tpat_constant(Const_int64 i))
+      (function Tpat_constant(Literal_int64 i) -> i | _ -> assert false)
+      (function i -> Tpat_constant(Literal_int64 i))
       0L Int64.succ p env
-| ({pat_desc=(Tpat_constant (Const_nativeint _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_nativeint _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_nativeint i) -> i | _ -> assert false)
-      (function i -> Tpat_constant(Const_nativeint i))
+      (function Tpat_constant(Literal_nativeint i) -> i | _ -> assert false)
+      (function i -> Tpat_constant(Literal_nativeint i))
       0n Nativeint.succ p env
-| ({pat_desc=(Tpat_constant (Const_string _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_string _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_string s) -> String.length s
+      (function Tpat_constant(Literal_string s) -> String.length s
               | _ -> assert false)
-      (function i -> Tpat_constant(Const_string(String.make i '*')))
+      (function i -> Tpat_constant(Literal_string(String.make i '*')))
       0 succ p env
-| ({pat_desc=(Tpat_constant (Const_float _))} as p,_) :: _ ->
+| ({pat_desc=(Tpat_constant (Literal_float _))} as p,_) :: _ ->
     build_other_constant
-      (function Tpat_constant(Const_float f) -> float_of_string f
+      (function Tpat_constant(Literal_float f) -> float_of_string f
               | _ -> assert false)
-      (function f -> Tpat_constant(Const_float (string_of_float f)))
+      (function f -> Tpat_constant(Literal_float (string_of_float f)))
       0.0 (fun f -> f +. 1.0) p env
 
 | ({pat_desc = Tpat_array args} as p,_)::_ ->
@@ -1378,7 +1378,7 @@ let pressure_variants tdefs patl =
   about guarded patterns
 *)
 
-let has_guard act =   match act.Typedtree.exp_desc with
+let has_guard act =   match act.Typedtree.texp_desc with
 | Typedtree.Texp_when(_, _) -> true
 | _ -> false
 
