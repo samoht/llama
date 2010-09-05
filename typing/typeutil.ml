@@ -3,8 +3,7 @@ open Base
 (* Expansion of abbreviations. *)
 
 let apply params body args =
-  let f = function Tparam tv -> tv | _ -> assert false in
-  let subst = List.combine (List.map f params) args in
+  let subst = List.combine params args in
   let rec aux = function
       Tparam tv -> List.assq tv subst
     | Tarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)

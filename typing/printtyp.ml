@@ -88,8 +88,7 @@ let rec print_list pr sep ppf =
 (* Print one type declaration *)
 
 let rec tree_of_type_decl tcs =
-  let params = List.map (function Tparam param -> param | _ -> assert false) tcs.tcs_params in
-  let params = List.map (fun param -> param.param_name, (true, true)) params in
+  let params = List.map (fun param -> param.param_name, (true, true)) tcs.tcs_params in
   tcs.tcs_name,
   params,
   begin match tcs.tcs_kind with

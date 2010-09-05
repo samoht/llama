@@ -79,7 +79,7 @@ and cs_cons =
   { cs_tcs = {tcs=tcs_list};
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ param_list; Tconstr ({tcs=tcs_list}, [param_list]) ];
+    cs_args = [ Tparam param_list; Tconstr ({tcs=tcs_list}, [Tparam param_list]) ];
     cs_tag = Tag_block 0 }
 
 let param_option = new_standard_parameter 0
@@ -101,7 +101,7 @@ and cs_some =
   { cs_tcs = {tcs=tcs_option};
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ param_option ];
+    cs_args = [ Tparam param_option ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)

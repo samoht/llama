@@ -133,8 +133,7 @@ let rec compare_records subst corresp idx labels1 labels2 =
 let type_declarations subst tcs1 tcs2 =
   let error msg = Error [Type_declarations (tcs1, tcs2, msg)] in
   if tcs_arity tcs1 <> tcs_arity tcs2 then raise (error Arity) else
-  let aux = function Tparam tv -> tv | _ -> assert false in
-  let corresp = List.combine (List.map aux tcs1.tcs_params) (List.map aux tcs2.tcs_params) in
+  let corresp = List.combine tcs1.tcs_params tcs2.tcs_params in
   match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->
         ()
@@ -152,7 +151,7 @@ let type_declarations subst tcs1 tcs2 =
         if Typeutil.equiv corresp ty1 (subst_type subst ty2) then () else
           raise (error Unspecified)
     | _, Tcs_abbrev ty2 ->
-        let ty1 = Tconstr ({tcs=tcs2}, tcs2.tcs_params) in
+        let ty1 = tcs_res tcs2 in
         if Typeutil.equal ty1 ty2 then () else raise (error Unspecified)
     | _ ->
         raise (error Unspecified)

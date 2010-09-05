@@ -50,11 +50,9 @@ let instantiate_one_type ty =
   instantiate_type (make_inst [] ty) ty
 
 let instantiate_type_constructor tcs =
-  let inst =
-    List.map (function
-                  Tparam param -> (param, new_type_var ())
-                | _ -> assert false) tcs.tcs_params in
-  inst, Mconstr (tcs, List.map snd inst)
+  let vars = List.map (fun _ -> new_type_var ()) tcs.tcs_params in
+  let inst = List.combine tcs.tcs_params vars in
+  inst, Mconstr (tcs, vars)
 
 let instantiate_constructor cs =
   let inst, ty_res = instantiate_type_constructor (cs_tcs cs) in
@@ -85,7 +83,8 @@ let is_closed, generalize =
   let is_closed ty = (variables ty = []) in
   let generalize ty =
     let vars = variables ty in
-    let subst = List.combine vars (new_standard_parameters (List.length vars)) in
+    let params = new_standard_parameters (List.length vars) in
+    let subst = List.combine vars (List.map (fun param -> Tparam param) params) in
     let rec aux = function
         Mvar tv ->
           begin match tv.link with
@@ -94,9 +93,9 @@ let is_closed, generalize =
           end
       | Marrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
       | Mtuple tyl -> Ttuple (List.map aux tyl)
-      | Mconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl)
-    in aux ty
-  in is_closed, generalize
+      | Mconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl) in
+    aux ty in
+  is_closed, generalize
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
@@ -107,7 +106,6 @@ let rec repr = function
   | ty -> ty
 
 let apply params body args =
-  let params = List.map (function Tparam tv -> tv | _ -> assert false) params in
   let subst = List.combine params args in
   let rec aux = function
       Tparam tv -> List.assq tv subst

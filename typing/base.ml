@@ -43,11 +43,11 @@ type 'tcs gen_type =
   | Tconstr of 'tcs * 'tcs gen_type list
 
 type 'tcs gen_type_constructor =
-  { tcs_module : module_id;           (* Defining module *)
-    tcs_name : string;                (* Name of the type constructor *)
-    tcs_params : 'tcs gen_type list;  (* List of type parameters *)
+  { tcs_module : module_id;            (* Defining module *)
+    tcs_name : string;                 (* Name of the type constructor *)
+    tcs_params : type_parameter list;  (* List of type parameters *)
     mutable tcs_kind : 'tcs gen_type_constructor_kind }
-                                      (* Kind of the type constructor *)
+                                       (* Kind of the type constructor *)
 
 and 'tcs gen_type_constructor_kind =
     Tcs_abstract                              (* Abstract type *)
@@ -112,8 +112,9 @@ type signature = type_constructor_ref gen_signature
 (* ---------------------------------------------------------------------- *)
 
 let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)
-let tcs_res tcs = Tconstr ({tcs=tcs}, tcs.tcs_params)
-                                                 (* Type w/ default arguments *)
+let tcs_res tcs =                                (* Type w/ default arguments *)
+  Tconstr ({tcs=tcs}, List.map (fun param -> Tparam param) tcs.tcs_params)
+
   (* Constructors and labels have slightly different interfaces in order
      to accommodate exceptions as constructors. *)
 let cs_tcs cs = cs.cs_tcs.tcs                    (* Parent type constructor *)
@@ -135,7 +136,7 @@ let standard_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let new_parameter name : llama_type = Tparam { param_name = name }
+let new_parameter name = { param_name = name }
 let new_standard_parameter i = new_parameter (standard_name i)
 let new_standard_parameters n =
   let rec aux i = if i < n then new_standard_parameter i :: aux (succ i) else [] in
