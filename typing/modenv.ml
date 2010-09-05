@@ -242,9 +242,6 @@ and lookup_module_index = function
 and lookup_type_constructor modid name =
   Tbl.find name (lookup_module_index modid).mod_types
 
-let lookup_signature modid =
-  (lookup_module_index modid).mod_signature
-
 let lookup_constructor modid name =
   Tbl.find name (lookup_module_index modid).mod_constrs
 
@@ -253,6 +250,9 @@ let lookup_label modid name =
 
 let lookup_value modid name =
   Tbl.find name (lookup_module_index modid).mod_values
+
+let lookup_signature modid =
+  (lookup_module_index modid).mod_signature
 
 let lookup_value_position v =
   Tbl.find v.val_name (lookup_module_index v.val_module).mod_value_positions

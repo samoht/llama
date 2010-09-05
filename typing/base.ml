@@ -78,8 +78,8 @@ type 'tcs gen_value =
 (* Internal representation of a signature. *)
 
 type 'tcs gen_signature_item =
-    Sig_value of 'tcs gen_value
-  | Sig_type of 'tcs gen_type_constructor * rec_status
+    Sig_type of 'tcs gen_type_constructor * rec_status
+  | Sig_value of 'tcs gen_value
   | Sig_exception of 'tcs gen_constructor
     
 type 'tcs gen_signature = 'tcs gen_signature_item list

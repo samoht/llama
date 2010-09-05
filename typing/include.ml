@@ -32,7 +32,6 @@ let identity_subst modid = {
   subst_type_constructors = [] }
 
 let subst_add_type_constructor tcs1 tcs2 subst =
-  if tcs1.tcs_name = "fpclass" then print_endline"satc:fpclass";
   { subst with
       subst_type_constructors = (tcs1, tcs2) :: subst.subst_type_constructors }
 
