@@ -30,16 +30,17 @@ type type_parameter = { param_name : string }
 (* ---------------------------------------------------------------------- *)
 
 (* These are generic so they can be used in-memory or on disk. *)
+
 (* 'tcs is a reference to a type constructor. *)
+
+(* The record types, representing the essential named entities, get
+   compared with (==). *)
 
 type 'tcs gen_type =
     Tparam of type_parameter
   | Tarrow of 'tcs gen_type * 'tcs gen_type
   | Ttuple of 'tcs gen_type list
   | Tconstr of 'tcs * 'tcs gen_type list
-
-(* Record types representing the essential named entities. *)
-(* They get compared with (==). *)
 
 type 'tcs gen_type_constructor =
   { tcs_module : module_id;           (* Defining module *)
@@ -55,7 +56,7 @@ and 'tcs gen_type_constructor_kind =
   | Tcs_abbrev of 'tcs gen_type               (* Abbreviation type *)
 
 and 'tcs gen_constructor =
-  { cs_tcsr : 'tcs;                (* Ref. to parent type constructor *)
+  { cs_tcs : 'tcs;                 (* Ref. to parent type constructor *)
     cs_module : module_id;         (* Defining module *)
     cs_name : string;              (* Name of the constructor *)
     cs_args : 'tcs gen_type list;  (* Type of the arguments *)
@@ -89,6 +90,8 @@ type 'tcs gen_signature = 'tcs gen_signature_item list
 
 type type_constructor = type_constructor_ref gen_type_constructor
 and type_constructor_ref = { tcs : type_constructor }
+    (* This indirection has no semantic purpose, but is needed to
+       avoid an illegal cyclic type. *)
 
 type llama_type = type_constructor_ref gen_type
 
@@ -111,9 +114,9 @@ type signature = type_constructor_ref gen_signature
 let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)
 let tcs_res tcs = Tconstr ({tcs=tcs}, tcs.tcs_params)
                                                  (* Type w/ default arguments *)
-  (* The discrepencies between constructors and labels are in order to
-     accommodate exceptions as constructors. *)
-let cs_tcs cs = cs.cs_tcsr.tcs                   (* Parent type constructor *)
+  (* Constructors and labels have slightly different interfaces in order
+     to accommodate exceptions as constructors. *)
+let cs_tcs cs = cs.cs_tcs.tcs                    (* Parent type constructor *)
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res (cs_tcs cs)              (* Type of the result *)
 let lbl_module lbl = lbl.lbl_tcs.tcs_module      (* Defining module *)

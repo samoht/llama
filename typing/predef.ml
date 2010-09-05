@@ -34,7 +34,7 @@ let rec tcs_unit : type_constructor =
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
-  { cs_tcsr = {tcs=tcs_unit};
+  { cs_tcs = {tcs=tcs_unit};
     cs_module = Module_builtin;
     cs_name = "()";
     cs_args = [];
@@ -47,14 +47,14 @@ let rec tcs_bool : type_constructor =
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
-  { cs_tcsr = {tcs=tcs_bool};
+  { cs_tcs = {tcs=tcs_bool};
     cs_module = Module_builtin;
     cs_name = "false";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_true =
-  { cs_tcsr = {tcs=tcs_bool};
+  { cs_tcs = {tcs=tcs_bool};
     cs_module = Module_builtin;
     cs_name = "true";
     cs_args = [];
@@ -69,14 +69,14 @@ let rec tcs_list =
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
-  { cs_tcsr = {tcs=tcs_list};
+  { cs_tcs = {tcs=tcs_list};
     cs_module = Module_builtin;
     cs_name = "[]";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_cons =
-  { cs_tcsr = {tcs=tcs_list};
+  { cs_tcs = {tcs=tcs_list};
     cs_module = Module_builtin;
     cs_name = "::";
     cs_args = [ param_list; Tconstr ({tcs=tcs_list}, [param_list]) ];
@@ -91,14 +91,14 @@ let rec tcs_option =
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
-  { cs_tcsr = {tcs=tcs_option};
+  { cs_tcs = {tcs=tcs_option};
     cs_module = Module_builtin;
     cs_name = "None";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_some =
-  { cs_tcsr = {tcs=tcs_option};
+  { cs_tcs = {tcs=tcs_option};
     cs_module = Module_builtin;
     cs_name = "Some";
     cs_args = [ param_option ];
@@ -132,7 +132,7 @@ let type_int64 = Tconstr({tcs=tcs_int64}, [])
 (* ---------------------------------------------------------------------- *)
 
 let mkexn name tyl =
-  { cs_tcsr = {tcs=tcs_exn};
+  { cs_tcs = {tcs=tcs_exn};
     cs_module = Module_builtin;
     cs_name = name;
     cs_args = tyl;

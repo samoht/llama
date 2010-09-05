@@ -64,7 +64,7 @@ and map_type_constructor_kind f = function
   | Tcs_abbrev ty -> Tcs_abbrev (map_type f ty)
 
 and map_constructor f cs =
-  { cs_tcsr = f.tcs_ref cs.cs_tcsr;
+  { cs_tcs = f.tcs_ref cs.cs_tcs;
     cs_module = cs.cs_module;
     cs_name = cs.cs_name;
     cs_args = List.map (map_type f) cs.cs_args;
