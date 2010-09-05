@@ -386,7 +386,7 @@ let _ =
   Compile.init_path();
   List.iter
     (fun (name, crc) ->
-      Consistbl.set Modenv.crc_units name crc Sys.executable_name)
+      Consistbl.set Modenv.cached_digests name crc Sys.executable_name)
     crc_intfs
 
 let load_llamainit ppf =

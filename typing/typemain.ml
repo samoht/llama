@@ -66,7 +66,7 @@ let rec signature_of_structure = function
 
 (* Typecheck an implementation file *)
 
-let implementation sourcefile outputprefix modulename env pstr =
+let implementation srcfile outputprefix modname env pstr =
   let str = structure env pstr in
   let sg = signature_of_structure str in
   let simple_sg = simplify_signature sg in
@@ -75,22 +75,21 @@ let implementation sourcefile outputprefix modulename env pstr =
     (str, Include.Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
-      Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
+      Misc.chop_extension_if_any srcfile ^ !Config.interface_suffix in
     if Sys.file_exists sourceintf then begin
       let intf_file =
         try
-          find_in_path_uncap !Config.load_path (modulename ^ ".cmi")
+          find_in_path_uncap !Config.load_path (modname ^ ".cmi")
         with Not_found ->
           raise(Error(Location.none, Interface_not_compiled sourceintf)) in
-      let dclsig = Modenv.read_signature modulename intf_file in
-      let coercion = Include.compunit (Module modulename) sourcefile sg intf_file dclsig in
+      let dclsig = Modenv.read_signature modname intf_file in
+      let coercion = Include.compunit (Module modname) srcfile sg intf_file dclsig in
       (str, coercion)
     end else begin
       let coercion =
-        Include.compunit (Module modulename) sourcefile sg
-                            "(inferred signature)" simple_sg in
+        Include.compunit (Module modname) srcfile sg "(inferred signature)" simple_sg in
       if not !Clflags.dont_write_files then
-        Modenv.save_signature simple_sg modulename (outputprefix ^ ".cmi");
+        Modenv.save_signature simple_sg modname (outputprefix ^ ".cmi");
       (str, coercion)
     end
   end

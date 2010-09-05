@@ -9,7 +9,7 @@ type error =
 exception Error of error
 
 (* ---------------------------------------------------------------------- *)
-(* Persistent structures.                                                 *)
+(* Global state.                                                          *)
 (* ---------------------------------------------------------------------- *)
 
 type module_index =
@@ -22,72 +22,17 @@ type module_index =
     mod_value_positions : (string, int) Tbl.t;
     mod_exception_positions : (string, int) Tbl.t }
 
-let persistent_structures = ref (Tbl.empty : (string, module_index) Tbl.t)
+let cached_indices = ref (Tbl.empty : (string, module_index) Tbl.t)
+let cached_digests = Consistbl.create()
 
-let crc_units = Consistbl.create()
+let reset_caches () =
+  cached_indices := Tbl.empty;
+  Consistbl.clear cached_digests
 
-let reset_cache () =
-  persistent_structures := Tbl.empty;
-  Consistbl.clear crc_units
-
-let imported_units () = Consistbl.extract crc_units
-
-(* Consistency between persistent structures *)
-
-let check_consistency filename crcs =
-  try
-    List.iter
-      (fun (name, crc) -> Consistbl.check crc_units name crc filename)
-      crcs
-  with Consistbl.Inconsistency(name, source, auth) ->
-    raise(Error(Inconsistent_import(name, auth, source)))
-
-(* Reading persistent structures from .cmi files *)
-
-let make_module_index sg crcs =
-  let type_constructors = ref Tbl.empty in
-  let constructors = ref Tbl.empty in
-  let labels = ref Tbl.empty in
-  let values = ref Tbl.empty in
-  let value_positions = ref Tbl.empty in
-  let exception_positions = ref Tbl.empty in
-  let pos = ref 0 in
-  List.iter
-    begin function
-        Sig_value v ->
-          values := Tbl.add v.val_name v !values;
-          if v.val_kind = Val_reg then begin
-            value_positions := Tbl.add v.val_name !pos !value_positions;
-            incr pos
-          end
-      | Sig_exception cs ->
-          constructors := Tbl.add cs.cs_name cs !constructors;
-          exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
-          incr pos
-      | Sig_type (tcs,_) ->
-          type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
-          begin match tcs.tcs_kind with
-            | Tcs_variant cstrs ->
-                List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
-            | Tcs_record lbls ->
-                List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
-            | _ ->
-                ()
-          end
-    end sg;
-  { mod_signature = sg;
-    mod_dependencies = crcs;
-    mod_values = !values;
-    mod_constrs = !constructors;
-    mod_labels = !labels;
-    mod_types = !type_constructors;
-    mod_value_positions = !value_positions;
-    mod_exception_positions = !exception_positions }
-
-let modidx_predef = make_module_index Predef.signature []
+let current_module = ref (Module "")
 
 (* ---------------------------------------------------------------------- *)
-(* Map operation for abstract signatures.                                 *)
+(* Abstract map operation for signatures.                                 *)
 (* ---------------------------------------------------------------------- *)
 
 let rec map_type memo f = function
@@ -160,33 +105,83 @@ let map_signature_for_save modid l =
       External (tcs.tcs_module, tcs.tcs_name) in
   map_signature memo f l
 
-let save_signature_with_imports sg modname filename imports =
-  let outsg = map_signature_for_save (Module modname) sg in
+let save_signature sg modname filename =
+  let sg = map_signature_for_save (Module modname) sg in
   let oc = open_out_bin filename in
   try
     output_value oc modname;
-    output_value oc outsg;
+    output_value oc sg;
     flush oc;
     let crc = Digest.file filename in
-    let crcs = (modname, crc) :: imports in
-    output_value oc crcs;
+    Consistbl.set cached_digests modname crc filename;
+    output_value oc (Consistbl.extract cached_digests);
     close_out oc;
-    (* Enter signature in persistent table so that imported_unit()
-       will also return its crc *)
-    let ps = make_module_index sg crcs in
-    persistent_structures := Tbl.add modname ps !persistent_structures;
-    Consistbl.set crc_units modname crc filename
   with exn ->
     close_out oc;
     Misc.remove_file filename;
     raise exn
 
-let save_signature sg modname filename =
-  save_signature_with_imports sg modname filename (imported_units())
-
 (* ---------------------------------------------------------------------- *)
 (* Loading signatures.                                                    *)
 (* ---------------------------------------------------------------------- *)
+
+(* Consistency between persistent structures *)
+
+let check_consistency filename crcs =
+  try
+    List.iter
+      (fun (name, crc) -> Consistbl.check cached_digests name crc filename)
+      crcs
+  with Consistbl.Inconsistency(name, source, auth) ->
+    raise(Error(Inconsistent_import(name, auth, source)))
+
+(* Reading persistent structures from .cmi files *)
+
+let make_module_index sg crcs =
+  let type_constructors = ref Tbl.empty in
+  let constructors = ref Tbl.empty in
+  let labels = ref Tbl.empty in
+  let values = ref Tbl.empty in
+  let value_positions = ref Tbl.empty in
+  let exception_positions = ref Tbl.empty in
+  let pos = ref 0 in
+  List.iter
+    begin function
+        Sig_value v ->
+          values := Tbl.add v.val_name v !values;
+          if v.val_kind = Val_reg then begin
+            value_positions := Tbl.add v.val_name !pos !value_positions;
+            incr pos
+          end
+      | Sig_exception cs ->
+          constructors := Tbl.add cs.cs_name cs !constructors;
+          exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
+          incr pos
+      | Sig_type (tcs,_) ->
+          type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
+          begin match tcs.tcs_kind with
+            | Tcs_variant cstrs ->
+                List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
+            | Tcs_record lbls ->
+                List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
+            | _ ->
+                ()
+          end
+    end sg;
+  { mod_signature = sg;
+    mod_dependencies = crcs;
+    mod_values = !values;
+    mod_constrs = !constructors;
+    mod_labels = !labels;
+    mod_types = !type_constructors;
+    mod_value_positions = !value_positions;
+    mod_exception_positions = !exception_positions }
+
+(* Index for the predefined module. *)
+
+let predef_index = make_module_index Predef.signature []
+
+(* Reading signatures. *)
 
 let rec map_signature_for_load l =
   let memo = ref ([] : (pers_type_constructor * type_constructor) list) in
@@ -196,25 +191,11 @@ let rec map_signature_for_load l =
             Internal pers_tcs ->
               map_type_constructor memo f pers_tcs
           | External (modid, name) ->
-              get_type_constructor modid name } in
+              lookup_type_constructor modid name } in
   map_signature memo f l
 
-and get_type_constructor modid name =
-  let cm = module_index modid in
-  Tbl.find name cm.mod_types
-
-and module_index = function
-    Module_builtin ->
-      modidx_predef
-  | Module name ->
-      begin try
-        Tbl.find name !persistent_structures
-      with Not_found ->
-        read_module_index name
-          (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
-      end
-  | Module_toplevel ->
-      failwith "Modenv.module_index"
+and read_signature modname filename =
+  (read_module_index modname filename).mod_signature
 
 and read_module_index modname filename =
   let ic = open_in_bin filename in
@@ -227,42 +208,45 @@ and read_module_index modname filename =
     assert (mn = modname);
     check_consistency filename crcs;
     let ps = make_module_index mod_sig crcs in
-    persistent_structures := Tbl.add modname ps !persistent_structures;
+    cached_indices := Tbl.add modname ps !cached_indices;
     ps
   with End_of_file | Failure _ ->
     close_in ic;
-    Printf.eprintf "Corrupted compiled interface file %s.\n\
-                       Please recompile %s.mli or %s.ml first.\n"
-      filename modname modname;
-    assert false
+    raise (Error (Corrupted_interface filename))
 
-let read_signature modname filename =
-  (read_module_index modname filename).mod_signature
+and lookup_module_index = function
+    Module_builtin ->
+      predef_index
+  | Module name ->
+      begin try
+        Tbl.find name !cached_indices
+      with Not_found ->
+        read_module_index name
+          (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
+      end
+  | Module_toplevel ->
+      failwith "Modenv.lookup_module_index"
 
-(* ---------------------------------------------------------------------- *)
-(* Lookups.                                                               *)
-(* ---------------------------------------------------------------------- *)
+and lookup_type_constructor modid name =
+  Tbl.find name (lookup_module_index modid).mod_types
 
 let lookup_signature modid =
-  (module_index modid).mod_signature
-let lookup_type_constructor modid name =
-  Tbl.find name (module_index modid).mod_types
+  (lookup_module_index modid).mod_signature
+
 let lookup_constructor modid name =
-  Tbl.find name (module_index modid).mod_constrs
+  Tbl.find name (lookup_module_index modid).mod_constrs
+
 let lookup_label modid name =
-  Tbl.find name (module_index modid).mod_labels
+  Tbl.find name (lookup_module_index modid).mod_labels
+
 let lookup_value modid name =
-  Tbl.find name (module_index modid).mod_values
+  Tbl.find name (lookup_module_index modid).mod_values
+
 let lookup_value_position v =
-  Tbl.find v.val_name (module_index v.val_module).mod_value_positions
+  Tbl.find v.val_name (lookup_module_index v.val_module).mod_value_positions
+
 let lookup_exception_position cs =
-  Tbl.find cs.cs_name (module_index cs.cs_module).mod_exception_positions
-
-(* ---------------------------------------------------------------------- *)
-(* Current module.                                                        *)
-(* ---------------------------------------------------------------------- *)
-
-let current_module = ref (Module "")
+  Tbl.find cs.cs_name (lookup_module_index cs.cs_module).mod_exception_positions
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)
