@@ -61,13 +61,13 @@ let type_constructors ltcs_list =
     tcs_list ltcs_list;
   tcs_list
 
-let value name ty kind =
+let primitive_value name ty prim =
   { val_module = !Modenv.current_module;
     val_name = name;
     val_type = ty;
-    val_kind = kind }
+    val_kind = Val_prim prim }
 
-let permanent_exception name args =
+let exception_constructor name args =
   { cs_tcs = {tcs=Predef.tcs_exn};
     cs_module = !Modenv.current_module;
     cs_name = name;
@@ -82,17 +82,21 @@ let signature_items_of_type_constructors tcs_list =
 let signature_items env tsig =
   match tsig.tsig_desc with
       Tsig_value (name, ty) ->
-        let v = value name ty Val_reg in
+        let v =
+          { val_module = !Modenv.current_module;
+            val_name = name;
+            val_type = ty;
+            val_kind = Val_reg } in
         [Sig_value v], Env.add_value v env
     | Tsig_external (name, ty, prim) ->
-        let v = value name ty (Val_prim prim) in
+        let v = primitive_value name ty prim in
         [Sig_value v], Env.add_value v env
     | Tsig_type decls ->
         let tcs_list = type_constructors decls in
         signature_items_of_type_constructors tcs_list,
         List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
     | Tsig_exception (name, args) ->
-        let cs = permanent_exception name args in
+        let cs = exception_constructor name args in
         [Sig_exception cs], Env.add_exception cs env
     | Tsig_open (_, csig) ->
         [], Env.add_signature csig env
@@ -107,18 +111,21 @@ let structure_item env tstr =
                                     Resolve.bound_local_values pat) pat_exp_list) in
         let vals =
           List.map (fun lval ->
-                      value lval.lval_name (generalize lval.lval_type) Val_reg) lvals in
+                      { val_module = !Modenv.current_module;
+                        val_name = lval.lval_name;
+                        val_type = generalize_one_type lval.lval_type;
+                        val_kind = Val_reg }) lvals in
         Str_value (rec_flag, pat_exp_list, List.combine lvals vals),
         List.fold_left (fun env v -> Env.add_value v env) env vals
     | Tstr_external (name, ty, prim) ->
-        let v = value name ty (Val_prim prim) in
+        let v = primitive_value name ty prim in
         Str_external v, Env.add_value v env
     | Tstr_type decl_list ->
         let tcs_list = type_constructors decl_list in
         Str_type tcs_list,
         List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
     | Tstr_exception (name, args) ->
-        let cs = permanent_exception name args in
+        let cs = exception_constructor name args in
         Str_exception cs, Env.add_exception cs env
     | Tstr_open (_, sg) ->
         Str_open sg, Env.add_signature sg env

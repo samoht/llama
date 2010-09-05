@@ -478,7 +478,7 @@ let toplevel_eval exp =
   let ty = expression exp in
   if not (is_nonexpansive exp) && not (is_closed ty) then
     raise (Error (exp.texp_loc, Non_generalizable ty));
-  generalize ty
+  generalize_one_type ty
 
 (* ---------------------------------------------------------------------- *)
 

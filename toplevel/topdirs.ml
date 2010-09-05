@@ -148,7 +148,7 @@ let match_printer_type ppf desc typename =
   Mutable_type.unify
     (Mutable_type.Mconstr (printer_tcs, [ty_arg]))
     (Mutable_type.instantiate_one_type desc.val_type);
-  Mutable_type.generalize ty_arg
+  Mutable_type.generalize_one_type ty_arg
 
 let find_printer_type ppf lid =
   try

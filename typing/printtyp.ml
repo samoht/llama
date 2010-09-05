@@ -167,7 +167,7 @@ let signature ppf sg =
 
 open Mutable_type
 
-let mutable_names = ref ([] : (mutable_type_variable * string) list)
+let mutable_names = ref ([] : (type_variable * string) list)
 let mutable_counter = ref 0
 let reset_mutable_names () = mutable_names := []
 let new_mutable_name () =

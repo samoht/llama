@@ -3,12 +3,12 @@
 open Base
 
 type mutable_type =
-  | Mvar of mutable_type_variable
+  | Mvar of type_variable
   | Marrow of mutable_type * mutable_type
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
-and mutable_type_variable =  (* compared with (==) *)
+and type_variable =  (* compared with (==) *)
   { mutable link : mutable_type option }
 
 let new_type_var() = Mvar { link = None }
@@ -31,10 +31,14 @@ let type_array ty = Mconstr(Predef.tcs_array, [ty])
 (* ---------------------------------------------------------------------- *)
 
 let rec instantiate_type inst = function
-    Tparam tv -> List.assq tv inst
-  | Tarrow (ty1, ty2) -> Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
-  | Ttuple tyl -> Mtuple (List.map (instantiate_type inst) tyl)
-  | Tconstr (tcsr, tyl) -> Mconstr (tcsr.tcs, List.map (instantiate_type inst) tyl)
+    Tparam tv ->
+      List.assq tv inst
+  | Tarrow (ty1, ty2) ->
+      Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
+  | Ttuple tyl ->
+      Mtuple (List.map (instantiate_type inst) tyl)
+  | Tconstr ({tcs=tcs}, tyl) ->
+      Mconstr (tcs, List.map (instantiate_type inst) tyl)
 
 let instantiate_one_type ty =
   let rec make_inst accum = function
@@ -68,34 +72,39 @@ let instantiate_label lbl =
 (* Generalization (mutable -> immutable).                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let is_closed, generalize =
-  let addq l x = if List.memq x l then l else x::l in
-  let unionq = List.fold_left addq in
-  let rec variables = function
+let rec generalize_type gen = function
+    Mvar tv ->
+      begin match tv.link with
+          None -> List.assq tv gen
+        | Some ty -> generalize_type gen ty
+      end
+  | Marrow (ty1, ty2) ->
+      Tarrow (generalize_type gen ty1, generalize_type gen ty2)
+  | Mtuple tyl ->
+      Ttuple (List.map (generalize_type gen) tyl)
+  | Mconstr (tcs, tyl) ->
+      Tconstr ({tcs=tcs}, List.map (generalize_type gen) tyl)
+
+let type_variables =
+  let rec aux accum = function
       Mvar tv ->
         begin match tv.link with
-            None -> [tv]
-          | Some ty -> variables ty
+            None -> if List.memq tv accum then accum else tv :: accum
+          | Some ty -> aux accum ty
         end
-    | Marrow (ty1, ty2) -> unionq (variables ty1) (variables ty2)
-    | Mtuple tyl | Mconstr (_, tyl) -> List.fold_left unionq [] (List.map variables tyl)
-  in
-  let is_closed ty = (variables ty = []) in
-  let generalize ty =
-    let vars = variables ty in
-    let params = new_standard_parameters (List.length vars) in
-    let subst = List.combine vars (List.map (fun param -> Tparam param) params) in
-    let rec aux = function
-        Mvar tv ->
-          begin match tv.link with
-              None -> List.assq tv subst
-            | Some ty -> aux ty
-          end
-      | Marrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
-      | Mtuple tyl -> Ttuple (List.map aux tyl)
-      | Mconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl) in
-    aux ty in
-  is_closed, generalize
+    | Marrow (ty1, ty2) ->
+        aux (aux accum ty1) ty2
+    | Mtuple tyl | Mconstr (_, tyl) ->
+        List.fold_left aux accum tyl in
+  aux []
+
+let is_closed ty = (type_variables ty = [])
+
+let generalize_one_type ty =
+  let vars = type_variables ty in
+  let params = new_standard_parameters (List.length vars) in
+  let gen = List.combine vars (List.map (fun param -> Tparam param) params) in
+  generalize_type gen ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
