@@ -51,7 +51,7 @@ let rec map_type_constructor f tcs =
     let new_tcs =
       { tcs_module = tcs.tcs_module;
         tcs_name = tcs.tcs_name;
-        tcs_params = tcs.tcs_params;
+        tcs_arity = tcs.tcs_arity;
         tcs_kind = Tcs_abstract } in
     f.memo_tcs <- (tcs, new_tcs) :: f.memo_tcs;
     new_tcs.tcs_kind <- map_type_constructor_kind f tcs.tcs_kind;

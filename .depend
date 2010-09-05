@@ -90,8 +90,10 @@ typing/modenv.cmo: utils/tbl.cmi typing/predef.cmo utils/misc.cmi \
     utils/consistbl.cmi utils/config.cmi typing/base.cmo typing/modenv.cmi
 typing/modenv.cmx: utils/tbl.cmx typing/predef.cmx utils/misc.cmx \
     utils/consistbl.cmx utils/config.cmx typing/base.cmx typing/modenv.cmi
-typing/mutable_type.cmo: typing/predef.cmo typing/base.cmo
-typing/mutable_type.cmx: typing/predef.cmx typing/base.cmx
+typing/mutable_type.cmo: typing/typeutil.cmo typing/predef.cmo \
+    typing/base.cmo
+typing/mutable_type.cmx: typing/typeutil.cmx typing/predef.cmx \
+    typing/base.cmx
 typing/oprint.cmo: typing/outcometree.cmi typing/oprint.cmi
 typing/oprint.cmx: typing/outcometree.cmi typing/oprint.cmi
 typing/permanent.cmo: typing/typedtree.cmi typing/resolve.cmo \
@@ -210,14 +212,14 @@ bytecomp/dll.cmo: utils/misc.cmi utils/config.cmi bytecomp/dll.cmi
 bytecomp/dll.cmx: utils/misc.cmx utils/config.cmx bytecomp/dll.cmi
 bytecomp/emitcode.cmo: bytecomp/translmod.cmi typing/primitive.cmi \
     bytecomp/opcodes.cmo typing/modenv.cmi utils/misc.cmi bytecomp/meta.cmi \
-    bytecomp/lambda.cmi bytecomp/instruct.cmi utils/config.cmi \
-    bytecomp/cmo_format.cmi utils/clflags.cmi parsing/asttypes.cmi \
-    bytecomp/emitcode.cmi
+    bytecomp/lambda.cmi bytecomp/instruct.cmi utils/consistbl.cmi \
+    utils/config.cmi bytecomp/cmo_format.cmi utils/clflags.cmi \
+    parsing/asttypes.cmi bytecomp/emitcode.cmi
 bytecomp/emitcode.cmx: bytecomp/translmod.cmx typing/primitive.cmx \
     bytecomp/opcodes.cmx typing/modenv.cmx utils/misc.cmx bytecomp/meta.cmx \
-    bytecomp/lambda.cmx bytecomp/instruct.cmx utils/config.cmx \
-    bytecomp/cmo_format.cmi utils/clflags.cmx parsing/asttypes.cmi \
-    bytecomp/emitcode.cmi
+    bytecomp/lambda.cmx bytecomp/instruct.cmx utils/consistbl.cmx \
+    utils/config.cmx bytecomp/cmo_format.cmi utils/clflags.cmx \
+    parsing/asttypes.cmi bytecomp/emitcode.cmi
 bytecomp/ident.cmo: utils/tbl.cmi typing/context.cmo typing/base.cmo
 bytecomp/ident.cmx: utils/tbl.cmx typing/context.cmx typing/base.cmx
 bytecomp/instruct.cmo: typing/mutable_type.cmo parsing/location.cmi \

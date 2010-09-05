@@ -293,7 +293,7 @@ and expression_aux exp =
       Texp_ident genval ->
         begin match genval with
             Local_value lval -> lval.lval_type
-          | Global_value v -> instantiate_one_type v.val_type
+          | Global_value v -> instantiate_value v
         end
     | Texp_literal c ->
         literal c

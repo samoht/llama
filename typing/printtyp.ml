@@ -41,8 +41,8 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tparam param ->
-      Otyp_var (false, param.param_name)
+    Tparam i ->
+      Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
@@ -87,34 +87,32 @@ let rec print_list pr sep ppf =
 
 (* Print one type declaration *)
 
-let rec tree_of_type_decl tcs =
-  let params = List.map (fun param -> param.param_name, (true, true)) tcs.tcs_params in
-  tcs.tcs_name,
-  params,
-  begin match tcs.tcs_kind with
-      Tcs_abstract ->
-        Otyp_abstract
-    | Tcs_variant cs_list ->
-        Otyp_sum (List.map tree_of_constructor_description cs_list)
-    | Tcs_record lbl_list ->
-        Otyp_record (List.map tree_of_label_description lbl_list)
-    | Tcs_abbrev ty ->
-        tree_of_type ty
-  end,
-  []
-
-and tree_of_constructor_description cs =
+let tree_of_constructor_description cs =
   (cs.cs_name, tree_of_type_list cs.cs_args)
 
-and tree_of_label_description lbl =
+let tree_of_label_description lbl =
   (lbl.lbl_name, lbl.lbl_mut, tree_of_type lbl.lbl_arg)
 
-let tree_of_rec = function
-  | Rec_first -> Orec_first
-  | Rec_next -> Orec_next
-
-let tree_of_type_declaration tcs rs =
-  Osig_type (tree_of_type_decl tcs, tree_of_rec rs)
+let tree_of_type_declaration tcs rec_status =
+  Osig_type (begin
+               tcs.tcs_name,
+               nat_map (fun i -> parameter_name i, (true, true)) tcs.tcs_arity,
+               begin match tcs.tcs_kind with
+                   Tcs_abstract ->
+                     Otyp_abstract
+                 | Tcs_variant cs_list ->
+                     Otyp_sum (List.map tree_of_constructor_description cs_list)
+                 | Tcs_record lbl_list ->
+                     Otyp_record (List.map tree_of_label_description lbl_list)
+                 | Tcs_abbrev ty ->
+                     tree_of_type ty
+               end,
+               []
+             end,
+             begin match rec_status with
+                 Rec_first -> Orec_first
+               | Rec_next -> Orec_next
+             end)
 
 let type_declaration ppf decl =
   !Oprint.out_sig_item ppf (tree_of_type_declaration decl Rec_first)
@@ -171,7 +169,7 @@ let mutable_names = ref ([] : (type_variable * string) list)
 let mutable_counter = ref 0
 let reset_mutable_names () = mutable_names := []
 let new_mutable_name () =
-  let name = standard_name !mutable_counter in
+  let name = parameter_name !mutable_counter in
   incr mutable_counter;
   name
 let name_of_mutable_type tv =

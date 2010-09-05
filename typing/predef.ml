@@ -8,29 +8,29 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params : type_constructor =
+let mkabs name arity : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
-    tcs_params = params;
+    tcs_arity = arity;
     tcs_kind = Tcs_abstract }
 
-let tcs_int = mkabs "int" []
-let tcs_char = mkabs "char" []
-let tcs_string = mkabs "string" []
-let tcs_float = mkabs "float" []
-let tcs_exn = mkabs "exn" []
-let tcs_array = mkabs "array" [new_standard_parameter 0]
-let tcs_format6 = mkabs "format6" (new_standard_parameters 6)
-let tcs_nativeint = mkabs "nativeint" []
-let tcs_int32 = mkabs "int32" []
-let tcs_int64 = mkabs "int64" []
+let tcs_int = mkabs "int" 0
+let tcs_char = mkabs "char" 0
+let tcs_string = mkabs "string" 0
+let tcs_float = mkabs "float" 0
+let tcs_exn = mkabs "exn" 0
+let tcs_array = mkabs "array" 1
+let tcs_format6 = mkabs "format6" 6
+let tcs_nativeint = mkabs "nativeint" 0
+let tcs_int32 = mkabs "int32" 0
+let tcs_int64 = mkabs "int64" 0
 
 (* variant types *)
 
 let rec tcs_unit : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "unit";
-    tcs_params = [];
+    tcs_arity = 0;
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
@@ -43,7 +43,7 @@ and cs_void =
 let rec tcs_bool : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "bool";
-    tcs_params = [];
+    tcs_arity = 0;
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
@@ -60,12 +60,10 @@ and cs_true =
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
-let param_list = new_standard_parameter 0
-
 let rec tcs_list =
   { tcs_module = Module_builtin;
     tcs_name = "list";
-    tcs_params = [ param_list ];
+    tcs_arity = 1;
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -79,15 +77,13 @@ and cs_cons =
   { cs_tcs = {tcs=tcs_list};
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tparam param_list; Tconstr ({tcs=tcs_list}, [Tparam param_list]) ];
+    cs_args = [ Tparam 0; Tconstr ({tcs=tcs_list}, [ Tparam 0 ]) ];
     cs_tag = Tag_block 0 }
-
-let param_option = new_standard_parameter 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;
     tcs_name = "option";
-    tcs_params = [ param_option ];
+    tcs_arity = 1;
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
@@ -101,7 +97,7 @@ and cs_some =
   { cs_tcs = {tcs=tcs_option};
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ Tparam param_option ];
+    cs_args = [ Tparam 0 ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)

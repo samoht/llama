@@ -377,7 +377,7 @@ open Odoc_types
                                       co, cn)
                                   )
                         *)
-                        List.map (fun param -> Tparam param) sig_type_decl.Base.tcs_params;
+                        Base.nat_map (fun i -> Tparam i) sig_type_decl.Base.tcs_arity;
                       ty_kind = type_kind;
                       ty_manifest =
                         (match sig_type_decl.Base.tcs_kind with

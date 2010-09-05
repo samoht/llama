@@ -6,7 +6,7 @@ open Longident
 open Base
 
 type local_type =
-    Lparam of type_parameter
+    Lparam of int
   | Larrow of local_type * local_type
   | Ltuple of local_type list
   | Lconstr of local_or_global_type_constructor * local_type list
@@ -17,8 +17,7 @@ and local_or_global_type_constructor =
 
 and local_type_constructor = {
   ltcs_name : string;
-  ltcs_arity : int;
-  ltcs_params : type_parameter list;
+  ltcs_params : string list;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -43,22 +42,20 @@ let type_of_local_type subst =
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_parameters : (string, type_parameter) Tbl.t }
+  pseudoenv_parameters : string list }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
-  pseudoenv_parameters = Tbl.empty }
+  pseudoenv_parameters = [] }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
       pseudoenv_type_constructors =
       Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
 
-let pseudoenv_add_parameter tv pseudoenv =
-  { pseudoenv with
-      pseudoenv_parameters =
-      Tbl.add tv.param_name tv pseudoenv.pseudoenv_parameters }
+let pseudoenv_set_parameters ltcs pseudoenv =
+  { pseudoenv with pseudoenv_parameters = ltcs.ltcs_params }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -70,4 +67,8 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
     | Ldot _ -> look_global ()
 
 let pseudoenv_lookup_parameter name pseudoenv =
-  Tbl.find name pseudoenv.pseudoenv_parameters
+  let rec aux i = function
+      [] -> raise Not_found
+    | (param_name :: tl) ->
+        if name = param_name then i else aux (succ i) tl in
+  aux 0 pseudoenv.pseudoenv_parameters

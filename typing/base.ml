@@ -22,9 +22,6 @@ type rec_status =
     Rec_first                          (* first in a recursive group *)
   | Rec_next                           (* not first in a recursive group *)
 
-type type_parameter = { param_name : string }
-  (* Parameters are compared with (==). *)
-
 (* ---------------------------------------------------------------------- *)
 (* Fundamental types.                                                     *)
 (* ---------------------------------------------------------------------- *)
@@ -37,7 +34,7 @@ type type_parameter = { param_name : string }
    compared with (==). *)
 
 type 'tcs gen_type =
-    Tparam of type_parameter
+    Tparam of int
   | Tarrow of 'tcs gen_type * 'tcs gen_type
   | Ttuple of 'tcs gen_type list
   | Tconstr of 'tcs * 'tcs gen_type list
@@ -45,7 +42,7 @@ type 'tcs gen_type =
 type 'tcs gen_type_constructor =
   { tcs_module : module_id;            (* Defining module *)
     tcs_name : string;                 (* Name of the type constructor *)
-    tcs_params : type_parameter list;  (* List of type parameters *)
+    tcs_arity : int;                   (* Number of type parameters *)
     mutable tcs_kind : 'tcs gen_type_constructor_kind }
                                        (* Kind of the type constructor *)
 
@@ -111,10 +108,10 @@ type signature = type_constructor_ref gen_signature
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)
+let nat_map f n =
+  let rec aux i = if i < n then f i :: aux (succ i) else [] in aux 0
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr ({tcs=tcs}, List.map (fun param -> Tparam param) tcs.tcs_params)
-
+  Tconstr ({tcs=tcs}, nat_map (fun i -> Tparam i) tcs.tcs_arity)
   (* Constructors and labels have slightly different interfaces in order
      to accommodate exceptions as constructors. *)
 let cs_tcs cs = cs.cs_tcs.tcs                    (* Parent type constructor *)
@@ -132,12 +129,7 @@ let get_labels tcs =
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
 
-let standard_name i =
+let parameter_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let new_parameter name = { param_name = name }
-let new_standard_parameter i = new_parameter (standard_name i)
-let new_standard_parameters n =
-  let rec aux i = if i < n then new_standard_parameter i :: aux (succ i) else [] in
-  aux 0

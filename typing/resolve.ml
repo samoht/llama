@@ -143,7 +143,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           begin try
             List.assoc name !params
           with Not_found ->
-            let ty = Tparam { param_name = name } in
+            let ty = Tparam (List.length !params) in
             params := (name, ty) :: !params;
             ty
           end
@@ -153,9 +153,9 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) ->
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-          if List.length tyl <> tcs_arity tcs then
+          if List.length tyl <> tcs.tcs_arity then
             raise (Error (ty.ptyp_loc, 
-                          Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
+                          Type_arity_mismatch (lid, tcs.tcs_arity, List.length tyl)));
           Tconstr ({tcs=tcs}, List.map aux tyl)
     end
   in
@@ -170,16 +170,16 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv) tyl)
     | Ptyp_constr (lid, tyl) ->
-        let tcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
+        let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         let arity =
-          match tcs with
-              Local_type_constructor ltcs -> ltcs.ltcs_arity
-            | Global_type_constructor gtcs -> tcs_arity gtcs
+          match gentcs with
+              Local_type_constructor ltcs -> List.length ltcs.ltcs_params
+            | Global_type_constructor tcs -> tcs.tcs_arity
         in
         if List.length tyl <> arity then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, arity, List.length tyl)));
-        Lconstr (tcs, List.map (local_type pseudoenv) tyl)
+        Lconstr (gentcs, List.map (local_type pseudoenv) tyl)
 
 let type_variables = ref ([] : (string * Mutable_type.mutable_type) list);;
 let reset_type_variables () = type_variables := []
@@ -200,9 +200,9 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         Mutable_type.Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-        if List.length tyl <> tcs_arity tcs then
+        if List.length tyl <> tcs.tcs_arity then
           raise (Error (ty.ptyp_loc, 
-                        Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
+                        Type_arity_mismatch (lid, tcs.tcs_arity, List.length tyl)));
         Mutable_type.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
                               List.map (mutable_type env) tyl)
 
@@ -422,8 +422,7 @@ let type_declarations env pdecls =
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
-          ltcs_arity = List.length pdecl.ptype_params;
-          ltcs_params = List.map (fun name -> { param_name=name }) pdecl.ptype_params;
+          ltcs_params = pdecl.ptype_params;
           ltcs_kind = Ltcs_abstract }
       end pdecls
   in
@@ -434,10 +433,7 @@ let type_declarations env pdecls =
   in
   List.iter2
     (fun pdecl ltcs ->
-       let pseudoenv =
-         List.fold_left
-           (fun pseudoenv tv -> pseudoenv_add_parameter tv pseudoenv) pseudoenv ltcs.ltcs_params
-       in
+       let pseudoenv = pseudoenv_set_parameters ltcs pseudoenv in
        ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->
