@@ -35,55 +35,60 @@ let current_module = ref (Module "")
 (* Abstract map operation for signatures.                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let rec map_type memo f = function
-    Tparam param -> Tparam param
-  | Tarrow (ty1, ty2) -> Tarrow (map_type memo f ty1, map_type memo f ty2)
-  | Ttuple tyl -> Ttuple (List.map (map_type memo f) tyl)
-  | Tconstr (tcsr, tyl) -> Tconstr (f tcsr, List.map (map_type memo f) tyl)
+type ('tcs1, 'tcs2) abstract_map = {
+  tcs_ref : 'tcs1 -> 'tcs2;
+  mutable memo_tcs : ('tcs1 gen_type_constructor * 'tcs2 gen_type_constructor) list
+}
 
-let rec map_type_constructor memo f tcs =
-  try List.assq tcs !memo with Not_found ->
+let rec map_type f = function
+    Tparam param -> Tparam param
+  | Tarrow (ty1, ty2) -> Tarrow (map_type f ty1, map_type f ty2)
+  | Ttuple tyl -> Ttuple (List.map (map_type f) tyl)
+  | Tconstr (tcsr, tyl) -> Tconstr (f.tcs_ref tcsr, List.map (map_type f) tyl)
+
+let rec map_type_constructor f tcs =
+  try List.assq tcs f.memo_tcs with Not_found ->
     let new_tcs =
       { tcs_module = tcs.tcs_module;
         tcs_name = tcs.tcs_name;
-        tcs_params = List.map (map_type memo f) tcs.tcs_params;
+        tcs_params = List.map (map_type f) tcs.tcs_params;
         tcs_kind = Tcs_abstract } in
-    memo := (tcs, new_tcs) :: !memo;
-    new_tcs.tcs_kind <- map_type_constructor_kind memo f tcs.tcs_kind;
+    f.memo_tcs <- (tcs, new_tcs) :: f.memo_tcs;
+    new_tcs.tcs_kind <- map_type_constructor_kind f tcs.tcs_kind;
     new_tcs
 
-and map_type_constructor_kind memo f = function
+and map_type_constructor_kind f = function
     Tcs_abstract -> Tcs_abstract
-  | Tcs_variant cs_list -> Tcs_variant (List.map (map_constructor memo f) cs_list)
-  | Tcs_record lbl_list -> Tcs_record (List.map (map_label memo f) lbl_list)
-  | Tcs_abbrev ty -> Tcs_abbrev (map_type memo f ty)
+  | Tcs_variant cs_list -> Tcs_variant (List.map (map_constructor f) cs_list)
+  | Tcs_record lbl_list -> Tcs_record (List.map (map_label f) lbl_list)
+  | Tcs_abbrev ty -> Tcs_abbrev (map_type f ty)
 
-and map_constructor memo f cs =
-  { cs_tcsr = f cs.cs_tcsr;
+and map_constructor f cs =
+  { cs_tcsr = f.tcs_ref cs.cs_tcsr;
     cs_module = cs.cs_module;
     cs_name = cs.cs_name;
-    cs_args = List.map (map_type memo f) cs.cs_args;
+    cs_args = List.map (map_type f) cs.cs_args;
     cs_tag = cs.cs_tag }
 
-and map_label memo f lbl =
-  { lbl_tcs = map_type_constructor memo f lbl.lbl_tcs;
+and map_label f lbl =
+  { lbl_tcs = map_type_constructor f lbl.lbl_tcs;
     lbl_name = lbl.lbl_name;
-    lbl_arg = map_type memo f lbl.lbl_arg;
+    lbl_arg = map_type f lbl.lbl_arg;
     lbl_mut = lbl.lbl_mut;
     lbl_pos = lbl.lbl_pos }
 
-let map_value memo f v =
+let map_value f v =
   { val_module = v.val_module;
     val_name = v.val_name;
-    val_type = map_type memo f v.val_type;
+    val_type = map_type f v.val_type;
     val_kind = v.val_kind }
 
-let map_signature_item memo f = function
-    Sig_value v -> Sig_value (map_value memo f v)
-  | Sig_type (tcs, rec_status) -> Sig_type (map_type_constructor memo f tcs, rec_status)
-  | Sig_exception cs -> Sig_exception (map_constructor memo f cs)
+let map_signature_item f = function
+    Sig_value v -> Sig_value (map_value f v)
+  | Sig_type (tcs, rec_status) -> Sig_type (map_type_constructor f tcs, rec_status)
+  | Sig_exception cs -> Sig_exception (map_constructor f cs)
 
-let map_signature memo f = List.map (map_signature_item memo f)
+let map_signature f = List.map (map_signature_item f)
 
 (* ---------------------------------------------------------------------- *)
 (* Saving signatures.                                                     *)
@@ -91,19 +96,22 @@ let map_signature memo f = List.map (map_signature_item memo f)
 
 type pers_type_constructor = pers_type_constructor_ref gen_type_constructor
 and pers_type_constructor_ref =
-    Internal of pers_type_constructor
-  | External of module_id * string
+    Internal_type_constructor of pers_type_constructor
+  | External_type_constructor of module_id * string
 type pers_signature = pers_type_constructor_ref gen_signature
 
 let map_signature_for_save modid l =
-  let memo = ref ([] : (type_constructor * pers_type_constructor) list) in
-  let rec f tcsr =
-    let tcs = tcsr.tcs in
-    if tcs.tcs_module = modid then
-      Internal (map_type_constructor memo f tcs)
-    else
-      External (tcs.tcs_module, tcs.tcs_name) in
-  map_signature memo f l
+  let rec f =
+    { tcs_ref =
+        begin fun tcsr ->
+          let tcs = tcsr.tcs in
+          if tcs.tcs_module = modid then
+            Internal_type_constructor (map_type_constructor f tcs)
+          else
+            External_type_constructor (tcs.tcs_module, tcs.tcs_name)
+        end;
+      memo_tcs = [] } in
+  map_signature f l
 
 let save_signature sg modname filename =
   let sg = map_signature_for_save (Module modname) sg in
@@ -184,15 +192,19 @@ let predef_index = make_module_index Predef.signature []
 (* Reading signatures. *)
 
 let rec map_signature_for_load l =
-  let memo = ref ([] : (pers_type_constructor * type_constructor) list) in
-  let rec f pers_tcsr =
-    { tcs =
-        match pers_tcsr with
-            Internal pers_tcs ->
-              map_type_constructor memo f pers_tcs
-          | External (modid, name) ->
-              lookup_type_constructor modid name } in
-  map_signature memo f l
+  let rec f = 
+    { tcs_ref =
+        begin fun pers_tcsr ->
+          { tcs =
+              begin match pers_tcsr with
+                  Internal_type_constructor pers_tcs ->
+                    map_type_constructor f pers_tcs
+                | External_type_constructor (modid, name) ->
+                    lookup_type_constructor modid name
+              end }
+        end;
+      memo_tcs = [] } in
+  map_signature f l
 
 and read_signature modname filename =
   (read_module_index modname filename).mod_signature

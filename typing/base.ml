@@ -30,65 +30,64 @@ type type_parameter = { param_name : string }
 (* ---------------------------------------------------------------------- *)
 
 (* These are generic so they can be used in-memory or on disk. *)
-(* 'tcsr is a reference to a type constructor. *)
+(* 'tcs is a reference to a type constructor. *)
 
-type 'tcsr gen_type =
+type 'tcs gen_type =
     Tparam of type_parameter
-  | Tarrow of 'tcsr gen_type * 'tcsr gen_type
-  | Ttuple of 'tcsr gen_type list
-  | Tconstr of 'tcsr * 'tcsr gen_type list
+  | Tarrow of 'tcs gen_type * 'tcs gen_type
+  | Ttuple of 'tcs gen_type list
+  | Tconstr of 'tcs * 'tcs gen_type list
 
 (* Record types representing the essential named entities. *)
 (* They get compared with (==). *)
 
-type 'tcsr gen_type_constructor =
-  { tcs_module : module_id;            (* Defining module *)
-    tcs_name : string;                 (* Name of the type constructor *)
-    tcs_params : 'tcsr gen_type list;  (* List of type parameters *)
-    mutable tcs_kind : 'tcsr gen_type_constructor_kind }
-                                       (* Kind of the type constructor *)
+type 'tcs gen_type_constructor =
+  { tcs_module : module_id;           (* Defining module *)
+    tcs_name : string;                (* Name of the type constructor *)
+    tcs_params : 'tcs gen_type list;  (* List of type parameters *)
+    mutable tcs_kind : 'tcs gen_type_constructor_kind }
+                                      (* Kind of the type constructor *)
 
-and 'tcsr gen_type_constructor_kind =
-    Tcs_abstract                               (* Abstract type *)
-  | Tcs_variant of 'tcsr gen_constructor list  (* Sum type *)
-  | Tcs_record of 'tcsr gen_label list         (* Record type *)
-  | Tcs_abbrev of 'tcsr gen_type               (* Abbreviation type *)
+and 'tcs gen_type_constructor_kind =
+    Tcs_abstract                              (* Abstract type *)
+  | Tcs_variant of 'tcs gen_constructor list  (* Sum type *)
+  | Tcs_record of 'tcs gen_label list         (* Record type *)
+  | Tcs_abbrev of 'tcs gen_type               (* Abbreviation type *)
 
-and 'tcsr gen_constructor =
-  { cs_tcsr : 'tcsr;                (* Parent type constructor *)
-    cs_module : module_id;          (* Defining module *)
-    cs_name : string;               (* Name of the constructor *)
-    cs_args : 'tcsr gen_type list;  (* Type of the arguments *)
-    cs_tag : constructor_tag }      (* Tag for heap blocks *)
+and 'tcs gen_constructor =
+  { cs_tcsr : 'tcs;                (* Ref. to parent type constructor *)
+    cs_module : module_id;         (* Defining module *)
+    cs_name : string;              (* Name of the constructor *)
+    cs_args : 'tcs gen_type list;  (* Type of the arguments *)
+    cs_tag : constructor_tag }     (* Tag for heap blocks *)
 
-and 'tcsr gen_label =
-  { lbl_tcs : 'tcsr gen_type_constructor;  (* Parent type constructor *)
-    lbl_name : string;                     (* Name of the label *)
-    lbl_arg : 'tcsr gen_type;              (* Type of the argument *)
-    lbl_mut : bool;                        (* Is this a mutable field? *)
-    lbl_pos : int }                        (* Position in block *)
+and 'tcs gen_label =
+  { lbl_tcs : 'tcs gen_type_constructor;  (* Parent type constructor *)
+    lbl_name : string;                    (* Name of the label *)
+    lbl_arg : 'tcs gen_type;              (* Type of the argument *)
+    lbl_mut : bool;                       (* Is this a mutable field? *)
+    lbl_pos : int }                       (* Position in block *)
 
-type 'tcsr gen_value =
-  { val_module : module_id;     (* Defining module *)
-    val_name : string;          (* Name of the value *)
-    val_type : 'tcsr gen_type;  (* Type of the value *)
-    val_kind : value_kind }     (* Is this a primitive? *)
+type 'tcs gen_value =
+  { val_module : module_id;    (* Defining module *)
+    val_name : string;         (* Name of the value *)
+    val_type : 'tcs gen_type;  (* Type of the value *)
+    val_kind : value_kind }    (* Is this a primitive? *)
 
 (* Internal representation of a signature. *)
 
-type 'tcsr gen_signature_item =
-    Sig_value of 'tcsr gen_value
-  | Sig_type of 'tcsr gen_type_constructor * rec_status
-  | Sig_exception of 'tcsr gen_constructor
+type 'tcs gen_signature_item =
+    Sig_value of 'tcs gen_value
+  | Sig_type of 'tcs gen_type_constructor * rec_status
+  | Sig_exception of 'tcs gen_constructor
     
-type 'tcsr gen_signature = 'tcsr gen_signature_item list
+type 'tcs gen_signature = 'tcs gen_signature_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Specialization to the in-memory case.                                  *)
 (* ---------------------------------------------------------------------- *)
 
 type type_constructor = type_constructor_ref gen_type_constructor
-
 and type_constructor_ref = { tcs : type_constructor }
 
 type llama_type = type_constructor_ref gen_type
