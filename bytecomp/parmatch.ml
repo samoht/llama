@@ -28,7 +28,7 @@ let invalid_mutable_type = Mtuple []
 
 let make_pat desc ty tenv =
   {pat_desc = desc; pat_loc = Location.none;
-   pat_type = ty ; pat_env = tenv }
+   pat_type = ty ; pat_env = () }
 
 let omega = make_pat Tpat_any invalid_mutable_type Env.empty
 

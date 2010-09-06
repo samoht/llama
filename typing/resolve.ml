@@ -85,19 +85,26 @@ let rec bound_names pat =
     | Ppat_record lbl_pat_list ->
         List.flatten (List.map (fun (lbl, pat) -> bound_names pat) lbl_pat_list)
 
-let rec bound_local_values pat =
+let rec bound_variables_with_types pat =
   match pat.tpat_desc with
-      Tpat_any -> []
-    | Tpat_var v -> [v]
-    | Tpat_alias(pat,v) -> v :: bound_local_values pat
-    | Tpat_literal _ -> []
-    | Tpat_tuple patl -> List.flatten (List.map bound_local_values patl)
-    | Tpat_construct(_, pats) -> List.flatten (List.map bound_local_values pats)
+      Tpat_any | Tpat_literal _ ->
+        []
+    | Tpat_var var ->
+        [ (var, pat.tpat_type) ]
+    | Tpat_alias (pat, var) ->
+        (var, pat.tpat_type) :: bound_variables_with_types pat
+    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
+        List.flatten (List.map bound_variables_with_types patl)
     | Tpat_record (_, lbl_pat_list) ->
-        List.flatten (List.map (fun (lbl,pat) -> bound_local_values pat) lbl_pat_list)
-    | Tpat_array patl -> List.flatten (List.map bound_local_values patl)
-    | Tpat_or (pat1, pat2) -> bound_local_values pat1
-    | Tpat_constraint(pat, _) -> bound_local_values pat
+        List.flatten
+          (List.map (fun (lbl,pat) -> bound_variables_with_types pat) lbl_pat_list)
+    | Tpat_or (pat1, pat2) ->
+        bound_variables_with_types pat1
+    | Tpat_constraint (pat', _) ->
+        bound_variables_with_types pat'
+
+let bound_variables pat =
+  List.map fst (bound_variables_with_types pat)
 
 (* ---------------------------------------------------------------------- *)
 (* Lookup utilities.                                                      *)
@@ -211,8 +218,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
 (* ---------------------------------------------------------------------- *)
 
 let new_local_value name =
-  { lval_name = name;
-    lval_type = Mutable_type.new_type_var () }
+  { var_name = name }
 
 let pattern env pat =
   let names = bound_names pat in
@@ -224,7 +230,6 @@ let pattern env pat =
   let rec pattern pat =
     { tpat_desc = pattern_aux pat;
       tpat_loc = pat.ppat_loc;
-      tpat_env = env;
       tpat_type = Mutable_type.new_type_var () }
   and pattern_aux pat =
     match pat.ppat_desc with
@@ -275,18 +280,20 @@ let pattern env pat =
 let extend_context ctxt pat =
   List.fold_left
     (fun ctxt lval -> context_add_value lval ctxt)
-    ctxt (bound_local_values pat)
+    ctxt (bound_variables pat)
 
 let rec expression ctxt exp =
   { texp_desc = expression_aux ctxt exp;
     texp_loc = exp.pexp_loc;
-    texp_ctxt = ctxt;
     texp_type = Mutable_type.new_type_var () }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
       Pexp_ident li ->
-        Texp_ident (lookup_value ctxt li exp.pexp_loc)
+        begin match lookup_value ctxt li exp.pexp_loc with
+            Local_value var -> Texp_var var
+          | Global_value v -> Texp_value v
+        end
     | Pexp_literal c ->
         Texp_literal c
     | Pexp_tuple l ->
@@ -477,7 +484,7 @@ let top_bindings env rec_flag ppat_pexp_list =
   let ctxt =
     match rec_flag with
         Recursive ->
-          let lvals = List.flatten (List.map bound_local_values pat_list) in
+          let lvals = List.flatten (List.map bound_variables pat_list) in
           List.fold_left
             (fun ctxt lval -> context_add_value lval ctxt)
             (context_create env) lvals

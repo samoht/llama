@@ -521,9 +521,9 @@ let rec cut n l =
 
 let rec transl_exp e =
   match e.texp_desc with
-    Texp_ident (Context.Local_value lval) ->
-      Lvar (Ident.of_local_value lval)
-  | Texp_ident (Context.Global_value v) ->
+    Texp_var var ->
+      Lvar (Ident.of_variable var)
+  | Texp_value v ->
       begin match v with
         | {val_kind = Val_prim p} ->
             transl_primitive p
@@ -541,7 +541,7 @@ let rec transl_exp e =
             transl_function e.texp_loc !Clflags.native_code repr pat_expr_list)
       in
       Lfunction(kind, params, body)
-  | Texp_apply({texp_desc = Texp_ident(Context.Global_value(v))}, oargs)
+  | Texp_apply({texp_desc = Texp_value v}, oargs)
       when (match v.val_kind with 
               | Val_prim p -> List.length oargs >= p.prim_arity
               | _ -> false) ->
@@ -670,7 +670,7 @@ let rec transl_exp e =
   | Texp_while(cond, body) ->
       Lwhile(transl_exp cond, event_before body (transl_exp body))
   | Texp_for(param, low, high, dir, body) ->
-      Lfor(Ident.of_local_value param, transl_exp low, transl_exp high, dir,
+      Lfor(Ident.of_variable param, transl_exp low, transl_exp high, dir,
            event_before body (transl_exp body))
   | Texp_when(cond, body) ->
       event_before cond
@@ -811,7 +811,7 @@ and transl_let rec_flag pat_expr_list body =
         List.map
           (fun (pat, expr) ->
             match pat.tpat_desc with
-              Tpat_var id -> Ident.of_local_value id
+              Tpat_var id -> Ident.of_variable id
             | _ -> raise(Error(pat.tpat_loc, Illegal_letrec_pat)))
         pat_expr_list in
       let transl_case (pat, expr) id =

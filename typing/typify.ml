@@ -32,54 +32,57 @@ let literal = function
 (* Patterns.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let rec pattern pat =
-  let ty = pattern_aux pat in
+let rec pattern var_types pat =
+  let ty = pattern_aux var_types pat in
   (try unify pat.tpat_type ty with Unify -> fatal_error "Typify.pattern");
   pat.tpat_type
 
-and pattern_aux pat =
+and pattern_aux var_types pat =
   match pat.tpat_desc with
       Tpat_any ->
         new_type_var ()
-    | Tpat_var lval ->
-        lval.lval_type
-    | Tpat_alias (pat', lval) ->
-        pattern_expect pat' lval.lval_type;
+    | Tpat_var var ->
+        List.assq var var_types
+    | Tpat_alias (pat', var) ->
+        pattern_expect var_types pat' (List.assq var var_types);
         pat'.tpat_type
     | Tpat_literal c ->
         literal c
     | Tpat_tuple patl ->
-        Mtuple (List.map pattern patl)
+        Mtuple (List.map (pattern var_types) patl)
     | Tpat_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
-        List.iter2 pattern_expect args ty_args;
+        List.iter2 (pattern_expect var_types) args ty_args;
         ty_res
     | Tpat_record (tcs, lbl_arg_list) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, arg) ->
              let ty_arg = instantiate_type inst lbl.lbl_arg in
-             pattern_expect arg ty_arg) lbl_arg_list;
+             pattern_expect var_types arg ty_arg) lbl_arg_list;
         ty_res
     | Tpat_array patl ->
         let ty = new_type_var () in
-        List.iter (fun pat -> pattern_expect pat ty) patl;
+        List.iter (fun pat -> pattern_expect var_types pat ty) patl;
         type_array ty
     | Tpat_or (pat1, pat2) ->
-        let ty = pattern pat1 in
-        pattern_expect pat2 ty;
+        let ty = pattern var_types pat1 in
+        pattern_expect var_types pat2 ty;
         ty
     | Tpat_constraint (pat', ty) ->
-        pattern_expect pat' ty;
+        pattern_expect var_types pat' ty;
         ty
 
-and pattern_expect pat expected_ty =
-  let ty = pattern pat in
+and pattern_expect var_types pat expected_ty =
+  let ty = pattern var_types pat in
   begin try
     unify ty expected_ty
   with Unify ->
     raise (Error (pat.tpat_loc, Pattern_type_clash (ty, expected_ty)))
   end
+
+let make_var_types pat =
+  List.map (fun var -> (var, new_type_var ())) (Resolve.bound_variables pat)
 
 (* ---------------------------------------------------------------------- *)
 (* Value restriction stuff.                                               *)
@@ -90,12 +93,13 @@ and pattern_expect pat expected_ty =
 
 let rec is_nonexpansive expr =
   match expr.texp_desc with
-      Texp_ident id -> true
+      Texp_var _ -> true
+    | Texp_value _ -> true
     | Texp_literal sc -> true
     | Texp_tuple el -> List.forall is_nonexpansive el
     | Texp_construct (cstr, l) -> List.forall is_nonexpansive l
-    | Texp_let (rec_flag, bindings, body) ->
-        List.forall (fun (pat, expr) -> is_nonexpansive expr) bindings &&
+    | Texp_let (rec_flag, pat_expr_list, body) ->
+        List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list &&
           is_nonexpansive body
     | Texp_function pat_expr_list -> true
     | Texp_try (body, pat_expr_list) ->
@@ -283,28 +287,27 @@ let formatstring loc fmt =
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let rec expression exp =
-  let ty = expression_aux exp in
+let rec expression ctxt exp =
+  let ty = expression_aux ctxt exp in
   (try unify exp.texp_type ty with Unify -> fatal_error "Typify.expression");
   ty
 
-and expression_aux exp =
+and expression_aux ctxt exp =
   match exp.texp_desc with
-      Texp_ident genval ->
-        begin match genval with
-            Local_value lval -> lval.lval_type
-          | Global_value v -> instantiate_value v
-        end
+      Texp_var var ->
+        List.assq var ctxt
+    | Texp_value v ->
+        instantiate_value v
     | Texp_literal c ->
         literal c
     | Texp_tuple args ->
-        Mtuple (List.map expression args)
+        Mtuple (List.map (expression ctxt) args)
     | Texp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
-        List.iter2 expression_expect args ty_args;
+        List.iter2 (expression_expect ctxt) args ty_args;
         ty_res
     | Texp_apply (fct, args) ->
-        let ty_fct = expression fct in
+        let ty_fct = expression ctxt fct in
         let rec type_args ty_res = function
             [] -> ty_res
           | arg1 :: argl ->
@@ -318,83 +321,82 @@ and expression_aux exp =
                   | Marrow (ty1, ty2) -> ty1, ty2
                   | _ -> raise(Error(exp.texp_loc, Apply_non_function ty_fct))
               in
-              expression_expect arg1 ty1;
+              expression_expect ctxt arg1 ty1;
               type_args ty2 argl
         in
         type_args ty_fct args
-    | Texp_let (_, pat_exp_list, body) ->
-        bindings pat_exp_list;
-        expression body
+    | Texp_let (rec_flag, pat_expr_list, body) ->
+        let ctxt = bindings ctxt rec_flag pat_expr_list in
+        expression ctxt body
     | Texp_match (item, pat_exp_list) ->
-        let ty_arg = expression item in
+        let ty_arg = expression ctxt item in
         let ty_res = new_type_var () in
-        caselist ty_arg ty_res pat_exp_list;
+        caselist ctxt ty_arg ty_res pat_exp_list;
         ty_res
     | Texp_function pat_exp_list ->
         let ty_arg = new_type_var () in
         let ty_res = new_type_var () in
-        caselist ty_arg ty_res pat_exp_list;
+        caselist ctxt ty_arg ty_res pat_exp_list;
         Marrow (ty_arg, ty_res)
     | Texp_try (body, pat_exp_list) ->
         let ty_arg = new_type_var () in
-        let ty_res = expression body in
-        caselist ty_arg ty_res pat_exp_list;
+        let ty_res = expression ctxt body in
+        caselist ctxt ty_arg ty_res pat_exp_list;
         ty_res
     | Texp_sequence (e1, e2) ->
-        statement e1; expression e2
+        statement ctxt e1; expression ctxt e2
     | Texp_ifthenelse (cond, ifso, ifnot) ->
-        expression_expect cond type_bool;
+        expression_expect ctxt cond type_bool;
         begin match ifnot with
           | None ->
-              expression_expect ifso type_unit;
+              expression_expect ctxt ifso type_unit;
               type_unit
           | Some ifnot ->
-              let ty = expression ifso in
-              expression_expect ifnot ty;
+              let ty = expression ctxt ifso in
+              expression_expect ctxt ifnot ty;
               ty
         end
     | Texp_when (cond, act) ->
-        expression_expect cond type_bool;
-        expression act
+        expression_expect ctxt cond type_bool;
+        expression ctxt act
     | Texp_while (cond, body) ->
-        expression_expect cond type_bool;
-        statement body;
+        expression_expect ctxt cond type_bool;
+        statement ctxt body;
         type_unit
     | Texp_for (id, start, stop, up_flag, body) ->
-        unify id.lval_type type_int;
-        expression_expect start type_int;
-        expression_expect stop type_int;
-        statement body;
+        expression_expect ctxt start type_int;
+        expression_expect ctxt stop type_int;
+        statement ((id, type_int) :: ctxt) body;
         type_unit
     | Texp_constraint (e, ty') ->
-        expression_expect e ty';
+        expression_expect ctxt e ty';
         ty'
     | Texp_array elist ->
-        let ty_arg = new_type_var() in
-        List.iter (fun e -> expression_expect e ty_arg) elist;
+        let ty_arg = new_type_var () in
+        List.iter (fun e -> expression_expect ctxt e ty_arg) elist;
         type_array ty_arg
     | Texp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, exp) ->
              let ty_arg = instantiate_type inst lbl.lbl_arg in
-             expression_expect exp ty_arg) lbl_exp_list;
+             expression_expect ctxt exp ty_arg) lbl_exp_list;
         begin match opt_init with
             None -> ()
-          | Some init -> expression_expect init ty_res
+          | Some init -> expression_expect ctxt init ty_res
         end;
         ty_res
     | Texp_field (e, lbl) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
-        expression_expect e ty_res;
+        expression_expect ctxt e ty_res;
         ty_arg      
     | Texp_setfield (e1, lbl, e2) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
-        expression_expect e1 ty_res;
-        expression_expect e2 ty_arg;
+        expression_expect ctxt e1 ty_res;
+        expression_expect ctxt e2 ty_arg;
         type_unit
     | Texp_assert e ->
-        expression_expect e type_bool;
+        expression_expect ctxt e type_bool;
         type_unit
     | Texp_assertfalse ->
         new_type_var ()
@@ -402,14 +404,14 @@ and expression_aux exp =
 (* Typify of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
-and expression_expect exp expected_ty =
+and expression_expect ctxt exp expected_ty =
   match exp.texp_desc with
-    | Texp_let (_, pat_exp_list, body) ->
-        bindings pat_exp_list;
-        expression_expect body expected_ty
+    | Texp_let (rec_flag, pat_expr_list, body) ->
+        let ctxt = bindings ctxt rec_flag pat_expr_list in
+        expression_expect ctxt body expected_ty
     | Texp_sequence (e1, e2) ->
-        statement e1;
-        expression_expect e2 expected_ty
+        statement ctxt e1;
+        expression_expect ctxt e2 expected_ty
     | _ ->
         let ty =
           (* Terrible hack for format strings *)
@@ -424,7 +426,7 @@ and expression_expect exp expected_ty =
                 unify exp.texp_type ty;
                 ty
             | _ ->
-                expression exp
+                expression ctxt exp
         in
         begin try
           unify ty expected_ty
@@ -434,20 +436,34 @@ and expression_expect exp expected_ty =
 
 (* Typify of "let" definitions *)
 
-and bindings pat_exp_list =
-  List.iter (fun (pat, _) -> ignore (pattern pat)) pat_exp_list;
-  List.iter (fun (pat, exp) -> expression_expect exp pat.tpat_type) pat_exp_list
+and bindings ctxt rec_flag pat_expr_list =
+  let body_ctxt =
+    List.fold_left
+      (fun ctxt (pat, _) ->
+         let var_types = make_var_types pat in
+         ignore (pattern var_types pat);
+         List.rev_append var_types ctxt) ctxt pat_expr_list in
+  let expr_ctxt =
+    match rec_flag with Recursive -> body_ctxt | Nonrecursive -> ctxt in
+  List.iter
+    (fun (pat, expr) ->
+       expression_expect expr_ctxt expr pat.tpat_type) pat_expr_list;
+  body_ctxt
 
 (* Typify of match cases *)
 
-and caselist ty_arg ty_res pat_exp_list =
-  List.iter (fun (pat, _) -> pattern_expect pat ty_arg) pat_exp_list;
-  List.iter (fun (_, exp) -> expression_expect exp ty_res) pat_exp_list;
+and caselist ctxt ty_arg ty_res pat_expr_list =
+  List.iter
+    (fun (pat, expr) ->
+       let var_types = make_var_types pat in
+       pattern_expect var_types pat ty_arg;
+       expression_expect (List.rev_append var_types ctxt) expr ty_res)
+    pat_expr_list
 
 (* Typify of statements (expressions whose values are ignored) *)
 
-and statement expr =
-  let ty = expression expr in
+and statement ctxt expr =
+  let ty = expression ctxt expr in
   match type_repr ty with
   | Marrow(_,_) ->
       Location.prerr_warning expr.texp_loc Warnings.Partial_application
@@ -460,24 +476,24 @@ and statement expr =
 (* Temporary structure items and toplevel evals.                          *)
 (* ---------------------------------------------------------------------- *)
 
-let top_bindings pat_exp_list =
-  bindings pat_exp_list;
+let top_bindings rec_flag pat_expr_list =
+  ignore (bindings [] rec_flag pat_expr_list);
   List.iter
     (fun (pat, exp) ->
        if not (is_nonexpansive exp) && not (is_closed pat.tpat_type) then
          raise (Error (exp.texp_loc, Non_generalizable pat.tpat_type)))
-    pat_exp_list
+    pat_expr_list
 
 let temporary_structure_item tstr =
   match tstr.tstr_desc with
-      Tstr_eval exp -> ignore (expression exp)
-    | Tstr_value (_, pat_exp_list) -> top_bindings pat_exp_list
+      Tstr_eval expr -> ignore (expression [] expr)
+    | Tstr_value (rec_flag, pat_exp_list) -> top_bindings rec_flag pat_exp_list
     | _ -> ()
 
-let toplevel_eval exp =
-  let ty = expression exp in
-  if not (is_nonexpansive exp) && not (is_closed ty) then
-    raise (Error (exp.texp_loc, Non_generalizable ty));
+let toplevel_eval expr =
+  let ty = expression [] expr in
+  if not (is_nonexpansive expr) && not (is_closed ty) then
+    raise (Error (expr.texp_loc, Non_generalizable ty));
   generalize_one_type ty
 
 (* ---------------------------------------------------------------------- *)

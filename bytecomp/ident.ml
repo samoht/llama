@@ -7,14 +7,14 @@ type t =
   | Id_predef_exn of string
   | Id of int * string
 let values : (string, value * t) Hashtbl.t = Hashtbl.create 17
-let local_values : (string, Context.local_value * t) Hashtbl.t = Hashtbl.create 17
+let variables : (string, Context.variable * t) Hashtbl.t = Hashtbl.create 17
 let exceptions : (string, constructor * t) Hashtbl.t = Hashtbl.create 17
 let next_id_ref = ref 0
 let next_id () = let id = !next_id_ref in incr next_id_ref; id
 let reset () =
   next_id_ref := 0;
   Hashtbl.clear values;
-  Hashtbl.clear local_values;
+  Hashtbl.clear variables;
   Hashtbl.clear exceptions
 let same = (=)
 let of_exception cs =
@@ -35,13 +35,13 @@ let of_value v =
   try List.assq v (Hashtbl.find_all values name)
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add values name (v, id); id
-let identify (lv, v) = (* NB *)
-  Hashtbl.add local_values lv.Context.lval_name (lv, of_value v)
-let of_local_value lv =
-  let name = lv.Context.lval_name in
-  try List.assq lv (Hashtbl.find_all local_values name)
+let identify (var, v) = (* NB *)
+  Hashtbl.add variables var.Context.var_name (var, of_value v)
+let of_variable var =
+  let name = var.Context.var_name in
+  try List.assq var (Hashtbl.find_all variables name)
   with Not_found ->
-    let id = Id (next_id (), name) in Hashtbl.add local_values name (lv, id); id
+    let id = Id (next_id (), name) in Hashtbl.add variables name (var, id); id
 let create name = Id (next_id (), name)
 let name = function
     Id_module name -> name

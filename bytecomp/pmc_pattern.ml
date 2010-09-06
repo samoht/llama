@@ -9,7 +9,7 @@ type row_desc = unit
 type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
-    pat_env: Env.t;
+    pat_env: unit;
     pat_type: mutable_type }
 
 and pattern_desc =
@@ -31,13 +31,13 @@ let rec import pat =
   | desc ->
       { pat_desc = import_desc desc;
         pat_loc = pat.Typedtree.tpat_loc;
-        pat_env = pat.Typedtree.tpat_env;
+        pat_env = ();
         pat_type = pat.Typedtree.tpat_type }
 
 and import_desc = function
     Typedtree.Tpat_any -> Tpat_any
-  | Typedtree.Tpat_var v -> Tpat_var (Ident.of_local_value v)
-  | Typedtree.Tpat_alias (p, v) -> Tpat_alias (import p, Ident.of_local_value v)
+  | Typedtree.Tpat_var var -> Tpat_var (Ident.of_variable var)
+  | Typedtree.Tpat_alias (p, var) -> Tpat_alias (import p, Ident.of_variable var)
   | Typedtree.Tpat_literal c -> Tpat_constant c
   | Typedtree.Tpat_tuple lp -> Tpat_tuple (List.map import lp)
   | Typedtree.Tpat_construct (cs, lp) -> Tpat_construct (cs, List.map import lp)

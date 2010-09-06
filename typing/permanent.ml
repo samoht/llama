@@ -105,17 +105,19 @@ let structure_item env tstr =
   match tstr.tstr_desc with
       Tstr_eval exp ->
         Str_eval exp, env
-    | Tstr_value (rec_flag, pat_exp_list) ->
-        let lvals =
-          List.flatten (List.map (fun (pat, _) ->
-                                    Resolve.bound_local_values pat) pat_exp_list) in
+    | Tstr_value (rec_flag, pat_expr_list) ->
+        let vars, var_types =
+          List.split
+            (List.flatten
+               (List.map (fun (pat, _) ->
+                            Resolve.bound_variables_with_types pat) pat_expr_list)) in
         let vals =
-          List.map (fun lval ->
+          List.map2 (fun var var_ty ->
                       { val_module = !Modenv.current_module;
-                        val_name = lval.lval_name;
-                        val_type = generalize_one_type lval.lval_type;
-                        val_kind = Val_reg }) lvals in
-        Str_value (rec_flag, pat_exp_list, List.combine lvals vals),
+                        val_name = var.var_name;
+                        val_type = generalize_one_type var_ty;
+                        val_kind = Val_reg }) vars var_types in
+        Str_value (rec_flag, pat_expr_list, List.combine vars vals),
         List.fold_left (fun env v -> Env.add_value v env) env vals
     | Tstr_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
