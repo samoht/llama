@@ -93,14 +93,18 @@ typing/include.cmo: typing/typeutil.cmo typing/typedtree.cmi utils/tbl.cmi \
     typing/printtyp.cmo typing/primitive.cmi utils/misc.cmi typing/base.cmo
 typing/include.cmx: typing/typeutil.cmx typing/typedtree.cmi utils/tbl.cmx \
     typing/printtyp.cmx typing/primitive.cmx utils/misc.cmx typing/base.cmx
-typing/modenv.cmo: utils/tbl.cmi typing/predef.cmo utils/misc.cmi \
-    utils/consistbl.cmi utils/config.cmi typing/base.cmo typing/modenv.cmi
-typing/modenv.cmx: utils/tbl.cmx typing/predef.cmx utils/misc.cmx \
-    utils/consistbl.cmx utils/config.cmx typing/base.cmx typing/modenv.cmi
+typing/modenv.cmo: utils/tbl.cmi typing/predef.cmo typing/persistent.cmo \
+    utils/misc.cmi utils/consistbl.cmi utils/config.cmi typing/base.cmo \
+    typing/modenv.cmi
+typing/modenv.cmx: utils/tbl.cmx typing/predef.cmx typing/persistent.cmx \
+    utils/misc.cmx utils/consistbl.cmx utils/config.cmx typing/base.cmx \
+    typing/modenv.cmi
 typing/mutable_type.cmo: typing/typeutil.cmo typing/base.cmo
 typing/mutable_type.cmx: typing/typeutil.cmx typing/base.cmx
 typing/oprint.cmo: typing/outcometree.cmi typing/oprint.cmi
 typing/oprint.cmx: typing/outcometree.cmi typing/oprint.cmi
+typing/persistent.cmo: typing/predef.cmo typing/base.cmo
+typing/persistent.cmx: typing/predef.cmx typing/base.cmx
 typing/predef.cmo: typing/base.cmo
 typing/predef.cmx: typing/base.cmx
 typing/primitive.cmo: utils/misc.cmi typing/primitive.cmi

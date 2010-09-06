@@ -42,7 +42,8 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
 
 TYPING=typing/unused_var.cmo typing/oprint.cmo typing/primitive.cmo \
   typing/base.cmo typing/predef.cmo \
-  typing/typeutil.cmo typing/modenv.cmo \
+  typing/typeutil.cmo \
+  typing/persistent.cmo typing/modenv.cmo \
   typing/env.cmo typing/mutable_type.cmo \
   typing/printtyp.cmo typing/resolve.cmo \
   typing/typify.cmo typing/immutify.cmo \

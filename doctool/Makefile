@@ -40,6 +40,7 @@ CAMLOBJS=\
   ../typing/primitive.cmo \
   ../typing/base.cmo \
   ../typing/predef.cmo \
+  ../typing/persistent.cmo \
   ../typing/modenv.cmo \
   ../typing/env.cmo \
   ../typing/typeutil.cmo \
