@@ -144,9 +144,9 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
-          | Tconstr({tcs=tcs}, []) when tcs == Predef.tcs_exn ->
+          | Tconstr(tcs, []) when tcs == Predef.tcs_exn ->
               tree_of_exception depth obj
-          | Tconstr({tcs=tcs}, [ty_arg]) when tcs == Predef.tcs_list ->
+          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_list ->
               if Obj.is_block obj then
                 match check_depth depth obj ty with
                   Some x -> x
@@ -164,7 +164,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_list (List.rev (tree_of_conses [] obj))
               else
                 Oval_list []
-          | Tconstr({tcs=tcs}, [ty_arg]) when tcs == Predef.tcs_array ->
+          | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_array ->
               let length = Obj.size obj in
               if length > 0 then
                 match check_depth depth obj ty with
@@ -190,13 +190,13 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               else
               Oval_stuff "<lazy>"
 *)
-          | Tconstr({tcs=tcs}, ty_list) ->
+          | Tconstr(tcs, ty_list) ->
               match tcs with
                 | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Typeutil.apply_abbrev tcs.tcs_arity body ty_list)
+                      (Typeutil.apply_abbrev tcs.tcs_params body ty_list)
                 | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -207,7 +207,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Typeutil.apply_abbrev tcs.tcs_arity ty ty_list)
+                           Typeutil.apply_abbrev tcs.tcs_params ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -219,7 +219,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Typeutil.apply_abbrev tcs.tcs_arity lbl.lbl_arg
+                                Typeutil.apply_abbrev tcs.tcs_params lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =

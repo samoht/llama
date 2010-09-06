@@ -8,33 +8,33 @@ open Base
 
 (* abstract types *)
 
-let mkabs name arity : type_constructor =
+let mkabs name params : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = name;
-    tcs_arity = arity;
+    tcs_params = params;
     tcs_kind = Tcs_abstract }
 
-let tcs_int = mkabs "int" 0
-let tcs_char = mkabs "char" 0
-let tcs_string = mkabs "string" 0
-let tcs_float = mkabs "float" 0
-let tcs_exn = mkabs "exn" 0
-let tcs_array = mkabs "array" 1
-let tcs_format6 = mkabs "format6" 6
-let tcs_nativeint = mkabs "nativeint" 0
-let tcs_int32 = mkabs "int32" 0
-let tcs_int64 = mkabs "int64" 0
+let tcs_int = mkabs "int" []
+let tcs_char = mkabs "char" []
+let tcs_string = mkabs "string" []
+let tcs_float = mkabs "float" []
+let tcs_exn = mkabs "exn" []
+let tcs_array = mkabs "array" (new_standard_parameters 1)
+let tcs_format6 = mkabs "format6" (new_standard_parameters 6)
+let tcs_nativeint = mkabs "nativeint" []
+let tcs_int32 = mkabs "int32" []
+let tcs_int64 = mkabs "int64" []
 
 (* variant types *)
 
 let rec tcs_unit : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "unit";
-    tcs_arity = 0;
+    tcs_params = [];
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
-  { cs_tcs = {tcs=tcs_unit};
+  { cs_tcs = tcs_unit;
     cs_module = Module_builtin;
     cs_name = "()";
     cs_args = [];
@@ -43,61 +43,65 @@ and cs_void =
 let rec tcs_bool : type_constructor =
   { tcs_module = Module_builtin;
     tcs_name = "bool";
-    tcs_arity = 0;
+    tcs_params = [];
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
-  { cs_tcs = {tcs=tcs_bool};
+  { cs_tcs = tcs_bool;
     cs_module = Module_builtin;
     cs_name = "false";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_true =
-  { cs_tcs = {tcs=tcs_bool};
+  { cs_tcs = tcs_bool;
     cs_module = Module_builtin;
     cs_name = "true";
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
+let list_param = new_standard_parameter 0
+
 let rec tcs_list =
   { tcs_module = Module_builtin;
     tcs_name = "list";
-    tcs_arity = 1;
+    tcs_params = [list_param];
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
-  { cs_tcs = {tcs=tcs_list};
+  { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "[]";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_cons =
-  { cs_tcs = {tcs=tcs_list};
+  { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tparam 0; Tconstr ({tcs=tcs_list}, [ Tparam 0 ]) ];
+    cs_args = [ Tparam list_param; Tconstr (tcs_list, [ Tparam list_param ]) ];
     cs_tag = Tag_block 0 }
+
+let option_param = new_standard_parameter 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;
     tcs_name = "option";
-    tcs_arity = 1;
+    tcs_params = [ option_param ];
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
-  { cs_tcs = {tcs=tcs_option};
+  { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "None";
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
 and cs_some =
-  { cs_tcs = {tcs=tcs_option};
+  { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ Tparam 0 ];
+    cs_args = [ Tparam option_param ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)
@@ -109,26 +113,26 @@ let type_constructors =
 
 (* helpers *)
 
-let type_int = Tconstr({tcs=tcs_int}, [])
-let type_char = Tconstr({tcs=tcs_char}, [])
-let type_string = Tconstr({tcs=tcs_string}, [])
-let type_float = Tconstr({tcs=tcs_float}, [])
-let type_bool = Tconstr({tcs=tcs_bool}, [])
-let type_unit = Tconstr({tcs=tcs_unit}, [])
-let type_exn = Tconstr({tcs=tcs_exn}, [])
-let type_array ty = Tconstr({tcs=tcs_array}, [ty])
-let type_list ty = Tconstr({tcs=tcs_list}, [ty])
-let type_option ty = Tconstr({tcs=tcs_option}, [ty])
-let type_nativeint = Tconstr({tcs=tcs_nativeint}, [])
-let type_int32 = Tconstr({tcs=tcs_int32}, [])
-let type_int64 = Tconstr({tcs=tcs_int64}, [])
+let type_int = Tconstr(tcs_int, [])
+let type_char = Tconstr(tcs_char, [])
+let type_string = Tconstr(tcs_string, [])
+let type_float = Tconstr(tcs_float, [])
+let type_bool = Tconstr(tcs_bool, [])
+let type_unit = Tconstr(tcs_unit, [])
+let type_exn = Tconstr(tcs_exn, [])
+let type_array ty = Tconstr(tcs_array, [ty])
+let type_list ty = Tconstr(tcs_list, [ty])
+let type_option ty = Tconstr(tcs_option, [ty])
+let type_nativeint = Tconstr(tcs_nativeint, [])
+let type_int32 = Tconstr(tcs_int32, [])
+let type_int64 = Tconstr(tcs_int64, [])
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
 
 let mkexn name tyl =
-  { cs_tcs = {tcs=tcs_exn};
+  { cs_tcs = tcs_exn;
     cs_module = Module_builtin;
     cs_name = name;
     cs_args = tyl;

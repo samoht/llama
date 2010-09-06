@@ -12,9 +12,9 @@ let type_of_local_type subst =
       Lparam param -> Tparam param
     | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl)
+    | Lconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
     | Lconstr_local (ltcs, tyl) ->
-        Tconstr ({tcs=List.assq ltcs subst}, List.map aux tyl) in
+        Tconstr (List.assq ltcs subst, List.map aux tyl) in
   aux
 
 let type_constructors ltcs_list =
@@ -23,7 +23,7 @@ let type_constructors ltcs_list =
       begin fun ltcs ->
         { tcs_module = !Modenv.current_module;
           tcs_name = ltcs.ltcs_name;
-          tcs_arity = List.length ltcs.ltcs_params;
+          tcs_params = ltcs.ltcs_params;
           tcs_kind = Tcs_abstract }
       end
       ltcs_list
@@ -45,7 +45,7 @@ let type_constructors ltcs_list =
                          else
                            Tag_block idx_block, idx_const, succ idx_block
                        in
-                       { cs_tcs = {tcs=tcs};
+                       { cs_tcs = tcs;
                          cs_module = tcs.tcs_module;
                          cs_name = name;
                          cs_args = List.map (type_of_local_type subst) args;
@@ -76,7 +76,7 @@ let primitive_value name ty prim =
     val_kind = Val_prim prim }
 
 let exception_constructor name args =
-  { cs_tcs = {tcs=Predef.tcs_exn};
+  { cs_tcs = Predef.tcs_exn;
     cs_module = !Modenv.current_module;
     cs_name = name;
     cs_args = List.map (type_of_local_type []) args;

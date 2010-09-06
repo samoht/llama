@@ -2058,7 +2058,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
   end else begin
     (* Regular concrete type *)
     let ncases = List.length tag_lambda_list
-    and nconstrs =  List.length (get_constructors (cs_tcs cstr)) in
+    and nconstrs =  List.length (get_constructors cstr.cs_tcs) in
     let sig_complete = ncases = nconstrs in
     let fails,local_jumps =
       if sig_complete then [],jumps_empty
@@ -2072,7 +2072,7 @@ let combine_constructor arg ex_pat cstr partial ctx def
       | Some act -> act
       | _ ->
           let cstr_consts, cstr_nonconsts =
-            Pmc_pattern.count_constructors (cs_tcs cstr) in
+            Pmc_pattern.count_constructors cstr.cs_tcs in
           match
             (cstr_consts, cstr_nonconsts, consts, nonconsts)
           with

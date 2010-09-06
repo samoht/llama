@@ -48,8 +48,8 @@ let rec subst_type subst = function
       Tarrow (subst_type subst ty1, subst_type subst ty2)
   | Ttuple tyl ->
       Ttuple (List.map (subst_type subst) tyl)
-  | Tconstr ({tcs=tcs}, tyl) ->
-      Tconstr ({tcs=subst_type_constructor subst tcs}, List.map (subst_type subst) tyl)
+  | Tconstr (tcs, tyl) ->
+      Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Coercions in the format supported by the ocaml compiler.               *)
@@ -90,7 +90,7 @@ let values subst v1 v2 =
 (* Inclusion for type declarations.                                       *)
 (* ---------------------------------------------------------------------- *)
 
-let rec compare_variants subst idx cstrs1 cstrs2 =
+let rec compare_variants subst corresp idx cstrs1 cstrs2 =
   match cstrs1, cstrs2 with
     [], [] ->
       None
@@ -105,14 +105,14 @@ let rec compare_variants subst idx cstrs1 cstrs2 =
         Some (Field_arity cs1.cs_name)
       else if
         Misc.for_all2
-          (fun ty1 ty2 -> Typeutil.equal ty1 (subst_type subst ty2))
+          (fun ty1 ty2 -> Typeutil.equiv corresp ty1 (subst_type subst ty2))
           cs1.cs_args cs2.cs_args
       then
-        compare_variants subst (succ idx) rem1 rem2
+        compare_variants subst corresp (succ idx) rem1 rem2
       else
         Some (Field_type cs1.cs_name)
 
-let rec compare_records subst idx labels1 labels2 =
+let rec compare_records subst corresp idx labels1 labels2 =
   match labels1, labels2 with
       [], [] ->
         None
@@ -125,33 +125,34 @@ let rec compare_records subst idx labels1 labels2 =
           Some (Field_names (idx, lbl1.lbl_name, lbl2.lbl_name))
         else if lbl1.lbl_mut <> lbl2.lbl_mut then
           Some (Field_mutable lbl1.lbl_name)
-        else if Typeutil.equal lbl1.lbl_arg (subst_type subst lbl2.lbl_arg) then
-          compare_records subst (succ idx) rem1 rem2
+        else if Typeutil.equiv corresp lbl1.lbl_arg (subst_type subst lbl2.lbl_arg) then
+          compare_records subst corresp (succ idx) rem1 rem2
         else
           Some (Field_type lbl1.lbl_name)
 
 let type_declarations subst tcs1 tcs2 =
   let error msg = Error [Type_declarations (tcs1, tcs2, msg)] in
-  if tcs1.tcs_arity <> tcs2.tcs_arity then raise (error Arity) else
+  if tcs_arity tcs1 <> tcs_arity tcs2 then raise (error Arity) else
+  let corresp = List.combine tcs1.tcs_params tcs2.tcs_params in
   match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->
         ()
     | Tcs_variant cstrs1, Tcs_variant cstrs2 ->
-        begin match compare_variants subst 0 cstrs1 cstrs2 with
+        begin match compare_variants subst corresp 0 cstrs1 cstrs2 with
             None -> ()
           | Some msg -> raise (error msg)
         end
     | Tcs_record lbls1, Tcs_record lbls2 ->
-        begin match compare_records subst 1 lbls1 lbls2 with
+        begin match compare_records subst corresp 1 lbls1 lbls2 with
             None -> ()
           | Some msg -> raise (error msg)
         end
     | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
-        if Typeutil.equal ty1 (subst_type subst ty2) then () else
+        if Typeutil.equiv corresp ty1 (subst_type subst ty2) then () else
           raise (error Unspecified)
     | _, Tcs_abbrev ty2 ->
         let ty1 = tcs_res tcs2 in
-        if Typeutil.equal ty1 ty2 then () else raise (error Unspecified)
+        if Typeutil.equiv corresp ty1 ty2 then () else raise (error Unspecified)
     | _ ->
         raise (error Unspecified)
 

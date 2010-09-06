@@ -41,13 +41,13 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tparam i ->
-      Otyp_var (false, parameter_name i)
+    Tparam param ->
+      Otyp_var (false, param.param_name)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
       Otyp_tuple (tree_of_type_list tyl)
-  | Tconstr ({tcs=tcs}, tyl) ->
+  | Tconstr (tcs, tyl) ->
       Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
 
 and tree_of_type_list tyl =
@@ -96,7 +96,7 @@ let tree_of_label_description lbl =
 let tree_of_type_declaration tcs rec_status =
   Osig_type (begin
                tcs.tcs_name,
-               nat_map (fun i -> parameter_name i, (true, true)) tcs.tcs_arity,
+               List.map (fun param -> param.param_name, (true, true)) tcs.tcs_params,
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract
@@ -169,7 +169,7 @@ let mutable_names = ref ([] : (type_variable * string) list)
 let mutable_counter = ref 0
 let reset_mutable_names () = mutable_names := []
 let new_mutable_name () =
-  let name = parameter_name !mutable_counter in
+  let name = standard_name !mutable_counter in
   incr mutable_counter;
   name
 let name_of_mutable_type tv =
