@@ -224,16 +224,13 @@ let directive_table = (Hashtbl.create 13 : (string, directive_fun) Hashtbl.t)
 
 let execute_phrase print_outcome ppf phr =
   match phr with
-  | Ptop_def sstr ->
+  | Ptop_def pstr ->
       let oldenv = !toplevel_env in
-      let _ = Unused_var.warn ppf [sstr] in
-      let tstr = Resolve.temporary_structure_item oldenv sstr in
-      let tyopt =
-        match tstr.tstr_desc with
-            Tstr_eval e -> Some (Typify.toplevel_eval e)
-          | _ -> Typify.temporary_structure_item tstr; None
-      in
-      let str, newenv = Globalize.structure_item oldenv tstr in
+      let _ = Unused_var.warn ppf [pstr] in
+      let tstr = Resolve.structure_item oldenv pstr in
+      Typify.structure_item tstr;
+      let tstr = Immutify.structure_item tstr in
+      let str, tyopt, newenv = Globalize.structure_item oldenv tstr in
       let sg = Typemain.signature_of_structure [str] in
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();

@@ -1,6 +1,5 @@
 open Asttypes
 open Base
-open Mutable_type
 
 (* Compatibility layer for ocaml's pattern-matching compiler.*)
 
@@ -10,7 +9,7 @@ type pattern =
   { pat_desc: pattern_desc;
     pat_loc: Location.t;
     pat_env: unit;
-    pat_type: mutable_type }
+    pat_type: llama_type }
 
 and pattern_desc =
     Tpat_any

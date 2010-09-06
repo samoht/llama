@@ -20,15 +20,14 @@ open Primitive
 open Base
 open Typedtree
 open Lambda
-open Mutable_type
 
 let has_base_type exp base_tcs =
-  match expand_head exp.texp_type with
+  match Typeutil.expand_head exp.texp_type with
   | Tconstr(tcs, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
-  match expand_head exp.texp_type with
+  match Typeutil.expand_head exp.texp_type with
   | Tconstr(tcs, args) ->
       not (tcs == Predef.tcs_int) &&
       not (tcs == Predef.tcs_char) &&
@@ -46,7 +45,7 @@ let maybe_pointer exp =
   | _ -> true
 
 let array_element_kind ty =
-  match expand_head ty with
+  match Typeutil.expand_head ty with
   | Tvar _ ->
       Pgenarray
   | Tconstr(tcs, args) ->
@@ -80,7 +79,7 @@ let array_element_kind ty =
       Paddrarray
 
 let array_kind_gen ty =
-  match expand_head ty with
+  match Typeutil.expand_head ty with
   | Tconstr(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
       array_element_kind elt_ty
   | _ ->
@@ -92,7 +91,7 @@ let array_kind exp = array_kind_gen exp.texp_type
 let array_pattern_kind pat = array_kind_gen pat.tpat_type
 
 let bigarray_decode_type ty tbl dfl =
-  match expand_head ty with
+  match Typeutil.expand_head ty with
   | Tconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
       begin try List.assoc name tbl with Not_found -> dfl end
   | _ ->
@@ -117,7 +116,7 @@ let layout_table =
    "fortran_layout", Pbigarray_fortran_layout]
 
 let bigarray_kind_and_layout exp =
-  match expand_head exp.texp_type with
+  match Typeutil.expand_head exp.texp_type with
   | Tconstr(_, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type layout_type layout_table Pbigarray_unknown_layout)

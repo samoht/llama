@@ -83,32 +83,24 @@ let rec bound_names pat =
     | Ppat_record lbl_pat_list ->
         List.flatten (List.map (fun (lbl, pat) -> bound_names pat) lbl_pat_list)
 
-let rec bound_variables_with_types pat =
+let rec pattern_variables pat =
   match pat.tpat_desc with
-      Tpat_any | Tpat_literal _ ->
-        []
-    | Tpat_var var ->
-        [ (var, pat.tpat_type) ]
-    | Tpat_alias (pat, var) ->
-        (var, pat.tpat_type) :: bound_variables_with_types pat
+      Tpat_any | Tpat_literal _ -> []
+    | Tpat_var var -> [ var ]
+    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
     | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
-        List.flatten (List.map bound_variables_with_types patl)
+        List.flatten (List.map pattern_variables patl)
     | Tpat_record (_, lbl_pat_list) ->
         List.flatten
-          (List.map (fun (lbl,pat) -> bound_variables_with_types pat) lbl_pat_list)
-    | Tpat_or (pat1, pat2) ->
-        bound_variables_with_types pat1
-    | Tpat_constraint (pat', _) ->
-        bound_variables_with_types pat'
-
-let bound_variables pat =
-  List.map fst (bound_variables_with_types pat)
+          (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
+    | Tpat_or (pat1, pat2) -> pattern_variables pat1
+    | Tpat_constraint (pat', _) -> pattern_variables pat'
 
 (* ---------------------------------------------------------------------- *)
 (* Contexts.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-(* A context extends an Env.t with some local values. *)
+(* A context extends an Env.t with some local variables. *)
 
 type ('a, 'b) local_or_global =
     Local of 'a
@@ -116,21 +108,21 @@ type ('a, 'b) local_or_global =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_values : (string, variable) Tbl.t }
+  ctxt_variables : (string, Mutable_type.mutable_type gen_variable) Tbl.t }
 
 let context_create env =
   { ctxt_env = env;
-    ctxt_values = Tbl.empty }
+    ctxt_variables = Tbl.empty }
 
-let context_add_value lv ctxt =
+let context_add_variable var ctxt =
   { ctxt_env = ctxt.ctxt_env;
-    ctxt_values = Tbl.add lv.var_name lv ctxt.ctxt_values }
+    ctxt_variables = Tbl.add var.var_name var ctxt.ctxt_variables }
 
 let context_lookup_value lid ctxt =
   let look_global () = Global (Env.lookup_value lid ctxt.ctxt_env) in
   match lid with
       Longident.Lident s ->
-        begin try Local (Tbl.find s ctxt.ctxt_values)
+        begin try Local (Tbl.find s ctxt.ctxt_variables)
         with Not_found -> look_global () end
     | Longident.Ldot _ -> look_global ()
 
@@ -287,16 +279,13 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
 (* Resolution of patterns.                                                *)
 (* ---------------------------------------------------------------------- *)
 
-let new_local_value name =
-  { var_name = name }
-
 let pattern env pat =
   let names = bound_names pat in
   begin match find_duplicate names with
       None -> ()
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
-  let values = List.map (fun name -> (name, new_local_value name)) names in
+  let values = List.map (fun name -> (name, new_variable name (Mutable_type.new_type_var ()))) names in
   let rec pattern pat =
     { tpat_desc = pattern_aux pat;
       tpat_loc = pat.ppat_loc;
@@ -349,8 +338,7 @@ let pattern env pat =
 
 let extend_context ctxt pat =
   List.fold_left
-    (fun ctxt lval -> context_add_value lval ctxt)
-    ctxt (bound_variables pat)
+    (fun ctxt var -> context_add_variable var ctxt) ctxt (pattern_variables pat)
 
 let rec expression ctxt exp =
   { texp_desc = expression_aux ctxt exp;
@@ -421,9 +409,9 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Texp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let lval = new_local_value name in
-        let big_ctxt = context_add_value lval ctxt in
-        Texp_for (lval,
+        let var = new_variable name Predef.type_int in
+        let big_ctxt = context_add_variable var ctxt in
+        Texp_for (var,
                   expression ctxt e1,
                   expression ctxt e2,
                   dir_flag,
@@ -520,7 +508,7 @@ let type_declarations env pdecls =
   ltcs_list
 
 (* ---------------------------------------------------------------------- *)
-(* Temporary signature and structure items.                               *)
+(* Signature and structure items.                                         *)
 (* ---------------------------------------------------------------------- *)
 
 let external_declaration decl ty =
@@ -530,7 +518,7 @@ let external_declaration decl ty =
       | _ -> 0 in
   Primitive.parse_declaration (arity ty) decl
 
-let temporary_signature_item env psig =
+let signature_item env psig =
   reset_type_variables ();
   { tsig_desc =
       begin match psig.psig_desc with
@@ -554,16 +542,16 @@ let top_bindings env rec_flag ppat_pexp_list =
   let ctxt =
     match rec_flag with
         Recursive ->
-          let lvals = List.flatten (List.map bound_variables pat_list) in
+          let vars = List.flatten (List.map pattern_variables pat_list) in
           List.fold_left
-            (fun ctxt lval -> context_add_value lval ctxt)
-            (context_create env) lvals
+            (fun ctxt var -> context_add_variable var ctxt)
+            (context_create env) vars
       | Nonrecursive ->
           context_create env
   in
   List.map2 (fun pat (_, pexp) -> pat, expression ctxt pexp) pat_list ppat_pexp_list
 
-let temporary_structure_item env pstr =
+let structure_item env pstr =
   reset_type_variables ();
   { tstr_desc =
       begin match pstr.pstr_desc with

@@ -2,9 +2,6 @@
 
 open Asttypes
 open Base
-open Mutable_type
-
-type variable = { var_name : string }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -17,8 +14,8 @@ type 'ty gen_pattern =
 
 and 'ty gen_pattern_desc =
     Tpat_any
-  | Tpat_var of variable
-  | Tpat_alias of 'ty gen_pattern * variable
+  | Tpat_var of 'ty gen_variable
+  | Tpat_alias of 'ty gen_pattern * 'ty gen_variable
   | Tpat_literal of literal
   | Tpat_tuple of 'ty gen_pattern list
   | Tpat_construct of constructor * 'ty gen_pattern list
@@ -27,7 +24,7 @@ and 'ty gen_pattern_desc =
   | Tpat_or of 'ty gen_pattern * 'ty gen_pattern
   | Tpat_constraint of 'ty gen_pattern * 'ty
 
-type pattern = mutable_type gen_pattern
+type pattern = llama_type gen_pattern
 
 (* ---------------------------------------------------------------------- *)
 (* Expressions.                                                           *)
@@ -39,7 +36,7 @@ type 'ty gen_expression =
     texp_type : 'ty }
 
 and 'ty gen_expression_desc =
-    Texp_var of variable
+    Texp_var of 'ty gen_variable
   | Texp_value of value
   | Texp_literal of literal
   | Texp_let of rec_flag * ('ty gen_pattern * 'ty gen_expression) list * 'ty gen_expression
@@ -56,13 +53,13 @@ and 'ty gen_expression_desc =
   | Texp_ifthenelse of 'ty gen_expression * 'ty gen_expression * 'ty gen_expression option
   | Texp_sequence of 'ty gen_expression * 'ty gen_expression
   | Texp_while of 'ty gen_expression * 'ty gen_expression
-  | Texp_for of variable * 'ty gen_expression * 'ty gen_expression * direction_flag * 'ty gen_expression
+  | Texp_for of 'ty gen_variable * 'ty gen_expression * 'ty gen_expression * direction_flag * 'ty gen_expression
   | Texp_when of 'ty gen_expression * 'ty gen_expression
   | Texp_assert of 'ty gen_expression
   | Texp_assertfalse
   | Texp_constraint of 'ty gen_expression * 'ty
 
-type expression = mutable_type gen_expression
+type expression = llama_type gen_expression
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)
@@ -90,18 +87,16 @@ and local_type =
 (* Signature items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty gen_temporary_signature_item =
-  { tsig_desc : 'ty gen_temporary_signature_item_desc;
+type temporary_signature_item =
+  { tsig_desc : temporary_signature_item_desc;
     tsig_loc : Location.t }
 
-and 'ty gen_temporary_signature_item_desc =
+and temporary_signature_item_desc =
     Tsig_value of string * llama_type
   | Tsig_external of string * llama_type * Primitive.description
   | Tsig_type of local_type_constructor list
   | Tsig_exception of string * local_type list
   | Tsig_open of string * signature
-
-type temporary_signature_item = mutable_type gen_temporary_signature_item
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)
@@ -118,6 +113,9 @@ and 'ty gen_temporary_structure_item_desc =
   | Tstr_type of local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
+
+type temporary_structure_item =
+    llama_type gen_temporary_structure_item
 
 (* what the compiler sees *)
 

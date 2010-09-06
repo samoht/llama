@@ -14,7 +14,7 @@ let rec signature env psigl =
   match psigl with
       [] -> []
     | psig :: rest ->
-        let tsig = Resolve.temporary_signature_item env psig in
+        let tsig = Resolve.signature_item env psig in
         let sg, newenv = Globalize.signature_items env tsig in
         sg @ signature newenv rest
 
@@ -24,9 +24,10 @@ let rec structure env pstrl =
   match pstrl with
       [] -> []
     | pstr :: rest ->
-        let tstr = Resolve.temporary_structure_item env pstr in
-        Typify.temporary_structure_item tstr;
-        let str, newenv = Globalize.structure_item env tstr in
+        let tstr = Resolve.structure_item env pstr in
+        Typify.structure_item tstr;
+        let tstr = Immutify.structure_item tstr in
+        let str, _, newenv = Globalize.structure_item env tstr in
         str :: structure newenv rest
 
 (* Simplify multiple specifications of a value or an exception in a

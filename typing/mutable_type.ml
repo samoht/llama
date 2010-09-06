@@ -4,10 +4,12 @@ open Base
 
 type mutable_type = mutable_type_variable gen_type
 
-and mutable_type_variable =  (* compared with (==) *)
+and mutable_type_variable =
   { mutable link : mutable_type option }
 
-let new_type_var () : mutable_type = Tvar { link = None }
+type mutable_variable = mutable_type gen_variable
+
+let new_type_var () = Tvar { link = None }
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
@@ -22,15 +24,6 @@ let rec instantiate_type inst = function
       Ttuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map (instantiate_type inst) tyl)
-
-let rec add_to_instantiation inst = function
-    Tvar param ->
-      if List.mem_assq param inst then inst
-      else (param, new_type_var ()) :: inst
-  | Tarrow (ty1, ty2) ->
-      add_to_instantiation (add_to_instantiation inst ty1) ty2
-  | Ttuple tyl | Tconstr (_, tyl) ->
-      List.fold_left add_to_instantiation inst tyl
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_var ())) tcs.tcs_params in
@@ -48,47 +41,9 @@ let instantiate_label lbl =
 
 let instantiate_value v =
   let ty = v.val_type in
-  let inst = add_to_instantiation [] ty in
+  let inst =
+    List.map (fun var -> (var, new_type_var ())) (Typeutil.variables ty) in
   instantiate_type inst ty
-
-(* ---------------------------------------------------------------------- *)
-(* Generalization (mutable -> immutable).                                 *)
-(* ---------------------------------------------------------------------- *)
-
-let rec generalize_type gen = function
-    Tvar tv ->
-      begin match tv.link with
-          None -> List.assq tv gen
-        | Some ty -> generalize_type gen ty
-      end
-  | Tarrow (ty1, ty2) ->
-      Tarrow (generalize_type gen ty1, generalize_type gen ty2)
-  | Ttuple tyl ->
-      Ttuple (List.map (generalize_type gen) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (generalize_type gen) tyl)
-
-let rec add_to_generalization gen = function
-    Tvar tv ->
-      begin match tv.link with
-          None ->
-            if List.mem_assq tv gen then gen
-            else
-              let param = new_parameter (List.length gen) in
-              (tv, Tvar param) :: gen
-        | Some ty ->
-            add_to_generalization gen ty
-      end
-  | Tarrow (ty1, ty2) ->
-      add_to_generalization (add_to_generalization gen ty1) ty2
-  | Ttuple tyl | Tconstr (_, tyl) ->
-      List.fold_left add_to_generalization gen tyl
-
-let generalize_one_type ty =
-  generalize_type (add_to_generalization [] ty) ty
-
-let is_closed ty =
-  add_to_generalization [] ty = []
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
@@ -98,13 +53,10 @@ let rec type_repr = function
     Tvar { link = Some ty } -> type_repr ty
   | ty -> ty
 
-let apply_abbrev params body args =
-  instantiate_type (List.combine params args) body
-
 let rec expand_head = function
     Tvar { link = Some ty } -> expand_head ty
   | Tconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
-      expand_head (apply_abbrev params body args)
+      expand_head (Typeutil.apply_abbrev params body args)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -142,9 +94,9 @@ let rec unify ty1 ty2 =
     | Ttuple tyl1, Ttuple tyl2 ->
         unify_list tyl1 tyl2
     | Tconstr ({tcs_params=params1; tcs_kind=Tcs_abbrev body1}, tyl1), _ ->
-        unify (apply_abbrev params1 body1 tyl1) ty2
+        unify (Typeutil.apply_abbrev params1 body1 tyl1) ty2
     | _, Tconstr ({tcs_params=params2; tcs_kind=Tcs_abbrev body2}, tyl2) ->
-        unify ty1 (apply_abbrev params2 body2 tyl2)
+        unify ty1 (Typeutil.apply_abbrev params2 body2 tyl2)
     | Tconstr (tcs1, tyl1), Tconstr (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list tyl1 tyl2
     | _ ->

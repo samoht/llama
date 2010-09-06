@@ -7,7 +7,7 @@ type t =
   | Id_predef_exn of string
   | Id of int * string
 let values : (string, value * t) Hashtbl.t = Hashtbl.create 17
-let variables : (string, Typedtree.variable * t) Hashtbl.t = Hashtbl.create 17
+let variables : (string, variable * t) Hashtbl.t = Hashtbl.create 17
 let exceptions : (string, constructor * t) Hashtbl.t = Hashtbl.create 17
 let next_id_ref = ref 0
 let next_id () = let id = !next_id_ref in incr next_id_ref; id
@@ -36,9 +36,9 @@ let of_value v =
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add values name (v, id); id
 let identify (var, v) = (* NB *)
-  Hashtbl.add variables var.Typedtree.var_name (var, of_value v)
+  Hashtbl.add variables var.var_name (var, of_value v)
 let of_variable var =
-  let name = var.Typedtree.var_name in
+  let name = var.var_name in
   try List.assq var (Hashtbl.find_all variables name)
   with Not_found ->
     let id = Id (next_id (), name) in Hashtbl.add variables name (var, id); id

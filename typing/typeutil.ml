@@ -1,20 +1,40 @@
 open Base
 
+(* Basics. *)
+
+let variables =
+  let rec aux accu = function
+      Tvar tv -> if List.memq tv accu then accu else tv :: accu
+    | Tarrow (ty1, ty2) -> aux (aux accu ty1) ty2
+    | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl in
+  fun ty -> List.rev (aux [] ty)
+
+let is_closed ty = (variables ty = [])
+
+let rec subst s : llama_type -> 'v gen_type = function
+    Tvar tv -> List.assq tv s
+  | Tarrow (ty1, ty2) -> Tarrow (subst s ty1, subst s ty2)
+  | Ttuple tyl -> Ttuple (List.map (subst s) tyl)
+  | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst s) tyl)
+
 (* Expansion of abbreviations. *)
 
 let apply_abbrev params body args =
-  let subst = List.combine params args in
-  let rec aux = function
-      Tvar param -> List.assq param subst
-    | Tarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
-    | Ttuple tyl -> Ttuple (List.map aux tyl)
-    | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
-  in aux body
+  subst (List.combine params args) body
 
-let rec expand_head = function
+let rec expand_head : llama_type -> llama_type = function
     Tconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
       expand_head (apply_abbrev params body args)
   | ty -> ty
+
+(* Rename type variables to standard parameter names. *)
+
+let rename_variables (ty : llama_type) : llama_type =
+  subst
+    (let rec aux i = function
+         [] -> []
+       | (var :: tl) -> ((var, Tvar (new_parameter i)) :: aux (succ i) tl) in
+     aux 0 (variables ty)) ty
 
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
@@ -43,7 +63,7 @@ let equal, equiv =
 
 (* Whether one type is more general than another. *)
 
-let moregeneral ty1 ty2 =
+let moregeneral (ty1 : llama_type) (ty2 : llama_type) =
   let subst = ref [] in
   let rec aux ty1 ty2 =
     match ty1, ty2 with

@@ -160,30 +160,23 @@ let signature ppf sg =
   fprintf ppf "%a" print_signature (tree_of_signature sg)
 
 (* ---------------------------------------------------------------------- *)
-(* mutable types                                                          *)
+(* Mutable types.                                                         *)
 (* ---------------------------------------------------------------------- *)
 
 open Mutable_type
 
-let mutable_names = ref ([] : (mutable_type_variable * string) list)
-let mutable_counter = ref 0
-let reset_mutable_names () = mutable_names := []
-let new_mutable_name () =
-  let name = parameter_name !mutable_counter in
-  incr mutable_counter;
-  name
-let name_of_mutable_type tv =
-  try List.assq tv !mutable_names with Not_found ->
-    let name = new_mutable_name () in
-    mutable_names := (tv, name) :: !mutable_names;
-    name
-
-let rec tree_of_mutable_type ty =
-  begin match ty with
-    | Tvar tv ->
-        begin match tv.link with
+let tree_of_mutable_type =
+  let var_names = ref ([] : (mutable_type_variable * string) list) in
+  let var_name v =
+    try List.assq v !var_names with Not_found ->
+      let name = parameter_name (List.length !var_names) in
+      var_names := (v, name) :: !var_names;
+      name in
+  let rec tree_of_mutable_type = function
+      Tvar v ->
+        begin match v.link with
           | None ->
-              Otyp_var (false, name_of_mutable_type tv)
+              Otyp_var (false, var_name v)
           | Some ty ->
               tree_of_mutable_type ty
         end
@@ -193,10 +186,11 @@ let rec tree_of_mutable_type ty =
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Tconstr (tcs, tyl) ->
         Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
-  end
-
-and tree_of_mutable_type_list tyl =
-  List.map tree_of_mutable_type tyl
+  and tree_of_mutable_type_list tyl =
+    List.map tree_of_mutable_type tyl in
+  fun ty ->
+    var_names := [];
+    tree_of_mutable_type ty
 
 let mutable_type ppf ty =
   !Oprint.out_type ppf (tree_of_mutable_type ty)

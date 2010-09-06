@@ -24,7 +24,7 @@ type rec_status =
 
 (* Variables are compared with (==). *)
 type type_variable = { tvar_name : string }
-type 'ty variable = { var_name : string; var_type : 'ty }
+type 'ty gen_variable = { var_name : string; var_type : 'ty }
 
 (* ---------------------------------------------------------------------- *)
 (* Types representing the essential names entitites.                      *)
@@ -96,6 +96,8 @@ type constructor = llama_type gen_constructor
 type label = llama_type gen_label
 
 type value = llama_type gen_value
+
+type variable = llama_type gen_variable
 
 type signature_item = llama_type gen_signature_item
 

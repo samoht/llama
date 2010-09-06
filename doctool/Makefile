@@ -49,6 +49,7 @@ CAMLOBJS=\
   ../typing/include.cmo \
   ../typing/resolve.cmo \
   ../typing/typify.cmo \
+  ../typing/immutify.cmo \
   ../typing/globalize.cmo \
   ../typing/typemain.cmo \
   ../bytecomp/ident.cmo \

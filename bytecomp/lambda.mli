@@ -170,7 +170,7 @@ and lambda_event =
 
 and lambda_event_kind =
     Lev_before
-  | Lev_after of Mutable_type.mutable_type
+  | Lev_after of Base.llama_type
   | Lev_function
 
 val same: lambda -> lambda -> bool
