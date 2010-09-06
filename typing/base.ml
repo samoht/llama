@@ -22,22 +22,21 @@ type rec_status =
     Rec_first                          (* first in a recursive group *)
   | Rec_next                           (* not first in a recursive group *)
 
-type type_parameter = { param_name : string }
-  (* Parameters are compared with (==). *)
+(* Variables are compared with (==). *)
+type type_variable = { tvar_name : string }
+type 'ty variable = { var_name : string; var_type : 'ty }
 
 (* ---------------------------------------------------------------------- *)
-(* Fundamental types.                                                     *)
+(* Types representing the essential names entitites.                      *)
 (* ---------------------------------------------------------------------- *)
 
 (* These are generic so they can be used in-memory or on disk. *)
-
-(* The record types, representing the essential named entities, get
-   compared with (==). *)
+(* The record types are compared with (==). *)
 
 type 'ty gen_type_constructor =
   { tcs_module : module_id;            (* Defining module *)
     tcs_name : string;                 (* Name of the type constructor *)
-    tcs_params : type_parameter list;  (* Number of type parameters *)
+    tcs_params : type_variable list;   (* Number of type parameters *)
     mutable tcs_kind : 'ty gen_type_constructor_kind }
                                        (* Kind of the type constructor *)
 
@@ -80,11 +79,13 @@ type 'ty gen_signature = 'ty gen_signature_item list
 (* Specialization to the in-memory case.                                  *)
 (* ---------------------------------------------------------------------- *)
 
-type llama_type =
-    Tparam of type_parameter
-  | Tarrow of llama_type * llama_type
-  | Ttuple of llama_type list
-  | Tconstr of type_constructor * llama_type list
+type llama_type = type_variable gen_type
+
+and 'v gen_type =
+    Tvar of 'v  (* alternate 'v is used during type inference *)
+  | Tarrow of 'v gen_type * 'v gen_type
+  | Ttuple of 'v gen_type list
+  | Tconstr of type_constructor * 'v gen_type list
 
 and type_constructor = llama_type gen_type_constructor
 
@@ -106,7 +107,7 @@ type signature = llama_type gen_signature
 
 let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr (tcs, List.map (fun param -> Tparam param) tcs.tcs_params)
+  Tconstr (tcs, List.map (fun param -> Tvar param) tcs.tcs_params)
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = lbl.lbl_tcs.tcs_module      (* Defining module *)
@@ -123,12 +124,14 @@ let get_labels tcs =
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
 
-let standard_name i =
+let new_type_variable name = { tvar_name = name }
+let new_variable name ty = { var_name = name; var_type = ty }
+
+let parameter_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let new_parameter name = { param_name = name }
-let new_standard_parameter i = new_parameter (standard_name i)
-let new_standard_parameters n =
-  let rec aux i = if i < n then new_standard_parameter i :: aux (succ i) else [] in
+let new_parameter i = new_type_variable (parameter_name i)
+let new_parameters n =
+  let rec aux i = if i < n then new_parameter i :: aux (succ i) else [] in
   aux 0

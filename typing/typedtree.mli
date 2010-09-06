@@ -70,7 +70,7 @@ type expression = mutable_type gen_expression
 
 type local_type_constructor = {
   ltcs_name : string;
-  ltcs_params : type_parameter list;
+  ltcs_params : type_variable list;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -80,7 +80,7 @@ and local_type_constructor_kind =
   | Ltcs_abbrev of local_type
 
 and local_type =
-    Lparam of type_parameter
+    Lvar of type_variable
   | Larrow of local_type * local_type
   | Ltuple of local_type list
   | Lconstr of type_constructor * local_type list

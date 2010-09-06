@@ -41,8 +41,8 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tparam param ->
-      Otyp_var (false, param.param_name)
+    Tvar tvar ->
+      Otyp_var (false, tvar.tvar_name)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
@@ -96,7 +96,7 @@ let tree_of_label_description lbl =
 let tree_of_type_declaration tcs rec_status =
   Osig_type (begin
                tcs.tcs_name,
-               List.map (fun param -> param.param_name, (true, true)) tcs.tcs_params,
+               List.map (fun tvar -> tvar.tvar_name, (true, true)) tcs.tcs_params,
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract
@@ -165,11 +165,11 @@ let signature ppf sg =
 
 open Mutable_type
 
-let mutable_names = ref ([] : (type_variable * string) list)
+let mutable_names = ref ([] : (mutable_type_variable * string) list)
 let mutable_counter = ref 0
 let reset_mutable_names () = mutable_names := []
 let new_mutable_name () =
-  let name = standard_name !mutable_counter in
+  let name = parameter_name !mutable_counter in
   incr mutable_counter;
   name
 let name_of_mutable_type tv =
@@ -180,18 +180,18 @@ let name_of_mutable_type tv =
 
 let rec tree_of_mutable_type ty =
   begin match ty with
-    | Mvar tv ->
+    | Tvar tv ->
         begin match tv.link with
           | None ->
               Otyp_var (false, name_of_mutable_type tv)
           | Some ty ->
               tree_of_mutable_type ty
         end
-    | Marrow (ty1, ty2) ->
+    | Tarrow (ty1, ty2) ->
         Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2)
-    | Mtuple tyl ->
+    | Ttuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
-    | Mconstr (tcs, tyl) ->
+    | Tconstr (tcs, tyl) ->
         Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
   end
 

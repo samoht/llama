@@ -146,7 +146,7 @@ let match_printer_type ppf desc typename =
       raise Exit in
   let ty_arg = Mutable_type.new_type_var() in
   Mutable_type.unify
-    (Mutable_type.Mconstr (printer_tcs, [ty_arg]))
+    (Tconstr (printer_tcs, [ty_arg]))
     (Mutable_type.instantiate_value desc);
   Mutable_type.generalize_one_type ty_arg
 

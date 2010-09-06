@@ -24,7 +24,7 @@ open Pmc_pattern
 (* Utilities for building patterns   *)
 (*************************************)
 
-let invalid_mutable_type = Mtuple []
+let invalid_mutable_type = Ttuple []
 
 let make_pat desc ty tenv =
   {pat_desc = desc; pat_loc = Location.none;
@@ -119,7 +119,7 @@ exception Empty (* Empty pattern *)
 let get_type_path ty =
   let ty = Mutable_type.expand_head ty in
   match ty with
-  | Mutable_type.Mconstr (path,_) -> path
+  | Tconstr (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
 
 
@@ -566,7 +566,7 @@ let close_variant env row =
     (* this unification cannot fail *)
     Mutable_type.unify env row.row_more
       (Typeutil.newgenty
-         (Tparamiant {row with row_fields = []; row_more = Typeutil.newgenvar();
+         (Tvariant {row with row_fields = []; row_more = Typeutil.newgenvar();
                     row_closed = true; row_name = nm}))
   end
 *)
@@ -575,7 +575,7 @@ let row_of_pat pat =
   assert false
 (*
   match Mutable_type.expand_head pat.pat_env pat.pat_type with
-    {desc = Tparamiant row} -> Typeutil.row_repr row
+    {desc = Tvariant row} -> Typeutil.row_repr row
   | _ -> assert false
 *)
 

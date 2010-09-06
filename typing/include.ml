@@ -42,7 +42,7 @@ let subst_type_constructor subst tcs =
     tcs
 
 let rec subst_type subst = function
-    Tparam _ as ty ->
+    Tvar _ as ty ->
       ty
   | Tarrow (ty1, ty2) ->
       Tarrow (subst_type subst ty1, subst_type subst ty2)

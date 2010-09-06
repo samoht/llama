@@ -139,27 +139,27 @@ let context_lookup_value lid ctxt =
 (* ---------------------------------------------------------------------- *)
 
 (* A pseudoenv is an Env.t extended by some local type constructors
-   and parameters. (Compare with contexts, above.) *)
+   and type variables. (Compare with contexts, above.) *)
 
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_parameters : (string, type_parameter) Tbl.t }
+  pseudoenv_type_variables : (string, type_variable) Tbl.t }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
-  pseudoenv_parameters = Tbl.empty }
+  pseudoenv_type_variables = Tbl.empty }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
       pseudoenv_type_constructors =
       Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
 
-let pseudoenv_add_parameter param pseudoenv =
+let pseudoenv_add_type_variable tvar pseudoenv =
   { pseudoenv with
-      pseudoenv_parameters =
-      Tbl.add param.param_name param pseudoenv.pseudoenv_parameters }
+      pseudoenv_type_variables =
+      Tbl.add tvar.tvar_name tvar pseudoenv.pseudoenv_type_variables }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -170,8 +170,8 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
         with Not_found -> look_global () end
     | Longident.Ldot _ -> look_global ()
 
-let pseudoenv_lookup_parameter name pseudoenv =
-  Tbl.find name pseudoenv.pseudoenv_parameters
+let pseudoenv_lookup_type_variable name pseudoenv =
+  Tbl.find name pseudoenv.pseudoenv_type_variables
 
 (* ---------------------------------------------------------------------- *)
 (* Lookup utilities.                                                      *)
@@ -201,8 +201,8 @@ let lookup_general_type_constructor pseudoenv lid loc =
   try pseudoenv_lookup_type_constructor lid pseudoenv
   with Not_found -> raise (Error (loc, Unbound_type_constructor lid))
 
-let lookup_parameter pseudoenv name loc =
-  try pseudoenv_lookup_parameter name pseudoenv
+let lookup_type_variable pseudoenv name loc =
+  try pseudoenv_lookup_type_variable name pseudoenv
   with Not_found -> raise (Error (loc, Unbound_parameter name))
 
 (* ---------------------------------------------------------------------- *)
@@ -217,7 +217,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           begin try
             List.assoc name !params
           with Not_found ->
-            let ty = Tparam (new_parameter name) in
+            let ty = Tvar (new_type_variable name) in
             params := (name, ty) :: !params;
             ty
           end
@@ -238,7 +238,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
 let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
-        Lparam (lookup_parameter pseudoenv name ty.ptyp_loc)
+        Lvar (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
         Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2)
     | Ptyp_tuple tyl ->
@@ -272,16 +272,16 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Mutable_type.Marrow (mutable_type env ty1, mutable_type env ty2)
+        Tarrow (mutable_type env ty1, mutable_type env ty2)
     | Ptyp_tuple tyl ->
-        Mutable_type.Mtuple (List.map (mutable_type env) tyl)
+        Ttuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mutable_type.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
-                              List.map (mutable_type env) tyl)
+        Tconstr (lookup_type_constructor env lid ty.ptyp_loc,
+                 List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -475,7 +475,7 @@ let type_kind ctxt = function
 
 let is_recursive_abbrev =
   let rec occ seen = function
-      Lparam _ -> false
+      Lvar _ -> false
     | Larrow (ty1, ty2) -> occ seen ty1 || occ seen ty2
     | Ltuple tyl | Lconstr (_, tyl) -> List.exists (occ seen) tyl
     | Lconstr_local (ltcs, tyl) ->
@@ -496,7 +496,7 @@ let type_declarations env pdecls =
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
-          ltcs_params = List.map new_parameter pdecl.ptype_params;
+          ltcs_params = List.map new_type_variable pdecl.ptype_params;
           ltcs_kind = Ltcs_abstract }
       end pdecls
   in
@@ -509,7 +509,7 @@ let type_declarations env pdecls =
     (fun pdecl ltcs ->
        let pseudoenv =
          List.fold_left
-           (fun pseudoenv param -> pseudoenv_add_parameter param pseudoenv)
+           (fun pseudoenv param -> pseudoenv_add_type_variable param pseudoenv)
            pseudoenv ltcs.ltcs_params in
        ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
   List.iter2

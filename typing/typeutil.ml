@@ -5,7 +5,7 @@ open Base
 let apply_abbrev params body args =
   let subst = List.combine params args in
   let rec aux = function
-      Tparam param -> List.assq param subst
+      Tvar param -> List.assq param subst
     | Tarrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ttuple tyl -> Ttuple (List.map aux tyl)
     | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
@@ -20,9 +20,9 @@ let rec expand_head = function
 and per the provided correspondence function for the variables. *)
 
 let equal, equiv =
-  let rec equiv_gen corresp ty1 ty2 =
+  let rec equiv_gen corresp (ty1:llama_type) (ty2:llama_type) =
     match ty1, ty2 with
-        Tparam tv1, Tparam tv2 ->
+        Tvar tv1, Tvar tv2 ->
           corresp tv1 == tv2
       | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
           equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
@@ -47,7 +47,7 @@ let moregeneral ty1 ty2 =
   let subst = ref [] in
   let rec aux ty1 ty2 =
     match ty1, ty2 with
-        Tparam tv, _ ->
+        Tvar tv, _ ->
           begin try
             equal (List.assq tv !subst) ty2
           with Not_found ->

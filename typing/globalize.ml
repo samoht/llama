@@ -9,7 +9,7 @@ open Mutable_type
 
 let type_of_local_type subst =
   let rec aux = function
-      Lparam param -> Tparam param
+      Lvar param -> Tvar param
     | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)

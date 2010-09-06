@@ -15,7 +15,7 @@ let rec signature env psigl =
       [] -> []
     | psig :: rest ->
         let tsig = Resolve.temporary_signature_item env psig in
-        let sg, newenv = Permanent.signature_items env tsig in
+        let sg, newenv = Globalize.signature_items env tsig in
         sg @ signature newenv rest
 
 (* Typecheck a structure *)
@@ -26,7 +26,7 @@ let rec structure env pstrl =
     | pstr :: rest ->
         let tstr = Resolve.temporary_structure_item env pstr in
         Typify.temporary_structure_item tstr;
-        let str, newenv = Permanent.structure_item env tstr in
+        let str, newenv = Globalize.structure_item env tstr in
         str :: structure newenv rest
 
 (* Simplify multiple specifications of a value or an exception in a
@@ -60,7 +60,7 @@ let rec signature_of_structure = function
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ signature_of_structure rem
   | Str_external v :: rem -> Sig_value v :: signature_of_structure rem
   | Str_type tcs_list :: rem ->
-      Permanent.signature_items_of_type_constructors tcs_list @ signature_of_structure rem
+      Globalize.signature_items_of_type_constructors tcs_list @ signature_of_structure rem
   | Str_exception cs :: rem -> Sig_exception cs :: signature_of_structure rem
   | Str_open _ :: rem -> signature_of_structure rem
 

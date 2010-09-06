@@ -233,7 +233,7 @@ let execute_phrase print_outcome ppf phr =
             Tstr_eval e -> Some (Typify.toplevel_eval e)
           | _ -> Typify.temporary_structure_item tstr; None
       in
-      let str, newenv = Permanent.structure_item oldenv tstr in
+      let str, newenv = Globalize.structure_item oldenv tstr in
       let sg = Typemain.signature_of_structure [str] in
       let lam = Translmod.transl_toplevel_definition [str] in
       Warnings.check_fatal ();

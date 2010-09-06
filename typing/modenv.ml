@@ -89,7 +89,7 @@ let map_signature f = List.map (map_signature_item f)
 (* ---------------------------------------------------------------------- *)
 
 type pers_type =
-    Pparam of type_parameter
+    Pvar of type_variable
   | Parrow of pers_type * pers_type
   | Ptuple of pers_type list
   | Pconstr of pers_type_constructor_ref * pers_type list
@@ -104,7 +104,7 @@ let map_signature_for_save modid l =
   let rec f : (llama_type, pers_type) abstract_map =
     { map_type =
         begin function
-            Tparam param -> Pparam param
+            Tvar param -> Pvar param
           | Tarrow (ty1, ty2) -> Parrow (f.map_type ty1, f.map_type ty2)
           | Ttuple tyl -> Ptuple (List.map f.map_type tyl)
           | Tconstr (tcs, tyl) ->
@@ -200,7 +200,7 @@ let rec map_signature_for_load l =
   let rec f = 
     { map_type =
         begin function
-            Pparam param -> Tparam param
+            Pvar param -> Tvar param
           | Parrow (ty1, ty2) -> Tarrow (f.map_type ty1, f.map_type ty2)
           | Ptuple tyl -> Ttuple (List.map f.map_type tyl)
           | Pconstr (pers_tcs_ref, tyl) ->

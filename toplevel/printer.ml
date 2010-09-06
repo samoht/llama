@@ -138,7 +138,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
           find_printer env ty obj
         with Not_found ->
           match ty with
-          | Tparam _ ->
+          | Tvar _ ->
               Oval_stuff "<poly>"
           | Tarrow(ty1, ty2) ->
               Oval_stuff "<fun>"

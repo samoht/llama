@@ -19,8 +19,8 @@ let tcs_char = mkabs "char" []
 let tcs_string = mkabs "string" []
 let tcs_float = mkabs "float" []
 let tcs_exn = mkabs "exn" []
-let tcs_array = mkabs "array" (new_standard_parameters 1)
-let tcs_format6 = mkabs "format6" (new_standard_parameters 6)
+let tcs_array = mkabs "array" (new_parameters 1)
+let tcs_format6 = mkabs "format6" (new_parameters 6)
 let tcs_nativeint = mkabs "nativeint" []
 let tcs_int32 = mkabs "int32" []
 let tcs_int64 = mkabs "int64" []
@@ -60,7 +60,7 @@ and cs_true =
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
-let list_param = new_standard_parameter 0
+let list_param = new_parameter 0
 
 let rec tcs_list =
   { tcs_module = Module_builtin;
@@ -79,10 +79,10 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tparam list_param; Tconstr (tcs_list, [ Tparam list_param ]) ];
+    cs_args = [ Tvar list_param; Tconstr (tcs_list, [ Tvar list_param ]) ];
     cs_tag = Tag_block 0 }
 
-let option_param = new_standard_parameter 0
+let option_param = new_parameter 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;
@@ -101,7 +101,7 @@ and cs_some =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ Tparam option_param ];
+    cs_args = [ Tvar option_param ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)
@@ -113,19 +113,19 @@ let type_constructors =
 
 (* helpers *)
 
-let type_int = Tconstr(tcs_int, [])
-let type_char = Tconstr(tcs_char, [])
-let type_string = Tconstr(tcs_string, [])
-let type_float = Tconstr(tcs_float, [])
-let type_bool = Tconstr(tcs_bool, [])
-let type_unit = Tconstr(tcs_unit, [])
-let type_exn = Tconstr(tcs_exn, [])
-let type_array ty = Tconstr(tcs_array, [ty])
-let type_list ty = Tconstr(tcs_list, [ty])
-let type_option ty = Tconstr(tcs_option, [ty])
-let type_nativeint = Tconstr(tcs_nativeint, [])
-let type_int32 = Tconstr(tcs_int32, [])
-let type_int64 = Tconstr(tcs_int64, [])
+let type_int = Tconstr (tcs_int, [])
+let type_char = Tconstr (tcs_char, [])
+let type_string = Tconstr (tcs_string, [])
+let type_float = Tconstr (tcs_float, [])
+let type_bool = Tconstr (tcs_bool, [])
+let type_unit = Tconstr (tcs_unit, [])
+let type_exn = Tconstr (tcs_exn, [])
+let type_array ty = Tconstr (tcs_array, [ty])
+let type_list ty = Tconstr (tcs_list, [ty])
+let type_option ty = Tconstr (tcs_option, [ty])
+let type_nativeint = Tconstr (tcs_nativeint, [])
+let type_int32 = Tconstr (tcs_int32, [])
+let type_int64 = Tconstr (tcs_int64, [])
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)

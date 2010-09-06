@@ -45,7 +45,7 @@ TYPING=typing/unused_var.cmo typing/oprint.cmo typing/primitive.cmo \
   typing/typeutil.cmo typing/modenv.cmo \
   typing/env.cmo typing/mutable_type.cmo \
   typing/printtyp.cmo typing/resolve.cmo \
-  typing/typify.cmo typing/permanent.cmo \
+  typing/typify.cmo typing/globalize.cmo \
   typing/include.cmo typing/typemain.cmo
 
 COMP=bytecomp/ident.cmo \

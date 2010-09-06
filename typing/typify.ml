@@ -19,13 +19,13 @@ exception Error of Location.t * error
 (* ---------------------------------------------------------------------- *)
 
 let literal = function
-    Literal_int _ -> type_int
-  | Literal_float _ -> type_float
-  | Literal_string _ -> type_string
-  | Literal_char _ -> type_char
-  | Literal_int32 _ -> type_int32
-  | Literal_int64 _ -> type_int64
-  | Literal_nativeint _ -> type_nativeint
+    Literal_int _ -> Predef.type_int
+  | Literal_float _ -> Predef.type_float
+  | Literal_string _ -> Predef.type_string
+  | Literal_char _ -> Predef.type_char
+  | Literal_int32 _ -> Predef.type_int32
+  | Literal_int64 _ -> Predef.type_int64
+  | Literal_nativeint _ -> Predef.type_nativeint
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -48,7 +48,7 @@ and pattern_aux var_types pat =
     | Tpat_literal c ->
         literal c
     | Tpat_tuple patl ->
-        Mtuple (List.map (pattern var_types) patl)
+        Ttuple (List.map (pattern var_types) patl)
     | Tpat_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
         List.iter2 (pattern_expect var_types) args ty_args;
@@ -63,7 +63,7 @@ and pattern_aux var_types pat =
     | Tpat_array patl ->
         let ty = new_type_var () in
         List.iter (fun pat -> pattern_expect var_types pat ty) patl;
-        type_array ty
+        Predef.type_array ty
     | Tpat_or (pat1, pat2) ->
         let ty = pattern var_types pat1 in
         pattern_expect var_types pat2 ty;
@@ -134,7 +134,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty) in
+  let ty_arrow gty ty = Tarrow(gty, ty) in
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -201,7 +201,7 @@ let formatstring loc fmt =
         match fmt.[j] with
         | '*' ->
           let ty_uresult, ty_result = scan i (j + 1) in
-          ty_uresult, ty_arrow type_int ty_result
+          ty_uresult, ty_arrow Predef.type_int ty_result
         | '-' | '+' -> scan_decimal_string scan i (j + 1)
         | _ -> scan_decimal_string scan i j
       and scan_precision i j =
@@ -229,15 +229,15 @@ let formatstring loc fmt =
         if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
-        | 's' | 'S' -> conversion j type_string
+        | 's' | 'S' -> conversion j Predef.type_string
         | '[' ->
           let j = range_closing_index fmt j in
-          conversion j type_string
-        | 'c' | 'C' -> conversion j type_char
+          conversion j Predef.type_string
+        | 'c' | 'C' -> conversion j Predef.type_char
         | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
-          conversion j type_int
-        | 'f' | 'e' | 'E' | 'g' | 'G' | 'F' -> conversion j type_float
-        | 'B' | 'b' -> conversion j type_bool
+          conversion j Predef.type_int
+        | 'f' | 'e' | 'E' | 'g' | 'G' | 'F' -> conversion j Predef.type_float
+        | 'B' | 'b' -> conversion j Predef.type_bool
         | 'a' | 'r' as conv ->
           let conversion =
             if conv = 'a' then conversion_a else conversion_r in
@@ -247,16 +247,16 @@ let formatstring loc fmt =
         | 't' -> conversion j (ty_arrow ty_input ty_aresult)
         | 'l' | 'n' | 'L' as c ->
           let j = j + 1 in
-          if j >= len then conversion (j - 1) type_int else begin
+          if j >= len then conversion (j - 1) Predef.type_int else begin
             match fmt.[j] with
             | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' ->
               let ty_arg =
                 match c with
-                | 'l' -> type_int32
-                | 'n' -> type_nativeint
-                | _ -> type_int64 in
+                | 'l' -> Predef.type_int32
+                | 'n' -> Predef.type_nativeint
+                | _ -> Predef.type_int64 in
               conversion j ty_arg
-            | c -> conversion (j - 1) type_int
+            | c -> conversion (j - 1) Predef.type_int
           end
         | '{' | '(' as c ->
           let j = j + 1 in
@@ -276,7 +276,7 @@ let formatstring loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    Mconstr
+    Tconstr
       (Predef.tcs_format6,
        [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
   in
@@ -300,7 +300,7 @@ and expression_aux ctxt exp =
     | Texp_literal c ->
         literal c
     | Texp_tuple args ->
-        Mtuple (List.map (expression ctxt) args)
+        Ttuple (List.map (expression ctxt) args)
     | Texp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
         List.iter2 (expression_expect ctxt) args ty_args;
@@ -312,12 +312,12 @@ and expression_aux ctxt exp =
           | arg1 :: argl ->
               let ty1, ty2 =
                 match expand_head ty_res with
-                    Mvar v ->
+                    Tvar v ->
                       let ty1 = new_type_var () in
                       let ty2 = new_type_var () in
-                      v.link <- Some (Marrow (ty1, ty2));
+                      v.link <- Some (Tarrow (ty1, ty2));
                       ty1, ty2
-                  | Marrow (ty1, ty2) -> ty1, ty2
+                  | Tarrow (ty1, ty2) -> ty1, ty2
                   | _ -> raise(Error(exp.texp_loc, Apply_non_function ty_fct))
               in
               expression_expect ctxt arg1 ty1;
@@ -336,7 +336,7 @@ and expression_aux ctxt exp =
         let ty_arg = new_type_var () in
         let ty_res = new_type_var () in
         caselist ctxt ty_arg ty_res pat_exp_list;
-        Marrow (ty_arg, ty_res)
+        Tarrow (ty_arg, ty_res)
     | Texp_try (body, pat_exp_list) ->
         let ty_arg = new_type_var () in
         let ty_res = expression ctxt body in
@@ -345,35 +345,35 @@ and expression_aux ctxt exp =
     | Texp_sequence (e1, e2) ->
         statement ctxt e1; expression ctxt e2
     | Texp_ifthenelse (cond, ifso, ifnot) ->
-        expression_expect ctxt cond type_bool;
+        expression_expect ctxt cond Predef.type_bool;
         begin match ifnot with
           | None ->
-              expression_expect ctxt ifso type_unit;
-              type_unit
+              expression_expect ctxt ifso Predef.type_unit;
+              Predef.type_unit
           | Some ifnot ->
               let ty = expression ctxt ifso in
               expression_expect ctxt ifnot ty;
               ty
         end
     | Texp_when (cond, act) ->
-        expression_expect ctxt cond type_bool;
+        expression_expect ctxt cond Predef.type_bool;
         expression ctxt act
     | Texp_while (cond, body) ->
-        expression_expect ctxt cond type_bool;
+        expression_expect ctxt cond Predef.type_bool;
         statement ctxt body;
-        type_unit
+        Predef.type_unit
     | Texp_for (id, start, stop, up_flag, body) ->
-        expression_expect ctxt start type_int;
-        expression_expect ctxt stop type_int;
-        statement ((id, type_int) :: ctxt) body;
-        type_unit
+        expression_expect ctxt start Predef.type_int;
+        expression_expect ctxt stop Predef.type_int;
+        statement ((id, Predef.type_int) :: ctxt) body;
+        Predef.type_unit
     | Texp_constraint (e, ty') ->
         expression_expect ctxt e ty';
         ty'
     | Texp_array elist ->
         let ty_arg = new_type_var () in
         List.iter (fun e -> expression_expect ctxt e ty_arg) elist;
-        type_array ty_arg
+        Predef.type_array ty_arg
     | Texp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
@@ -393,10 +393,10 @@ and expression_aux ctxt exp =
         let (ty_res, ty_arg) = instantiate_label lbl in
         expression_expect ctxt e1 ty_res;
         expression_expect ctxt e2 ty_arg;
-        type_unit
+        Predef.type_unit
     | Texp_assert e ->
-        expression_expect ctxt e type_bool;
-        type_unit
+        expression_expect ctxt e Predef.type_bool;
+        Predef.type_unit
     | Texp_assertfalse ->
         new_type_var ()
 
@@ -418,10 +418,10 @@ and expression_expect ctxt exp expected_ty =
               Texp_literal (Literal_string s) ->
                 let ty =
                   match expand_head expected_ty with
-                      Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
+                      Tconstr (tcs, _) when tcs == Predef.tcs_format6 ->
                         formatstring exp.texp_loc s
                     | _ ->
-                        type_string in
+                        Predef.type_string in
                 unify exp.texp_type ty;
                 ty
             | _ ->
@@ -464,10 +464,10 @@ and caselist ctxt ty_arg ty_res pat_expr_list =
 and statement ctxt expr =
   let ty = expression ctxt expr in
   match type_repr ty with
-  | Marrow(_,_) ->
+  | Tarrow(_,_) ->
       Location.prerr_warning expr.texp_loc Warnings.Partial_application
-  | Mvar _ -> ()
-  | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
+  | Tvar _ -> ()
+  | Tconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Location.prerr_warning expr.texp_loc Warnings.Statement_type
 
@@ -534,7 +534,7 @@ let report_error ppf = function
            fprintf ppf "but an expression was expected of type")
   | Apply_non_function typ ->
       begin match typ with
-        Marrow _ ->
+        Tarrow _ ->
           fprintf ppf "This function is applied to too many arguments;@ ";
           fprintf ppf "maybe you forgot a `;'"
       | _ ->

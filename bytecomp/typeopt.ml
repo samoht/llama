@@ -24,12 +24,12 @@ open Mutable_type
 
 let has_base_type exp base_tcs =
   match expand_head exp.texp_type with
-  | Mconstr(tcs, _) -> tcs == base_tcs
+  | Tconstr(tcs, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
   match expand_head exp.texp_type with
-  | Mconstr(tcs, args) ->
+  | Tconstr(tcs, args) ->
       not (tcs == Predef.tcs_int) &&
       not (tcs == Predef.tcs_char) &&
       begin try
@@ -47,9 +47,9 @@ let maybe_pointer exp =
 
 let array_element_kind ty =
   match expand_head ty with
-  | Mvar _ ->
+  | Tvar _ ->
       Pgenarray
-  | Mconstr(tcs, args) ->
+  | Tconstr(tcs, args) ->
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
       else if tcs == Predef.tcs_float then
@@ -81,7 +81,7 @@ let array_element_kind ty =
 
 let array_kind_gen ty =
   match expand_head ty with
-  | Mconstr(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
+  | Tconstr(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
       array_element_kind elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)
@@ -93,7 +93,7 @@ let array_pattern_kind pat = array_kind_gen pat.tpat_type
 
 let bigarray_decode_type ty tbl dfl =
   match expand_head ty with
-  | Mconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
+  | Tconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
       begin try List.assoc name tbl with Not_found -> dfl end
   | _ ->
       dfl
@@ -118,7 +118,7 @@ let layout_table =
 
 let bigarray_kind_and_layout exp =
   match expand_head exp.texp_type with
-  | Mconstr(_, [caml_type; elt_type; layout_type]) ->
+  | Tconstr(_, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type layout_type layout_table Pbigarray_unknown_layout)
   | _ ->
