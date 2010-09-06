@@ -44,8 +44,6 @@ CAMLOBJS=\
   ../typing/env.cmo \
   ../typing/typeutil.cmo \
   ../typing/oprint.cmo \
-  ../typing/context.cmo \
-  ../typing/pseudoenv.cmo \
   ../typing/printtyp.cmo \
   ../typing/mutable_type.cmo \
   ../typing/include.cmo \

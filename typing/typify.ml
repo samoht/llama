@@ -3,7 +3,6 @@ open Asttypes
 open Base
 open Typedtree
 open Mutable_type
-open Context
 
 type error =
   | Incomplete_format of string

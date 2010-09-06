@@ -3,8 +3,12 @@
 open Asttypes
 open Base
 open Mutable_type
-open Context
-open Pseudoenv
+
+type variable = { var_name : string }
+
+(* ---------------------------------------------------------------------- *)
+(* Patterns.                                                              *)
+(* ---------------------------------------------------------------------- *)
 
 type 'ty gen_pattern =
   { tpat_desc : 'ty gen_pattern_desc;
@@ -24,6 +28,10 @@ and 'ty gen_pattern_desc =
   | Tpat_constraint of 'ty gen_pattern * 'ty
 
 type pattern = mutable_type gen_pattern
+
+(* ---------------------------------------------------------------------- *)
+(* Expressions.                                                           *)
+(* ---------------------------------------------------------------------- *)
 
 type 'ty gen_expression =
   { texp_desc : 'ty gen_expression_desc;
@@ -56,6 +64,32 @@ and 'ty gen_expression_desc =
 
 type expression = mutable_type gen_expression
 
+(* ---------------------------------------------------------------------- *)
+(* Local type constructors.                                               *)
+(* ---------------------------------------------------------------------- *)
+
+type local_type_constructor = {
+  ltcs_name : string;
+  ltcs_params : string list;
+  mutable ltcs_kind : local_type_constructor_kind }
+
+and local_type_constructor_kind =
+    Ltcs_abstract
+  | Ltcs_variant of (string * local_type list) list
+  | Ltcs_record of (string * mutable_flag * local_type) list
+  | Ltcs_abbrev of local_type
+
+and local_type =
+    Lparam of int
+  | Larrow of local_type * local_type
+  | Ltuple of local_type list
+  | Lconstr of type_constructor * local_type list
+  | Lconstr_local of local_type_constructor * local_type list
+
+(* ---------------------------------------------------------------------- *)
+(* Signature items.                                                       *)
+(* ---------------------------------------------------------------------- *)
+
 type 'ty gen_temporary_signature_item =
   { tsig_desc : 'ty gen_temporary_signature_item_desc;
     tsig_loc : Location.t }
@@ -68,6 +102,10 @@ and 'ty gen_temporary_signature_item_desc =
   | Tsig_open of string * signature
 
 type temporary_signature_item = mutable_type gen_temporary_signature_item
+
+(* ---------------------------------------------------------------------- *)
+(* Structure items.                                                       *)
+(* ---------------------------------------------------------------------- *)
 
 type 'ty gen_temporary_structure_item =
   { tstr_desc : 'ty gen_temporary_structure_item_desc;

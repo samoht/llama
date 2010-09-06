@@ -4,10 +4,18 @@ in the process. *)
 
 open Asttypes
 open Base
-open Context
-open Pseudoenv
 open Typedtree
 open Mutable_type
+
+let type_of_local_type subst =
+  let rec aux = function
+      Lparam param -> Tparam param
+    | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
+    | Ltuple tyl -> Ttuple (List.map aux tyl)
+    | Lconstr (tcs, tyl) -> Tconstr ({tcs=tcs}, List.map aux tyl)
+    | Lconstr_local (ltcs, tyl) ->
+        Tconstr ({tcs=List.assq ltcs subst}, List.map aux tyl) in
+  aux
 
 let type_constructors ltcs_list =
   let tcs_list =

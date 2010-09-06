@@ -6,8 +6,6 @@ open Base
 open Parsetree
 open Typedtree
 open Primitive
-open Context
-open Pseudoenv
 
 type error =
     Unbound_type_constructor of Longident.t
@@ -107,6 +105,77 @@ let bound_variables pat =
   List.map fst (bound_variables_with_types pat)
 
 (* ---------------------------------------------------------------------- *)
+(* Contexts.                                                              *)
+(* ---------------------------------------------------------------------- *)
+
+(* A context extends an Env.t with some local values. *)
+
+type ('a, 'b) local_or_global =
+    Local of 'a
+  | Global of 'b
+
+type context = {
+  ctxt_env : Env.t;
+  ctxt_values : (string, variable) Tbl.t }
+
+let context_create env =
+  { ctxt_env = env;
+    ctxt_values = Tbl.empty }
+
+let context_add_value lv ctxt =
+  { ctxt_env = ctxt.ctxt_env;
+    ctxt_values = Tbl.add lv.var_name lv ctxt.ctxt_values }
+
+let context_lookup_value lid ctxt =
+  let look_global () = Global (Env.lookup_value lid ctxt.ctxt_env) in
+  match lid with
+      Longident.Lident s ->
+        begin try Local (Tbl.find s ctxt.ctxt_values)
+        with Not_found -> look_global () end
+    | Longident.Ldot _ -> look_global ()
+
+(* ---------------------------------------------------------------------- *)
+(* Pseudo-environments.                                                   *)
+(* ---------------------------------------------------------------------- *)
+
+(* A pseudoenv is an Env.t extended by some local type constructors
+   and parameters. Compare with contexts, above. *)
+
+type pseudoenv = {
+  pseudoenv_env : Env.t;
+  pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
+  pseudoenv_parameters : string list }
+
+let pseudoenv_create env = {
+  pseudoenv_env = env;
+  pseudoenv_type_constructors = Tbl.empty;
+  pseudoenv_parameters = [] }
+
+let pseudoenv_add_type_constructor ltcs pseudoenv =
+  { pseudoenv with
+      pseudoenv_type_constructors =
+      Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
+
+let pseudoenv_set_parameters ltcs pseudoenv =
+  { pseudoenv with pseudoenv_parameters = ltcs.ltcs_params }
+
+let pseudoenv_lookup_type_constructor lid pseudoenv =
+  let look_global () =
+    Global (Env.lookup_type_constructor lid pseudoenv.pseudoenv_env) in
+  match lid with
+      Longident.Lident name ->
+        begin try Local (Tbl.find name pseudoenv.pseudoenv_type_constructors)
+        with Not_found -> look_global () end
+    | Longident.Ldot _ -> look_global ()
+
+let pseudoenv_lookup_parameter name pseudoenv =
+  let rec aux i = function
+      [] -> raise Not_found
+    | (param_name :: tl) ->
+        if name = param_name then i else aux (succ i) tl in
+  aux 0 pseudoenv.pseudoenv_parameters
+
+(* ---------------------------------------------------------------------- *)
 (* Lookup utilities.                                                      *)
 (* ---------------------------------------------------------------------- *)
 
@@ -180,13 +249,16 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         let arity =
           match gentcs with
-              Local_type_constructor ltcs -> List.length ltcs.ltcs_params
-            | Global_type_constructor tcs -> tcs.tcs_arity
+              Local ltcs -> List.length ltcs.ltcs_params
+            | Global tcs -> tcs.tcs_arity
         in
         if List.length tyl <> arity then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, arity, List.length tyl)));
-        Lconstr (gentcs, List.map (local_type pseudoenv) tyl)
+        let tyl = List.map (local_type pseudoenv) tyl in
+        match gentcs with
+            Local ltcs -> Lconstr_local (ltcs, tyl)
+          | Global tcs -> Lconstr (tcs, tyl)
 
 let type_variables = ref ([] : (string * Mutable_type.mutable_type) list);;
 let reset_type_variables () = type_variables := []
@@ -291,8 +363,8 @@ and expression_aux ctxt exp =
   match exp.pexp_desc with
       Pexp_ident li ->
         begin match lookup_value ctxt li exp.pexp_loc with
-            Local_value var -> Texp_var var
-          | Global_value v -> Texp_value v
+            Local var -> Texp_var var
+          | Global v -> Texp_value v
         end
     | Pexp_literal c ->
         Texp_literal c
@@ -407,16 +479,13 @@ let is_recursive_abbrev =
   let rec occ seen = function
       Lparam _ -> false
     | Larrow (ty1, ty2) -> occ seen ty1 || occ seen ty2
-    | Ltuple tyl -> List.exists (occ seen) tyl
-    | Lconstr (tcs, tyl) ->
-        begin match tcs with
-            Local_type_constructor ltcs ->
-              List.memq ltcs seen ||
-                (match ltcs.ltcs_kind with
-                     Ltcs_abbrev ty -> occ (ltcs :: seen) ty
-                   | _ -> false)
-          | Global_type_constructor _ -> false
-        end || List.exists (occ seen) tyl in
+    | Ltuple tyl | Lconstr (_, tyl) -> List.exists (occ seen) tyl
+    | Lconstr_local (ltcs, tyl) ->
+        List.memq ltcs seen ||
+          (match ltcs.ltcs_kind with
+               Ltcs_abbrev ty -> occ (ltcs :: seen) ty
+             | _ -> false) ||
+          List.exists (occ seen) tyl in
   fun ltcs ->
     match ltcs.ltcs_kind with
         Ltcs_abbrev ty -> occ [ltcs] ty

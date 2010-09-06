@@ -20,7 +20,6 @@ open Primitive
 open Base
 open Typedtree
 open Lambda
-open Context
 open Mutable_type
 
 let has_base_type exp base_tcs =
