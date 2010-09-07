@@ -1,8 +1,12 @@
 open Base
 
-val reset_caches : unit -> unit
-val cached_digests : Consistbl.t
+(* Global state *)
+
+val loaded_crcs : Consistbl.t
 val current_module : module_id ref
+val reset : unit -> unit
+
+(* Lookups *)
 
 val lookup_signature : module_id -> signature
 val lookup_type_constructor : module_id -> string -> type_constructor
@@ -12,8 +16,12 @@ val lookup_value : module_id -> string -> value
 val lookup_value_position : value -> int
 val lookup_exception_position : constructor -> int
 
-val read_signature : string -> string -> signature
+(* Loading and saving signatures *)
+
+val load_signature : string -> string -> signature
 val save_signature : signature -> string -> string -> unit
+
+(* Error report *)
 
 type error =
     Not_an_interface of string

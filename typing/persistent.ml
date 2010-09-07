@@ -4,10 +4,10 @@
 open Base
 
 (* ---------------------------------------------------------------------- *)
-(* Generic map operation used during loading and saving.                  *)
+(* Generic map operation used during both loading and saving.             *)
 (* ---------------------------------------------------------------------- *)
 
-type ('ty1, 'ty2) abstract_map =
+type ('ty1, 'ty2) generic_map =
   { map_type : 'ty1 -> 'ty2;
     mutable tcs_alist : ('ty1 gen_type_constructor * 'ty2 gen_type_constructor) list;
   }
@@ -57,7 +57,7 @@ let map_signature_item f = function
 let map_signature f = List.map (map_signature_item f)
 
 (* ---------------------------------------------------------------------- *)
-(* Persistent versions of essential types.                                *)
+(* Persistent versions of fundamental types.                              *)
 (* ---------------------------------------------------------------------- *)
 
 type 'a reference =
@@ -75,41 +75,6 @@ and type_constructor = pers_type gen_type_constructor
 type signature = pers_type gen_signature
 
 (* ---------------------------------------------------------------------- *)
-(* Saving signatures.                                                     *)
-(* ---------------------------------------------------------------------- *)
-
-type saver =
-  { saver_module : module_id;
-    saver_map : (llama_type, pers_type) abstract_map;
-  }
-
-let ref_tcs saver tcs =
-  if tcs.tcs_module = saver.saver_module then
-    Internal (map_type_constructor saver.saver_map tcs)
-  else
-    External (tcs.tcs_module, tcs.tcs_name)
-
-let rec save_type saver = function
-    Base.Tvar tvar ->
-      Tvar tvar
-  | Base.Tarrow (ty1, ty2) ->
-      Tarrow (save_type saver ty1, save_type saver ty2)
-  | Base.Ttuple tyl ->
-      Ttuple (List.map (save_type saver) tyl)
-  | Base.Tconstr (tcs, tyl) ->
-      Tconstr (ref_tcs saver tcs, List.map (save_type saver) tyl)
-
-let save_signature modid sg =
-  let rec saver =
-    { saver_module = modid;
-      saver_map =
-        { map_type = (fun ty -> save_type saver ty);
-          tcs_alist = [];
-        };
-    } in
-  map_signature saver.saver_map sg
-
-(* ---------------------------------------------------------------------- *)
 (* Loading signatures.                                                    *)
 (* ---------------------------------------------------------------------- *)
 
@@ -119,7 +84,7 @@ type modenv =
 
 type loader =
   { loader_module : module_id;
-    loader_map : (pers_type, llama_type) abstract_map;
+    loader_map : (pers_type, llama_type) generic_map;
     loader_modenv : modenv;
   }
 
@@ -151,3 +116,38 @@ let load_signature modenv modid sg =
   let sg = map_signature loader.loader_map sg in
   List.iter (function Sig_exception cs -> cs.cs_tcs <- Predef.tcs_exn | _ -> ()) sg;
   sg
+
+(* ---------------------------------------------------------------------- *)
+(* Saving signatures.                                                     *)
+(* ---------------------------------------------------------------------- *)
+
+type saver =
+  { saver_module : module_id;
+    saver_map : (llama_type, pers_type) generic_map;
+  }
+
+let ref_tcs saver tcs =
+  if tcs.tcs_module = saver.saver_module then
+    Internal (map_type_constructor saver.saver_map tcs)
+  else
+    External (tcs.tcs_module, tcs.tcs_name)
+
+let rec save_type saver = function
+    Base.Tvar tvar ->
+      Tvar tvar
+  | Base.Tarrow (ty1, ty2) ->
+      Tarrow (save_type saver ty1, save_type saver ty2)
+  | Base.Ttuple tyl ->
+      Ttuple (List.map (save_type saver) tyl)
+  | Base.Tconstr (tcs, tyl) ->
+      Tconstr (ref_tcs saver tcs, List.map (save_type saver) tyl)
+
+let save_signature modid sg =
+  let rec saver =
+    { saver_module = modid;
+      saver_map =
+        { map_type = (fun ty -> save_type saver ty);
+          tcs_alist = [];
+        };
+    } in
+  map_signature saver.saver_map sg

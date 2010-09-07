@@ -83,7 +83,7 @@ let implementation srcfile outputprefix modname env pstr =
           find_in_path_uncap !Config.load_path (modname ^ ".cmi")
         with Not_found ->
           raise(Error(Location.none, Interface_not_compiled sourceintf)) in
-      let dclsig = Modenv.read_signature modname intf_file in
+      let dclsig = Modenv.load_signature modname intf_file in
       let coercion = Include.compunit (Module modname) srcfile sg intf_file dclsig in
       (str, coercion)
     end else begin

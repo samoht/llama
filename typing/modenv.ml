@@ -9,66 +9,41 @@ type error =
 exception Error of error
 
 (* ---------------------------------------------------------------------- *)
-(* Global state.                                                          *)
+(* Basics and global state.                                               *)
 (* ---------------------------------------------------------------------- *)
 
-type module_index =
-  { mod_signature : signature;
-    mod_dependencies : (string * Digest.t) list;
-    mod_values : (string, value) Tbl.t;
-    mod_constrs : (string, constructor) Tbl.t;
-    mod_labels : (string, label) Tbl.t;
-    mod_types : (string, type_constructor) Tbl.t;
-    mod_value_positions : (string, int) Tbl.t;
-    mod_exception_positions : (string, int) Tbl.t }
+type loaded_module =
+  { signature : signature;
+    imports : (string * Digest.t) list;
+    type_constructors : (string, type_constructor) Tbl.t;
+    constructors : (string, constructor) Tbl.t;
+    labels : (string, label) Tbl.t;
+    values : (string, value) Tbl.t;
+    value_positions : (string, int) Tbl.t;
+    exception_positions : (string, int) Tbl.t }
 
-let cached_indices = ref (Tbl.empty : (string, module_index) Tbl.t)
-let cached_digests = Consistbl.create()
-
-let reset_caches () =
-  cached_indices := Tbl.empty;
-  Consistbl.clear cached_digests
-
+let loaded_modules = ref (Tbl.empty : (string, loaded_module) Tbl.t)
+let loaded_crcs = Consistbl.create()
 let current_module = ref (Module "")
 
-(* ---------------------------------------------------------------------- *)
-(* Saving signatures.                                                     *)
-(* ---------------------------------------------------------------------- *)
-
-let save_signature sg modname filename =
-  let sg : Persistent.signature =
-    Persistent.save_signature (Module modname) sg in
-  let oc = open_out_bin filename in
-  try
-    output_value oc modname;
-    output_value oc sg;
-    flush oc;
-    let crc = Digest.file filename in
-    Consistbl.set cached_digests modname crc filename;
-    output_value oc (Consistbl.extract cached_digests);
-    close_out oc;
-  with exn ->
-    close_out oc;
-    Misc.remove_file filename;
-    raise exn
+let reset () =
+  loaded_modules := Tbl.empty;
+  Consistbl.clear loaded_crcs;
+  current_module := Module ""
 
 (* ---------------------------------------------------------------------- *)
 (* Loading signatures.                                                    *)
 (* ---------------------------------------------------------------------- *)
 
-(* Consistency between persistent structures *)
-
 let check_consistency filename crcs =
   try
     List.iter
-      (fun (name, crc) -> Consistbl.check cached_digests name crc filename)
+      (fun (name, crc) -> Consistbl.check loaded_crcs name crc filename)
       crcs
   with Consistbl.Inconsistency(name, source, auth) ->
     raise(Error(Inconsistent_import(name, auth, source)))
 
-(* Reading persistent structures from .cmi files *)
-
-let make_module_index sg crcs =
+let make_loaded_module sg crcs =
   let type_constructors = ref Tbl.empty in
   let constructors = ref Tbl.empty in
   let labels = ref Tbl.empty in
@@ -99,76 +74,89 @@ let make_module_index sg crcs =
                 ()
           end
     end sg;
-  { mod_signature = sg;
-    mod_dependencies = crcs;
-    mod_values = !values;
-    mod_constrs = !constructors;
-    mod_labels = !labels;
-    mod_types = !type_constructors;
-    mod_value_positions = !value_positions;
-    mod_exception_positions = !exception_positions }
+  { signature = sg;
+    imports = crcs;
+    values = !values;
+    constructors = !constructors;
+    labels = !labels;
+    type_constructors = !type_constructors;
+    value_positions = !value_positions;
+    exception_positions = !exception_positions }
 
-(* Index for the predefined module. *)
+let predefined_module = make_loaded_module Predef.signature []
 
-let predef_index = make_module_index Predef.signature []
-
-(* Reading signatures. *)
-
-let rec read_signature modname filename =
-  (read_module_index modname filename).mod_signature
-
-and read_module_index modname filename =
+let rec load_module modname filename =
   let modenv = {
     Persistent.lookup_type_constructor = lookup_type_constructor; } in
   let ic = open_in_bin filename in
   try
-    let mn = (input_value ic : string) in
-    let mod_sig = (input_value ic : Persistent.signature) in
-    let mod_sig = Persistent.load_signature modenv (Module modname) mod_sig in
+    let pers_sig = (input_value ic : Persistent.signature) in
+    let sg = Persistent.load_signature modenv (Module modname) pers_sig in
     let crcs = input_value ic in
     close_in ic;
-    assert (mn = modname);
     check_consistency filename crcs;
-    let ps = make_module_index mod_sig crcs in
-    cached_indices := Tbl.add modname ps !cached_indices;
+    let ps = make_loaded_module sg crcs in
+    loaded_modules := Tbl.add modname ps !loaded_modules;
     ps
   with End_of_file | Failure _ ->
     close_in ic;
     raise (Error (Corrupted_interface filename))
 
-and lookup_module_index = function
+and lookup_module = function
     Module_builtin ->
-      predef_index
+      predefined_module
   | Module name ->
       begin try
-        Tbl.find name !cached_indices
+        Tbl.find name !loaded_modules
       with Not_found ->
-        read_module_index name
+        load_module name
           (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
       end
   | Module_toplevel ->
-      failwith "Modenv.lookup_module_index"
+      failwith "Modenv.lookup_module"
 
 and lookup_type_constructor modid name =
-  Tbl.find name (lookup_module_index modid).mod_types
+  Tbl.find name (lookup_module modid).type_constructors
 
 let lookup_constructor modid name =
-  Tbl.find name (lookup_module_index modid).mod_constrs
+  Tbl.find name (lookup_module modid).constructors
 
 let lookup_label modid name =
-  Tbl.find name (lookup_module_index modid).mod_labels
+  Tbl.find name (lookup_module modid).labels
 
 let lookup_value modid name =
-  Tbl.find name (lookup_module_index modid).mod_values
+  Tbl.find name (lookup_module modid).values
 
 let lookup_signature modid =
-  (lookup_module_index modid).mod_signature
+  (lookup_module modid).signature
 
 let lookup_value_position v =
-  Tbl.find v.val_name (lookup_module_index v.val_module).mod_value_positions
+  Tbl.find v.val_name (lookup_module v.val_module).value_positions
 
 let lookup_exception_position cs =
-  Tbl.find cs.cs_name (lookup_module_index cs.cs_module).mod_exception_positions
+  Tbl.find cs.cs_name (lookup_module cs.cs_module).exception_positions
+
+let load_signature modname filename =
+  (load_module modname filename).signature
+
+(* ---------------------------------------------------------------------- *)
+(* Saving signatures.                                                     *)
+(* ---------------------------------------------------------------------- *)
+
+let save_signature sg modname filename =
+  let pers_sig = Persistent.save_signature (Module modname) sg in
+  let oc = open_out_bin filename in
+  try
+    output_value oc (pers_sig : Persistent.signature);
+    flush oc;
+    let crc = Digest.file filename in
+    Consistbl.set loaded_crcs modname crc filename;
+    output_value oc (Consistbl.extract loaded_crcs);
+    close_out oc;
+  with exn ->
+    close_out oc;
+    Misc.remove_file filename;
+    raise exn
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)

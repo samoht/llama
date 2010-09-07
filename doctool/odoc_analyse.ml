@@ -30,7 +30,7 @@ open Typedtree
 let init_path () =
   load_path :=
     "" :: List.rev (Config.standard_library :: !Clflags.include_dirs);
-  Modenv.reset_caches ()
+  Modenv.reset ()
 
 (** Return the initial environment in which compilation proceeds. *)
 let initial_env () =
