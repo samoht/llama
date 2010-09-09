@@ -6,16 +6,18 @@ let variables =
   let rec aux accu = function
       Tvar tv -> if List.memq tv accu then accu else tv :: accu
     | Tarrow (ty1, ty2) -> aux (aux accu ty1) ty2
-    | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl in
+    | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl
+    | Tlink _ | Tdisk _ -> assert false in
   fun ty -> List.rev (aux [] ty)
 
 let is_closed ty = (variables ty = [])
 
-let rec subst s : llama_type -> 'v gen_type = function
+let rec subst s = function
     Tvar tv -> List.assq tv s
   | Tarrow (ty1, ty2) -> Tarrow (subst s ty1, subst s ty2)
   | Ttuple tyl -> Ttuple (List.map (subst s) tyl)
   | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst s) tyl)
+  | Tlink _ | Tdisk _ -> assert false
 
 (* Expansion of abbreviations. *)
 

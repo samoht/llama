@@ -90,7 +90,7 @@ let rec load_module modname filename =
     Persistent.lookup_type_constructor = lookup_type_constructor; } in
   let ic = open_in_bin filename in
   try
-    let pers_sig = (input_value ic : Persistent.signature) in
+    let pers_sig = (input_value ic : signature) in
     let sg = Persistent.load_signature modenv (Module modname) pers_sig in
     let crcs = input_value ic in
     close_in ic;
@@ -147,7 +147,7 @@ let save_signature sg modname filename =
   let pers_sig = Persistent.save_signature (Module modname) sg in
   let oc = open_out_bin filename in
   try
-    output_value oc (pers_sig : Persistent.signature);
+    output_value oc pers_sig;
     flush oc;
     let crc = Digest.file filename in
     Consistbl.set loaded_crcs modname crc filename;

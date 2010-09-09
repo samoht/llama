@@ -48,6 +48,7 @@ CAMLOBJS=\
   ../typing/printtyp.cmo \
   ../typing/mutable_type.cmo \
   ../typing/include.cmo \
+  ../typing/typedtree.cmo \
   ../typing/resolve.cmo \
   ../typing/typify.cmo \
   ../typing/immutify.cmo \

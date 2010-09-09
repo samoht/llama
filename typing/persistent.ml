@@ -7,9 +7,9 @@ open Base
 (* Generic map operation used during both loading and saving.             *)
 (* ---------------------------------------------------------------------- *)
 
-type ('ty1, 'ty2) generic_map =
-  { map_type : 'ty1 -> 'ty2;
-    mutable tcs_alist : ('ty1 gen_type_constructor * 'ty2 gen_type_constructor) list;
+type generic_map =
+  { map_type : llama_type -> llama_type;
+    mutable tcs_alist : (type_constructor * type_constructor) list;
   }
 
 let rec map_type_constructor f tcs =
@@ -57,24 +57,6 @@ let map_signature_item f = function
 let map_signature f = List.map (map_signature_item f)
 
 (* ---------------------------------------------------------------------- *)
-(* Persistent versions of fundamental types.                              *)
-(* ---------------------------------------------------------------------- *)
-
-type 'a reference =
-    Internal of 'a
-  | External of module_id * string
-
-type pers_type =
-    Tvar of type_variable
-  | Tarrow of pers_type * pers_type
-  | Ttuple of pers_type list
-  | Tconstr of type_constructor reference * pers_type list
-
-and type_constructor = pers_type gen_type_constructor
-
-type signature = pers_type gen_signature
-
-(* ---------------------------------------------------------------------- *)
 (* Loading signatures.                                                    *)
 (* ---------------------------------------------------------------------- *)
 
@@ -84,25 +66,27 @@ type modenv =
 
 type loader =
   { loader_module : module_id;
-    loader_map : (pers_type, llama_type) generic_map;
+    loader_map : generic_map;
     loader_modenv : modenv;
   }
 
-let deref_tcs loader = function
-    Internal tcs ->
-      map_type_constructor loader.loader_map tcs
-  | External (modid, name) ->
-      loader.loader_modenv.lookup_type_constructor modid name
+let load_type_constructor loader tcs =
+  map_type_constructor loader.loader_map tcs
 
 let rec load_type loader = function
     Tvar tvar ->
-      Base.Tvar tvar
+      Tvar tvar
   | Tarrow (ty1, ty2) ->
-      Base.Tarrow (load_type loader ty1, load_type loader ty2)
+      Tarrow (load_type loader ty1, load_type loader ty2)
   | Ttuple tyl ->
-      Base.Ttuple (List.map (load_type loader) tyl)
+      Ttuple (List.map (load_type loader) tyl)
   | Tconstr (tcs, tyl) ->
-      Base.Tconstr (deref_tcs loader tcs, List.map (load_type loader) tyl)
+      Tconstr (load_type_constructor loader tcs, List.map (load_type loader) tyl)
+  | Tdisk (modid, name, tyl) ->
+      Tconstr (loader.loader_modenv.lookup_type_constructor modid name,
+               List.map (load_type loader) tyl)
+  | Tlink _ ->
+      assert false
 
 let load_signature modenv modid sg =
   let rec loader =
@@ -123,24 +107,26 @@ let load_signature modenv modid sg =
 
 type saver =
   { saver_module : module_id;
-    saver_map : (llama_type, pers_type) generic_map;
+    saver_map : generic_map;
   }
 
-let ref_tcs saver tcs =
-  if tcs.tcs_module = saver.saver_module then
-    Internal (map_type_constructor saver.saver_map tcs)
-  else
-    External (tcs.tcs_module, tcs.tcs_name)
+let save_type_constructor saver tcs =
+  map_type_constructor saver.saver_map tcs
 
 let rec save_type saver = function
-    Base.Tvar tvar ->
+    Tvar tvar ->
       Tvar tvar
-  | Base.Tarrow (ty1, ty2) ->
+  | Tarrow (ty1, ty2) ->
       Tarrow (save_type saver ty1, save_type saver ty2)
-  | Base.Ttuple tyl ->
+  | Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
-  | Base.Tconstr (tcs, tyl) ->
-      Tconstr (ref_tcs saver tcs, List.map (save_type saver) tyl)
+  | Tconstr (tcs, tyl) ->
+      if tcs.tcs_module = saver.saver_module then
+        Tconstr (save_type_constructor saver tcs, List.map (save_type saver) tyl)
+      else
+        Tdisk (tcs.tcs_module, tcs.tcs_name, List.map (save_type saver) tyl)
+  | Tlink _ | Tdisk _ ->
+      assert false
 
 let save_signature modid sg =
   let rec saver =

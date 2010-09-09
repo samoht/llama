@@ -2,39 +2,55 @@ open Base
 open Typedtree
 open Mutable_type
 
-(* ---------------------------------------------------------------------- *)
-(* Generic mapping operation.                                             *)
-(* ---------------------------------------------------------------------- *)
+type memo =
+  { mutable type_variables : (mutable_type_variable * llama_type) list;
+    mutable variables : (variable * variable) list }
 
-(* Here we mechanically lift a mapping of variables all the way to
-   structure items. *)
-
-type ('tv1, 'v1, 'ty2, 'v2) variable_map =
-  { type_variable : 'tv1 -> 'ty2;
-    variable : 'v1 -> 'v2 }
-
-let rec map_type f = function
-    Tvar tv ->
-      f.type_variable tv
+let rec llama_type f = function
+    Tvar _ ->
+      assert false
   | Tarrow (ty1, ty2) ->
-      Tarrow (map_type f ty1, map_type f ty2)
+      Tarrow (llama_type f ty1, llama_type f ty2)
   | Ttuple tyl ->
-      Ttuple (List.map (map_type f) tyl)
+      Ttuple (List.map (llama_type f) tyl)
   | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (map_type f) tyl)
+      Tconstr (tcs, List.map (llama_type f) tyl)
+  | Tlink v ->
+      type_variable f v
+  | Tdisk _ ->
+      assert false
+
+and type_variable f tvar =
+  match tvar.link with
+      None ->
+        begin try List.assq tvar f.type_variables
+        with Not_found ->
+          let ty' = Tvar (new_parameter (List.length f.type_variables)) in
+          f.type_variables <- (tvar, ty') :: f.type_variables;
+          ty'
+        end
+    | Some ty ->
+        llama_type f ty
+
+let variable f var =
+  try List.assq var f.variables
+  with Not_found ->
+    let var' = new_variable var.var_name (llama_type f var.var_type) in
+    f.variables <- (var, var') :: f.variables;
+    var'
 
 let rec pattern f pat =
   { tpat_desc = pattern_desc f pat.tpat_desc;
     tpat_loc = pat.tpat_loc;
-    tpat_type = map_type f pat.tpat_type }
+    tpat_type = llama_type f pat.tpat_type }
 
 and pattern_desc f = function
     Tpat_any ->
       Tpat_any
   | Tpat_var var ->
-      Tpat_var (f.variable var)
+      Tpat_var (variable f var)
   | Tpat_alias (pat', var) ->
-      Tpat_alias (pattern f pat', f.variable var)
+      Tpat_alias (pattern f pat', variable f var)
   | Tpat_literal lit ->
       Tpat_literal lit
   | Tpat_tuple patl ->
@@ -48,16 +64,16 @@ and pattern_desc f = function
   | Tpat_or (pat1, pat2) ->
       Tpat_or (pattern f pat1, pattern f pat2)
   | Tpat_constraint (pat', ty) ->
-      Tpat_constraint (pattern f pat', map_type f ty)
+      Tpat_constraint (pattern f pat', llama_type f ty)
 
 let rec expression f expr =
   { texp_desc = expression_desc f expr.texp_desc;
     texp_loc = expr.texp_loc;
-    texp_type = map_type f expr.texp_type }
+    texp_type = llama_type f expr.texp_type }
 
 and expression_desc f = function
     Texp_var var ->
-      Texp_var (f.variable var)
+      Texp_var (variable f var)
   | Texp_value v ->
       Texp_value v
   | Texp_literal lit ->
@@ -98,7 +114,7 @@ and expression_desc f = function
   | Texp_while (cond, body) ->
       Texp_while (expression f cond, expression f body)
   | Texp_for (param, low, high, dir, body) ->
-      Texp_for (f.variable param, expression f low, expression f high, dir, expression f body)
+      Texp_for (variable f param, expression f low, expression f high, dir, expression f body)
   | Texp_when (cond, body) ->
       Texp_when (expression f cond, expression f body)
   | Texp_assert cond ->
@@ -106,7 +122,7 @@ and expression_desc f = function
   | Texp_assertfalse ->
       Texp_assertfalse
   | Texp_constraint (expr, ty) ->
-      Texp_constraint (expression f expr, map_type f ty)
+      Texp_constraint (expression f expr, llama_type f ty)
 
 and pattern_expression_list f =
   List.map (fun (pat, expr) -> (pattern f pat, expression f expr))
@@ -131,43 +147,16 @@ let structure_item_desc f = function
   | Tstr_open (name, sg) ->
       Tstr_open (name, sg)
 
-let map_structure_item f str =
+let structure_item f str =
   { tstr_desc = structure_item_desc f str.tstr_desc;
     tstr_loc = str.tstr_loc }
 
 (* ---------------------------------------------------------------------- *)
-(* Specific mapping operation.                                            *)
-(* ---------------------------------------------------------------------- *)
 
-(* Mutable -> immutable, creating new type variables and variables as
-   needed. *)
+let new_memo () =
+  { type_variables = [];
+    variables = [] }
 
-let new_variable_map () =
-  let type_variables = ref [] in
-  let variables = ref [] in
-  let rec f =
-    { type_variable =
-        begin fun tvar ->
-          match tvar.link with
-              None ->
-                begin try List.assq tvar !type_variables
-                with Not_found ->
-                  let ty' = Tvar (new_parameter (List.length !type_variables)) in
-                  type_variables := (tvar, ty') :: !type_variables;
-                  ty'
-                end
-            | Some ty ->
-                map_type f ty
-        end;
-      variable =
-        begin fun var ->
-          try List.assq var !variables
-          with Not_found ->
-            let var' = new_variable var.var_name (map_type f var.var_type) in
-            variables := (var, var') :: !variables;
-            var'
-        end } in f
+let structure_item = structure_item (new_memo ())
 
-let structure_item = map_structure_item (new_variable_map ())
-
-let one_type = map_type (new_variable_map ())
+let one_type = llama_type (new_memo ())

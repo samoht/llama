@@ -7,59 +7,68 @@ open Base
 (* Patterns.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty gen_pattern =
-  { tpat_desc : 'ty gen_pattern_desc;
+type pattern =
+  { tpat_desc : pattern_desc;
     tpat_loc : Location.t;
-    tpat_type : 'ty }
+    tpat_type : llama_type }
 
-and 'ty gen_pattern_desc =
+and pattern_desc =
     Tpat_any
-  | Tpat_var of 'ty gen_variable
-  | Tpat_alias of 'ty gen_pattern * 'ty gen_variable
+  | Tpat_var of variable
+  | Tpat_alias of pattern * variable
   | Tpat_literal of literal
-  | Tpat_tuple of 'ty gen_pattern list
-  | Tpat_construct of constructor * 'ty gen_pattern list
-  | Tpat_record of type_constructor * (label * 'ty gen_pattern) list
-  | Tpat_array of 'ty gen_pattern list
-  | Tpat_or of 'ty gen_pattern * 'ty gen_pattern
-  | Tpat_constraint of 'ty gen_pattern * 'ty
+  | Tpat_tuple of pattern list
+  | Tpat_construct of constructor * pattern list
+  | Tpat_record of type_constructor * (label * pattern) list
+  | Tpat_array of pattern list
+  | Tpat_or of pattern * pattern
+  | Tpat_constraint of pattern * llama_type
 
-type pattern = llama_type gen_pattern
+let rec pattern_variables pat =
+  match pat.tpat_desc with
+      Tpat_any | Tpat_literal _ -> []
+    | Tpat_var var -> [ var ]
+    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
+    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
+        List.flatten (List.map pattern_variables patl)
+    | Tpat_record (_, lbl_pat_list) ->
+        List.flatten
+          (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
+    | Tpat_or (pat1, pat2) -> pattern_variables pat1
+    | Tpat_constraint (pat', _) -> pattern_variables pat'
 
 (* ---------------------------------------------------------------------- *)
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty gen_expression =
-  { texp_desc : 'ty gen_expression_desc;
+type expression =
+  { texp_desc : expression_desc;
     texp_loc : Location.t;
-    texp_type : 'ty }
+    texp_type : llama_type }
 
-and 'ty gen_expression_desc =
-    Texp_var of 'ty gen_variable
+and expression_desc =
+    Texp_var of variable
   | Texp_value of value
   | Texp_literal of literal
-  | Texp_let of rec_flag * ('ty gen_pattern * 'ty gen_expression) list * 'ty gen_expression
-  | Texp_function of ('ty gen_pattern * 'ty gen_expression) list
-  | Texp_apply of 'ty gen_expression * 'ty gen_expression list
-  | Texp_match of 'ty gen_expression * ('ty gen_pattern * 'ty gen_expression) list
-  | Texp_try of 'ty gen_expression * ('ty gen_pattern * 'ty gen_expression) list
-  | Texp_tuple of 'ty gen_expression list
-  | Texp_construct of constructor * 'ty gen_expression list
-  | Texp_record of type_constructor * (label * 'ty gen_expression) list * 'ty gen_expression option
-  | Texp_field of 'ty gen_expression * label
-  | Texp_setfield of 'ty gen_expression * label * 'ty gen_expression
-  | Texp_array of 'ty gen_expression list
-  | Texp_ifthenelse of 'ty gen_expression * 'ty gen_expression * 'ty gen_expression option
-  | Texp_sequence of 'ty gen_expression * 'ty gen_expression
-  | Texp_while of 'ty gen_expression * 'ty gen_expression
-  | Texp_for of 'ty gen_variable * 'ty gen_expression * 'ty gen_expression * direction_flag * 'ty gen_expression
-  | Texp_when of 'ty gen_expression * 'ty gen_expression
-  | Texp_assert of 'ty gen_expression
+  | Texp_let of rec_flag * (pattern * expression) list * expression
+  | Texp_function of (pattern * expression) list
+  | Texp_apply of expression * expression list
+  | Texp_match of expression * (pattern * expression) list
+  | Texp_try of expression * (pattern * expression) list
+  | Texp_tuple of expression list
+  | Texp_construct of constructor * expression list
+  | Texp_record of type_constructor * (label * expression) list * expression option
+  | Texp_field of expression * label
+  | Texp_setfield of expression * label * expression
+  | Texp_array of expression list
+  | Texp_ifthenelse of expression * expression * expression option
+  | Texp_sequence of expression * expression
+  | Texp_while of expression * expression
+  | Texp_for of variable * expression * expression * direction_flag * expression
+  | Texp_when of expression * expression
+  | Texp_assert of expression
   | Texp_assertfalse
-  | Texp_constraint of 'ty gen_expression * 'ty
-
-type expression = llama_type gen_expression
+  | Texp_constraint of expression * llama_type
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)
@@ -102,20 +111,17 @@ and temporary_signature_item_desc =
 (* Structure items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty gen_temporary_structure_item =
-  { tstr_desc : 'ty gen_temporary_structure_item_desc;
+type temporary_structure_item =
+  { tstr_desc : temporary_structure_item_desc;
     tstr_loc : Location.t }
 
-and 'ty gen_temporary_structure_item_desc =
-    Tstr_eval of 'ty gen_expression
-  | Tstr_value of rec_flag * ('ty gen_pattern * 'ty gen_expression) list
+and temporary_structure_item_desc =
+    Tstr_eval of expression
+  | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_external of string * llama_type * Primitive.description
   | Tstr_type of local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
-
-type temporary_structure_item =
-    llama_type gen_temporary_structure_item
 
 (* what the compiler sees *)
 

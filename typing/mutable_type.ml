@@ -2,14 +2,7 @@
 
 open Base
 
-type mutable_type = mutable_type_variable gen_type
-
-and mutable_type_variable =
-  { mutable link : mutable_type option }
-
-type mutable_variable = mutable_type gen_variable
-
-let new_type_var () = Tvar { link = None }
+let new_type_var () = Tlink { link = None }
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
@@ -24,6 +17,8 @@ let rec instantiate_type inst = function
       Ttuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map (instantiate_type inst) tyl)
+  | Tlink _ | Tdisk _ ->
+      assert false
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_var ())) tcs.tcs_params in
@@ -50,11 +45,11 @@ let instantiate_value v =
 (* ---------------------------------------------------------------------- *)
 
 let rec type_repr = function
-    Tvar { link = Some ty } -> type_repr ty
+    Tlink { link = Some ty } -> type_repr ty
   | ty -> ty
 
 let rec expand_head = function
-    Tvar { link = Some ty } -> expand_head ty
+    Tlink { link = Some ty } -> expand_head ty
   | Tconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
       expand_head (Typeutil.apply_abbrev params body args)
   | ty -> ty
@@ -64,7 +59,7 @@ let rec expand_head = function
 (* ---------------------------------------------------------------------- *)
 
 let rec occurs v = function
-    Tvar tv ->
+    Tlink tv ->
       begin match tv.link with
         | None -> tv == v
         | Some ty -> occurs v ty
@@ -75,6 +70,7 @@ let rec occurs v = function
       List.exists (occurs v) tyl
   | Tconstr (tcs, tyl) ->
       List.exists (occurs v) tyl
+  | Tvar _ | Tdisk _ -> assert false
 
 exception Unify
 
@@ -82,11 +78,11 @@ let rec unify ty1 ty2 =
   let ty1 = type_repr ty1 in
   let ty2 = type_repr ty2 in
   match ty1, ty2 with
-      Tvar v1, Tvar v2 when v1 == v2 ->
+      Tlink v1, Tlink v2 when v1 == v2 ->
         ()
-    | Tvar v1, _ when not (occurs v1 ty2) ->
+    | Tlink v1, _ when not (occurs v1 ty2) ->
         v1.link <- Some ty2
-    | _, Tvar v2 when not (occurs v2 ty1) ->
+    | _, Tlink v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Tarrow (t1arg, t1res), Tarrow(t2arg, t2res) ->
         unify t1arg t2arg;

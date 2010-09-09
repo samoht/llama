@@ -169,8 +169,7 @@ let structure_item env (tstr:temporary_structure_item) =
         check_value_restriction pat_expr_list;
         let vars =
           List.flatten
-            (List.map (fun (pat, _) ->
-                         Resolve.pattern_variables pat) pat_expr_list) in
+            (List.map (fun (pat, _) -> pattern_variables pat) pat_expr_list) in
         let vals =
           List.map (fun var ->
                       { val_module = !Modenv.current_module;

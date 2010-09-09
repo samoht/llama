@@ -144,6 +144,8 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
+          | Tdisk _ | Tlink _ ->
+              assert false
           | Tconstr(tcs, []) when tcs == Predef.tcs_exn ->
               tree_of_exception depth obj
           | Tconstr(tcs, [ty_arg]) when tcs == Predef.tcs_list ->

@@ -7,9 +7,9 @@ open Mutable_type
 type error =
   | Incomplete_format of string
   | Bad_conversion of string * int * char
-  | Pattern_type_clash of mutable_type * mutable_type
-  | Expression_type_clash of mutable_type * mutable_type
-  | Apply_non_function of mutable_type
+  | Pattern_type_clash of llama_type * llama_type
+  | Expression_type_clash of llama_type * llama_type
+  | Apply_non_function of llama_type
 
 exception Error of Location.t * error
 
@@ -270,7 +270,7 @@ and expression_aux exp =
           | arg1 :: argl ->
               let ty1, ty2 =
                 match expand_head ty_res with
-                    Tvar v ->
+                    Tlink v ->
                       let ty1 = new_type_var () in
                       let ty2 = new_type_var () in
                       v.link <- Some (Tarrow (ty1, ty2));
@@ -411,7 +411,7 @@ and statement expr =
   match type_repr ty with
   | Tarrow(_,_) ->
       Location.prerr_warning expr.texp_loc Warnings.Partial_application
-  | Tvar _ -> ()
+  | Tlink _ -> ()
   | Tconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Location.prerr_warning expr.texp_loc Warnings.Statement_type

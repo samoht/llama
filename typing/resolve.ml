@@ -83,19 +83,6 @@ let rec bound_names pat =
     | Ppat_record lbl_pat_list ->
         List.flatten (List.map (fun (lbl, pat) -> bound_names pat) lbl_pat_list)
 
-let rec pattern_variables pat =
-  match pat.tpat_desc with
-      Tpat_any | Tpat_literal _ -> []
-    | Tpat_var var -> [ var ]
-    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
-    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
-        List.flatten (List.map pattern_variables patl)
-    | Tpat_record (_, lbl_pat_list) ->
-        List.flatten
-          (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
-    | Tpat_or (pat1, pat2) -> pattern_variables pat1
-    | Tpat_constraint (pat', _) -> pattern_variables pat'
-
 (* ---------------------------------------------------------------------- *)
 (* Contexts.                                                              *)
 (* ---------------------------------------------------------------------- *)
@@ -108,7 +95,7 @@ type ('a, 'b) local_or_global =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_variables : (string, Mutable_type.mutable_type gen_variable) Tbl.t }
+  ctxt_variables : (string, variable) Tbl.t }
 
 let context_create env =
   { ctxt_env = env;
@@ -250,7 +237,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
             Local ltcs -> Lconstr_local (ltcs, tyl)
           | Global tcs -> Lconstr (tcs, tyl)
 
-let type_variables = ref ([] : (string * Mutable_type.mutable_type) list);;
+let type_variables = ref ([] : (string * llama_type) list);;
 let reset_type_variables () = type_variables := []
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
