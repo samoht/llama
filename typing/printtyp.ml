@@ -49,7 +49,7 @@ let rec tree_of_type = function
       Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, tyl) ->
       Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
-  | Tdisk _ | Tlink _ ->
+  | Tlink _ ->
       assert false
 
 and tree_of_type_list tyl =
@@ -188,7 +188,7 @@ let tree_of_mutable_type =
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Tconstr (tcs, tyl) ->
         Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
-    | Tvar _ | Tdisk _ ->
+    | Tvar _ ->
         assert false
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in

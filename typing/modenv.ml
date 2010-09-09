@@ -90,7 +90,7 @@ let rec load_module modname filename =
     Persistent.lookup_type_constructor = lookup_type_constructor; } in
   let ic = open_in_bin filename in
   try
-    let pers_sig = (input_value ic : signature) in
+    let pers_sig = (input_value ic : Persistent.signature) in
     let sg = Persistent.load_signature modenv (Module modname) pers_sig in
     let crcs = input_value ic in
     close_in ic;

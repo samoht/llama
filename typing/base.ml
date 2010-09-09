@@ -36,10 +36,7 @@ type llama_type =
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
-      (* temporary usage only *)
   | Tlink of mutable_type_variable  (* used only during inference *)
-  | Tdisk of module_id * string * llama_type list
-                        (* used only when saving and loading to disk *)
 
 and mutable_type_variable =
   { mutable link : llama_type option }
@@ -58,11 +55,11 @@ and type_constructor_kind =
   | Tcs_abbrev of llama_type         (* Abbreviation type *)
 
 and constructor =
-  { mutable cs_tcs : type_constructor;  (* Parent type constructor *)
-    cs_module : module_id;              (* Defining module *)
-    cs_name : string;                   (* Name of the constructor *)
-    cs_args : llama_type list;          (* Type of the arguments *)
-    cs_tag : constructor_tag }          (* Tag for heap blocks *)
+  { cs_tcs : type_constructor;   (* Parent type constructor *)
+    cs_module : module_id;       (* Defining module *)
+    cs_name : string;            (* Name of the constructor *)
+    cs_args : llama_type list;   (* Type of the arguments *)
+    cs_tag : constructor_tag }   (* Tag for heap blocks *)
 
 and label =
   { lbl_tcs : type_constructor;  (* Parent type constructor *)

@@ -17,8 +17,6 @@ let rec llama_type f = function
       Tconstr (tcs, List.map (llama_type f) tyl)
   | Tlink v ->
       type_variable f v
-  | Tdisk _ ->
-      assert false
 
 and type_variable f tvar =
   match tvar.link with

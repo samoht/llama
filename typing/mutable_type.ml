@@ -17,7 +17,7 @@ let rec instantiate_type inst = function
       Ttuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (tcs, List.map (instantiate_type inst) tyl)
-  | Tlink _ | Tdisk _ ->
+  | Tlink _ ->
       assert false
 
 let instantiate_type_constructor tcs =
@@ -70,7 +70,7 @@ let rec occurs v = function
       List.exists (occurs v) tyl
   | Tconstr (tcs, tyl) ->
       List.exists (occurs v) tyl
-  | Tvar _ | Tdisk _ -> assert false
+  | Tvar _ -> assert false
 
 exception Unify
 

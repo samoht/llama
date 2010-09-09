@@ -50,7 +50,7 @@ let rec subst_type subst = function
       Ttuple (List.map (subst_type subst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl)
-  | Tlink _ | Tdisk _ ->
+  | Tlink _ ->
       assert false
 
 (* ---------------------------------------------------------------------- *)
