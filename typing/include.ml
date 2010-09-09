@@ -50,8 +50,6 @@ let rec subst_type subst = function
       Ttuple (List.map (subst_type subst) tyl)
   | Tconstr (tcs, tyl) ->
       Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl)
-  | Tlink _ ->
-      assert false
 
 (* ---------------------------------------------------------------------- *)
 (* Coercions in the format supported by the ocaml compiler.               *)

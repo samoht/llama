@@ -49,8 +49,8 @@ val pat_of_constr : pattern -> constructor -> pattern
 val complete_constrs : pattern -> constructor list -> constructor list
 
 val pressure_variants: Env.t -> pattern list -> unit
-val check_partial: Location.t -> (pattern * Typedtree.expression) list -> partial
-val check_unused: (pattern * Typedtree.expression) list -> unit
+val check_partial: Location.t -> (pattern * Base.llama_type Typedtree.expression) list -> partial
+val check_unused: (pattern * Base.llama_type Typedtree.expression) list -> unit
 
 (* Irrefutability tests *)
 val irrefutable : pattern -> bool

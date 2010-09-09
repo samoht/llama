@@ -95,7 +95,7 @@ type ('a, 'b) local_or_global =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_variables : (string, variable) Tbl.t }
+  ctxt_variables : (string, Mutable_type.mutable_type variable) Tbl.t }
 
 let context_create env =
   { ctxt_env = env;
@@ -237,7 +237,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
             Local ltcs -> Lconstr_local (ltcs, tyl)
           | Global tcs -> Lconstr (tcs, tyl)
 
-let type_variables = ref ([] : (string * llama_type) list);;
+let type_variables = ref ([] : (string * Mutable_type.mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
@@ -251,16 +251,16 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Tarrow (mutable_type env ty1, mutable_type env ty2)
+        Mutable_type.Marrow (mutable_type env ty1, mutable_type env ty2)
     | Ptyp_tuple tyl ->
-        Ttuple (List.map (mutable_type env) tyl)
+        Mutable_type.Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Tconstr (lookup_type_constructor env lid ty.ptyp_loc,
-                 List.map (mutable_type env) tyl)
+        Mutable_type.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
+                              List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -396,7 +396,7 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Texp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name Predef.type_int in
+        let var = new_variable name (Mutable_type.new_type_var ()) in
         let big_ctxt = context_add_variable var ctxt in
         Texp_for (var,
                   expression ctxt e1,

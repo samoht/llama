@@ -52,6 +52,10 @@ type value =
     val_type : llama_type;
     val_kind : value_kind }
 
+type variable =
+  { var_name : string;
+    var_type : llama_type }
+
 type signature_item =
     Sig_type of type_constructor * rec_status
   | Sig_value of value
@@ -77,8 +81,6 @@ let rec save_type saver = function
       Ttuple (List.map (save_type saver) tyl)
   | Base.Tconstr (tcs, tyl) ->
       Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl)
-  | Base.Tlink _ ->
-      assert false
 
 and save_type_constructor_reference saver tcs =
   if tcs.Base.tcs_module = saver.saver_module then

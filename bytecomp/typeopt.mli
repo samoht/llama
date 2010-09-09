@@ -14,10 +14,10 @@
 
 (* Auxiliaries for type-based optimizations, e.g. array kinds *)
 
-val has_base_type : Typedtree.expression -> Base.type_constructor -> bool
-val maybe_pointer : Typedtree.expression -> bool
+val has_base_type : Base.llama_type Typedtree.expression -> Base.type_constructor -> bool
+val maybe_pointer : Base.llama_type Typedtree.expression -> bool
 val array_kind_gen : Base.llama_type -> Lambda.array_kind
-val array_kind : Typedtree.expression -> Lambda.array_kind
-val array_pattern_kind : Typedtree.pattern -> Lambda.array_kind
+val array_kind : Base.llama_type Typedtree.expression -> Lambda.array_kind
+val array_pattern_kind : Base.llama_type Typedtree.pattern -> Lambda.array_kind
 val bigarray_kind_and_layout :
-      Typedtree.expression -> Lambda.bigarray_kind * Lambda.bigarray_layout
+      Base.llama_type Typedtree.expression -> Lambda.bigarray_kind * Lambda.bigarray_layout

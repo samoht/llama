@@ -161,7 +161,7 @@ let signature_items env tsig =
     | Tsig_open (_, csig) ->
         [], Env.add_signature csig env
 
-let structure_item env (tstr:temporary_structure_item) =
+let structure_item env tstr =
   match tstr.tstr_desc with
       Tstr_eval expr ->
         Str_eval expr, Some (Typeutil.rename_variables expr.texp_type), env

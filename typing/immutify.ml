@@ -4,19 +4,17 @@ open Mutable_type
 
 type memo =
   { mutable type_variables : (mutable_type_variable * llama_type) list;
-    mutable variables : (variable * variable) list }
+    mutable variables : (mutable_type variable * llama_type variable) list }
 
-let rec llama_type f = function
-    Tvar _ ->
-      assert false
-  | Tarrow (ty1, ty2) ->
-      Tarrow (llama_type f ty1, llama_type f ty2)
-  | Ttuple tyl ->
-      Ttuple (List.map (llama_type f) tyl)
-  | Tconstr (tcs, tyl) ->
-      Tconstr (tcs, List.map (llama_type f) tyl)
-  | Tlink v ->
+let rec mutable_type f = function
+    Mvar v ->
       type_variable f v
+  | Marrow (ty1, ty2) ->
+      Tarrow (mutable_type f ty1, mutable_type f ty2)
+  | Mtuple tyl ->
+      Ttuple (List.map (mutable_type f) tyl)
+  | Mconstr (tcs, tyl) ->
+      Tconstr (tcs, List.map (mutable_type f) tyl)
 
 and type_variable f tvar =
   match tvar.link with
@@ -28,19 +26,19 @@ and type_variable f tvar =
           ty'
         end
     | Some ty ->
-        llama_type f ty
+        mutable_type f ty
 
 let variable f var =
   try List.assq var f.variables
   with Not_found ->
-    let var' = new_variable var.var_name (llama_type f var.var_type) in
+    let var' = new_variable var.var_name (mutable_type f var.var_type) in
     f.variables <- (var, var') :: f.variables;
     var'
 
 let rec pattern f pat =
   { tpat_desc = pattern_desc f pat.tpat_desc;
     tpat_loc = pat.tpat_loc;
-    tpat_type = llama_type f pat.tpat_type }
+    tpat_type = mutable_type f pat.tpat_type }
 
 and pattern_desc f = function
     Tpat_any ->
@@ -62,12 +60,12 @@ and pattern_desc f = function
   | Tpat_or (pat1, pat2) ->
       Tpat_or (pattern f pat1, pattern f pat2)
   | Tpat_constraint (pat', ty) ->
-      Tpat_constraint (pattern f pat', llama_type f ty)
+      Tpat_constraint (pattern f pat', mutable_type f ty)
 
 let rec expression f expr =
   { texp_desc = expression_desc f expr.texp_desc;
     texp_loc = expr.texp_loc;
-    texp_type = llama_type f expr.texp_type }
+    texp_type = mutable_type f expr.texp_type }
 
 and expression_desc f = function
     Texp_var var ->
@@ -120,7 +118,7 @@ and expression_desc f = function
   | Texp_assertfalse ->
       Texp_assertfalse
   | Texp_constraint (expr, ty) ->
-      Texp_constraint (expression f expr, llama_type f ty)
+      Texp_constraint (expression f expr, mutable_type f ty)
 
 and pattern_expression_list f =
   List.map (fun (pat, expr) -> (pattern f pat, expression f expr))
@@ -157,4 +155,4 @@ let new_memo () =
 
 let structure_item = structure_item (new_memo ())
 
-let one_type = llama_type (new_memo ())
+let one_type = mutable_type (new_memo ())

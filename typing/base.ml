@@ -36,10 +36,6 @@ type llama_type =
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
-  | Tlink of mutable_type_variable  (* used only during inference *)
-
-and mutable_type_variable =
-  { mutable link : llama_type option }
 
 and type_constructor =
   { tcs_module : module_id;            (* Defining module *)
@@ -87,7 +83,7 @@ type signature = signature_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-type variable = { var_name : string; var_type : llama_type }
+type 'ty variable = { var_name : string; var_type : 'ty }
 let new_variable name ty = { var_name = name; var_type = ty }
 
 let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)

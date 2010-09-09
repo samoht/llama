@@ -7,7 +7,7 @@ type t =
   | Id_predef_exn of string
   | Id of int * string
 let values : (string, value * t) Hashtbl.t = Hashtbl.create 17
-let variables : (string, variable * t) Hashtbl.t = Hashtbl.create 17
+let variables : (string, llama_type variable * t) Hashtbl.t = Hashtbl.create 17
 let exceptions : (string, constructor * t) Hashtbl.t = Hashtbl.create 17
 let next_id_ref = ref 0
 let next_id () = let id = !next_id_ref in incr next_id_ref; id

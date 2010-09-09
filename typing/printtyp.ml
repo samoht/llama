@@ -49,8 +49,6 @@ let rec tree_of_type = function
       Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, tyl) ->
       Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
-  | Tlink _ ->
-      assert false
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl
@@ -175,21 +173,19 @@ let tree_of_mutable_type =
       var_names := (v, name) :: !var_names;
       name in
   let rec tree_of_mutable_type = function
-      Tlink v ->
+      Mvar v ->
         begin match v.link with
           | None ->
               Otyp_var (false, var_name v)
           | Some ty ->
               tree_of_mutable_type ty
         end
-    | Tarrow (ty1, ty2) ->
+    | Marrow (ty1, ty2) ->
         Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2)
-    | Ttuple tyl ->
+    | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
-    | Tconstr (tcs, tyl) ->
+    | Mconstr (tcs, tyl) ->
         Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
-    | Tvar _ ->
-        assert false
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
   fun ty ->
