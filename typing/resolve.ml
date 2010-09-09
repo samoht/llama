@@ -274,21 +274,21 @@ let pattern env pat =
   end;
   let values = List.map (fun name -> (name, new_variable name (Mutable_type.new_type_var ()))) names in
   let rec pattern pat =
-    { tpat_desc = pattern_aux pat;
-      tpat_loc = pat.ppat_loc;
-      tpat_type = Mutable_type.new_type_var () }
+    { pat_desc = pattern_aux pat;
+      pat_loc = pat.ppat_loc;
+      pat_type = Mutable_type.new_type_var () }
   and pattern_aux pat =
     match pat.ppat_desc with
         Ppat_any ->
-          Tpat_any
+          Pat_any
       | Ppat_var name ->
-          Tpat_var (List.assoc name values)
+          Pat_var (List.assoc name values)
       | Ppat_alias (pat', name) ->
-          Tpat_alias (pattern pat', List.assoc name values)
+          Pat_alias (pattern pat', List.assoc name values)
       | Ppat_literal c ->
-          Tpat_literal c
+          Pat_literal c
       | Ppat_tuple l ->
-          Tpat_tuple (List.map pattern l)
+          Pat_tuple (List.map pattern l)
       | Ppat_construct (lid, sarg) ->
           let cs = lookup_constructor env lid pat.ppat_loc in
           let arity = cs_arity cs in
@@ -303,19 +303,19 @@ let pattern env pat =
           if List.length sargs <> cs_arity cs then
             raise(Error(pat.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
                                                                  List.length sargs)));
-          Tpat_construct (cs, List.map pattern sargs)
+          Pat_construct (cs, List.map pattern sargs)
       | Ppat_record lbl_pat_list ->
           let lbl_pat_list =
             List.map (fun (lbl, pat) ->
                         lookup_label env lbl pat.ppat_loc, pattern pat) lbl_pat_list in
           let tcs = check_labels pat.ppat_loc false (List.map fst lbl_pat_list) in
-          Tpat_record (tcs, lbl_pat_list)
+          Pat_record (tcs, lbl_pat_list)
       | Ppat_array patl ->
-          Tpat_array (List.map pattern patl)
+          Pat_array (List.map pattern patl)
       | Ppat_or (pat1, pat2) ->
-          Tpat_or (pattern pat1, pattern pat2)
+          Pat_or (pattern pat1, pattern pat2)
       | Ppat_constraint (pat', ty) ->
-          Tpat_constraint (pattern pat', mutable_type env ty)
+          Pat_constraint (pattern pat', mutable_type env ty)
   in
   pattern pat
 
@@ -328,21 +328,21 @@ let extend_context ctxt pat =
     (fun ctxt var -> context_add_variable var ctxt) ctxt (pattern_variables pat)
 
 let rec expression ctxt exp =
-  { texp_desc = expression_aux ctxt exp;
-    texp_loc = exp.pexp_loc;
-    texp_type = Mutable_type.new_type_var () }
+  { exp_desc = expression_aux ctxt exp;
+    exp_loc = exp.pexp_loc;
+    exp_type = Mutable_type.new_type_var () }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
       Pexp_ident li ->
         begin match lookup_value ctxt li exp.pexp_loc with
-            Local var -> Texp_var var
-          | Global v -> Texp_value v
+            Local var -> Exp_var var
+          | Global v -> Exp_value v
         end
     | Pexp_literal c ->
-        Texp_literal c
+        Exp_literal c
     | Pexp_tuple l ->
-        Texp_tuple (List.map (expression ctxt) l)
+        Exp_tuple (List.map (expression ctxt) l)
     | Pexp_construct (lid, sarg) ->
         let cs = lookup_constructor ctxt.ctxt_env lid exp.pexp_loc in
         let arity = cs_arity cs in
@@ -355,11 +355,11 @@ and expression_aux ctxt exp =
         if List.length sargs <> cs_arity cs then
           raise(Error(exp.pexp_loc, Constructor_arity_mismatch(lid,
                                                               cs_arity cs, List.length sargs)));
-        Texp_construct (cs, List.map (expression ctxt) sargs)
+        Exp_construct (cs, List.map (expression ctxt) sargs)
     | Pexp_apply (f, l) ->
-        Texp_apply (expression ctxt f, List.map (expression ctxt) l)
+        Exp_apply (expression ctxt f, List.map (expression ctxt) l)
     | Pexp_match (item, pat_exp_list) ->
-        Texp_match
+        Exp_match
           (expression ctxt item,
            List.map
              (fun (pat, exp) ->
@@ -371,9 +371,9 @@ and expression_aux ctxt exp =
         let big_ctxt = List.fold_left extend_context ctxt pat_list in
         let cond_ctxt = if b = Recursive then big_ctxt else ctxt in
         let exp_list = List.map (expression cond_ctxt) (List.map snd lpe) in
-        Texp_let (b, List.combine pat_list exp_list, expression big_ctxt e)
+        Exp_let (b, List.combine pat_list exp_list, expression big_ctxt e)
     | Pexp_function l ->
-        Texp_function
+        Exp_function
           (List.map
              (fun (pat, exp) ->
                 let pat = pattern ctxt.ctxt_env pat in
@@ -386,27 +386,27 @@ and expression_aux ctxt exp =
             (fun pat (_, exp) -> pat, expression (extend_context ctxt pat) exp)
             pat_list pat_exp_list
         in
-        Texp_try (expression ctxt exp, pat_exp_list)
+        Exp_try (expression ctxt exp, pat_exp_list)
     | Pexp_sequence (e1,e2) ->
-        Texp_sequence(expression ctxt e1,expression ctxt e2)
+        Exp_sequence(expression ctxt e1,expression ctxt e2)
     | Pexp_ifthenelse (e1, e2, o) ->
-        Texp_ifthenelse (expression ctxt e1,
+        Exp_ifthenelse (expression ctxt e1,
                          expression ctxt e2,
                          match o with None -> None | Some e3 -> Some (expression ctxt e3))
     | Pexp_while (e1, e2) ->
-        Texp_while(expression ctxt e1, expression ctxt e2)
+        Exp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
         let var = new_variable name (Mutable_type.new_type_var ()) in
         let big_ctxt = context_add_variable var ctxt in
-        Texp_for (var,
+        Exp_for (var,
                   expression ctxt e1,
                   expression ctxt e2,
                   dir_flag,
                   expression big_ctxt e3)
     | Pexp_constraint(e,te) ->
-        Texp_constraint(expression ctxt e,mutable_type ctxt.ctxt_env te)
+        Exp_constraint(expression ctxt e,mutable_type ctxt.ctxt_env te)
     | Pexp_array l ->
-        Texp_array(List.map (expression ctxt) l)
+        Exp_array(List.map (expression ctxt) l)
     | Pexp_record (lbl_exp_list, opt_init) ->
         let lbl_exp_list =
           List.map
@@ -419,18 +419,18 @@ and expression_aux ctxt exp =
               None -> None
             | Some init -> Some (expression ctxt init)
         in
-        Texp_record (tcs, lbl_exp_list, opt_init)
-    | Pexp_field (e,li) -> Texp_field(expression ctxt e,lookup_label ctxt.ctxt_env li exp.pexp_loc)
+        Exp_record (tcs, lbl_exp_list, opt_init)
+    | Pexp_field (e,li) -> Exp_field(expression ctxt e,lookup_label ctxt.ctxt_env li exp.pexp_loc)
     | Pexp_setfield(e,li,e2) ->
         let lbl = lookup_label ctxt.ctxt_env li exp.pexp_loc in
         if not lbl.lbl_mut then raise(Error(exp.pexp_loc, Label_not_mutable lbl));
-        Texp_setfield (expression ctxt e, lbl, expression ctxt e2)
+        Exp_setfield (expression ctxt e, lbl, expression ctxt e2)
     | Pexp_assert e ->
-        Texp_assert (expression ctxt e)
+        Exp_assert (expression ctxt e)
     | Pexp_assertfalse ->
-        Texp_assertfalse
+        Exp_assertfalse
     | Pexp_when(e1,e2) ->
-        Texp_when(expression ctxt e1,expression ctxt e2)
+        Exp_when(expression ctxt e1,expression ctxt e2)
 
 (* ---------------------------------------------------------------------- *)
 (* Type declarations.                                                     *)

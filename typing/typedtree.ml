@@ -8,67 +8,67 @@ open Base
 (* ---------------------------------------------------------------------- *)
 
 type 'ty pattern =
-  { tpat_desc : 'ty pattern_desc;
-    tpat_loc : Location.t;
-    tpat_type : 'ty }
+  { pat_desc : 'ty pattern_desc;
+    pat_loc : Location.t;
+    pat_type : 'ty }
 
 and 'ty pattern_desc =
-    Tpat_any
-  | Tpat_var of 'ty variable
-  | Tpat_alias of 'ty pattern * 'ty variable
-  | Tpat_literal of literal
-  | Tpat_tuple of 'ty pattern list
-  | Tpat_construct of constructor * 'ty pattern list
-  | Tpat_record of type_constructor * (label * 'ty pattern) list
-  | Tpat_array of 'ty pattern list
-  | Tpat_or of 'ty pattern * 'ty pattern
-  | Tpat_constraint of 'ty pattern * 'ty
+    Pat_any
+  | Pat_var of 'ty variable
+  | Pat_alias of 'ty pattern * 'ty variable
+  | Pat_literal of literal
+  | Pat_tuple of 'ty pattern list
+  | Pat_construct of constructor * 'ty pattern list
+  | Pat_record of type_constructor * (label * 'ty pattern) list
+  | Pat_array of 'ty pattern list
+  | Pat_or of 'ty pattern * 'ty pattern
+  | Pat_constraint of 'ty pattern * 'ty
 
 let rec pattern_variables pat =
-  match pat.tpat_desc with
-      Tpat_any | Tpat_literal _ -> []
-    | Tpat_var var -> [ var ]
-    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
-    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
+  match pat.pat_desc with
+      Pat_any | Pat_literal _ -> []
+    | Pat_var var -> [ var ]
+    | Pat_alias (pat, var) -> (var :: pattern_variables pat)
+    | Pat_tuple patl | Pat_construct (_, patl) | Pat_array patl ->
         List.flatten (List.map pattern_variables patl)
-    | Tpat_record (_, lbl_pat_list) ->
+    | Pat_record (_, lbl_pat_list) ->
         List.flatten
           (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
-    | Tpat_or (pat1, pat2) -> pattern_variables pat1
-    | Tpat_constraint (pat', _) -> pattern_variables pat'
+    | Pat_or (pat1, pat2) -> pattern_variables pat1
+    | Pat_constraint (pat', _) -> pattern_variables pat'
 
 (* ---------------------------------------------------------------------- *)
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
 type 'ty expression =
-  { texp_desc : 'ty expression_desc;
-    texp_loc : Location.t;
-    texp_type : 'ty }
+  { exp_desc : 'ty expression_desc;
+    exp_loc : Location.t;
+    exp_type : 'ty }
 
 and 'ty expression_desc =
-    Texp_var of 'ty variable
-  | Texp_value of value
-  | Texp_literal of literal
-  | Texp_let of rec_flag * ('ty pattern * 'ty expression) list * 'ty expression
-  | Texp_function of ('ty pattern * 'ty expression) list
-  | Texp_apply of 'ty expression * 'ty expression list
-  | Texp_match of 'ty expression * ('ty pattern * 'ty expression) list
-  | Texp_try of 'ty expression * ('ty pattern * 'ty expression) list
-  | Texp_tuple of 'ty expression list
-  | Texp_construct of constructor * 'ty expression list
-  | Texp_record of type_constructor * (label * 'ty expression) list * 'ty expression option
-  | Texp_field of 'ty expression * label
-  | Texp_setfield of 'ty expression * label * 'ty expression
-  | Texp_array of 'ty expression list
-  | Texp_ifthenelse of 'ty expression * 'ty expression * 'ty expression option
-  | Texp_sequence of 'ty expression * 'ty expression
-  | Texp_while of 'ty expression * 'ty expression
-  | Texp_for of 'ty variable * 'ty expression * 'ty expression * direction_flag * 'ty expression
-  | Texp_when of 'ty expression * 'ty expression
-  | Texp_assert of 'ty expression
-  | Texp_assertfalse
-  | Texp_constraint of 'ty expression * 'ty
+    Exp_var of 'ty variable
+  | Exp_value of value
+  | Exp_literal of literal
+  | Exp_let of rec_flag * ('ty pattern * 'ty expression) list * 'ty expression
+  | Exp_function of ('ty pattern * 'ty expression) list
+  | Exp_apply of 'ty expression * 'ty expression list
+  | Exp_match of 'ty expression * ('ty pattern * 'ty expression) list
+  | Exp_try of 'ty expression * ('ty pattern * 'ty expression) list
+  | Exp_tuple of 'ty expression list
+  | Exp_construct of constructor * 'ty expression list
+  | Exp_record of type_constructor * (label * 'ty expression) list * 'ty expression option
+  | Exp_field of 'ty expression * label
+  | Exp_setfield of 'ty expression * label * 'ty expression
+  | Exp_array of 'ty expression list
+  | Exp_ifthenelse of 'ty expression * 'ty expression * 'ty expression option
+  | Exp_sequence of 'ty expression * 'ty expression
+  | Exp_while of 'ty expression * 'ty expression
+  | Exp_for of 'ty variable * 'ty expression * 'ty expression * direction_flag * 'ty expression
+  | Exp_when of 'ty expression * 'ty expression
+  | Exp_assert of 'ty expression
+  | Exp_assertfalse
+  | Exp_constraint of 'ty expression * 'ty
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)

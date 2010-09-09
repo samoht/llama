@@ -36,89 +36,89 @@ let variable f var =
     var'
 
 let rec pattern f pat =
-  { tpat_desc = pattern_desc f pat.tpat_desc;
-    tpat_loc = pat.tpat_loc;
-    tpat_type = mutable_type f pat.tpat_type }
+  { pat_desc = pattern_desc f pat.pat_desc;
+    pat_loc = pat.pat_loc;
+    pat_type = mutable_type f pat.pat_type }
 
 and pattern_desc f = function
-    Tpat_any ->
-      Tpat_any
-  | Tpat_var var ->
-      Tpat_var (variable f var)
-  | Tpat_alias (pat', var) ->
-      Tpat_alias (pattern f pat', variable f var)
-  | Tpat_literal lit ->
-      Tpat_literal lit
-  | Tpat_tuple patl ->
-      Tpat_tuple (List.map (pattern f) patl)
-  | Tpat_construct (cs, patl) ->
-      Tpat_construct (cs, List.map (pattern f) patl)
-  | Tpat_record (tcs, lbl_pat_list) ->
-      Tpat_record (tcs, List.map (fun (lbl, pat) -> (lbl, pattern f pat)) lbl_pat_list)
-  | Tpat_array patl ->
-      Tpat_array (List.map (pattern f) patl)
-  | Tpat_or (pat1, pat2) ->
-      Tpat_or (pattern f pat1, pattern f pat2)
-  | Tpat_constraint (pat', ty) ->
-      Tpat_constraint (pattern f pat', mutable_type f ty)
+    Pat_any ->
+      Pat_any
+  | Pat_var var ->
+      Pat_var (variable f var)
+  | Pat_alias (pat', var) ->
+      Pat_alias (pattern f pat', variable f var)
+  | Pat_literal lit ->
+      Pat_literal lit
+  | Pat_tuple patl ->
+      Pat_tuple (List.map (pattern f) patl)
+  | Pat_construct (cs, patl) ->
+      Pat_construct (cs, List.map (pattern f) patl)
+  | Pat_record (tcs, lbl_pat_list) ->
+      Pat_record (tcs, List.map (fun (lbl, pat) -> (lbl, pattern f pat)) lbl_pat_list)
+  | Pat_array patl ->
+      Pat_array (List.map (pattern f) patl)
+  | Pat_or (pat1, pat2) ->
+      Pat_or (pattern f pat1, pattern f pat2)
+  | Pat_constraint (pat', ty) ->
+      Pat_constraint (pattern f pat', mutable_type f ty)
 
 let rec expression f expr =
-  { texp_desc = expression_desc f expr.texp_desc;
-    texp_loc = expr.texp_loc;
-    texp_type = mutable_type f expr.texp_type }
+  { exp_desc = expression_desc f expr.exp_desc;
+    exp_loc = expr.exp_loc;
+    exp_type = mutable_type f expr.exp_type }
 
 and expression_desc f = function
-    Texp_var var ->
-      Texp_var (variable f var)
-  | Texp_value v ->
-      Texp_value v
-  | Texp_literal lit ->
-      Texp_literal lit
-  | Texp_let (rec_flag, pat_expr_list, body) ->
-      Texp_let (rec_flag,
+    Exp_var var ->
+      Exp_var (variable f var)
+  | Exp_value v ->
+      Exp_value v
+  | Exp_literal lit ->
+      Exp_literal lit
+  | Exp_let (rec_flag, pat_expr_list, body) ->
+      Exp_let (rec_flag,
                 List.map (fun (pat, expr) ->
                             (pattern f pat, expression f expr)) pat_expr_list,
                 expression f body)
-  | Texp_function pat_expr_list ->
-      Texp_function (pattern_expression_list f pat_expr_list)
-  | Texp_apply (funct, args) ->
-      Texp_apply (expression f funct, List.map (expression f) args)
-  | Texp_match (arg, pat_expr_list) ->
-      Texp_match (expression f arg,
+  | Exp_function pat_expr_list ->
+      Exp_function (pattern_expression_list f pat_expr_list)
+  | Exp_apply (funct, args) ->
+      Exp_apply (expression f funct, List.map (expression f) args)
+  | Exp_match (arg, pat_expr_list) ->
+      Exp_match (expression f arg,
                   pattern_expression_list f pat_expr_list)
-  | Texp_try (body, pat_expr_list) ->
-      Texp_try (expression f body, pattern_expression_list f pat_expr_list)
-  | Texp_tuple el ->
-      Texp_tuple (List.map (expression f) el)
-  | Texp_construct (cs, el) ->
-      Texp_construct (cs, List.map (expression f) el)
-  | Texp_record (tcs, lbl_expr_list, opt_init_expr) ->
-      Texp_record (tcs,
+  | Exp_try (body, pat_expr_list) ->
+      Exp_try (expression f body, pattern_expression_list f pat_expr_list)
+  | Exp_tuple el ->
+      Exp_tuple (List.map (expression f) el)
+  | Exp_construct (cs, el) ->
+      Exp_construct (cs, List.map (expression f) el)
+  | Exp_record (tcs, lbl_expr_list, opt_init_expr) ->
+      Exp_record (tcs,
                    List.map (fun (lbl, expr) -> (lbl, expression f expr)) lbl_expr_list,
                    expression_option f opt_init_expr)
-  | Texp_field (arg, lbl) ->
-      Texp_field (expression f arg, lbl)
-  | Texp_setfield (arg, lbl, newval) ->
-      Texp_setfield (expression f arg, lbl, expression f newval)
-  | Texp_array el ->
-      Texp_array (List.map (expression f) el)
-  | Texp_ifthenelse (cond, ifso, opt_ifnot) ->
-      Texp_ifthenelse (expression f cond, expression f ifso,
+  | Exp_field (arg, lbl) ->
+      Exp_field (expression f arg, lbl)
+  | Exp_setfield (arg, lbl, newval) ->
+      Exp_setfield (expression f arg, lbl, expression f newval)
+  | Exp_array el ->
+      Exp_array (List.map (expression f) el)
+  | Exp_ifthenelse (cond, ifso, opt_ifnot) ->
+      Exp_ifthenelse (expression f cond, expression f ifso,
                        expression_option f opt_ifnot)
-  | Texp_sequence (expr1, expr2) ->
-      Texp_sequence (expression f expr1, expression f expr2)
-  | Texp_while (cond, body) ->
-      Texp_while (expression f cond, expression f body)
-  | Texp_for (param, low, high, dir, body) ->
-      Texp_for (variable f param, expression f low, expression f high, dir, expression f body)
-  | Texp_when (cond, body) ->
-      Texp_when (expression f cond, expression f body)
-  | Texp_assert cond ->
-      Texp_assert (expression f cond)
-  | Texp_assertfalse ->
-      Texp_assertfalse
-  | Texp_constraint (expr, ty) ->
-      Texp_constraint (expression f expr, mutable_type f ty)
+  | Exp_sequence (expr1, expr2) ->
+      Exp_sequence (expression f expr1, expression f expr2)
+  | Exp_while (cond, body) ->
+      Exp_while (expression f cond, expression f body)
+  | Exp_for (param, low, high, dir, body) ->
+      Exp_for (variable f param, expression f low, expression f high, dir, expression f body)
+  | Exp_when (cond, body) ->
+      Exp_when (expression f cond, expression f body)
+  | Exp_assert cond ->
+      Exp_assert (expression f cond)
+  | Exp_assertfalse ->
+      Exp_assertfalse
+  | Exp_constraint (expr, ty) ->
+      Exp_constraint (expression f expr, mutable_type f ty)
 
 and pattern_expression_list f =
   List.map (fun (pat, expr) -> (pattern f pat, expression f expr))

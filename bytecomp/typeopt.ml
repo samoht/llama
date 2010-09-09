@@ -22,12 +22,12 @@ open Typedtree
 open Lambda
 
 let has_base_type exp base_tcs =
-  match Typeutil.expand_head exp.texp_type with
+  match Typeutil.expand_head exp.exp_type with
   | Tconstr(tcs, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
-  match Typeutil.expand_head exp.texp_type with
+  match Typeutil.expand_head exp.exp_type with
   | Tconstr(tcs, args) ->
       not (tcs == Predef.tcs_int) &&
       not (tcs == Predef.tcs_char) &&
@@ -86,9 +86,9 @@ let array_kind_gen ty =
       (* This can happen with e.g. Obj.field *)
       Pgenarray
 
-let array_kind exp = array_kind_gen exp.texp_type
+let array_kind exp = array_kind_gen exp.exp_type
 
-let array_pattern_kind pat = array_kind_gen pat.tpat_type
+let array_pattern_kind pat = array_kind_gen pat.pat_type
 
 let bigarray_decode_type ty tbl dfl =
   match Typeutil.expand_head ty with
@@ -116,7 +116,7 @@ let layout_table =
    "fortran_layout", Pbigarray_fortran_layout]
 
 let bigarray_kind_and_layout exp =
-  match Typeutil.expand_head exp.texp_type with
+  match Typeutil.expand_head exp.exp_type with
   | Tconstr(_, [caml_type; elt_type; layout_type]) ->
       (bigarray_decode_type elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type layout_type layout_table Pbigarray_unknown_layout)

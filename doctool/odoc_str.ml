@@ -29,7 +29,6 @@ let rec is_arrow_type t =
   | Base.Ttuple _
   | Base.Tconstr _
   | Base.Tvar _ -> false
-  | Base.Tlink _ -> assert false
 
 let raw_string_of_type_list sep type_list =
   let buf = Buffer.create 256 in
@@ -40,7 +39,6 @@ let raw_string_of_type_list sep type_list =
     | Base.Tconstr _ ->
         false
     | Base.Tvar _ -> false
-    | Base.Tlink _ -> assert false
   in
   let print_one_type variance t =
     if need_parent t then

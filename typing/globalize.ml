@@ -19,30 +19,30 @@ exception Error of Location.t * error
    evaluation cannot contain newly created mutable objects. *)
 
 let rec is_nonexpansive expr =
-  match expr.texp_desc with
-      Texp_var _ -> true
-    | Texp_value _ -> true
-    | Texp_literal sc -> true
-    | Texp_tuple el -> List.forall is_nonexpansive el
-    | Texp_construct (cstr, l) -> List.forall is_nonexpansive l
-    | Texp_let (rec_flag, pat_expr_list, body) ->
+  match expr.exp_desc with
+      Exp_var _ -> true
+    | Exp_value _ -> true
+    | Exp_literal sc -> true
+    | Exp_tuple el -> List.forall is_nonexpansive el
+    | Exp_construct (cstr, l) -> List.forall is_nonexpansive l
+    | Exp_let (rec_flag, pat_expr_list, body) ->
         List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list &&
           is_nonexpansive body
-    | Texp_function pat_expr_list -> true
-    | Texp_try (body, pat_expr_list) ->
+    | Exp_function pat_expr_list -> true
+    | Exp_try (body, pat_expr_list) ->
         is_nonexpansive body &&
           List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
-    | Texp_sequence (e1, e2) -> is_nonexpansive e2
-    | Texp_ifthenelse(cond, ifso, ifnot) ->
+    | Exp_sequence (e1, e2) -> is_nonexpansive e2
+    | Exp_ifthenelse(cond, ifso, ifnot) ->
         is_nonexpansive ifso && is_nonexpansive_opt ifnot
-    | Texp_constraint(e, ty) -> is_nonexpansive e
-    | Texp_array [] -> true
-    | Texp_record (tcs, lbl_expr_list, opt_init_exp) ->
+    | Exp_constraint(e, ty) -> is_nonexpansive e
+    | Exp_array [] -> true
+    | Exp_record (tcs, lbl_expr_list, opt_init_exp) ->
         List.forall (fun (lbl, expr) ->
                        not lbl.lbl_mut && is_nonexpansive expr) lbl_expr_list &&
           is_nonexpansive_opt opt_init_exp
-    | Texp_field (e, lbl) -> is_nonexpansive e
-    | Texp_when (cond, act) -> is_nonexpansive act
+    | Exp_field (e, lbl) -> is_nonexpansive e
+    | Exp_when (cond, act) -> is_nonexpansive act
     | _ -> false
 
 and is_nonexpansive_opt = function
@@ -52,9 +52,9 @@ and is_nonexpansive_opt = function
 let check_value_restriction pat_expr_list =
   List.iter
     (fun (pat, expr) ->
-       let ty = pat.tpat_type in
+       let ty = pat.pat_type in
        if not (is_nonexpansive expr) && not (Typeutil.is_closed ty) then
-         raise (Error (expr.texp_loc, Non_generalizable (Typeutil.rename_variables ty))))
+         raise (Error (expr.exp_loc, Non_generalizable (Typeutil.rename_variables ty))))
     pat_expr_list
 
 (* ---------------------------------------------------------------------- *)
@@ -164,7 +164,7 @@ let signature_items env tsig =
 let structure_item env tstr =
   match tstr.tstr_desc with
       Tstr_eval expr ->
-        Str_eval expr, Some (Typeutil.rename_variables expr.texp_type), env
+        Str_eval expr, Some (Typeutil.rename_variables expr.exp_type), env
     | Tstr_value (rec_flag, pat_expr_list) ->
         check_value_restriction pat_expr_list;
         let vars =

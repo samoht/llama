@@ -32,42 +32,42 @@ let literal = function
 
 let rec pattern pat =
   let ty = pattern_aux pat in
-  (try unify pat.tpat_type ty with Unify -> fatal_error "Typify.pattern");
-  pat.tpat_type
+  (try unify pat.pat_type ty with Unify -> fatal_error "Typify.pattern");
+  pat.pat_type
 
 and pattern_aux pat =
-  match pat.tpat_desc with
-      Tpat_any ->
+  match pat.pat_desc with
+      Pat_any ->
         new_type_var ()
-    | Tpat_var var ->
+    | Pat_var var ->
         var.var_type
-    | Tpat_alias (pat', var) ->
+    | Pat_alias (pat', var) ->
         pattern_expect pat' var.var_type;
-        pat'.tpat_type
-    | Tpat_literal c ->
+        pat'.pat_type
+    | Pat_literal c ->
         literal c
-    | Tpat_tuple patl ->
+    | Pat_tuple patl ->
         Mtuple (List.map pattern patl)
-    | Tpat_construct (cs, args) ->
+    | Pat_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
         List.iter2 pattern_expect args ty_args;
         ty_res
-    | Tpat_record (tcs, lbl_arg_list) ->
+    | Pat_record (tcs, lbl_arg_list) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, arg) ->
              let ty_arg = instantiate_type inst lbl.lbl_arg in
              pattern_expect arg ty_arg) lbl_arg_list;
         ty_res
-    | Tpat_array patl ->
+    | Pat_array patl ->
         let ty = new_type_var () in
         List.iter (fun pat -> pattern_expect pat ty) patl;
         predef_type_array ty
-    | Tpat_or (pat1, pat2) ->
+    | Pat_or (pat1, pat2) ->
         let ty = pattern pat1 in
         pattern_expect pat2 ty;
         ty
-    | Tpat_constraint (pat', ty) ->
+    | Pat_constraint (pat', ty) ->
         pattern_expect pat' ty;
         ty
 
@@ -76,7 +76,7 @@ and pattern_expect pat expected_ty =
   begin try
     unify ty expected_ty
   with Unify ->
-    raise (Error (pat.tpat_loc, Pattern_type_clash (ty, expected_ty)))
+    raise (Error (pat.pat_loc, Pattern_type_clash (ty, expected_ty)))
   end
 
 (* ---------------------------------------------------------------------- *)
@@ -246,24 +246,24 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty = expression_aux exp in
-  (try unify exp.texp_type ty with Unify -> fatal_error "Typify.expression");
+  (try unify exp.exp_type ty with Unify -> fatal_error "Typify.expression");
   ty
 
 and expression_aux exp =
-  match exp.texp_desc with
-      Texp_var var ->
+  match exp.exp_desc with
+      Exp_var var ->
         var.var_type
-    | Texp_value v ->
+    | Exp_value v ->
         instantiate_value v
-    | Texp_literal c ->
+    | Exp_literal c ->
         literal c
-    | Texp_tuple args ->
+    | Exp_tuple args ->
         Mtuple (List.map expression args)
-    | Texp_construct (cs, args) ->
+    | Exp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
         List.iter2 expression_expect args ty_args;
         ty_res
-    | Texp_apply (fct, args) ->
+    | Exp_apply (fct, args) ->
         let ty_fct = expression fct in
         let rec type_args ty_res = function
             [] -> ty_res
@@ -276,33 +276,33 @@ and expression_aux exp =
                       v.link <- Some (Marrow (ty1, ty2));
                       ty1, ty2
                   | Marrow (ty1, ty2) -> ty1, ty2
-                  | _ -> raise(Error(exp.texp_loc, Apply_non_function ty_fct))
+                  | _ -> raise(Error(exp.exp_loc, Apply_non_function ty_fct))
               in
               expression_expect arg1 ty1;
               type_args ty2 argl
         in
         type_args ty_fct args
-    | Texp_let (_, pat_expr_list, body) ->
+    | Exp_let (_, pat_expr_list, body) ->
         bindings pat_expr_list;
         expression body
-    | Texp_match (item, pat_exp_list) ->
+    | Exp_match (item, pat_exp_list) ->
         let ty_arg = expression item in
         let ty_res = new_type_var () in
         caselist ty_arg ty_res pat_exp_list;
         ty_res
-    | Texp_function pat_exp_list ->
+    | Exp_function pat_exp_list ->
         let ty_arg = new_type_var () in
         let ty_res = new_type_var () in
         caselist ty_arg ty_res pat_exp_list;
         Marrow (ty_arg, ty_res)
-    | Texp_try (body, pat_exp_list) ->
+    | Exp_try (body, pat_exp_list) ->
         let ty_arg = new_type_var () in
         let ty_res = expression body in
         caselist ty_arg ty_res pat_exp_list;
         ty_res
-    | Texp_sequence (e1, e2) ->
+    | Exp_sequence (e1, e2) ->
         statement e1; expression e2
-    | Texp_ifthenelse (cond, ifso, ifnot) ->
+    | Exp_ifthenelse (cond, ifso, ifnot) ->
         expression_expect cond predef_type_bool;
         begin match ifnot with
           | None ->
@@ -313,26 +313,26 @@ and expression_aux exp =
               expression_expect ifnot ty;
               ty
         end
-    | Texp_when (cond, act) ->
+    | Exp_when (cond, act) ->
         expression_expect cond predef_type_bool;
         expression act
-    | Texp_while (cond, body) ->
+    | Exp_while (cond, body) ->
         expression_expect cond predef_type_bool;
         statement body;
         predef_type_unit
-    | Texp_for (id, start, stop, up_flag, body) ->
+    | Exp_for (id, start, stop, up_flag, body) ->
         expression_expect start predef_type_int;
         expression_expect stop predef_type_int;
         statement body;
         predef_type_unit
-    | Texp_constraint (e, ty') ->
+    | Exp_constraint (e, ty') ->
         expression_expect e ty';
         ty'
-    | Texp_array elist ->
+    | Exp_array elist ->
         let ty_arg = new_type_var () in
         List.iter (fun e -> expression_expect e ty_arg) elist;
         predef_type_array ty_arg
-    | Texp_record (tcs, lbl_exp_list, opt_init) ->
+    | Exp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, exp) ->
@@ -343,44 +343,44 @@ and expression_aux exp =
           | Some init -> expression_expect init ty_res
         end;
         ty_res
-    | Texp_field (e, lbl) ->
+    | Exp_field (e, lbl) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
         expression_expect e ty_res;
         ty_arg      
-    | Texp_setfield (e1, lbl, e2) ->
+    | Exp_setfield (e1, lbl, e2) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
         expression_expect e1 ty_res;
         expression_expect e2 ty_arg;
         predef_type_unit
-    | Texp_assert e ->
+    | Exp_assert e ->
         expression_expect e predef_type_bool;
         predef_type_unit
-    | Texp_assertfalse ->
+    | Exp_assertfalse ->
         new_type_var ()
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and expression_expect exp expected_ty =
-  match exp.texp_desc with
-    | Texp_let (_, pat_expr_list, body) ->
+  match exp.exp_desc with
+    | Exp_let (_, pat_expr_list, body) ->
         bindings pat_expr_list;
         expression_expect body expected_ty
-    | Texp_sequence (e1, e2) ->
+    | Exp_sequence (e1, e2) ->
         statement e1;
         expression_expect e2 expected_ty
     | _ ->
         let ty =
           (* Terrible hack for format strings *)
-          match exp.texp_desc with
-              Texp_literal (Literal_string s) ->
+          match exp.exp_desc with
+              Exp_literal (Literal_string s) ->
                 let ty =
                   match expand_head expected_ty with
                       Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
-                        formatstring exp.texp_loc s
+                        formatstring exp.exp_loc s
                     | _ ->
                         predef_type_string in
-                unify exp.texp_type ty;
+                unify exp.exp_type ty;
                 ty
             | _ ->
                 expression exp
@@ -388,14 +388,14 @@ and expression_expect exp expected_ty =
         begin try
           unify ty expected_ty
         with Unify ->
-          raise (Error (exp.texp_loc, Expression_type_clash (ty, expected_ty)))
+          raise (Error (exp.exp_loc, Expression_type_clash (ty, expected_ty)))
         end
 
 (* Typing of "let" definitions *)
 
 and bindings pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
-  List.iter (fun (pat, expr) -> expression_expect expr pat.tpat_type) pat_expr_list
+  List.iter (fun (pat, expr) -> expression_expect expr pat.pat_type) pat_expr_list
 
 (* Typing of match cases *)
 
@@ -410,11 +410,11 @@ and statement expr =
   let ty = expression expr in
   match type_repr ty with
   | Marrow(_,_) ->
-      Location.prerr_warning expr.texp_loc Warnings.Partial_application
+      Location.prerr_warning expr.exp_loc Warnings.Partial_application
   | Mvar _ -> ()
   | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
-      Location.prerr_warning expr.texp_loc Warnings.Statement_type
+      Location.prerr_warning expr.exp_loc Warnings.Statement_type
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)

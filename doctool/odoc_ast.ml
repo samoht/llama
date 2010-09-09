@@ -54,9 +54,9 @@ let simple_blank = "[ \013\009\012]"
     type tab_values = (Odoc_name.t, Typedtree.pattern * Typedtree.expression) Hashtbl.t
 
     let iter_val_pattern = function
-      | Typedtree.Tpat_any -> None
-      | Typedtree.Tpat_var v -> Some (Base.val_name v)
-      | Typedtree.Tpat_tuple _ -> None (* A VOIR quand on traitera les tuples *)
+      | Typedtree.Pat_any -> None
+      | Typedtree.Pat_var v -> Some (Base.val_name v)
+      | Typedtree.Pat_tuple _ -> None (* A VOIR quand on traitera les tuples *)
       | _ -> None
 
     let add_to_hashes table table_values tt =
@@ -242,22 +242,22 @@ let simple_blank = "[ \013\009\012]"
     let tt_param_info_from_pattern env f_desc pat =
       let rec iter_pattern pat =
         match pat.pat_desc with
-          Typedtree.Tpat_var ident ->
+          Typedtree.Pat_var ident ->
             let name = Odoc_name.from_ident ident in
             Simple_name { sn_name = name ;
                           sn_text = f_desc name ;
                           sn_type = Odoc_env.subst_type env pat.pat_type
                         }
 
-        | Typedtree.Tpat_alias (pat, _) ->
+        | Typedtree.Pat_alias (pat, _) ->
             iter_pattern pat
 
-        | Typedtree.Tpat_tuple patlist ->
+        | Typedtree.Pat_tuple patlist ->
             Tuple
               (List.map iter_pattern patlist,
                Odoc_env.subst_type env pat.pat_type)
 
-        | Typedtree.Tpat_construct (cons_desc, _) when
+        | Typedtree.Pat_construct (cons_desc, _) when
             (* we give a name to the parameter only if it unit *)
             (match cons_desc.cstr_res.desc with
               Tconstr (p, _, _) ->
@@ -311,7 +311,7 @@ let simple_blank = "[ \013\009\012]"
                 (
                  (
                   match func_body.exp_desc with
-                    Typedtree.Texp_let (_, ({pat_desc = Typedtree.Tpat_var id } , exp) :: _, func_body2) ->
+                    Typedtree.Exp_let (_, ({pat_desc = Typedtree.Pat_var id } , exp) :: _, func_body2) ->
                       let name = Odoc_name.from_ident id in
                       let new_param = Simple_name
                           { sn_name = name ;
@@ -330,7 +330,7 @@ let simple_blank = "[ \013\009\012]"
           in
          (* continue if the body is still a function *)
           match next_exp.exp_desc with
-            Texp_function (pat_exp_list, _) ->
+            Exp_function (pat_exp_list, _) ->
               p :: (tt_analyse_function_parameters env current_comment_opt pat_exp_list)
           | _ ->
               (* something else ; no more parameter *)
@@ -341,7 +341,7 @@ let simple_blank = "[ \013\009\012]"
      let tt_analyse_value env current_module_name comment_opt loc pat_exp rec_flag =
        let (pat, exp) = pat_exp in
        match (pat.pat_desc, exp.exp_desc) with
-         (Typedtree.Tpat_var ident, Typedtree.Texp_function (pat_exp_list2, partial)) ->
+         (Typedtree.Pat_var ident, Typedtree.Exp_function (pat_exp_list2, partial)) ->
            (* a new function is defined *)
            let name_pre = Odoc_name.from_ident ident in
            let name = Odoc_name.parens_if_infix name_pre in
@@ -359,7 +359,7 @@ let simple_blank = "[ \013\009\012]"
            in
            [ new_value ]
 
-       | (Typedtree.Tpat_var ident, _) ->
+       | (Typedtree.Pat_var ident, _) ->
            (* a new value is defined *)
            let name_pre = Odoc_name.from_ident ident in
            let name = Odoc_name.parens_if_infix name_pre in
@@ -376,7 +376,7 @@ let simple_blank = "[ \013\009\012]"
            in
            [ new_value ]
 
-       | (Typedtree.Tpat_tuple lpat, _) ->
+       | (Typedtree.Pat_tuple lpat, _) ->
            (* new identifiers are defined *)
            (* A VOIR : by now we don't accept to have global variables defined in tuples *)
            []
