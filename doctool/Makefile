@@ -21,7 +21,6 @@ COMPFLAGS=$(INCLUDES) -warn-error A -pp './remove_DEBUG'
 LINKFLAGS=$(INCLUDES)
 
 CAMLOBJS=\
-  ../parsing/printast.cmo \
   ../utils/tbl.cmo \
   ../utils/misc.cmo \
   ../utils/config.cmo \
@@ -36,7 +35,6 @@ CAMLOBJS=\
   ../parsing/parser.cmo \
   ../parsing/lexer.cmo \
   ../parsing/parse.cmo \
-  ../typing/unused_var.cmo \
   ../typing/primitive.cmo \
   ../typing/base.cmo \
   ../typing/predef.cmo \
@@ -47,22 +45,11 @@ CAMLOBJS=\
   ../typing/oprint.cmo \
   ../typing/printtyp.cmo \
   ../typing/mutable_type.cmo \
-  ../typing/include.cmo \
   ../typing/typedtree.cmo \
   ../typing/resolve.cmo \
   ../typing/typify.cmo \
   ../typing/immutify.cmo \
   ../typing/globalize.cmo \
-  ../typing/typemain.cmo \
-  ../bytecomp/ident.cmo \
-  ../bytecomp/lambda.cmo \
-  ../bytecomp/typeopt.cmo \
-  ../bytecomp/printlambda.cmo \
-  ../bytecomp/pmc_pattern.cmo \
-  ../bytecomp/parmatch.cmo \
-  ../bytecomp/switch.cmo \
-  ../bytecomp/matching.cmo \
-  ../bytecomp/translcore.cmo \
   ../tools/depend.cmo
 
 OBJS=\

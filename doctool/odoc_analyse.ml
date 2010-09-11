@@ -103,35 +103,17 @@ let parse_file inputfile parse_fun ast_magic =
 
 let (++) x f = f x
 
-(** Analysis of an implementation file. Returns (Some typedtree) if
-   no error occured, else None and an error message is printed.*)
-let process_implementation_file ppf sourcefile =
-  init_path ();
-  let prefixname = Filename.chop_extension sourcefile in
-  let modulename = String.capitalize(Filename.basename prefixname) in
-  Modenv.current_module := Base.Module modulename;
-  let inputfile = preprocess sourcefile in
-  let env = initial_env () in
-  try
-    let parsetree = parse_file inputfile Parse.implementation ast_impl_magic_number in
-    let typedtree = Typemain.implementation sourcefile prefixname modulename env parsetree in
-    (Some (parsetree, typedtree), inputfile)
-  with
-    e ->
-      match e with
-        Syntaxerr.Error err ->
-          fprintf Format.err_formatter "@[%a@]@."
-            Syntaxerr.report_error err;
-          None, inputfile
-      | Failure s ->
-          prerr_endline s;
-          incr Odoc_global.errors ;
-          None, inputfile
-      | e ->
-          raise e
-
 (** Analysis of an interface file. Returns (Some signature) if
    no error occured, else None and an error message is printed.*)
+
+let rec typemain_signature env psigl =
+  match psigl with
+      [] -> []
+    | psig :: rest ->
+        let tsig = Resolve.signature_item env psig in
+        let sg, newenv = Globalize.signature_items env tsig in
+        sg @ typemain_signature newenv rest
+
 let process_interface_file ppf sourcefile =
   init_path ();
   let prefixname = Filename.chop_extension sourcefile in
@@ -139,7 +121,7 @@ let process_interface_file ppf sourcefile =
   Modenv.current_module := Base.Module modulename;
   let inputfile = preprocess sourcefile in
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
-  let sg = Typemain.signature (initial_env()) ast in
+  let sg = typemain_signature (initial_env()) ast in
   Warnings.check_fatal ();
   (ast, sg, inputfile)
 
@@ -171,13 +153,6 @@ let process_error exn =
       Location.print_error ppf loc; Typify.report_error ppf err
   | Globalize.Error(loc, err) ->
       Location.print_error ppf loc; Globalize.report_error ppf err
-  | Include.Error err ->
-      Location.print_error_cur_file ppf;
-      Include.report_error ppf err
-  | Typemain.Error(loc, err) ->
-      Location.print_error ppf loc; Typemain.report_error ppf err
-  | Translcore.Error(loc, err) ->
-      Location.print_error ppf loc; Translcore.report_error ppf err
   | Sys_error msg ->
       Location.print_error_cur_file ppf;
       fprintf ppf "I/O error: %s" msg
