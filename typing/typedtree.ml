@@ -76,7 +76,7 @@ and 'ty expression_desc =
 
 type local_type_constructor = {
   ltcs_name : string;
-  ltcs_params : type_variable list;
+  ltcs_params : string list;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -86,7 +86,7 @@ and local_type_constructor_kind =
   | Ltcs_abbrev of local_type
 
 and local_type =
-    Lvar of type_variable
+    Lvar of int
   | Larrow of local_type * local_type
   | Ltuple of local_type list
   | Lconstr of type_constructor * local_type list

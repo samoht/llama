@@ -8,14 +8,13 @@
 type module_id = Base.module_id
 type value_kind = Base.value_kind
 type rec_status = Base.rec_status
-type type_variable = Base.type_variable
 
 type 'a reference =
     Internal of 'a
   | External of module_id * string
 
 type llama_type =
-    Tvar of type_variable
+    Tvar of int
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
@@ -23,7 +22,7 @@ type llama_type =
 and type_constructor =
   { tcs_module : module_id;
     tcs_name : string;
-    tcs_params : type_variable list;
+    tcs_params : int list;
     mutable tcs_kind : type_constructor_kind }
 
 and type_constructor_kind =

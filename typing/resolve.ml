@@ -123,7 +123,7 @@ let context_lookup_value lid ctxt =
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_type_variables : (string, type_variable) Tbl.t }
+  pseudoenv_type_variables : (string, int) Tbl.t }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
@@ -135,10 +135,10 @@ let pseudoenv_add_type_constructor ltcs pseudoenv =
       pseudoenv_type_constructors =
       Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
 
-let pseudoenv_add_type_variable tvar pseudoenv =
+let pseudoenv_add_type_variable name i pseudoenv =
   { pseudoenv with
       pseudoenv_type_variables =
-      Tbl.add tvar.tvar_name tvar pseudoenv.pseudoenv_type_variables }
+      Tbl.add name i pseudoenv.pseudoenv_type_variables }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -196,7 +196,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           begin try
             List.assoc name !params
           with Not_found ->
-            let ty = Tvar (new_type_variable name) in
+            let ty = Tvar (List.length !params) in
             params := (name, ty) :: !params;
             ty
           end
@@ -471,7 +471,7 @@ let type_declarations env pdecls =
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
-          ltcs_params = List.map new_type_variable pdecl.ptype_params;
+          ltcs_params = pdecl.ptype_params;
           ltcs_kind = Ltcs_abstract }
       end pdecls
   in
@@ -482,10 +482,11 @@ let type_declarations env pdecls =
   in
   List.iter2
     (fun pdecl ltcs ->
-       let pseudoenv =
-         List.fold_left
-           (fun pseudoenv param -> pseudoenv_add_type_variable param pseudoenv)
-           pseudoenv ltcs.ltcs_params in
+       let rec aux pseudoenv i = function
+           [] -> pseudoenv
+         | (param :: tl) ->
+             aux (pseudoenv_add_type_variable param i pseudoenv) (succ i) tl in
+       let pseudoenv = aux pseudoenv 0 ltcs.ltcs_params in
        ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->

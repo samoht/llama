@@ -75,7 +75,7 @@ let type_constructors ltcs_list =
       begin fun ltcs ->
         { tcs_module = !Modenv.current_module;
           tcs_name = ltcs.ltcs_name;
-          tcs_params = ltcs.ltcs_params;
+          tcs_params = standard_parameters (List.length ltcs.ltcs_params);
           tcs_kind = Tcs_abstract }
       end
       ltcs_list

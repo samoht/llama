@@ -21,7 +21,7 @@ and type_variable f tvar =
       None ->
         begin try List.assq tvar f.type_variables
         with Not_found ->
-          let ty' = Tvar (new_parameter (List.length f.type_variables)) in
+          let ty' = Tvar (List.length f.type_variables) in
           f.type_variables <- (tvar, ty') :: f.type_variables;
           ty'
         end

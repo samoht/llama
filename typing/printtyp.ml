@@ -41,8 +41,8 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tvar tvar ->
-      Otyp_var (false, tvar.tvar_name)
+    Tvar i ->
+      Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
   | Ttuple tyl ->
@@ -96,7 +96,7 @@ let tree_of_label_description lbl =
 let tree_of_type_declaration tcs rec_status =
   Osig_type (begin
                tcs.tcs_name,
-               List.map (fun tvar -> tvar.tvar_name, (true, true)) tcs.tcs_params,
+               List.map (fun i -> parameter_name i, (true, true)) tcs.tcs_params,
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract

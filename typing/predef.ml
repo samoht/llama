@@ -19,8 +19,8 @@ let tcs_char = mkabs "char" []
 let tcs_string = mkabs "string" []
 let tcs_float = mkabs "float" []
 let tcs_exn = mkabs "exn" []
-let tcs_array = mkabs "array" (new_parameters 1)
-let tcs_format6 = mkabs "format6" (new_parameters 6)
+let tcs_array = mkabs "array" (standard_parameters 1)
+let tcs_format6 = mkabs "format6" (standard_parameters 6)
 let tcs_nativeint = mkabs "nativeint" []
 let tcs_int32 = mkabs "int32" []
 let tcs_int64 = mkabs "int64" []
@@ -60,12 +60,10 @@ and cs_true =
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
-let list_param = new_parameter 0
-
 let rec tcs_list =
   { tcs_module = Module_builtin;
     tcs_name = "list";
-    tcs_params = [list_param];
+    tcs_params = [ 0 ];
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -79,15 +77,13 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tvar list_param; Tconstr (tcs_list, [ Tvar list_param ]) ];
+    cs_args = [ Tvar 0; Tconstr (tcs_list, [ Tvar 0 ]) ];
     cs_tag = Tag_block 0 }
-
-let option_param = new_parameter 0
 
 let rec tcs_option =
   { tcs_module = Module_builtin;
     tcs_name = "option";
-    tcs_params = [ option_param ];
+    tcs_params = [ 0 ];
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
@@ -101,7 +97,7 @@ and cs_some =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ Tvar option_param ];
+    cs_args = [ Tvar 0 ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)

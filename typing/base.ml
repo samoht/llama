@@ -28,11 +28,8 @@ type rec_status =
 
 (* The record types are compared with (==). *)
 
-type type_variable =
-  { tvar_name : string }
-
 type llama_type =
-    Tvar of type_variable
+    Tvar of int
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
@@ -40,7 +37,7 @@ type llama_type =
 and type_constructor =
   { tcs_module : module_id;            (* Defining module *)
     tcs_name : string;                 (* Name of the type constructor *)
-    tcs_params : type_variable list;   (* Number of type parameters *)
+    tcs_params : int list;             (* List of type parameters *)
     mutable tcs_kind : type_constructor_kind }
                                        (* Kind of the type constructor *)
 
@@ -105,13 +102,10 @@ let get_labels tcs =
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
 
-let new_type_variable name = { tvar_name = name }
-
 let parameter_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-let new_parameter i = new_type_variable (parameter_name i)
-let new_parameters n =
-  let rec aux i = if i < n then new_parameter i :: aux (succ i) else [] in
+let standard_parameters n =
+  let rec aux i = if i < n then i :: aux (succ i) else [] in
   aux 0

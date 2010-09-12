@@ -33,7 +33,7 @@ let rename_variables (ty : llama_type) : llama_type =
   subst
     (let rec aux i = function
          [] -> []
-       | (var :: tl) -> ((var, Tvar (new_parameter i)) :: aux (succ i) tl) in
+       | (var :: tl) -> ((var, Tvar i) :: aux (succ i) tl) in
      aux 0 (variables ty)) ty
 
 (* Whether two types are identical, modulo expansion of abbreviations,

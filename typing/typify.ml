@@ -296,7 +296,7 @@ and expression_aux exp =
         caselist ty_arg ty_res pat_exp_list;
         Marrow (ty_arg, ty_res)
     | Exp_try (body, pat_exp_list) ->
-        let ty_arg = new_type_var () in
+        let ty_arg = predef_type_exn in
         let ty_res = expression body in
         caselist ty_arg ty_res pat_exp_list;
         ty_res
