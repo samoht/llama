@@ -186,9 +186,8 @@ let rec pr_item env = function
             Some v
       in
       Some (tree, valopt, rem)
-  | Sig_type(tcs, rec_status) :: rem ->
-      let tree = Printtyp.tree_of_type_declaration tcs rec_status in
-      Some (tree, None, rem)
+  | Sig_type _ :: rem ->
+      assert false
   | Sig_exception(cs) :: rem ->
       let tree = Printtyp.tree_of_exception_declaration cs in
       Some (tree, None, rem)
@@ -196,6 +195,8 @@ let rec pr_item env = function
 
 let rec item_list env = function
   | [] -> []
+  | [Sig_type tcsg] ->
+      List.map (fun x -> x, None) (Printtyp.trees_of_type_constructor_group tcsg)
   | items ->
      match pr_item env items with
      | None -> []
@@ -247,8 +248,7 @@ let execute_phrase print_outcome ppf phr =
                     let outv = outval_of_value newenv v typ in
                     let ty = Printtyp.tree_of_type typ in
                     Ophr_eval (outv, ty)
-                | _ -> Ophr_signature (item_list newenv
-                                             (Typemain.simplify_signature sg))
+                | _ -> Ophr_signature (item_list newenv sg)
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;

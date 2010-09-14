@@ -136,8 +136,8 @@ let structure_item_desc f = function
       Tstr_value (rec_flag, pattern_expression_list f pat_expr_list)
   | Tstr_external (name, ty, prim) ->
       Tstr_external (name, ty, prim)
-  | Tstr_type ltcs_list ->
-      Tstr_type ltcs_list
+  | Tstr_type (params, ltcs_list) ->
+      Tstr_type (params, ltcs_list)
   | Tstr_exception (name, tyl) ->
       Tstr_exception (name, tyl)
   | Tstr_open (name, sg) ->

@@ -48,6 +48,9 @@ let add_type_constructor tcs env =
               (fun lbl lbls -> Tbl.add lbl.lbl_name lbl lbls)
               lbls env.labels }
 
+let add_type_constructor_group tcsg env =
+  List.fold_left (fun env tcs -> add_type_constructor tcs env) env tcsg.tcsg_members
+
 let add_value v env =
   { env with values = Tbl.add v.val_name v env.values }
 
@@ -57,8 +60,8 @@ let add_exception cs env =
 let add_signature sg env =
   List.fold_left
     (fun env -> function
-         Sig_type (tcs, _) ->
-           add_type_constructor tcs env
+         Sig_type tcsg ->
+           List.fold_left (fun env tcs -> add_type_constructor tcs env) env tcsg.tcsg_members
        | Sig_value v ->
            add_value v env
        | Sig_exception cs ->

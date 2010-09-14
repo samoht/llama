@@ -17,6 +17,8 @@
    the empty stream. This is type safe because the empty stream is never
    patched. *)
 
+type buffio =
+  { ic : in_channel; buff : string; mutable len : int; mutable ind : int };;
 type 'a t = { count : int; data : 'a data }
 and 'a data =
     Sempty
@@ -24,10 +26,7 @@ and 'a data =
   | Sapp of 'a data * 'a data
   | Sgen of 'a gen
   | Sbuffio of buffio
-and 'a gen = { mutable curr : 'a option option; func : int -> 'a option }
-and buffio =
-  { ic : in_channel; buff : string; mutable len : int; mutable ind : int }
-;;
+and 'a gen = { mutable curr : 'a option option; func : int -> 'a option };;
 exception Failure;;
 exception Error of string;;
 

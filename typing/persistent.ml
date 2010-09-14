@@ -7,7 +7,6 @@
 
 type module_id = Base.module_id
 type value_kind = Base.value_kind
-type rec_status = Base.rec_status
 
 type 'a reference =
     Internal of 'a
@@ -19,10 +18,14 @@ type llama_type =
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
 
+and type_constructor_group =
+  { tcsg_module : module_id;
+    tcsg_params : int list;
+    mutable tcsg_members : type_constructor list }
+
 and type_constructor =
-  { tcs_module : module_id;
+  { tcs_group : type_constructor_group;
     tcs_name : string;
-    tcs_params : int list;
     mutable tcs_kind : type_constructor_kind }
 
 and type_constructor_kind =
@@ -56,7 +59,7 @@ type variable =
     var_type : llama_type }
 
 type signature_item =
-    Sig_type of type_constructor * rec_status
+    Sig_type of type_constructor_group
   | Sig_value of value
   | Sig_exception of constructor
     
@@ -68,6 +71,7 @@ type signature = signature_item list
 
 type saver =
   { saver_module : module_id;
+    mutable saver_tcsg : (Base.type_constructor_group * type_constructor_group) list;
     mutable saver_tcs : (Base.type_constructor * type_constructor) list;
   }
 
@@ -82,21 +86,30 @@ let rec save_type saver = function
       Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl)
 
 and save_type_constructor_reference saver tcs =
-  if tcs.Base.tcs_module = saver.saver_module then
+  if Base.tcs_module tcs = saver.saver_module then
     Internal (save_type_constructor saver tcs)
   else
-    External (tcs.Base.tcs_module, tcs.Base.tcs_name)
+    External (Base.tcs_module tcs, tcs.Base.tcs_name)
+
+and save_type_constructor_group saver tcsg =
+  try List.assq tcsg saver.saver_tcsg with Not_found ->
+    let tcsg' =
+      { tcsg_module = tcsg.Base.tcsg_module;
+        tcsg_params = tcsg.Base.tcsg_params;
+        tcsg_members = [] } in
+    saver.saver_tcsg <- (tcsg, tcsg') :: saver.saver_tcsg;
+    tcsg'.tcsg_members <- List.map (save_type_constructor saver) tcsg.Base.tcsg_members;
+    tcsg'
 
 and save_type_constructor saver tcs =
   try List.assq tcs saver.saver_tcs with Not_found ->
-    let working_tcs =
-      { tcs_module = tcs.Base.tcs_module;
+    let tcs' =
+      { tcs_group = save_type_constructor_group saver tcs.Base.tcs_group;
         tcs_name = tcs.Base.tcs_name;
-        tcs_params = tcs.Base.tcs_params;
         tcs_kind = Tcs_abstract } in
-    saver.saver_tcs <- (tcs, working_tcs) :: saver.saver_tcs;
-    working_tcs.tcs_kind <- save_type_constructor_kind saver tcs.Base.tcs_kind;
-    working_tcs
+    saver.saver_tcs <- (tcs, tcs') :: saver.saver_tcs;
+    tcs'.tcs_kind <- save_type_constructor_kind saver tcs.Base.tcs_kind;
+    tcs'
 
 and save_type_constructor_kind saver = function
     Base.Tcs_abstract ->
@@ -131,8 +144,8 @@ let save_value saver v =
 let save_signature_item saver = function
     Base.Sig_value v ->
       Sig_value (save_value saver v)
-  | Base.Sig_type (tcs, rec_status) ->
-      Sig_type (save_type_constructor saver tcs, rec_status)
+  | Base.Sig_type tcsg ->
+      Sig_type (save_type_constructor_group saver tcsg)
   | Base.Sig_exception cs ->
       Sig_exception (save_constructor saver cs)
 
@@ -142,6 +155,7 @@ let save_signature saver sg =
 let save_signature modid sg =
   let saver =
     { saver_module = modid;
+      saver_tcsg = [];
       saver_tcs = [];
     } in
   save_signature saver sg
@@ -156,6 +170,7 @@ type loader_lookup =
 
 type loader =
   { loader_module : module_id;
+    mutable loader_tcsg : (type_constructor_group * Base.type_constructor_group) list;
     mutable loader_tcs : (type_constructor * Base.type_constructor) list;
     loader_lookup : loader_lookup;
   }
@@ -177,16 +192,25 @@ and load_type_constructor_reference loader = function
   | External (modid, name) ->
       loader.loader_lookup.lookup_type_constructor modid name
 
+and load_type_constructor_group loader tcsg =
+  try List.assq tcsg loader.loader_tcsg with Not_found ->
+    let tcsg' =
+      { Base.tcsg_module = tcsg.tcsg_module;
+        Base.tcsg_params = tcsg.tcsg_params;
+        Base.tcsg_members = [] } in
+    loader.loader_tcsg <- (tcsg, tcsg') :: loader.loader_tcsg;
+    tcsg'.Base.tcsg_members <- List.map (load_type_constructor loader) tcsg.tcsg_members;
+    tcsg'
+
 and load_type_constructor loader tcs =
   try List.assq tcs loader.loader_tcs with Not_found ->
-    let working_tcs =
-      { Base.tcs_module = tcs.tcs_module;
+    let tcs' =
+      { Base.tcs_group = load_type_constructor_group loader tcs.tcs_group;
         Base.tcs_name = tcs.tcs_name;
-        Base.tcs_params = tcs.tcs_params;
         Base.tcs_kind = Base.Tcs_abstract } in
-    loader.loader_tcs <- (tcs, working_tcs) :: loader.loader_tcs;
-    working_tcs.Base.tcs_kind <- load_type_constructor_kind loader tcs.tcs_kind;
-    working_tcs
+    loader.loader_tcs <- (tcs, tcs') :: loader.loader_tcs;
+    tcs'.Base.tcs_kind <- load_type_constructor_kind loader tcs.tcs_kind;
+    tcs'
 
 and load_type_constructor_kind loader = function
     Tcs_abstract ->
@@ -221,8 +245,8 @@ let load_value loader v =
 let load_signature_item loader = function
     Sig_value v ->
       Base.Sig_value (load_value loader v)
-  | Sig_type (tcs, rec_status) ->
-      Base.Sig_type (load_type_constructor loader tcs, rec_status)
+  | Sig_type tcsg ->
+      Base.Sig_type (load_type_constructor_group loader tcsg)
   | Sig_exception cs ->
       Base.Sig_exception (load_constructor loader cs)
 
@@ -232,6 +256,7 @@ let load_signature loader sg =
 let load_signature lookup modid sg =
   let loader =
     { loader_module = modid;
+      loader_tcsg = [];
       loader_tcs = [];
       loader_lookup = lookup;
     } in

@@ -17,7 +17,7 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/llamarun boot/llamac -nostdlib -I boot
+CAMLC=boot/llamarun boot/llamac -nostdlib -I boot -g
 COMPFLAGS=-strict-sequence -warn-error A $(INCLUDES)
 LINKFLAGS=
 

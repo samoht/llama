@@ -46,8 +46,9 @@ open Odoc_types
           Hashtbl.add table (V v.Base.val_name) signat
       | Base.Sig_exception cs ->
           Hashtbl.add table (E cs.Base.cs_name) signat
-      | Base.Sig_type (tcs, _) ->
-          Hashtbl.add table (T tcs.Base.tcs_name) signat
+      | Base.Sig_type tcsg ->
+          List.iter
+            (fun tcs -> Hashtbl.add table (T tcs.Base.tcs_name) signat) tcsg.Base.tcsg_members
 
     let table signat =
       let t = Hashtbl.create 13 in
@@ -67,7 +68,7 @@ open Odoc_types
 
     let search_type table name =
       match Hashtbl.find table (T name) with
-      | Base.Sig_type (tcs, _) -> tcs
+      | Base.Sig_type tcsg -> List.find (fun tcs -> tcs.Base.tcs_name = name) tcsg.tcsg_members
       | _ -> assert false
 
     (** This variable is used to load a file as a string and retrieve characters from it.*)
@@ -377,7 +378,7 @@ open Odoc_types
                                       co, cn)
                                   )
                         *)
-                        List.map (fun param -> Tvar param) sig_type_decl.Base.tcs_params;
+                        List.map (fun param -> Tvar param) (Base.tcs_params sig_type_decl);
                       ty_kind = type_kind;
                       ty_manifest =
                         (match sig_type_decl.Base.tcs_kind with

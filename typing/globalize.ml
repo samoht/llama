@@ -69,17 +69,20 @@ let type_of_local_type subst =
         Tconstr (List.assq ltcs subst, List.map aux tyl) in
   aux
 
-let type_constructors ltcs_list =
+let type_constructors params ltcs_list =
+  let tcsg =
+    { tcsg_module = !Modenv.current_module;
+      tcsg_params = params;
+      tcsg_members = [] } in
   let tcs_list =
     List.map
       begin fun ltcs ->
-        { tcs_module = !Modenv.current_module;
+        { tcs_group = tcsg;
           tcs_name = ltcs.ltcs_name;
-          tcs_params = standard_parameters (List.length ltcs.ltcs_params);
           tcs_kind = Tcs_abstract }
       end
-      ltcs_list
-  in
+      ltcs_list in
+  tcsg.tcsg_members <- tcs_list;
   let subst = List.combine ltcs_list tcs_list in
   List.iter2
     begin fun tcs ltcs ->
@@ -98,7 +101,7 @@ let type_constructors ltcs_list =
                            Tag_block idx_block, idx_const, succ idx_block
                        in
                        { cs_tcs = tcs;
-                         cs_module = tcs.tcs_module;
+                         cs_module = tcs_module tcs;
                          cs_name = name;
                          cs_args = List.map (type_of_local_type subst) args;
                          cs_tag = tag } :: aux idx_const idx_block tl
@@ -119,7 +122,7 @@ let type_constructors ltcs_list =
         end
     end
     tcs_list ltcs_list;
-  tcs_list
+  tcsg
 
 let primitive_value name ty prim =
   { val_module = !Modenv.current_module;
@@ -135,10 +138,6 @@ let exception_constructor name args =
     cs_tag = Tag_exception;
   }
 
-let signature_items_of_type_constructors tcs_list =
-  Sig_type (List.hd tcs_list, Rec_first) ::
-    List.map (fun tcs -> Sig_type (tcs, Rec_next)) (List.tl tcs_list)
-
 let signature_items env tsig =
   match tsig.tsig_desc with
       Tsig_value (name, ty) ->
@@ -151,10 +150,9 @@ let signature_items env tsig =
     | Tsig_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
         [Sig_value v], Env.add_value v env
-    | Tsig_type decls ->
-        let tcs_list = type_constructors decls in
-        signature_items_of_type_constructors tcs_list,
-        List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
+    | Tsig_type (params, decls) ->
+        let tcsg = type_constructors params decls in
+        [Sig_type tcsg], Env.add_type_constructor_group tcsg env
     | Tsig_exception (name, args) ->
         let cs = exception_constructor name args in
         [Sig_exception cs], Env.add_exception cs env
@@ -182,10 +180,10 @@ let structure_item env tstr =
     | Tstr_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
         Str_external v, None, Env.add_value v env
-    | Tstr_type decl_list ->
-        let tcs_list = type_constructors decl_list in
-        Str_type tcs_list, None,
-        List.fold_left (fun env tcs -> Env.add_type_constructor tcs env) env tcs_list
+    | Tstr_type (params, decls) ->
+        let tcsg = type_constructors params decls in
+        Str_type tcsg, None,
+        Env.add_type_constructor_group tcsg env
     | Tstr_exception (name, args) ->
         let cs = exception_constructor name args in
         Str_exception cs, None, Env.add_exception cs env

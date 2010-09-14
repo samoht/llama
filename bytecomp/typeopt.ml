@@ -92,10 +92,10 @@ let array_pattern_kind pat = array_kind_gen pat.pat_type
 
 let bigarray_decode_type ty tbl dfl =
   match Typeutil.expand_head ty with
-  | Tconstr({ tcs_module = Module "Bigarray"; tcs_name = name }, []) ->
-      begin try List.assoc name tbl with Not_found -> dfl end
-  | _ ->
-      dfl
+    | Tconstr (tcs, []) when tcs_module tcs = Module "Bigarray" ->
+        begin try List.assoc tcs.tcs_name tbl with Not_found -> dfl end
+    | _ ->
+        dfl
 
 let kind_table =
   ["float32_elt", Pbigarray_float32;

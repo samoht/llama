@@ -18,10 +18,6 @@ type value_kind =
     Val_reg                            (* Regular value *)
   | Val_prim of Primitive.description  (* Primitive *)
 
-type rec_status =
-    Rec_first                          (* first in a recursive group *)
-  | Rec_next                           (* not first in a recursive group *)
-
 (* ---------------------------------------------------------------------- *)
 (* Fundamental types.                                                     *)
 (* ---------------------------------------------------------------------- *)
@@ -34,12 +30,15 @@ type llama_type =
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
 
+and type_constructor_group =
+  { tcsg_module : module_id;                (* Defining module *)
+    tcsg_params : int list;                 (* List of type parameters *)
+    mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
+
 and type_constructor =
-  { tcs_module : module_id;            (* Defining module *)
-    tcs_name : string;                 (* Name of the type constructor *)
-    tcs_params : int list;             (* List of type parameters *)
-    mutable tcs_kind : type_constructor_kind }
-                                       (* Kind of the type constructor *)
+  { tcs_group : type_constructor_group;         (* Containing group *)
+    tcs_name : string;                          (* Name of the type ctor. *)
+    mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
 
 and type_constructor_kind =
     Tcs_abstract                     (* Abstract type *)
@@ -70,7 +69,7 @@ type value =
 (* Internal representation of a signature. *)
 
 type signature_item =
-    Sig_type of type_constructor * rec_status
+    Sig_type of type_constructor_group
   | Sig_value of value
   | Sig_exception of constructor
     
@@ -83,12 +82,15 @@ type signature = signature_item list
 type 'ty variable = { var_name : string; var_type : 'ty }
 let new_variable name ty = { var_name = name; var_type = ty }
 
-let tcs_arity tcs = List.length tcs.tcs_params   (* Number of type arguments *)
+let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
+let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
+let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
+let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr (tcs, List.map (fun param -> Tvar param) tcs.tcs_params)
+  Tconstr (tcs, List.map (fun param -> Tvar param) (tcs_params tcs))
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
-let lbl_module lbl = lbl.lbl_tcs.tcs_module      (* Defining module *)
+let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
   (* The analogous definition doesn't work for constructors because of
      exceptions. *)
 let lbl_res lbl = tcs_res lbl.lbl_tcs            (* Type of the result *)

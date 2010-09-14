@@ -76,7 +76,6 @@ and 'ty expression_desc =
 
 type local_type_constructor = {
   ltcs_name : string;
-  ltcs_params : string list;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -103,7 +102,7 @@ type temporary_signature_item =
 and temporary_signature_item_desc =
     Tsig_value of string * llama_type
   | Tsig_external of string * llama_type * Primitive.description
-  | Tsig_type of local_type_constructor list
+  | Tsig_type of int list * local_type_constructor list
   | Tsig_exception of string * local_type list
   | Tsig_open of string * signature
 
@@ -119,7 +118,7 @@ and 'ty temporary_structure_item_desc =
     Tstr_eval of 'ty expression
   | Tstr_value of rec_flag * ('ty pattern * 'ty expression) list
   | Tstr_external of string * llama_type * Primitive.description
-  | Tstr_type of local_type_constructor list
+  | Tstr_type of int list * local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
 
@@ -130,7 +129,7 @@ type structure_item =
   | Str_value of
       rec_flag * (llama_type pattern * llama_type expression) list * (llama_type variable * value) list
   | Str_external of value
-  | Str_type of type_constructor list
+  | Str_type of type_constructor_group
   | Str_exception of constructor
   | Str_open of signature
 

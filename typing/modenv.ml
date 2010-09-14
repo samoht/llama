@@ -19,8 +19,8 @@ type loaded_module =
     constructors : (string, constructor) Tbl.t;
     labels : (string, label) Tbl.t;
     values : (string, value) Tbl.t;
-    value_positions : (string, int) Tbl.t;
-    exception_positions : (string, int) Tbl.t }
+    value_positions : (string, value * int) Hashtbl.t;
+    exception_positions : (string, constructor * int) Hashtbl.t }
 
 let loaded_modules = ref (Tbl.empty : (string, loaded_module) Tbl.t)
 let loaded_crcs = Consistbl.create()
@@ -48,31 +48,33 @@ let make_loaded_module sg crcs =
   let constructors = ref Tbl.empty in
   let labels = ref Tbl.empty in
   let values = ref Tbl.empty in
-  let value_positions = ref Tbl.empty in
-  let exception_positions = ref Tbl.empty in
+  let value_positions = Hashtbl.create 17 in
+  let exception_positions = Hashtbl.create 17 in
   let pos = ref 0 in
   List.iter
     begin function
         Sig_value v ->
           values := Tbl.add v.val_name v !values;
           if v.val_kind = Val_reg then begin
-            value_positions := Tbl.add v.val_name !pos !value_positions;
+            Hashtbl.add value_positions v.val_name (v, !pos);
             incr pos
           end
       | Sig_exception cs ->
           constructors := Tbl.add cs.cs_name cs !constructors;
-          exception_positions := Tbl.add cs.cs_name !pos !exception_positions;
+          Hashtbl.add exception_positions cs.cs_name (cs, !pos);
           incr pos
-      | Sig_type (tcs,_) ->
-          type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
-          begin match tcs.tcs_kind with
-            | Tcs_variant cstrs ->
-                List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
-            | Tcs_record lbls ->
-                List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
-            | _ ->
-                ()
-          end
+      | Sig_type tcsg ->
+          List.iter
+            (fun tcs ->
+               type_constructors := Tbl.add tcs.tcs_name tcs !type_constructors;
+               begin match tcs.tcs_kind with
+                 | Tcs_variant cstrs ->
+                     List.iter (fun cs -> constructors := Tbl.add cs.cs_name cs !constructors) cstrs
+                 | Tcs_record lbls ->
+                     List.iter (fun lbl -> labels := Tbl.add lbl.lbl_name lbl !labels) lbls
+                 | _ ->
+                     ()
+               end) tcsg.tcsg_members
     end sg;
   { signature = sg;
     imports = crcs;
@@ -80,8 +82,8 @@ let make_loaded_module sg crcs =
     constructors = !constructors;
     labels = !labels;
     type_constructors = !type_constructors;
-    value_positions = !value_positions;
-    exception_positions = !exception_positions }
+    value_positions = value_positions;
+    exception_positions = exception_positions }
 
 let predefined_module = make_loaded_module Predef.signature []
 
@@ -131,10 +133,10 @@ let lookup_signature modid =
   (lookup_module modid).signature
 
 let lookup_value_position v =
-  Tbl.find v.val_name (lookup_module v.val_module).value_positions
+  List.assq v (Hashtbl.find_all (lookup_module v.val_module).value_positions v.val_name) 
 
 let lookup_exception_position cs =
-  Tbl.find cs.cs_name (lookup_module cs.cs_module).exception_positions
+  List.assq cs (Hashtbl.find_all (lookup_module cs.cs_module).exception_positions cs.cs_name)
 
 let load_signature modname filename =
   (load_module modname filename).signature

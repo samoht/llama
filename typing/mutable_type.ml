@@ -42,7 +42,7 @@ let rec instantiate_type inst = function
       Mconstr (tcs, List.map (instantiate_type inst) tyl)
 
 let instantiate_type_constructor tcs =
-  let inst = List.map (fun param -> (param, new_type_var ())) tcs.tcs_params in
+  let inst = List.map (fun param -> (param, new_type_var ())) (tcs_params tcs) in
   inst, Mconstr (tcs, List.map snd inst)
 
 let instantiate_constructor cs =
@@ -74,8 +74,8 @@ let apply_abbrev params body args =
 
 let rec expand_head = function
     Mvar { link = Some ty } -> expand_head ty
-  | Mconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
-      expand_head (apply_abbrev params body args)
+  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      expand_head (apply_abbrev (tcs_params tcs) body args)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -112,10 +112,10 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_params=params1; tcs_kind=Tcs_abbrev body1}, tyl1), _ ->
-        unify (apply_abbrev params1 body1 tyl1) ty2
-    | _, Mconstr ({tcs_params=params2; tcs_kind=Tcs_abbrev body2}, tyl2) ->
-        unify ty1 (apply_abbrev params2 body2 tyl2)
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
+        unify (apply_abbrev (tcs_params tcs1) body1 tyl1) ty2
+    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
+        unify ty1 (apply_abbrev (tcs_params tcs2) body2 tyl2)
     | Mconstr (tcs1, tyl1), Mconstr (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list tyl1 tyl2
     | _ ->

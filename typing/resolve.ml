@@ -14,6 +14,7 @@ type error =
   | Unbound_label of Longident.t
   | Unbound_module of string
   | Repeated_parameter
+  | Nonidentical_parameter_lists
   | Unbound_parameter of string
   | Multiply_bound_variable of string
   | Orpat_vars of string
@@ -123,12 +124,12 @@ let context_lookup_value lid ctxt =
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_type_variables : (string, int) Tbl.t }
+  pseudoenv_type_variables : (string * int) list }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
-  pseudoenv_type_variables = Tbl.empty }
+  pseudoenv_type_variables = [] }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
@@ -137,8 +138,7 @@ let pseudoenv_add_type_constructor ltcs pseudoenv =
 
 let pseudoenv_add_type_variable name i pseudoenv =
   { pseudoenv with
-      pseudoenv_type_variables =
-      Tbl.add name i pseudoenv.pseudoenv_type_variables }
+      pseudoenv_type_variables = (name, i) :: pseudoenv.pseudoenv_type_variables }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -150,7 +150,7 @@ let pseudoenv_lookup_type_constructor lid pseudoenv =
     | Longident.Ldot _ -> look_global ()
 
 let pseudoenv_lookup_type_variable name pseudoenv =
-  Tbl.find name pseudoenv.pseudoenv_type_variables
+  List.assoc name pseudoenv.pseudoenv_type_variables
 
 (* ---------------------------------------------------------------------- *)
 (* Lookup utilities.                                                      *)
@@ -226,7 +226,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         let arity =
           match gentcs with
-              Local ltcs -> List.length ltcs.ltcs_params
+              Local ltcs -> List.length pseudoenv.pseudoenv_type_variables
             | Global tcs -> tcs_arity tcs
         in
         if List.length tyl <> arity then
@@ -436,17 +436,17 @@ and expression_aux ctxt exp =
 (* Type declarations.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let type_kind ctxt = function
+let type_kind pseudoenv = function
     Ptype_abstract ->
       Ltcs_abstract
   | Ptype_abbrev ty ->
-      Ltcs_abbrev (local_type ctxt ty)
+      Ltcs_abbrev (local_type pseudoenv ty)
   | Ptype_variant cs_list ->
       Ltcs_variant (List.map (fun (name, tyl, _) ->
-                                (name, List.map (local_type ctxt) tyl)) cs_list)
+                                (name, List.map (local_type pseudoenv) tyl)) cs_list)
   | Ptype_record lbl_list ->
       Ltcs_record (List.map (fun (name, mut, ty, _) ->
-                               (name, mut, local_type ctxt ty)) lbl_list)
+                               (name, mut, local_type pseudoenv ty)) lbl_list)
 
 let is_recursive_abbrev =
   let rec occ seen = function
@@ -465,13 +465,21 @@ let is_recursive_abbrev =
       | _ -> false
 
 let type_declarations env pdecls =
+  let pdecl1 = List.hd pdecls in
+  let params = pdecl1.ptype_params in
+  if find_duplicate params <> None then
+    raise (Error (pdecl1.ptype_loc, Repeated_parameter));
+  List.iter
+    (fun pdecl ->
+       if pdecl.ptype_params <> params then
+         raise (Error (pdecl.ptype_loc, Nonidentical_parameter_lists)))
+    (List.tl pdecls);
   let ltcs_list =
     List.map
       begin fun pdecl ->
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
-          ltcs_params = pdecl.ptype_params;
           ltcs_kind = Ltcs_abstract }
       end pdecls
   in
@@ -480,20 +488,17 @@ let type_declarations env pdecls =
       (fun pseudoenv ltcs -> pseudoenv_add_type_constructor ltcs pseudoenv)
       (pseudoenv_create env) ltcs_list
   in
+  let int_params = standard_parameters (List.length params) in
+  let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
   List.iter2
     (fun pdecl ltcs ->
-       let rec aux pseudoenv i = function
-           [] -> pseudoenv
-         | (param :: tl) ->
-             aux (pseudoenv_add_type_variable param i pseudoenv) (succ i) tl in
-       let pseudoenv = aux pseudoenv 0 ltcs.ltcs_params in
        ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->
        if is_recursive_abbrev ltcs then
          raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
     pdecls ltcs_list;
-  ltcs_list
+  int_params, ltcs_list
 
 (* ---------------------------------------------------------------------- *)
 (* Signature and structure items.                                         *)
@@ -515,8 +520,8 @@ let signature_item env psig =
         | Psig_external(id,te,pr) ->
             Tsig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
-            let decls = type_declarations env pdecls in
-            Tsig_type decls
+            let params, decls = type_declarations env pdecls in
+            Tsig_type (params, decls)
         | Psig_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
             Tsig_exception (name, List.map (local_type pseudoenv) args)
@@ -550,7 +555,8 @@ let structure_item env pstr =
         | Pstr_external (name, pty, decl) ->
             Tstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_type pdecls ->
-            Tstr_type (type_declarations env pdecls)
+            let params, decls = type_declarations env pdecls in
+            Tstr_type (params, decls)
         | Pstr_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
             Tstr_exception (name, List.map (local_type pseudoenv) args)
@@ -579,6 +585,8 @@ let report_error ppf = function
       fprintf ppf "Unbound value %a" longident lid
   | Repeated_parameter ->
       fprintf ppf "A type parameter occurs several times"
+  | Nonidentical_parameter_lists ->
+      fprintf ppf "Mutually recursive types must have identical parameter lists."
   | Unbound_parameter name ->
       fprintf ppf "Unbound type parameter %s" name
   | Multiply_bound_variable name ->

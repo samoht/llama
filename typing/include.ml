@@ -23,23 +23,23 @@ exception Error of error list
 (* Subtitutions.                                                          *)
 (* ---------------------------------------------------------------------- *)
 
+type pair =
+    Paired_type_constructors of type_constructor * type_constructor
+  | Paired_values of value * value
+  | Paired_exceptions of constructor * constructor
+
 type subst = {
   subst_module : module_id;
-  subst_type_constructors : (type_constructor * type_constructor) list }
-
-let identity_subst modid = {
-  subst_module = modid;
-  subst_type_constructors = [] }
-
-let subst_add_type_constructor tcs1 tcs2 subst =
-  { subst with
-      subst_type_constructors = (tcs1, tcs2) :: subst.subst_type_constructors }
+  subst_pairs : pair list }
 
 let subst_type_constructor subst tcs =
-  if tcs.tcs_module = subst.subst_module then
-    List.assq tcs subst.subst_type_constructors
-  else
-    tcs
+  if tcs_module tcs = subst.subst_module then
+    match
+      List.find
+        (function Paired_type_constructors (_, tcs2) -> tcs == tcs2 | _ -> false)
+        subst.subst_pairs
+    with Paired_type_constructors (tcs1, _) -> tcs1 | _ -> assert false
+  else tcs
 
 let rec subst_type subst = function
     Tvar _ as ty ->
@@ -130,10 +130,10 @@ let rec compare_records subst corresp idx labels1 labels2 =
         else
           Some (Field_type lbl1.lbl_name)
 
-let type_declarations subst tcs1 tcs2 =
+let type_constructors subst tcs1 tcs2 =
   let error msg = Error [Type_declarations (tcs1, tcs2, msg)] in
   if tcs_arity tcs1 <> tcs_arity tcs2 then raise (error Arity) else
-  let corresp = List.combine tcs1.tcs_params tcs2.tcs_params in
+  let corresp = List.combine (tcs_params tcs1) (tcs_params tcs2) in
   match tcs1.tcs_kind, tcs2.tcs_kind with
       _, Tcs_abstract ->
         ()
@@ -172,87 +172,95 @@ let exceptions subst cs1 cs2 =
 (* Inclusion for signatures.                                              *)
 (* ---------------------------------------------------------------------- *)
 
-(* Component identifiers *)
+type runtime =
+  { value_positions : (string, value * int) Hashtbl.t;
+    exception_positions : (string, constructor * int) Hashtbl.t }
 
-type component_id =
-    Component_type of string
-  | Component_value of string
-  | Component_exception of string
+let make_runtime sg =
+  let runtime = 
+    { value_positions = Hashtbl.create 17;
+      exception_positions = Hashtbl.create 17 } in
+  let rec aux pos = function
+      [] -> ()
+    | Sig_type _ :: rem -> aux pos rem
+    | Sig_value v :: rem ->
+        Hashtbl.add runtime.value_positions v.val_name (v, pos);
+        aux (if v.val_kind = Val_reg then succ pos else pos) rem
+    | Sig_exception cs :: rem ->
+        Hashtbl.add runtime.exception_positions cs.cs_name (cs, pos);
+        aux (succ pos) rem in
+  aux 0 sg;
+  runtime
 
-let component_id = function
-    Sig_type (tcs, _) -> Component_type tcs.tcs_name
-  | Sig_value v       -> Component_value v.val_name
-  | Sig_exception cs  -> Component_exception cs.cs_name
-
-let name_of_component_id = function
-    Component_type name
-  | Component_value name
-  | Component_exception name -> name
-
-(* Build a table of the components of a signature, along with their
-   positions.  The table is indexed by kind and name of component *)
-
-let rec build_component_table pos tbl = function
-    [] -> tbl
-  | item :: rem ->
-      let id = component_id item in
-      let nextpos =
-        match item with
-            Sig_type _ | Sig_value { val_kind = Val_prim _ } -> pos
-          | Sig_value _ | Sig_exception _ -> succ pos in
-      build_component_table nextpos (Tbl.add id (item, pos) tbl) rem
-
-let rec signature_components subst = function
-    [] -> []
-  | (Sig_value v1, Sig_value v2, pos) :: rem ->
-      let cc = values subst v1 v2 in
-      begin match v2.val_kind with
-          Val_prim _ -> signature_components subst rem
-        | _ -> (pos, cc) :: signature_components subst rem
+let rec pair_main impl_env paired unpaired = function
+    [] ->
+      List.rev paired, List.rev unpaired
+  | Sig_type intf_tcsg :: rem ->
+      let paired, unpaired =
+        pair_type_constructors impl_env paired unpaired intf_tcsg.tcsg_members in
+      pair_main impl_env paired unpaired rem
+  | Sig_value intf_val :: rem ->
+      begin try
+        let impl_val = Env.lookup_value (Longident.Lident intf_val.val_name) impl_env in
+        pair_main impl_env (Paired_values (impl_val, intf_val) :: paired) unpaired rem
+      with Not_found ->
+        pair_main impl_env paired (Missing_field intf_val.val_name :: unpaired) rem
       end
-  | (Sig_type (tcs1, _), Sig_type (tcs2, _), pos) :: rem ->
-      type_declarations subst tcs1 tcs2;
-      signature_components subst rem
-  | (Sig_exception cs1, Sig_exception cs2, pos) :: rem ->
-      exceptions subst cs1 cs2;
-      (pos, Tcoerce_none) :: signature_components subst rem
-  | _ ->
-      assert false
+  | Sig_exception intf_cs :: rem ->
+      begin try
+        let impl_cs = Env.lookup_constructor (Longident.Lident intf_cs.cs_name) impl_env in
+        pair_main impl_env (Paired_exceptions (impl_cs, intf_cs) :: paired) unpaired rem
+      with Not_found ->
+        pair_main impl_env paired (Missing_field intf_cs.cs_name :: unpaired) rem
+      end
 
-let signatures subst sig1 sig2 =
-  let comps1 = build_component_table 0 Tbl.empty sig1 in
-  (* Pair each component of sig2 with a component of sig1,
-     identifying the names along the way.
-     Return a coercion list indicating, for all run-time components
-     of sig2, the position of the matching run-time components of sig1
-     and the coercion to be applied to it. *)
-  let rec pair_components subst paired unpaired = function
-      [] ->
-        begin match unpaired with
-            [] -> signature_components subst (List.rev paired)
-          | _  -> raise (Error unpaired)
+and pair_type_constructors impl_env paired unpaired = function
+    [] ->
+      paired, unpaired
+  | intf_tcs :: rem ->
+      begin try
+        let impl_tcs = Env.lookup_type_constructor (Longident.Lident intf_tcs.tcs_name) impl_env in
+        pair_type_constructors impl_env
+          (Paired_type_constructors (impl_tcs, intf_tcs) :: paired) unpaired rem
+      with Not_found ->
+        pair_type_constructors impl_env
+          paired (Missing_field intf_tcs.tcs_name :: unpaired) rem
+      end
+
+let signatures modname impl_sig intf_sig =
+  let impl_env = Env.add_signature impl_sig Env.empty in
+  let impl_runtime = make_runtime impl_sig in
+  let pairs, unpaired = pair_main impl_env [] [] intf_sig in
+  if unpaired <> [] then raise (Error unpaired);
+  let subst =
+    { subst_module = modname;
+      subst_pairs = pairs } in
+  let rec aux subst = function
+      [] -> []
+    | Paired_type_constructors (tcs1, tcs2) :: rem ->
+        type_constructors subst tcs1 tcs2;
+        aux subst rem
+    | Paired_values (v1, v2) :: rem ->
+        let cc = values subst v1 v2 in
+        begin match v2.val_kind with
+            Val_prim _ -> aux subst rem
+          | Val_reg ->
+              try
+                let pos = List.assq v1 (Hashtbl.find_all impl_runtime.value_positions v1.val_name) in
+                (pos, cc) :: aux subst rem
+              with Not_found ->
+                print_endline v1.val_name;
+                let l = Hashtbl.find_all  impl_runtime.value_positions v1.val_name in
+                assert (fst(List.hd l) == v1 || fst(List.hd l) == v2);
+                
+                assert false
         end
-    | item2 :: rem ->
-        let id2 = component_id item2 in
-        begin match
-          try Some (Tbl.find id2 comps1) with Not_found -> None
-        with
-            Some (item1, pos1) ->
-              let new_subst =
-                match item1, item2 with
-                    Sig_type (tcs1, _), Sig_type (tcs2, _) ->
-                      subst_add_type_constructor tcs2 tcs1 subst
-                  | _ ->
-                      subst
-              in
-              pair_components new_subst ((item1, item2, pos1) :: paired) unpaired rem
-          | None ->
-              let unpaired = Missing_field (name_of_component_id id2) :: unpaired in
-              pair_components subst paired unpaired rem
-        end
-  in
-  (* Do the pairing and checking, and return the final coercion *)
-  simplify_coercion (pair_components subst [] [] sig2)
+    | Paired_exceptions (cs1, cs2) :: rem ->
+        exceptions subst cs1 cs2;
+        let pos = List.assq cs1 (Hashtbl.find_all impl_runtime.exception_positions cs1.cs_name) in
+        (pos, Tcoerce_none) :: aux subst rem in
+  let coercion = aux subst pairs in
+  simplify_coercion coercion
 
 (* ---------------------------------------------------------------------- *)
 (* Inclusion for compilation units.                                       *)
@@ -260,7 +268,7 @@ let signatures subst sig1 sig2 =
 
 let compunit modname impl_name impl_sig intf_name intf_sig =
   try
-    signatures (identity_subst modname) impl_sig intf_sig
+    signatures modname impl_sig intf_sig
   with Error reasons ->
     raise (Error (Interface_mismatch (impl_name, intf_name) :: reasons))
 

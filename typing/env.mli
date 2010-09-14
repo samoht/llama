@@ -8,6 +8,7 @@ val initial : t  (* builtins but not Pervasives *)
 
 (* Building environments *)
 
+val add_type_constructor_group : type_constructor_group -> t -> t
 val add_type_constructor : type_constructor -> t -> t
 val add_value : value -> t -> t
 val add_exception : constructor -> t -> t

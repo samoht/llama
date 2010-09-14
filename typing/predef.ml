@@ -8,29 +8,38 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params : type_constructor =
-  { tcs_module = Module_builtin;
-    tcs_name = name;
-    tcs_params = params;
-    tcs_kind = Tcs_abstract }
+let mkabs name params =
+  let rec tcsg =
+    { tcsg_module = Module_builtin;
+      tcsg_params = params;
+      tcsg_members = [ tcs ] }
+  and tcs =
+    { tcs_group = tcsg;
+      tcs_name = name;
+      tcs_kind = Tcs_abstract } in
+  tcsg, tcs
 
-let tcs_int = mkabs "int" []
-let tcs_char = mkabs "char" []
-let tcs_string = mkabs "string" []
-let tcs_float = mkabs "float" []
-let tcs_exn = mkabs "exn" []
-let tcs_array = mkabs "array" (standard_parameters 1)
-let tcs_format6 = mkabs "format6" (standard_parameters 6)
-let tcs_nativeint = mkabs "nativeint" []
-let tcs_int32 = mkabs "int32" []
-let tcs_int64 = mkabs "int64" []
+let tcsg_int, tcs_int = mkabs "int" []
+let tcsg_char, tcs_char = mkabs "char" []
+let tcsg_string, tcs_string = mkabs "string" []
+let tcsg_float, tcs_float = mkabs "float" []
+let tcsg_exn, tcs_exn = mkabs "exn" []
+let tcsg_array, tcs_array = mkabs "array" (standard_parameters 1)
+let tcsg_format6, tcs_format6 = mkabs "format6" (standard_parameters 6)
+let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" []
+let tcsg_int32, tcs_int32 = mkabs "int32" []
+let tcsg_int64, tcs_int64 = mkabs "int64" []
 
 (* variant types *)
 
-let rec tcs_unit : type_constructor =
-  { tcs_module = Module_builtin;
+let rec tcsg_unit =
+  { tcsg_module = Module_builtin;
+    tcsg_params = [];
+    tcsg_members = [ tcs_unit ] }
+
+and tcs_unit =
+  { tcs_group = tcsg_unit;
     tcs_name = "unit";
-    tcs_params = [];
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
@@ -40,10 +49,14 @@ and cs_void =
     cs_args = [];
     cs_tag = Tag_constant 0 }
 
-let rec tcs_bool : type_constructor =
-  { tcs_module = Module_builtin;
+let rec tcsg_bool =
+  { tcsg_module = Module_builtin;
+    tcsg_params = [];
+    tcsg_members = [ tcs_bool ] }
+
+and tcs_bool =
+  { tcs_group = tcsg_bool;
     tcs_name = "bool";
-    tcs_params = [];
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
@@ -60,10 +73,14 @@ and cs_true =
     cs_args = [];
     cs_tag = Tag_constant 1 }
 
-let rec tcs_list =
-  { tcs_module = Module_builtin;
+let rec tcsg_list =
+  { tcsg_module = Module_builtin;
+    tcsg_params = [ 0 ];
+    tcsg_members = [ tcs_list ] }
+
+and tcs_list =
+  { tcs_group = tcsg_list;
     tcs_name = "list";
-    tcs_params = [ 0 ];
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -80,10 +97,14 @@ and cs_cons =
     cs_args = [ Tvar 0; Tconstr (tcs_list, [ Tvar 0 ]) ];
     cs_tag = Tag_block 0 }
 
-let rec tcs_option =
-  { tcs_module = Module_builtin;
+let rec tcsg_option =
+  { tcsg_module = Module_builtin;
+    tcsg_params = [ 0 ];
+    tcsg_members = [ tcs_option ] }
+
+and tcs_option =
+  { tcs_group = tcsg_option;
     tcs_name = "option";
-    tcs_params = [ 0 ];
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
@@ -102,10 +123,10 @@ and cs_some =
 
 (* all together now *)
 
-let type_constructors =
-  [ tcs_int; tcs_char; tcs_string; tcs_float; tcs_bool; tcs_unit;
-    tcs_exn; tcs_array; tcs_list; tcs_format6; tcs_option;
-    tcs_nativeint; tcs_int32; tcs_int64 ]
+let type_constructor_groups =
+  [ tcsg_int; tcsg_char; tcsg_string; tcsg_float; tcsg_bool; tcsg_unit;
+    tcsg_exn; tcsg_array; tcsg_list; tcsg_format6; tcsg_option;
+    tcsg_nativeint; tcsg_int32; tcsg_int64 ]
 
 (* helpers *)
 
@@ -166,5 +187,5 @@ let find_exception name = List.find (fun cs -> cs.cs_name = name) exceptions
 (* ---------------------------------------------------------------------- *)
 
 let signature =
-  List.map (fun tcs -> Sig_type (tcs, Rec_first)) type_constructors @
-    List.map (fun cs -> Sig_exception cs) exceptions
+  List.map (fun tcsg -> Sig_type tcsg) type_constructor_groups @
+  List.map (fun cs -> Sig_exception cs) exceptions

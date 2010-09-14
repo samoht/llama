@@ -21,7 +21,7 @@ let make_longident modid name =
       Module_builtin | Module_toplevel -> Longident.Lident name
     | Module modname -> Longident.Ldot (modname, name)
 
-let tcs_longident tcs = make_longident tcs.tcs_module tcs.tcs_name
+let tcs_longident tcs = make_longident (tcs_module tcs) tcs.tcs_name
 let cs_longident cs = make_longident cs.cs_module cs.cs_name
 let lbl_longident lbl = make_longident (lbl_module lbl) lbl.lbl_name
 let val_longident v = make_longident v.val_module v.val_name
@@ -93,10 +93,10 @@ let tree_of_constructor_description cs =
 let tree_of_label_description lbl =
   (lbl.lbl_name, lbl.lbl_mut, tree_of_type lbl.lbl_arg)
 
-let tree_of_type_declaration tcs rec_status =
+let tree_of_type_declaration rec_status tcs =
   Osig_type (begin
                tcs.tcs_name,
-               List.map (fun i -> parameter_name i, (true, true)) tcs.tcs_params,
+               List.map (fun i -> parameter_name i, (true, true)) (tcs_params tcs),
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract
@@ -109,13 +109,14 @@ let tree_of_type_declaration tcs rec_status =
                end,
                []
              end,
-             begin match rec_status with
-                 Rec_first -> Orec_first
-               | Rec_next -> Orec_next
-             end)
+             rec_status)
 
 let type_declaration ppf decl =
-  !Oprint.out_sig_item ppf (tree_of_type_declaration decl Rec_first)
+  !Oprint.out_sig_item ppf (tree_of_type_declaration Orec_first decl)
+
+let trees_of_type_constructor_group tcsg =
+  tree_of_type_declaration Orec_first (List.hd tcsg.tcsg_members) ::
+    List.map (tree_of_type_declaration Orec_next) (List.tl tcsg.tcsg_members)
 
 (* Print an exception declaration *)
 
@@ -145,13 +146,13 @@ let value_description ppf decl =
 
 let tree_of_signature_item = function
     Sig_value v ->
-      tree_of_value_description v
-  | Sig_type (tcs, rec_status) ->
-      tree_of_type_declaration tcs rec_status
+      [tree_of_value_description v]
+  | Sig_type tcsg ->
+      trees_of_type_constructor_group tcsg
   | Sig_exception cs ->
-      tree_of_exception_declaration cs
+      [tree_of_exception_declaration cs]
 
-let tree_of_signature l = List.map tree_of_signature_item l
+let tree_of_signature l = List.flatten(List.map tree_of_signature_item l)
 
 let print_signature ppf tree =
   fprintf ppf "@[<v>%a@]" !Oprint.out_signature tree

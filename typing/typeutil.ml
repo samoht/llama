@@ -23,8 +23,8 @@ let apply_abbrev params body args =
   subst (List.combine params args) body
 
 let rec expand_head : llama_type -> llama_type = function
-    Tconstr ({tcs_params=params; tcs_kind=Tcs_abbrev body}, args) ->
-      expand_head (apply_abbrev params body args)
+    Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      expand_head (apply_abbrev (tcs_params tcs) body args)
   | ty -> ty
 
 (* Rename type variables to standard parameter names. *)
@@ -48,10 +48,10 @@ let equal, equiv =
           equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
       | Ttuple(t1args), Ttuple(t2args) ->
           List.forall2 (equiv_gen corresp) t1args t2args
-      | Tconstr ({tcs_params=params;tcs_kind=Tcs_abbrev body}, args), _ ->
-          equiv_gen corresp (apply_abbrev params body args) ty2
-      | _, Tconstr ({tcs_params=params;tcs_kind=Tcs_abbrev body}, args) ->
-          equiv_gen corresp ty1 (apply_abbrev params body args)
+      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+          equiv_gen corresp (apply_abbrev (tcs_params tcs) body args) ty2
+      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+          equiv_gen corresp ty1 (apply_abbrev (tcs_params tcs) body args)
       | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
           List.forall2 (equiv_gen corresp) tyl1 tyl2
       | _ ->
@@ -77,10 +77,10 @@ let moregeneral (ty1 : llama_type) (ty2 : llama_type) =
           aux t1arg t2arg && aux t1res t2res
       | Ttuple tyl1, Ttuple tyl2 ->
           List.forall2 aux tyl1 tyl2
-      | Tconstr ({tcs_params=params;tcs_kind=Tcs_abbrev body}, args), _ ->
-          aux (apply_abbrev params body args) ty2
-      | _, Tconstr ({tcs_params=params;tcs_kind=Tcs_abbrev body}, args) ->
-          aux ty1 (apply_abbrev params body args)
+      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+          aux (apply_abbrev (tcs_params tcs) body args) ty2
+      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+          aux ty1 (apply_abbrev (tcs_params tcs) body args)
       | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
           List.forall2 aux tyl1 tyl2
       | _ ->
