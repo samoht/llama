@@ -81,7 +81,7 @@ let add_ccobjs l =
 
 (* First pass: determine which units are needed *)
 
-let missing_globals = ref (Set.empty : Ident.t Set.t)
+let missing_globals = ref (Set.empty_generic : Ident.t Set.t)
 
 let is_required (rel, pos) =
   match rel with

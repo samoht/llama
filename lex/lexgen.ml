@@ -81,7 +81,7 @@ type ('args,'action) automata_entry =
 (* A lot of sets and map structures *)
 
 (* module Ints = Set.Make(struct type t = int let compare = compare end)*)
-let _Ints_empty : int Set.t = Set.empty
+let _Ints_empty : int Set.t = Set.empty_generic
 let _Ints_mem = Set.mem
 let _Ints_add = Set.add
 let _Ints_diff = Set.diff
@@ -104,7 +104,7 @@ let _Tags_fold = Set.fold
 (* module TagMap =
     Map.Make (struct type t = tag_info let compare = tag_compare end) *)
 type 'a _TagMap_t = (tag_info, 'a) Map.t
-let _TagMap_empty = Map.empty (* tag_compare = Pervasives.compare *)
+let _TagMap_empty = Map.empty_generic (* tag_compare = Pervasives.compare *)
 let _TagMap_add = Map.add
 let _TagMap_remove = Map.remove
 let _TagMap_iter = Map.iter
@@ -651,7 +651,7 @@ let no_action = max_int
 (* module StateSet =
      Set.Make (struct type t = t_transition let compare = Pervasives.compare end) *)
 type _StateSet_t = t_transition Set.t
-let _StateSet_empty : _StateSet_t  = Set.empty
+let _StateSet_empty : _StateSet_t  = Set.empty_generic
 let _StateSet_add = Set.add
 let _StateSet_compare = Set.compare
 let _StateSet_choose = Set.choose
@@ -660,7 +660,7 @@ let _StateSet_choose = Set.choose
 (* module MemMap =
      Map.Make (struct type t = int let compare = Pervasives.compare end) *)
 type 'a _MemMap_t = (int, 'a) Map.t
-let _MemMap_empty = Map.empty
+let _MemMap_empty = Map.empty_generic
 let _MemMap_is_empty = Map.is_empty
 let _MemMap_add = Map.add
 let _MemMap_remove = Map.remove

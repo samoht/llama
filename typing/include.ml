@@ -245,15 +245,8 @@ let signatures modname impl_sig intf_sig =
         begin match v2.val_kind with
             Val_prim _ -> aux subst rem
           | Val_reg ->
-              try
-                let pos = List.assq v1 (Hashtbl.find_all impl_runtime.value_positions v1.val_name) in
-                (pos, cc) :: aux subst rem
-              with Not_found ->
-                print_endline v1.val_name;
-                let l = Hashtbl.find_all  impl_runtime.value_positions v1.val_name in
-                assert (fst(List.hd l) == v1 || fst(List.hd l) == v2);
-                
-                assert false
+              let pos = List.assq v1 (Hashtbl.find_all impl_runtime.value_positions v1.val_name) in
+              (pos, cc) :: aux subst rem
         end
     | Paired_exceptions (cs1, cs2) :: rem ->
         exceptions subst cs1 cs2;

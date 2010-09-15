@@ -66,7 +66,7 @@ exception Incompatible
       end else
         Node(comparator l, l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
 
-    let empty = Empty Pervasives.compare
+    let empty_generic = Empty Pervasives.compare
 
     let empty_custom cmp = Empty cmp
 

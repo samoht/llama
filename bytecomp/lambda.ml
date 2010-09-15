@@ -287,7 +287,7 @@ let rec iter f = function
       f e
 
 let free_ids get l =
-  let fv = ref Set.empty in
+  let fv = ref Set.empty_generic in
   let rec free l =
     iter free l;
     fv := List.fold_right Set.add (get l) !fv;

@@ -789,17 +789,17 @@ let newline_to_indented_br s =
     (** The known types names.
        Used to know if we must create a link to a type
        when printing a type. *)
-    let known_types_names = ref (Set.empty : string Set.t)
+    let known_types_names = ref (Set.empty_generic : string Set.t)
 
     (** The known class and class type names.
        Used to know if we must create a link to a class
        or class type or not when printing a type. *)
-    let known_classes_names = ref (Set.empty : string Set.t)
+    let known_classes_names = ref (Set.empty_generic : string Set.t)
 
     (** The known modules and module types names.
        Used to know if we must create a link to a type or not
        when printing a module type. *)
-    let known_modules_names = ref (Set.empty : string Set.t)
+    let known_modules_names = ref (Set.empty_generic : string Set.t)
 
 
 

@@ -35,7 +35,7 @@ exception Incompatible
 abstract type ('key, 'a) t
   (** The type of maps from type ['key] to type ['a]. *)
 
-val empty: ('key, 'a) t
+val empty_generic: ('key, 'a) t
   (** The empty map, ordered by the generic structural comparison function
       {!Pervasives.compare}. *)
 

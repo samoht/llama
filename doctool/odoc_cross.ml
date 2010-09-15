@@ -23,7 +23,7 @@ open Odoc_parameter
 (*** Replacements of aliases : if e1 = e2 and e2 = e3, then replace e2 by e3 to have e1 = e3,
    in order to associate the element with complete information. *)
 
-let verified_refs = ref (Set.empty : (Odoc_name.t * ref_kind option) Set.t)
+let verified_refs = ref (Set.empty_generic : (Odoc_name.t * ref_kind option) Set.t)
 
 let add_verified v = verified_refs := Set.add v !verified_refs
 let was_verified v = Set.mem v !verified_refs
@@ -133,7 +133,7 @@ let name_alias =
     f alias_tbl name
 
 
-let known_elements = ref (Map.empty : (Odoc_name.t, Odoc_search.result_element list) Map.t)
+let known_elements = ref (Map.empty_generic : (Odoc_name.t, Odoc_search.result_element list) Map.t)
 let add_known_element name k =
   try
     let l = Map.find name !known_elements in

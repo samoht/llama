@@ -18,7 +18,7 @@
 open Sys
 open Misc
 
-let to_keep = ref (Set.empty : string Set.t)
+let to_keep = ref (Set.empty_generic : string Set.t)
 
 let expunge_map tbl =
   Symtable.filter_global_map

@@ -159,7 +159,7 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
 
     (* Implementation of the set operations *)
 
-    let empty = Empty Pervasives.compare
+    let empty_generic = Empty Pervasives.compare
 
     let empty_custom cmp = Empty cmp
 

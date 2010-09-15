@@ -215,7 +215,7 @@ let compile fold_case re =
   (* Instruction buffering *)
   let prog = ref (Array.make 32 0)
   and progpos = ref 0
-  and cpool = ref Map.empty
+  and cpool = ref Map.empty_generic
   and cpoolpos = ref 0
   and numgroups = ref 1
   and numregs = ref 0 in

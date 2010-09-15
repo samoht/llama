@@ -35,7 +35,7 @@ exception Incompatible
 abstract type 'elt t
   (** The type of sets. *)
 
-val empty: 'elt t
+val empty_generic: 'elt t
   (** The empty set, ordered by the generic structural
       comparison function {!Pervasives.compare}. *)
 

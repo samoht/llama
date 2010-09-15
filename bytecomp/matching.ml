@@ -655,7 +655,7 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
 let pm_free_variables {cases=cases} =
   List.fold_right
     (fun (_,act) r -> Set.union (free_variables act) r)
-    cases Set.empty
+    cases Set.empty_generic
 
 
 (* Basic grouping predicates *)
@@ -741,8 +741,8 @@ let insert_or_append p ps act ors no =
         if is_or q then begin
           if compat p q then
             if
-              Set.is_empty (extract_vars Set.empty p) &&
-              Set.is_empty (extract_vars Set.empty q) &&
+              Set.is_empty (extract_vars Set.empty_generic p) &&
+              Set.is_empty (extract_vars Set.empty_generic q) &&
               equiv_pat p q
             then (* attempt insert, for equivalent orpats with no variables *)
               let _, not_e = get_equiv q rem in
@@ -976,7 +976,7 @@ and precompile_or argo cls ors args def k = match ors with
           let vars =
             Set.elements
               (Set.inter
-                 (extract_vars Set.empty orp)
+                 (extract_vars Set.empty_generic orp)
                  (pm_free_variables orpm)) in
           let or_num = next_raise_count () in
           let new_patl = Parmatch.omega_list patl in
