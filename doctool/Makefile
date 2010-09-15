@@ -49,7 +49,6 @@ CAMLOBJS=\
   ../typing/resolve.cmo \
   ../typing/typify.cmo \
   ../typing/immutify.cmo \
-  ../typing/globalize.cmo \
   ../tools/depend.cmo
 
 OBJS=\

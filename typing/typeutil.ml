@@ -63,27 +63,82 @@ let equal, equiv =
 
 (* Whether one type is more general than another. *)
 
-let moregeneral (ty1 : llama_type) (ty2 : llama_type) =
-  let subst = ref [] in
-  let rec aux ty1 ty2 =
+let find_instantiation =
+  let rec aux inst ty1 ty2 =
     match ty1, ty2 with
         Tvar tv, _ ->
-          begin try
-            equal (List.assq tv !subst) ty2
-          with Not_found ->
-            subst := (tv, ty2) :: !subst; true
+          begin match
+            try Some (List.assq tv inst) with Not_found -> None
+          with
+              None -> (tv, ty2) :: inst
+            | Some ty2' -> if equal ty2 ty2' then inst else raise Not_found
           end
-      | Tarrow (t1arg, t1res), Tarrow (t2arg, t2res) ->
-          aux t1arg t2arg && aux t1res t2res
+      | Tarrow (dom1, cod1), Tarrow (dom2, cod2) ->
+          aux (aux inst dom1 dom2) cod1 cod2
       | Ttuple tyl1, Ttuple tyl2 ->
-          List.forall2 aux tyl1 tyl2
+          List.fold_left2 aux inst tyl1 tyl2
       | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
-          aux (apply_abbrev (tcs_params tcs) body args) ty2
+          aux inst (apply_abbrev (tcs_params tcs) body args) ty2
       | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-          aux ty1 (apply_abbrev (tcs_params tcs) body args)
+          aux inst ty1 (apply_abbrev (tcs_params tcs) body args)
       | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
-          List.forall2 aux tyl1 tyl2
+          List.fold_left2 aux inst tyl1 tyl2
       | _ ->
-          false
-  in
-  aux ty1 ty2
+          raise Not_found in
+  aux []
+
+let moregeneral ty1 ty2 =
+  try ignore (find_instantiation ty1 ty2); true
+  with Not_found -> false
+
+(* ---------------------------------------------------------------------- *)
+(* Non type stuff (XXX: rename module to Basics).                         *)
+(* ---------------------------------------------------------------------- *)
+
+let rec pattern_variables pat =
+  match pat.pat_desc with
+      Pat_any _ | Pat_literal _ -> []
+    | Pat_var var -> [ var ]
+    | Pat_alias (pat, var) -> (var :: pattern_variables pat)
+    | Pat_tuple patl | Pat_construct (_, patl) | Pat_array patl ->
+        List.flatten (List.map pattern_variables patl)
+    | Pat_record (_, lbl_pat_list) ->
+        List.flatten
+          (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
+    | Pat_or (pat1, pat2) -> pattern_variables pat1
+    | Pat_constraint (pat', _) -> pattern_variables pat'
+
+(* Check if an expression is non-expansive, that is, the result of its 
+   evaluation cannot contain newly created mutable objects. *)
+
+let rec is_nonexpansive expr =
+  match expr.exp_desc with
+      Exp_var _ -> true
+    | Exp_value _ -> true
+    | Exp_literal sc -> true
+    | Exp_tuple el -> List.forall is_nonexpansive el
+    | Exp_construct (cstr, l) -> List.forall is_nonexpansive l
+    | Exp_let (rec_flag, pat_expr_list, body) ->
+        List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list &&
+          is_nonexpansive body
+    | Exp_function pat_expr_list -> true
+    | Exp_try (body, pat_expr_list) ->
+        is_nonexpansive body &&
+          List.forall (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
+    | Exp_sequence (e1, e2) -> is_nonexpansive e2
+    | Exp_ifthenelse(cond, ifso, ifnot) ->
+        is_nonexpansive ifso && is_nonexpansive_opt ifnot
+    | Exp_array [] -> true
+    | Exp_record (tcs, lbl_expr_list, opt_init_exp) ->
+        List.forall (fun (lbl, expr) ->
+                       not lbl.lbl_mut && is_nonexpansive expr) lbl_expr_list &&
+          is_nonexpansive_opt opt_init_exp
+    | Exp_field (e, lbl) -> is_nonexpansive e
+    | Exp_when (cond, act) -> is_nonexpansive act
+    | Exp_constraint (e, _) -> is_nonexpansive e
+    | _ -> false
+
+and is_nonexpansive_opt = function
+    None -> true
+  | Some e -> is_nonexpansive e
+

@@ -86,7 +86,7 @@ type structure_item =
 
 and structure_item_desc =
     Pstr_type of type_declaration list
-  | Pstr_value of rec_flag * (pattern * expression) list
+  | Pstr_let of rec_flag * (pattern * expression) list
   | Pstr_eval of expression
   | Pstr_exception of string * type_expression list
   | Pstr_open of string

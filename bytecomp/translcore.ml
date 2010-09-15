@@ -19,7 +19,6 @@ open Misc
 open Asttypes
 open Primitive
 open Base
-open Typedtree
 open Typeopt
 open Lambda
 

@@ -2,73 +2,82 @@
 
 open Asttypes
 open Base
+open Mutable_type
+
+(* ---------------------------------------------------------------------- *)
+(* Variables.                                                             *)
+(* ---------------------------------------------------------------------- *)
+
+type variable =
+  { tvar_name : string;
+    tvar_type : mutable_type }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty pattern =
-  { pat_desc : 'ty pattern_desc;
-    pat_loc : Location.t;
-    pat_type : 'ty }
+type pattern =
+  { tpat_desc : pattern_desc;
+    tpat_loc : Location.t;
+    tpat_type : mutable_type }
 
-and 'ty pattern_desc =
-    Pat_any
-  | Pat_var of 'ty variable
-  | Pat_alias of 'ty pattern * 'ty variable
-  | Pat_literal of literal
-  | Pat_tuple of 'ty pattern list
-  | Pat_construct of constructor * 'ty pattern list
-  | Pat_record of type_constructor * (label * 'ty pattern) list
-  | Pat_array of 'ty pattern list
-  | Pat_or of 'ty pattern * 'ty pattern
-  | Pat_constraint of 'ty pattern * 'ty
+and pattern_desc =
+    Tpat_any
+  | Tpat_var of variable
+  | Tpat_alias of pattern * variable
+  | Tpat_literal of literal
+  | Tpat_tuple of pattern list
+  | Tpat_construct of constructor * pattern list
+  | Tpat_record of type_constructor * (label * pattern) list
+  | Tpat_array of pattern list
+  | Tpat_or of pattern * pattern
+  | Tpat_constraint of pattern * mutable_type
 
 let rec pattern_variables pat =
-  match pat.pat_desc with
-      Pat_any | Pat_literal _ -> []
-    | Pat_var var -> [ var ]
-    | Pat_alias (pat, var) -> (var :: pattern_variables pat)
-    | Pat_tuple patl | Pat_construct (_, patl) | Pat_array patl ->
+  match pat.tpat_desc with
+      Tpat_any | Tpat_literal _ -> []
+    | Tpat_var var -> [ var ]
+    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
+    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
         List.flatten (List.map pattern_variables patl)
-    | Pat_record (_, lbl_pat_list) ->
+    | Tpat_record (_, lbl_pat_list) ->
         List.flatten
           (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
-    | Pat_or (pat1, pat2) -> pattern_variables pat1
-    | Pat_constraint (pat', _) -> pattern_variables pat'
+    | Tpat_or (pat1, pat2) -> pattern_variables pat1
+    | Tpat_constraint (pat', _) -> pattern_variables pat'
 
 (* ---------------------------------------------------------------------- *)
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty expression =
-  { exp_desc : 'ty expression_desc;
-    exp_loc : Location.t;
-    exp_type : 'ty }
+type expression =
+  { texp_desc : expression_desc;
+    texp_loc : Location.t;
+    texp_type : mutable_type }
 
-and 'ty expression_desc =
-    Exp_var of 'ty variable
-  | Exp_value of value
-  | Exp_literal of literal
-  | Exp_let of rec_flag * ('ty pattern * 'ty expression) list * 'ty expression
-  | Exp_function of ('ty pattern * 'ty expression) list
-  | Exp_apply of 'ty expression * 'ty expression list
-  | Exp_match of 'ty expression * ('ty pattern * 'ty expression) list
-  | Exp_try of 'ty expression * ('ty pattern * 'ty expression) list
-  | Exp_tuple of 'ty expression list
-  | Exp_construct of constructor * 'ty expression list
-  | Exp_record of type_constructor * (label * 'ty expression) list * 'ty expression option
-  | Exp_field of 'ty expression * label
-  | Exp_setfield of 'ty expression * label * 'ty expression
-  | Exp_array of 'ty expression list
-  | Exp_ifthenelse of 'ty expression * 'ty expression * 'ty expression option
-  | Exp_sequence of 'ty expression * 'ty expression
-  | Exp_while of 'ty expression * 'ty expression
-  | Exp_for of 'ty variable * 'ty expression * 'ty expression * direction_flag * 'ty expression
-  | Exp_when of 'ty expression * 'ty expression
-  | Exp_assert of 'ty expression
-  | Exp_assertfalse
-  | Exp_constraint of 'ty expression * 'ty
+and expression_desc =
+    Texp_var of variable
+  | Texp_value of value
+  | Texp_literal of literal
+  | Texp_let of rec_flag * (pattern * expression) list * expression
+  | Texp_function of (pattern * expression) list
+  | Texp_apply of expression * expression list
+  | Texp_match of expression * (pattern * expression) list
+  | Texp_try of expression * (pattern * expression) list
+  | Texp_tuple of expression list
+  | Texp_construct of constructor * expression list
+  | Texp_record of type_constructor * (label * expression) list * expression option
+  | Texp_field of expression * label
+  | Texp_setfield of expression * label * expression
+  | Texp_array of expression list
+  | Texp_ifthenelse of expression * expression * expression option
+  | Texp_sequence of expression * expression
+  | Texp_while of expression * expression
+  | Texp_for of variable * expression * expression * direction_flag * expression
+  | Texp_when of expression * expression
+  | Texp_assert of expression
+  | Texp_assertfalse
+  | Texp_constraint of expression * mutable_type
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)
@@ -94,11 +103,11 @@ and local_type =
 (* Signature items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type temporary_signature_item =
-  { tsig_desc : temporary_signature_item_desc;
+type signature_item =
+  { tsig_desc : signature_item_desc;
     tsig_loc : Location.t }
 
-and temporary_signature_item_desc =
+and signature_item_desc =
     Tsig_abstract_type of int * string
   | Tsig_type of int list * local_type_constructor list
   | Tsig_value of string * llama_type
@@ -110,28 +119,15 @@ and temporary_signature_item_desc =
 (* Structure items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type 'ty temporary_structure_item =
-  { tstr_desc : 'ty temporary_structure_item_desc;
+type structure_item =
+  { tstr_desc : structure_item_desc;
     tstr_loc : Location.t }
 
-and 'ty temporary_structure_item_desc =
+and structure_item_desc =
     Tstr_type of int list * local_type_constructor list
-  | Tstr_value of rec_flag * ('ty pattern * 'ty expression) list
-  | Tstr_eval of 'ty expression
+  | Tstr_let of rec_flag * (pattern * expression) list
+  | Tstr_eval of expression
   | Tstr_external_type of int * string
   | Tstr_external of string * llama_type * Primitive.description
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
-
-(* what the compiler sees *)
-
-type structure_item =
-    Str_type of type_constructor_group
-  | Str_eval of llama_type expression
-  | Str_value of
-      rec_flag * (llama_type pattern * llama_type expression) list * (llama_type variable * value) list
-  | Str_external of value
-  | Str_exception of constructor
-  | Str_open of signature
-
-type structure = structure_item list

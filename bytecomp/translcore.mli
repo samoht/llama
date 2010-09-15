@@ -17,12 +17,11 @@
 
 open Asttypes
 open Base
-open Typedtree
 open Lambda
 
-val transl_exp: llama_type expression -> lambda
-val transl_apply: lambda -> llama_type expression list -> Location.t -> lambda
-val transl_let: rec_flag -> (llama_type pattern * llama_type expression) list -> lambda -> lambda
+val transl_exp: expression -> lambda
+val transl_apply: lambda -> expression list -> Location.t -> lambda
+val transl_let: rec_flag -> (pattern * expression) list -> lambda -> lambda
 val transl_primitive: Primitive.description -> lambda
 val transl_exception: constructor -> lambda
 

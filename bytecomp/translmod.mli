@@ -15,7 +15,7 @@
 (* Translation from typed abstract syntax to lambda terms,
    for the module language *)
 
-open Typedtree
+open Base
 open Lambda
 
 val transl_implementation: string -> structure * Include.coercion -> lambda

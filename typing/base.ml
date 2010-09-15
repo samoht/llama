@@ -1,5 +1,7 @@
 (* Where Llama Light really starts. *)
 
+open Asttypes
+
 (* ---------------------------------------------------------------------- *)
 (* Utility types.                                                         *)
 (* ---------------------------------------------------------------------- *)
@@ -18,6 +20,8 @@ type value_kind =
     Val_reg                            (* Regular value *)
   | Val_prim of Primitive.description  (* Primitive *)
 
+type parameter = int
+
 (* ---------------------------------------------------------------------- *)
 (* Fundamental types.                                                     *)
 (* ---------------------------------------------------------------------- *)
@@ -25,14 +29,14 @@ type value_kind =
 (* The record types are compared with (==). *)
 
 type llama_type =
-    Tvar of int
+    Tvar of parameter
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
 
 and type_constructor_group =
   { tcsg_module : module_id;                (* Defining module *)
-    tcsg_params : int list;                 (* List of type parameters *)
+    tcsg_params : parameter list;           (* List of type parameters *)
     mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
 
 and type_constructor =
@@ -66,21 +70,75 @@ type value =
     val_type : llama_type;     (* Type of the value *)
     val_kind : value_kind }    (* Is this a primitive? *)
 
-(* Internal representation of a signature. *)
+type variable =
+  { var_name : string;
+    var_type : llama_type }
+
+type pattern =
+  { pat_desc : pattern_desc;
+    pat_loc : Location.t;
+    pat_type : llama_type }
+
+and pattern_desc =
+    Pat_any
+  | Pat_var of variable
+  | Pat_alias of pattern * variable
+  | Pat_literal of literal
+  | Pat_tuple of pattern list
+  | Pat_construct of constructor * pattern list
+  | Pat_record of type_constructor * (label * pattern) list
+  | Pat_array of pattern list
+  | Pat_or of pattern * pattern
+  | Pat_constraint of pattern * llama_type
+
+type expression =
+  { exp_desc : expression_desc;
+    exp_loc : Location.t;
+    exp_type : llama_type }
+
+and expression_desc =
+    Exp_var of variable
+  | Exp_value of value
+  | Exp_literal of literal
+  | Exp_let of rec_flag * (pattern * expression) list * expression
+  | Exp_function of (pattern * expression) list
+  | Exp_apply of expression * expression list
+  | Exp_match of expression * (pattern * expression) list
+  | Exp_try of expression * (pattern * expression) list
+  | Exp_tuple of expression list
+  | Exp_construct of constructor * expression list
+  | Exp_record of type_constructor * (label * expression) list * expression option
+  | Exp_field of expression * label
+  | Exp_setfield of expression * label * expression
+  | Exp_array of expression list
+  | Exp_ifthenelse of expression * expression * expression option
+  | Exp_sequence of expression * expression
+  | Exp_while of expression * expression
+  | Exp_for of variable * expression * expression * direction_flag * expression
+  | Exp_when of expression * expression
+  | Exp_assert of expression
+  | Exp_assertfalse
+  | Exp_constraint of expression * llama_type
 
 type signature_item =
     Sig_type of type_constructor_group
   | Sig_value of value
   | Sig_exception of constructor
-    
+
 type signature = signature_item list
+
+type structure_item =
+    Str_type of type_constructor_group
+  | Str_let of rec_flag * (pattern * expression) list * (variable * value) list
+  | Str_eval of expression
+  | Str_external of value
+  | Str_exception of constructor
+
+type structure = structure_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
-
-type 'ty variable = { var_name : string; var_type : 'ty }
-let new_variable name ty = { var_name = name; var_type = ty }
 
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)

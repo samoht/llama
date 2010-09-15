@@ -111,7 +111,7 @@ let rec typemain_signature env psigl =
       [] -> []
     | psig :: rest ->
         let tsig = Resolve.signature_item env psig in
-        let sg, newenv = Globalize.signature_items env tsig in
+        let sg, newenv = Immutify.signature_item env tsig in
         sg @ typemain_signature newenv rest
 
 let process_interface_file ppf sourcefile =
@@ -151,8 +151,8 @@ let process_error exn =
       Location.print_error ppf loc; Resolve.report_error ppf err
   | Typify.Error(loc, err) ->
       Location.print_error ppf loc; Typify.report_error ppf err
-  | Globalize.Error(loc, err) ->
-      Location.print_error ppf loc; Globalize.report_error ppf err
+  | Immutify.Error(loc, err) ->
+      Location.print_error ppf loc; Immutify.report_error ppf err
   | Sys_error msg ->
       Location.print_error_cur_file ppf;
       fprintf ppf "I/O error: %s" msg

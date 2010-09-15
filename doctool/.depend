@@ -12,7 +12,7 @@ odoc_analyse.cmo: ../utils/warnings.cmi ../typing/typify.cmo \
     odoc_module.cmo odoc_misc.cmi odoc_messages.cmo odoc_merge.cmi \
     odoc_global.cmi odoc_dep.cmo odoc_cross.cmi odoc_args.cmi \
     ../typing/modenv.cmi ../utils/misc.cmi ../parsing/location.cmi \
-    ../parsing/lexer.cmi ../typing/globalize.cmo ../typing/env.cmi \
+    ../parsing/lexer.cmi ../typing/immutify.cmo ../typing/env.cmi \
     ../utils/config.cmi ../utils/clflags.cmi ../utils/ccomp.cmi \
     ../typing/base.cmo odoc_analyse.cmi
 odoc_analyse.cmx: ../utils/warnings.cmx ../typing/typify.cmx \
@@ -21,7 +21,7 @@ odoc_analyse.cmx: ../utils/warnings.cmx ../typing/typify.cmx \
     odoc_module.cmx odoc_misc.cmx odoc_messages.cmx odoc_merge.cmx \
     odoc_global.cmx odoc_dep.cmx odoc_cross.cmx odoc_args.cmx \
     ../typing/modenv.cmx ../utils/misc.cmx ../parsing/location.cmx \
-    ../parsing/lexer.cmx ../typing/globalize.cmx ../typing/env.cmx \
+    ../parsing/lexer.cmx ../typing/immutify.cmx ../typing/env.cmx \
     ../utils/config.cmx ../utils/clflags.cmx ../utils/ccomp.cmx \
     ../typing/base.cmx odoc_analyse.cmi
 odoc_args.cmo: odoc_types.cmi odoc_module.cmo odoc_messages.cmo \
@@ -62,8 +62,6 @@ odoc_cross.cmo: odoc_value.cmo odoc_types.cmi odoc_type.cmo odoc_search.cmi \
 odoc_cross.cmx: odoc_value.cmx odoc_types.cmx odoc_type.cmx odoc_search.cmx \
     odoc_parameter.cmx odoc_name.cmx odoc_module.cmx odoc_misc.cmx \
     odoc_messages.cmx odoc_exception.cmx odoc_cross.cmi
-odoc_dag2html.cmo: odoc_dag2html.cmi
-odoc_dag2html.cmx: odoc_dag2html.cmi
 odoc_dep.cmo: ../parsing/parsetree.cmi odoc_type.cmo odoc_print.cmi \
     odoc_module.cmo ../tools/depend.cmi
 odoc_dep.cmx: ../parsing/parsetree.cmi odoc_type.cmx odoc_print.cmx \

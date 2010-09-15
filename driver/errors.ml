@@ -38,8 +38,8 @@ let report_error ppf exn =
       Location.print_error ppf loc; Resolve.report_error ppf err
   | Typify.Error(loc, err) ->
       Location.print_error ppf loc; Typify.report_error ppf err
-  | Globalize.Error(loc, err) ->
-      Location.print_error ppf loc; Globalize.report_error ppf err
+  | Immutify.Error(loc, err) ->
+      Location.print_error ppf loc; Immutify.report_error ppf err
   | Include.Error err ->
       Location.print_error_cur_file ppf;
       Include.report_error ppf err

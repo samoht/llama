@@ -90,7 +90,7 @@ let rec transl_structure fields cc x =
       end
   | Str_eval expr :: rem ->
       Lsequence(transl_exp expr, transl_structure fields cc rem)
-  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+  | Str_let(rec_flag, pat_expr_list, m) :: rem ->
       List.iter Ident.identify m;
       let ext_fields = List.rev_map (fun (_, v) -> Ident.of_value v) m @ fields in
       transl_let rec_flag pat_expr_list
@@ -104,8 +104,6 @@ let rec transl_structure fields cc x =
       let id = Ident.of_exception cs in
       Llet(Strict, id, transl_exception cs,
            transl_structure (id :: fields) cc rem)
-  | Str_open _ :: rem ->
-      transl_structure fields cc rem
 
 (* Compile an implementation *)
 
@@ -144,7 +142,7 @@ let transl_store_structure glob map prims str =
   | Str_eval expr :: rem ->
       Lsequence(subst_lambda subst (transl_exp expr),
                 transl_store subst rem)
-  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+  | Str_let(rec_flag, pat_expr_list, m) :: rem ->
       List.iter Ident.identify m;
       let ids = List.map (fun (_, v) -> Ident.of_value v) m in
       let lam = transl_let rec_flag pat_expr_list (store_idents ids) in
@@ -160,8 +158,6 @@ let transl_store_structure glob map prims str =
       let lam = transl_exception cs in
       Lsequence(Llet(Strict, id, lam, store_ident id),
                 transl_store (add_ident false id subst) rem)
-  | Str_open _ :: rem ->
-      transl_store subst rem
   and store_ident id =
     try
       let (pos, cc) = Ident.find_same id map in
@@ -200,12 +196,11 @@ let transl_store_structure glob map prims str =
 let rec defined_idents = function
     [] -> []
   | Str_eval expr :: rem -> defined_idents rem
-  | Str_value(rec_flag, pat_expr_list, m) :: rem ->
+  | Str_let(rec_flag, pat_expr_list, m) :: rem ->
       List.map (fun (_, v) -> Ident.of_value v) m @ defined_idents rem
   | Str_external _ :: rem -> defined_idents rem
   | Str_type (decls) :: rem -> defined_idents rem
   | Str_exception(cs) :: rem -> Ident.of_exception cs :: defined_idents rem
-  | Str_open _ :: rem -> defined_idents rem
 
 (* Transform a coercion and the list of value identifiers defined by
    a toplevel structure into a table [id -> (pos, coercion)],
@@ -300,7 +295,7 @@ let close_toplevel_term lam =
 let transl_toplevel_item = function
     Str_eval expr ->
       transl_exp expr
-  | Str_value(rec_flag, pat_expr_list, m) ->
+  | Str_let(rec_flag, pat_expr_list, m) ->
       List.iter Ident.identify m;
       let idents = List.map (fun (_, v) -> Ident.of_value v) m in
       transl_let rec_flag pat_expr_list
@@ -311,8 +306,6 @@ let transl_toplevel_item = function
       lambda_unit
   | Str_exception(cs) ->
       toploop_setvalue (Ident.of_exception cs) (transl_exception cs)
-  | Str_open _ ->
-      lambda_unit
 
 let transl_toplevel_item_and_close itm =
   close_toplevel_term ((*transl_label_init*) (transl_toplevel_item itm))

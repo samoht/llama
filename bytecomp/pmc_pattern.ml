@@ -25,25 +25,25 @@ and pattern_desc =
   | Pat_lazy of pattern
 
 let rec import pat =
-  match pat.Typedtree.pat_desc with
-    Typedtree.Pat_constraint (p, _) -> import p
-  | desc ->
-      { pat_desc = import_desc desc;
-        pat_loc = pat.Typedtree.pat_loc;
-        pat_env = ();
-        pat_type = pat.Typedtree.pat_type }
+  match pat.Base.pat_desc with
+      Base.Pat_constraint (p, _) -> import p
+    | desc ->
+        { pat_desc = import_desc pat.Base.pat_desc;
+          pat_loc = pat.Base.pat_loc;
+          pat_env = ();
+          pat_type = pat.Base.pat_type }
 
 and import_desc = function
-    Typedtree.Pat_any -> Pat_any
-  | Typedtree.Pat_var var -> Pat_var (Ident.of_variable var)
-  | Typedtree.Pat_alias (p, var) -> Pat_alias (import p, Ident.of_variable var)
-  | Typedtree.Pat_literal c -> Pat_constant c
-  | Typedtree.Pat_tuple lp -> Pat_tuple (List.map import lp)
-  | Typedtree.Pat_construct (cs, lp) -> Pat_construct (cs, List.map import lp)
-  | Typedtree.Pat_record (_,l) -> Pat_record (List.map (fun (lbl, p) -> (lbl, import p)) l)
-  | Typedtree.Pat_array lp -> Pat_array (List.map import lp)
-  | Typedtree.Pat_or (p1, p2) -> Pat_or (import p1, import p2, None)
-  | Typedtree.Pat_constraint (p, _) -> assert false
+    Base.Pat_any _ -> Pat_any
+  | Base.Pat_var var -> Pat_var (Ident.of_variable var)
+  | Base.Pat_alias (p, var) -> Pat_alias (import p, Ident.of_variable var)
+  | Base.Pat_literal c -> Pat_constant c
+  | Base.Pat_tuple lp -> Pat_tuple (List.map import lp)
+  | Base.Pat_construct (cs, lp) -> Pat_construct (cs, List.map import lp)
+  | Base.Pat_record (_,l) -> Pat_record (List.map (fun (lbl, p) -> (lbl, import p)) l)
+  | Base.Pat_array lp -> Pat_array (List.map import lp)
+  | Base.Pat_or (p1, p2) -> Pat_or (import p1, import p2, None)
+  | Base.Pat_constraint (pat', _) -> assert false
 
 let map_pattern_desc f d =
   match d with

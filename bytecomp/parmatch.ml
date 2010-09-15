@@ -1377,8 +1377,8 @@ let pressure_variants tdefs patl =
   about guarded patterns
 *)
 
-let has_guard act =   match act.Typedtree.exp_desc with
-| Typedtree.Exp_when(_, _) -> true
+let has_guard act =   match act.Base.exp_desc with
+| Base.Exp_when(_, _) -> true
 | _ -> false
 
 

@@ -48,7 +48,6 @@ TYPING=typing/unused_var.cmo typing/oprint.cmo typing/primitive.cmo \
   typing/typedtree.cmo \
   typing/printtyp.cmo typing/resolve.cmo \
   typing/typify.cmo typing/immutify.cmo \
-  typing/globalize.cmo \
   typing/include.cmo typing/typemain.cmo
 
 COMP=bytecomp/ident.cmo \

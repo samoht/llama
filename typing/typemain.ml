@@ -14,7 +14,7 @@ let rec signature env psigl =
       [] -> []
     | psig :: rest ->
         let tsig = Resolve.signature_item env psig in
-        let sg, newenv = Globalize.signature_items env tsig in
+        let sg, newenv = Immutify.signature_item env tsig in
         sg @ signature newenv rest
 
 (* Typecheck a structure *)
@@ -24,20 +24,18 @@ let rec structure env = function
   | pstr :: rest ->
       let tstr = Resolve.structure_item env pstr in
       Typify.structure_item tstr;
-      let tstr = Immutify.structure_item tstr in
-      let str, _, env = Globalize.structure_item env tstr in
-      str :: structure env rest
+      let str, env, _ = Immutify.structure_item env tstr in
+      str @ structure env rest
 
 (* Convert a structure into a signature *)
 
 let rec signature_of_structure = function
     [] -> []
   | Str_type tcsg :: rem -> Sig_type tcsg :: signature_of_structure rem
+  | Str_let (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ signature_of_structure rem
   | Str_eval _ :: rem -> signature_of_structure rem
-  | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ signature_of_structure rem
   | Str_external v :: rem -> Sig_value v :: signature_of_structure rem
   | Str_exception cs :: rem -> Sig_exception cs :: signature_of_structure rem
-  | Str_open _ :: rem -> signature_of_structure rem
 
 (* Typecheck an implementation file *)
 

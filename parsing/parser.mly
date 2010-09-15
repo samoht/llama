@@ -359,7 +359,7 @@ structure_item:
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
-        | _ -> mkstr(Pstr_value($2, List.rev $3)) }
+        | _ -> mkstr(Pstr_let($2, List.rev $3)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
   | OPEN UIDENT

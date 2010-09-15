@@ -98,7 +98,7 @@ let simple_blank = "[ \013\009\012]"
       | Typedtree.Tstr_value (_, pat_exp_list) ->
           List.iter
             (fun (pat,exp) ->
-              match iter_val_pattern pat.Typedtree.pat_desc with
+              match iter_val_pattern pat.Typedtree.tpat_desc with
                 None -> ()
               | Some n -> Hashtbl.add table_values n (pat,exp)
             )
@@ -182,7 +182,7 @@ let simple_blank = "[ \013\009\012]"
             raise Not_found
         | Typedtree.Cf_val (_, ident, Some exp, _) :: q
           when Odoc_name.from_ident ident = name ->
-            exp.Typedtree.exp_type
+            exp.Typedtree.texp_type
         | _ :: q ->
             iter q
       in
@@ -241,12 +241,12 @@ let simple_blank = "[ \013\009\012]"
     *)
     let tt_param_info_from_pattern env f_desc pat =
       let rec iter_pattern pat =
-        match pat.pat_desc with
+        match pat.tpat_desc with
           Typedtree.Pat_var ident ->
             let name = Odoc_name.from_ident ident in
             Simple_name { sn_name = name ;
                           sn_text = f_desc name ;
-                          sn_type = Odoc_env.subst_type env pat.pat_type
+                          sn_type = Odoc_env.subst_type env pat.tpat_type
                         }
 
         | Typedtree.Pat_alias (pat, _) ->
@@ -255,7 +255,7 @@ let simple_blank = "[ \013\009\012]"
         | Typedtree.Pat_tuple patlist ->
             Tuple
               (List.map iter_pattern patlist,
-               Odoc_env.subst_type env pat.pat_type)
+               Odoc_env.subst_type env pat.tpat_type)
 
         | Typedtree.Pat_construct (cons_desc, _) when
             (* we give a name to the parameter only if it unit *)
@@ -268,14 +268,14 @@ let simple_blank = "[ \013\009\012]"
             (* a () argument, it never has description *)
             Simple_name { sn_name = "()" ;
                           sn_text = None ;
-                          sn_type = Odoc_env.subst_type env pat.pat_type
+                          sn_type = Odoc_env.subst_type env pat.tpat_type
                         }
 
         | _ ->
             (* implicit pattern matching -> anonymous parameter *)
             Simple_name { sn_name = "()" ;
                           sn_text = None ;
-                          sn_type = Odoc_env.subst_type env pat.pat_type
+                          sn_type = Odoc_env.subst_type env pat.tpat_type
                         }
       in
       iter_pattern pat
@@ -291,7 +291,7 @@ let simple_blank = "[ \013\009\012]"
       | (pattern_param, exp) :: second_ele :: q ->
           (* implicit pattern matching -> anonymous parameter and no more parameter *)
           (* A VOIR : le label ? *)
-          let parameter = Odoc_parameter.Tuple ([], Odoc_env.subst_type env pattern_param.pat_type) in
+          let parameter = Odoc_parameter.Tuple ([], Odoc_env.subst_type env pattern_param.tpat_type) in
           [ parameter ]
 
       | (pattern_param, func_body) :: [] ->
@@ -310,13 +310,13 @@ let simple_blank = "[ \013\009\012]"
               Simple_name { sn_name = "*opt*" } ->
                 (
                  (
-                  match func_body.exp_desc with
-                    Typedtree.Exp_let (_, ({pat_desc = Typedtree.Pat_var id } , exp) :: _, func_body2) ->
+                  match func_body.texp_desc with
+                    Typedtree.Exp_let (_, ({tpat_desc = Typedtree.Pat_var id } , exp) :: _, func_body2) ->
                       let name = Odoc_name.from_ident id in
                       let new_param = Simple_name
                           { sn_name = name ;
                             sn_text = Odoc_parameter.desc_from_info_opt current_comment_opt name ;
-                            sn_type = Odoc_env.subst_type env exp.exp_type
+                            sn_type = Odoc_env.subst_type env exp.texp_type
                           }
                       in
                       (new_param, func_body2)
@@ -329,7 +329,7 @@ let simple_blank = "[ \013\009\012]"
                 (parameter, func_body)
           in
          (* continue if the body is still a function *)
-          match next_exp.exp_desc with
+          match next_exp.texp_desc with
             Exp_function (pat_exp_list, _) ->
               p :: (tt_analyse_function_parameters env current_comment_opt pat_exp_list)
           | _ ->
@@ -340,7 +340,7 @@ let simple_blank = "[ \013\009\012]"
         @raise Failure if an error occurs.*)
      let tt_analyse_value env current_module_name comment_opt loc pat_exp rec_flag =
        let (pat, exp) = pat_exp in
-       match (pat.pat_desc, exp.exp_desc) with
+       match (pat.tpat_desc, exp.texp_desc) with
          (Typedtree.Pat_var ident, Typedtree.Exp_function (pat_exp_list2, partial)) ->
            (* a new function is defined *)
            let name_pre = Odoc_name.from_ident ident in
@@ -350,7 +350,7 @@ let simple_blank = "[ \013\009\012]"
            let new_value = {
              val_name = complete_name ;
              val_info = comment_opt ;
-             val_type = Odoc_env.subst_type env pat.Typedtree.pat_type ;
+             val_type = Odoc_env.subst_type env pat.Typedtree.tpat_type ;
              val_recursive = rec_flag = Asttypes.Recursive ;
              val_parameters = tt_analyse_function_parameters env comment_opt pat_exp_list2 ;
              val_code = Some (get_string_of_file loc.Location.loc_start.Lexing.pos_cnum loc.Location.loc_end.Lexing.pos_cnum) ;
@@ -367,7 +367,7 @@ let simple_blank = "[ \013\009\012]"
            let new_value = {
              val_name = complete_name ;
              val_info = comment_opt ;
-             val_type = Odoc_env.subst_type env pat.Typedtree.pat_type ;
+             val_type = Odoc_env.subst_type env pat.Typedtree.tpat_type ;
              val_recursive = rec_flag = Asttypes.Recursive ;
              val_parameters = [] ;
              val_code = Some (get_string_of_file loc.Location.loc_start.Lexing.pos_cnum loc.Location.loc_end.Lexing.pos_cnum) ;
@@ -579,7 +579,7 @@ let simple_blank = "[ \013\009\012]"
             | Parsetree.Ppat_any -> None
             | Parsetree.Ppat_var name -> Some name
             | Parsetree.Ppat_tuple _ -> None (* A VOIR quand on traitera les tuples *)
-            | Parsetree.Ppat_constraint (pat, _) -> iter_pat pat.Parsetree.ppat_desc
+            | Parsetree.Ppat_constraint (pat, _) -> iter_pat pat.Parsetree.ptpat_desc
             | _ -> None
           in
           let rec iter first last_pos acc_env acc p_e_list = (* ?(first=false) *)
@@ -587,8 +587,8 @@ let simple_blank = "[ \013\009\012]"
               [] ->
                 (acc_env, acc)
             | (pat, exp) :: q ->
-                let value_name_opt = iter_pat pat.Parsetree.ppat_desc in
-                let new_last_pos = exp.Parsetree.pexp_loc.Location.loc_end.Lexing.pos_cnum in
+                let value_name_opt = iter_pat pat.Parsetree.ptpat_desc in
+                let new_last_pos = exp.Parsetree.ptexp_loc.Location.loc_end.Lexing.pos_cnum in
                 match value_name_opt with
                   None ->
                     iter new_last_pos acc_env acc q
@@ -602,7 +602,7 @@ let simple_blank = "[ \013\009\012]"
                         else
                           get_comments_in_module
                             last_pos
-                            pat.Parsetree.ppat_loc.Location.loc_start.Lexing.pos_cnum
+                            pat.Parsetree.ptpat_loc.Location.loc_start.Lexing.pos_cnum
                       in
                       let l_values = tt_analyse_value
                           env
@@ -1006,9 +1006,9 @@ let simple_blank = "[ \013\009\012]"
           let code =
             let loc = p_module_expr.Parsetree.pmod_loc in
             let loc_end = loc.Location.loc_end.Lexing.pos_cnum in
-            let exp_loc = p_exp.Parsetree.pexp_loc in
-            let exp_loc_end = exp_loc.Location.loc_end.Lexing.pos_cnum in
-            let s = get_string_of_file exp_loc_end loc_end in
+            let texp_loc = p_exp.Parsetree.ptexp_loc in
+            let texp_loc_end = texp_loc.Location.loc_end.Lexing.pos_cnum in
+            let s = get_string_of_file texp_loc_end loc_end in
             Printf.sprintf "(val ...%s" s
           in
           let name = Odoc_env.full_module_type_name env (Odoc_name.from_longident (fst pkg_type)) in

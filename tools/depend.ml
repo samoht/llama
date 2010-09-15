@@ -130,7 +130,7 @@ let add_struct_item bv item =
   match item.pstr_desc with
   | Pstr_eval e ->
       add_expr bv e
-  | Pstr_value(id, pel) ->
+  | Pstr_let(id, pel) ->
       add_pat_expr_list bv pel
   | Pstr_type dcls ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls

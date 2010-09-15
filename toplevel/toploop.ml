@@ -230,10 +230,9 @@ let execute_phrase print_outcome ppf phr =
       let _ = Unused_var.warn ppf [pstr] in
       let tstr = Resolve.structure_item oldenv pstr in
       Typify.structure_item tstr;
-      let tstr = Immutify.structure_item tstr in
-      let str, tyopt, newenv = Globalize.structure_item oldenv tstr in
-      let sg = Typemain.signature_of_structure [str] in
-      let lam = Translmod.transl_toplevel_definition [str] in
+      let str, newenv, tyopt = Immutify.structure_item oldenv tstr in
+      let sg = Typemain.signature_of_structure str in
+      let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
@@ -243,7 +242,7 @@ let execute_phrase print_outcome ppf phr =
           | Result v ->
               if print_outcome then
                 match str with
-                | Str_eval exp ->
+                | [Str_eval exp] ->
                     let typ = match tyopt with Some ty -> ty | None -> assert false in
                     let outv = outval_of_value newenv v typ in
                     let ty = Printtyp.tree_of_type typ in
