@@ -387,8 +387,6 @@ signature_item:
       { mksig(Psig_exception($2, $3)) }
   | OPEN UIDENT
       { mksig(Psig_open $2) }
-  | EXTERNAL TYPE type_parameters LIDENT
-      { mksig(Psig_abstract_type($3, $4)) }
   | EXTERNAL val_ident COLON core_type EQUAL external_declaration
       { mksig(Psig_external($2, $4, $6)) }
 ;
