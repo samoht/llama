@@ -109,7 +109,7 @@ open Odoc_types
 
     let name_comment_from_type_kind pos_end pos_limit tk =
       match tk with
-        Parsetree.Ptype_abstract _ | Parsetree.Ptype_abbrev _ ->
+        Parsetree.Ptype_abbrev _ ->
           (0, [])
       | Parsetree.Ptype_variant cons_core_type_list_list ->
           let rec f acc cons_core_type_list_list =
@@ -316,6 +316,24 @@ open Odoc_types
             let new_env = Odoc_env.add_exception env e.ex_name in
             (maybe_more, new_env, [ Element_exception e ])
 
+        | Parsetree.Psig_abstract_type (params, name) ->
+            (* we start by extending the environment *)
+            let new_env = Odoc_env.add_type env (Odoc_name.concat current_module_name name) in
+            let new_type =
+              {
+                ty_name = Odoc_name.concat current_module_name name ;
+                ty_info = comment_opt ;
+                ty_parameters = List.map (fun param -> Tvar param) (standard_parameters (List.length params));
+                ty_kind = Odoc_type.Tcs_abstract;
+                ty_manifest = None;
+                ty_loc =
+                  { loc_impl = None ;
+                    loc_inter = Some (!file_name, pos_start_ele) ;
+                  };
+                ty_code = None;
+              } in
+            (0, new_env, [Element_type new_type])  (* XXX: not sure about 0 *)
+            
         | Parsetree.Psig_type type_decl_list ->
             (* we start by extending the environment *)
             let new_env =
@@ -371,14 +389,7 @@ open Odoc_types
                     {
                       ty_name = Odoc_name.concat current_module_name name ;
                       ty_info = assoc_com ;
-                      ty_parameters =
-                        (*
-                        List.map2 (fun p (co,cn,_) ->
-                                     (p, (* Odoc_env.subst_type new_env p, *)
-                                      co, cn)
-                                  )
-                        *)
-                        List.map (fun param -> Tvar param) (Base.tcs_params sig_type_decl);
+                      ty_parameters = List.map (fun param -> Tvar param) (Base.tcs_params sig_type_decl);
                       ty_kind = type_kind;
                       ty_manifest =
                         (match sig_type_decl.Base.tcs_kind with

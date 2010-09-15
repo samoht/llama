@@ -88,8 +88,7 @@ let type_constructors params ltcs_list =
     begin fun tcs ltcs ->
       tcs.tcs_kind <-
         begin match ltcs.ltcs_kind with
-            Ltcs_abstract _ -> Tcs_abstract
-          | Ltcs_variant name_args_list ->
+            Ltcs_variant name_args_list ->
               Tcs_variant
                 (let rec aux idx_const idx_block = function
                      [] -> []
@@ -138,9 +137,23 @@ let exception_constructor name args =
     cs_tag = Tag_exception;
   }
 
+let make_singleton_type arity name kind =
+  let rec tcsg =
+    { tcsg_module = !Modenv.current_module;
+      tcsg_params = standard_parameters arity;
+      tcsg_members = [ tcs ] }
+  and tcs =
+    { tcs_group = tcsg;
+      tcs_name = name;
+      tcs_kind = kind } in
+  tcsg
+
 let signature_items env tsig =
   match tsig.tsig_desc with
-      Tsig_value (name, ty) ->
+      Tsig_abstract_type (arity, name) ->
+        let tcsg = make_singleton_type arity name Tcs_abstract in
+        [Sig_type tcsg], Env.add_type_constructor_group tcsg env
+    | Tsig_value (name, ty) ->
         let v =
           { val_module = !Modenv.current_module;
             val_name = name;
@@ -177,6 +190,9 @@ let structure_item env tstr =
         Str_value (rec_flag, pat_expr_list, List.combine vars vals),
         None,
         List.fold_left (fun env v -> Env.add_value v env) env vals
+    | Tstr_external_type (arity, name) ->
+        let tcsg = make_singleton_type arity name Tcs_abstract in
+        Str_type tcsg, None, Env.add_type_constructor_group tcsg env
     | Tstr_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
         Str_external v, None, Env.add_value v env

@@ -11,7 +11,7 @@
 
 (* $Id: cursor.mli,v 1.7 2008/01/01 18:46:28 deraugla Exp $ *)
 
-type 'a t
+abstract type 'a t
 
 exception Failure
 

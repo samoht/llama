@@ -50,7 +50,6 @@ type bytecomp_options = {
 
     bc_nopervasives : unit -> unit;
     bc_use_prims : string -> unit;
-    bc_dparsetree : unit -> unit;
     bc_drawlambda : unit -> unit;
     bc_dlambda : unit -> unit;
     bc_dinstr : unit -> unit;
@@ -72,7 +71,6 @@ type bytetop_options = {
   bt_warn_error : string -> unit;
   bt_warn_help : unit -> unit;
 
-  bt_dparsetree : unit -> unit;
   bt_drawlambda : unit -> unit;
   bt_dlambda : unit -> unit;
   bt_dinstr : unit -> unit;
@@ -118,7 +116,6 @@ type optcomp_options = {
   oc_where : unit -> unit;
 
   oc_nopervasives : unit -> unit;
-  oc_dparsetree : unit -> unit;
   oc_drawlambda : unit -> unit;
   oc_dlambda : unit -> unit;
   oc_dcmm : unit -> unit;
@@ -155,7 +152,6 @@ type opttop_options = {
   ot_warn_error : string -> unit;
   ot_warn_help : unit -> unit;
 
-  ot_dparsetree : unit -> unit;
   ot_drawlambda : unit -> unit;
   ot_dlambda : unit -> unit;
   ot_dcmm : unit -> unit;

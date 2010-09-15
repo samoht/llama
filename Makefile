@@ -38,7 +38,7 @@ UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
 
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/syntaxerr.cmo parsing/parser.cmo \
-  parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
+  parsing/lexer.cmo parsing/parse.cmo
 
 TYPING=typing/unused_var.cmo typing/oprint.cmo typing/primitive.cmo \
   typing/base.cmo typing/predef.cmo \

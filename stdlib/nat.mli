@@ -15,7 +15,7 @@
 
 (* Module [Nat]: operations on natural numbers *)
 
-type nat
+abstract type nat
 
 (* Natural numbers (type [nat]) are positive integers of arbitrary size.
    All operations on [nat] are performed in-place. *)

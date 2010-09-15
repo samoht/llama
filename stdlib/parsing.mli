@@ -76,7 +76,7 @@ val set_trace: bool -> bool
 (** The following definitions are used by the generated parsers only.
    They are not intended to be used by user programs. *)
 
-type parser_env
+abstract type parser_env
 
 type parse_tables =
   { actions : (parser_env -> Obj.t) array;

@@ -130,18 +130,20 @@ and expression_option f = function
       Some (expression f expr)
 
 let structure_item_desc f = function
-    Tstr_eval expr ->
-      Tstr_eval (expression f expr)
+    Tstr_type (params, ltcs_list) ->
+      Tstr_type (params, ltcs_list)
   | Tstr_value (rec_flag, pat_expr_list) ->
       Tstr_value (rec_flag, pattern_expression_list f pat_expr_list)
-  | Tstr_external (name, ty, prim) ->
-      Tstr_external (name, ty, prim)
-  | Tstr_type (params, ltcs_list) ->
-      Tstr_type (params, ltcs_list)
+  | Tstr_eval expr ->
+      Tstr_eval (expression f expr)
   | Tstr_exception (name, tyl) ->
       Tstr_exception (name, tyl)
   | Tstr_open (name, sg) ->
       Tstr_open (name, sg)
+  | Tstr_external_type (arity, name) ->
+      Tstr_external_type (arity, name)
+  | Tstr_external (name, ty, prim) ->
+      Tstr_external (name, ty, prim)
 
 let structure_item f str =
   { tstr_desc = structure_item_desc f str.tstr_desc;

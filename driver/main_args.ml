@@ -223,10 +223,6 @@ let mk_use_prims f =
   "-use-prims", Arg.String f, "<file>  (undocumented)"
 ;;
 
-let mk_dparsetree f =
-  "-dparsetree", Arg.Unit f, " (undocumented)"
-;;
-
 let mk_drawlambda f =
   "-drawlambda", Arg.Unit f, " (undocumented)"
 ;;
@@ -334,7 +330,6 @@ type bytecomp_options = {
 
     bc_nopervasives : unit -> unit;
     bc_use_prims : string -> unit;
-    bc_dparsetree : unit -> unit;
     bc_drawlambda : unit -> unit;
     bc_dlambda : unit -> unit;
     bc_dinstr : unit -> unit;
@@ -356,7 +351,6 @@ type bytetop_options = {
   bt_warn_error : string -> unit;
   bt_warn_help : unit -> unit;
 
-  bt_dparsetree : unit -> unit;
   bt_drawlambda : unit -> unit;
   bt_dlambda : unit -> unit;
   bt_dinstr : unit -> unit;
@@ -402,7 +396,6 @@ type optcomp_options = {
   oc_where : unit -> unit;
 
   oc_nopervasives : unit -> unit;
-  oc_dparsetree : unit -> unit;
   oc_drawlambda : unit -> unit;
   oc_dlambda : unit -> unit;
   oc_dcmm : unit -> unit;
@@ -439,7 +432,6 @@ type opttop_options = {
   ot_warn_error : string -> unit;
   ot_warn_help : unit -> unit;
 
-  ot_dparsetree : unit -> unit;
   ot_drawlambda : unit -> unit;
   ot_dlambda : unit -> unit;
   ot_dcmm : unit -> unit;
@@ -500,7 +492,6 @@ let make_bytecomp_options (f : bytecomp_options) =
 
     mk_nopervasives f.bc_nopervasives;
     mk_use_prims f.bc_use_prims;
-    mk_dparsetree f.bc_dparsetree;
     mk_drawlambda f.bc_drawlambda;
     mk_dlambda f.bc_dlambda;
     mk_dinstr f.bc_dinstr;
@@ -523,7 +514,6 @@ let make_bytetop_options (f : bytetop_options) =
     mk_warn_error f.bt_warn_error;
     mk_warn_help f.bt_warn_help;
 
-    mk_dparsetree f.bt_dparsetree;
     mk_drawlambda f.bt_drawlambda;
     mk_dlambda f.bt_dlambda;
     mk_dinstr f.bt_dinstr;
@@ -570,7 +560,6 @@ let make_optcomp_options (f : optcomp_options) =
     mk_where f.oc_where;
 
     mk_nopervasives f.oc_nopervasives;
-    mk_dparsetree f.oc_dparsetree;
     mk_drawlambda f.oc_drawlambda;
     mk_dlambda f.oc_dlambda;
     mk_dcmm f.oc_dcmm;
@@ -607,7 +596,6 @@ let make_opttop_options (f : opttop_options) =
     mk_warn_error f.ot_warn_error;
     mk_warn_help f.ot_warn_help;
 
-    mk_dparsetree f.ot_dparsetree;
     mk_drawlambda f.ot_drawlambda;
     mk_dcmm f.ot_dcmm;
     mk_dsel f.ot_dsel;

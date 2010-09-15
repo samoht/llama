@@ -41,7 +41,6 @@ val gprofile : bool ref
 val c_compiler : string option ref
 val no_auto_link : bool ref
 val dllpaths : string list ref
-val dump_parsetree : bool ref
 val dump_rawlambda : bool ref
 val dump_lambda : bool ref
 val dump_instr : bool ref

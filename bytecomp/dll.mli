@@ -31,7 +31,7 @@ val open_dlls: dll_mode -> string list -> unit
 val close_all_dlls: unit -> unit
 
 (* The abstract type representing C function pointers *)
-type dll_address
+abstract type dll_address
 
 (* Find a primitive in the currently opened DLLs and return its address.
    Raise [Not_found] if not found. *)

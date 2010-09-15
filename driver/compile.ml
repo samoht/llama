@@ -79,7 +79,6 @@ let interface ppf sourcefile outputprefix =
   try
     let ast =
       Pparse.file ppf inputfile Parse.interface ast_intf_magic_number in
-    if !Clflags.dump_parsetree then fprintf ppf "%a@." Printast.interface ast;
     let sg = Typemain.signature (initial_env()) ast in
     if !Clflags.print_types then
       fprintf std_formatter "%a@." Printtyp.signature sg;
@@ -112,7 +111,6 @@ let implementation ppf sourcefile outputprefix =
   if !Clflags.print_types then begin
     try ignore(
       Pparse.file ppf inputfile Parse.implementation ast_impl_magic_number
-      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
       ++ Typemain.implementation sourcefile outputprefix modulename env)
     with x ->
       Pparse.remove_preprocessed_if_ast inputfile;
@@ -122,7 +120,6 @@ let implementation ppf sourcefile outputprefix =
     let oc = open_out_bin objfile in
     try
       Pparse.file ppf inputfile Parse.implementation ast_impl_magic_number
-      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
       ++ Unused_var.warn ppf
       ++ Typemain.implementation sourcefile outputprefix modulename env
       ++ Translmod.transl_implementation modulename

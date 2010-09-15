@@ -90,6 +90,7 @@ let rec structure ppf tbl l =
 
 and structure_item ppf tbl s =
   match s.pstr_desc with
+    Pstr_external_type _ -> ()
   | Pstr_eval e -> expression ppf tbl e;
   | Pstr_value (recflag, pel) -> let_pel ppf tbl recflag pel None;
   | Pstr_external _ -> ()

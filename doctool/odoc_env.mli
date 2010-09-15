@@ -15,7 +15,7 @@
 
 (** An environment of known names,
    from simple name to complete name. *)
-type env
+abstract type env
 
 (** The empty environment. *)
 val empty : env

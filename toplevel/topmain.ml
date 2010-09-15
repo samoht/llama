@@ -74,7 +74,6 @@ let options = make_bytetop_options {
   bt_w = Warnings.parse_options false;
   bt_warn_error = Warnings.parse_options true;
   bt_warn_help = Warnings.help_warnings;
-  bt_dparsetree = set dump_parsetree;
   bt_drawlambda = set dump_rawlambda;
   bt_dlambda = set dump_lambda;
   bt_dinstr = set dump_instr;

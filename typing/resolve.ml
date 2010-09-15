@@ -19,6 +19,7 @@ type error =
   | Multiply_bound_variable of string
   | Orpat_vars of string
   | Type_arity_mismatch of Longident.t * int * int
+  | Type_parameters_mismatch of string
   | Constructor_arity_mismatch of Longident.t * int * int
   | Label_mismatch of label * type_constructor
   | Label_multiply_defined of label
@@ -224,14 +225,22 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         Ltuple (List.map (local_type pseudoenv) tyl)
     | Ptyp_constr (lid, tyl) ->
         let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
-        let arity =
-          match gentcs with
-              Local ltcs -> List.length pseudoenv.pseudoenv_type_variables
-            | Global tcs -> tcs_arity tcs
-        in
-        if List.length tyl <> arity then
-          raise (Error (ty.ptyp_loc, 
-                        Type_arity_mismatch (lid, arity, List.length tyl)));
+        begin match gentcs with
+            Local ltcs ->
+              let rec check l1 l2 =
+                match l1, l2 with
+                    ({ptyp_desc=Ptyp_var name} :: tl1), ((name', _) :: tl2) when name = name' ->
+                      check tl1 tl2
+                  | [], [] -> ()
+                  | _ ->
+                      raise (Error (ty.ptyp_loc, Type_parameters_mismatch ltcs.ltcs_name)) in
+              check tyl pseudoenv.pseudoenv_type_variables
+          | Global tcs ->
+              let arity = tcs_arity tcs in
+              if List.length tyl <> arity then
+                raise (Error (ty.ptyp_loc, 
+                              Type_arity_mismatch (lid, arity, List.length tyl)))
+        end;
         let tyl = List.map (local_type pseudoenv) tyl in
         match gentcs with
             Local ltcs -> Lconstr_local (ltcs, tyl)
@@ -437,9 +446,7 @@ and expression_aux ctxt exp =
 (* ---------------------------------------------------------------------- *)
 
 let type_kind pseudoenv = function
-    Ptype_abstract ->
-      Ltcs_abstract
-  | Ptype_abbrev ty ->
+    Ptype_abbrev ty ->
       Ltcs_abbrev (local_type pseudoenv ty)
   | Ptype_variant cs_list ->
       Ltcs_variant (List.map (fun (name, tyl, _) ->
@@ -480,7 +487,7 @@ let type_declarations env pdecls =
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
-          ltcs_kind = Ltcs_abstract }
+          ltcs_kind = Ltcs_variant [] }
       end pdecls
   in
   let pseudoenv =
@@ -515,7 +522,11 @@ let signature_item env psig =
   reset_type_variables ();
   { tsig_desc =
       begin match psig.psig_desc with
-          Psig_value (s, te) ->
+          Psig_abstract_type (params, name) ->
+            if find_duplicate params <> None then
+              raise (Error (psig.psig_loc, Repeated_parameter));
+            Tsig_abstract_type (List.length params, name)
+        | Psig_value (s, te) ->
             Tsig_value (s, llama_type env te)
         | Psig_external(id,te,pr) ->
             Tsig_external (id, llama_type env te, external_declaration pr te)
@@ -548,15 +559,17 @@ let structure_item env pstr =
   reset_type_variables ();
   { tstr_desc =
       begin match pstr.pstr_desc with
-          Pstr_eval pexp ->
-            Tstr_eval (expression (context_create env) pexp)
-        | Pstr_value (rec_flag, ppat_pexp_list) ->
-            Tstr_value (rec_flag, top_bindings env rec_flag ppat_pexp_list)
-        | Pstr_external (name, pty, decl) ->
-            Tstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_type pdecls ->
             let params, decls = type_declarations env pdecls in
             Tstr_type (params, decls)
+        | Pstr_value (rec_flag, ppat_pexp_list) ->
+            Tstr_value (rec_flag, top_bindings env rec_flag ppat_pexp_list)
+        | Pstr_eval pexp ->
+            Tstr_eval (expression (context_create env) pexp)
+        | Pstr_external_type (params, name) ->
+            Tstr_external_type (List.length params, name)
+        | Pstr_external (name, pty, decl) ->
+            Tstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
             Tstr_exception (name, List.map (local_type pseudoenv) args)
@@ -598,6 +611,11 @@ let report_error ppf = function
        "@[The type constructor %a@ expects %i argument(s),@ \
         but is here applied to %i argument(s)@]"
        longident lid expected provided
+  | Type_parameters_mismatch name ->
+      fprintf ppf
+       "@[The local type constructor %s@ must be applied to the current \
+        parameter list.@]"
+        name
   | Constructor_arity_mismatch(lid, expected, provided) ->
       fprintf ppf
        "@[The constructor %a@ expects %i argument(s),@ \

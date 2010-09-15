@@ -16,7 +16,7 @@
 
 open Format
 
-type codeptr
+abstract type codeptr
 
 type traced_function =
   { path: Base.value;                   (* Name under which it is traced *)

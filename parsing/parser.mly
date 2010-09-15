@@ -150,6 +150,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 
 /* Tokens */
 
+%token ABSTRACT
 %token AMPERAMPER
 %token AMPERSAND
 %token AND
@@ -354,18 +355,20 @@ structure_tail:
   | structure_item structure_tail               { $1 :: $2 }
 ;
 structure_item:
+    TYPE type_declarations
+      { mkstr(Pstr_type(List.rev $2)) }
   | LET rec_flag let_bindings
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
-  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
-      { mkstr(Pstr_external($2, $4, $6)) }
-  | TYPE type_declarations
-      { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
   | OPEN UIDENT
       { mkstr(Pstr_open $2) }
+  | EXTERNAL TYPE type_parameters LIDENT
+      { mkstr(Pstr_external_type($3, $4)) }
+  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
+      { mkstr(Pstr_external($2, $4, $6)) }
 ;
 
 signature:
@@ -374,16 +377,20 @@ signature:
   | signature signature_item SEMISEMI           { $2 :: $1 }
 ;
 signature_item:
-    VAL val_ident COLON core_type
-      { mksig(Psig_value($2, $4)) }
-  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
-      { mksig(Psig_external($2, $4, $6)) }
+    ABSTRACT TYPE type_parameters LIDENT
+      { mksig(Psig_abstract_type($3, $4)) }
   | TYPE type_declarations
       { mksig(Psig_type(List.rev $2)) }
+  | VAL val_ident COLON core_type
+      { mksig(Psig_value($2, $4)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
   | OPEN UIDENT
       { mksig(Psig_open $2) }
+  | EXTERNAL TYPE type_parameters LIDENT
+      { mksig(Psig_abstract_type($3, $4)) }
+  | EXTERNAL val_ident COLON core_type EQUAL external_declaration
+      { mksig(Psig_external($2, $4, $6)) }
 ;
 
 /* Core expressions */
@@ -683,9 +690,7 @@ type_declaration:
           ptype_loc = symbol_rloc() } }
 ;
 type_kind:
-    /* empty */
-      { Ptype_abstract }
-  | EQUAL core_type
+    EQUAL core_type
       { Ptype_abbrev $2 }
   | EQUAL constructor_declarations
       { Ptype_variant(List.rev $2) }

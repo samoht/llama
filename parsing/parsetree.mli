@@ -64,8 +64,7 @@ type type_declaration =
     ptype_loc : Location.t }
 
 and type_kind =
-    Ptype_abstract
-  | Ptype_variant of (string * type_expression list * Location.t) list
+    Ptype_variant of (string * type_expression list * Location.t) list
   | Ptype_record of (string * mutable_flag * type_expression * Location.t) list
   | Ptype_abbrev of type_expression
 
@@ -74,23 +73,25 @@ type signature_item =
     psig_loc: Location.t }
 
 and signature_item_desc =
-    Psig_value of string * type_expression
-  | Psig_external of string * type_expression * string list
+    Psig_abstract_type of string list * string
   | Psig_type of type_declaration list
+  | Psig_value of string * type_expression
   | Psig_exception of string * type_expression list
   | Psig_open of string
+  | Psig_external of string * type_expression * string list
 
 type structure_item =
   { pstr_desc: structure_item_desc;
     pstr_loc: Location.t }
 
 and structure_item_desc =
-    Pstr_eval of expression
+    Pstr_type of type_declaration list
   | Pstr_value of rec_flag * (pattern * expression) list
-  | Pstr_external of string * type_expression * string list
-  | Pstr_type of type_declaration list
+  | Pstr_eval of expression
   | Pstr_exception of string * type_expression list
   | Pstr_open of string
+  | Pstr_external_type of string list * string
+  | Pstr_external of string * type_expression * string list
 
 (* Toplevel phrases *)
 

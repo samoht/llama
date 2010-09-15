@@ -280,7 +280,7 @@ external chdir : string -> unit = "unix_chdir"
 external getcwd : unit -> string = "unix_getcwd"
 external chroot : string -> unit = "unix_chroot"
 
-type dir_handle
+external type dir_handle
 
 external opendir : string -> dir_handle = "unix_opendir"
 external readdir : dir_handle -> string = "unix_readdir"

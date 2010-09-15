@@ -14,8 +14,8 @@
 
 (* Handling of dynamically-linked libraries *)
 
-type dll_handle
-type dll_address
+external type dll_handle
+external type dll_address
 type dll_mode = For_checking | For_execution
 
 external dll_open: dll_mode -> string -> dll_handle = "caml_dynlink_open_lib"

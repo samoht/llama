@@ -22,7 +22,7 @@
 
  **************************************************************)
 
-type size;;
+external type size;;
 
 external size_of_int : int -> size = "%identity"
 ;;

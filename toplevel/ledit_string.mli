@@ -1,4 +1,4 @@
-type t
+abstract type t
 val empty : t
 val of_char : Ledit_char.t -> t
 val of_ascii : string -> t

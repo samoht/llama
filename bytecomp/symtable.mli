@@ -37,7 +37,7 @@ val assign_global_value: Ident.t -> Obj.t -> unit
 val get_global_position: Ident.t -> int
 val check_global_initialized: (reloc_info * int) list -> unit
 
-type global_map
+abstract type global_map
 
 val current_state: unit -> global_map
 val restore_state: global_map -> unit

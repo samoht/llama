@@ -124,7 +124,6 @@ let options = make_bytecomp_options {
   bc_where = print_standard_library;
   bc_verbose = set verbose;
   bc_nopervasives = set nopervasives;
-  bc_dparsetree = set dump_parsetree;
   bc_drawlambda = set dump_rawlambda;
   bc_dlambda = set dump_lambda;
   bc_dinstr = set dump_instr;

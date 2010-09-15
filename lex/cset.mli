@@ -15,7 +15,7 @@
 
 (* Set of characters encoded as list of intervals *)
 
-type t
+abstract type t
 
 val empty : t
 val is_empty : t -> bool

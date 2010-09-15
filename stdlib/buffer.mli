@@ -21,7 +21,7 @@
    concatenated pairwise).
 *)
 
-type t
+abstract type t
 (** The abstract type of buffers. *)
 
 val create : int -> t

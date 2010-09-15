@@ -20,7 +20,7 @@
 
 open Nat
 
-type big_int
+abstract type big_int
         (** The type of big integers. *)
 
 val zero_big_int : big_int

@@ -49,8 +49,7 @@ let add_opt add_fn bv = function
 
 let add_type_declaration bv pdecl =
   let rec add_tkind = function
-    Ptype_abstract _ -> ()
-  | Ptype_variant cstrs ->
+    Ptype_variant cstrs ->
       List.iter (fun (c, args, _) -> List.iter (add_type bv) args) cstrs
   | Ptype_record lbls ->
       List.iter (fun (l, mut, ty, _) -> add_type bv ty) lbls
@@ -111,7 +110,8 @@ and add_pat_expr_list bv pel =
 
 let add_sig_item bv item =
   match item.psig_desc with
-    Psig_value(id, ty) ->
+      Psig_abstract_type _ -> ()
+    | Psig_value(id, ty) ->
       add_type bv ty
   | Psig_external(id, ty, _) ->
       add_type bv ty
@@ -128,20 +128,19 @@ let add_signature bv = List.iter (add_sig_item bv)
 
 let add_struct_item bv item =
   match item.pstr_desc with
-    Pstr_eval e ->
+  | Pstr_eval e ->
       add_expr bv e
   | Pstr_value(id, pel) ->
       add_pat_expr_list bv pel
-  | Pstr_external(id, ty, _) ->
-      add_type bv ty
   | Pstr_type dcls ->
       List.iter (fun (td) -> add_type_declaration bv td) dcls
   | Pstr_exception(id, args) ->
       List.iter (add_type bv) args
-(*  | Pstr_exn_rebind(id, l) ->
-      add bv l *)
   | Pstr_open l ->
       addmodule bv l
+  | Pstr_external_type _ -> ()
+  | Pstr_external(id, ty, _) ->
+      add_type bv ty
 (*  | Pstr_include modl ->
       add_module bv modl *)
 

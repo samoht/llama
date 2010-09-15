@@ -15,7 +15,7 @@
 
 (** Weak array operations *)
 
-type 'a t;;
+external type 'a t;;
 
 external create: int -> 'a t = "caml_weak_create";;
 

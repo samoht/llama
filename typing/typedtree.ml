@@ -79,8 +79,7 @@ type local_type_constructor = {
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
-    Ltcs_abstract
-  | Ltcs_variant of (string * local_type list) list
+    Ltcs_variant of (string * local_type list) list
   | Ltcs_record of (string * mutable_flag * local_type) list
   | Ltcs_abbrev of local_type
 
@@ -100,9 +99,10 @@ type temporary_signature_item =
     tsig_loc : Location.t }
 
 and temporary_signature_item_desc =
-    Tsig_value of string * llama_type
-  | Tsig_external of string * llama_type * Primitive.description
+    Tsig_abstract_type of int * string
   | Tsig_type of int list * local_type_constructor list
+  | Tsig_value of string * llama_type
+  | Tsig_external of string * llama_type * Primitive.description
   | Tsig_exception of string * local_type list
   | Tsig_open of string * signature
 
@@ -115,21 +115,22 @@ type 'ty temporary_structure_item =
     tstr_loc : Location.t }
 
 and 'ty temporary_structure_item_desc =
-    Tstr_eval of 'ty expression
+    Tstr_type of int list * local_type_constructor list
   | Tstr_value of rec_flag * ('ty pattern * 'ty expression) list
+  | Tstr_eval of 'ty expression
+  | Tstr_external_type of int * string
   | Tstr_external of string * llama_type * Primitive.description
-  | Tstr_type of int list * local_type_constructor list
   | Tstr_exception of string * local_type list
   | Tstr_open of string * signature
 
 (* what the compiler sees *)
 
 type structure_item =
-    Str_eval of llama_type expression
+    Str_type of type_constructor_group
+  | Str_eval of llama_type expression
   | Str_value of
       rec_flag * (llama_type pattern * llama_type expression) list * (llama_type variable * value) list
   | Str_external of value
-  | Str_type of type_constructor_group
   | Str_exception of constructor
   | Str_open of signature
 

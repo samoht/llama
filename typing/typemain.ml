@@ -32,10 +32,10 @@ let rec structure env = function
 
 let rec signature_of_structure = function
     [] -> []
+  | Str_type tcsg :: rem -> Sig_type tcsg :: signature_of_structure rem
   | Str_eval _ :: rem -> signature_of_structure rem
   | Str_value (_, _, m) :: rem -> List.map (fun (_, v) -> Sig_value v) m @ signature_of_structure rem
   | Str_external v :: rem -> Sig_value v :: signature_of_structure rem
-  | Str_type tcsg :: rem -> Sig_type tcsg :: signature_of_structure rem
   | Str_exception cs :: rem -> Sig_exception cs :: signature_of_structure rem
   | Str_open _ :: rem -> signature_of_structure rem
 

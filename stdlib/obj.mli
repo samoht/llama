@@ -18,7 +18,7 @@
    Not for the casual user.
 *)
 
-type t
+abstract type t
 
 external repr : 'a -> t = "%identity"
 external obj : t -> 'a = "%identity"

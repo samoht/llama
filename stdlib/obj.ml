@@ -15,7 +15,7 @@
 
 (* Operations on internal representations of values *)
 
-type t
+external type t
 
 external repr : 'a -> t = "%identity"
 external obj : t -> 'a = "%identity"

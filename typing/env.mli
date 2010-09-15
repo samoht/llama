@@ -2,7 +2,7 @@
 
 open Base
 
-type t
+abstract type t
 val empty : t
 val initial : t  (* builtins but not Pervasives *)
 
