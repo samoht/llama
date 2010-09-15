@@ -256,7 +256,7 @@ val finalise_release : unit -> unit;;
     GC that it can launch the next finalisation function without waiting
     for the current one to return. *)
 
-abstract type alarm
+type alarm
 (** An alarm is a piece of data that calls a user function at the end of
    each major GC cycle.  The following functions are provided to create
    and delete alarms. *)

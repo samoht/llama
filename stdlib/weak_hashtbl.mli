@@ -22,7 +22,7 @@
     *)
 
 
-  abstract type 'data t
+  type 'data t
     (** The type of tables that contain elements of type [data].
         Note that weak hash tables cannot be marshaled using
         {!Pervasives.output_value} or the functions of the {!Marshal}

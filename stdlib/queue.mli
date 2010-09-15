@@ -18,7 +18,7 @@
    This module implements queues (FIFOs), with in-place modification.
 *)
 
-abstract type 'a t
+type 'a t
 (** The type of queues containing elements of type ['a]. *)
 
 

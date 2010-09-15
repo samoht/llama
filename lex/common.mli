@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-abstract type line_tracker;;
+type line_tracker;;
 val open_tracker : string -> out_channel -> line_tracker
 val close_tracker : line_tracker -> unit
 val copy_chunk :

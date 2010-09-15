@@ -22,7 +22,7 @@
 (** {6 Generic interface} *)
 
 
-abstract type ('a, 'b) t
+type ('a, 'b) t
 (** The type of hash tables from type ['a] to type ['b]. *)
 
 val create : int -> ('a, 'b) t

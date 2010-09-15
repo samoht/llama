@@ -30,7 +30,7 @@
 
 (** Functional streams *)
 
-abstract type 'a t
+type 'a t
     (* The type of 'a functional streams *)
 val from : (int -> 'a option) -> 'a t
     (* [Fstream.from f] returns a stream built from the function [f].
@@ -83,7 +83,7 @@ val bparse_all : ('a, 'b) bp -> 'a t -> 'b list
 (*--*)
 
 val nil : unit -> 'a t
-abstract type 'a data
+type 'a data
 val cons : 'a -> 'a t -> 'a data
 val app : 'a t -> 'a t -> 'a data
 val flazy : (unit -> 'a data) -> 'a t

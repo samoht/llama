@@ -118,13 +118,13 @@ type merge_option =
 val all_merge_options : merge_option list
 
 (** Type of magic numbers. *)
-abstract type magic
+type magic
 
 (** The magic number for the dumps of this version of ocamldoc. *)
 val magic : magic
 
 (** A dump of a structure. *)
-abstract type 'a dump
+type 'a dump
 
 (** Create a dump structure. *)
 val make_dump : 'a -> 'a dump

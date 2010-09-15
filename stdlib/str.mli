@@ -19,7 +19,7 @@
 (** {6 Regular expressions} *)
 
 
-abstract type regexp
+type regexp
 (** The type of compiled regular expressions. *)
 
 

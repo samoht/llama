@@ -213,7 +213,7 @@ val nice : int -> int
 (** {6 Basic file input/output} *)
 
 
-abstract type file_descr
+type file_descr
 (** The abstract type of file descriptors. *)
 
 val stdin : file_descr
@@ -486,7 +486,7 @@ val getcwd : unit -> string
 val chroot : string -> unit
 (** Change the process root directory. *)
 
-abstract type dir_handle
+type dir_handle
 (** The type of descriptors over opened directories. *)
 
 val opendir : string -> dir_handle
@@ -869,7 +869,7 @@ val getgrgid : int -> group_entry
 (** {6 Internet addresses} *)
 
 
-abstract type inet_addr
+type inet_addr
 (** The abstract type of Internet addresses. *)
 
 val inet_addr_of_string : string -> inet_addr

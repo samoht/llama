@@ -14,7 +14,7 @@
 
 (* Consistency tables: for checking consistency of module CRCs *)
 
-abstract type t
+type t
 
 val create: unit -> t
 

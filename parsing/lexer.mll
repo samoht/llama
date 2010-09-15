@@ -35,7 +35,6 @@ exception Error of error * Location.t;;
 
 let keyword_table =
   create_hashtable 149 [
-    "abstract", ABSTRACT;
     "and", AND;
     "as", AS;
     "assert", ASSERT;

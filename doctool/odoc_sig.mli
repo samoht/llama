@@ -14,7 +14,7 @@
 (** The module for analysing a signature and source code and creating modules, classes, ..., elements.*)
 
 (** The functions used to retrieve information from a signature. *)
-      abstract type ele
+      type ele
       type tab = (ele, Base.signature_item) Hashtbl.t
 
       (** Create a table from a signature. This table is used by some

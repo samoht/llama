@@ -32,7 +32,7 @@ type 'elt ord = 'elt -> 'elt -> int
 exception Incompatible
   (** Exception raised when sets use incompatible orderings. *)
 
-abstract type 'elt t
+type 'elt t
   (** The type of sets. *)
 
 val empty_generic: 'elt t

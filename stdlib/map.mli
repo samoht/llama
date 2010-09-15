@@ -32,7 +32,7 @@ type 'key ord = 'key -> 'key -> int
 exception Incompatible
   (** Exception raised when sets use incompatible orderings. *)
 
-abstract type ('key, 'a) t
+type ('key, 'a) t
   (** The type of maps from type ['key] to type ['a]. *)
 
 val empty_generic: ('key, 'a) t

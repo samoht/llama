@@ -15,7 +15,7 @@
 (* Association tables from any ordered type to any type.
    We use the generic ordering to compare keys. *)
 
-abstract type ('a, 'b) t
+type ('a, 'b) t
 
 val empty: ('a, 'b) t
 val add: 'a -> 'b -> ('a, 'b) t -> ('a, 'b) t

@@ -492,10 +492,10 @@ val ( @ ) : 'a list -> 'a list -> 'a list
 
 (** {6 Input/output} *)
 
-abstract type in_channel
+type in_channel
 (** The type of input channel. *)
 
-abstract type out_channel
+type out_channel
 (** The type of output channel. *)
 
 val stdin : in_channel

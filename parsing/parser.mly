@@ -150,7 +150,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 
 /* Tokens */
 
-%token ABSTRACT
 %token AMPERAMPER
 %token AMPERSAND
 %token AND
@@ -377,8 +376,8 @@ signature:
   | signature signature_item SEMISEMI           { $2 :: $1 }
 ;
 signature_item:
-    ABSTRACT TYPE type_parameters LIDENT
-      { mksig(Psig_abstract_type($3, $4)) }
+    TYPE type_parameters LIDENT
+      { mksig(Psig_abstract_type($2, $3)) }
   | TYPE type_declarations
       { mksig(Psig_type(List.rev $2)) }
   | VAL val_ident COLON core_type

@@ -23,7 +23,7 @@ open Big_int
    In constrast with numbers (type [num]), the special cases of
    small integers and big integers are not optimized specially. *)
 
-abstract type ratio
+type ratio
 
 val null_denominator : ratio -> bool
 val numerator_ratio : ratio -> big_int

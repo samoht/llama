@@ -1,4 +1,4 @@
-abstract type in_channel;;
+type in_channel;;
 (* The notion of input channel for the [Scanf] module:
    those channels provide all the machinery necessary to read from a given
    [Pervasives.in_channel] value.

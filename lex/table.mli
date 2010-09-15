@@ -11,7 +11,7 @@
 (***********************************************************************)
 
 (* Table used for code emission, ie extensible arrays *)
-abstract type 'a t
+type 'a t
 
 val create : 'a -> 'a t
 
