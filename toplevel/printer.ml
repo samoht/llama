@@ -101,7 +101,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       | [] ->
           raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Basics.moregeneral sch ty
+          if Basics.type_moregeneral sch ty
           then printer
           else find remainder
       in find !printers
@@ -138,7 +138,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
           find_printer env ty obj
         with Not_found ->
           match ty with
-          | Tvar _ ->
+          | Tparam _ ->
               Oval_stuff "<poly>"
           | Tarrow(ty1, ty2) ->
               Oval_stuff "<fun>"
@@ -196,7 +196,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Basics.apply_abbrev (tcs_params tcs) body ty_list)
+                      (Basics.apply_type (tcs_params tcs) body ty_list)
                 | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -207,7 +207,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Basics.apply_abbrev (tcs_params tcs) ty ty_list)
+                           Basics.apply_type (tcs_params tcs) ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -219,7 +219,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Basics.apply_abbrev (tcs_params tcs) lbl.lbl_arg
+                                Basics.apply_type (tcs_params tcs) lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =

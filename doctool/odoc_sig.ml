@@ -322,7 +322,7 @@ open Odoc_types
               {
                 ty_name = Odoc_name.concat current_module_name name ;
                 ty_info = comment_opt ;
-                ty_parameters = List.map (fun param -> Tvar param) (standard_parameters (List.length params));
+                ty_parameters = List.map (fun param -> Tparam param) (standard_parameters (List.length params));
                 ty_kind = Odoc_type.Tcs_abstract;
                 ty_manifest = None;
                 ty_loc =
@@ -388,7 +388,7 @@ open Odoc_types
                     {
                       ty_name = Odoc_name.concat current_module_name name ;
                       ty_info = assoc_com ;
-                      ty_parameters = List.map (fun param -> Tvar param) (Base.tcs_params sig_type_decl);
+                      ty_parameters = List.map (fun param -> Tparam param) (Base.tcs_params sig_type_decl);
                       ty_kind = type_kind;
                       ty_manifest =
                         (match sig_type_decl.Base.tcs_kind with

@@ -116,7 +116,7 @@ and compats ps qs = match ps,qs with
 exception Empty (* Empty pattern *)
 
 let get_type_path ty =
-  let ty = Basics.expand_head ty in
+  let ty = Basics.expand_type ty in
   match ty with
   | Tconstr (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"
@@ -565,7 +565,7 @@ let close_variant env row =
     (* this unification cannot fail *)
     Typeutil.unify env row.row_more
       (Typeutil.newgenty
-         (Tvariant {row with row_fields = []; row_more = Typeutil.newgenvar();
+         (Tparamiant {row with row_fields = []; row_more = Typeutil.newgenvar();
                     row_closed = true; row_name = nm}))
   end
 *)
@@ -573,8 +573,8 @@ let close_variant env row =
 let row_of_pat pat =
   assert false
 (*
-  match Typeutil.expand_head pat.pat_env pat.pat_type with
-    {desc = Tvariant row} -> Typeutil.row_repr row
+  match Typeutil.expand_type pat.pat_env pat.pat_type with
+    {desc = Tparamiant row} -> Typeutil.row_repr row
   | _ -> assert false
 *)
 

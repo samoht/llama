@@ -42,7 +42,7 @@ let subst_type_constructor subst tcs =
   else tcs
 
 let rec subst_type subst = function
-    Tvar _ as ty ->
+    Tparam _ as ty ->
       ty
   | Tarrow (ty1, ty2) ->
       Tarrow (subst_type subst ty1, subst_type subst ty2)
@@ -76,7 +76,7 @@ let simplify_coercion cc =
 
 let values subst v1 v2 =
   let error () = Error [Value_descriptions (v1, v2)] in
-  if Basics.moregeneral v1.val_type (subst_type subst v2.val_type) then
+  if Basics.type_moregeneral v1.val_type (subst_type subst v2.val_type) then
     match v1.val_kind, v2.val_kind with
         Val_prim prim1, Val_prim prim2 ->
           if prim1 = prim2 then Tcoerce_none else raise (error ())
@@ -105,7 +105,7 @@ let rec compare_variants subst corresp idx cstrs1 cstrs2 =
         Some (Field_arity cs1.cs_name)
       else if
         Misc.for_all2
-          (fun ty1 ty2 -> Basics.equiv corresp ty1 (subst_type subst ty2))
+          (fun ty1 ty2 -> Basics.types_equiv corresp ty1 (subst_type subst ty2))
           cs1.cs_args cs2.cs_args
       then
         compare_variants subst corresp (succ idx) rem1 rem2
@@ -125,7 +125,7 @@ let rec compare_records subst corresp idx labels1 labels2 =
           Some (Field_names (idx, lbl1.lbl_name, lbl2.lbl_name))
         else if lbl1.lbl_mut <> lbl2.lbl_mut then
           Some (Field_mutable lbl1.lbl_name)
-        else if Basics.equiv corresp lbl1.lbl_arg (subst_type subst lbl2.lbl_arg) then
+        else if Basics.types_equiv corresp lbl1.lbl_arg (subst_type subst lbl2.lbl_arg) then
           compare_records subst corresp (succ idx) rem1 rem2
         else
           Some (Field_type lbl1.lbl_name)
@@ -148,11 +148,11 @@ let type_constructors subst tcs1 tcs2 =
           | Some msg -> raise (error msg)
         end
     | Tcs_abbrev ty1, Tcs_abbrev ty2 ->
-        if Basics.equiv corresp ty1 (subst_type subst ty2) then () else
+        if Basics.types_equiv corresp ty1 (subst_type subst ty2) then () else
           raise (error Unspecified)
     | _, Tcs_abbrev ty2 ->
         let ty1 = tcs_res tcs2 in
-        if Basics.equiv corresp ty1 ty2 then () else raise (error Unspecified)
+        if Basics.types_equiv corresp ty1 ty2 then () else raise (error Unspecified)
     | _ ->
         raise (error Unspecified)
 
@@ -163,7 +163,7 @@ let type_constructors subst tcs1 tcs2 =
 let exceptions subst cs1 cs2 =
   if
     List.forall2
-      (fun ty1 ty2 -> Basics.equal ty1 (subst_type subst ty2))
+      (fun ty1 ty2 -> Basics.types_equal ty1 (subst_type subst ty2))
       cs1.cs_args cs2.cs_args
   then ()
   else raise (Error [Exception_declarations (cs1, cs2)])

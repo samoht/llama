@@ -1,57 +1,55 @@
 open Base
 
-(* Basics. *)
-
-let variables =
+let parameters =
   let rec aux accu = function
-      Tvar tv -> if List.memq tv accu then accu else tv :: accu
+      Tparam tv -> if List.memq tv accu then accu else tv :: accu
     | Tarrow (ty1, ty2) -> aux (aux accu ty1) ty2
     | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl in
   fun ty -> List.rev (aux [] ty)
 
-let is_closed ty = (variables ty = [])
+let type_closed ty = (parameters ty = [])
 
-let rec subst s = function
-    Tvar tv -> List.assq tv s
-  | Tarrow (ty1, ty2) -> Tarrow (subst s ty1, subst s ty2)
-  | Ttuple tyl -> Ttuple (List.map (subst s) tyl)
-  | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst s) tyl)
+let rec subst_type s = function
+    Tparam tv -> List.assq tv s
+  | Tarrow (ty1, ty2) -> Tarrow (subst_type s ty1, subst_type s ty2)
+  | Ttuple tyl -> Ttuple (List.map (subst_type s) tyl)
+  | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst_type s) tyl)
 
 (* Expansion of abbreviations. *)
 
-let apply_abbrev params body args =
-  subst (List.combine params args) body
+let apply_type params body args =
+  subst_type (List.combine params args) body
 
-let rec expand_head : llama_type -> llama_type = function
+let rec expand_type = function
     Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-      expand_head (apply_abbrev (tcs_params tcs) body args)
+      expand_type (apply_type (tcs_params tcs) body args)
   | ty -> ty
 
 (* Rename type variables to standard parameter names. *)
 
-let rename_variables (ty : llama_type) : llama_type =
-  subst
+let renumber_parameters ty =
+  subst_type
     (let rec aux i = function
          [] -> []
-       | (var :: tl) -> ((var, Tvar i) :: aux (succ i) tl) in
-     aux 0 (variables ty)) ty
+       | (var :: tl) -> ((var, Tparam i) :: aux (succ i) tl) in
+     aux 0 (parameters ty)) ty
 
 (* Whether two types are identical, modulo expansion of abbreviations,
 and per the provided correspondence function for the variables. *)
 
-let equal, equiv =
+let types_equal, types_equiv =
   let rec equiv_gen corresp (ty1:llama_type) (ty2:llama_type) =
     match ty1, ty2 with
-        Tvar tv1, Tvar tv2 ->
+        Tparam tv1, Tparam tv2 ->
           corresp tv1 == tv2
       | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
           equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
       | Ttuple(t1args), Ttuple(t2args) ->
           List.forall2 (equiv_gen corresp) t1args t2args
       | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
-          equiv_gen corresp (apply_abbrev (tcs_params tcs) body args) ty2
+          equiv_gen corresp (apply_type (tcs_params tcs) body args) ty2
       | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-          equiv_gen corresp ty1 (apply_abbrev (tcs_params tcs) body args)
+          equiv_gen corresp ty1 (apply_type (tcs_params tcs) body args)
       | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
           List.forall2 (equiv_gen corresp) tyl1 tyl2
       | _ ->
@@ -66,33 +64,31 @@ let equal, equiv =
 let find_instantiation =
   let rec aux inst ty1 ty2 =
     match ty1, ty2 with
-        Tvar tv, _ ->
+        Tparam tv, _ ->
           begin match
             try Some (List.assq tv inst) with Not_found -> None
           with
               None -> (tv, ty2) :: inst
-            | Some ty2' -> if equal ty2 ty2' then inst else raise Not_found
+            | Some ty2' -> if types_equal ty2 ty2' then inst else raise Not_found
           end
       | Tarrow (dom1, cod1), Tarrow (dom2, cod2) ->
           aux (aux inst dom1 dom2) cod1 cod2
       | Ttuple tyl1, Ttuple tyl2 ->
           List.fold_left2 aux inst tyl1 tyl2
       | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
-          aux inst (apply_abbrev (tcs_params tcs) body args) ty2
+          aux inst (apply_type (tcs_params tcs) body args) ty2
       | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-          aux inst ty1 (apply_abbrev (tcs_params tcs) body args)
+          aux inst ty1 (apply_type (tcs_params tcs) body args)
       | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
           List.fold_left2 aux inst tyl1 tyl2
       | _ ->
           raise Not_found in
   aux []
 
-let moregeneral ty1 ty2 =
+let type_moregeneral ty1 ty2 =
   try ignore (find_instantiation ty1 ty2); true
   with Not_found -> false
 
-(* ---------------------------------------------------------------------- *)
-(* Non type stuff (XXX: rename module to Basics).                         *)
 (* ---------------------------------------------------------------------- *)
 
 let rec pattern_variables pat =

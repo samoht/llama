@@ -41,7 +41,7 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* ---------------------------------------------------------------------- *)
 
 let rec tree_of_type = function
-    Tvar i ->
+    Tparam i ->
       Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2) ->
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)

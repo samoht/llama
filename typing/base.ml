@@ -29,7 +29,7 @@ type parameter = int
 (* The record types are compared with (==). *)
 
 type llama_type =
-    Tvar of parameter
+    Tparam of parameter
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
@@ -69,6 +69,15 @@ type value =
     val_name : string;         (* Name of the value *)
     val_type : llama_type;     (* Type of the value *)
     val_kind : value_kind }    (* Is this a primitive? *)
+
+type signature_item =
+    Sig_type of type_constructor_group
+  | Sig_value of value
+  | Sig_exception of constructor
+
+type signature = signature_item list
+
+(* ---------------------------------------------------------------------- *)
 
 type variable =
   { var_name : string;
@@ -120,13 +129,6 @@ and expression_desc =
   | Exp_assertfalse
   | Exp_constraint of expression * llama_type
 
-type signature_item =
-    Sig_type of type_constructor_group
-  | Sig_value of value
-  | Sig_exception of constructor
-
-type signature = signature_item list
-
 type structure_item =
     Str_type of type_constructor_group
   | Str_let of rec_flag * (pattern * expression) list * (variable * value) list
@@ -145,7 +147,7 @@ let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr (tcs, List.map (fun param -> Tvar param) (tcs_params tcs))
+  Tconstr (tcs, List.map (fun param -> Tparam param) (tcs_params tcs))
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)

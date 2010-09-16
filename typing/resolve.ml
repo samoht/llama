@@ -29,6 +29,10 @@ type error =
 
 exception Error of Location.t * error
 
+let type_variables = ref ([] : (string * mutable_type) list);;
+let reset_type_variables () = type_variables := []
+let new_variable name ty = { mvar_name = name; mvar_type = ty }
+
 (* ---------------------------------------------------------------------- *)
 (* Utilities for checking things.                                         *)
 (* ---------------------------------------------------------------------- *)
@@ -97,7 +101,7 @@ type ('a, 'b) local_or_global =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_variables : (string, Mutable_base.variable) Tbl.t }
+  ctxt_variables : (string, mutable_variable) Tbl.t }
 
 let context_create env =
   { ctxt_env = env;
@@ -105,7 +109,7 @@ let context_create env =
 
 let context_add_variable var ctxt =
   { ctxt_env = ctxt.ctxt_env;
-    ctxt_variables = Tbl.add var.tvar_name var ctxt.ctxt_variables }
+    ctxt_variables = Tbl.add var.mvar_name var ctxt.ctxt_variables }
 
 let context_lookup_value lid ctxt =
   let look_global () = Global (Env.lookup_value lid ctxt.ctxt_env) in
@@ -125,7 +129,7 @@ let context_lookup_value lid ctxt =
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_type_variables : (string * int) list }
+  pseudoenv_type_variables : (string * parameter) list }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
@@ -197,7 +201,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           begin try
             List.assoc name !params
           with Not_found ->
-            let ty = Tvar (List.length !params) in
+            let ty = Tparam (List.length !params) in
             params := (name, ty) :: !params;
             ty
           end
@@ -218,7 +222,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
 let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
-        Lvar (lookup_type_variable pseudoenv name ty.ptyp_loc)
+        Lparam (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
         Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2)
     | Ptyp_tuple tyl ->
@@ -241,13 +245,9 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
                 raise (Error (ty.ptyp_loc, 
                               Type_arity_mismatch (lid, arity, List.length tyl)))
         end;
-        let tyl = List.map (local_type pseudoenv) tyl in
         match gentcs with
-            Local ltcs -> Lconstr_local (ltcs, tyl)
-          | Global tcs -> Lconstr (tcs, tyl)
-
-let type_variables = ref ([] : (string * Mutable_base.mutable_type) list);;
-let reset_type_variables () = type_variables := []
+            Local ltcs -> Lconstr_local ltcs
+          | Global tcs -> Lconstr (tcs, List.map (local_type pseudoenv) tyl)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -255,29 +255,25 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         begin try
           List.assoc name !type_variables
         with Not_found ->
-          let ty = Mutable_base.new_type_var () in
+          let ty = new_type_variable () in
           type_variables := (name, ty) :: !type_variables;
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Mutable_base.Marrow (mutable_type env ty1, mutable_type env ty2)
+        Marrow (mutable_type env ty1, mutable_type env ty2)
     | Ptyp_tuple tyl ->
-        Mutable_base.Mtuple (List.map (mutable_type env) tyl)
+        Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mutable_base.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
-                              List.map (mutable_type env) tyl)
+        Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
+                 List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
 (* ---------------------------------------------------------------------- *)
-
-let new_variable name ty =
-  { tvar_name = name;
-    tvar_type = ty }
 
 let pattern env pat =
   let names = bound_names pat in
@@ -285,23 +281,23 @@ let pattern env pat =
       None -> ()
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
-  let values = List.map (fun name -> (name, new_variable name (Mutable_base.new_type_var ()))) names in
+  let values = List.map (fun name -> (name, new_variable name (new_type_variable ()))) names in
   let rec pattern pat =
-    { tpat_desc = pattern_aux pat;
-      tpat_loc = pat.ppat_loc;
-      tpat_type = Mutable_base.new_type_var () }
+    { mpat_desc = pattern_aux pat;
+      mpat_loc = pat.ppat_loc;
+      mpat_type = new_type_variable () }
   and pattern_aux pat =
     match pat.ppat_desc with
         Ppat_any ->
-          Tpat_any
+          Mpat_any
       | Ppat_var name ->
-          Tpat_var (List.assoc name values)
+          Mpat_var (List.assoc name values)
       | Ppat_alias (pat', name) ->
-          Tpat_alias (pattern pat', List.assoc name values)
+          Mpat_alias (pattern pat', List.assoc name values)
       | Ppat_literal c ->
-          Tpat_literal c
+          Mpat_literal c
       | Ppat_tuple l ->
-          Tpat_tuple (List.map pattern l)
+          Mpat_tuple (List.map pattern l)
       | Ppat_construct (lid, sarg) ->
           let cs = lookup_constructor env lid pat.ppat_loc in
           let arity = cs_arity cs in
@@ -316,19 +312,19 @@ let pattern env pat =
           if List.length sargs <> cs_arity cs then
             raise(Error(pat.ppat_loc, Constructor_arity_mismatch(lid, cs_arity cs,
                                                                  List.length sargs)));
-          Tpat_construct (cs, List.map pattern sargs)
+          Mpat_construct (cs, List.map pattern sargs)
       | Ppat_record lbl_pat_list ->
           let lbl_pat_list =
             List.map (fun (lbl, pat) ->
                         lookup_label env lbl pat.ppat_loc, pattern pat) lbl_pat_list in
           let tcs = check_labels pat.ppat_loc false (List.map fst lbl_pat_list) in
-          Tpat_record (tcs, lbl_pat_list)
+          Mpat_record (tcs, lbl_pat_list)
       | Ppat_array patl ->
-          Tpat_array (List.map pattern patl)
+          Mpat_array (List.map pattern patl)
       | Ppat_or (pat1, pat2) ->
-          Tpat_or (pattern pat1, pattern pat2)
+          Mpat_or (pattern pat1, pattern pat2)
       | Ppat_constraint (pat', ty) ->
-          Tpat_constraint (pattern pat', mutable_type env ty)
+          Mpat_constraint (pattern pat', mutable_type env ty)
   in
   pattern pat
 
@@ -338,24 +334,24 @@ let pattern env pat =
 
 let extend_context ctxt pat =
   List.fold_left
-    (fun ctxt var -> context_add_variable var ctxt) ctxt (pattern_variables pat)
+    (fun ctxt var -> context_add_variable var ctxt) ctxt (mutable_pattern_variables pat)
 
 let rec expression ctxt exp =
-  { texp_desc = expression_aux ctxt exp;
-    texp_loc = exp.pexp_loc;
-    texp_type = Mutable_base.new_type_var () }
+  { mexp_desc = expression_aux ctxt exp;
+    mexp_loc = exp.pexp_loc;
+    mexp_type = new_type_variable () }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
       Pexp_ident li ->
         begin match lookup_value ctxt li exp.pexp_loc with
-            Local var -> Texp_var var
-          | Global v -> Texp_value v
+            Local var -> Mexp_var var
+          | Global v -> Mexp_value v
         end
     | Pexp_literal c ->
-        Texp_literal c
+        Mexp_literal c
     | Pexp_tuple l ->
-        Texp_tuple (List.map (expression ctxt) l)
+        Mexp_tuple (List.map (expression ctxt) l)
     | Pexp_construct (lid, sarg) ->
         let cs = lookup_constructor ctxt.ctxt_env lid exp.pexp_loc in
         let arity = cs_arity cs in
@@ -368,11 +364,11 @@ and expression_aux ctxt exp =
         if List.length sargs <> cs_arity cs then
           raise(Error(exp.pexp_loc, Constructor_arity_mismatch(lid,
                                                               cs_arity cs, List.length sargs)));
-        Texp_construct (cs, List.map (expression ctxt) sargs)
+        Mexp_construct (cs, List.map (expression ctxt) sargs)
     | Pexp_apply (f, l) ->
-        Texp_apply (expression ctxt f, List.map (expression ctxt) l)
+        Mexp_apply (expression ctxt f, List.map (expression ctxt) l)
     | Pexp_match (item, pat_exp_list) ->
-        Texp_match
+        Mexp_match
           (expression ctxt item,
            List.map
              (fun (pat, exp) ->
@@ -384,9 +380,9 @@ and expression_aux ctxt exp =
         let big_ctxt = List.fold_left extend_context ctxt pat_list in
         let cond_ctxt = if b = Recursive then big_ctxt else ctxt in
         let exp_list = List.map (expression cond_ctxt) (List.map snd lpe) in
-        Texp_let (b, List.combine pat_list exp_list, expression big_ctxt e)
+        Mexp_let (b, List.combine pat_list exp_list, expression big_ctxt e)
     | Pexp_function l ->
-        Texp_function
+        Mexp_function
           (List.map
              (fun (pat, exp) ->
                 let pat = pattern ctxt.ctxt_env pat in
@@ -399,27 +395,27 @@ and expression_aux ctxt exp =
             (fun pat (_, exp) -> pat, expression (extend_context ctxt pat) exp)
             pat_list pat_exp_list
         in
-        Texp_try (expression ctxt exp, pat_exp_list)
+        Mexp_try (expression ctxt exp, pat_exp_list)
     | Pexp_sequence (e1,e2) ->
-        Texp_sequence(expression ctxt e1,expression ctxt e2)
+        Mexp_sequence(expression ctxt e1,expression ctxt e2)
     | Pexp_ifthenelse (e1, e2, o) ->
-        Texp_ifthenelse (expression ctxt e1,
+        Mexp_ifthenelse (expression ctxt e1,
                          expression ctxt e2,
                          match o with None -> None | Some e3 -> Some (expression ctxt e3))
     | Pexp_while (e1, e2) ->
-        Texp_while(expression ctxt e1, expression ctxt e2)
+        Mexp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name (Mutable_base.new_type_var ()) in
+        let var = new_variable name (new_type_variable ()) in
         let big_ctxt = context_add_variable var ctxt in
-        Texp_for (var,
+        Mexp_for (var,
                   expression ctxt e1,
                   expression ctxt e2,
                   dir_flag,
                   expression big_ctxt e3)
     | Pexp_constraint(e,te) ->
-        Texp_constraint(expression ctxt e,mutable_type ctxt.ctxt_env te)
+        Mexp_constraint(expression ctxt e,mutable_type ctxt.ctxt_env te)
     | Pexp_array l ->
-        Texp_array(List.map (expression ctxt) l)
+        Mexp_array(List.map (expression ctxt) l)
     | Pexp_record (lbl_exp_list, opt_init) ->
         let lbl_exp_list =
           List.map
@@ -432,18 +428,18 @@ and expression_aux ctxt exp =
               None -> None
             | Some init -> Some (expression ctxt init)
         in
-        Texp_record (tcs, lbl_exp_list, opt_init)
-    | Pexp_field (e,li) -> Texp_field(expression ctxt e,lookup_label ctxt.ctxt_env li exp.pexp_loc)
+        Mexp_record (tcs, lbl_exp_list, opt_init)
+    | Pexp_field (e,li) -> Mexp_field(expression ctxt e,lookup_label ctxt.ctxt_env li exp.pexp_loc)
     | Pexp_setfield(e,li,e2) ->
         let lbl = lookup_label ctxt.ctxt_env li exp.pexp_loc in
         if not lbl.lbl_mut then raise(Error(exp.pexp_loc, Label_not_mutable lbl));
-        Texp_setfield (expression ctxt e, lbl, expression ctxt e2)
+        Mexp_setfield (expression ctxt e, lbl, expression ctxt e2)
     | Pexp_assert e ->
-        Texp_assert (expression ctxt e)
+        Mexp_assert (expression ctxt e)
     | Pexp_assertfalse ->
-        Texp_assertfalse
+        Mexp_assertfalse
     | Pexp_when(e1,e2) ->
-        Texp_when(expression ctxt e1,expression ctxt e2)
+        Mexp_when(expression ctxt e1,expression ctxt e2)
 
 (* ---------------------------------------------------------------------- *)
 (* Type declarations.                                                     *)
@@ -461,15 +457,14 @@ let type_kind pseudoenv = function
 
 let is_recursive_abbrev =
   let rec occ seen = function
-      Lvar _ -> false
+      Lparam _ -> false
     | Larrow (ty1, ty2) -> occ seen ty1 || occ seen ty2
     | Ltuple tyl | Lconstr (_, tyl) -> List.exists (occ seen) tyl
-    | Lconstr_local (ltcs, tyl) ->
+    | Lconstr_local ltcs ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
                Ltcs_abbrev ty -> occ (ltcs :: seen) ty
-             | _ -> false) ||
-          List.exists (occ seen) tyl in
+             | _ -> false) in
   fun ltcs ->
     match ltcs.ltcs_kind with
         Ltcs_abbrev ty -> occ [ltcs] ty
@@ -524,33 +519,33 @@ let external_declaration decl ty =
 
 let signature_item env psig =
   reset_type_variables ();
-  { tsig_desc =
+  { msig_desc =
       begin match psig.psig_desc with
           Psig_abstract_type (params, name) ->
             if find_duplicate params <> None then
               raise (Error (psig.psig_loc, Repeated_parameter));
-            Tsig_abstract_type (List.length params, name)
+            Msig_abstract_type (List.length params, name)
         | Psig_value (s, te) ->
-            Tsig_value (s, llama_type env te)
+            Msig_value (s, llama_type env te)
         | Psig_external(id,te,pr) ->
-            Tsig_external (id, llama_type env te, external_declaration pr te)
+            Msig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
             let params, decls = type_declarations env pdecls in
-            Tsig_type (params, decls)
+            Msig_type (params, decls)
         | Psig_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
-            Tsig_exception (name, List.map (local_type pseudoenv) args)
+            Msig_exception (name, List.map (local_type pseudoenv) args)
         | Psig_open name ->
-            Tsig_open (name, lookup_module name psig.psig_loc)
+            Msig_open (name, lookup_module name psig.psig_loc)
       end;
-    tsig_loc = psig.psig_loc }
+    msig_loc = psig.psig_loc }
             
 let top_bindings env rec_flag ppat_pexp_list =
   let pat_list = List.map (fun (ppat, _) -> pattern env ppat) ppat_pexp_list in
   let ctxt =
     match rec_flag with
         Recursive ->
-          let vars = List.flatten (List.map pattern_variables pat_list) in
+          let vars = List.flatten (List.map mutable_pattern_variables pat_list) in
           List.fold_left
             (fun ctxt var -> context_add_variable var ctxt)
             (context_create env) vars
@@ -561,26 +556,26 @@ let top_bindings env rec_flag ppat_pexp_list =
 
 let structure_item env pstr =
   reset_type_variables ();
-  { tstr_desc =
+  { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->
             let params, decls = type_declarations env pdecls in
-            Tstr_type (params, decls)
+            Mstr_type (params, decls)
         | Pstr_let (rec_flag, ppat_pexp_list) ->
-            Tstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
+            Mstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
         | Pstr_eval pexp ->
-            Tstr_eval (expression (context_create env) pexp)
+            Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
-            Tstr_external_type (List.length params, name)
+            Mstr_external_type (List.length params, name)
         | Pstr_external (name, pty, decl) ->
-            Tstr_external (name, llama_type env pty, external_declaration decl pty)
+            Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
-            Tstr_exception (name, List.map (local_type pseudoenv) args)
+            Mstr_exception (name, List.map (local_type pseudoenv) args)
         | Pstr_open name ->
-            Tstr_open (name, lookup_module name pstr.pstr_loc)
+            Mstr_open (name, lookup_module name pstr.pstr_loc)
       end;
-    tstr_loc = pstr.pstr_loc }
+    mstr_loc = pstr.pstr_loc }
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)

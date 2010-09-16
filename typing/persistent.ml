@@ -13,7 +13,7 @@ type 'a reference =
   | External of module_id * string
 
 type llama_type =
-    Tvar of int
+    Tparam of int
   | Tarrow of llama_type * llama_type
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
@@ -76,8 +76,8 @@ type saver =
   }
 
 let rec save_type saver = function
-    Base.Tvar tv ->
-      Tvar tv
+    Base.Tparam tv ->
+      Tparam tv
   | Base.Tarrow (ty1, ty2) ->
       Tarrow (save_type saver ty1, save_type saver ty2)
   | Base.Ttuple tyl ->
@@ -176,8 +176,8 @@ type loader =
   }
 
 let rec load_type loader = function
-    Tvar tvar ->
-      Base.Tvar tvar
+    Tparam tvar ->
+      Base.Tparam tvar
   | Tarrow (ty1, ty2) ->
       Base.Tarrow (load_type loader ty1, load_type loader ty2)
   | Ttuple tyl ->

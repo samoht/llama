@@ -144,7 +144,7 @@ let match_printer_type ppf desc typename =
     with Not_found ->
       fprintf ppf "Cannot find type Topdirs.%s.@." typename;
       raise Exit in
-  let ty_arg = Mutable_base.new_type_var() in
+  let ty_arg = Mutable_base.new_type_variable() in
   Mutable_base.unify
     (Mutable_base.Mconstr (printer_tcs, [ty_arg]))
     (Mutable_base.instantiate_value desc);

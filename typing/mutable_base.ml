@@ -16,76 +16,76 @@ and mutable_type_variable =
 (* Variables.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-type variable =
-  { tvar_name : string;
-    tvar_type : mutable_type }
+type mutable_variable =
+  { mvar_name : string;
+    mvar_type : mutable_type }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-type pattern =
-  { tpat_desc : pattern_desc;
-    tpat_loc : Location.t;
-    tpat_type : mutable_type }
+type mutable_pattern =
+  { mpat_desc : mutable_pattern_desc;
+    mpat_loc : Location.t;
+    mpat_type : mutable_type }
 
-and pattern_desc =
-    Tpat_any
-  | Tpat_var of variable
-  | Tpat_alias of pattern * variable
-  | Tpat_literal of literal
-  | Tpat_tuple of pattern list
-  | Tpat_construct of constructor * pattern list
-  | Tpat_record of type_constructor * (label * pattern) list
-  | Tpat_array of pattern list
-  | Tpat_or of pattern * pattern
-  | Tpat_constraint of pattern * mutable_type
+and mutable_pattern_desc =
+    Mpat_any
+  | Mpat_var of mutable_variable
+  | Mpat_alias of mutable_pattern * mutable_variable
+  | Mpat_literal of literal
+  | Mpat_tuple of mutable_pattern list
+  | Mpat_construct of constructor * mutable_pattern list
+  | Mpat_record of type_constructor * (label * mutable_pattern) list
+  | Mpat_array of mutable_pattern list
+  | Mpat_or of mutable_pattern * mutable_pattern
+  | Mpat_constraint of mutable_pattern * mutable_type
 
-let rec pattern_variables pat =
-  match pat.tpat_desc with
-      Tpat_any | Tpat_literal _ -> []
-    | Tpat_var var -> [ var ]
-    | Tpat_alias (pat, var) -> (var :: pattern_variables pat)
-    | Tpat_tuple patl | Tpat_construct (_, patl) | Tpat_array patl ->
-        List.flatten (List.map pattern_variables patl)
-    | Tpat_record (_, lbl_pat_list) ->
+let rec mutable_pattern_variables pat =
+  match pat.mpat_desc with
+      Mpat_any | Mpat_literal _ -> []
+    | Mpat_var var -> [ var ]
+    | Mpat_alias (pat, var) -> (var :: mutable_pattern_variables pat)
+    | Mpat_tuple patl | Mpat_construct (_, patl) | Mpat_array patl ->
+        List.flatten (List.map mutable_pattern_variables patl)
+    | Mpat_record (_, lbl_pat_list) ->
         List.flatten
-          (List.map (fun (lbl,pat) -> pattern_variables pat) lbl_pat_list)
-    | Tpat_or (pat1, pat2) -> pattern_variables pat1
-    | Tpat_constraint (pat', _) -> pattern_variables pat'
+          (List.map (fun (lbl,pat) -> mutable_pattern_variables pat) lbl_pat_list)
+    | Mpat_or (pat1, pat2) -> mutable_pattern_variables pat1
+    | Mpat_constraint (pat', _) -> mutable_pattern_variables pat'
 
 (* ---------------------------------------------------------------------- *)
 (* Expressions.                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-type expression =
-  { texp_desc : expression_desc;
-    texp_loc : Location.t;
-    texp_type : mutable_type }
+type mutable_expression =
+  { mexp_desc : mutable_expression_desc;
+    mexp_loc : Location.t;
+    mexp_type : mutable_type }
 
-and expression_desc =
-    Texp_var of variable
-  | Texp_value of value
-  | Texp_literal of literal
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor * expression list
-  | Texp_record of type_constructor * (label * expression) list * expression option
-  | Texp_field of expression * label
-  | Texp_setfield of expression * label * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of variable * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
-  | Texp_assert of expression
-  | Texp_assertfalse
-  | Texp_constraint of expression * mutable_type
+and mutable_expression_desc =
+    Mexp_var of mutable_variable
+  | Mexp_value of value
+  | Mexp_literal of literal
+  | Mexp_let of rec_flag * (mutable_pattern * mutable_expression) list * mutable_expression
+  | Mexp_function of (mutable_pattern * mutable_expression) list
+  | Mexp_apply of mutable_expression * mutable_expression list
+  | Mexp_match of mutable_expression * (mutable_pattern * mutable_expression) list
+  | Mexp_try of mutable_expression * (mutable_pattern * mutable_expression) list
+  | Mexp_tuple of mutable_expression list
+  | Mexp_construct of constructor * mutable_expression list
+  | Mexp_record of type_constructor * (label * mutable_expression) list * mutable_expression option
+  | Mexp_field of mutable_expression * label
+  | Mexp_setfield of mutable_expression * label * mutable_expression
+  | Mexp_array of mutable_expression list
+  | Mexp_ifthenelse of mutable_expression * mutable_expression * mutable_expression option
+  | Mexp_sequence of mutable_expression * mutable_expression
+  | Mexp_while of mutable_expression * mutable_expression
+  | Mexp_for of mutable_variable * mutable_expression * mutable_expression * direction_flag * mutable_expression
+  | Mexp_when of mutable_expression * mutable_expression
+  | Mexp_assert of mutable_expression
+  | Mexp_assertfalse
+  | Mexp_constraint of mutable_expression * mutable_type
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)
@@ -101,71 +101,75 @@ and local_type_constructor_kind =
   | Ltcs_abbrev of local_type
 
 and local_type =
-    Lvar of int
+    Lparam of parameter
   | Larrow of local_type * local_type
   | Ltuple of local_type list
   | Lconstr of type_constructor * local_type list
-  | Lconstr_local of local_type_constructor * local_type list
+  | Lconstr_local of local_type_constructor
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type signature_item =
-  { tsig_desc : signature_item_desc;
-    tsig_loc : Location.t }
+type mutable_signature_item =
+  { msig_desc : mutable_signature_item_desc;
+    msig_loc : Location.t }
 
-and signature_item_desc =
-    Tsig_abstract_type of int * string
-  | Tsig_type of int list * local_type_constructor list
-  | Tsig_value of string * llama_type
-  | Tsig_external of string * llama_type * Primitive.description
-  | Tsig_exception of string * local_type list
-  | Tsig_open of string * signature
+and mutable_signature_item_desc =
+    Msig_abstract_type of int * string
+  | Msig_type of int list * local_type_constructor list
+  | Msig_value of string * llama_type
+  | Msig_external of string * llama_type * Primitive.description
+  | Msig_exception of string * local_type list
+  | Msig_open of string * signature
+
+type mutable_signature = mutable_signature_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)
 (* ---------------------------------------------------------------------- *)
 
-type structure_item =
-  { tstr_desc : structure_item_desc;
-    tstr_loc : Location.t }
+type mutable_structure_item =
+  { mstr_desc : mutable_structure_item_desc;
+    mstr_loc : Location.t }
 
-and structure_item_desc =
-    Tstr_type of int list * local_type_constructor list
-  | Tstr_let of rec_flag * (pattern * expression) list
-  | Tstr_eval of expression
-  | Tstr_external_type of int * string
-  | Tstr_external of string * llama_type * Primitive.description
-  | Tstr_exception of string * local_type list
-  | Tstr_open of string * signature
+and mutable_structure_item_desc =
+    Mstr_type of int list * local_type_constructor list
+  | Mstr_let of rec_flag * (mutable_pattern * mutable_expression) list
+  | Mstr_eval of mutable_expression
+  | Mstr_external_type of int * string
+  | Mstr_external of string * llama_type * Primitive.description
+  | Mstr_exception of string * local_type list
+  | Mstr_open of string * signature
+
+type mutable_structure = mutable_structure_item list
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let new_type_var () = Mvar { link = None }
+let new_type_variable () = Mvar { link = None }
 
-let predef_type_int = Mconstr (Predef.tcs_int, [])
-let predef_type_char = Mconstr (Predef.tcs_char, [])
-let predef_type_string = Mconstr (Predef.tcs_string, [])
-let predef_type_float = Mconstr (Predef.tcs_float, [])
-let predef_type_bool = Mconstr (Predef.tcs_bool, [])
-let predef_type_unit = Mconstr (Predef.tcs_unit, [])
-let predef_type_exn = Mconstr (Predef.tcs_exn, [])
-let predef_type_array ty = Mconstr (Predef.tcs_array, [ty])
-let predef_type_list ty = Mconstr (Predef.tcs_list, [ty])
-let predef_type_option ty = Mconstr (Predef.tcs_option, [ty])
-let predef_type_nativeint = Mconstr (Predef.tcs_nativeint, [])
-let predef_type_int32 = Mconstr (Predef.tcs_int32, [])
-let predef_type_int64 = Mconstr (Predef.tcs_int64, [])
+let mutable_type_int = Mconstr (Predef.tcs_int, [])
+let mutable_type_char = Mconstr (Predef.tcs_char, [])
+let mutable_type_string = Mconstr (Predef.tcs_string, [])
+let mutable_type_float = Mconstr (Predef.tcs_float, [])
+let mutable_type_bool = Mconstr (Predef.tcs_bool, [])
+let mutable_type_unit = Mconstr (Predef.tcs_unit, [])
+let mutable_type_exn = Mconstr (Predef.tcs_exn, [])
+let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty])
+let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty])
+let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty])
+let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [])
+let mutable_type_int32 = Mconstr (Predef.tcs_int32, [])
+let mutable_type_int64 = Mconstr (Predef.tcs_int64, [])
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
 
 let rec instantiate_type inst = function
-    Tvar param ->
+    Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2) ->
       Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
@@ -175,7 +179,7 @@ let rec instantiate_type inst = function
       Mconstr (tcs, List.map (instantiate_type inst) tyl)
 
 let instantiate_type_constructor tcs =
-  let inst = List.map (fun param -> (param, new_type_var ())) (tcs_params tcs) in
+  let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
   inst, Mconstr (tcs, List.map snd inst)
 
 let instantiate_constructor cs =
@@ -190,25 +194,24 @@ let instantiate_label lbl =
 
 let instantiate_value v =
   let ty = v.val_type in
-  let inst =
-    List.map (fun var -> (var, new_type_var ())) (Basics.variables ty) in
+  let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.parameters ty) in
   instantiate_type inst ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let rec type_repr = function
-    Mvar { link = Some ty } -> type_repr ty
+let rec mutable_type_repr = function
+    Mvar { link = Some ty } -> mutable_type_repr ty
   | ty -> ty
 
-let apply_abbrev params body args =
+let mutable_apply_type params body args =
   instantiate_type (List.combine params args) body
 
-let rec expand_head = function
-    Mvar { link = Some ty } -> expand_head ty
+let rec expand_mutable_type = function
+    Mvar { link = Some ty } -> expand_mutable_type ty
   | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
-      expand_head (apply_abbrev (tcs_params tcs) body args)
+      expand_mutable_type (mutable_apply_type (tcs_params tcs) body args)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -231,8 +234,8 @@ let rec occurs v = function
 exception Unify
 
 let rec unify ty1 ty2 =
-  let ty1 = type_repr ty1 in
-  let ty2 = type_repr ty2 in
+  let ty1 = mutable_type_repr ty1 in
+  let ty2 = mutable_type_repr ty2 in
   match ty1, ty2 with
       Mvar v1, Mvar v2 when v1 == v2 ->
         ()
@@ -246,9 +249,9 @@ let rec unify ty1 ty2 =
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
     | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
-        unify (apply_abbrev (tcs_params tcs1) body1 tyl1) ty2
+        unify (mutable_apply_type (tcs_params tcs1) body1 tyl1) ty2
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
-        unify ty1 (apply_abbrev (tcs_params tcs2) body2 tyl2)
+        unify ty1 (mutable_apply_type (tcs_params tcs2) body2 tyl2)
     | Mconstr (tcs1, tyl1), Mconstr (tcs2, tyl2) when tcs1 == tcs2 ->
         unify_list tyl1 tyl2
     | _ ->

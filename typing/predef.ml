@@ -94,7 +94,7 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tvar 0; Tconstr (tcs_list, [ Tvar 0 ]) ];
+    cs_args = [ Tparam 0; Tconstr (tcs_list, [ Tparam 0 ]) ];
     cs_tag = Tag_block 0 }
 
 let rec tcsg_option =
@@ -118,7 +118,7 @@ and cs_some =
   { cs_tcs = tcs_option;
     cs_module = Module_builtin;
     cs_name = "Some";
-    cs_args = [ Tvar 0 ];
+    cs_args = [ Tparam 0 ];
     cs_tag = Tag_block 0 }
 
 (* all together now *)

@@ -14,8 +14,8 @@ exception Error of Location.t * error
 (* ---------------------------------------------------------------------- *)
 
 type env =
-  { mutable type_variables : (mutable_type_variable * llama_type) list;
-    mutable variables : (Mutable_base.variable * Base.variable) list }
+  { mutable type_variables : (mutable_type_variable * parameter) list;
+    mutable variables : (mutable_variable * variable) list }
 
 let new_env () =
   { type_variables = [];
@@ -38,11 +38,11 @@ let rec mutable_type f = function
 and type_variable f tvar =
   match tvar.link with
       None ->
-        begin try List.assq tvar f.type_variables
+        begin try Tparam (List.assq tvar f.type_variables)
         with Not_found ->
-          let ty' = Tvar (List.length f.type_variables) in
-          f.type_variables <- (tvar, ty') :: f.type_variables;
-          ty'
+          let i = List.length f.type_variables in
+          f.type_variables <- (tvar, i) :: f.type_variables;
+          Tparam i
         end
     | Some ty ->
         mutable_type f ty
@@ -54,7 +54,7 @@ and type_variable f tvar =
 let variable f var =
   try List.assq var f.variables
   with Not_found ->
-    let var' = { var_name = var.tvar_name; var_type = mutable_type f var.tvar_type } in
+    let var' = { var_name = var.mvar_name; var_type = mutable_type f var.mvar_type } in
     f.variables <- (var, var') :: f.variables;
     var'
 
@@ -63,30 +63,30 @@ let variable f var =
 (* ---------------------------------------------------------------------- *)
 
 let rec pattern f pat =
-  { pat_desc = pattern_desc f pat.tpat_desc;
-    pat_loc = pat.tpat_loc;
-    pat_type = mutable_type f pat.tpat_type }
+  { pat_desc = pattern_desc f pat.mpat_desc;
+    pat_loc = pat.mpat_loc;
+    pat_type = mutable_type f pat.mpat_type }
 
 and pattern_desc f = function
-    Tpat_any ->
+    Mpat_any ->
       Pat_any
-  | Tpat_var var ->
+  | Mpat_var var ->
       Pat_var (variable f var)
-  | Tpat_alias (pat', var) ->
+  | Mpat_alias (pat', var) ->
       Pat_alias (pattern f pat', variable f var)
-  | Tpat_literal lit ->
+  | Mpat_literal lit ->
       Pat_literal lit
-  | Tpat_tuple patl ->
+  | Mpat_tuple patl ->
       Pat_tuple (List.map (pattern f) patl)
-  | Tpat_construct (cs, patl) ->
+  | Mpat_construct (cs, patl) ->
       Pat_construct (cs, List.map (pattern f) patl)
-  | Tpat_record (tcs, lbl_pat_list) ->
+  | Mpat_record (tcs, lbl_pat_list) ->
       Pat_record (tcs, List.map (fun (lbl, pat) -> (lbl, pattern f pat)) lbl_pat_list)
-  | Tpat_array patl ->
+  | Mpat_array patl ->
       Pat_array (List.map (pattern f) patl)
-  | Tpat_or (pat1, pat2) ->
+  | Mpat_or (pat1, pat2) ->
       Pat_or (pattern f pat1, pattern f pat2)
-  | Tpat_constraint (pat', ty) ->
+  | Mpat_constraint (pat', ty) ->
       Pat_constraint (pattern f pat', mutable_type f ty)
 
 (* ---------------------------------------------------------------------- *)
@@ -94,60 +94,60 @@ and pattern_desc f = function
 (* ---------------------------------------------------------------------- *)
 
 let rec expression f expr =
-  { exp_desc = expression_desc f expr.texp_desc;
-    exp_loc = expr.texp_loc;
-    exp_type = mutable_type f expr.texp_type }
+  { exp_desc = expression_desc f expr.mexp_desc;
+    exp_loc = expr.mexp_loc;
+    exp_type = mutable_type f expr.mexp_type }
 
 and expression_desc f = function
-    Texp_var var ->
+    Mexp_var var ->
       Exp_var (variable f var)
-  | Texp_value v ->
+  | Mexp_value v ->
       Exp_value v
-  | Texp_literal lit ->
+  | Mexp_literal lit ->
       Exp_literal lit
-  | Texp_let (rec_flag, pat_expr_list, body) ->
+  | Mexp_let (rec_flag, pat_expr_list, body) ->
       Exp_let (rec_flag,
                 List.map (fun (pat, expr) ->
                             (pattern f pat, expression f expr)) pat_expr_list,
                 expression f body)
-  | Texp_function pat_expr_list ->
+  | Mexp_function pat_expr_list ->
       Exp_function (pattern_expression_list f pat_expr_list)
-  | Texp_apply (funct, args) ->
+  | Mexp_apply (funct, args) ->
       Exp_apply (expression f funct, List.map (expression f) args)
-  | Texp_match (arg, pat_expr_list) ->
+  | Mexp_match (arg, pat_expr_list) ->
       Exp_match (expression f arg,
                   pattern_expression_list f pat_expr_list)
-  | Texp_try (body, pat_expr_list) ->
+  | Mexp_try (body, pat_expr_list) ->
       Exp_try (expression f body, pattern_expression_list f pat_expr_list)
-  | Texp_tuple el ->
+  | Mexp_tuple el ->
       Exp_tuple (List.map (expression f) el)
-  | Texp_construct (cs, el) ->
+  | Mexp_construct (cs, el) ->
       Exp_construct (cs, List.map (expression f) el)
-  | Texp_record (tcs, lbl_expr_list, opt_init_expr) ->
+  | Mexp_record (tcs, lbl_expr_list, opt_init_expr) ->
       Exp_record (tcs, List.map (fun (lbl, expr) -> (lbl, expression f expr)) lbl_expr_list,
                   expression_option f opt_init_expr)
-  | Texp_field (arg, lbl) ->
+  | Mexp_field (arg, lbl) ->
       Exp_field (expression f arg, lbl)
-  | Texp_setfield (arg, lbl, newval) ->
+  | Mexp_setfield (arg, lbl, newval) ->
       Exp_setfield (expression f arg, lbl, expression f newval)
-  | Texp_array el ->
+  | Mexp_array el ->
       Exp_array (List.map (expression f) el)
-  | Texp_ifthenelse (cond, ifso, opt_ifnot) ->
+  | Mexp_ifthenelse (cond, ifso, opt_ifnot) ->
       Exp_ifthenelse (expression f cond, expression f ifso,
                        expression_option f opt_ifnot)
-  | Texp_sequence (expr1, expr2) ->
+  | Mexp_sequence (expr1, expr2) ->
       Exp_sequence (expression f expr1, expression f expr2)
-  | Texp_while (cond, body) ->
+  | Mexp_while (cond, body) ->
       Exp_while (expression f cond, expression f body)
-  | Texp_for (param, low, high, dir, body) ->
+  | Mexp_for (param, low, high, dir, body) ->
       Exp_for (variable f param, expression f low, expression f high, dir, expression f body)
-  | Texp_when (cond, body) ->
+  | Mexp_when (cond, body) ->
       Exp_when (expression f cond, expression f body)
-  | Texp_assert cond ->
+  | Mexp_assert cond ->
       Exp_assert (expression f cond)
-  | Texp_assertfalse ->
+  | Mexp_assertfalse ->
       Exp_assertfalse
-  | Texp_constraint (expr', ty) ->
+  | Mexp_constraint (expr', ty) ->
       Exp_constraint (expression f expr', mutable_type f ty)
 
 and pattern_expression_list f =
@@ -163,14 +163,14 @@ and expression_option f = function
 (* Helpers for creating global entities.                                  *)
 (* ---------------------------------------------------------------------- *)
 
-let type_of_local_type subst =
+let type_of_local_type subst local_args =
   let rec aux = function
-      Lvar param -> Tvar param
+      Lparam i -> Tparam i
     | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
-    | Lconstr_local (ltcs, tyl) ->
-        Tconstr (List.assq ltcs subst, List.map aux tyl) in
+    | Lconstr_local ltcs ->
+        Tconstr (List.assq ltcs subst, local_args) in
   aux
 
 let make_type_constructor_group params ltcs_list =
@@ -188,6 +188,7 @@ let make_type_constructor_group params ltcs_list =
       ltcs_list in
   tcsg.tcsg_members <- tcs_list;
   let subst = List.combine ltcs_list tcs_list in
+  let local_args = List.map (fun i -> Tparam i) params in
   List.iter2
     begin fun tcs ltcs ->
       tcs.tcs_kind <-
@@ -206,7 +207,7 @@ let make_type_constructor_group params ltcs_list =
                        { cs_tcs = tcs;
                          cs_module = tcs_module tcs;
                          cs_name = name;
-                         cs_args = List.map (type_of_local_type subst) args;
+                         cs_args = List.map (type_of_local_type subst local_args) args;
                          cs_tag = tag } :: aux idx_const idx_block tl
                  in aux 0 0 name_args_list)
           | Ltcs_record name_mut_arg_list ->
@@ -216,12 +217,12 @@ let make_type_constructor_group params ltcs_list =
                    | (name, mut, arg) :: tl ->
                        { lbl_tcs = tcs;
                          lbl_name = name;
-                         lbl_arg = type_of_local_type subst arg;
+                         lbl_arg = type_of_local_type subst local_args arg;
                          lbl_mut = (mut = Mutable);
                          lbl_pos = pos } :: aux (succ pos) tl
                  in aux 0 name_mut_arg_list)
           | Ltcs_abbrev arg ->
-              Tcs_abbrev (type_of_local_type subst arg)
+              Tcs_abbrev (type_of_local_type subst local_args arg)
         end
     end
     tcs_list ltcs_list;
@@ -248,7 +249,7 @@ let exception_constructor name args =
   { cs_tcs = Predef.tcs_exn;
     cs_module = !Modenv.current_module;
     cs_name = name;
-    cs_args = List.map (type_of_local_type []) args;
+    cs_args = List.map (type_of_local_type [] []) args;
     cs_tag = Tag_exception;
   }
 
@@ -257,27 +258,27 @@ let exception_constructor name args =
 (* ---------------------------------------------------------------------- *)
 
 let signature_item env tsig =
-  match tsig.tsig_desc with
-      Tsig_abstract_type (arity, name) ->
+  match tsig.msig_desc with
+      Msig_abstract_type (arity, name) ->
         let tcsg = make_singleton_type arity name Tcs_abstract in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
-    | Tsig_value (name, ty) ->
+    | Msig_value (name, ty) ->
         let v =
           { val_module = !Modenv.current_module;
             val_name = name;
             val_type = ty;
             val_kind = Val_reg } in
         [Sig_value v], Env.add_value v env
-    | Tsig_external (name, ty, prim) ->
+    | Msig_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
         [Sig_value v], Env.add_value v env
-    | Tsig_type (params, decls) ->
+    | Msig_type (params, decls) ->
         let tcsg = make_type_constructor_group params decls in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
-    | Tsig_exception (name, args) ->
+    | Msig_exception (name, args) ->
         let cs = exception_constructor name args in
         [Sig_exception cs], Env.add_exception cs env
-    | Tsig_open (_, csig) ->
+    | Msig_open (_, csig) ->
         [], Env.add_signature csig env
 
 (* ---------------------------------------------------------------------- *)
@@ -286,17 +287,17 @@ let signature_item env tsig =
 
 let structure_item env str =
   let menv = new_env () in
-  match str.tstr_desc with
-      Tstr_eval texpr ->
+  match str.mstr_desc with
+      Mstr_eval texpr ->
         let expr = expression menv texpr in
-        [Str_eval expr], env, Some (Basics.rename_variables expr.exp_type)
-    | Tstr_let (rec_flag, pat_expr_list) ->
+        [Str_eval expr], env, Some (Basics.renumber_parameters expr.exp_type)
+    | Mstr_let (rec_flag, pat_expr_list) ->
         let pat_expr_list = pattern_expression_list menv pat_expr_list in
         List.iter
           (fun (pat, expr) ->
              let ty = pat.pat_type in
-             if not (Basics.is_nonexpansive expr) && not (Basics.is_closed ty) then
-               raise (Error (expr.exp_loc, Non_generalizable (Basics.rename_variables ty))))
+             if not (Basics.is_nonexpansive expr) && not (Basics.type_closed ty) then
+               raise (Error (expr.exp_loc, Non_generalizable (Basics.renumber_parameters ty))))
           pat_expr_list;
         let vars =
           List.flatten
@@ -305,24 +306,24 @@ let structure_item env str =
           List.map (fun var ->
                       { val_module = !Modenv.current_module;
                         val_name = var.var_name;
-                        val_type = Basics.rename_variables var.var_type;
+                        val_type = Basics.renumber_parameters var.var_type;
                         val_kind = Val_reg }) vars in
         [Str_let (rec_flag, pat_expr_list, List.combine vars vals)],
         List.fold_left (fun env v -> Env.add_value v env) env vals,
         None
-    | Tstr_external_type (arity, name) ->
+    | Mstr_external_type (arity, name) ->
         let tcsg = make_singleton_type arity name Tcs_abstract in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
-    | Tstr_external (name, ty, prim) ->
+    | Mstr_external (name, ty, prim) ->
         let v = primitive_value name ty prim in
         [Str_external v], Env.add_value v env, None
-    | Tstr_type (params, decls) ->
+    | Mstr_type (params, decls) ->
         let tcsg = make_type_constructor_group params decls in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
-    | Tstr_exception (name, args) ->
+    | Mstr_exception (name, args) ->
         let cs = exception_constructor name args in
         [Str_exception cs], Env.add_exception cs env, None
-    | Tstr_open (_, sg) ->
+    | Mstr_open (_, sg) ->
         [], Env.add_signature sg env, None
 
 (* ---------------------------------------------------------------------- *)
