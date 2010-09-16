@@ -20,7 +20,6 @@ open Config
 open Misc
 open Parsetree
 open Base
-open Typedtree
 open Outcometree
 
 type directive_fun =

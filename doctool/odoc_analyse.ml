@@ -20,7 +20,6 @@ open Config
 open Clflags
 open Misc
 open Format
-open Typedtree
 
 
 (** Initialize the search path.

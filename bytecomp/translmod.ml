@@ -19,7 +19,6 @@ open Misc
 open Asttypes
 open Longident
 open Base
-open Typedtree
 open Primitive
 open Lambda
 open Translcore

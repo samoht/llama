@@ -17,7 +17,6 @@ open Config
 open Clflags
 open Misc
 open Format
-open Typedtree
 
 let print_DEBUG s = print_string s ; print_newline ()
 

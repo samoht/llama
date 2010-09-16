@@ -116,7 +116,7 @@ and compats ps qs = match ps,qs with
 exception Empty (* Empty pattern *)
 
 let get_type_path ty =
-  let ty = Typeutil.expand_head ty in
+  let ty = Basics.expand_head ty in
   match ty with
   | Tconstr (path,_) -> path
   | _ -> fatal_error "Parmatch.get_type_path"

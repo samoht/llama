@@ -1,9 +1,8 @@
-(* Convert Typedtree entities to their Base counterparts. *)
+(* Convert Mutable_base entities to their Base counterparts. *)
 
 open Asttypes
 open Base
-open Typedtree
-open Mutable_type
+open Mutable_base
 
 type error =
     Non_generalizable of llama_type
@@ -16,7 +15,7 @@ exception Error of Location.t * error
 
 type env =
   { mutable type_variables : (mutable_type_variable * llama_type) list;
-    mutable variables : (Typedtree.variable * Base.variable) list }
+    mutable variables : (Mutable_base.variable * Base.variable) list }
 
 let new_env () =
   { type_variables = [];
@@ -290,23 +289,23 @@ let structure_item env str =
   match str.tstr_desc with
       Tstr_eval texpr ->
         let expr = expression menv texpr in
-        [Str_eval expr], env, Some (Typeutil.rename_variables expr.exp_type)
+        [Str_eval expr], env, Some (Basics.rename_variables expr.exp_type)
     | Tstr_let (rec_flag, pat_expr_list) ->
         let pat_expr_list = pattern_expression_list menv pat_expr_list in
         List.iter
           (fun (pat, expr) ->
              let ty = pat.pat_type in
-             if not (Typeutil.is_nonexpansive expr) && not (Typeutil.is_closed ty) then
-               raise (Error (expr.exp_loc, Non_generalizable (Typeutil.rename_variables ty))))
+             if not (Basics.is_nonexpansive expr) && not (Basics.is_closed ty) then
+               raise (Error (expr.exp_loc, Non_generalizable (Basics.rename_variables ty))))
           pat_expr_list;
         let vars =
           List.flatten
-            (List.map (fun (pat, _) -> Typeutil.pattern_variables pat) pat_expr_list) in
+            (List.map (fun (pat, _) -> Basics.pattern_variables pat) pat_expr_list) in
         let vals =
           List.map (fun var ->
                       { val_module = !Modenv.current_module;
                         val_name = var.var_name;
-                        val_type = Typeutil.rename_variables var.var_type;
+                        val_type = Basics.rename_variables var.var_type;
                         val_kind = Val_reg }) vars in
         [Str_let (rec_flag, pat_expr_list, List.combine vars vals)],
         List.fold_left (fun env v -> Env.add_value v env) env vals,

@@ -101,7 +101,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
       | [] ->
           raise Not_found
       | (name, sch, printer) :: remainder ->
-          if Typeutil.moregeneral sch ty
+          if Basics.moregeneral sch ty
           then printer
           else find remainder
       in find !printers
@@ -196,7 +196,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Typeutil.apply_abbrev (tcs_params tcs) body ty_list)
+                      (Basics.apply_abbrev (tcs_params tcs) body ty_list)
                 | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -207,7 +207,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                     let ty_args =
                       List.map
                         (function ty ->
-                           Typeutil.apply_abbrev (tcs_params tcs) ty ty_list)
+                           Basics.apply_abbrev (tcs_params tcs) ty ty_list)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -219,7 +219,7 @@ let ref_eval_exception = ref (fun (_:constructor) ->( assert false:Obj.t))
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Typeutil.apply_abbrev (tcs_params tcs) lbl.lbl_arg
+                                Basics.apply_abbrev (tcs_params tcs) lbl.lbl_arg
                                   ty_list in
                               let lid = tree_of_label env lbl in
                               let v =

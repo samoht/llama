@@ -4,7 +4,7 @@ open Asttypes
 open Misc
 open Base
 open Parsetree
-open Typedtree
+open Mutable_base
 open Primitive
 
 type error =
@@ -97,7 +97,7 @@ type ('a, 'b) local_or_global =
 
 type context = {
   ctxt_env : Env.t;
-  ctxt_variables : (string, Typedtree.variable) Tbl.t }
+  ctxt_variables : (string, Mutable_base.variable) Tbl.t }
 
 let context_create env =
   { ctxt_env = env;
@@ -246,7 +246,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
             Local ltcs -> Lconstr_local (ltcs, tyl)
           | Global tcs -> Lconstr (tcs, tyl)
 
-let type_variables = ref ([] : (string * Mutable_type.mutable_type) list);;
+let type_variables = ref ([] : (string * Mutable_base.mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
@@ -255,20 +255,20 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         begin try
           List.assoc name !type_variables
         with Not_found ->
-          let ty = Mutable_type.new_type_var () in
+          let ty = Mutable_base.new_type_var () in
           type_variables := (name, ty) :: !type_variables;
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Mutable_type.Marrow (mutable_type env ty1, mutable_type env ty2)
+        Mutable_base.Marrow (mutable_type env ty1, mutable_type env ty2)
     | Ptyp_tuple tyl ->
-        Mutable_type.Mtuple (List.map (mutable_type env) tyl)
+        Mutable_base.Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mutable_type.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
+        Mutable_base.Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
                               List.map (mutable_type env) tyl)
 
 (* ---------------------------------------------------------------------- *)
@@ -285,11 +285,11 @@ let pattern env pat =
       None -> ()
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
-  let values = List.map (fun name -> (name, new_variable name (Mutable_type.new_type_var ()))) names in
+  let values = List.map (fun name -> (name, new_variable name (Mutable_base.new_type_var ()))) names in
   let rec pattern pat =
     { tpat_desc = pattern_aux pat;
       tpat_loc = pat.ppat_loc;
-      tpat_type = Mutable_type.new_type_var () }
+      tpat_type = Mutable_base.new_type_var () }
   and pattern_aux pat =
     match pat.ppat_desc with
         Ppat_any ->
@@ -343,7 +343,7 @@ let extend_context ctxt pat =
 let rec expression ctxt exp =
   { texp_desc = expression_aux ctxt exp;
     texp_loc = exp.pexp_loc;
-    texp_type = Mutable_type.new_type_var () }
+    texp_type = Mutable_base.new_type_var () }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
@@ -409,7 +409,7 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Texp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name (Mutable_type.new_type_var ()) in
+        let var = new_variable name (Mutable_base.new_type_var ()) in
         let big_ctxt = context_add_variable var ctxt in
         Texp_for (var,
                   expression ctxt e1,

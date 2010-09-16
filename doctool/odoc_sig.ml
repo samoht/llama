@@ -16,7 +16,6 @@
 open Misc
 open Asttypes
 open Base
-open Typedtree
 
 let print_DEBUG s = print_string s ; print_newline ();;
 

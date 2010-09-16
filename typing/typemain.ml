@@ -1,6 +1,6 @@
 open Misc
 open Base
-open Typedtree
+open Mutable_base
 
 type error =
     Interface_not_compiled of string

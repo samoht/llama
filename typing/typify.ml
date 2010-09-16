@@ -1,8 +1,7 @@
 open Misc
 open Asttypes
 open Base
-open Typedtree
-open Mutable_type
+open Mutable_base
 
 type error =
   | Incomplete_format of string

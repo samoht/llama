@@ -38,14 +38,13 @@ CAMLOBJS=\
   ../typing/primitive.cmo \
   ../typing/base.cmo \
   ../typing/predef.cmo \
+  ../typing/basics.cmo \
   ../typing/persistent.cmo \
   ../typing/modenv.cmo \
   ../typing/env.cmo \
-  ../typing/typeutil.cmo \
   ../typing/oprint.cmo \
   ../typing/printtyp.cmo \
-  ../typing/mutable_type.cmo \
-  ../typing/typedtree.cmo \
+  ../typing/mutable_base.cmo \
   ../typing/resolve.cmo \
   ../typing/typify.cmo \
   ../typing/immutify.cmo \

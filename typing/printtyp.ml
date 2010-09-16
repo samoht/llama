@@ -164,7 +164,7 @@ let signature ppf sg =
 (* Mutable types.                                                         *)
 (* ---------------------------------------------------------------------- *)
 
-open Mutable_type
+open Mutable_base
 
 let tree_of_mutable_type =
   let var_names = ref ([] : (mutable_type_variable * string) list) in
