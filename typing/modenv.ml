@@ -108,11 +108,17 @@ and lookup_module = function
     Module_builtin ->
       predefined_module
   | Module name ->
+      begin match !current_module with
+          Module m when m = name -> raise Not_found
+        | _ -> ()
+      end;
       begin try
         Tbl.find name !loaded_modules
       with Not_found ->
-        load_module name
-          (Misc.find_in_path !Config.load_path (String.uncapitalize name ^ ".cmi"))
+        let get n =
+          load_module name
+            (Misc.find_in_path !Config.load_path (n ^ ".cmi")) in
+        try get name with Not_found -> get (String.uncapitalize name)
       end
   | Module_toplevel ->
       failwith "Modenv.lookup_module"
