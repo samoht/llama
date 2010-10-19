@@ -38,7 +38,7 @@ OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
   filename.cmo complex.cmo scanning.cmo str.cmo \
   int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
   ratio.cmo num.cmo arith_status.cmo \
-  unix.cmo # lazy.cmo scanf.cmo
+  unix.cmo scanf.cmo # lazy.cmo
 
 all: stdlib.cma std_exit.cmo camlheader camlheader_ur
 

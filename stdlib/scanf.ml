@@ -919,6 +919,7 @@ let ascanf sc fmt =
   let delay f x () = f x
   let stack f = delay (return f)
   let no_stack f x = f
+  let maybe_stack skip f x = if skip then no_stack f x else stack f x
 
 let scan_format ib ef fmt rv f =
 
@@ -974,7 +975,6 @@ let scan_format ib ef fmt rv f =
       scan_conversion skip max_opt min_opt ir f i
 
     and scan_conversion skip max_opt min_opt ir f i =
-      let stack = if skip then no_stack else stack in
       let max = int_max max_opt in
       let min = int_min min_opt in
       match Printf_sformat.get fmt i with
@@ -983,50 +983,50 @@ let scan_format ib ef fmt rv f =
       | 's' ->
         let i, stp = scan_fmt_stoppers (succ i) in
         let _x = scan_string stp max ib in
-        scan_fmt ir (stack f (token_string ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_string ib)) (succ i)
       | 'S' ->
         let _x = scan_String max ib in
-        scan_fmt ir (stack f (token_string ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_string ib)) (succ i)
       | '[' (* ']' *) ->
         let i, char_set = read_char_set fmt (succ i) in
         let i, stp = scan_fmt_stoppers (succ i) in
         let _x = scan_chars_in_char_set stp char_set max ib in
-        scan_fmt ir (stack f (token_string ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_string ib)) (succ i)
       | ('c' | 'C') when max = 0 ->
         let c = Scanning.checked_peek_char ib in
-        scan_fmt ir (stack f c) (succ i)
+        scan_fmt ir (maybe_stack skip f c) (succ i)
       | 'c' ->
         let _x = scan_char max ib in
-        scan_fmt ir (stack f (token_char ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_char ib)) (succ i)
       | 'C' ->
         let _x = scan_Char max ib in
-        scan_fmt ir (stack f (token_char ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_char ib)) (succ i)
       | 'd' | 'i' | 'o' | 'u' | 'x' | 'X' as conv ->
         let _x = scan_int_conv conv max min ib in
-        scan_fmt ir (stack f (token_int conv ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_int conv ib)) (succ i)
       | 'N' as conv ->
-        scan_fmt ir (stack f (get_count conv ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (get_count conv ib)) (succ i)
       | 'f' | 'e' | 'E' | 'g' | 'G' ->
         let min = float_min min_opt in
         let _x = scan_float max min ib in
-        scan_fmt ir (stack f (token_float ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_float ib)) (succ i)
       | 'F' ->
         let min = float_min min_opt in
         let _x = scan_Float max min ib in
-        scan_fmt ir (stack f (token_float ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_float ib)) (succ i)
 (*      | 'B' | 'b' when max = Some 0 ->
         let _x = scan_bool max ib in
-        scan_fmt ir (stack f (token_int ib)) (succ i) *)
+        scan_fmt ir (maybe_stack skip f (token_int ib)) (succ i) *)
       | 'B' | 'b' ->
         let _x = scan_bool max ib in
-        scan_fmt ir (stack f (token_bool ib)) (succ i)
+        scan_fmt ir (maybe_stack skip f (token_bool ib)) (succ i)
       | 'r' ->
         if ir > limr then assert false else
         let token = Obj.magic rv.(ir) ib in
-        scan_fmt (succ ir) (stack f token) (succ i)
+        scan_fmt (succ ir) (maybe_stack skip f token) (succ i)
       | 'l' | 'n' | 'L' as conv0 ->
         let i = succ i in
-        if i > lim then scan_fmt ir (stack f (get_count conv0 ib)) i else begin
+        if i > lim then scan_fmt ir (maybe_stack skip f (get_count conv0 ib)) i else begin
         match Printf_sformat.get fmt i with
         (* This is in fact an integer conversion (e.g. %ld, %ni, or %Lo). *)
         | 'd' | 'i' | 'o' | 'u' | 'x' | 'X' as conv1 ->
@@ -1035,11 +1035,11 @@ let scan_format ib ef fmt rv f =
              (this character is either 'l', 'n' or 'L') to find the
              conversion to apply to the integer token read. *)
           begin match conv0 with
-          | 'l' -> scan_fmt ir (stack f (token_int32 conv1 ib)) (succ i)
-          | 'n' -> scan_fmt ir (stack f (token_nativeint conv1 ib)) (succ i)
-          | _ -> scan_fmt ir (stack f (token_int64 conv1 ib)) (succ i) end
+          | 'l' -> scan_fmt ir (maybe_stack skip f (token_int32 conv1 ib)) (succ i)
+          | 'n' -> scan_fmt ir (maybe_stack skip f (token_nativeint conv1 ib)) (succ i)
+          | _ -> scan_fmt ir (maybe_stack skip f (token_int64 conv1 ib)) (succ i) end
         (* This is not an integer conversion, but a regular %l, %n or %L. *)
-        | _ -> scan_fmt ir (stack f (get_count conv0 ib)) i end
+        | _ -> scan_fmt ir (maybe_stack skip f (get_count conv0 ib)) i end
       | '!' ->
         if Scanning.end_of_input ib then scan_fmt ir f (succ i)
         else bad_input "end of input not found"
@@ -1059,9 +1059,9 @@ let scan_format ib ef fmt rv f =
         if not (compatible_format_type rf mf) then format_mismatch rf mf else
         (* For conversion %{%}, just return this format string as the token
            read. *)
-        if conv = '{' (* '}' *) then scan_fmt ir (stack f rf) j else
+        if conv = '{' (* '}' *) then scan_fmt ir (maybe_stack skip f rf) j else
         (* Or else, read according to the format string just read. *)
-        let ir, nf = scan (string_to_format rf) ir (stack f rf) 0 in
+        let ir, nf = scan (string_to_format rf) ir (maybe_stack skip f rf) 0 in
         (* Return the format string read and the value just read,
            then go on with the rest of the format. *)
         scan_fmt ir nf j

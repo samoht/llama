@@ -76,3 +76,7 @@ doctool/odoc_text_parser.mli
 doctool/odoc_text_parser.output
 doctool/llamadoc
 doctool/odoc_info.cma
+testsuite/tests/*/*.result
+testsuite/tests/*/program
+testsuite/tests/*/program.byte
+testsuite/_log
