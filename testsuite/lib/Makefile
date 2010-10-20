@@ -1,6 +1,4 @@
-# $Id$
-
-compile: testing.cmi testing.cmo #testing.cmx
+compile: testing.lmi testing.lmo
 
 clean: defaultclean
 

@@ -280,7 +280,7 @@ external chdir : string -> unit = "unix_chdir"
 external getcwd : unit -> string = "unix_getcwd"
 external chroot : string -> unit = "unix_chroot"
 
-external type dir_handle
+type dir_handle
 
 external opendir : string -> dir_handle = "unix_opendir"
 external readdir : dir_handle -> string = "unix_readdir"
@@ -811,7 +811,7 @@ type popen_process =
 let popen_processes = (Hashtbl.create 7 : (popen_process, int) Hashtbl.t)
 
 let open_proc cmd proc input output toclose =
-  let cloexec = List.forall try_set_close_on_exec toclose in
+  let cloexec = List.for_all try_set_close_on_exec toclose in
   match fork() with
      0 -> if input <> stdin then begin dup2 input stdin; close input end;
           if output <> stdout then begin dup2 output stdout; close output end;
@@ -847,7 +847,7 @@ let open_process cmd =
   (inchan, outchan)
 
 let open_proc_full cmd env proc input output error toclose =
-  let cloexec = List.forall try_set_close_on_exec toclose in
+  let cloexec = List.for_all try_set_close_on_exec toclose in
   match fork() with
      0 -> dup2 input stdin; close input;
           dup2 output stdout; close output;

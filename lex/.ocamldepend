@@ -1,0 +1,66 @@
+common.cmo: ../stdlib/sys.cmi syntax.cmi ../stdlib/string.cmi \
+    ../stdlib/printf.cmi ../stdlib/pervasives.cmi ../stdlib/list.cmi \
+    lexgen.cmi common.cmi
+common.cmx: ../stdlib/sys.cmx syntax.cmx ../stdlib/string.cmx \
+    ../stdlib/printf.cmx ../stdlib/pervasives.cmx ../stdlib/list.cmx \
+    lexgen.cmx common.cmi
+compact.cmo: table.cmi ../stdlib/list.cmi lexgen.cmi ../stdlib/hashtbl.cmi \
+    ../stdlib/array.cmi compact.cmi
+compact.cmx: table.cmx ../stdlib/list.cmx lexgen.cmx ../stdlib/hashtbl.cmx \
+    ../stdlib/array.cmx compact.cmi
+cset.cmo: ../stdlib/list.cmi ../stdlib/array.cmi cset.cmi
+cset.cmx: ../stdlib/list.cmx ../stdlib/array.cmx cset.cmi
+lexer.cmo: ../stdlib/sys.cmi syntax.cmi ../stdlib/string.cmi \
+    ../stdlib/printf.cmi parser.cmi ../stdlib/lexing.cmi ../stdlib/char.cmi \
+    ../stdlib/buffer.cmi ../stdlib/array.cmi lexer.cmi
+lexer.cmx: ../stdlib/sys.cmx syntax.cmx ../stdlib/string.cmx \
+    ../stdlib/printf.cmx parser.cmx ../stdlib/lexing.cmx ../stdlib/char.cmx \
+    ../stdlib/buffer.cmx ../stdlib/array.cmx lexer.cmi
+lexgen.cmo: table.cmi syntax.cmi ../stdlib/string.cmi ../stdlib/stack.cmi \
+    ../stdlib/set.cmi ../stdlib/printf.cmi ../stdlib/pervasives.cmi \
+    ../stdlib/map.cmi ../stdlib/list.cmi ../stdlib/hashtbl.cmi cset.cmi \
+    ../stdlib/array.cmi lexgen.cmi
+lexgen.cmx: table.cmx syntax.cmx ../stdlib/string.cmx ../stdlib/stack.cmx \
+    ../stdlib/set.cmx ../stdlib/printf.cmx ../stdlib/pervasives.cmx \
+    ../stdlib/map.cmx ../stdlib/list.cmx ../stdlib/hashtbl.cmx cset.cmx \
+    ../stdlib/array.cmx lexgen.cmi
+main.cmo: ../stdlib/sys.cmi syntax.cmi ../stdlib/printf.cmi \
+    ../stdlib/parsing.cmi parser.cmi outputbis.cmi output.cmi \
+    ../stdlib/lexing.cmi lexgen.cmi lexer.cmi ../stdlib/filename.cmi cset.cmi \
+    compact.cmi common.cmi ../stdlib/arg.cmi
+main.cmx: ../stdlib/sys.cmx syntax.cmx ../stdlib/printf.cmx \
+    ../stdlib/parsing.cmx parser.cmx outputbis.cmx output.cmx \
+    ../stdlib/lexing.cmx lexgen.cmx lexer.cmx ../stdlib/filename.cmx cset.cmx \
+    compact.cmx common.cmx ../stdlib/arg.cmx
+output.cmo: syntax.cmi ../stdlib/printf.cmi ../stdlib/list.cmi lexgen.cmi \
+    compact.cmi common.cmi ../stdlib/char.cmi ../stdlib/array.cmi output.cmi
+output.cmx: syntax.cmx ../stdlib/printf.cmx ../stdlib/list.cmx lexgen.cmx \
+    compact.cmx common.cmx ../stdlib/char.cmx ../stdlib/array.cmx output.cmi
+outputbis.cmo: syntax.cmi ../stdlib/printf.cmi ../stdlib/list.cmi lexgen.cmi \
+    ../stdlib/hashtbl.cmi common.cmi ../stdlib/char.cmi ../stdlib/array.cmi \
+    outputbis.cmi
+outputbis.cmx: syntax.cmx ../stdlib/printf.cmx ../stdlib/list.cmx lexgen.cmx \
+    ../stdlib/hashtbl.cmx common.cmx ../stdlib/char.cmx ../stdlib/array.cmx \
+    outputbis.cmi
+parser.cmo: syntax.cmi ../stdlib/string.cmi ../stdlib/printf.cmi \
+    ../stdlib/parsing.cmi ../stdlib/obj.cmi ../stdlib/list.cmi \
+    ../stdlib/lexing.cmi ../stdlib/hashtbl.cmi cset.cmi ../stdlib/char.cmi \
+    parser.cmi
+parser.cmx: syntax.cmx ../stdlib/string.cmx ../stdlib/printf.cmx \
+    ../stdlib/parsing.cmx ../stdlib/obj.cmx ../stdlib/list.cmx \
+    ../stdlib/lexing.cmx ../stdlib/hashtbl.cmx cset.cmx ../stdlib/char.cmx \
+    parser.cmi
+syntax.cmo: cset.cmi syntax.cmi
+syntax.cmx: cset.cmx syntax.cmi
+table.cmo: ../stdlib/array.cmi table.cmi
+table.cmx: ../stdlib/array.cmx table.cmi
+common.cmi: syntax.cmi lexgen.cmi
+compact.cmi: lexgen.cmi
+cset.cmi:
+lexer.cmi: parser.cmi ../stdlib/lexing.cmi
+lexgen.cmi: syntax.cmi
+output.cmi: syntax.cmi lexgen.cmi compact.cmi common.cmi
+outputbis.cmi: syntax.cmi lexgen.cmi common.cmi
+parser.cmi: syntax.cmi ../stdlib/lexing.cmi
+syntax.cmi: cset.cmi
+table.cmi:

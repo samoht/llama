@@ -163,13 +163,13 @@ exception Incompatible
       | Node(_, l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
 
-    let rec forall p = function
+    let rec for_all p = function
         Empty _ -> true
-      | Node(_, l, v, d, r, _) -> p v d && forall p l && forall p r
+      | Node(_, l, v, d, r, _) -> p v d && for_all p l && for_all p r
 
-    let rec exists p = function
+    let rec exist p = function
         Empty _ -> false
-      | Node(_, l, v, d, r, _) -> p v d || exists p l || exists p r
+      | Node(_, l, v, d, r, _) -> p v d || exist p l || exist p r
 
     let filter p s =
       let rec filt accu = function

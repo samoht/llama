@@ -2,10 +2,10 @@
 
 CC=$(NATIVECC) $(NATIVECCCOMPOPTS)
 FC=$(FORTAN_COMPILER)
-CMO_FILES=$(MODULES:=.cmo)
-CMX_FILES=$(MODULES:=.cmx)
-CMA_FILES=$(LIBRARIES:=.cma)
-CMXA_FILES=$(LIBRARIES:=.cmxa)
+LMO_FILES=$(MODULES:=.lmo)
+LMX_FILES=$(MODULES:=.lmx)
+LMA_FILES=$(LIBRARIES:=.lma)
+LMXA_FILES=$(LIBRARIES:=.lmxa)
 O_FILES=$(C_FILES:=.o)
 
 CUSTOM_FLAG=`if [ -z "$(C_FILES)" ]; then true; else echo '-custom'; fi`
@@ -26,11 +26,7 @@ run-all:
 	done;
 	@for file in *.ml; do \
 	  printf " ... testing '$$file':"; \
-	  $(MAKE) run-file DESC=llamac COMP='$(OCAMLC)' COMPFLAGS='$(ADD_COMPFLAGS) $(ADD_CFLAGS) $(O_FILES) -w a $(CMA_FILES) -I ../../lib $(CMO_FILES)' FILE=$$file PROGRAM_ARGS=$(PROGRAM_ARGS) && \
-	  if [ ! -z $(UNSAFE) ]; then \
-	    $(MAKE) run-file DESC=llamac-unsafe COMP=$(PREFIX)/bin/llamac COMPFLAGS='-w a -unsafe -I ../../li $(CMO_FILES)' FILE=$$file && \
-	    $(MAKE) run-file DESC=llamaopt-unsafe COMP=$(PREFIX)/bin/llamaopt COMPFLAGS='-w a -unsafe -I ../../lib $(CMX_FILES)' FILE=$$file; \
-	  fi && \
+	  $(MAKE) run-file DESC=llamac COMP='$(LLAMAC)' COMPFLAGS='$(ADD_COMPFLAGS) $(ADD_CFLAGS) $(O_FILES) $(LMA_FILES) -I ../../lib $(LMO_FILES)' FILE=$$file PROGRAM_ARGS=$(PROGRAM_ARGS) && \
 	  echo " => passed"; \
 	done;
 

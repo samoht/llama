@@ -15,7 +15,7 @@
 
 let ok = "Ok"
 let software = "Llamadoc"
-let config_version = Config.version
+let config_version = "XXX"
 let magic = config_version^""
 let message_version = software^" "^config_version
 

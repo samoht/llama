@@ -1,152 +1,89 @@
-#########################################################################
-#                                                                       #
-#                            Objective Caml                             #
-#                                                                       #
-#            Xavier Leroy, projet Cristal, INRIA Rocquencourt           #
-#                                                                       #
-#   Copyright 1999 Institut National de Recherche en Informatique et    #
-#   en Automatique.  All rights reserved.  This file is distributed     #
-#   under the terms of the GNU Library General Public License, with     #
-#   the special exception on linking described in file ../LICENSE.      #
-#                                                                       #
-#########################################################################
+# ----------------------------------------------------------------------
+# Makefile for the standard library
+# ----------------------------------------------------------------------
 
-# $Id: Makefile 9547 2010-01-22 12:48:24Z doligez $
+BOOTDIR=../boot
+MODULES=pervasives $(NONPERVASIVES)
+NONPERVASIVES=sys list array char string \
+  hashtbl sort marshal obj \
+  int32 int64 nativeint \
+  lexing parsing \
+  set map \
+  stack queue \
+  stream \
+  buffer printf_sformat printf_tformat printf format \
+  arg printexc gc \
+  digest random_state random callback \
+  genlex weak weak_hashtbl \
+  filename complex scanning scanf str \
+  int_misc nat big_int arith_flags \
+  ratio num arith_status \
+  unix terminfo
 
-include ../config/Makefile
-RUNTIME=../boot/llamarun
-COMPILER=../llamac
-CAMLC=$(RUNTIME) $(COMPILER)
-COMPFLAGS=-strict-sequence -g -warn-error A -nostdlib
-OPTCOMPILER=../llamaopt
-CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
-OPTCOMPFLAGS=-warn-error A -nostdlib -g
-CAMLDEP=../boot/llamarun ../tools/llamadep
+include ../Make/generic.mk
 
-OBJS=pervasives.cmo $(OTHERS)
-OTHERS=array.cmo list.cmo char.cmo string.cmo sys.cmo \
-  hashtbl.cmo sort.cmo marshal.cmo obj.cmo \
-  int32.cmo int64.cmo nativeint.cmo \
-  lexing.cmo parsing.cmo \
-  set.cmo map.cmo \
-  stack.cmo queue.cmo \
-  stream.cmo \
-  buffer.cmo printf_sformat.cmo printf_tformat.cmo printf.cmo format.cmo \
-  arg.cmo printexc.cmo gc.cmo \
-  digest.cmo random_state.cmo random.cmo callback.cmo \
-  genlex.cmo weak.cmo weak_hashtbl.cmo \
-  filename.cmo complex.cmo scanning.cmo str.cmo \
-  int_misc.cmo nat.cmo big_int.cmo arith_flags.cmo \
-  ratio.cmo num.cmo arith_status.cmo \
-  unix.cmo scanf.cmo # lazy.cmo
+# ----------------------------------------------------------------------
+# Main
+# ----------------------------------------------------------------------
 
-all: stdlib.cma std_exit.cmo camlheader camlheader_ur
+all: stdlib.lma std_exit.lmo
+with-ocaml: stdlib.cma std_exit.cmo camlheader
+.PHONY: all with-ocaml
 
-install:
-	cp stdlib.cma std_exit.cmo *.cmi *.mli *.ml camlheader camlheader_ur $(LIBDIR)
+stdlib.lma: $(MODULES:%=%.lmo)
+	$(LLAMAC) -a $^ -o $@
+stdlib.cma: $(MODULES:%=%.cmo)
+	$(OCAMLC_STRICT) -a $^ -o $@
 
-stdlib.cma: $(OBJS)
-	$(CAMLC) -a -o stdlib.cma $(OBJS)
+# ----------------------------------------------------------------------
+# Special
+# ----------------------------------------------------------------------
 
-stdlib.cmxa: $(OBJS:.cmo=.cmx)
-	$(CAMLOPT) -a -o stdlib.cmxa $(OBJS:.cmo=.cmx)
+camlheader:
+	echo "#!`which ocamlrun`" > $@
+pervasives.lmi: pervasives.mli
+	$(LLAMAC) -c -nostdlib -nopervasives $<
+pervasives.lml: pervasives.ml
+	$(LLAMAC) -c -nostdlib -nopervasives $<
+pervasives.cmi: pervasives.mli
+	$(OCAMLC_STRICT) -c -nostdlib -nopervasives $<
+pervasives.cmo: pervasives.ml
+	$(OCAMLC_STRICT) -c -nostdlib -nopervasives $<
 
-sys.ml: sys.mlp ../VERSION
-	sed -e "s|%%VERSION%%|`sed -e 1q ../VERSION`|" sys.mlp >sys.ml
-
-clean::
-	rm -f sys.ml
-
-clean::
-	rm -f camlheader camlheader_ur
-
-.SUFFIXES: .mli .ml .cmi .cmo .cmx .p.cmx
-
-.mli.cmi:
-	$(CAMLC) $(COMPFLAGS) `./Compflags $@` -c $<
-
-.ml.cmo:
-	$(CAMLC) $(COMPFLAGS) `./Compflags $@` -c $<
-
-.ml.cmx:
-	$(CAMLOPT) $(OPTCOMPFLAGS) `./Compflags $@` -c $<
-
-.ml.p.cmx:
-	$(CAMLOPT) $(OPTCOMPFLAGS) `./Compflags $@` -p -c -o $*.p.cmx $<
-
-# Dependencies on the compiler
-$(OBJS) std_exit.cmo: $(COMPILER)
-$(OBJS:.cmo=.cmi) std_exit.cmi: $(COMPILER)
-$(OBJS:.cmo=.cmx) std_exit.cmx: $(OPTCOMPILER)
-$(OBJS:.cmo=.p.cmx) std_exit.p.cmx: $(OPTCOMPILER)
-
-# Dependencies on Pervasives (not tracked by llamadep)
-$(OBJS) std_exit.cmo: pervasives.cmi
-$(OTHERS:.cmo=.cmi) std_exit.cmi: pervasives.cmi
-$(OBJS:.cmo=.cmx) std_exit.cmx: pervasives.cmi
-$(OBJS:.cmo=.p.cmx) std_exit.p.cmx: pervasives.cmi
-$(OTHERS:.cmo=.cmx) std_exit.cmx: pervasives.cmx
-$(OTHERS:.cmo=.p.cmx) std_exit.p.cmx: pervasives.cmx
-
-clean::
-	rm -f *.cm* *.$(O) *.$(A)
-	rm -f *~
-
-include .depend
+# ----------------------------------------------------------------------
+# Depend
+# ----------------------------------------------------------------------
 
 depend:
-	$(CAMLDEP) *.mli *.ml > .depend
-	$(CAMLDEP) *.ml | sed -e 's/\.cmx/.p.cmx/g' >>.depend
+	$(LLAMADEP) *.ml *.mli > .depend
+ocamldepend:
+	$(OCAMLDEP) *.ml *.mli > .ocamldepend
+.PHONY: depend ocamldepend
 
-# ---------------------------------------------------------------------- #
+include .depend
+include .ocamldepend
 
-allopt: stdlib.cmxa std_exit.cmx allopt-$(PROFILING)
+pervasives.lml: pervasives.lmi
+$(NONPERVASIVES:%=%.lmi): pervasives.lmi
+pervasives.cmo: pervasives.cmi
+$(NONPERVASIVES:%=%.cmi): pervasives.cmi
 
-allopt-noprof:
+# ----------------------------------------------------------------------
+# Clean
+# ----------------------------------------------------------------------
 
-allopt-prof: stdlib.p.cmxa std_exit.p.cmx
-	rm -f std_exit.p.cmi
+clean:
+	rm -f stdlib.lma *.lm{i,l,o,x}
+ocamlclean:
+	rm -f stdlib.cma *.cm{i,o} camlheader
+.PHONY: clean ocamlclean
 
-installopt: installopt-default installopt-$(PROFILING)
+# ----------------------------------------------------------------------
+# Install
+# ----------------------------------------------------------------------
 
-installopt-default:
-	cp stdlib.cmxa stdlib.a std_exit.o *.cmx $(LIBDIR)
-	cd $(LIBDIR); $(RANLIB) stdlib.a
+include ../config.mk
 
-installopt-noprof:
-	rm -f $(LIBDIR)/stdlib.p.cmxa; ln -s stdlib.cmxa $(LIBDIR)/stdlib.p.cmxa
-	rm -f $(LIBDIR)/stdlib.p.a; ln -s stdlib.a $(LIBDIR)/stdlib.p.a
-	rm -f $(LIBDIR)/std_exit.p.cmx; \
-	  ln -s std_exit.cmx $(LIBDIR)/std_exit.p.cmx
-	rm -f $(LIBDIR)/std_exit.p.o; ln -s std_exit.o $(LIBDIR)/std_exit.p.o
-
-installopt-prof:
-	cp stdlib.p.cmxa stdlib.p.a std_exit.p.cmx std_exit.p.o $(LIBDIR)
-	cd $(LIBDIR); $(RANLIB) stdlib.p.a
-
-stdlib.p.cmxa: $(OBJS:.cmo=.p.cmx)
-	$(CAMLOPT) -a -o stdlib.p.cmxa $(OBJS:.cmo=.p.cmx)
-
-camlheader camlheader_ur: header.c ../config/Makefile
-	if $(SHARPBANGSCRIPTS); then \
-	  echo '#!$(BINDIR)/llamarun' > camlheader && \
-	  echo '#!' | tr -d '\012' > camlheader_ur; \
-	else \
-	  $(BYTECC) $(BYTECCCOMPOPTS) $(BYTECCLINKOPTS) \
-	            -DRUNTIME_NAME='"$(BINDIR)/llamarun"' \
-	            header.c -o tmpheader$(EXE) && \
-	  strip tmpheader$(EXE) && \
-	  mv tmpheader$(EXE) camlheader && \
-	  cp camlheader camlheader_ur; \
-	fi
-
-.PHONY: all allopt allopt-noprof allopt-prof install installopt
-.PHONY: installopt-default installopt-noprof installopt-prof clean depend
-
-# Assumes an installed system.
-ref:
-	mkdir -p libref
-	llamadoc -sort -html -d libref *.mli
-refclean:
-	rm -rf libref
-.PHONY: ref refclean
+install:
+	cp *.lmi stdlib.lma std_exit.lmo $(LIBDIR)
+.PHONY: install

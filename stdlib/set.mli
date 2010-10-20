@@ -89,12 +89,12 @@ val fold: ('elt -> 'a -> 'a) -> 'elt t -> 'a -> 'a
   (** [fold f s a] computes [(f xN ... (f x2 (f x1 a))...)],
       where [x1 ... xN] are the elements of [s], in increasing order. *)
 
-val forall: ('elt -> bool) -> 'elt t -> bool
-  (** [forall p s] checks if all elements of the set
+val for_all: ('elt -> bool) -> 'elt t -> bool
+  (** [for_all p s] checks if all elements of the set
       satisfy the predicate [p]. *)
 
-val exists: ('elt -> bool) -> 'elt t -> bool
-  (** [exists p s] checks if at least one element of
+val exist: ('elt -> bool) -> 'elt t -> bool
+  (** [exist p s] checks if at least one element of
       the set satisfies the predicate [p]. *)
   
 val filter: ('elt -> bool) -> 'elt t -> 'elt t

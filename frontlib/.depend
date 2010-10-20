@@ -1,0 +1,261 @@
+base.lmo: ../stdlib/string.lmi ../backlib/primitive.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../backlib/asttypes.lmi
+base.lmx: ../stdlib/string.lmx ../backlib/primitive.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../backlib/asttypes.lmx
+basics.lmo: ../stdlib/list.lmi base.lmo
+basics.lmx: ../stdlib/list.lmx base.lmx
+depend.lmo: ../stdlib/set.lmi parsetree.lmi longident.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/format.lmi \
+    depend.lmi
+depend.lmx: ../stdlib/set.lmx parsetree.lmi longident.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/format.lmx \
+    depend.lmi
+env.lmo: predef.lmo modenv.lmi ../stdlib/map.lmi longident.lmi \
+    ../stdlib/list.lmi ../backlib/fatal.lmo base.lmo env.lmi
+env.lmx: predef.lmx modenv.lmx ../stdlib/map.lmx longident.lmx \
+    ../stdlib/list.lmx ../backlib/fatal.lmx base.lmx env.lmi
+frontconfig.lmo:
+frontconfig.lmx:
+fronterrors.lmo: warnings.lmi typify.lmo typemain.lmo translcore.lmi \
+    syntaxerr.lmi resolve.lmo modenv.lmi lexer.lmi include.lmo immutify.lmo \
+    frontlocation.lmi ../stdlib/format.lmi
+fronterrors.lmx: warnings.lmx typify.lmx typemain.lmx translcore.lmx \
+    syntaxerr.lmx resolve.lmx modenv.lmx lexer.lmx include.lmx immutify.lmx \
+    frontlocation.lmx ../stdlib/format.lmx
+frontlocation.lmo: warnings.lmi ../stdlib/terminfo.lmi ../stdlib/sys.lmi \
+    ../stdlib/string.lmi ../backlib/location.lmi linenum.lmi \
+    ../stdlib/lexing.lmi ../stdlib/format.lmi frontlocation.lmi
+frontlocation.lmx: warnings.lmx ../stdlib/terminfo.lmx ../stdlib/sys.lmx \
+    ../stdlib/string.lmx ../backlib/location.lmx linenum.lmx \
+    ../stdlib/lexing.lmx ../stdlib/format.lmx frontlocation.lmi
+frontmisc.lmo: ../stdlib/sys.lmi ../stdlib/string.lmi ../stdlib/list.lmi \
+    ../stdlib/hashtbl.lmi ../stdlib/filename.lmi
+frontmisc.lmx: ../stdlib/sys.lmx ../stdlib/string.lmx ../stdlib/list.lmx \
+    ../stdlib/hashtbl.lmx ../stdlib/filename.lmx
+immutify.lmo: printtyp.lmo predef.lmo mutable_base.lmo modenv.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/format.lmi env.lmi \
+    basics.lmo base.lmo ../backlib/asttypes.lmi
+immutify.lmx: printtyp.lmx predef.lmx mutable_base.lmx modenv.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/format.lmx env.lmx \
+    basics.lmx base.lmx ../backlib/asttypes.lmx
+include.lmo: printtyp.lmo ../backlib/primitive.lmi mutable_base.lmo \
+    longident.lmi ../stdlib/list.lmi ../stdlib/hashtbl.lmi frontmisc.lmo \
+    ../stdlib/format.lmi env.lmi basics.lmo base.lmo
+include.lmx: printtyp.lmx ../backlib/primitive.lmx mutable_base.lmx \
+    longident.lmx ../stdlib/list.lmx ../stdlib/hashtbl.lmx frontmisc.lmx \
+    ../stdlib/format.lmx env.lmx basics.lmx base.lmx
+lexer.lmo: warnings.lmi ../stdlib/string.lmi parser.lmi \
+    ../stdlib/nativeint.lmi ../backlib/location.lmi ../stdlib/lexing.lmi \
+    ../stdlib/int64.lmi ../stdlib/int32.lmi ../stdlib/hashtbl.lmi \
+    frontmisc.lmo frontlocation.lmi ../stdlib/format.lmi ../stdlib/char.lmi \
+    ../stdlib/array.lmi lexer.lmi
+lexer.lmx: warnings.lmx ../stdlib/string.lmx parser.lmx \
+    ../stdlib/nativeint.lmx ../backlib/location.lmx ../stdlib/lexing.lmx \
+    ../stdlib/int64.lmx ../stdlib/int32.lmx ../stdlib/hashtbl.lmx \
+    frontmisc.lmx frontlocation.lmx ../stdlib/format.lmx ../stdlib/char.lmx \
+    ../stdlib/array.lmx lexer.lmi
+linenum.lmo: ../stdlib/string.lmi ../stdlib/lexing.lmi ../backlib/fatal.lmo \
+    linenum.lmi
+linenum.lmx: ../stdlib/string.lmx ../stdlib/lexing.lmx ../backlib/fatal.lmx \
+    linenum.lmi
+longident.lmo: ../stdlib/string.lmi longident.lmi
+longident.lmx: ../stdlib/string.lmx longident.lmi
+makeident.lmo: ../stdlib/list.lmi ../backlib/ident.lmo ../stdlib/hashtbl.lmi \
+    base.lmo makeident.lmi
+makeident.lmx: ../stdlib/list.lmx ../backlib/ident.lmx ../stdlib/hashtbl.lmx \
+    base.lmx makeident.lmi
+makelambda.lmo: modenv.lmi makeident.lmi ../backlib/lambda.lmi base.lmo
+makelambda.lmx: modenv.lmx makeident.lmx ../backlib/lambda.lmx base.lmx
+matching.lmo: switch.lmi ../stdlib/set.lmi ../backlib/printlambda.lmi \
+    ../stdlib/printf.lmi ../backlib/primitive.lmi predef.lmo pmc_pattern.lmo \
+    ../stdlib/pervasives.lmi parmatch.lmi makelambda.lmo \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/lexing.lmi \
+    ../backlib/lambda.lmi ../backlib/ident.lmo ../stdlib/hashtbl.lmi \
+    frontmisc.lmo frontlocation.lmi ../stdlib/format.lmi ../backlib/fatal.lmo \
+    ../stdlib/char.lmi base.lmo ../backlib/asttypes.lmi ../stdlib/array.lmi \
+    matching.lmi
+matching.lmx: switch.lmx ../stdlib/set.lmx ../backlib/printlambda.lmx \
+    ../stdlib/printf.lmx ../backlib/primitive.lmx predef.lmx pmc_pattern.lmx \
+    ../stdlib/pervasives.lmx parmatch.lmx makelambda.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/lexing.lmx \
+    ../backlib/lambda.lmx ../backlib/ident.lmx ../stdlib/hashtbl.lmx \
+    frontmisc.lmx frontlocation.lmx ../stdlib/format.lmx ../backlib/fatal.lmx \
+    ../stdlib/char.lmx base.lmx ../backlib/asttypes.lmx ../stdlib/array.lmx \
+    matching.lmi
+modenv.lmo: ../stdlib/string.lmi predef.lmo persistent.lmo module.lmi \
+    ../stdlib/map.lmi ../stdlib/list.lmi frontmisc.lmo ../stdlib/format.lmi \
+    ../stdlib/digest.lmi ../backlib/consistbl.lmi base.lmo modenv.lmi
+modenv.lmx: ../stdlib/string.lmx predef.lmx persistent.lmx module.lmx \
+    ../stdlib/map.lmx ../stdlib/list.lmx frontmisc.lmx ../stdlib/format.lmx \
+    ../stdlib/digest.lmx ../backlib/consistbl.lmx base.lmx modenv.lmi
+module.lmo: ../stdlib/map.lmi ../stdlib/list.lmi ../stdlib/hashtbl.lmi \
+    base.lmo module.lmi
+module.lmx: ../stdlib/map.lmx ../stdlib/list.lmx ../stdlib/hashtbl.lmx \
+    base.lmx module.lmi
+mutable_base.lmo: ../backlib/primitive.lmi predef.lmo ../backlib/location.lmi \
+    ../stdlib/list.lmi basics.lmo base.lmo ../backlib/asttypes.lmi
+mutable_base.lmx: ../backlib/primitive.lmx predef.lmx ../backlib/location.lmx \
+    ../stdlib/list.lmx basics.lmx base.lmx ../backlib/asttypes.lmx
+oprint.lmo: ../stdlib/sys.lmi ../stdlib/string.lmi ../stdlib/printf.lmi \
+    outcometree.lmi ../stdlib/list.lmi ../stdlib/format.lmi oprint.lmi
+oprint.lmx: ../stdlib/sys.lmx ../stdlib/string.lmx ../stdlib/printf.lmx \
+    outcometree.lmi ../stdlib/list.lmx ../stdlib/format.lmx oprint.lmi
+parmatch.lmo: warnings.lmi ../stdlib/string.lmi ../stdlib/sort.lmi predef.lmo \
+    pmc_pattern.lmo ../stdlib/nativeint.lmi ../backlib/location.lmi \
+    ../stdlib/list.lmi ../stdlib/int64.lmi ../stdlib/int32.lmi \
+    ../backlib/ident.lmo frontmisc.lmo frontlocation.lmi ../stdlib/format.lmi \
+    ../backlib/fatal.lmo ../stdlib/char.lmi ../stdlib/buffer.lmi basics.lmo \
+    base.lmo ../backlib/asttypes.lmi ../stdlib/array.lmi parmatch.lmi
+parmatch.lmx: warnings.lmx ../stdlib/string.lmx ../stdlib/sort.lmx predef.lmx \
+    pmc_pattern.lmx ../stdlib/nativeint.lmx ../backlib/location.lmx \
+    ../stdlib/list.lmx ../stdlib/int64.lmx ../stdlib/int32.lmx \
+    ../backlib/ident.lmx frontmisc.lmx frontlocation.lmx ../stdlib/format.lmx \
+    ../backlib/fatal.lmx ../stdlib/char.lmx ../stdlib/buffer.lmx basics.lmx \
+    base.lmx ../backlib/asttypes.lmx ../stdlib/array.lmx parmatch.lmi
+parse.lmo: syntaxerr.lmi ../stdlib/parsing.lmi parser.lmi \
+    ../backlib/location.lmi lexer.lmi frontlocation.lmi parse.lmi
+parse.lmx: syntaxerr.lmx ../stdlib/parsing.lmx parser.lmx \
+    ../backlib/location.lmx lexer.lmx frontlocation.lmx parse.lmi
+parser.lmo: syntaxerr.lmi ../stdlib/string.lmi ../stdlib/parsing.lmi \
+    parsetree.lmi ../stdlib/obj.lmi ../stdlib/nativeint.lmi longident.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/lexing.lmi \
+    ../stdlib/int64.lmi ../stdlib/int32.lmi frontconfig.lmo \
+    ../stdlib/char.lmi ../backlib/asttypes.lmi parser.lmi
+parser.lmx: syntaxerr.lmx ../stdlib/string.lmx ../stdlib/parsing.lmx \
+    parsetree.lmi ../stdlib/obj.lmx ../stdlib/nativeint.lmx longident.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/lexing.lmx \
+    ../stdlib/int64.lmx ../stdlib/int32.lmx frontconfig.lmx \
+    ../stdlib/char.lmx ../backlib/asttypes.lmx parser.lmi
+persistent.lmo: ../stdlib/list.lmi base.lmo
+persistent.lmx: ../stdlib/list.lmx base.lmx
+pmc_pattern.lmo: typeopt.lmi makeident.lmi ../backlib/location.lmi \
+    ../stdlib/list.lmi ../backlib/ident.lmo base.lmo ../backlib/asttypes.lmi \
+    ../stdlib/array.lmi
+pmc_pattern.lmx: typeopt.lmx makeident.lmx ../backlib/location.lmx \
+    ../stdlib/list.lmx ../backlib/ident.lmx base.lmx ../backlib/asttypes.lmx \
+    ../stdlib/array.lmx
+predef.lmo: ../stdlib/list.lmi base.lmo
+predef.lmx: ../stdlib/list.lmx base.lmx
+printtyp.lmo: ../stdlib/string.lmi ../backlib/primitive.lmi outcometree.lmi \
+    oprint.lmi mutable_base.lmo longident.lmi ../stdlib/list.lmi \
+    ../stdlib/format.lmi base.lmo
+printtyp.lmx: ../stdlib/string.lmx ../backlib/primitive.lmx outcometree.lmi \
+    oprint.lmx mutable_base.lmx longident.lmx ../stdlib/list.lmx \
+    ../stdlib/format.lmx base.lmx
+resolve.lmo: ../backlib/tbl.lmi printtyp.lmo ../backlib/primitive.lmi \
+    parsetree.lmi mutable_base.lmo modenv.lmi longident.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi frontmisc.lmo \
+    ../stdlib/format.lmi ../backlib/fatal.lmo env.lmi base.lmo \
+    ../backlib/asttypes.lmi ../stdlib/array.lmi
+resolve.lmx: ../backlib/tbl.lmx printtyp.lmx ../backlib/primitive.lmx \
+    parsetree.lmi mutable_base.lmx modenv.lmx longident.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx frontmisc.lmx \
+    ../stdlib/format.lmx ../backlib/fatal.lmx env.lmx base.lmx \
+    ../backlib/asttypes.lmx ../stdlib/array.lmx
+simplif.lmo: ../stdlib/set.lmi ../stdlib/list.lmi ../backlib/lambda.lmi \
+    ../backlib/ident.lmo ../stdlib/hashtbl.lmi frontconfig.lmo \
+    ../backlib/asttypes.lmi simplif.lmi
+simplif.lmx: ../stdlib/set.lmx ../stdlib/list.lmx ../backlib/lambda.lmx \
+    ../backlib/ident.lmx ../stdlib/hashtbl.lmx frontconfig.lmx \
+    ../backlib/asttypes.lmx simplif.lmi
+switch.lmo: ../stdlib/printf.lmi ../stdlib/hashtbl.lmi ../stdlib/array.lmi \
+    switch.lmi
+switch.lmx: ../stdlib/printf.lmx ../stdlib/hashtbl.lmx ../stdlib/array.lmx \
+    switch.lmi
+syntaxerr.lmo: ../stdlib/string.lmi ../backlib/location.lmi frontlocation.lmi \
+    ../stdlib/format.lmi syntaxerr.lmi
+syntaxerr.lmx: ../stdlib/string.lmx ../backlib/location.lmx frontlocation.lmx \
+    ../stdlib/format.lmx syntaxerr.lmi
+translcore.lmo: typeopt.lmi ../stdlib/set.lmi printtyp.lmo \
+    ../backlib/primitive.lmi predef.lmo pmc_pattern.lmo parmatch.lmi \
+    matching.lmi makelambda.lmo makeident.lmi longident.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/lexing.lmi \
+    ../backlib/lambda.lmi ../backlib/ident.lmo ../stdlib/hashtbl.lmi \
+    frontmisc.lmo frontlocation.lmi frontconfig.lmo ../stdlib/format.lmi \
+    ../backlib/fatal.lmo base.lmo ../backlib/asttypes.lmi ../stdlib/array.lmi \
+    translcore.lmi
+translcore.lmx: typeopt.lmx ../stdlib/set.lmx printtyp.lmx \
+    ../backlib/primitive.lmx predef.lmx pmc_pattern.lmx parmatch.lmx \
+    matching.lmx makelambda.lmx makeident.lmx longident.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/lexing.lmx \
+    ../backlib/lambda.lmx ../backlib/ident.lmx ../stdlib/hashtbl.lmx \
+    frontmisc.lmx frontlocation.lmx frontconfig.lmx ../stdlib/format.lmx \
+    ../backlib/fatal.lmx base.lmx ../backlib/asttypes.lmx ../stdlib/array.lmx \
+    translcore.lmi
+translmod.lmo: translcore.lmi ../backlib/tbl.lmi ../stdlib/set.lmi \
+    ../backlib/primitive.lmi makeident.lmi longident.lmi \
+    ../backlib/location.lmi ../stdlib/list.lmi ../backlib/lambda.lmi \
+    include.lmo ../backlib/ident.lmo frontmisc.lmo ../backlib/fatal.lmo \
+    base.lmo ../backlib/asttypes.lmi ../stdlib/array.lmi translmod.lmi
+translmod.lmx: translcore.lmx ../backlib/tbl.lmx ../stdlib/set.lmx \
+    ../backlib/primitive.lmx makeident.lmx longident.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../backlib/lambda.lmx \
+    include.lmx ../backlib/ident.lmx frontmisc.lmx ../backlib/fatal.lmx \
+    base.lmx ../backlib/asttypes.lmx ../stdlib/array.lmx translmod.lmi
+typemain.lmo: typify.lmo ../stdlib/sys.lmi resolve.lmo printtyp.lmo \
+    mutable_base.lmo modenv.lmi ../backlib/location.lmi ../stdlib/list.lmi \
+    include.lmo immutify.lmo frontmisc.lmo frontconfig.lmo \
+    ../stdlib/format.lmi env.lmi base.lmo
+typemain.lmx: typify.lmx ../stdlib/sys.lmx resolve.lmx printtyp.lmx \
+    mutable_base.lmx modenv.lmx ../backlib/location.lmx ../stdlib/list.lmx \
+    include.lmx immutify.lmx frontmisc.lmx frontconfig.lmx \
+    ../stdlib/format.lmx env.lmx base.lmx
+typeopt.lmo: ../backlib/primitive.lmi predef.lmo ../stdlib/list.lmi \
+    ../backlib/lambda.lmi frontmisc.lmo basics.lmo base.lmo \
+    ../backlib/asttypes.lmi typeopt.lmi
+typeopt.lmx: ../backlib/primitive.lmx predef.lmx ../stdlib/list.lmx \
+    ../backlib/lambda.lmx frontmisc.lmx basics.lmx base.lmx \
+    ../backlib/asttypes.lmx typeopt.lmi
+typify.lmo: warnings.lmi ../stdlib/string.lmi printtyp.lmo \
+    ../stdlib/printf_tformat.lmo predef.lmo mutable_base.lmo \
+    ../backlib/location.lmi ../stdlib/list.lmi frontmisc.lmo \
+    frontlocation.lmi ../stdlib/format.lmi ../backlib/fatal.lmo base.lmo \
+    ../backlib/asttypes.lmi
+typify.lmx: warnings.lmx ../stdlib/string.lmx printtyp.lmx \
+    ../stdlib/printf_tformat.lmx predef.lmx mutable_base.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx frontmisc.lmx \
+    frontlocation.lmx ../stdlib/format.lmx ../backlib/fatal.lmx base.lmx \
+    ../backlib/asttypes.lmx
+unused_var.lmo: warnings.lmi ../stdlib/string.lmi parsetree.lmi longident.lmi \
+    ../stdlib/list.lmi ../stdlib/hashtbl.lmi frontlocation.lmi \
+    ../backlib/asttypes.lmi unused_var.lmi
+unused_var.lmx: warnings.lmx ../stdlib/string.lmx parsetree.lmi longident.lmx \
+    ../stdlib/list.lmx ../stdlib/hashtbl.lmx frontlocation.lmx \
+    ../backlib/asttypes.lmx unused_var.lmi
+warnings.lmo: ../stdlib/string.lmi ../stdlib/printf.lmi ../stdlib/list.lmi \
+    ../stdlib/format.lmi ../stdlib/char.lmi ../stdlib/array.lmi \
+    ../stdlib/arg.lmi warnings.lmi
+warnings.lmx: ../stdlib/string.lmx ../stdlib/printf.lmx ../stdlib/list.lmx \
+    ../stdlib/format.lmx ../stdlib/char.lmx ../stdlib/array.lmx \
+    ../stdlib/arg.lmx warnings.lmi
+depend.lmi: ../stdlib/set.lmi parsetree.lmi
+env.lmi: modenv.lmi longident.lmi base.lmo
+frontlocation.lmi: warnings.lmi ../backlib/location.lmi ../stdlib/lexing.lmi \
+    ../stdlib/format.lmi
+lexer.lmi: parser.lmi ../backlib/location.lmi ../stdlib/lexing.lmi \
+    ../stdlib/format.lmi
+linenum.lmi:
+longident.lmi:
+makeident.lmi: ../backlib/ident.lmo ../stdlib/hashtbl.lmi base.lmo
+matching.lmi: pmc_pattern.lmo modenv.lmi ../backlib/location.lmi \
+    ../backlib/lambda.lmi ../backlib/ident.lmo ../backlib/asttypes.lmi
+modenv.lmi: ../stdlib/format.lmi ../backlib/consistbl.lmi base.lmo
+module.lmi: base.lmo
+oprint.lmi: outcometree.lmi ../stdlib/format.lmi
+outcometree.lmi: ../stdlib/format.lmi
+parmatch.lmi: pmc_pattern.lmo ../backlib/location.lmi ../stdlib/format.lmi \
+    env.lmi base.lmo
+parse.lmi: parsetree.lmi ../stdlib/lexing.lmi
+parser.lmi: parsetree.lmi ../stdlib/lexing.lmi
+parsetree.lmi: longident.lmi ../backlib/location.lmi ../backlib/asttypes.lmi
+simplif.lmi: ../backlib/lambda.lmi
+switch.lmi:
+syntaxerr.lmi: ../backlib/location.lmi ../stdlib/format.lmi
+translcore.lmi: ../backlib/primitive.lmi modenv.lmi ../backlib/location.lmi \
+    ../backlib/lambda.lmi ../backlib/ident.lmo ../stdlib/format.lmi base.lmo \
+    ../backlib/asttypes.lmi
+translmod.lmi: ../backlib/primitive.lmi modenv.lmi ../backlib/lambda.lmi \
+    include.lmo ../backlib/ident.lmo base.lmo
+typeopt.lmi: ../backlib/lambda.lmi base.lmo
+unused_var.lmi: parsetree.lmi ../stdlib/format.lmi
+warnings.lmi: ../stdlib/format.lmi

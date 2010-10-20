@@ -23,25 +23,12 @@ let output_name = ref (None : string option)
 
 let usage = "usage: llamalex [options] sourcefile"
 
-let print_version_string () =
-  print_string "The Llama Light lexer generator, version ";
-  print_string Sys.llama_version ; print_newline();
-  exit 0
-
-let print_version_num () =
-  print_endline Sys.llama_version;
-  exit 0;
-;;
-
 let specs =
   ["-ml", Arg.Set ml_automata,
     " Output code that does not use the Lexing module built-in automata interpreter";
    "-o", Arg.String (fun x -> output_name := Some x),
     " <file>  Set output file name to <file>";
    "-q", Arg.Set Common.quiet_mode, " Do not display informational messages";
-   "-v",  Arg.Unit print_version_string, " Print version and exit";
-   "-version",  Arg.Unit print_version_string, " Print version and exit";
-   "-vnum",  Arg.Unit print_version_num, " Print version number and exit";
   ]
 
 let _ =

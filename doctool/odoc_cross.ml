@@ -160,7 +160,7 @@ let kind_name_exists kind =
     | RK_section _ -> assert false
   in
   fun name ->
-    try List.exists pred (get_known_elements name)
+    try List.exist pred (get_known_elements name)
     with Not_found -> false
 
 let module_exists = kind_name_exists RK_module

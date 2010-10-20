@@ -1,0 +1,16 @@
+depconfig.lmo:
+depconfig.lmx:
+depmain.lmo: ../stdlib/sys.lmi ../frontlib/syntaxerr.lmi ../stdlib/string.lmi \
+    ../stdlib/set.lmi ../stdlib/printf.lmi ../stdlib/pervasives.lmi \
+    ../frontlib/parsetree.lmi ../frontlib/parse.lmi ../frontlib/longident.lmi \
+    ../backlib/location.lmi ../stdlib/lexing.lmi ../frontlib/lexer.lmi \
+    ../frontlib/frontlocation.lmi ../stdlib/format.lmi ../stdlib/filename.lmi \
+    ../frontlib/depend.lmi depconfig.lmo ../stdlib/array.lmi \
+    ../stdlib/arg.lmi
+depmain.lmx: ../stdlib/sys.lmx ../frontlib/syntaxerr.lmx ../stdlib/string.lmx \
+    ../stdlib/set.lmx ../stdlib/printf.lmx ../stdlib/pervasives.lmx \
+    ../frontlib/parsetree.lmi ../frontlib/parse.lmx ../frontlib/longident.lmx \
+    ../backlib/location.lmx ../stdlib/lexing.lmx ../frontlib/lexer.lmx \
+    ../frontlib/frontlocation.lmx ../stdlib/format.lmx ../stdlib/filename.lmx \
+    ../frontlib/depend.lmx depconfig.lmx ../stdlib/array.lmx \
+    ../stdlib/arg.lmx

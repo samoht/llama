@@ -14,32 +14,27 @@
 
 # Makefile for the parser generator.
 
-include ../config/Makefile
-
-CC=$(BYTECC)
-CFLAGS=-O -DNDEBUG $(BYTECCCOMPOPTS)
+CFLAGS=-O -DNDEBUG
 
 OBJS= closure.o error.o lalr.o lr0.o main.o mkpar.o output.o reader.o \
   skeleton.o symtab.o verbose.o warshall.o
 
-all: llamayacc$(EXE)
+all: llamayacc
+boot: llamayacc
+.PHONY: all boot
 
-llamayacc$(EXE): $(OBJS)
-	$(CC) $(CFLAGS) $(CCLINKFLAGS) -o llamayacc $(OBJS)
-
-version.h : ../VERSION
-	echo "#define OCAML_VERSION \"`sed -e 1q ../VERSION`\"" >version.h
+llamayacc: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm -f *.o llamayacc$(EXE) *~ version.h
-
-depend:
+	rm -f *.o llamayacc
+.PHONY: clean
 
 closure.o: defs.h
 error.o: defs.h
 lalr.o: defs.h
 lr0.o: defs.h
-main.o: defs.h version.h
+main.o: defs.h
 mkpar.o: defs.h
 output.o: defs.h
 reader.o: defs.h
@@ -47,3 +42,14 @@ skeleton.o: defs.h
 symtab.o: defs.h
 verbose.o: defs.h
 warshall.o: defs.h
+
+depend:
+bootdepend:
+.PHONY: depend bootdepend
+
+include ../config.mk
+install:
+	cp llamayacc $(BINDIR)
+bootinstall: install
+bootclean: clean
+.PHONY: install bootinstall bootclean

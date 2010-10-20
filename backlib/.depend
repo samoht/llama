@@ -1,0 +1,34 @@
+asttypes.lmo: asttypes.lmi
+asttypes.lmx: asttypes.lmi
+consistbl.lmo: ../stdlib/list.lmi ../stdlib/hashtbl.lmi ../stdlib/digest.lmi \
+    consistbl.lmi
+consistbl.lmx: ../stdlib/list.lmx ../stdlib/hashtbl.lmx ../stdlib/digest.lmx \
+    consistbl.lmi
+fatal.lmo:
+fatal.lmx:
+ident.lmo: tbl.lmi ../stdlib/format.lmi
+ident.lmx: tbl.lmx ../stdlib/format.lmx
+lambda.lmo: ../stdlib/set.lmi primitive.lmi location.lmi ../stdlib/list.lmi \
+    ident.lmo fatal.lmo ../stdlib/digest.lmi asttypes.lmi lambda.lmi
+lambda.lmx: ../stdlib/set.lmx primitive.lmx location.lmx ../stdlib/list.lmx \
+    ident.lmx fatal.lmx ../stdlib/digest.lmx asttypes.lmx lambda.lmi
+location.lmo: ../stdlib/parsing.lmi ../stdlib/lexing.lmi location.lmi
+location.lmx: ../stdlib/parsing.lmx ../stdlib/lexing.lmx location.lmi
+primitive.lmo: ../stdlib/list.lmi fatal.lmo primitive.lmi
+primitive.lmx: ../stdlib/list.lmx fatal.lmx primitive.lmi
+printlambda.lmo: ../stdlib/printf.lmi primitive.lmi location.lmi \
+    ../stdlib/list.lmi ../stdlib/lexing.lmi lambda.lmi ident.lmo \
+    ../stdlib/format.lmi asttypes.lmi printlambda.lmi
+printlambda.lmx: ../stdlib/printf.lmx primitive.lmx location.lmx \
+    ../stdlib/list.lmx ../stdlib/lexing.lmx lambda.lmx ident.lmx \
+    ../stdlib/format.lmx asttypes.lmx printlambda.lmi
+tbl.lmo: ../stdlib/format.lmi tbl.lmi
+tbl.lmx: ../stdlib/format.lmx tbl.lmi
+asttypes.lmi:
+consistbl.lmi: ../stdlib/digest.lmi
+lambda.lmi: ../stdlib/set.lmi primitive.lmi location.lmi ident.lmo \
+    ../stdlib/digest.lmi asttypes.lmi
+location.lmi: ../stdlib/lexing.lmi ../stdlib/format.lmi
+primitive.lmi:
+printlambda.lmi: lambda.lmi ../stdlib/format.lmi
+tbl.lmi: ../stdlib/format.lmi

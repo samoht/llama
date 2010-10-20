@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../config/s.h"
+/*#include "config/s.h"*/
 
 /*  machine-dependent definitions                              */
 /*  the following definitions are for the Tahoe                */

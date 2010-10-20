@@ -21,6 +21,9 @@ open Clflags
 open Misc
 open Format
 
+let load_path = ref([] : string list)
+and ast_impl_magic_number = "Caml1999M013"
+and ast_intf_magic_number = "Caml1999N012"
 
 (** Initialize the search path.
    The current directory is always searched first,
@@ -29,22 +32,15 @@ open Format
 let init_path () =
   load_path :=
     "" :: List.rev (Config.standard_library :: !Clflags.include_dirs);
-  Modenv.reset ()
-
-(** Return the initial environment in which compilation proceeds. *)
-let initial_env () =
-  try
-    if !Clflags.nopervasives
-    then Env.initial
-    else Env.add_signature (Modenv.lookup_signature (Base.Module "Pervasives")) Env.initial
-  with Not_found ->
-    fatal_error "cannot open pervasives.cmi"
+  Modenv.create !load_path
 
 (** Optionally preprocess a source file *)
 let preprocess sourcefile =
   match !Clflags.preprocessor with
     None -> sourcefile
   | Some pp ->
+      assert false (* XXX *)
+(*
       let tmpfile = Filename.temp_file "camlpp" "" in
       let comm = Printf.sprintf "%s %s > %s" pp sourcefile tmpfile in
       if Ccomp.command comm <> 0 then begin
@@ -53,6 +49,7 @@ let preprocess sourcefile =
         exit 2
       end;
       tmpfile
+*)
 
 (** Remove the input file if this file was the result of a preprocessing.*)
 let remove_preprocessed inputfile =
@@ -63,7 +60,7 @@ let remove_preprocessed inputfile =
 let remove_preprocessed_if_ast inputfile =
   match !Clflags.preprocessor with
     None -> ()
-  | Some _ -> if inputfile <> !Location.input_name then remove_file inputfile
+  | Some _ -> if inputfile <> !Frontlocation.input_name then remove_file inputfile
 
 exception Outdated_version
 
@@ -80,17 +77,17 @@ let parse_file inputfile parse_fun ast_magic =
       else false
     with
       Outdated_version ->
-        fatal_error "Ocaml and preprocessor have incompatible versions"
+        Fatal.error "Ocaml and preprocessor have incompatible versions"
     | _ -> false
   in
   let ast =
     try
       if is_ast_file then begin
-        Location.input_name := input_value ic;
+        Frontlocation.input_name := input_value ic;
         input_value ic
       end else begin
         seek_in ic 0;
-        Location.input_name := inputfile;
+        Frontlocation.input_name := inputfile;
         let lexbuf = Lexing.from_channel ic in
         Location.init lexbuf inputfile;
         parse_fun lexbuf
@@ -114,13 +111,13 @@ let rec typemain_signature env psigl =
         sg @ typemain_signature newenv rest
 
 let process_interface_file ppf sourcefile =
-  init_path ();
+  let modenv = init_path () in
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
-  Modenv.current_module := Base.Module modulename;
+  Modenv.set_current_module modenv (Base.Module modulename);
   let inputfile = preprocess sourcefile in
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
-  let sg = typemain_signature (initial_env()) ast in
+  let sg = typemain_signature (Env.thru_Pervasives modenv) ast in
   Warnings.check_fatal ();
   (ast, sg, inputfile)
 
@@ -139,24 +136,24 @@ let process_interface_file ppf sourcefile =
 let process_error exn =
   let report ppf = function
   | Lexer.Error(err, loc) ->
-      Location.print_error ppf loc;
+      Frontlocation.print_error ppf loc;
       Lexer.report_error ppf err
   | Syntaxerr.Error err ->
       Syntaxerr.report_error ppf err
   | Modenv.Error err ->
-      Location.print_error_cur_file ppf;
+      Frontlocation.print_error_cur_file ppf;
       Modenv.report_error ppf err
   | Resolve.Error(loc, err) ->
-      Location.print_error ppf loc; Resolve.report_error ppf err
+      Frontlocation.print_error ppf loc; Resolve.report_error ppf err
   | Typify.Error(loc, err) ->
-      Location.print_error ppf loc; Typify.report_error ppf err
+      Frontlocation.print_error ppf loc; Typify.report_error ppf err
   | Immutify.Error(loc, err) ->
-      Location.print_error ppf loc; Immutify.report_error ppf err
+      Frontlocation.print_error ppf loc; Immutify.report_error ppf err
   | Sys_error msg ->
-      Location.print_error_cur_file ppf;
+      Frontlocation.print_error_cur_file ppf;
       fprintf ppf "I/O error: %s" msg
   | Warnings.Errors (n) ->
-      Location.print_error_cur_file ppf;
+      Frontlocation.print_error_cur_file ppf;
       fprintf ppf "Error-enabled warnings (%d occurrences)" n
   | x ->
       fprintf ppf "@]";
@@ -183,7 +180,7 @@ let process_file ppf sourcefile =
       assert false
 (*
       (
-       Location.input_name := file;
+       Frontlocation.input_name := file;
        try
          let (parsetree_typedtree_opt, input_file) = process_implementation_file ppf file in
          match parsetree_typedtree_opt with
@@ -191,7 +188,7 @@ let process_file ppf sourcefile =
              None
          | Some (parsetree, typedtree) ->
              let file_module = Ast_analyser.analyse_typed_tree file
-                 !Location.input_name parsetree typedtree
+                 !Frontlocation.input_name parsetree typedtree
              in
              file_module.Odoc_module.m_top_deps <- Odoc_dep.impl_dependencies parsetree ;
 
@@ -216,11 +213,11 @@ let process_file ppf sourcefile =
 *)
   | Odoc_args.Intf_file file ->
       (
-       Location.input_name := file;
+       Frontlocation.input_name := file;
        try
          let (ast, signat, input_file) = process_interface_file ppf file in
          let file_module = Odoc_sig.analyse_signature file
-             !Location.input_name ast signat
+             !Frontlocation.input_name ast signat
          in
 
          file_module.Odoc_module.m_top_deps <- Odoc_dep.intf_dependencies ast ;
@@ -244,7 +241,7 @@ let process_file ppf sourcefile =
            None
       )
   | Odoc_args.Text_file file ->
-      Location.input_name := file;
+      Frontlocation.input_name := file;
       try
         let mod_name =
           String.capitalize (Filename.basename (Filename.chop_extension file))

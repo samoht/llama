@@ -130,23 +130,23 @@ val fold_right2 : ('a -> 'b -> 'c -> 'c) -> 'a list -> 'b list -> 'c -> 'c
 (** {6 List scanning} *)
 
 
-val forall : ('a -> bool) -> 'a list -> bool
-(** [forall p [a1; ...; an]] checks if all elements of the list
+val for_all : ('a -> bool) -> 'a list -> bool
+(** [for_all p [a1; ...; an]] checks if all elements of the list
    satisfy the predicate [p]. That is, it returns
    [(p a1) && (p a2) && ... && (p an)]. *)
 
-val exists : ('a -> bool) -> 'a list -> bool
-(** [exists p [a1; ...; an]] checks if at least one element of
+val exist : ('a -> bool) -> 'a list -> bool
+(** [exist p [a1; ...; an]] checks if at least one element of
    the list satisfies the predicate [p]. That is, it returns
    [(p a1) || (p a2) || ... || (p an)]. *)
 
-val forall2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
-(** Same as {!List.forall}, but for a two-argument predicate.
+val for_all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
+(** Same as {!List.for_all}, but for a two-argument predicate.
    Raise [Invalid_argument] if the two lists have
    different lengths. *)
 
-val exists2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
-(** Same as {!List.exists}, but for a two-argument predicate.
+val exist2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
+(** Same as {!List.exist}, but for a two-argument predicate.
    Raise [Invalid_argument] if the two lists have
    different lengths. *)
 

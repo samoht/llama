@@ -276,13 +276,13 @@ type 'a t = Empty of 'a ord | Node of 'a ord * 'a t * 'a * 'a t * int
         Empty _ -> accu
       | Node(_, l, v, r, _) -> fold f r (f v (fold f l accu))
 
-    let rec forall p = function
+    let rec for_all p = function
         Empty _ -> true
-      | Node(_, l, v, r, _) -> p v && forall p l && forall p r
+      | Node(_, l, v, r, _) -> p v && for_all p l && for_all p r
 
-    let rec exists p = function
+    let rec exist p = function
         Empty _ -> false
-      | Node(_, l, v, r, _) -> p v || exists p l || exists p r
+      | Node(_, l, v, r, _) -> p v || exist p l || exist p r
 
     let filter p s =
       let rec filt accu = function

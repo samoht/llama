@@ -94,7 +94,7 @@ let intf_dependencies ast =
               node.far
           in
           let set = Set.remove node.id set_reachables in
-          if Set.exists (fun n2 -> Set.mem child (get_node graph n2).near) set then
+          if Set.exist (fun n2 -> Set.mem child (get_node graph n2).near) set then
             (
              node.near <- Set.remove child node.near ;
              node.far <- List.filter (fun (ch,_) -> ch <> child) node.far

@@ -1,0 +1,261 @@
+base.cmo: ../stdlib/string.cmi ../backlib/primitive.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../backlib/asttypes.cmi
+base.cmx: ../stdlib/string.cmx ../backlib/primitive.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../backlib/asttypes.cmx
+basics.cmo: ../stdlib/list.cmi base.cmo
+basics.cmx: ../stdlib/list.cmx base.cmx
+depend.cmo: ../stdlib/set.cmi parsetree.cmi longident.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../stdlib/format.cmi \
+    depend.cmi
+depend.cmx: ../stdlib/set.cmx parsetree.cmi longident.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../stdlib/format.cmx \
+    depend.cmi
+env.cmo: predef.cmo modenv.cmi ../stdlib/map.cmi longident.cmi \
+    ../stdlib/list.cmi ../backlib/fatal.cmo base.cmo env.cmi
+env.cmx: predef.cmx modenv.cmx ../stdlib/map.cmx longident.cmx \
+    ../stdlib/list.cmx ../backlib/fatal.cmx base.cmx env.cmi
+frontconfig.cmo:
+frontconfig.cmx:
+fronterrors.cmo: warnings.cmi typify.cmo typemain.cmo translcore.cmi \
+    syntaxerr.cmi resolve.cmo modenv.cmi lexer.cmi include.cmo immutify.cmo \
+    frontlocation.cmi ../stdlib/format.cmi
+fronterrors.cmx: warnings.cmx typify.cmx typemain.cmx translcore.cmx \
+    syntaxerr.cmx resolve.cmx modenv.cmx lexer.cmx include.cmx immutify.cmx \
+    frontlocation.cmx ../stdlib/format.cmx
+frontlocation.cmo: warnings.cmi ../stdlib/terminfo.cmi ../stdlib/sys.cmi \
+    ../stdlib/string.cmi ../backlib/location.cmi linenum.cmi \
+    ../stdlib/lexing.cmi ../stdlib/format.cmi frontlocation.cmi
+frontlocation.cmx: warnings.cmx ../stdlib/terminfo.cmx ../stdlib/sys.cmx \
+    ../stdlib/string.cmx ../backlib/location.cmx linenum.cmx \
+    ../stdlib/lexing.cmx ../stdlib/format.cmx frontlocation.cmi
+frontmisc.cmo: ../stdlib/sys.cmi ../stdlib/string.cmi ../stdlib/list.cmi \
+    ../stdlib/hashtbl.cmi ../stdlib/filename.cmi
+frontmisc.cmx: ../stdlib/sys.cmx ../stdlib/string.cmx ../stdlib/list.cmx \
+    ../stdlib/hashtbl.cmx ../stdlib/filename.cmx
+immutify.cmo: printtyp.cmo predef.cmo mutable_base.cmo modenv.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../stdlib/format.cmi env.cmi \
+    basics.cmo base.cmo ../backlib/asttypes.cmi
+immutify.cmx: printtyp.cmx predef.cmx mutable_base.cmx modenv.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../stdlib/format.cmx env.cmx \
+    basics.cmx base.cmx ../backlib/asttypes.cmx
+include.cmo: printtyp.cmo ../backlib/primitive.cmi mutable_base.cmo \
+    longident.cmi ../stdlib/list.cmi ../stdlib/hashtbl.cmi frontmisc.cmo \
+    ../stdlib/format.cmi env.cmi basics.cmo base.cmo
+include.cmx: printtyp.cmx ../backlib/primitive.cmx mutable_base.cmx \
+    longident.cmx ../stdlib/list.cmx ../stdlib/hashtbl.cmx frontmisc.cmx \
+    ../stdlib/format.cmx env.cmx basics.cmx base.cmx
+lexer.cmo: warnings.cmi ../stdlib/string.cmi parser.cmi \
+    ../stdlib/nativeint.cmi ../backlib/location.cmi ../stdlib/lexing.cmi \
+    ../stdlib/int64.cmi ../stdlib/int32.cmi ../stdlib/hashtbl.cmi \
+    frontmisc.cmo frontlocation.cmi ../stdlib/format.cmi ../stdlib/char.cmi \
+    ../stdlib/array.cmi lexer.cmi
+lexer.cmx: warnings.cmx ../stdlib/string.cmx parser.cmx \
+    ../stdlib/nativeint.cmx ../backlib/location.cmx ../stdlib/lexing.cmx \
+    ../stdlib/int64.cmx ../stdlib/int32.cmx ../stdlib/hashtbl.cmx \
+    frontmisc.cmx frontlocation.cmx ../stdlib/format.cmx ../stdlib/char.cmx \
+    ../stdlib/array.cmx lexer.cmi
+linenum.cmo: ../stdlib/string.cmi ../stdlib/lexing.cmi ../backlib/fatal.cmo \
+    linenum.cmi
+linenum.cmx: ../stdlib/string.cmx ../stdlib/lexing.cmx ../backlib/fatal.cmx \
+    linenum.cmi
+longident.cmo: ../stdlib/string.cmi longident.cmi
+longident.cmx: ../stdlib/string.cmx longident.cmi
+makeident.cmo: ../stdlib/list.cmi ../backlib/ident.cmo ../stdlib/hashtbl.cmi \
+    base.cmo makeident.cmi
+makeident.cmx: ../stdlib/list.cmx ../backlib/ident.cmx ../stdlib/hashtbl.cmx \
+    base.cmx makeident.cmi
+makelambda.cmo: modenv.cmi makeident.cmi ../backlib/lambda.cmi base.cmo
+makelambda.cmx: modenv.cmx makeident.cmx ../backlib/lambda.cmx base.cmx
+matching.cmo: switch.cmi ../stdlib/set.cmi ../backlib/printlambda.cmi \
+    ../stdlib/printf.cmi ../backlib/primitive.cmi predef.cmo pmc_pattern.cmo \
+    ../stdlib/pervasives.cmi parmatch.cmi makelambda.cmo \
+    ../backlib/location.cmi ../stdlib/list.cmi ../stdlib/lexing.cmi \
+    ../backlib/lambda.cmi ../backlib/ident.cmo ../stdlib/hashtbl.cmi \
+    frontmisc.cmo frontlocation.cmi ../stdlib/format.cmi ../backlib/fatal.cmo \
+    ../stdlib/char.cmi base.cmo ../backlib/asttypes.cmi ../stdlib/array.cmi \
+    matching.cmi
+matching.cmx: switch.cmx ../stdlib/set.cmx ../backlib/printlambda.cmx \
+    ../stdlib/printf.cmx ../backlib/primitive.cmx predef.cmx pmc_pattern.cmx \
+    ../stdlib/pervasives.cmx parmatch.cmx makelambda.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../stdlib/lexing.cmx \
+    ../backlib/lambda.cmx ../backlib/ident.cmx ../stdlib/hashtbl.cmx \
+    frontmisc.cmx frontlocation.cmx ../stdlib/format.cmx ../backlib/fatal.cmx \
+    ../stdlib/char.cmx base.cmx ../backlib/asttypes.cmx ../stdlib/array.cmx \
+    matching.cmi
+modenv.cmo: ../stdlib/string.cmi predef.cmo persistent.cmo module.cmi \
+    ../stdlib/map.cmi ../stdlib/list.cmi frontmisc.cmo ../stdlib/format.cmi \
+    ../stdlib/digest.cmi ../backlib/consistbl.cmi base.cmo modenv.cmi
+modenv.cmx: ../stdlib/string.cmx predef.cmx persistent.cmx module.cmx \
+    ../stdlib/map.cmx ../stdlib/list.cmx frontmisc.cmx ../stdlib/format.cmx \
+    ../stdlib/digest.cmx ../backlib/consistbl.cmx base.cmx modenv.cmi
+module.cmo: ../stdlib/map.cmi ../stdlib/list.cmi ../stdlib/hashtbl.cmi \
+    base.cmo module.cmi
+module.cmx: ../stdlib/map.cmx ../stdlib/list.cmx ../stdlib/hashtbl.cmx \
+    base.cmx module.cmi
+mutable_base.cmo: ../backlib/primitive.cmi predef.cmo ../backlib/location.cmi \
+    ../stdlib/list.cmi basics.cmo base.cmo ../backlib/asttypes.cmi
+mutable_base.cmx: ../backlib/primitive.cmx predef.cmx ../backlib/location.cmx \
+    ../stdlib/list.cmx basics.cmx base.cmx ../backlib/asttypes.cmx
+oprint.cmo: ../stdlib/sys.cmi ../stdlib/string.cmi ../stdlib/printf.cmi \
+    outcometree.cmi ../stdlib/list.cmi ../stdlib/format.cmi oprint.cmi
+oprint.cmx: ../stdlib/sys.cmx ../stdlib/string.cmx ../stdlib/printf.cmx \
+    outcometree.cmi ../stdlib/list.cmx ../stdlib/format.cmx oprint.cmi
+parmatch.cmo: warnings.cmi ../stdlib/string.cmi ../stdlib/sort.cmi predef.cmo \
+    pmc_pattern.cmo ../stdlib/nativeint.cmi ../backlib/location.cmi \
+    ../stdlib/list.cmi ../stdlib/int64.cmi ../stdlib/int32.cmi \
+    ../backlib/ident.cmo frontmisc.cmo frontlocation.cmi ../stdlib/format.cmi \
+    ../backlib/fatal.cmo ../stdlib/char.cmi ../stdlib/buffer.cmi basics.cmo \
+    base.cmo ../backlib/asttypes.cmi ../stdlib/array.cmi parmatch.cmi
+parmatch.cmx: warnings.cmx ../stdlib/string.cmx ../stdlib/sort.cmx predef.cmx \
+    pmc_pattern.cmx ../stdlib/nativeint.cmx ../backlib/location.cmx \
+    ../stdlib/list.cmx ../stdlib/int64.cmx ../stdlib/int32.cmx \
+    ../backlib/ident.cmx frontmisc.cmx frontlocation.cmx ../stdlib/format.cmx \
+    ../backlib/fatal.cmx ../stdlib/char.cmx ../stdlib/buffer.cmx basics.cmx \
+    base.cmx ../backlib/asttypes.cmx ../stdlib/array.cmx parmatch.cmi
+parse.cmo: syntaxerr.cmi ../stdlib/parsing.cmi parser.cmi \
+    ../backlib/location.cmi lexer.cmi frontlocation.cmi parse.cmi
+parse.cmx: syntaxerr.cmx ../stdlib/parsing.cmx parser.cmx \
+    ../backlib/location.cmx lexer.cmx frontlocation.cmx parse.cmi
+parser.cmo: syntaxerr.cmi ../stdlib/string.cmi ../stdlib/parsing.cmi \
+    parsetree.cmi ../stdlib/obj.cmi ../stdlib/nativeint.cmi longident.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../stdlib/lexing.cmi \
+    ../stdlib/int64.cmi ../stdlib/int32.cmi frontconfig.cmo \
+    ../stdlib/char.cmi ../backlib/asttypes.cmi parser.cmi
+parser.cmx: syntaxerr.cmx ../stdlib/string.cmx ../stdlib/parsing.cmx \
+    parsetree.cmi ../stdlib/obj.cmx ../stdlib/nativeint.cmx longident.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../stdlib/lexing.cmx \
+    ../stdlib/int64.cmx ../stdlib/int32.cmx frontconfig.cmx \
+    ../stdlib/char.cmx ../backlib/asttypes.cmx parser.cmi
+persistent.cmo: ../stdlib/list.cmi base.cmo
+persistent.cmx: ../stdlib/list.cmx base.cmx
+pmc_pattern.cmo: typeopt.cmi makeident.cmi ../backlib/location.cmi \
+    ../stdlib/list.cmi ../backlib/ident.cmo base.cmo ../backlib/asttypes.cmi \
+    ../stdlib/array.cmi
+pmc_pattern.cmx: typeopt.cmx makeident.cmx ../backlib/location.cmx \
+    ../stdlib/list.cmx ../backlib/ident.cmx base.cmx ../backlib/asttypes.cmx \
+    ../stdlib/array.cmx
+predef.cmo: ../stdlib/list.cmi base.cmo
+predef.cmx: ../stdlib/list.cmx base.cmx
+printtyp.cmo: ../stdlib/string.cmi ../backlib/primitive.cmi outcometree.cmi \
+    oprint.cmi mutable_base.cmo longident.cmi ../stdlib/list.cmi \
+    ../stdlib/format.cmi base.cmo
+printtyp.cmx: ../stdlib/string.cmx ../backlib/primitive.cmx outcometree.cmi \
+    oprint.cmx mutable_base.cmx longident.cmx ../stdlib/list.cmx \
+    ../stdlib/format.cmx base.cmx
+resolve.cmo: ../backlib/tbl.cmi printtyp.cmo ../backlib/primitive.cmi \
+    parsetree.cmi mutable_base.cmo modenv.cmi longident.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi frontmisc.cmo \
+    ../stdlib/format.cmi ../backlib/fatal.cmo env.cmi base.cmo \
+    ../backlib/asttypes.cmi ../stdlib/array.cmi
+resolve.cmx: ../backlib/tbl.cmx printtyp.cmx ../backlib/primitive.cmx \
+    parsetree.cmi mutable_base.cmx modenv.cmx longident.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx frontmisc.cmx \
+    ../stdlib/format.cmx ../backlib/fatal.cmx env.cmx base.cmx \
+    ../backlib/asttypes.cmx ../stdlib/array.cmx
+simplif.cmo: ../stdlib/set.cmi ../stdlib/list.cmi ../backlib/lambda.cmi \
+    ../backlib/ident.cmo ../stdlib/hashtbl.cmi frontconfig.cmo \
+    ../backlib/asttypes.cmi simplif.cmi
+simplif.cmx: ../stdlib/set.cmx ../stdlib/list.cmx ../backlib/lambda.cmx \
+    ../backlib/ident.cmx ../stdlib/hashtbl.cmx frontconfig.cmx \
+    ../backlib/asttypes.cmx simplif.cmi
+switch.cmo: ../stdlib/printf.cmi ../stdlib/hashtbl.cmi ../stdlib/array.cmi \
+    switch.cmi
+switch.cmx: ../stdlib/printf.cmx ../stdlib/hashtbl.cmx ../stdlib/array.cmx \
+    switch.cmi
+syntaxerr.cmo: ../stdlib/string.cmi ../backlib/location.cmi frontlocation.cmi \
+    ../stdlib/format.cmi syntaxerr.cmi
+syntaxerr.cmx: ../stdlib/string.cmx ../backlib/location.cmx frontlocation.cmx \
+    ../stdlib/format.cmx syntaxerr.cmi
+translcore.cmo: typeopt.cmi ../stdlib/set.cmi printtyp.cmo \
+    ../backlib/primitive.cmi predef.cmo pmc_pattern.cmo parmatch.cmi \
+    matching.cmi makelambda.cmo makeident.cmi longident.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../stdlib/lexing.cmi \
+    ../backlib/lambda.cmi ../backlib/ident.cmo ../stdlib/hashtbl.cmi \
+    frontmisc.cmo frontlocation.cmi frontconfig.cmo ../stdlib/format.cmi \
+    ../backlib/fatal.cmo base.cmo ../backlib/asttypes.cmi ../stdlib/array.cmi \
+    translcore.cmi
+translcore.cmx: typeopt.cmx ../stdlib/set.cmx printtyp.cmx \
+    ../backlib/primitive.cmx predef.cmx pmc_pattern.cmx parmatch.cmx \
+    matching.cmx makelambda.cmx makeident.cmx longident.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../stdlib/lexing.cmx \
+    ../backlib/lambda.cmx ../backlib/ident.cmx ../stdlib/hashtbl.cmx \
+    frontmisc.cmx frontlocation.cmx frontconfig.cmx ../stdlib/format.cmx \
+    ../backlib/fatal.cmx base.cmx ../backlib/asttypes.cmx ../stdlib/array.cmx \
+    translcore.cmi
+translmod.cmo: translcore.cmi ../backlib/tbl.cmi ../stdlib/set.cmi \
+    ../backlib/primitive.cmi makeident.cmi longident.cmi \
+    ../backlib/location.cmi ../stdlib/list.cmi ../backlib/lambda.cmi \
+    include.cmo ../backlib/ident.cmo frontmisc.cmo ../backlib/fatal.cmo \
+    base.cmo ../backlib/asttypes.cmi ../stdlib/array.cmi translmod.cmi
+translmod.cmx: translcore.cmx ../backlib/tbl.cmx ../stdlib/set.cmx \
+    ../backlib/primitive.cmx makeident.cmx longident.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx ../backlib/lambda.cmx \
+    include.cmx ../backlib/ident.cmx frontmisc.cmx ../backlib/fatal.cmx \
+    base.cmx ../backlib/asttypes.cmx ../stdlib/array.cmx translmod.cmi
+typemain.cmo: typify.cmo ../stdlib/sys.cmi resolve.cmo printtyp.cmo \
+    mutable_base.cmo modenv.cmi ../backlib/location.cmi ../stdlib/list.cmi \
+    include.cmo immutify.cmo frontmisc.cmo frontconfig.cmo \
+    ../stdlib/format.cmi env.cmi base.cmo
+typemain.cmx: typify.cmx ../stdlib/sys.cmx resolve.cmx printtyp.cmx \
+    mutable_base.cmx modenv.cmx ../backlib/location.cmx ../stdlib/list.cmx \
+    include.cmx immutify.cmx frontmisc.cmx frontconfig.cmx \
+    ../stdlib/format.cmx env.cmx base.cmx
+typeopt.cmo: ../backlib/primitive.cmi predef.cmo ../stdlib/list.cmi \
+    ../backlib/lambda.cmi frontmisc.cmo basics.cmo base.cmo \
+    ../backlib/asttypes.cmi typeopt.cmi
+typeopt.cmx: ../backlib/primitive.cmx predef.cmx ../stdlib/list.cmx \
+    ../backlib/lambda.cmx frontmisc.cmx basics.cmx base.cmx \
+    ../backlib/asttypes.cmx typeopt.cmi
+typify.cmo: warnings.cmi ../stdlib/string.cmi printtyp.cmo \
+    ../stdlib/printf_tformat.cmo predef.cmo mutable_base.cmo \
+    ../backlib/location.cmi ../stdlib/list.cmi frontmisc.cmo \
+    frontlocation.cmi ../stdlib/format.cmi ../backlib/fatal.cmo base.cmo \
+    ../backlib/asttypes.cmi
+typify.cmx: warnings.cmx ../stdlib/string.cmx printtyp.cmx \
+    ../stdlib/printf_tformat.cmx predef.cmx mutable_base.cmx \
+    ../backlib/location.cmx ../stdlib/list.cmx frontmisc.cmx \
+    frontlocation.cmx ../stdlib/format.cmx ../backlib/fatal.cmx base.cmx \
+    ../backlib/asttypes.cmx
+unused_var.cmo: warnings.cmi ../stdlib/string.cmi parsetree.cmi longident.cmi \
+    ../stdlib/list.cmi ../stdlib/hashtbl.cmi frontlocation.cmi \
+    ../backlib/asttypes.cmi unused_var.cmi
+unused_var.cmx: warnings.cmx ../stdlib/string.cmx parsetree.cmi longident.cmx \
+    ../stdlib/list.cmx ../stdlib/hashtbl.cmx frontlocation.cmx \
+    ../backlib/asttypes.cmx unused_var.cmi
+warnings.cmo: ../stdlib/string.cmi ../stdlib/printf.cmi ../stdlib/list.cmi \
+    ../stdlib/format.cmi ../stdlib/char.cmi ../stdlib/array.cmi \
+    ../stdlib/arg.cmi warnings.cmi
+warnings.cmx: ../stdlib/string.cmx ../stdlib/printf.cmx ../stdlib/list.cmx \
+    ../stdlib/format.cmx ../stdlib/char.cmx ../stdlib/array.cmx \
+    ../stdlib/arg.cmx warnings.cmi
+depend.cmi: ../stdlib/set.cmi parsetree.cmi
+env.cmi: modenv.cmi longident.cmi base.cmo
+frontlocation.cmi: warnings.cmi ../backlib/location.cmi ../stdlib/lexing.cmi \
+    ../stdlib/format.cmi
+lexer.cmi: parser.cmi ../backlib/location.cmi ../stdlib/lexing.cmi \
+    ../stdlib/format.cmi
+linenum.cmi:
+longident.cmi:
+makeident.cmi: ../backlib/ident.cmo ../stdlib/hashtbl.cmi base.cmo
+matching.cmi: pmc_pattern.cmo modenv.cmi ../backlib/location.cmi \
+    ../backlib/lambda.cmi ../backlib/ident.cmo ../backlib/asttypes.cmi
+modenv.cmi: ../stdlib/format.cmi ../backlib/consistbl.cmi base.cmo
+module.cmi: base.cmo
+oprint.cmi: outcometree.cmi ../stdlib/format.cmi
+outcometree.cmi: ../stdlib/format.cmi
+parmatch.cmi: pmc_pattern.cmo ../backlib/location.cmi ../stdlib/format.cmi \
+    env.cmi base.cmo
+parse.cmi: parsetree.cmi ../stdlib/lexing.cmi
+parser.cmi: parsetree.cmi ../stdlib/lexing.cmi
+parsetree.cmi: longident.cmi ../backlib/location.cmi ../backlib/asttypes.cmi
+simplif.cmi: ../backlib/lambda.cmi
+switch.cmi:
+syntaxerr.cmi: ../backlib/location.cmi ../stdlib/format.cmi
+translcore.cmi: ../backlib/primitive.cmi modenv.cmi ../backlib/location.cmi \
+    ../backlib/lambda.cmi ../backlib/ident.cmo ../stdlib/format.cmi base.cmo \
+    ../backlib/asttypes.cmi
+translmod.cmi: ../backlib/primitive.cmi modenv.cmi ../backlib/lambda.cmi \
+    include.cmo ../backlib/ident.cmo base.cmo
+typeopt.cmi: ../backlib/lambda.cmi base.cmo
+unused_var.cmi: parsetree.cmi ../stdlib/format.cmi
+warnings.cmi: ../stdlib/format.cmi

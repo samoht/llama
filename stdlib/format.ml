@@ -22,7 +22,7 @@
 
  **************************************************************)
 
-external type size;;
+type size;;
 
 external size_of_int : int -> size = "%identity"
 ;;
@@ -1148,7 +1148,7 @@ let mkprintf to_s get_out =
         pp_print_as_string s; doprn n i
       and cont_a n printer arg i =
         if to_s then
-          pp_print_as_string ((Obj.magic printer (* : unit -> _ -> string *) ) () arg)
+          pp_print_as_string ((Obj.magic printer : unit -> 'a -> string) () arg)
         else
           printer ppf arg;
         doprn n i
@@ -1236,7 +1236,7 @@ let mkprintf to_s get_out =
             and cont_a n printer arg i =
               let s =
                 if to_s
-                then (Obj.magic printer (* : unit -> _ -> string *) ) () arg
+                then (Obj.magic printer : unit -> 'a -> string) () arg
                 else exstring printer arg in
               get (s :: s0 :: accu) n i i
             and cont_t n printer i =

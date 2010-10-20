@@ -550,7 +550,7 @@ let mkprintf to_s get_out outc outs flush k fmt =
       outs out s; doprn n i
     and cont_a n printer arg i =
       if to_s then
-        outs out ((Obj.magic printer (* : unit -> _ -> string *) ) () arg)
+        outs out ((Obj.magic printer : unit -> 'a -> string) () arg)
       else
         printer out arg;
       doprn n i

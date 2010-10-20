@@ -1,4 +1,4 @@
-  external type index;;
+  type index;;
 
   external unsafe_index_of_int : int -> index = "%identity"
   ;;

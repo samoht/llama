@@ -315,24 +315,6 @@ open Odoc_types
             let new_env = Odoc_env.add_exception env e.ex_name in
             (maybe_more, new_env, [ Element_exception e ])
 
-        | Parsetree.Psig_abstract_type (params, name) ->
-            (* we start by extending the environment *)
-            let new_env = Odoc_env.add_type env (Odoc_name.concat current_module_name name) in
-            let new_type =
-              {
-                ty_name = Odoc_name.concat current_module_name name ;
-                ty_info = comment_opt ;
-                ty_parameters = List.map (fun param -> Tparam param) (standard_parameters (List.length params));
-                ty_kind = Odoc_type.Tcs_abstract;
-                ty_manifest = None;
-                ty_loc =
-                  { loc_impl = None ;
-                    loc_inter = Some (!file_name, pos_start_ele) ;
-                  };
-                ty_code = None;
-              } in
-            (0, new_env, [Element_type new_type])  (* XXX: not sure about 0 *)
-            
         | Parsetree.Psig_type type_decl_list ->
             (* we start by extending the environment *)
             let new_env =

@@ -15,7 +15,7 @@
 
 open Int_misc
 
-external type nat;;
+type nat;;
 
 external create_nat: int -> nat = "caml_create_nat"
 external set_to_zero_nat: nat -> int -> int -> unit = "caml_set_to_zero_nat"

@@ -120,7 +120,7 @@ let _IdSet_union = Set.union
 let _IdSet_inter = Set.inter
 let _IdSet_diff = Set.diff
 let _IdSet_fold = Set.fold
-let _IdSet_exists = Set.exists
+let _IdSet_exists = Set.exist
 
 (* module IdMap =
      Map.Make (struct type t =  ident let compare = id_compare end) *)

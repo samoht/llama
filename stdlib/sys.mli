@@ -196,7 +196,3 @@ val catch_break : bool -> unit
    Call [catch_break true] to enable raising [Break],
    and [catch_break false] to let the system
    terminate the program on user interrupt. *)
-
-
-val llama_version : string;;
-(** [llama_version] is the version of Llama Light. *)

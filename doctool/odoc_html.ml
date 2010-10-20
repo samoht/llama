@@ -1153,7 +1153,7 @@ let newline_to_indented_br s =
       (* get the params which have a name, and at least one name described. *)
       let l2 = List.filter
           (fun p ->
-            List.exists
+            List.exist
               (fun n -> (Odoc_parameter.desc_by_name p n) <> None)
               (Odoc_parameter.names p))
           l

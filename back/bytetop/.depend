@@ -1,0 +1,140 @@
+expunge.lmo: ../../stdlib/sys.lmi ../bytelib/symtable.lmi \
+    ../../stdlib/string.lmi ../../stdlib/set.lmi ../bytelib/runtimedef.lmi \
+    ../../stdlib/printexc.lmi ../bytelib/misc.lmi ../../stdlib/list.lmi \
+    ../../backlib/ident.lmo ../../stdlib/digest.lmi \
+    ../bytelib/bytesections.lmi ../../stdlib/array.lmi
+expunge.lmx: ../../stdlib/sys.lmx ../bytelib/symtable.lmx \
+    ../../stdlib/string.lmx ../../stdlib/set.lmx ../bytelib/runtimedef.lmx \
+    ../../stdlib/printexc.lmx ../bytelib/misc.lmx ../../stdlib/list.lmx \
+    ../../backlib/ident.lmx ../../stdlib/digest.lmx \
+    ../bytelib/bytesections.lmx ../../stdlib/array.lmx
+ledit.lmo: ../../stdlib/unix.lmi ../../stdlib/sys.lmi ../../stdlib/string.lmi \
+    ../../stdlib/stream.lmi ../../stdlib/printf.lmi ../../stdlib/list.lmi \
+    ledit_string.lmi ledit_fstream.lmi ledit_cursor.lmi ledit_char.lmi \
+    ../../stdlib/hashtbl.lmi ../../stdlib/filename.lmi ../../stdlib/char.lmi \
+    ledit.lmi
+ledit.lmx: ../../stdlib/unix.lmx ../../stdlib/sys.lmx ../../stdlib/string.lmx \
+    ../../stdlib/stream.lmx ../../stdlib/printf.lmx ../../stdlib/list.lmx \
+    ledit_string.lmx ledit_fstream.lmx ledit_cursor.lmx ledit_char.lmx \
+    ../../stdlib/hashtbl.lmx ../../stdlib/filename.lmx ../../stdlib/char.lmx \
+    ledit.lmi
+ledit_char.lmo: ../../stdlib/unix.lmi ../../stdlib/string.lmi \
+    ../../stdlib/stream.lmi ../../stdlib/char.lmi ledit_char.lmi
+ledit_char.lmx: ../../stdlib/unix.lmx ../../stdlib/string.lmx \
+    ../../stdlib/stream.lmx ../../stdlib/char.lmx ledit_char.lmi
+ledit_cursor.lmo: ../../stdlib/list.lmi ledit_cursor.lmi
+ledit_cursor.lmx: ../../stdlib/list.lmx ledit_cursor.lmi
+ledit_fstream.lmo: ../../stdlib/string.lmi ../../stdlib/list.lmi \
+    ledit_fstream.lmi
+ledit_fstream.lmx: ../../stdlib/string.lmx ../../stdlib/list.lmx \
+    ledit_fstream.lmi
+ledit_string.lmo: ../../stdlib/string.lmi ../../stdlib/list.lmi \
+    ledit_char.lmi ../../stdlib/char.lmi ../../stdlib/array.lmi \
+    ledit_string.lmi
+ledit_string.lmx: ../../stdlib/string.lmx ../../stdlib/list.lmx \
+    ledit_char.lmx ../../stdlib/char.lmx ../../stdlib/array.lmx \
+    ledit_string.lmi
+printer.lmo: ../../stdlib/string.lmi ../../frontlib/printtyp.lmo \
+    ../../frontlib/predef.lmo ../../frontlib/outcometree.lmi \
+    ../../stdlib/obj.lmi ../bytelib/misc.lmi ../../frontlib/longident.lmi \
+    ../../stdlib/list.lmi ../../stdlib/format.lmi ../../frontlib/env.lmi \
+    ../../frontlib/basics.lmo ../../frontlib/base.lmo printer.lmi
+printer.lmx: ../../stdlib/string.lmx ../../frontlib/printtyp.lmx \
+    ../../frontlib/predef.lmx ../../frontlib/outcometree.lmi \
+    ../../stdlib/obj.lmx ../bytelib/misc.lmx ../../frontlib/longident.lmx \
+    ../../stdlib/list.lmx ../../stdlib/format.lmx ../../frontlib/env.lmx \
+    ../../frontlib/basics.lmx ../../frontlib/base.lmx printer.lmi
+topdirs.lmo: ../../frontlib/warnings.lmi trace.lmi toploop.lmi \
+    ../../stdlib/sys.lmi ../bytelib/symtable.lmi ../../stdlib/string.lmi \
+    ../../frontlib/printtyp.lmo ../bytelib/opcodes.lmo ../../stdlib/obj.lmi \
+    ../../frontlib/mutable_base.lmo ../../frontlib/modenv.lmi \
+    ../bytelib/misc.lmi ../bytelib/meta.lmi ../../frontlib/longident.lmi \
+    ../../stdlib/list.lmi ../../frontlib/immutify.lmo \
+    ../../stdlib/hashtbl.lmi ../../stdlib/format.lmi ../../frontlib/env.lmi \
+    ../bytelib/dll.lmi ../../backlib/consistbl.lmi ../bytelib/config.lmo \
+    ../bytelib/cmo_format.lmi ../../stdlib/char.lmi ../../frontlib/base.lmo \
+    ../../stdlib/arg.lmi topdirs.lmi
+topdirs.lmx: ../../frontlib/warnings.lmx trace.lmx toploop.lmx \
+    ../../stdlib/sys.lmx ../bytelib/symtable.lmx ../../stdlib/string.lmx \
+    ../../frontlib/printtyp.lmx ../bytelib/opcodes.lmx ../../stdlib/obj.lmx \
+    ../../frontlib/mutable_base.lmx ../../frontlib/modenv.lmx \
+    ../bytelib/misc.lmx ../bytelib/meta.lmx ../../frontlib/longident.lmx \
+    ../../stdlib/list.lmx ../../frontlib/immutify.lmx \
+    ../../stdlib/hashtbl.lmx ../../stdlib/format.lmx ../../frontlib/env.lmx \
+    ../bytelib/dll.lmx ../../backlib/consistbl.lmx ../bytelib/config.lmx \
+    ../bytelib/cmo_format.lmi ../../stdlib/char.lmx ../../frontlib/base.lmx \
+    ../../stdlib/arg.lmx topdirs.lmi
+toploop.lmo: ../../frontlib/warnings.lmi ../../frontlib/unused_var.lmi \
+    ../../frontlib/typify.lmo ../../frontlib/typemain.lmo \
+    ../../frontlib/translmod.lmi ../../stdlib/sys.lmi ../bytelib/symtable.lmi \
+    ../../stdlib/string.lmi ../../frontlib/simplif.lmi \
+    ../../frontlib/resolve.lmo ../../frontlib/printtyp.lmo \
+    ../../backlib/printlambda.lmi ../bytelib/printinstr.lmi printer.lmi \
+    ../../frontlib/predef.lmo ../../stdlib/pervasives.lmi \
+    ../../frontlib/parsetree.lmi ../../frontlib/parse.lmi \
+    ../../frontlib/outcometree.lmi ../../frontlib/oprint.lmi \
+    ../../stdlib/obj.lmi ../../frontlib/modenv.lmi ../bytelib/misc.lmi \
+    ../bytelib/meta.lmi ../../frontlib/longident.lmi \
+    ../../backlib/location.lmi ../../stdlib/list.lmi ../../stdlib/lexing.lmi \
+    ../../frontlib/lexer.lmi ledit.lmi ../../frontlib/immutify.lmo \
+    ../../backlib/ident.lmo ../../stdlib/hashtbl.lmi ../../stdlib/gc.lmi \
+    ../../stdlib/format.lmi ../../stdlib/filename.lmi ../../frontlib/env.lmi \
+    ../bytelib/emitcode.lmi ../bytelib/dll.lmi ../../backlib/consistbl.lmi \
+    ../bytelib/config.lmo ../bytelib/clflags.lmi ../bytelib/bytegen.lmi \
+    ../../frontlib/base.lmo ../../stdlib/array.lmi ../../stdlib/arg.lmi \
+    toploop.lmi
+toploop.lmx: ../../frontlib/warnings.lmx ../../frontlib/unused_var.lmx \
+    ../../frontlib/typify.lmx ../../frontlib/typemain.lmx \
+    ../../frontlib/translmod.lmx ../../stdlib/sys.lmx ../bytelib/symtable.lmx \
+    ../../stdlib/string.lmx ../../frontlib/simplif.lmx \
+    ../../frontlib/resolve.lmx ../../frontlib/printtyp.lmx \
+    ../../backlib/printlambda.lmx ../bytelib/printinstr.lmx printer.lmx \
+    ../../frontlib/predef.lmx ../../stdlib/pervasives.lmx \
+    ../../frontlib/parsetree.lmi ../../frontlib/parse.lmx \
+    ../../frontlib/outcometree.lmi ../../frontlib/oprint.lmx \
+    ../../stdlib/obj.lmx ../../frontlib/modenv.lmx ../bytelib/misc.lmx \
+    ../bytelib/meta.lmx ../../frontlib/longident.lmx \
+    ../../backlib/location.lmx ../../stdlib/list.lmx ../../stdlib/lexing.lmx \
+    ../../frontlib/lexer.lmx ledit.lmx ../../frontlib/immutify.lmx \
+    ../../backlib/ident.lmx ../../stdlib/hashtbl.lmx ../../stdlib/gc.lmx \
+    ../../stdlib/format.lmx ../../stdlib/filename.lmx ../../frontlib/env.lmx \
+    ../bytelib/emitcode.lmx ../bytelib/dll.lmx ../../backlib/consistbl.lmx \
+    ../bytelib/config.lmx ../bytelib/clflags.lmx ../bytelib/bytegen.lmx \
+    ../../frontlib/base.lmx ../../stdlib/array.lmx ../../stdlib/arg.lmx \
+    toploop.lmi
+topmain.lmo: ../../frontlib/warnings.lmi toploop.lmi topdirs.lmi \
+    ../../stdlib/sys.lmi ../../stdlib/printf.lmi ../../stdlib/printexc.lmi \
+    ../bytelib/misc.lmi ../../stdlib/list.lmi ../../stdlib/format.lmi \
+    ../../stdlib/filename.lmi ../bytelib/config.lmo ../bytelib/clflags.lmi \
+    ../../stdlib/array.lmi ../../stdlib/arg.lmi topmain.lmi
+topmain.lmx: ../../frontlib/warnings.lmx toploop.lmx topdirs.lmx \
+    ../../stdlib/sys.lmx ../../stdlib/printf.lmx ../../stdlib/printexc.lmx \
+    ../bytelib/misc.lmx ../../stdlib/list.lmx ../../stdlib/format.lmx \
+    ../../stdlib/filename.lmx ../bytelib/config.lmx ../bytelib/clflags.lmx \
+    ../../stdlib/array.lmx ../../stdlib/arg.lmx topmain.lmi
+topstart.lmo: topmain.lmi
+topstart.lmx: topmain.lmx
+trace.lmo: toploop.lmi ../../frontlib/printtyp.lmo ../../frontlib/predef.lmo \
+    ../../stdlib/obj.lmi ../bytelib/misc.lmi ../bytelib/meta.lmi \
+    ../../frontlib/longident.lmi ../../stdlib/format.lmi \
+    ../../frontlib/basics.lmo ../../frontlib/base.lmo trace.lmi
+trace.lmx: toploop.lmx ../../frontlib/printtyp.lmx ../../frontlib/predef.lmx \
+    ../../stdlib/obj.lmx ../bytelib/misc.lmx ../bytelib/meta.lmx \
+    ../../frontlib/longident.lmx ../../stdlib/format.lmx \
+    ../../frontlib/basics.lmx ../../frontlib/base.lmx trace.lmi
+ledit.lmi:
+ledit_char.lmi: ../../stdlib/stream.lmi
+ledit_cursor.lmi:
+ledit_fstream.lmi:
+ledit_string.lmi: ledit_char.lmi
+printer.lmi: ../../frontlib/outcometree.lmi ../../stdlib/obj.lmi \
+    ../../stdlib/format.lmi ../../frontlib/env.lmi ../../frontlib/base.lmo
+topdirs.lmi: ../../frontlib/longident.lmi ../../stdlib/format.lmi
+toploop.lmi: ../../frontlib/warnings.lmi ../../frontlib/parsetree.lmi \
+    ../../frontlib/outcometree.lmi ../../stdlib/obj.lmi \
+    ../../frontlib/longident.lmi ../../backlib/location.lmi \
+    ../../stdlib/lexing.lmi ../../stdlib/hashtbl.lmi ../../stdlib/format.lmi \
+    ../../frontlib/env.lmi ../../frontlib/base.lmo
+topmain.lmi:
+trace.lmi: ../../stdlib/obj.lmi ../../frontlib/longident.lmi \
+    ../../stdlib/format.lmi ../../frontlib/env.lmi ../../frontlib/base.lmo

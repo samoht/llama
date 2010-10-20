@@ -89,13 +89,13 @@ val fold: ('key -> 'a -> 'c -> 'c) -> ('key, 'a) t -> 'c -> 'c
       where [k1 ... kN] are the keys of all bindings in [m]
       (in increasing order), and [d1 ... dN] are the associated data. *)
 
-val forall: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
-  (** [forall p m] checks if all the bindings of the map
+val for_all: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
+  (** [for_all p m] checks if all the bindings of the map
       satisfy the predicate [p].
   *)
 
-val exists: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
-  (** [exists p m] checks if at least one binding of the map
+val exist: ('key -> 'a -> bool) -> ('key, 'a) t -> bool
+  (** [exist p m] checks if at least one binding of the map
       satisfy the predicate [p].
   *)
 

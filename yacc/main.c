@@ -17,11 +17,7 @@
 #include <signal.h>
 #include <string.h>
 #include "defs.h"
-#ifdef HAS_UNISTD
-#include <unistd.h>
-#endif
-
-#include "version.h"
+#include <unistd.h> /* XXX: is this always available? */
 
 char dflag;
 char lflag;
@@ -187,16 +183,7 @@ void getargs(int argc, char **argv)
             goto no_more_options;
 
         case 'v':
-            if (!strcmp (argv[i], "-version")){
-              printf ("The Llama Light parser generator, version "
-                      OCAML_VERSION "\n");
-              exit (0);
-            }else if (!strcmp (argv[i], "-vnum")){
-              printf (OCAML_VERSION "\n");
-              exit (0);
-            }else{
-              vflag = 1;
-            }
+            vflag = 1;
             break;
 
         case 'q':

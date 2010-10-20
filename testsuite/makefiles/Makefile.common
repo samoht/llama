@@ -1,66 +1,14 @@
-# $Id$
-
 TOPDIR=$(BASEDIR)/..
+LLAMARUN=$(TOPDIR)/back/byterun/llamarun
+LLAMAC=$(LLAMARUN) $(TOPDIR)/back/bytec/llamac
 
-include $(TOPDIR)/config/Makefile
+.SUFFIXES: .mli .ml .lmi .lml .lmo
 
-BOOTDIR=$(TOPDIR)/boot
-OCAMLRUN=$(BOOTDIR)/llamarun$(EXE)
-OCAML=$(OCAMLRUN) $(TOPDIR)/llama$(EXE)
-OCAMLC=$(OCAMLRUN) $(TOPDIR)/llamac$(EXE)
-OCAMLOPT=$(OCAMLRUN) $(TOPDIR)/llamaopt$(EXE)
-OCAMLDOC=$(OCAMLRUN) $(TOPDIR)/llamadoc/llamadoc$(EXE)
-OCAMLLEX=$(OCAMLRUN) $(TOPDIR)/lex/llamalex$(EXE)
-OCAMLMKLIB=$(OCAMLRUN) $(TOPDIR)/tools/llamamklib$(EXE)
-OCAMLYACC=$(TOPDIR)/yacc/llamayacc$(EXE)
-OCAMLBUILD=$(TOPDIR)/_build/llamabuild/llamabuild.native
-DUMPOBJ=$(OCAMLRUN) $(TOPDIR)/tool/dumpobj$(EXE)
-#COMPFLAGS=
-#FORTRAN_COMPILER=
-#FORTRAN_LIBRARY=
+.mli.lmi:
+	$(LLAMAC) -c -g $(INCLUDES) $<
+.ml.lmo:
+	$(LLAMAC) -c -g $(INCLUDES) $<
 
 defaultclean:
-	@rm -f *.cmo *.cmi *.cmx *.cma *.cmxa *.cmxs *.$(O) *.$(SO) *.$(A)
-	@for dsym in *.dSYM; do \
-	  if [ -d $$dsym ]; then \
-	    rm -fr $$dsym; \
-	  fi \
-	done
-
-.SUFFIXES:
-.SUFFIXES: .mli .ml .mly .mll .cmi .cmo .cmx .cmm .cmxa .s .S .o .so
-
-.mli.cmi:
-	@$(OCAMLC) -c $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.ml.cmi:
-	@$(OCAMLC) -c $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.ml.cmo:
-	@if [ -f $<i ]; then $(OCAMLC) -c $(COMPFLAGS) $(ADD_COMPFLAGS) $<i; fi
-	@$(OCAMLC) -c $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.ml.cmx:
-	@$(OCAMLOPT) -c $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.cmx.so:
-	@$(OCAMLOPT) -o $@ -shared $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.cmxa.so:
-	@$(OCAMLOPT) -o $@ -shared -linkall $(COMPFLAGS) $(ADD_COMPFLAGS) $<
-
-.mly.ml:
-	@$(OCAMLYACC) -q $< 2> /dev/null
-
-.mll.ml:
-	@$(OCAMLLEX) -q $< > /dev/null
-
-.cmm.o:
-	@$(OCAMLRUN) ./codegen $*.cmm > $*.s
-	@$(AS) $(ASFLAGS) -o $*.o $*.s
-
-.S.o:
-	@$(ASPP) $(ASPPFLAGS) -DSYS_$(SYSTEM) -o $*.o $*.S
-
-.s.o:
-	@$(ASPP) $(ASPPFLAGS) -DSYS_$(SYSTEM) -o $*.o $*.s
+	rm -f *.lmi *.lmo
+.PHONY: defaultclean
