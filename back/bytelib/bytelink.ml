@@ -265,8 +265,15 @@ let link_bytecode tolink exec_name standalone =
     open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
                  0o777 exec_name in
   try
-    if standalone then
-      output_string outchan ("#!"^Config.standard_runtime^"\n");
+    if standalone then begin
+      (* Copy the header *)
+      try
+        let header = "llamaheader" in
+        let inchan = open_in_bin (find_in_path !load_path header) in
+        copy_file inchan outchan;
+        close_in inchan
+      with Not_found | Sys_error _ -> ()
+    end;
     Bytesections.init_record outchan;
     (* The path to the bytecode interpreter (in use_runtime mode) *)
     if String.length !Clflags.use_runtime > 0 then begin

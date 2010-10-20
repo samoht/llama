@@ -20,13 +20,14 @@ NONPERVASIVES=sys list array char string \
   ratio num arith_status \
   unix terminfo
 
+include ../config.mk
 include ../Make/generic.mk
 
 # ----------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------
 
-all: stdlib.lma std_exit.lmo
+all: stdlib.lma std_exit.lmo llamaheader
 with-ocaml: stdlib.cma std_exit.cmo camlheader
 .PHONY: all with-ocaml
 
@@ -41,14 +42,16 @@ stdlib.cma: $(MODULES:%=%.cmo)
 
 camlheader:
 	echo "#!`which ocamlrun`" > $@
+llamaheader: ../config.mk
+	echo "#!$(BINDIR)/llamarun" > $@
 pervasives.lmi: pervasives.mli
-	$(LLAMAC) -c -nostdlib -nopervasives $<
-pervasives.lml: pervasives.ml
-	$(LLAMAC) -c -nostdlib -nopervasives $<
+	$(LLAMAC) -c $(INCLUDES) -nopervasives $<
+pervasives.lmo: pervasives.ml
+	$(LLAMAC) -c $(INCLUDES) -nopervasives $<
 pervasives.cmi: pervasives.mli
-	$(OCAMLC_STRICT) -c -nostdlib -nopervasives $<
+	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
 pervasives.cmo: pervasives.ml
-	$(OCAMLC_STRICT) -c -nostdlib -nopervasives $<
+	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
 
 # ----------------------------------------------------------------------
 # Depend
@@ -63,7 +66,7 @@ ocamldepend:
 include .depend
 include .ocamldepend
 
-pervasives.lml: pervasives.lmi
+pervasives.lmo: pervasives.lmi
 $(NONPERVASIVES:%=%.lmi): pervasives.lmi
 pervasives.cmo: pervasives.cmi
 $(NONPERVASIVES:%=%.cmi): pervasives.cmi
@@ -73,7 +76,7 @@ $(NONPERVASIVES:%=%.cmi): pervasives.cmi
 # ----------------------------------------------------------------------
 
 clean:
-	rm -f stdlib.lma *.lm{i,l,o,x}
+	rm -f stdlib.lma *.lm{i,l,o,x} llamaheader
 ocamlclean:
 	rm -f stdlib.cma *.cm{i,o} camlheader
 .PHONY: clean ocamlclean
@@ -85,5 +88,5 @@ ocamlclean:
 include ../config.mk
 
 install:
-	cp *.lmi stdlib.lma std_exit.lmo $(LIBDIR)
+	cp *.lmi stdlib.lma std_exit.lmo llamaheader $(LIBDIR)
 .PHONY: install

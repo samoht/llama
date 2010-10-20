@@ -61,6 +61,7 @@ lex/llamalex-ocaml
 prover/*.o
 prover/llamaprover
 stdlib/camlheader
+stdlib/llamaheader
 stdlib/stdlib.cma
 stdlib/stdlib.lma
 yacc/*.o
