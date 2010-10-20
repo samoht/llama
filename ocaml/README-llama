@@ -1,6 +1,12 @@
-Notes on specific QPL-licensed directories:
-
-asmcomp   not included here (bc unused)
-boot      not included here (bc contains binaries only)
-debugger  not included here (bc unused)
-ocamldoc  compare with ../doctool
+COMPARE                                           WITH
+----------                                        ----------
+stdlib                                            ../stdlib
+parsing, typing, early parts of bytecomp          ../frontlib
+utils, early parts of bytecomp                    ../backlib
+late parts of bytecomp                            ../back/bytelib
+driver                                            ../back/bytec
+toplevel                                          ../back/bytetop
+tools                                             ../deptool
+ocamldoc                                          ../doctool
+lex                                               ../lex
+yacc                                              ../yacc

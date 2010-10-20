@@ -1,0 +1,8 @@
+Llama Light is an implementation of the Caml programming language
+(http://caml.inria.fr/). It incorporates code from the centrally
+distributed implementations of Caml.
+
+The file "directories.jpg" shows the dependency graph for directories
+containing Caml code.
+
+For more information, please visit http://llamalabs.org/light.html.
