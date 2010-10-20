@@ -81,19 +81,21 @@ and lookup_functions modenv =
 and lookup_module modenv modid =
   (lookup_module_info modenv modid).m
 
-and lookup_module_info modenv = function
-    Module_builtin ->
-      predefined_module
-  | Module name ->
-      begin try
-        Map.find name modenv.loaded_modules
-      with Not_found ->
-        let fn = 
-          Frontmisc.find_in_path modenv.load_path (String.uncapitalize name ^ ".lmi") in
-        load_module modenv name fn
-      end
-  | Module_toplevel ->
-      failwith "Modenv.lookup_module_info"
+and lookup_module_info modenv modid =
+  if modenv.current_module = modid then raise Not_found;
+  match modid with
+      Module_builtin ->
+        predefined_module
+    | Module modname ->
+        begin try
+          Map.find modname modenv.loaded_modules
+        with Not_found ->
+          let get n = Frontmisc.find_in_path modenv.load_path (n ^ ".lmi") in
+          let filename = try get modname with Not_found -> get (String.uncapitalize modname) in
+          load_module modenv modname filename
+        end
+    | Module_toplevel ->
+        failwith "Modenv.lookup_module_info"
 
 and lookup_type_constructor modenv modid name =
   Module.find_type_constructor name (lookup_module modenv modid)
