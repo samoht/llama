@@ -7,5 +7,3 @@ It is based on Llama-light, an implementation of the
 [Caml](http://caml.inria.fr/) programming language. It incorporates
 code from the centrally distributed implementations of Caml.
 
-The file "directories.jpg" shows the dependency graph for directories
-containing Caml code.
