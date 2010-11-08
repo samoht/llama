@@ -8,7 +8,7 @@ install:
 .PHONY: install
 
 clean:
-	rm -f $(BINARY) *.lm{i,l,o,x}
+	rm -f $(BINARY) *.lmi *.lml *.lmo *.lmx
 .PHONY: clean
 
 scrapeclean: clean

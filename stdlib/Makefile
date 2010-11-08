@@ -76,9 +76,9 @@ $(NONPERVASIVES:%=%.cmi): pervasives.cmi
 # ----------------------------------------------------------------------
 
 clean:
-	rm -f stdlib.lma *.lm{i,l,o,x} llamaheader
+	rm -f stdlib.lma *.lmi *.lml *.lmo *.lmx llamaheader
 ocamlclean:
-	rm -f stdlib.cma *.cm{i,o} camlheader
+	rm -f stdlib.cma *.cmi *.cmo camlheader
 .PHONY: clean ocamlclean
 
 # ----------------------------------------------------------------------
