@@ -7,7 +7,7 @@ $(LIBRARY).lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $(INCLUDES) $(LIBRARIES:%=%.lma) $^ -o $@
 
 clean:
-	rm -f $(LIBRARY).lma *.lm{i,l,o,x}
+	rm -f $(LIBRARY).lma *.lmi *.lml *.lmo *.lmx
 .PHONY: clean
 
 scrapeclean:
