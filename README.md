@@ -5,5 +5,5 @@ Boudol's "A deadlock-free semantics for shared memory concurrency"
 
 `Tesard` is based on Llama-light, an implementation of the
 [Caml](http://caml.inria.fr/) programming language. It incorporates
-code from the centrally distributed implementations of Caml.
-
+code from Objective Caml: for a comparison, please see the "ocaml"
+directory.
