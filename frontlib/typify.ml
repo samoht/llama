@@ -91,7 +91,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty) in
+  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty) in (* DUMMY *)
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -272,9 +272,9 @@ and expression_aux exp =
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      v.link <- Some (Marrow (ty1, ty2));
+                      v.link <- Some (Marrow (ty1, ty2, Effect.empty)); (* DUMMY *)
                       ty1, ty2
-                  | Marrow (ty1, ty2) -> ty1, ty2
+                  | Marrow (ty1, ty2, _) -> ty1, ty2
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
               in
               expression_expect arg1 ty1;
@@ -293,7 +293,7 @@ and expression_aux exp =
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         caselist ty_arg ty_res pat_exp_list;
-        Marrow (ty_arg, ty_res)
+        Marrow (ty_arg, ty_res, Effect.empty) (* DUMMY *)
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn in
         let ty_res = expression body in
@@ -408,7 +408,7 @@ and caselist ty_arg ty_res pat_expr_list =
 and statement expr =
   let ty = expression expr in
   match mutable_type_repr ty with
-  | Marrow(_,_) ->
+  | Marrow(_,_,_) ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Partial_application
   | Mvar _ -> ()
   | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()

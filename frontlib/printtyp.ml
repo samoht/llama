@@ -181,7 +181,7 @@ let tree_of_mutable_type =
           | Some ty ->
               tree_of_mutable_type ty
         end
-    | Marrow (ty1, ty2) ->
+    | Marrow (ty1, ty2, _) -> (* DUMMY *)
         Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2)
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)

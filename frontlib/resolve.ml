@@ -260,7 +260,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Marrow (mutable_type env ty1, mutable_type env ty2)
+        Marrow (mutable_type env ty1, mutable_type env ty2, Effect.empty) (* DUMMY *)
     | Ptyp_tuple tyl ->
         Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->

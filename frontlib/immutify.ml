@@ -28,7 +28,7 @@ let new_env () =
 let rec mutable_type f = function
     Mvar v ->
       type_variable f v
-  | Marrow (ty1, ty2) ->
+  | Marrow (ty1, ty2, _) ->
       Tarrow (mutable_type f ty1, mutable_type f ty2)
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)

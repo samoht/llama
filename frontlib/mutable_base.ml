@@ -174,7 +174,7 @@ let rec instantiate_type inst = function
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2) ->
-      Marrow (instantiate_type inst ty1, instantiate_type inst ty2)
+      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, Effect.empty) (* DUMMY *)
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
@@ -226,7 +226,7 @@ let rec occurs v = function
         | None -> tv == v
         | Some ty -> occurs v ty
       end
-  | Marrow (ty1, ty2) ->
+  | Marrow (ty1, ty2, _) ->
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
       List.exist (occurs v) tyl
@@ -245,7 +245,8 @@ let rec unify ty1 ty2 =
         v1.link <- Some ty2
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
-    | Marrow (t1arg, t1res), Marrow(t2arg, t2res) ->
+    | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2)
+      when Effect.equal phi1 phi2 -> (* DUMMY *)
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
