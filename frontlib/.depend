@@ -147,12 +147,12 @@ printtyp.lmx: ../stdlib/string.lmx ../backlib/primitive.lmx outcometree.lmi \
 resolve.lmo: ../backlib/tbl.lmi printtyp.lmo ../backlib/primitive.lmi \
     parsetree.lmi mutable_base.lmo modenv.lmi longident.lmi \
     ../backlib/location.lmi ../stdlib/list.lmi frontmisc.lmo \
-    ../stdlib/format.lmi ../backlib/fatal.lmo env.lmi base.lmo \
+    ../stdlib/format.lmi ../backlib/fatal.lmo env.lmi effect.lmo base.lmo \
     ../backlib/asttypes.lmi ../stdlib/array.lmi
 resolve.lmx: ../backlib/tbl.lmx printtyp.lmx ../backlib/primitive.lmx \
     parsetree.lmi mutable_base.lmx modenv.lmx longident.lmx \
     ../backlib/location.lmx ../stdlib/list.lmx frontmisc.lmx \
-    ../stdlib/format.lmx ../backlib/fatal.lmx env.lmx base.lmx \
+    ../stdlib/format.lmx ../backlib/fatal.lmx env.lmx effect.lmx base.lmx \
     ../backlib/asttypes.lmx ../stdlib/array.lmx
 simplif.lmo: ../stdlib/set.lmi ../stdlib/list.lmi ../backlib/lambda.lmi \
     ../backlib/ident.lmo ../stdlib/hashtbl.lmi frontconfig.lmo \
@@ -211,13 +211,13 @@ typeopt.lmx: ../backlib/primitive.lmx predef.lmx ../stdlib/list.lmx \
 typify.lmo: warnings.lmi ../stdlib/string.lmi printtyp.lmo \
     ../stdlib/printf_tformat.lmo predef.lmo mutable_base.lmo \
     ../backlib/location.lmi ../stdlib/list.lmi frontmisc.lmo \
-    frontlocation.lmi ../stdlib/format.lmi ../backlib/fatal.lmo base.lmo \
-    ../backlib/asttypes.lmi
+    frontlocation.lmi ../stdlib/format.lmi ../backlib/fatal.lmo effect.lmo \
+    base.lmo ../backlib/asttypes.lmi
 typify.lmx: warnings.lmx ../stdlib/string.lmx printtyp.lmx \
     ../stdlib/printf_tformat.lmx predef.lmx mutable_base.lmx \
     ../backlib/location.lmx ../stdlib/list.lmx frontmisc.lmx \
-    frontlocation.lmx ../stdlib/format.lmx ../backlib/fatal.lmx base.lmx \
-    ../backlib/asttypes.lmx
+    frontlocation.lmx ../stdlib/format.lmx ../backlib/fatal.lmx effect.lmx \
+    base.lmx ../backlib/asttypes.lmx
 unused_var.lmo: warnings.lmi ../stdlib/string.lmi parsetree.lmi longident.lmi \
     ../stdlib/list.lmi ../stdlib/hashtbl.lmi frontlocation.lmi \
     ../backlib/asttypes.lmi unused_var.lmi

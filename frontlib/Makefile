@@ -2,7 +2,8 @@ BOOTDIR=../boot
 LIBRARY=frontlib
 INCLUDES=-I ../stdlib -I ../backlib
 LIBRARIES=backlib
-MODULES=frontmisc frontconfig warnings \
+MODULES=effect \
+  frontmisc frontconfig warnings \
   linenum frontlocation longident \
   syntaxerr parser \
   lexer parse \
@@ -12,7 +13,6 @@ MODULES=frontmisc frontconfig warnings \
   mutable_base printtyp resolve \
   typify immutify \
   include typemain \
-  \
   makeident makelambda \
   typeopt pmc_pattern parmatch switch matching \
   translcore translmod simplif \
