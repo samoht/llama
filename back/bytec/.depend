@@ -6,12 +6,12 @@ main.lmo: ../../frontlib/warnings.lmi ../../frontlib/unused_var.lmi \
     ../../frontlib/parse.lmi ../../frontlib/modenv.lmi ../bytelib/misc.lmi \
     ../../backlib/location.lmi ../../stdlib/list.lmi ../../stdlib/lexing.lmi \
     ../../backlib/lambda.lmi ../../frontlib/frontlocation.lmi \
-    ../../frontlib/frontconfig.lmo ../../stdlib/format.lmi \
-    ../../stdlib/filename.lmi ../../frontlib/env.lmi ../bytelib/emitcode.lmi \
-    ../../backlib/consistbl.lmi ../bytelib/config.lmo ../bytelib/clflags.lmi \
-    ../bytelib/bytelink.lmi ../bytelib/bytelibrarian.lmi \
-    ../bytelib/bytegen.lmi ../bytelib/byteerrors.lmo ../../frontlib/base.lmo \
-    ../../stdlib/arg.lmi
+    ../../frontlib/fronterrors.lmo ../../frontlib/frontconfig.lmo \
+    ../../stdlib/format.lmi ../../stdlib/filename.lmi ../../frontlib/env.lmi \
+    ../bytelib/emitcode.lmi ../../backlib/consistbl.lmi ../bytelib/config.lmo \
+    ../bytelib/clflags.lmi ../bytelib/bytelink.lmi \
+    ../bytelib/bytelibrarian.lmi ../bytelib/bytegen.lmi \
+    ../bytelib/byteerrors.lmo ../../frontlib/base.lmo ../../stdlib/arg.lmi
 main.lmx: ../../frontlib/warnings.lmx ../../frontlib/unused_var.lmx \
     ../../frontlib/typemain.lmx ../../frontlib/translmod.lmx \
     ../../stdlib/string.lmx ../../frontlib/simplif.lmx \
@@ -20,9 +20,9 @@ main.lmx: ../../frontlib/warnings.lmx ../../frontlib/unused_var.lmx \
     ../../frontlib/parse.lmx ../../frontlib/modenv.lmx ../bytelib/misc.lmx \
     ../../backlib/location.lmx ../../stdlib/list.lmx ../../stdlib/lexing.lmx \
     ../../backlib/lambda.lmx ../../frontlib/frontlocation.lmx \
-    ../../frontlib/frontconfig.lmx ../../stdlib/format.lmx \
-    ../../stdlib/filename.lmx ../../frontlib/env.lmx ../bytelib/emitcode.lmx \
-    ../../backlib/consistbl.lmx ../bytelib/config.lmx ../bytelib/clflags.lmx \
-    ../bytelib/bytelink.lmx ../bytelib/bytelibrarian.lmx \
-    ../bytelib/bytegen.lmx ../bytelib/byteerrors.lmx ../../frontlib/base.lmx \
-    ../../stdlib/arg.lmx
+    ../../frontlib/fronterrors.lmx ../../frontlib/frontconfig.lmx \
+    ../../stdlib/format.lmx ../../stdlib/filename.lmx ../../frontlib/env.lmx \
+    ../bytelib/emitcode.lmx ../../backlib/consistbl.lmx ../bytelib/config.lmx \
+    ../bytelib/clflags.lmx ../bytelib/bytelink.lmx \
+    ../bytelib/bytelibrarian.lmx ../bytelib/bytegen.lmx \
+    ../bytelib/byteerrors.lmx ../../frontlib/base.lmx ../../stdlib/arg.lmx

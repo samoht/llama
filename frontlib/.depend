@@ -10,6 +10,8 @@ depend.lmo: ../stdlib/set.lmi parsetree.lmi longident.lmi \
 depend.lmx: ../stdlib/set.lmx parsetree.lmi longident.lmx \
     ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/format.lmx \
     depend.lmi
+effect.lmo: ../stdlib/set.lmi
+effect.lmx: ../stdlib/set.lmx
 env.lmo: predef.lmo modenv.lmi ../stdlib/map.lmi longident.lmi \
     ../stdlib/list.lmi ../backlib/fatal.lmo base.lmo env.lmi
 env.lmx: predef.lmx modenv.lmx ../stdlib/map.lmx longident.lmx \
@@ -93,9 +95,9 @@ module.lmo: ../stdlib/map.lmi ../stdlib/list.lmi ../stdlib/hashtbl.lmi \
 module.lmx: ../stdlib/map.lmx ../stdlib/list.lmx ../stdlib/hashtbl.lmx \
     base.lmx module.lmi
 mutable_base.lmo: ../backlib/primitive.lmi predef.lmo ../backlib/location.lmi \
-    ../stdlib/list.lmi basics.lmo base.lmo ../backlib/asttypes.lmi
+    ../stdlib/list.lmi effect.lmo basics.lmo base.lmo ../backlib/asttypes.lmi
 mutable_base.lmx: ../backlib/primitive.lmx predef.lmx ../backlib/location.lmx \
-    ../stdlib/list.lmx basics.lmx base.lmx ../backlib/asttypes.lmx
+    ../stdlib/list.lmx effect.lmx basics.lmx base.lmx ../backlib/asttypes.lmx
 oprint.lmo: ../stdlib/sys.lmi ../stdlib/string.lmi ../stdlib/printf.lmi \
     outcometree.lmi ../stdlib/list.lmi ../stdlib/format.lmi oprint.lmi
 oprint.lmx: ../stdlib/sys.lmx ../stdlib/string.lmx ../stdlib/printf.lmx \

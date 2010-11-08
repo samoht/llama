@@ -14,26 +14,26 @@ odoc.lmx: ../stdlib/sys.lmx odoc_messages.lmx odoc_info.lmx odoc_html.lmx \
     clflags.lmx ../stdlib/array.lmx
 odoc_analyse.lmo: ../frontlib/warnings.lmi ../frontlib/typify.lmo \
     ../frontlib/syntaxerr.lmi ../stdlib/string.lmi ../stdlib/sort.lmi \
-    ../frontlib/resolve.lmo ../stdlib/printf.lmi ../stdlib/printexc.lmi \
-    ../frontlib/parse.lmi odoc_types.lmi odoc_text.lmi odoc_sig.lmi \
-    odoc_module.lmo odoc_misc.lmi odoc_messages.lmo odoc_merge.lmi \
-    odoc_global.lmi odoc_dep.lmo odoc_cross.lmi odoc_args.lmi \
-    ../frontlib/modenv.lmi misc.lmo ../backlib/location.lmi \
-    ../stdlib/list.lmi ../stdlib/lexing.lmi ../frontlib/lexer.lmi \
-    ../frontlib/immutify.lmo ../stdlib/format.lmi ../stdlib/filename.lmi \
-    ../frontlib/env.lmi config.lmo clflags.lmo ../frontlib/base.lmo \
-    odoc_analyse.lmi
+    ../frontlib/resolve.lmo ../stdlib/printexc.lmi ../frontlib/parse.lmi \
+    odoc_types.lmi odoc_text.lmi odoc_sig.lmi odoc_module.lmo odoc_misc.lmi \
+    odoc_messages.lmo odoc_merge.lmi odoc_global.lmi odoc_dep.lmo \
+    odoc_cross.lmi odoc_args.lmi ../frontlib/modenv.lmi misc.lmo \
+    ../backlib/location.lmi ../stdlib/list.lmi ../stdlib/lexing.lmi \
+    ../frontlib/lexer.lmi ../frontlib/immutify.lmo \
+    ../frontlib/frontlocation.lmi ../stdlib/format.lmi ../stdlib/filename.lmi \
+    ../backlib/fatal.lmo ../frontlib/env.lmi config.lmo clflags.lmo \
+    ../frontlib/base.lmo odoc_analyse.lmi
 odoc_analyse.lmx: ../frontlib/warnings.lmx ../frontlib/typify.lmx \
     ../frontlib/syntaxerr.lmx ../stdlib/string.lmx ../stdlib/sort.lmx \
-    ../frontlib/resolve.lmx ../stdlib/printf.lmx ../stdlib/printexc.lmx \
-    ../frontlib/parse.lmx odoc_types.lmx odoc_text.lmx odoc_sig.lmx \
-    odoc_module.lmx odoc_misc.lmx odoc_messages.lmx odoc_merge.lmx \
-    odoc_global.lmx odoc_dep.lmx odoc_cross.lmx odoc_args.lmx \
-    ../frontlib/modenv.lmx misc.lmx ../backlib/location.lmx \
-    ../stdlib/list.lmx ../stdlib/lexing.lmx ../frontlib/lexer.lmx \
-    ../frontlib/immutify.lmx ../stdlib/format.lmx ../stdlib/filename.lmx \
-    ../frontlib/env.lmx config.lmx clflags.lmx ../frontlib/base.lmx \
-    odoc_analyse.lmi
+    ../frontlib/resolve.lmx ../stdlib/printexc.lmx ../frontlib/parse.lmx \
+    odoc_types.lmx odoc_text.lmx odoc_sig.lmx odoc_module.lmx odoc_misc.lmx \
+    odoc_messages.lmx odoc_merge.lmx odoc_global.lmx odoc_dep.lmx \
+    odoc_cross.lmx odoc_args.lmx ../frontlib/modenv.lmx misc.lmx \
+    ../backlib/location.lmx ../stdlib/list.lmx ../stdlib/lexing.lmx \
+    ../frontlib/lexer.lmx ../frontlib/immutify.lmx \
+    ../frontlib/frontlocation.lmx ../stdlib/format.lmx ../stdlib/filename.lmx \
+    ../backlib/fatal.lmx ../frontlib/env.lmx config.lmx clflags.lmx \
+    ../frontlib/base.lmx odoc_analyse.lmi
 odoc_args.lmo: ../stdlib/string.lmi ../stdlib/str.lmi odoc_types.lmi \
     odoc_module.lmo odoc_messages.lmo odoc_global.lmi odoc_config.lmi \
     misc.lmo ../stdlib/list.lmi ../stdlib/filename.lmi config.lmo clflags.lmo \
@@ -142,10 +142,10 @@ odoc_merge.lmx: odoc_value.lmx odoc_types.lmx odoc_type.lmx \
     odoc_args.lmx ../stdlib/list.lmx odoc_merge.lmi
 odoc_messages.lmo: ../stdlib/sys.lmi ../stdlib/string.lmi ../stdlib/str.lmi \
     ../stdlib/printf.lmi odoc_global.lmi odoc_config.lmi ../stdlib/list.lmi \
-    config.lmo ../stdlib/array.lmi
+    ../stdlib/array.lmi
 odoc_messages.lmx: ../stdlib/sys.lmx ../stdlib/string.lmx ../stdlib/str.lmx \
     ../stdlib/printf.lmx odoc_global.lmx odoc_config.lmx ../stdlib/list.lmx \
-    config.lmx ../stdlib/array.lmx
+    ../stdlib/array.lmx
 odoc_misc.lmo: ../stdlib/string.lmi ../stdlib/printf.lmi odoc_types.lmi \
     odoc_messages.lmo ../frontlib/longident.lmi ../stdlib/list.lmi \
     ../stdlib/char.lmi ../stdlib/buffer.lmi odoc_misc.lmi

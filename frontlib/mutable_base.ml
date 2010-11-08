@@ -2,10 +2,11 @@
 
 open Asttypes
 open Base
+open Effect
 
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type
+  | Marrow of mutable_type * mutable_type * effect
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
