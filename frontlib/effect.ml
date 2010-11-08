@@ -10,3 +10,4 @@ let new_region =
 
 let empty : effect = Set.empty_generic
 let equal : effect -> effect -> bool = Set.equal
+let union : effect -> effect -> effect = Set.union

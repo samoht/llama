@@ -91,7 +91,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty) in (* DUMMY *)
+  let ty_arrow gty ty = Marrow(gty, ty, ref None) in (* DUMMY *)
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -272,7 +272,7 @@ and expression_aux exp =
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      v.link <- Some (Marrow (ty1, ty2, Effect.empty)); (* DUMMY *)
+                      v.link <- Some (Marrow (ty1, ty2, ref None));
                       ty1, ty2
                   | Marrow (ty1, ty2, _) -> ty1, ty2
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
@@ -293,7 +293,7 @@ and expression_aux exp =
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         caselist ty_arg ty_res pat_exp_list;
-        Marrow (ty_arg, ty_res, Effect.empty) (* DUMMY *)
+        Marrow (ty_arg, ty_res, ref None) (* DUMMY *)
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn in
         let ty_res = expression body in
