@@ -97,8 +97,6 @@ let parse_file inputfile parse_fun ast_magic =
   close_in ic;
   ast
 
-let (++) x f = f x
-
 (** Analysis of an interface file. Returns (Some signature) if
    no error occured, else None and an error message is printed.*)
 
