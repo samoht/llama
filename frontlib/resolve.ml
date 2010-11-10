@@ -339,7 +339,8 @@ let extend_context ctxt pat =
 let rec expression ctxt exp =
   { mexp_desc = expression_aux ctxt exp;
     mexp_loc = exp.pexp_loc;
-    mexp_type = new_type_variable () }
+    mexp_type = new_type_variable ();
+    mexp_effect = ref None }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with

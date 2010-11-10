@@ -4,9 +4,11 @@ open Asttypes
 open Base
 open Effect
 
+type mutable_effect = effect option ref
+
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type * effect option ref
+  | Marrow of mutable_type * mutable_type * mutable_effect
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
@@ -62,7 +64,8 @@ let rec mutable_pattern_variables pat =
 type mutable_expression =
   { mexp_desc : mutable_expression_desc;
     mexp_loc : Location.t;
-    mexp_type : mutable_type }
+    mexp_type : mutable_type;
+    mexp_effect : mutable_effect }
 
 and mutable_expression_desc =
     Mexp_var of mutable_variable
