@@ -2,7 +2,7 @@ type region = int
 
 type effect = region Set.t
 
-let new_region =
+let new_region : unit -> region =
   let count = ref ~-1 in
   fun () ->
     incr count;
