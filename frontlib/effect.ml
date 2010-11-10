@@ -11,3 +11,6 @@ let new_region : unit -> region =
 let empty : effect = Set.empty_generic
 let equal : effect -> effect -> bool = Set.equal
 let union : effect -> effect -> effect = Set.union
+
+let merge l =
+  List.fold_left union empty l

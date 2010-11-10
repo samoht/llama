@@ -244,24 +244,24 @@ let formatstring loc fmt =
 (* ---------------------------------------------------------------------- *)
 
 let rec expression exp =
-  let ty = expression_aux exp in
+  let ty, phi = expression_aux exp in
   (try unify exp.mexp_type ty with Unify -> Fatal.error "Typify.expression");
-  ty
+  ty, phi
 
 and expression_aux exp =
   match exp.mexp_desc with
       Mexp_var var ->
-        var.mvar_type
+        var.mvar_type, Effect.empty
     | Mexp_value v ->
-        instantiate_value v
+        instantiate_value v, Effect.empty
     | Mexp_literal c ->
-        literal c
+        literal c, Effect.empty
     | Mexp_tuple args ->
-        Mtuple (List.map expression args)
+        let tys, phis = List.split (List.map expression args) in
+        Mtuple tys, Effect.merge phis
     | Mexp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
-        List.iter2 expression_expect args ty_args;
-        ty_res
+        ty_res, Effect.merge (List.map2 expression_expect args ty_args)
     | Mexp_apply (fct, args) ->
         let ty_fct = expression fct in
         let rec type_args ty_res = function
@@ -282,8 +282,9 @@ and expression_aux exp =
         in
         type_args ty_fct args
     | Mexp_let (_, pat_expr_list, body) ->
-        bindings pat_expr_list;
-        expression body
+        let phi1 = bindings pat_expr_list
+        and ty, phi2 = expression body in
+	ty, Effect.union phi1 phi2
     | Mexp_match (item, pat_exp_list) ->
         let ty_arg = expression item in
         let ty_res = new_type_variable () in
@@ -300,37 +301,39 @@ and expression_aux exp =
         caselist ty_arg ty_res pat_exp_list;
         ty_res
     | Mexp_sequence (e1, e2) ->
-        statement e1; expression e2
+        let phi1 = statement e1
+        and ty, phi2 = expression e2 in
+        ty, Effect.union phi1 phi2
     | Mexp_ifthenelse (cond, ifso, ifnot) ->
-        expression_expect cond mutable_type_bool;
+        let phi1 = expression_expect cond mutable_type_bool in
         begin match ifnot with
           | None ->
-              expression_expect ifso mutable_type_unit;
-              mutable_type_unit
+              let phi2 = expression_expect ifso mutable_type_unit in
+              mutable_type_unit, Effect.union phi1 phi2
           | Some ifnot ->
-              let ty = expression ifso in
-              expression_expect ifnot ty;
-              ty
+              let ty, phi2 = expression ifso in
+              let phi3 = expression_expect ifnot ty in
+              ty, Effect.merge [phi1; phi2; phi3]
         end
     | Mexp_when (cond, act) ->
-        expression_expect cond mutable_type_bool;
-        expression act
+        let phi1 = expression_expect cond mutable_type_bool
+        and ty, phi2 = expression act in
+        ty, Effect.union phi1 phi2
     | Mexp_while (cond, body) ->
-        expression_expect cond mutable_type_bool;
-        statement body;
-        mutable_type_unit
+        let phi1 = expression_expect cond mutable_type_bool
+        and phi2 = statement body in
+        mutable_type_unit, Effect.union phi1 phi2
     | Mexp_for (id, start, stop, up_flag, body) ->
-        expression_expect start mutable_type_int;
-        expression_expect stop mutable_type_int;
-        statement body;
-        mutable_type_unit
+        let phi1 = expression_expect start mutable_type_int
+        and phi2 = expression_expect stop mutable_type_int
+        and phi3 = statement body in
+        mutable_type_unit, Effect.merge [phi1; phi2; phi3]
     | Mexp_constraint (e, ty') ->
-        expression_expect e ty';
-        ty'
+        ty', expression_expect e ty'
     | Mexp_array elist ->
         let ty_arg = new_type_variable () in
-        List.iter (fun e -> expression_expect e ty_arg) elist;
-        mutable_type_array ty_arg
+        let phis = List.map (fun e -> expression_expect e ty_arg) elist in
+        mutable_type_array ty_arg, Effect.merge phis
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, ty_res = instantiate_type_constructor tcs in
         List.iter
@@ -344,18 +347,16 @@ and expression_aux exp =
         ty_res
     | Mexp_field (e, lbl) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
-        expression_expect e ty_res;
-        ty_arg      
+        ty_arg, expression_expect e ty_res
     | Mexp_setfield (e1, lbl, e2) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
-        expression_expect e1 ty_res;
-        expression_expect e2 ty_arg;
-        mutable_type_unit
+        let phi1 = expression_expect e1 ty_res
+        and phi2 = expression_expect e2 ty_arg in
+        mutable_type_unit, Effect.union phi1 phi2
     | Mexp_assert e ->
-        expression_expect e mutable_type_bool;
-        mutable_type_unit
+        mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
-        new_type_variable ()
+        new_type_variable (), Effect.empty
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
@@ -363,13 +364,13 @@ and expression_aux exp =
 and expression_expect exp expected_ty =
   match exp.mexp_desc with
     | Mexp_let (_, pat_expr_list, body) ->
-        bindings pat_expr_list;
-        expression_expect body expected_ty
+        Effect.union
+	  (bindings pat_expr_list)
+	  (expression_expect body expected_ty)
     | Mexp_sequence (e1, e2) ->
-        statement e1;
-        expression_expect e2 expected_ty
+        Effect.union (statement e1) (expression_expect e2 expected_ty)
     | _ ->
-        let ty =
+        let ty, phi =
           (* Terrible hack for format strings *)
           match exp.mexp_desc with
               Mexp_literal (Literal_string s) ->
@@ -380,12 +381,13 @@ and expression_expect exp expected_ty =
                     | _ ->
                         mutable_type_string in
                 unify exp.mexp_type ty;
-                ty
+                ty, Effect.empty (* DUMMY *)
             | _ ->
                 expression exp
         in
         begin try
-          unify ty expected_ty
+          unify ty expected_ty;
+          phi
         with Unify ->
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
         end
@@ -394,7 +396,9 @@ and expression_expect exp expected_ty =
 
 and bindings pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
-  List.iter (fun (pat, expr) -> expression_expect expr pat.mpat_type) pat_expr_list
+  Effect.merge
+    (List.map (fun (pat, expr) -> expression_expect expr pat.mpat_type)
+       pat_expr_list)
 
 (* Typing of match cases *)
 
@@ -406,14 +410,16 @@ and caselist ty_arg ty_res pat_expr_list =
 (* Typing of statements (expressions whose values are ignored) *)
 
 and statement expr =
-  let ty = expression expr in
-  match mutable_type_repr ty with
+  let ty, phi = expression expr in
+  begin match mutable_type_repr ty with
   | Marrow(_,_,_) ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Partial_application
   | Mvar _ -> ()
   | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Statement_type
+  end;
+  phi
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)
