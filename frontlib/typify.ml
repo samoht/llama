@@ -284,7 +284,7 @@ and expression_aux exp =
 *)  | Mexp_let (_, pat_expr_list, body) ->
         let phi1 = bindings pat_expr_list
         and ty, phi2 = expression body in
-	ty, Effect.union phi1 phi2
+        ty, Effect.union phi1 phi2
     | Mexp_match (item, pat_exp_list) ->
         let ty_arg, phi = expression item in
         let ty_res = new_type_variable () in
@@ -334,18 +334,18 @@ and expression_aux exp =
         mutable_type_array ty_arg, Effect.merge phis
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, ty_res = instantiate_type_constructor tcs in
-	let phis =
-	  List.map
-	    (fun (lbl, exp) ->
-	       let ty_arg = instantiate_type inst lbl.lbl_arg in
-	       expression_expect exp ty_arg)
-	    lbl_exp_list
-	and phi' =
+        let phis =
+          List.map
+            (fun (lbl, exp) ->
+               let ty_arg = instantiate_type inst lbl.lbl_arg in
+               expression_expect exp ty_arg)
+            lbl_exp_list
+        and phi' =
           match opt_init with
               None -> Effect.empty
             | Some init -> expression_expect init ty_res
-	in
-	ty_res, Effect.merge (phi' :: phis)
+        in
+        ty_res, Effect.merge (phi' :: phis)
     | Mexp_field (e, lbl) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
         ty_arg, expression_expect e ty_res
@@ -366,8 +366,8 @@ and expression_expect exp expected_ty =
   match exp.mexp_desc with
     | Mexp_let (_, pat_expr_list, body) ->
         Effect.union
-	  (bindings pat_expr_list)
-	  (expression_expect body expected_ty)
+          (bindings pat_expr_list)
+          (expression_expect body expected_ty)
     | Mexp_sequence (e1, e2) ->
         Effect.union (statement e1) (expression_expect e2 expected_ty)
     | _ ->
@@ -407,7 +407,7 @@ and caselist ty_arg ty_res pat_expr_list =
   Effect.merge
     (List.map
        (fun (pat, expr) ->
-	  pattern_expect pat ty_arg; expression_expect expr ty_res)
+          pattern_expect pat ty_arg; expression_expect expr ty_res)
        pat_expr_list)
 
 (* Typing of statements (expressions whose values are ignored) *)
