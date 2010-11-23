@@ -13,6 +13,51 @@
 
 (* $Id: unix.ml 9547 2010-01-22 12:48:24Z doligez $ *)
 
+(* An alternate implementation of the Unix module from ../unix
+   which is safe in conjunction with bytecode threads. *)
+
+(* Type definitions that matter for thread operations *)
+
+type file_descr = int
+
+type process_status =
+    WEXITED of int
+  | WSIGNALED of int
+  | WSTOPPED of int
+
+(* We can't call functions from Thread because of type circularities,
+   so we redefine here the functions that we need *)
+
+type resumption_status =
+    Resumed_wakeup
+  | Resumed_delay
+  | Resumed_join
+  | Resumed_io
+  | Resumed_select of file_descr list * file_descr list * file_descr list
+  | Resumed_wait of int * process_status
+
+external thread_initialize : unit -> unit = "thread_initialize"
+external thread_wait_read : file_descr -> unit = "thread_wait_read"
+external thread_wait_write : file_descr -> unit = "thread_wait_write"
+external thread_select :
+  file_descr list * file_descr list * file_descr list * float
+       -> resumption_status
+  = "thread_select"
+external thread_wait_pid : int -> resumption_status = "thread_wait_pid"
+external thread_delay : float -> unit = "thread_delay"
+
+let wait_read fd = thread_wait_read fd
+let wait_write fd = thread_wait_write fd
+let select_aux arg = thread_select arg
+let wait_pid_aux pid = thread_wait_pid pid
+let delay duration = thread_delay duration
+
+(* Make sure that threads are initialized (PR#1516). *)
+
+let _ = thread_initialize()
+
+(* Back to the Unix module *)
+
 type error =
     E2BIG
   | EACCES
@@ -112,27 +157,23 @@ external environment : unit -> string array = "unix_environment"
 external getenv: string -> string = "caml_sys_getenv"
 external putenv: string -> string -> unit = "unix_putenv"
 
-type process_status =
-    WEXITED of int
-  | WSIGNALED of int
-  | WSTOPPED of int
+type interval_timer =
+    ITIMER_REAL
+  | ITIMER_VIRTUAL
+  | ITIMER_PROF
+
+type interval_timer_status =
+  { it_interval: float;                 (* Period *)
+    it_value: float }                   (* Current value of the timer *)
+
+external getitimer: interval_timer -> interval_timer_status = "unix_getitimer"
+external setitimer:
+  interval_timer -> interval_timer_status -> interval_timer_status
+  = "unix_setitimer"
 
 type wait_flag =
     WNOHANG
   | WUNTRACED
-
-external execv : string -> string array -> 'a = "unix_execv"
-external execve : string -> string array -> string array -> 'a = "unix_execve"
-external execvp : string -> string array -> 'a = "unix_execvp"
-external execvpe : string -> string array -> string array -> 'a = "unix_execvpe"
-external fork : unit -> int = "unix_fork"
-external wait : unit -> int * process_status = "unix_wait"
-external waitpid : wait_flag list -> int -> int * process_status = "unix_waitpid"
-external getpid : unit -> int = "unix_getpid"
-external getppid : unit -> int = "unix_getppid"
-external nice : int -> int = "unix_nice"
-
-type file_descr = int
 
 let stdin = 0
 let stdout = 1
@@ -160,24 +201,34 @@ external openfile : string -> open_flag list -> file_perm -> file_descr
 
 external close : file_descr -> unit = "unix_close"
 external unsafe_read : file_descr -> string -> int -> int -> int = "unix_read"
-external unsafe_write : file_descr -> string -> int -> int -> int = "unix_write"
-external unsafe_single_write : file_descr -> string -> int -> int -> int = "unix_single_write"
+external unsafe_write : file_descr -> string -> int -> int -> int
+    = "unix_write"
+external unsafe_single_write : file_descr -> string -> int -> int -> int
+    = "unix_single_write"
 
-let read fd buf ofs len =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.read"
-  else unsafe_read fd buf ofs len
-let write fd buf ofs len =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.write"
-  else unsafe_write fd buf ofs len
-(* write misbehaves because it attempts to write all data by making repeated
-   calls to the Unix write function (see comment in write.c and unix.mli).
-   partial_write fixes this by never calling write twice. *)
-let single_write fd buf ofs len =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.single_write"
-  else unsafe_single_write fd buf ofs len
+let rec read fd buf ofs len =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.read"
+    else unsafe_read fd buf ofs len
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_read fd; read fd buf ofs len
+
+let rec write fd buf ofs len =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.write"
+    else unsafe_write fd buf ofs len
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_write fd; write fd buf ofs len
+
+let rec single_write fd buf ofs len =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.partial_write"
+    else unsafe_single_write fd buf ofs len
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_write fd; single_write fd buf ofs len
 
 external in_channel_of_descr : file_descr -> in_channel
                              = "caml_ml_open_descriptor_in"
@@ -228,26 +279,30 @@ external unlink : string -> unit = "unix_unlink"
 external rename : string -> string -> unit = "unix_rename"
 external link : string -> string -> unit = "unix_link"
 
-    external lseek64 : file_descr -> int64 -> seek_command -> int64 = "unix_lseek_64"
-    external truncate64 : string -> int64 -> unit = "unix_truncate_64"
-    external ftruncate64 : file_descr -> int64 -> unit = "unix_ftruncate_64"
-    type stats64 =
-      { st64_dev : int;
-        st64_ino : int;
-        st64_kind : file_kind;
-        st64_perm : file_perm;
-        st64_nlink : int;
-        st64_uid : int;
-        st64_gid : int;
-        st64_rdev : int;
-        st64_size : int64;
-        st64_atime : float;
-        st64_mtime : float;
-        st64_ctime : float;
+module LargeFile =
+  struct
+    external lseek : file_descr -> int64 -> seek_command -> int64
+                   = "unix_lseek_64"
+    external truncate : string -> int64 -> unit = "unix_truncate_64"
+    external ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
+    type stats =
+      { st_dev : int;
+        st_ino : int;
+        st_kind : file_kind;
+        st_perm : file_perm;
+        st_nlink : int;
+        st_uid : int;
+        st_gid : int;
+        st_rdev : int;
+        st_size : int64;
+        st_atime : float;
+        st_mtime : float;
+        st_ctime : float;
       }
-    external stat64 : string -> stats64 = "unix_stat_64"
-    external lstat64 : string -> stats64 = "unix_lstat_64"
-    external fstat64 : file_descr -> stats64 = "unix_fstat_64"
+    external stat : string -> stats = "unix_stat_64"
+    external lstat : string -> stats = "unix_lstat_64"
+    external fstat : file_descr -> stats = "unix_fstat_64"
+  end
 
 type access_permission =
     R_OK
@@ -269,11 +324,6 @@ external clear_nonblock : file_descr -> unit = "unix_clear_nonblock"
 external set_close_on_exec : file_descr -> unit = "unix_set_close_on_exec"
 external clear_close_on_exec : file_descr -> unit = "unix_clear_close_on_exec"
 
-(* FD_CLOEXEC should be supported on all Unix systems these days,
-   but just in case... *)
-let try_set_close_on_exec fd =
-  try set_close_on_exec fd; true with Invalid_argument _ -> false
-
 external mkdir : string -> file_perm -> unit = "unix_mkdir"
 external rmdir : string -> unit = "unix_rmdir"
 external chdir : string -> unit = "unix_chdir"
@@ -287,13 +337,22 @@ external readdir : dir_handle -> string = "unix_readdir"
 external rewinddir : dir_handle -> unit = "unix_rewinddir"
 external closedir : dir_handle -> unit = "unix_closedir"
 
-external pipe : unit -> file_descr * file_descr = "unix_pipe"
+external _pipe : unit -> file_descr * file_descr = "unix_pipe"
+
+let pipe() =
+  let (out_fd, in_fd as fd_pair) = _pipe() in
+  set_nonblock in_fd;
+  set_nonblock out_fd;
+  fd_pair
+
 external symlink : string -> string -> unit = "unix_symlink"
 external readlink : string -> string = "unix_readlink"
 external mkfifo : string -> file_perm -> unit = "unix_mkfifo"
-external select :
-  file_descr list -> file_descr list -> file_descr list -> float ->
-        file_descr list * file_descr list * file_descr list = "unix_select"
+
+let select readfds writefds exceptfds delay =
+  match select_aux (readfds, writefds, exceptfds, delay) with
+    Resumed_select(r, w, e) -> (r, w, e)
+  | _ -> ([], [], [])
 
 type lock_command =
     F_ULOCK
@@ -304,6 +363,70 @@ type lock_command =
   | F_TRLOCK
 
 external lockf : file_descr -> lock_command -> int -> unit = "unix_lockf"
+
+external _execv : string -> string array -> 'a = "unix_execv"
+external _execve : string -> string array -> string array -> 'a = "unix_execve"
+external _execvp : string -> string array -> 'a = "unix_execvp"
+external _execvpe : string -> string array -> string array -> 'a
+                  = "unix_execvpe"
+
+(* Disable the timer interrupt before doing exec, because some OS
+   keep sending timer interrupts to the exec'ed code.
+   Also restore blocking mode on stdin, stdout and stderr,
+   since this is what most programs expect! *)
+
+let safe_clear_nonblock fd =
+  try clear_nonblock fd with Unix_error(_,_,_) -> ()
+let safe_set_nonblock fd =
+  try set_nonblock fd with Unix_error(_,_,_) -> ()
+
+let do_exec fn =
+  let oldtimer =
+    setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0} in
+  safe_clear_nonblock stdin;
+  safe_clear_nonblock stdout;
+  safe_clear_nonblock stderr;
+  try
+    fn ()
+  with Unix_error(_,_,_) as exn ->
+    ignore(setitimer ITIMER_VIRTUAL oldtimer);
+    safe_set_nonblock stdin;
+    safe_set_nonblock stdout;
+    safe_set_nonblock stderr;
+    raise exn
+
+let execv proc args =
+  do_exec (fun () -> _execv proc args)
+
+let execve proc args env =
+  do_exec (fun () -> _execve proc args env)
+
+let execvp proc args =
+  do_exec (fun () -> _execvp proc args)
+
+let execvpe proc args =
+  do_exec (fun () -> _execvpe proc args)
+
+external fork : unit -> int = "unix_fork"
+external _waitpid : wait_flag list -> int -> int * process_status
+                  = "unix_waitpid"
+
+let wait_pid pid =
+  match wait_pid_aux pid with
+    Resumed_wait(pid, status) -> (pid, status)
+  | _ -> invalid_arg "Thread.wait_pid"
+
+let wait () = wait_pid (-1)
+
+let waitpid flags pid =
+  if List.mem WNOHANG flags
+  then _waitpid flags pid
+  else wait_pid pid
+
+external getpid : unit -> int = "unix_getpid"
+external getppid : unit -> int = "unix_getppid"
+external nice : int -> int = "unix_nice"
+
 external kill : int -> int -> unit = "unix_kill"
 type sigprocmask_command = SIG_SETMASK | SIG_BLOCK | SIG_UNBLOCK
 external sigprocmask: sigprocmask_command -> int list -> int list
@@ -337,23 +460,11 @@ external gmtime : float -> tm = "unix_gmtime"
 external localtime : float -> tm = "unix_localtime"
 external mktime : tm -> float * tm = "unix_mktime"
 external alarm : int -> int = "unix_alarm"
-external sleep : int -> unit = "unix_sleep"
+
+let sleep secs = delay (float secs)
+
 external times : unit -> process_times = "unix_times"
 external utimes : string -> float -> float -> unit = "unix_utimes"
-
-type interval_timer =
-    ITIMER_REAL
-  | ITIMER_VIRTUAL
-  | ITIMER_PROF
-
-type interval_timer_status =
-  { it_interval: float;                 (* Period *)
-    it_value: float }                   (* Current value of the timer *)
-
-external getitimer: interval_timer -> interval_timer_status = "unix_getitimer"
-external setitimer:
-  interval_timer -> interval_timer_status -> interval_timer_status
-  = "unix_setitimer"
 
 external getuid : unit -> int = "unix_getuid"
 external geteuid : unit -> int = "unix_geteuid"
@@ -389,8 +500,6 @@ external getgrgid : int -> group_entry = "unix_getgrgid"
 
 type inet_addr = string
 
-let is_inet6_addr s = String.length s = 16
-
 external inet_addr_of_string : string -> inet_addr
                                     = "unix_inet_addr_of_string"
 external string_of_inet_addr : inet_addr -> string
@@ -402,6 +511,8 @@ let inet6_addr_any =
   try inet_addr_of_string "::" with Failure _ -> inet_addr_any
 let inet6_addr_loopback =
   try inet_addr_of_string "::1" with Failure _ -> inet_addr_loopback
+
+let is_inet6_addr s = String.length s = 16
 
 type socket_domain =
     PF_UNIX
@@ -432,18 +543,47 @@ type msg_flag =
   | MSG_DONTROUTE
   | MSG_PEEK
 
-external socket : socket_domain -> socket_type -> int -> file_descr
+external _socket : socket_domain -> socket_type -> int -> file_descr
                                   = "unix_socket"
-external socketpair :
+external _socketpair :
         socket_domain -> socket_type -> int -> file_descr * file_descr
                                   = "unix_socketpair"
-external accept : file_descr -> file_descr * sockaddr = "unix_accept"
+
+let socket dom typ proto =
+  let s = _socket dom typ proto in
+  set_nonblock s;
+  s
+
+let socketpair dom typ proto =
+  let (s1, s2 as spair) = _socketpair dom typ proto in
+  set_nonblock s1; set_nonblock s2;
+  spair
+
+external _accept : file_descr -> file_descr * sockaddr = "unix_accept"
+
+let rec accept req =
+  wait_read req;
+  try
+    let (s, caller as result) = _accept req in
+    set_nonblock s;
+    result
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) -> accept req
+
 external bind : file_descr -> sockaddr -> unit = "unix_bind"
-external connect : file_descr -> sockaddr -> unit = "unix_connect"
 external listen : file_descr -> int -> unit = "unix_listen"
 external shutdown : file_descr -> shutdown_command -> unit = "unix_shutdown"
 external getsockname : file_descr -> sockaddr = "unix_getsockname"
 external getpeername : file_descr -> sockaddr = "unix_getpeername"
+
+external _connect : file_descr -> sockaddr -> unit = "unix_connect"
+
+let connect s addr =
+  try
+    _connect s addr
+  with Unix_error((EINPROGRESS | EWOULDBLOCK | EAGAIN), _, _) ->
+    wait_write s;
+    (* Check if it really worked *)
+    ignore(getpeername s)
 
 external unsafe_recv :
   file_descr -> string -> int -> int -> msg_flag list -> int
@@ -458,22 +598,40 @@ external unsafe_sendto :
   file_descr -> string -> int -> int -> msg_flag list -> sockaddr -> int
                                   = "unix_sendto" "unix_sendto_native"
 
-let recv fd buf ofs len flags =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.recv"
-  else unsafe_recv fd buf ofs len flags
-let recvfrom fd buf ofs len flags =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.recvfrom"
-  else unsafe_recvfrom fd buf ofs len flags
-let send fd buf ofs len flags =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.send"
-  else unsafe_send fd buf ofs len flags
-let sendto fd buf ofs len flags addr =
-  if ofs < 0 || len < 0 || ofs > String.length buf - len
-  then invalid_arg "Unix.sendto"
-  else unsafe_sendto fd buf ofs len flags addr
+let rec recv fd buf ofs len flags =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.recv"
+    else unsafe_recv fd buf ofs len flags
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_read fd; recv fd buf ofs len flags
+
+let rec recvfrom fd buf ofs len flags =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.recvfrom"
+    else unsafe_recvfrom fd buf ofs len flags
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_read fd;
+    recvfrom fd buf ofs len flags
+
+let rec send fd buf ofs len flags =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.send"
+    else unsafe_send fd buf ofs len flags
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_write fd;
+    send fd buf ofs len flags
+
+let rec sendto fd buf ofs len flags addr =
+  try
+    if ofs < 0 || len < 0 || ofs > String.length buf - len
+    then invalid_arg "Unix.sendto"
+    else unsafe_sendto fd buf ofs len flags addr
+  with Unix_error((EAGAIN | EWOULDBLOCK), _, _) ->
+    wait_write fd;
+    sendto fd buf ofs len flags addr
 
 type socket_bool_option =
     SO_DEBUG
@@ -485,6 +643,7 @@ type socket_bool_option =
   | SO_ACCEPTCONN
   | TCP_NODELAY
   | IPV6_ONLY
+
 
 type socket_int_option =
     SO_SNDBUF
@@ -502,30 +661,41 @@ type socket_float_option =
 
 type socket_error_option = SO_ERROR
 
-  type ('opt, 'v) _SO_t = int
-  let _SO_bool = 0
-  let _SO_int = 1
-  let _SO_optint = 2
-  let _SO_float = 3
-  let _SO_error = 4
-  external _SO_get: ('opt, 'v) _SO_t -> file_descr -> 'opt -> 'v
+module SO: sig
+  type ('opt, 'v) t
+  val bool: (socket_bool_option, bool) t
+  val int: (socket_int_option, int) t
+  val optint: (socket_optint_option, int option) t
+  val float: (socket_float_option, float) t
+  val error: (socket_error_option, error option) t
+  val get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
+  val set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
+end = struct
+  type ('opt, 'v) t = int
+  let bool = 0
+  let int = 1
+  let optint = 2
+  let float = 3
+  let error = 4
+  external get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
               = "unix_getsockopt"
-  external _SO_set: ('opt, 'v) _SO_t -> file_descr -> 'opt -> 'v -> unit
+  external set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
               = "unix_setsockopt"
+end
 
-let getsockopt fd opt = _SO_get _SO_bool fd opt
-let setsockopt fd opt v = _SO_set _SO_bool fd opt v
+let getsockopt fd opt = SO.get SO.bool fd opt
+let setsockopt fd opt v = SO.set SO.bool fd opt v
 
-let getsockopt_int fd opt = _SO_get _SO_int fd opt
-let setsockopt_int fd opt v = _SO_set _SO_int fd opt v
+let getsockopt_int fd opt = SO.get SO.int fd opt
+let setsockopt_int fd opt v = SO.set SO.int fd opt v
 
-let getsockopt_optint fd opt = _SO_get _SO_optint fd opt
-let setsockopt_optint fd opt v = _SO_set _SO_optint fd opt v
+let getsockopt_optint fd opt = SO.get SO.optint fd opt
+let setsockopt_optint fd opt v = SO.set SO.optint fd opt v
 
-let getsockopt_float fd opt = _SO_get _SO_float fd opt
-let setsockopt_float fd opt v = _SO_set _SO_float fd opt v
+let getsockopt_float fd opt = SO.get SO.float fd opt
+let setsockopt_float fd opt v = SO.set SO.float fd opt v
 
-let getsockopt_error fd = _SO_get _SO_error fd SO_ERROR
+let getsockopt_error fd = SO.get SO.error fd SO_ERROR
 
 type host_entry =
   { h_name : string;
@@ -555,7 +725,6 @@ external getservbyname : string -> string -> service_entry
                                          = "unix_getservbyname"
 external getservbyport : int -> string -> service_entry
                                          = "unix_getservbyport"
-
 type addr_info =
   { ai_family : socket_domain;
     ai_socktype : socket_type;
@@ -731,7 +900,7 @@ external tcgetattr: file_descr -> terminal_io = "unix_tcgetattr"
 type setattr_when = TCSANOW | TCSADRAIN | TCSAFLUSH
 
 external tcsetattr: file_descr -> setattr_when -> terminal_io -> unit
-               = "unix_tcsetattr"
+                  = "unix_tcsetattr"
 external tcsendbreak: file_descr -> int -> unit = "unix_tcsendbreak"
 external tcdrain: file_descr -> unit = "unix_tcdrain"
 
@@ -811,11 +980,10 @@ type popen_process =
 let popen_processes = (Hashtbl.create 7 : (popen_process, int) Hashtbl.t)
 
 let open_proc cmd proc input output toclose =
-  let cloexec = List.for_all try_set_close_on_exec toclose in
   match fork() with
      0 -> if input <> stdin then begin dup2 input stdin; close input end;
           if output <> stdout then begin dup2 output stdout; close output end;
-          if not cloexec then List.iter close toclose;
+          List.iter close toclose;
           begin try execv "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
           with _ -> exit 127
           end
@@ -847,12 +1015,11 @@ let open_process cmd =
   (inchan, outchan)
 
 let open_proc_full cmd env proc input output error toclose =
-  let cloexec = List.for_all try_set_close_on_exec toclose in
   match fork() with
      0 -> dup2 input stdin; close input;
           dup2 output stdout; close output;
           dup2 error stderr; close error;
-          if not cloexec then List.iter close toclose;
+          List.iter close toclose;
           begin try execve "/bin/sh" [| "/bin/sh"; "-c"; cmd |] env
           with _ -> exit 127
           end
@@ -916,17 +1083,12 @@ let open_connection sockaddr =
     socket (domain_of_sockaddr sockaddr) SOCK_STREAM 0 in
   try
     connect sock sockaddr;
-    ignore(try_set_close_on_exec sock);
     (in_channel_of_descr sock, out_channel_of_descr sock)
   with exn ->
     close sock; raise exn
 
 let shutdown_connection inchan =
   shutdown (descr_of_in_channel inchan) SHUTDOWN_SEND
-
-let rec accept_non_intr s =
-  try accept s
-  with Unix_error (EINTR, _, _) -> accept_non_intr s
 
 let establish_server server_fun sockaddr =
   let sock =
@@ -935,19 +1097,18 @@ let establish_server server_fun sockaddr =
   bind sock sockaddr;
   listen sock 5;
   while true do
-    let (s, caller) = accept_non_intr sock in
+    let (s, caller) = accept sock in
     (* The "double fork" trick, the process which calls server_fun will not
        leave a zombie process *)
     match fork() with
        0 -> if fork() <> 0 then exit 0; (* The son exits, the grandson works *)
-            close sock;
-            ignore(try_set_close_on_exec s);
             let inchan = in_channel_of_descr s in
             let outchan = out_channel_of_descr s in
             server_fun inchan outchan;
-            (* Do not close inchan nor outchan, as the server_fun could
-               have done it already, and we are about to exit anyway
-               (PR#3794) *)
+            close_out outchan;
+            (* The file descriptor was already closed by close_out.
+               close_in inchan;
+            *)
             exit 0
-    | id -> close s; ignore(waitpid_non_intr id) (* Reclaim the son *)
+    | id -> close s; ignore(waitpid [] id) (* Reclaim the son *)
   done
