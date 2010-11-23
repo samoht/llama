@@ -144,6 +144,8 @@ external string_create: int -> string = "caml_create_string"
 external string_blit : string -> int -> string -> int -> int -> unit
                      = "caml_blit_string" "noalloc"
 
+
+
 let (^) s1 s2 =
   let l1 = string_length s1 and l2 = string_length s2 in
   let s = string_create (l1 + l2) in
@@ -193,11 +195,15 @@ let string_of_int n =
 
 external int_of_string : string -> int = "caml_int_of_string"
 
+(* module String = struct*)
+  external string_get : string -> int -> char = "%string_safe_get"
+(* end *)
+
 let valid_float_lexem s =
   let l = string_length s in
   let rec loop i =
     if i >= l then s ^ "." else
-    match s.[i] with
+    match string_get s i with
     | '0' .. '9' | '-' -> loop (i+1)
     | _ -> s
   in
@@ -228,16 +234,17 @@ let stdout = open_descriptor_out 1
 let stderr = open_descriptor_out 2
 
 (* Non-blocking stuff *)
+type file_descr = int
 
-external thread_wait_read_prim : Unix.file_descr -> unit = "thread_wait_read"
-external thread_wait_write_prim : Unix.file_descr -> unit = "thread_wait_write"
+external thread_wait_read_prim : file_descr -> unit = "thread_wait_read"
+external thread_wait_write_prim : file_descr -> unit = "thread_wait_write"
 
 let thread_wait_read fd = thread_wait_read_prim fd
 let thread_wait_write fd = thread_wait_write_prim fd
 
-external descr_inchan : in_channel -> Unix.file_descr
+external descr_inchan : in_channel -> file_descr
                       = "caml_channel_descriptor"
-external descr_outchan : out_channel -> Unix.file_descr
+external descr_outchan : out_channel -> file_descr
                        = "caml_channel_descriptor"
 
 let wait_inchan ic = thread_wait_read (descr_inchan ic)
@@ -319,7 +326,7 @@ let output oc s ofs len =
   then invalid_arg "output"
   else unsafe_output oc s ofs len
 
-let output' oc ~buf ~pos ~len = output oc buf pos len
+let output' oc buf pos len = output oc buf pos len
 
 let rec output_byte oc b =
   try
@@ -484,16 +491,16 @@ let read_float () = float_of_string(read_line())
 
 (* Operations on large files *)
 
-module LargeFile =
-  struct
-    external seek_out : out_channel -> int64 -> unit = "caml_ml_seek_out_64"
-    external pos_out : out_channel -> int64 = "caml_ml_pos_out_64"
-    external out_channel_length : out_channel -> int64
+(* module LargeFile = *)
+(*  struct *)
+    external largefile_seek_out : out_channel -> int64 -> unit = "caml_ml_seek_out_64"
+    external largefile_pos_out : out_channel -> int64 = "caml_ml_pos_out_64"
+    external largefile_out_channel_length : out_channel -> int64
                                 = "caml_ml_channel_size_64"
-    external seek_in : in_channel -> int64 -> unit = "caml_ml_seek_in_64"
-    external pos_in : in_channel -> int64 = "caml_ml_pos_in_64"
-    external in_channel_length : in_channel -> int64 = "caml_ml_channel_size_64"
-  end
+    external largefile_seek_in : in_channel -> int64 -> unit = "caml_ml_seek_in_64"
+    external largefile_pos_in : in_channel -> int64 = "caml_ml_pos_in_64"
+    external largefile_in_channel_length : in_channel -> int64 = "caml_ml_channel_size_64"
+(*  end *)
 
 (* Formats *)
 type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6

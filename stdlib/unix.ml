@@ -279,12 +279,12 @@ external unlink : string -> unit = "unix_unlink"
 external rename : string -> string -> unit = "unix_rename"
 external link : string -> string -> unit = "unix_link"
 
-module LargeFile =
-  struct
-    external lseek : file_descr -> int64 -> seek_command -> int64
+(* module LargeFile = *)
+(*  struct *)
+    external largefile_lseek : file_descr -> int64 -> seek_command -> int64
                    = "unix_lseek_64"
-    external truncate : string -> int64 -> unit = "unix_truncate_64"
-    external ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
+    external largefile_truncate : string -> int64 -> unit = "unix_truncate_64"
+    external largefile_ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
     type stats =
       { st_dev : int;
         st_ino : int;
@@ -299,10 +299,10 @@ module LargeFile =
         st_mtime : float;
         st_ctime : float;
       }
-    external stat : string -> stats = "unix_stat_64"
-    external lstat : string -> stats = "unix_lstat_64"
-    external fstat : file_descr -> stats = "unix_fstat_64"
-  end
+    external largefile_stat : string -> stats = "unix_stat_64"
+    external largefile_lstat : string -> stats = "unix_lstat_64"
+    external largefile_fstat : file_descr -> stats = "unix_fstat_64"
+(*  end *)
 
 type access_permission =
     R_OK
@@ -661,7 +661,7 @@ type socket_float_option =
 
 type socket_error_option = SO_ERROR
 
-module SO: sig
+(* module SO: sig
   type ('opt, 'v) t
   val bool: (socket_bool_option, bool) t
   val int: (socket_int_option, int) t
@@ -670,18 +670,18 @@ module SO: sig
   val error: (socket_error_option, error option) t
   val get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
   val set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
-end = struct
+end = struct *)
   type ('opt, 'v) t = int
-  let bool = 0
-  let int = 1
-  let optint = 2
-  let float = 3
-  let error = 4
-  external get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
+  let _SO_bool = 0
+  let _SO_int = 1
+  let _SO_optint = 2
+  let _SO_float = 3
+  let _SO_error = 4
+  external _SO_get: ('opt, 'v) t -> file_descr -> 'opt -> 'v
               = "unix_getsockopt"
-  external set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
+  external _SO_set: ('opt, 'v) t -> file_descr -> 'opt -> 'v -> unit
               = "unix_setsockopt"
-end
+(* end *)
 
 let getsockopt fd opt = SO.get SO.bool fd opt
 let setsockopt fd opt v = SO.set SO.bool fd opt v
