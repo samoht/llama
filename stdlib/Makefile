@@ -3,7 +3,6 @@
 # ----------------------------------------------------------------------
 
 BOOTDIR=../boot
-MODULES=pervasives $(NONPERVASIVES)
 NONPERVASIVES=sys list array char string \
   hashtbl sort marshal obj \
   int32 int64 nativeint \
@@ -19,7 +18,10 @@ NONPERVASIVES=sys list array char string \
   int_misc nat big_int arith_flags \
   ratio num arith_status \
   unix terminfo
+THREADS=thread mutex condition event
 
+MODULES=pervasives $(NONPERVASIVES) $(THREADS:%=threads/%)
+INCLUDES+=-I threads
 include ../config.mk
 include ../Make/generic.mk
 
@@ -58,9 +60,9 @@ pervasives.cmo: pervasives.ml
 # ----------------------------------------------------------------------
 
 depend:
-	$(LLAMADEP) *.ml *.mli > .depend
+	$(LLAMADEP) *.ml *.mli threads/*.ml thread/*.mli > .depend
 ocamldepend:
-	$(OCAMLDEP) *.ml *.mli > .ocamldepend
+	$(OCAMLDEP) *.ml *.mli threads/*.ml threads/*.mli > .ocamldepend
 .PHONY: depend ocamldepend
 
 include .depend
@@ -77,8 +79,10 @@ $(NONPERVASIVES:%=%.cmi): pervasives.cmi
 
 clean:
 	rm -f stdlib.lma *.lmi *.lml *.lmo *.lmx llamaheader
+	rm -f threads/*.lmi threads/*.lml threads/*.lmo threads/*.lmx
 ocamlclean:
 	rm -f stdlib.cma *.cmi *.cmo camlheader
+	rm -f threads/*.cmi threads/*.cmo
 .PHONY: clean ocamlclean
 
 # ----------------------------------------------------------------------
