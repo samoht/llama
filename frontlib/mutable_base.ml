@@ -250,7 +250,8 @@ let rec unify ty1 ty2 =
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
         (match !phi1, !phi2 with
-             None, Some x -> phi1 := Some x
+             None, None -> ()
+           | None, Some x -> phi1 := Some x
            | Some x, None -> phi2 := Some x
            | Some x, Some y ->
                let u = Effect.union x y in
