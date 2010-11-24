@@ -48,8 +48,8 @@ list.lmo: list.lmi
 list.lmx: list.lmi
 map.lmo: pervasives.lmi map.lmi
 map.lmx: pervasives.lmx map.lmi
-marshal.lmo: string.lmi marshal.lmi
-marshal.lmx: string.lmx marshal.lmi
+marshal.lmo: string.lmi pervasives.lmi marshal.lmi
+marshal.lmx: string.lmx pervasives.lmx marshal.lmi
 nat.lmo: sys.lmi string.lmi obj.lmi int_misc.lmi int64.lmi char.lmi nat.lmi
 nat.lmx: sys.lmx string.lmx obj.lmx int_misc.lmx int64.lmx char.lmx nat.lmi
 nativeint.lmo: sys.lmi pervasives.lmi nativeint.lmi
@@ -60,8 +60,8 @@ obj.lmo: marshal.lmi int32.lmi array.lmi obj.lmi
 obj.lmx: marshal.lmx int32.lmx array.lmx obj.lmi
 parsing.lmo: obj.lmi lexing.lmi array.lmi parsing.lmi
 parsing.lmx: obj.lmx lexing.lmx array.lmx parsing.lmi
-pervasives.lmo: pervasives.lmi
-pervasives.lmx: pervasives.lmi
+pervasives.lmo: unix.lmi string.lmi pervasives.lmi
+pervasives.lmx: unix.lmx string.lmx pervasives.lmi
 printexc.lmo: printf.lmi obj.lmi buffer.lmi array.lmi printexc.lmi
 printexc.lmx: printf.lmx obj.lmx buffer.lmx array.lmx printexc.lmi
 printf.lmo: printf_tformat.lmo printf.lmi
@@ -167,3 +167,11 @@ terminfo.lmi:
 unix.lmi:
 weak.lmi:
 weak_hashtbl.lmi:
+threads/condition.lmo: list.lmi threads/condition.lmi
+threads/condition.lmx: list.lmx threads/condition.lmi
+threads/event.lmo: random.lmi queue.lmi list.lmi array.lmi threads/event.lmi
+threads/event.lmx: random.lmx queue.lmx list.lmx array.lmx threads/event.lmi
+threads/mutex.lmo: list.lmi threads/mutex.lmi
+threads/mutex.lmx: list.lmx threads/mutex.lmi
+threads/thread.lmo: unix.lmi sys.lmi list.lmi threads/thread.lmi
+threads/thread.lmx: unix.lmx sys.lmx list.lmx threads/thread.lmi
