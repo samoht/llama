@@ -683,19 +683,19 @@ end = struct *)
               = "unix_setsockopt"
 (* end *)
 
-let getsockopt fd opt = SO.get SO.bool fd opt
-let setsockopt fd opt v = SO.set SO.bool fd opt v
+let getsockopt fd opt = _SO_get _SO_bool fd opt
+let setsockopt fd opt v = _SO_set _SO_bool fd opt v
 
-let getsockopt_int fd opt = SO.get SO.int fd opt
-let setsockopt_int fd opt v = SO.set SO.int fd opt v
+let getsockopt_int fd opt = _SO_get _SO_int fd opt
+let setsockopt_int fd opt v = _SO_set _SO_int fd opt v
 
-let getsockopt_optint fd opt = SO.get SO.optint fd opt
-let setsockopt_optint fd opt v = SO.set SO.optint fd opt v
+let getsockopt_optint fd opt = _SO_get _SO_optint fd opt
+let setsockopt_optint fd opt v = _SO_set _SO_optint fd opt v
 
-let getsockopt_float fd opt = SO.get SO.float fd opt
-let setsockopt_float fd opt v = SO.set SO.float fd opt v
+let getsockopt_float fd opt = _SO_get _SO_float fd opt
+let setsockopt_float fd opt v = _SO_set _SO_float fd opt v
 
-let getsockopt_error fd = SO.get SO.error fd SO_ERROR
+let getsockopt_error fd = _SO_get _SO_error fd SO_ERROR
 
 type host_entry =
   { h_name : string;
