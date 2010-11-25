@@ -8,6 +8,7 @@
 *.lml
 *.lmo
 *.lmx
+*.o
 /config.mk
 back/config/m.h
 back/config/s.h
@@ -17,13 +18,12 @@ back/bytelib/bytelib.cma
 back/bytelib/bytelib.lma
 back/bytelib/runtimedef.ml
 back/bytelib/opcodes.ml
-back/byterun/*.o
-back/byterun/unix/*.o
 back/byterun/llamarun
 back/byterun/llamarun-ocaml
 back/byterun/libcamlrun.a
 back/byterun/jumptbl.h
 back/byterun/ld.conf
+back/byterun/opnames.h
 back/byterun/primitives
 back/byterun/prims.c
 back/byterun/version.h
@@ -62,13 +62,11 @@ lex/parser.mli
 lex/parser.output
 lex/llamalex
 lex/llamalex-ocaml
-prover/*.o
 prover/llamaprover
 stdlib/camlheader
 stdlib/llamaheader
 stdlib/stdlib.cma
 stdlib/stdlib.lma
-yacc/*.o
 yacc/llamayacc
 testsuite/_log
 testsuite/tests/*/*.result
