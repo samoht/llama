@@ -53,7 +53,7 @@ PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
-all:: llamarun$(EXE) ld.conf libcamlrun.$(A)
+all:: depend llamarun$(EXE) ld.conf libcamlrun.$(A)
 .PHONY: all
 
 ld.conf: ../config/Makefile
