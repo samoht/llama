@@ -10,10 +10,9 @@ ocamlclean:
 	rm -f $(LIBRARY).cma *.cm{i,o} .ocamldepend
 .PHONY: ocamlclean
 
-.ocamldepend: $(GENSOURCES)
+ocamldepend: $(GENSOURCES)
 	$(OCAMLDEP) $(INCLUDES) *.ml *.mli > .ocamldepend
-ocamldepend: .ocamldepend
-	@
-.PHONY: ocamldepend .ocamldepend
+
+.PHONY: ocamldepend
 
 -include .ocamldepend
