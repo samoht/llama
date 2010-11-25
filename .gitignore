@@ -1,3 +1,5 @@
+.depend
+.ocamldepend
 .directory
 *~
 *.cmi
