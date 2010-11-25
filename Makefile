@@ -156,7 +156,7 @@ COREDIRS=$(CORELIBDIRS) $(COREAPPDIRS)
 
 LIBDIRS=$(CORELIBDIRS)
 APPDIRS=$(COREAPPDIRS) doctool back/bytetop
-DIRS=$(LIBDIRS) $(APPDIRS)
+DIRS=$(LIBDIRS) $(APPDIRS) $(CDIRS)
 
 # ----------------------------------------------------------------------
 # Install
