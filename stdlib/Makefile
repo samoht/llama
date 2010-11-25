@@ -59,14 +59,20 @@ pervasives.cmo: pervasives.ml
 # Depend
 # ----------------------------------------------------------------------
 
-depend:
+.depend:
 	$(LLAMADEP) *.ml *.mli threads/*.ml thread/*.mli > .depend
-ocamldepend:
+depend: .depend
+	@
+
+.ocamldepend:
 	$(OCAMLDEP) *.ml *.mli threads/*.ml threads/*.mli > .ocamldepend
+ocamldepend: .ocamldepend
+	@
+
 .PHONY: depend ocamldepend
 
-include .depend
-include .ocamldepend
+-include .depend
+-include .ocamldepend
 
 pervasives.lmo: pervasives.lmi
 $(NONPERVASIVES:%=%.lmi): pervasives.lmi
@@ -80,9 +86,11 @@ $(NONPERVASIVES:%=%.cmi): pervasives.cmi
 clean:
 	rm -f stdlib.lma *.lmi *.lml *.lmo *.lmx llamaheader
 	rm -f threads/*.lmi threads/*.lml threads/*.lmo threads/*.lmx
+	rm -f .depend
 ocamlclean:
 	rm -f stdlib.cma *.cmi *.cmo camlheader
 	rm -f threads/*.cmi threads/*.cmo
+	rm -f .ocamldepend
 .PHONY: clean ocamlclean
 
 # ----------------------------------------------------------------------

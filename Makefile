@@ -14,7 +14,7 @@ default: back/byterun/llamarun yacc/llamayacc
 
 # Build everything using the ambient C compiler and the core system in "boot"
 
-all:
+all: depend
 	make -C stdlib
 	make -C backlib && make backlib/backlib.lma
 	make -C frontlib && make frontlib/frontlib.lma
@@ -38,7 +38,7 @@ promote:
 
 # Build an emergency core system using the ambient C and OCaml compilers
 
-with-ocaml:
+with-ocaml: ocamldepend
 	make -C stdlib with-ocaml
 	make -C backlib with-ocaml && make backlib/backlib.cma
 	make -C frontlib with-ocaml && make frontlib/frontlib.cma
