@@ -85,7 +85,9 @@ let num_of_prim name =
     else begin
       let symb =
         try Dll.find_primitive name
-        with Not_found -> raise(Error(Unavailable_primitive name)) in
+        with Not_found ->
+          Printf.eprintf "opened DLLs: %s\n" (String.concat " " !Dll.opened_names);
+          raise(Error(Unavailable_primitive name)) in
       let num = enter_numtable c_prim_table name in
       Dll.synchronize_primitive num symb;
       num

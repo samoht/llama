@@ -281,27 +281,27 @@ external link : string -> string -> unit = "unix_link"
 
 (* module LargeFile = *)
 (*  struct *)
-    external largefile_lseek : file_descr -> int64 -> seek_command -> int64
+    external lseek64 : file_descr -> int64 -> seek_command -> int64
                    = "unix_lseek_64"
-    external largefile_truncate : string -> int64 -> unit = "unix_truncate_64"
-    external largefile_ftruncate : file_descr -> int64 -> unit = "unix_ftruncate_64"
-    type stats =
-      { st_dev : int;
-        st_ino : int;
-        st_kind : file_kind;
-        st_perm : file_perm;
-        st_nlink : int;
-        st_uid : int;
-        st_gid : int;
-        st_rdev : int;
-        st_size : int64;
-        st_atime : float;
-        st_mtime : float;
-        st_ctime : float;
+    external truncate64 : string -> int64 -> unit = "unix_truncate_64"
+    external ftruncate64 : file_descr -> int64 -> unit = "unix_ftruncate_64"
+    type stats64 =
+      { st64_dev : int;
+        st64_ino : int;
+        st64_kind : file_kind;
+        st64_perm : file_perm;
+        st64_nlink : int;
+        st64_uid : int;
+        st64_gid : int;
+        st64_rdev : int;
+        st64_size : int64;
+        st64_atime : float;
+        st64_mtime : float;
+        st64_ctime : float;
       }
-    external largefile_stat : string -> stats = "unix_stat_64"
-    external largefile_lstat : string -> stats = "unix_lstat_64"
-    external largefile_fstat : file_descr -> stats = "unix_fstat_64"
+    external stat64 : string -> stats64 = "unix_stat_64"
+    external lstat64 : string -> stats64 = "unix_lstat_64"
+    external fstat64 : file_descr -> stats64 = "unix_fstat_64"
 (*  end *)
 
 type access_permission =

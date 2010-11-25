@@ -42,10 +42,10 @@ with-ocaml:
 	make -C stdlib with-ocaml
 	make -C backlib with-ocaml && make backlib/backlib.cma
 	make -C frontlib with-ocaml && make frontlib/frontlib.cma
+	make -C back/byterun
 	make -C deptool with-ocaml && make deptool/llamadep-ocaml
 	make -C lex with-ocaml && make lex/llamalex-ocaml
 	make -C yacc
-	make -C back/byterun
 	make -C back/bytelib with-ocaml && make back/bytelib/bytelib.cma
 	make -C back/bytec with-ocaml && make back/bytec/llamac-ocaml
 .PHONY: with-ocaml

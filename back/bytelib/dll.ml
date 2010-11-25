@@ -71,7 +71,10 @@ let open_dll mode name =
       failwith (fullname ^ ": " ^ msg)
   end
 
+let opened_names : string list ref = ref []
+
 let open_dlls mode names =
+  opened_names := names @ !opened_names;
   List.iter (open_dll mode) names
 
 (* Close all DLLs *)
