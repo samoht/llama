@@ -111,7 +111,7 @@ version.h : ../VERSION
 
 clean ::
 	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO)
-	rm -f unix/*.$(O)
+	rm -f unix/*.$(O) threads/*.$(0)
 	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
 	rm -f version.h
 .PHONY: clean
