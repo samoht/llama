@@ -15,12 +15,9 @@ scrapeclean: clean
 	rm -f $(GENSOURCES)
 .PHONY: scrapeclean
 
-.depend: $(GENSOURCES)
+depend: $(GENSOURCES)
 	$(LLAMADEP) $(INCLUDES) *.ml *.mli > .depend
 
-depend: .depend
-	@
-
-.PHONY: depend .depend
+.PHONY: depend
 
 -include .depend

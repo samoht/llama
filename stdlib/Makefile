@@ -59,15 +59,11 @@ pervasives.cmo: pervasives.ml
 # Depend
 # ----------------------------------------------------------------------
 
-.depend:
+depend:
 	$(LLAMADEP) *.ml *.mli threads/*.ml thread/*.mli > .depend
-depend: .depend
-	@
 
-.ocamldepend:
+ocamldepend:
 	$(OCAMLDEP) *.ml *.mli threads/*.ml threads/*.mli > .ocamldepend
-ocamldepend: .ocamldepend
-	@
 
 .PHONY: depend ocamldepend
 
