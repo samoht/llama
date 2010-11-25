@@ -18,11 +18,11 @@ all: depend
 	make -C stdlib
 	make -C backlib && make backlib/backlib.lma
 	make -C frontlib && make frontlib/frontlib.lma
+	make -C back/byterun
 	make -C deptool && make deptool/llamadep
 	make -C lex && make lex/llamalex
 	make -C yacc
 	make -C doctool && make doctool/llamadoc
-	make -C back/byterun
 	make -C back/bytelib && make back/bytelib/bytelib.lma
 	make -C back/bytec && make back/bytec/llamac
 	make -C back/bytetop && make back/bytetop/llama
