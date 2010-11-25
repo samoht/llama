@@ -7,11 +7,13 @@ $(LIBRARY).cma: $(MODULES:%=%.cmo)
 	$(OCAMLC_STRICT) -a $(INCLUDES) $^ -o $@
 
 ocamlclean:
-	rm -f $(LIBRARY).cma *.cm{i,o}
+	rm -f $(LIBRARY).cma *.cm{i,o} .ocamldepend
 .PHONY: ocamlclean
 
-ocamldepend: $(GENSOURCES)
+.ocamldepend: $(GENSOURCES)
 	$(OCAMLDEP) $(INCLUDES) *.ml *.mli > .ocamldepend
-.PHONY: ocamldepend
+ocamldepend: .ocamldepend
+	@
+.PHONY: ocamldepend .ocamldepend
 
-include .ocamldepend
+-include .ocamldepend

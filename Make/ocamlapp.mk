@@ -11,11 +11,13 @@ ocamlinstall:
 .PHONY: ocamlinstall
 
 ocamlclean:
-	rm -f $(BINARY)-ocaml *.cm{i,o}
+	rm -f $(BINARY)-ocaml *.cm{i,o} .ocamldepend
 .PHONY: ocamlclean
 
-ocamldepend: $(GENSOURCES)
+.ocamldepend: $(GENSOURCES)
 	$(OCAMLDEP) $(INCLUDES) *.ml *.mli > .ocamldepend
+ocamldepend: .ocamldepend
+	@
 .PHONY: ocamldepend
 
-include .ocamldepend
+-include .ocamldepend
