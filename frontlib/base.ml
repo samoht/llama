@@ -68,7 +68,9 @@ type value =
   { val_module : module_id;    (* Defining module *)
     val_name : string;         (* Name of the value *)
     val_type : llama_type;     (* Type of the value *)
-    val_kind : value_kind }    (* Is this a primitive? *)
+    val_kind : value_kind}     (* Is this a primitive? *)
+ (* val_effect : llama_effect; (* XXX some exported effects *) *)
+
 
 type signature_item =
     Sig_type of type_constructor_group

@@ -31,7 +31,10 @@ exception Error of Location.t * error
 
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
-let new_variable name ty = { mvar_name = name; mvar_type = ty }
+let new_variable name ty phi = {
+  mvar_name = name;
+  mvar_type = ty;
+  mvar_effect = phi; }
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities for checking things.                                         *)
@@ -260,7 +263,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Marrow (mutable_type env ty1, mutable_type env ty2, ref None)
+        Marrow (mutable_type env ty1, mutable_type env ty2, Effect.new_variable ())
     | Ptyp_tuple tyl ->
         Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
@@ -281,7 +284,7 @@ let pattern env pat =
       None -> ()
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
-  let values = List.map (fun name -> (name, new_variable name (new_type_variable ()))) names in
+  let values = List.map (fun name -> (name, new_variable name (new_type_variable ()) (Effect.new_variable ()))) names in
   let rec pattern pat =
     { mpat_desc = pattern_aux pat;
       mpat_loc = pat.ppat_loc;
@@ -340,7 +343,7 @@ let rec expression ctxt exp =
   { mexp_desc = expression_aux ctxt exp;
     mexp_loc = exp.pexp_loc;
     mexp_type = new_type_variable ();
-    mexp_effect = ref None }
+    mexp_effect = Effect.new_variable (); }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
@@ -406,7 +409,7 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Mexp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name (new_type_variable ()) in
+        let var = new_variable name (new_type_variable ()) (Effect.new_variable ()) in
         let big_ctxt = context_add_variable var ctxt in
         Mexp_for (var,
                   expression ctxt e1,

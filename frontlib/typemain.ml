@@ -23,7 +23,7 @@ let rec structure env = function
     [] -> []
   | pstr :: rest ->
       let tstr = Resolve.structure_item env pstr in
-      Typify.structure_item tstr;
+      let _ = Typify.structure_item tstr in
       let str, env, _ = Immutify.structure_item env tstr in
       str @ structure env rest
 
