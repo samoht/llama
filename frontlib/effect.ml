@@ -132,11 +132,6 @@ let rec unify phi1 phi2 =
       v1.link <- Some phi2
     | _, Evar v2 when not (occurs v2 phi1) ->
       v2.link <- Some phi1
-    | Eunion e1, Eunion e2 when Set.cardinal e1 = 1 ->
-      Set.iter (unify (Set.choose e1)) e2
-    | Eunion e1, Eunion e2 when Set.cardinal e2 = 1 ->
-      Set.iter (unify (Set.choose e2)) e1
-    (* XXX: what can we do for other enum cases ??? *)
     | _ -> raise Unify
 
 let _ =

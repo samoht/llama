@@ -160,6 +160,7 @@ let pr_vars =
 
 let rec print_out_effect ppf = function
   | Oeff_var v     -> fprintf ppf "'%s" v
+  | Oeff_union []  -> fprintf ppf ""
   | Oeff_union [v] -> print_out_effect ppf v
   | Oeff_union l   -> fprintf ppf "{%a}" print_out_effect_list l
 
