@@ -154,3 +154,6 @@ let _ =
   assert (compare v1 s4 = 0)
 
 
+(* effect variables are represented using integers to make them distinct from type variables *)
+let parameter_name id =
+  string_of_int id

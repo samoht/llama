@@ -209,7 +209,7 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
             ty
           end
       | Ptyp_arrow (ty1, ty2) ->
-          Tarrow (aux ty1, aux ty2)
+          Tarrow (aux ty1, aux ty2, Effect.empty)
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) ->

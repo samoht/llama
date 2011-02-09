@@ -14,7 +14,7 @@ type 'a reference =
 
 type llama_type =
     Tparam of int
-  | Tarrow of llama_type * llama_type
+  | Tarrow of llama_type * llama_type * Effect.t
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * llama_type list
 
@@ -78,8 +78,8 @@ type saver =
 let rec save_type saver = function
     Base.Tparam tv ->
       Tparam tv
-  | Base.Tarrow (ty1, ty2) ->
-      Tarrow (save_type saver ty1, save_type saver ty2)
+  | Base.Tarrow (ty1, ty2, phi) ->
+      Tarrow (save_type saver ty1, save_type saver ty2, phi)
   | Base.Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
   | Base.Tconstr (tcs, tyl) ->
@@ -178,8 +178,8 @@ type loader =
 let rec load_type loader = function
     Tparam tvar ->
       Base.Tparam tvar
-  | Tarrow (ty1, ty2) ->
-      Base.Tarrow (load_type loader ty1, load_type loader ty2)
+  | Tarrow (ty1, ty2, phi) ->
+      Base.Tarrow (load_type loader ty1, load_type loader ty2, phi)
   | Ttuple tyl ->
       Base.Ttuple (List.map (load_type loader) tyl)
   | Tconstr (tcs, tyl) ->

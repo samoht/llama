@@ -158,6 +158,16 @@ let pr_present =
 let pr_vars =
   print_list (fun ppf s -> fprintf ppf "'%s" s) (fun ppf -> fprintf ppf "@ ")
 
+let rec print_out_effect ppf = function
+  | Oeff_var v     -> fprintf ppf "'%s" v
+  | Oeff_union [v] -> print_out_effect ppf v
+  | Oeff_union l   -> fprintf ppf "{%a}" print_out_effect_list l
+
+and print_out_effect_list ppf = function
+  | []        -> fprintf ppf ""
+  | [phi]     -> fprintf ppf "%a" print_out_effect phi
+  | phi::phis -> fprintf ppf "%a,%a" print_out_effect phi print_out_effect_list phis
+
 let rec print_out_type ppf =
   function
   | Otyp_alias (ty, s) ->
@@ -171,9 +181,9 @@ let rec print_out_type ppf =
 
 and print_out_type_1 ppf =
   function
-    Otyp_arrow (lab, ty1, ty2) ->
-      fprintf ppf "@[%s%a ->@ %a@]" (if lab <> "" then lab ^ ":" else "")
-        print_out_type_2 ty1 print_out_type_1 ty2
+    Otyp_arrow (lab, ty1, ty2, phi) ->
+      fprintf ppf "@[%s%a -%a>@ %a@]" (if lab <> "" then lab ^ ":" else "")
+        print_out_type_2 ty1 print_out_effect phi print_out_type_1 ty2
   | ty -> print_out_type_2 ppf ty
 and print_out_type_2 ppf =
   function

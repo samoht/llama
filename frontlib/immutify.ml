@@ -28,8 +28,8 @@ let new_env () =
 let rec mutable_type f = function
     Mvar v ->
       type_variable f v
-  | Marrow (ty1, ty2, _) ->
-      Tarrow (mutable_type f ty1, mutable_type f ty2)
+  | Marrow (ty1, ty2, phi) ->
+      Tarrow (mutable_type f ty1, mutable_type f ty2, phi)
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)
   | Mconstr (tcs, tyl) ->
@@ -166,7 +166,7 @@ and expression_option f = function
 let type_of_local_type subst local_args =
   let rec aux = function
       Lparam i -> Tparam i
-    | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2)
+    | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2, Effect.empty) (* XXX: ? *)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
     | Lconstr_local ltcs ->
