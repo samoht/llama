@@ -132,6 +132,8 @@ let rec unify phi1 phi2 =
       v1.link <- Some phi2
     | _, Evar v2 when not (occurs v2 phi1) ->
       v2.link <- Some phi1
+    | Eunion s1, Eunion s2 when
+        Set.is_empty s1 && Set.is_empty s2 -> ()
     | _ -> raise Unify
 
 let _ =
