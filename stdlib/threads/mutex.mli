@@ -32,7 +32,7 @@ type t
 val create : unit -> t
 (** Return a new mutex. *)
 
-val lock : t -> unit
+val do_lock : t -> unit
 (** Lock the given mutex. Only one thread can have the mutex locked
    at any time. A thread that attempts to lock a mutex already locked
    by another thread will suspend until the other thread unlocks

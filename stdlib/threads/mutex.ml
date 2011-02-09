@@ -17,12 +17,12 @@ type t = { mutable locked: bool; mutable waiting: Thread.t list }
 
 let create () = { locked = false; waiting = [] }
 
-let rec lock m =
+let rec do_lock m =
   if m.locked then begin                (* test and set atomic *)
     Thread.critical_section := true;
     m.waiting <- Thread.self() :: m.waiting;
     Thread.sleep();
-    lock m
+    do_lock m
   end else begin
     m.locked <- true                    (* test and set atomic *)
   end
