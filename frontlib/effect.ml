@@ -49,6 +49,13 @@ let new_variable =
     Evar { id = !x; link = None } in
   aux
 
+let _ =
+  let v1 = new_variable () in
+  let v2 = new_variable () in
+  assert (compare v1 v2 = -1);
+  assert (compare v1 v1 = 0);
+  assert (compare v2 v1 = 1)
+
 (* phi1 U phi2 *)
 let union phi1 phi2 =
   match phi1, phi2 with
@@ -63,12 +70,40 @@ let union phi1 phi2 =
     | Eunion e1, Evar _    -> Eunion (Set.add phi2 e1)
     | Evar _   , Eunion e2 -> Eunion (Set.add phi1 e2)
 
+let _ =
+  let v1 = new_variable () in
+  let v2 = new_variable () in
+  let v3 = new_variable () in
+  let s1 = union v1 v2 in
+  let s2 = union v2 v3 in
+  let s3 = union v2 v3 in
+  assert (compare s1 s2 = -1);
+  assert (compare s2 s1 = 1);
+  assert (compare v1 s1 = 1);
+  assert (compare s1 v1 = -1);
+  assert (compare s2 s3 = 0);
+  let s4 = union v1 s3 in
+  let s5 = union v3 s1 in
+  assert (compare s4 s5 = 0)
+
+
 (* phi1 U ... U phin *)
 let union_list l =
   let rec aux accu = function
     | []    -> accu
     | h::t  -> aux (union h accu) t in
   aux empty l
+
+let _ =
+  let v1 = new_variable () in
+  let v2 = new_variable () in
+  let v3 = new_variable () in
+  let s1 = union_list [v1; v2; v3] in
+  let s2 = union_list [v1; v3; v2] in
+  let s3 = union v2 (union v1 v3) in
+  assert (compare s1 s2 = 0);
+  assert (compare s2 s3 = 0);
+  assert (compare v1 s3 = 0)
 
     
 (* unification *)
@@ -101,3 +136,17 @@ let rec unify phi1 phi2 =
       Set.iter (unify (Set.choose e2)) e1
     (* XXX: what can we do for other enum cases ??? *)
     | _ -> raise Unify
+
+let _ =
+  let v1 = new_variable () in
+  let v2 = new_variable () in
+  let v3 = new_variable () in
+  unify v2 v1;
+  let s1 = union v1 v3 in
+  let s2 = union_list [v1; v2; v3] in
+  let s3 = union v2 v3 in
+  assert (compare s1 s2 = 0);
+  assert (compare s2 s3 = 0);
+  assert (compare v1 s3 = 0)
+
+
