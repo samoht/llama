@@ -434,9 +434,9 @@ and statement expr =
 
 let structure_item tstr =
   match tstr.mstr_desc with
-      Mstr_eval expr -> snd (expression expr)
-    | Mstr_let (rec_flag, pat_exp_list) -> bindings pat_exp_list
-    | _ -> Effect.empty
+      Mstr_eval expr -> ignore (expression expr)
+    | Mstr_let (rec_flag, pat_exp_list) -> ignore (bindings pat_exp_list)
+    | _ -> ()
 
 (* ---------------------------------------------------------------------- *)
 
