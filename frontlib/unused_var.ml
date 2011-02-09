@@ -110,6 +110,9 @@ and expression ppf tbl e =
   | Pexp_literal _ -> ()
   | Pexp_let (recflag, pel, e) ->
       let_pel ppf tbl recflag pel (Some (fun ppf tbl -> expression ppf tbl e));
+  | Pexp_lock (el, e) ->
+      List.iter (expression ppf tbl) el;
+      expression ppf tbl e;
   | Pexp_function pel ->
       match_pel ppf tbl pel;
   | Pexp_apply (e, el) ->
@@ -154,6 +157,7 @@ and expression ppf tbl e =
       expression ppf tbl e2;
   | Pexp_assert e -> expression ppf tbl e;
   | Pexp_assertfalse -> ()
+  | Pexp_thread e -> expression ppf tbl e;
 (*  | Pexp_lazy e -> expression ppf tbl e;*)
 
 and expression_option ppf tbl eo =

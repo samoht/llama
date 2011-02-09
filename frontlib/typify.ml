@@ -257,7 +257,7 @@ and expression_aux exp =
       Mexp_var var ->
         var.mvar_type, var.mvar_effect
     | Mexp_value v ->
-        instantiate_value v, Effect.empty (* XXX: read (optional) exported (effects from signatures *)
+        instantiate_value v, Effect.empty (* XXX: read (optional) exported effects from signatures *)
     | Mexp_literal c ->
         literal c, Effect.empty
     | Mexp_tuple args ->
@@ -295,6 +295,10 @@ and expression_aux exp =
         let phi1 = bindings pat_expr_list
         and ty, phi2 = expression body in
         ty, Effect.union phi1 phi2
+    | Mexp_lock (l, e) -> (* DUMMY *)
+        let _, phis = List.split (List.map expression l)
+        and ty, phi = expression e in
+        ty, Effect.union (Effect.union_list phis) phi
     | Mexp_match (item, pat_exp_list) ->
         let ty_arg, phi1 = expression item in
         let ty_res = new_type_variable () in
@@ -371,6 +375,9 @@ and expression_aux exp =
         mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
         new_type_variable (), Effect.empty
+    | Mexp_thread e ->
+        let _ = statement e in
+        mutable_type_unit, Effect.empty
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages.

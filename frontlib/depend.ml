@@ -79,6 +79,7 @@ let rec add_expr bv exp =
     Pexp_ident l -> add bv l
   | Pexp_literal _ -> ()
   | Pexp_let(_, pel, e) -> add_pat_expr_list bv pel; add_expr bv e
+  | Pexp_lock(el, e) -> List.iter (add_expr bv) el; add_expr bv e
   | Pexp_function pel ->
       add_pat_expr_list bv pel
   | Pexp_apply(e, el) ->
@@ -105,6 +106,7 @@ let rec add_expr bv exp =
   | Pexp_when(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexp_assert (e) -> add_expr bv e
   | Pexp_assertfalse -> ()
+  | Pexp_thread e -> add_expr bv e
 (*| Pexp_lazy (e) -> add_expr bv e *)
 
 and add_pat_expr_list bv pel =

@@ -55,6 +55,7 @@ let keyword_table =
     "include", INCLUDE;
     "lazy", LAZY;
     "let", LET;
+    "lock", LOCK;
     "match", MATCH;
     "mutable", MUTABLE;
     "of", OF;
@@ -63,6 +64,7 @@ let keyword_table =
 (*  "parser", PARSER; *)
     "rec", REC;
     "then", THEN;
+    "thread", THREAD;
     "to", TO;
     "true", TRUE;
     "try", TRY;
