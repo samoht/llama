@@ -60,8 +60,8 @@ let union phi1 phi2 =
         phi1
       else (* U is associative *)
         Eunion (Set.union e1 e2)
-    | Eunion e1, Evar _    -> Eunion (Set.add phi1 e1)
-    | Evar _   , Eunion e2 -> Eunion (Set.add phi2 e2)
+    | Eunion e1, Evar _    -> Eunion (Set.add phi2 e1)
+    | Evar _   , Eunion e2 -> Eunion (Set.add phi1 e2)
 
 (* phi1 U ... U phin *)
 let union_list l =
