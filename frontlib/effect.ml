@@ -103,7 +103,7 @@ let _ =
   let s3 = union v2 (union v1 v3) in
   assert (compare s1 s2 = 0);
   assert (compare s2 s3 = 0);
-  assert (compare v1 s3 = 0)
+  assert (compare s1 s3 = 0)
 
     
 (* unification *)
@@ -147,6 +147,6 @@ let _ =
   let s3 = union v2 v3 in
   assert (compare s1 s2 = 0);
   assert (compare s2 s3 = 0);
-  assert (compare v1 s3 = 0)
+  assert (compare s1 s3 = 0)
 
 
