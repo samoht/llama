@@ -91,7 +91,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty, ref None) in (* DUMMY *)
+  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty) in
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -245,63 +245,71 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty, phi = expression_aux exp in
-  (try unify exp.mexp_type ty with Unify -> Fatal.error "Typify.expression");
+  (try
+     unify exp.mexp_type ty;
+     Effect.unify exp.mexp_effect phi;
+   with Unify | Effect.Unify ->
+     Fatal.error "Typify.expression");
   ty, phi
 
 and expression_aux exp =
   match exp.mexp_desc with
       Mexp_var var ->
-        var.mvar_type, Effect.empty
+        var.mvar_type, var.mvar_effect
     | Mexp_value v ->
-        instantiate_value v, Effect.empty
+        instantiate_value v, Effect.empty (* XXX: read (optional) exported (effects from signatures *)
     | Mexp_literal c ->
         literal c, Effect.empty
     | Mexp_tuple args ->
         let tys, phis = List.split (List.map expression args) in
-        Mtuple tys, Effect.merge phis
+        Mtuple tys, Effect.union_list phis
     | Mexp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
-        ty_res, Effect.merge (List.map2 expression_expect args ty_args)
+        let phis = List.map2 expression_expect args ty_args in
+        ty_res, Effect.union_list phis
     | Mexp_apply (fct, args) ->
-        let ty_fct, phi = expression fct in
-        let rec type_args ty_res = function
-            [] -> ty_res, Effect.empty
+        let ty_fct, phi_fct = expression fct in
+        let rec type_args ty_res phi_res = function
+            [] -> ty_res, phi_res
           | arg1 :: argl ->
-              let ty1, ty2, phi1 =
+              let ty1, ty2, phi =
                 match expand_mutable_type ty_res with
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      v.link <- Some (Marrow (ty1, ty2, ref None));
-                      ty1, ty2, Effect.empty (* DUMMY *)
+                      let phi = Effect.new_variable () in
+                      v.link <- Some (Marrow (ty1, ty2, phi));
+                      ty1, ty2, phi
                   | Marrow (ty1, ty2, phi) ->
-                      ty1, ty2,
-            (* DUMMY *) (match !phi with Some x -> x | None -> Effect.empty)
+                      ty1, ty2, phi
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
               in
-              let phi2 = expression_expect arg1 ty1
-              and ty, phi3 = type_args ty2 argl in
-              ty, Effect.merge [phi1; phi2; phi3]
+              (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *) 
+              let phi1 = expression_expect arg1 ty1 in
+              (* add the constraint that phi = phi_res U phi1 *)
+              Effect.unify phi (Effect.union phi_res phi1);
+              type_args ty2 phi argl
         in
-        let ty, phi' = type_args ty_fct args in
-        ty, Effect.union phi phi'
+        type_args ty_fct phi_fct args
     | Mexp_let (_, pat_expr_list, body) ->
         let phi1 = bindings pat_expr_list
         and ty, phi2 = expression body in
         ty, Effect.union phi1 phi2
     | Mexp_match (item, pat_exp_list) ->
-        let ty_arg, phi = expression item in
+        let ty_arg, phi1 = expression item in
         let ty_res = new_type_variable () in
-        ty_res, Effect.union phi (caselist ty_arg ty_res pat_exp_list)
+        let phi2 = caselist ty_arg ty_res pat_exp_list in
+        ty_res, Effect.union phi1 phi2
     | Mexp_function pat_exp_list ->
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         let phi = caselist ty_arg ty_res pat_exp_list in
-        Marrow (ty_arg, ty_res, ref (Some phi)), Effect.empty
+        Marrow (ty_arg, ty_res, phi), Effect.empty
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn in
-        let ty_res, phi = expression body in
-        ty_res, Effect.union phi (caselist ty_arg ty_res pat_exp_list)
+        let ty_res, phi1 = expression body in
+        let phi2 = caselist ty_arg ty_res pat_exp_list in
+        ty_res, Effect.union phi1 phi2
     | Mexp_sequence (e1, e2) ->
         let phi1 = statement e1
         and ty, phi2 = expression e2 in
@@ -315,7 +323,7 @@ and expression_aux exp =
           | Some ifnot ->
               let ty, phi2 = expression ifso in
               let phi3 = expression_expect ifnot ty in
-              ty, Effect.merge [phi1; phi2; phi3]
+              ty, Effect.union_list [phi1; phi2; phi3]
         end
     | Mexp_when (cond, act) ->
         let phi1 = expression_expect cond mutable_type_bool
@@ -329,14 +337,15 @@ and expression_aux exp =
         let phi1 = expression_expect start mutable_type_int
         and phi2 = expression_expect stop mutable_type_int
         and phi3 = statement body in
-        mutable_type_unit, Effect.merge [phi1; phi2; phi3]
+        mutable_type_unit, Effect.union_list [phi1; phi2; phi3]
     | Mexp_constraint (e, ty') ->
         ty', expression_expect e ty'
     | Mexp_array elist ->
         let ty_arg = new_type_variable () in
         let phis = List.map (fun e -> expression_expect e ty_arg) elist in
-        mutable_type_array ty_arg, Effect.merge phis
+        mutable_type_array ty_arg, Effect.union_list phis
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
+        (* XXX: shouldn't the mutable fields introduce some new effect variable ? *)
         let inst, ty_res = instantiate_type_constructor tcs in
         let phis =
           List.map
@@ -344,12 +353,12 @@ and expression_aux exp =
                let ty_arg = instantiate_type inst lbl.lbl_arg in
                expression_expect exp ty_arg)
             lbl_exp_list
-        and phi' =
+        and phi1 =
           match opt_init with
               None -> Effect.empty
             | Some init -> expression_expect init ty_res
         in
-        ty_res, Effect.merge (phi' :: phis)
+        ty_res, Effect.union_list (phi1 :: phis)
     | Mexp_field (e, lbl) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
         ty_arg, expression_expect e ty_res
@@ -364,16 +373,20 @@ and expression_aux exp =
         new_type_variable (), Effect.empty
 
 (* Typing of an expression with an expected type.
-   Some constructs are treated specially to provide better error messages. *)
+   Some constructs are treated specially to provide better error messages.
+
+   The return value is the computed effect of 'exp' *)
 
 and expression_expect exp expected_ty =
   match exp.mexp_desc with
     | Mexp_let (_, pat_expr_list, body) ->
-        Effect.union
-          (bindings pat_expr_list)
-          (expression_expect body expected_ty)
+        let phi1 = bindings pat_expr_list in
+        let phi2 = expression_expect body expected_ty in
+        Effect.union phi1 phi2
     | Mexp_sequence (e1, e2) ->
-        Effect.union (statement e1) (expression_expect e2 expected_ty)
+        let phi1 = statement e1 in
+        let phi2 = expression_expect e2 expected_ty in
+        Effect.union phi1 phi2
     | _ ->
         let ty, phi =
           (* Terrible hack for format strings *)
@@ -401,18 +414,18 @@ and expression_expect exp expected_ty =
 
 and bindings pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
-  Effect.merge
-    (List.map (fun (pat, expr) -> expression_expect expr pat.mpat_type)
-       pat_expr_list)
+  let phis = List.map (fun (pat, expr) -> expression_expect expr pat.mpat_type) pat_expr_list in
+  Effect.union_list phis
 
 (* Typing of match cases *)
 
 and caselist ty_arg ty_res pat_expr_list =
-  Effect.merge
-    (List.map
-       (fun (pat, expr) ->
-          pattern_expect pat ty_arg; expression_expect expr ty_res)
-       pat_expr_list)
+  let phis = List.map
+    (fun (pat, expr) ->
+      pattern_expect pat ty_arg;
+      expression_expect expr ty_res)
+    pat_expr_list in
+  Effect.union_list phis
 
 (* Typing of statements (expressions whose values are ignored) *)
 

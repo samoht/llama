@@ -2,13 +2,10 @@
 
 open Asttypes
 open Base
-open Effect
-
-type mutable_effect = effect option ref
 
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type * mutable_effect
+  | Marrow of mutable_type * mutable_type * Effect.t
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list
 
@@ -21,7 +18,8 @@ and mutable_type_variable =
 
 type mutable_variable =
   { mvar_name : string;
-    mvar_type : mutable_type }
+    mvar_type : mutable_type;
+    mvar_effect : Effect.t; }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -65,7 +63,7 @@ type mutable_expression =
   { mexp_desc : mutable_expression_desc;
     mexp_loc : Location.t;
     mexp_type : mutable_type;
-    mexp_effect : mutable_effect }
+    mexp_effect : Effect.t }
 
 and mutable_expression_desc =
     Mexp_var of mutable_variable
@@ -177,7 +175,7 @@ let rec instantiate_type inst = function
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2) ->
-      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, ref None) (* DUMMY *)
+      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, Effect.new_variable ())
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
@@ -249,15 +247,7 @@ let rec unify ty1 ty2 =
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
-        (match !phi1, !phi2 with
-             None, None -> ()
-           | None, Some x -> phi1 := Some x
-           | Some x, None -> phi2 := Some x
-           | Some x, Some y ->
-               let u = Effect.union x y in
-               phi1 := Some u;
-               phi2 := Some u
-        );
+        Effect.unify phi1 phi2;
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
