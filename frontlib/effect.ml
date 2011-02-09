@@ -12,6 +12,8 @@ and t =
 let rec repr phi =
   match phi with
     | Evar { link = Some phi2 } -> repr phi2
+    | Eunion s
+        when Set.cardinal s = 1 -> repr (Set.choose s)
     | phi                       -> phi
 
 (* Comparing effects is a bit tricky;
@@ -147,6 +149,8 @@ let _ =
   let s3 = union v2 v3 in
   assert (compare s1 s2 = 0);
   assert (compare s2 s3 = 0);
-  assert (compare s1 s3 = 0)
+  assert (compare s1 s3 = 0);
+  let s4 = union v1 v2 in
+  assert (compare v1 s4 = 0)
 
 
