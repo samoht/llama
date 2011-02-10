@@ -31,7 +31,7 @@ let rec repr phi =
     | Eunion s                  -> 
       let l = Set.elements s in
       let l = List.map repr l in
-      union_list l
+      repr (union_list l)
 
 (* phi1 U phi2 *)
 and union phi1 phi2 =
@@ -129,12 +129,24 @@ let rec unify phi1 phi2 =
   let phi1 = repr phi1 in
   let phi2 = repr phi2 in
   match phi1, phi2 with
+    (* reflexivity *)
     | Evar v1, Evar v2 when v1 == v2 -> ()
-    | Evar v1, _ when not (occurs v1 phi2) ->
-      v1.link <- Some phi2
-    | _, Evar v2 when not (occurs v2 phi1) ->
-      v2.link <- Some phi1
     | Eunion s1, Eunion s2 when Set.compare s1 s2 = 0 -> ()
+
+    (* v = phi *)
+    | Evar v1, _ when not (occurs v1 phi2) -> v1.link <- Some phi2
+    | _, Evar v2 when not (occurs v2 phi1) -> v2.link <- Some phi1
+
+    (* {} = phi U {} => phi = {} *)
+    | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify phi1) s2
+    | Eunion s1, Eunion s2 when Set.is_empty s2 -> Set.iter (unify phi2) s1
+
+    (* phi1 = phi1 U phi2 => ({} <= phi2 <= phi1 *)
+    (* XXX: does 'phi2 = {}' ensure minimality ? *)
+    | Evar _   , Eunion s2 -> Set.iter (unify empty) (Set.remove phi1 s2)
+    | Eunion s1, Evar _    -> Set.iter (unify empty) (Set.remove phi2 s1)
+    | Eunion s1, Eunion s2 -> Set.iter (unify empty) (Set.diff s2 s1)
+
     | _ ->
       Printf.eprintf "ERROR: cannot unify %s and %s\n%!" (to_string phi1) (to_string phi2);
       raise Unify
