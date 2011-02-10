@@ -69,7 +69,7 @@ let update_value_parameters_text v =
 let parameter_list_from_arrows typ =
   let rec iter t =
     match t with
-      Base.Tarrow (t1, t2) ->
+      Base.Tarrow (t1, t2, _) -> (* XXX: we may want to display effects in doc *)
         ("", t1) :: (iter t2)
     | _ ->
         []

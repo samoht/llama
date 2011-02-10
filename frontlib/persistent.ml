@@ -78,7 +78,7 @@ type saver =
 let rec save_type saver = function
     Base.Tparam tv ->
       Tparam tv
-  | Base.Tarrow (ty1, ty2) ->
+  | Base.Tarrow (ty1, ty2, _) ->
       Tarrow (save_type saver ty1, save_type saver ty2)
   | Base.Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
@@ -179,7 +179,7 @@ let rec load_type loader = function
     Tparam tvar ->
       Base.Tparam tvar
   | Tarrow (ty1, ty2) ->
-      Base.Tarrow (load_type loader ty1, load_type loader ty2)
+      Base.Tarrow (load_type loader ty1, load_type loader ty2, Effect.empty)
   | Ttuple tyl ->
       Base.Ttuple (List.map (load_type loader) tyl)
   | Tconstr (tcs, tyl) ->

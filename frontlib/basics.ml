@@ -3,15 +3,16 @@ open Base
 let parameters =
   let rec aux accu = function
       Tparam tv -> if List.memq tv accu then accu else tv :: accu
-    | Tarrow (ty1, ty2) -> aux (aux accu ty1) ty2
+    | Tarrow (ty1, ty2, _) -> aux (aux accu ty1) ty2
     | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl in
   fun ty -> List.rev (aux [] ty)
 
 let type_closed ty = (parameters ty = [])
 
+(* XXX: should we substitute effects as well ? *)
 let rec subst_type s = function
     Tparam tv -> List.assq tv s
-  | Tarrow (ty1, ty2) -> Tarrow (subst_type s ty1, subst_type s ty2)
+  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type s ty1, subst_type s ty2, phi)
   | Ttuple tyl -> Ttuple (List.map (subst_type s) tyl)
   | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst_type s) tyl)
 
@@ -42,7 +43,8 @@ let types_equal, types_equiv =
     match ty1, ty2 with
         Tparam tv1, Tparam tv2 ->
           corresp tv1 == tv2
-      | Tarrow(t1arg, t1res), Tarrow(t2arg, t2res) ->
+      | Tarrow(t1arg, t1res, _), Tarrow(t2arg, t2res, _) ->
+          (* XXX: should we test equility on effects as well ? *)
           equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
       | Ttuple(t1args), Ttuple(t2args) ->
           List.for_all2 (equiv_gen corresp) t1args t2args
@@ -71,7 +73,8 @@ let find_instantiation =
               None -> (tv, ty2) :: inst
             | Some ty2' -> if types_equal ty2 ty2' then inst else raise Not_found
           end
-      | Tarrow (dom1, cod1), Tarrow (dom2, cod2) ->
+      | Tarrow (dom1, cod1, _), Tarrow (dom2, cod2, _) ->
+          (* XXX: I believe we should do something on effects as well ... *)
           aux (aux inst dom1 dom2) cod1 cod2
       | Ttuple tyl1, Ttuple tyl2 ->
           List.fold_left2 aux inst tyl1 tyl2

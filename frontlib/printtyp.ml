@@ -40,11 +40,20 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
+let rec tree_of_effect phi =
+  let phi = Effect.repr phi in
+  match phi with
+    | Effect.Evar v   -> Oeff_var (Effect.parameter_name v.Effect.id)
+    | Effect.Eunion s ->
+      let l = Set.elements s in
+      let l = List.map tree_of_effect l in
+      Oeff_union l
+
 let rec tree_of_type = function
     Tparam i ->
       Otyp_var (false, parameter_name i)
-  | Tarrow (ty1, ty2) ->
-      Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2)
+  | Tarrow (ty1, ty2, phi) ->
+      Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
   | Ttuple tyl ->
       Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, tyl) ->
@@ -166,8 +175,26 @@ let signature ppf sg =
 
 open Mutable_base
 
+let effect_name effect_names v =
+  try List.assq v !effect_names with Not_found ->
+    let name = Effect.parameter_name (List.length !effect_names) in
+    effect_names := (v, name) :: !effect_names;
+    name
+
+(* normalize effect variable *)
+let rec tree_of_mutable_effect effect_names phi =
+  let phi = Effect.repr phi in
+  match phi with
+    | Effect.Evar v   -> Oeff_var (effect_name effect_names v)
+    | Effect.Eunion s ->
+      let l = Set.elements s in
+      let l = List.map (tree_of_mutable_effect effect_names) l in
+      Oeff_union l
+
+(* normalize type variables *)
 let tree_of_mutable_type =
   let var_names = ref ([] : (mutable_type_variable * string) list) in
+  let effect_names = ref ([] : (Effect.variable * string) list) in
   let var_name v =
     try List.assq v !var_names with Not_found ->
       let name = parameter_name (List.length !var_names) in
@@ -181,8 +208,8 @@ let tree_of_mutable_type =
           | Some ty ->
               tree_of_mutable_type ty
         end
-    | Marrow (ty1, ty2, _) -> (* DUMMY *)
-        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2)
+    | Marrow (ty1, ty2, phi) ->
+        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect effect_names phi)
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Mconstr (tcs, tyl) ->

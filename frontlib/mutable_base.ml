@@ -176,8 +176,8 @@ let mutable_type_int64 = Mconstr (Predef.tcs_int64, [])
 let rec instantiate_type inst = function
     Tparam param ->
       List.assq param inst
-  | Tarrow (ty1, ty2) ->
-      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, Effect.new_variable ())
+  | Tarrow (ty1, ty2, phi) ->
+      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, phi)
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->

@@ -44,10 +44,14 @@ type out_value =
   | Oval_tuple of out_value list
   | Oval_variant of string * out_value option
 
+type out_effect =
+  | Oeff_var of string
+  | Oeff_union of out_effect list
+  
 type out_type =
   | Otyp_abstract
   | Otyp_alias of out_type * string
-  | Otyp_arrow of string * out_type * out_type
+  | Otyp_arrow of string * out_type * out_type * out_effect
   | Otyp_class of bool * out_ident * out_type list
   | Otyp_constr of out_ident * out_type list
   | Otyp_manifest of out_type * out_type

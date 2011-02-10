@@ -44,8 +44,8 @@ let subst_type_constructor subst tcs =
 let rec subst_type subst = function
     Tparam _ as ty ->
       ty
-  | Tarrow (ty1, ty2) ->
-      Tarrow (subst_type subst ty1, subst_type subst ty2)
+  | Tarrow (ty1, ty2, phi) ->
+      Tarrow (subst_type subst ty1, subst_type subst ty2, phi) (* XXX: should we substitute effects as well ? *)
   | Ttuple tyl ->
       Ttuple (List.map (subst_type subst) tyl)
   | Tconstr (tcs, tyl) ->

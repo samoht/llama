@@ -138,7 +138,7 @@ open Outcometree
           match ty with
           | Tparam _ ->
               Oval_stuff "<poly>"
-          | Tarrow(ty1, ty2) ->
+          | Tarrow(ty1, ty2, phi) ->
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)

@@ -30,7 +30,7 @@ type parameter = int
 
 type llama_type =
     Tparam of parameter
-  | Tarrow of llama_type * llama_type
+  | Tarrow of llama_type * llama_type * Effect.t
   | Ttuple of llama_type list
   | Tconstr of type_constructor * llama_type list
 
