@@ -70,6 +70,7 @@ and mutable_expression_desc =
   | Mexp_value of value
   | Mexp_literal of literal
   | Mexp_let of rec_flag * (mutable_pattern * mutable_expression) list * mutable_expression
+  | Mexp_lock of mutable_expression list * mutable_expression
   | Mexp_function of (mutable_pattern * mutable_expression) list
   | Mexp_apply of mutable_expression * mutable_expression list
   | Mexp_match of mutable_expression * (mutable_pattern * mutable_expression) list
@@ -88,6 +89,7 @@ and mutable_expression_desc =
   | Mexp_assert of mutable_expression
   | Mexp_assertfalse
   | Mexp_constraint of mutable_expression * mutable_type
+  | Mexp_thread of mutable_expression
 
 (* ---------------------------------------------------------------------- *)
 (* Local type constructors.                                               *)

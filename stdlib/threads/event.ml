@@ -81,7 +81,7 @@ let basic_sync abort_env genev =
     if i >= Array.length bev
     then false
     else bev.(i).poll() || poll_events (i+1) in
-  Mutex.lock masterlock;
+  Mutex.do_lock masterlock;
   if not (poll_events 0) then begin
     (* Suspend on all events *)
     for i = 0 to Array.length bev - 1 do bev.(i).suspend() done;
@@ -155,7 +155,7 @@ let basic_poll abort_env genev =
     if i >= Array.length bev
     then false
     else bev.(i).poll() || poll_events (i+1) in
-  Mutex.lock masterlock;
+  Mutex.do_lock masterlock;
   let ready = poll_events 0 in
   if ready then begin
     (* Extract the result *)

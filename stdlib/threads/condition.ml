@@ -22,7 +22,7 @@ let wait cond mut =
   Mutex.unlock mut;
   cond.waiting <- Thread.self() :: cond.waiting;
   Thread.sleep();
-  Mutex.lock mut
+  Mutex.do_lock mut
 
 let signal cond =
   match cond.waiting with               (* atomic *)

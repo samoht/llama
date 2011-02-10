@@ -110,6 +110,7 @@ open Odoc_types
       match tk with
         Parsetree.Ptype_abbrev _ ->
           (0, [])
+
       | Parsetree.Ptype_variant cons_core_type_list_list ->
           let rec f acc cons_core_type_list_list =
             match cons_core_type_list_list with
@@ -150,6 +151,9 @@ open Odoc_types
                 (name, comment_opt) :: (f (ele2 :: q))
           in
           (0, f name_mutable_type_list)
+
+      | Parsetree.Ptype_abstract _ ->
+          assert false
 
     let get_type_kind env name_comment_list type_kind =
       match type_kind with

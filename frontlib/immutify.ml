@@ -110,6 +110,8 @@ and expression_desc f = function
                 List.map (fun (pat, expr) ->
                             (pattern f pat, expression f expr)) pat_expr_list,
                 expression f body)
+  | Mexp_lock (l, e) ->
+      Exp_lock (List.map (expression f) l, expression f e)
   | Mexp_function pat_expr_list ->
       Exp_function (pattern_expression_list f pat_expr_list)
   | Mexp_apply (funct, args) ->
@@ -149,6 +151,8 @@ and expression_desc f = function
       Exp_assertfalse
   | Mexp_constraint (expr', ty) ->
       Exp_constraint (expression f expr', mutable_type f ty)
+  | Mexp_thread e ->
+      Exp_thread (expression f e)
 
 and pattern_expression_list f =
   List.map (fun (pat, expr) -> (pattern f pat, expression f expr))

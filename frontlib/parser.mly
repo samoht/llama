@@ -204,6 +204,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LESSMINUS
 %token LET
 %token <string> LIDENT
+%token LOCK
 %token LPAREN
 %token MATCH
 %token MINUS
@@ -229,6 +230,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token STAR
 %token <string> STRING
 %token THEN
+%token THREAD
 %token TO
 %token TRUE
 %token TRY
@@ -266,7 +268,7 @@ The precedences must be listed from low to high.
 %nonassoc IN
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
-%nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
+%nonassoc LET LOCK                      /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
 %nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
@@ -402,10 +404,14 @@ expr:
       { mkexp(Pexp_apply($1, List.rev $2)) }
   | LET rec_flag let_bindings IN seq_expr
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
+  | LOCK lock_bindings IN seq_expr
+      { mkexp(Pexp_lock(List.rev $2, $4)) }
   | FUNCTION opt_bar match_cases
       { mkexp(Pexp_function(List.rev $3)) }
   | FUN simple_pattern fun_def
       { mkexp(Pexp_function([$2, $3])) }
+  | THREAD seq_expr
+      { mkexp(Pexp_thread $2) }
   | MATCH seq_expr WITH opt_bar match_cases
       { mkexp(Pexp_match($2, List.rev $5)) }
   | TRY seq_expr WITH opt_bar match_cases
@@ -548,6 +554,10 @@ let_binding:
       { ({ppat_desc = Ppat_var $1; ppat_loc = rhs_loc 1}, $2) }
   | pattern EQUAL seq_expr
       { ($1, $3) }
+;
+lock_bindings:
+    seq_expr                                    { [$1] }
+  | lock_bindings AND seq_expr                  { $3 :: $1 }
 ;
 fun_binding:
     strict_binding

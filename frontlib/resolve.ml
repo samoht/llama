@@ -385,6 +385,8 @@ and expression_aux ctxt exp =
         let cond_ctxt = if b = Recursive then big_ctxt else ctxt in
         let exp_list = List.map (expression cond_ctxt) (List.map snd lpe) in
         Mexp_let (b, List.combine pat_list exp_list, expression big_ctxt e)
+    | Pexp_lock (l, e) ->
+        Mexp_lock (List.map (expression ctxt) l, expression ctxt e)
     | Pexp_function l ->
         Mexp_function
           (List.map
@@ -444,6 +446,8 @@ and expression_aux ctxt exp =
         Mexp_assertfalse
     | Pexp_when(e1,e2) ->
         Mexp_when(expression ctxt e1,expression ctxt e2)
+    | Pexp_thread e ->
+        Mexp_thread(expression ctxt e)
 
 (* ---------------------------------------------------------------------- *)
 (* Type declarations.                                                     *)

@@ -38,6 +38,7 @@ and expression_desc =
     Pexp_ident of Longident.t
   | Pexp_literal of literal
   | Pexp_let of rec_flag * (pattern * expression) list * expression
+  | Pexp_lock of expression list * expression
   | Pexp_function of (pattern * expression) list
   | Pexp_apply of expression * expression list
   | Pexp_match of expression * (pattern * expression) list
@@ -56,6 +57,7 @@ and expression_desc =
   | Pexp_when of expression * expression
   | Pexp_assert of expression
   | Pexp_assertfalse
+  | Pexp_thread of expression
 
 type type_declaration =
   { ptype_name : string;
