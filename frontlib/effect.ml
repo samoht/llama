@@ -1,15 +1,29 @@
 (***************)
+(*     Base    *)
+(***************)
+
+(* Parameters are de brujin indices *)
+(* Structures are immutable *)
+
+type region = int
+
+type t = region list
+
+
+(***************)
 (*   Regions   *)
 (***************)
 
+(* Below, all the mutable links are used during the unification phase *)
+
 (* Regions are unified with other regions *)
 (* Links are useful for unification       *)
-type region = {
+type mutable_region = {
   rid           : int;
-  mutable rlink : region option;
+  mutable rlink : mutable_region option;
 }
 
-let string_of_region r =
+let string_of_mutable_region r =
   "r" ^ string_of_int r.rid
 
 let rec repr_of_region r =
@@ -17,13 +31,13 @@ let rec repr_of_region r =
     | None   -> r
     | Some v -> repr_of_region v
 
-let string_of_opt fn = function
+let string_of_mutable_region_opt = function
   | None   -> "<none>"
-  | Some x -> fn x
+  | Some x -> string_of_mutable_region x
 
 exception Unify
 
-let unify_region_opt r1 r2 =
+let unify_region r1 r2 =
   match r1, r2 with
     | Some v1, Some v2 ->
       let v1 = repr_of_region v1 in
@@ -31,24 +45,26 @@ let unify_region_opt r1 r2 =
       v1.rlink <- Some v2
     | _ ->
       Printf.eprintf "ERROR: cannot unify %s and %s"
-        (string_of_opt string_of_region r1)
-        (string_of_opt string_of_region r2);
+        (string_of_mutable_region_opt r1)
+        (string_of_mutable_region_opt r2);
       raise Unify
+
 
 (***************)
 (*   Effects   *)
 (***************)
 
+
 (* The type of effects *)
-type t =
-  | Evar of variable  (* An effect variable *)
-  | Eregion of region (* A region *)
-  | Eunion of t Set.t (* A union of effects *)
+type mutable_t =
+  | Evar of variable          (* An effect variable *)
+  | Eregion of mutable_region (* A region *)
+  | Eunion of mutable_t Set.t (* A union of effects *)
 
 (* Effect variables can be unified with any effect *)
 and variable = {
   id           : int;
-  mutable link : t option;
+  mutable link : mutable_t option;
 }
 
 let string_of_variable v =
@@ -56,7 +72,7 @@ let string_of_variable v =
 
 let rec to_string = function
   | Evar v    -> string_of_variable v
-  | Eregion r -> string_of_region r
+  | Eregion r -> string_of_mutable_region r
   | Eunion s  -> Printf.sprintf "{%s}" (String.concat "," (List.map to_string (Set.elements s)))
 
 (* check if a set if composed of representants only *)
@@ -116,7 +132,7 @@ and compare phi1 phi2 =
     | Eunion s1, Eunion s2 -> Set.compare s1 s2
 
 (* The empty effect is defined using the compare function above *)
-let empty_set : t Set.t = Set.empty_custom compare
+let empty_set : mutable_t Set.t = Set.empty_custom compare
 
 let empty = Eunion empty_set
 
@@ -127,7 +143,7 @@ let new_variable =
     { id = !x; link = None } in
   aux
 
-let new_region =
+let new_region_variable =
   let x = ref 0 in
   let aux () =
     incr x;
@@ -232,8 +248,3 @@ let _ =
   assert (compare s1 s3 = 0);
   let s4 = union v1 v2 in
   assert (compare v1 s4 = 0)
-
-
-(* effect variables are represented using integers to make them distinct from type variables *)
-let parameter_name id =
-  string_of_int id
