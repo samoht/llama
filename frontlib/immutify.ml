@@ -32,7 +32,8 @@ let rec mutable_type f = function
       Tarrow (mutable_type f ty1, mutable_type f ty2, phi)
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)
-  | Mconstr (tcs, tyl) ->
+  | Mconstr (tcs, tyl, r) ->
+      (* XXX: need to export the region to display it *)
       Tconstr (tcs, List.map (mutable_type f) tyl)
 
 and type_variable f tvar =

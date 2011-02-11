@@ -271,8 +271,9 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        Mconstr (lookup_type_constructor env lid ty.ptyp_loc,
-                 List.map (mutable_type env) tyl)
+        let cts = lookup_type_constructor env lid ty.ptyp_loc in 
+        let r = instantiate_region cts in
+        Mconstr (tcs, List.map (mutable_type env) tyl, r)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -479,6 +480,11 @@ let is_recursive_abbrev =
     match ltcs.ltcs_kind with
         Ltcs_abbrev ty -> occ [ltcs] ty
       | _ -> false
+
+(* Check it the top-level fields are mutable *)
+let is_mutable = function
+  | Ptype_record lbl_list -> List.exist (fun (_,mut,_,_) -> mut = Mutable) lbl_list
+  | _ -> false
 
 let type_declarations env pdecls =
   let pdecl1 = List.hd pdecls in

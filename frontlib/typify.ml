@@ -235,7 +235,8 @@ let formatstring loc fmt =
     let ty_ureader, ty_args = scan_format 0 in
     Mconstr
       (Predef.tcs_format6,
-       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
+       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result],
+      None)
   in
   type_in_format fmt
 
@@ -368,9 +369,10 @@ and expression_aux exp =
         ty_arg, expression_expect e ty_res
     | Mexp_setfield (e1, lbl, e2) ->
         let (ty_res, ty_arg) = instantiate_label lbl in
+        let r = region_of_mutable_type ty_res in
         let phi1 = expression_expect e1 ty_res
         and phi2 = expression_expect e2 ty_arg in
-        mutable_type_unit, Effect.union phi1 phi2
+        mutable_type_unit, Effect.union_list [Effect.of_region_opt r; phi1; phi2]
     | Mexp_assert e ->
         mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
@@ -401,7 +403,7 @@ and expression_expect exp expected_ty =
               Mexp_literal (Literal_string s) ->
                 let ty =
                   match expand_mutable_type expected_ty with
-                      Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
+                      Mconstr (tcs, _, None) when tcs == Predef.tcs_format6 ->
                         formatstring exp.mexp_loc s
                     | _ ->
                         mutable_type_string in
@@ -442,7 +444,7 @@ and statement expr =
   | Marrow(_,_,_) ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Partial_application
   | Mvar _ -> ()
-  | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
+  | Mconstr (tcs, _, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Statement_type
   end;

@@ -7,7 +7,7 @@ type mutable_type =
     Mvar of mutable_type_variable
   | Marrow of mutable_type * mutable_type * Effect.t
   | Mtuple of mutable_type list
-  | Mconstr of type_constructor * mutable_type list
+  | Mconstr of type_constructor * mutable_type list * Effect.region option
 
 and mutable_type_variable =
   { mutable link : mutable_type option }
@@ -155,23 +155,28 @@ type mutable_structure = mutable_structure_item list
 
 let new_type_variable () = Mvar { link = None }
 
-let mutable_type_int = Mconstr (Predef.tcs_int, [])
-let mutable_type_char = Mconstr (Predef.tcs_char, [])
-let mutable_type_string = Mconstr (Predef.tcs_string, [])
-let mutable_type_float = Mconstr (Predef.tcs_float, [])
-let mutable_type_bool = Mconstr (Predef.tcs_bool, [])
-let mutable_type_unit = Mconstr (Predef.tcs_unit, [])
-let mutable_type_exn = Mconstr (Predef.tcs_exn, [])
-let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty])
-let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty])
-let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty])
-let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [])
-let mutable_type_int32 = Mconstr (Predef.tcs_int32, [])
-let mutable_type_int64 = Mconstr (Predef.tcs_int64, [])
+let mutable_type_int = Mconstr (Predef.tcs_int, [], None)
+let mutable_type_char = Mconstr (Predef.tcs_char, [], None)
+let mutable_type_string = Mconstr (Predef.tcs_string, [], None)
+let mutable_type_float = Mconstr (Predef.tcs_float, [], None)
+let mutable_type_bool = Mconstr (Predef.tcs_bool, [], None)
+let mutable_type_unit = Mconstr (Predef.tcs_unit, [], None)
+let mutable_type_exn = Mconstr (Predef.tcs_exn, [], None)
+let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty], None)
+let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], None)
+let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], None)
+let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [], None)
+let mutable_type_int32 = Mconstr (Predef.tcs_int32, [], None)
+let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], None)
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
+
+let instantiate_region tcs =
+  match tcs.tcs_kind with
+    | Tcs_record _ -> Some (Effect.new_region ())
+    | _            -> None
 
 let rec instantiate_type inst = function
     Tparam param ->
@@ -181,11 +186,11 @@ let rec instantiate_type inst = function
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst) tyl)
   | Tconstr (tcs, tyl) ->
-      Mconstr (tcs, List.map (instantiate_type inst) tyl)
+      Mconstr (tcs, List.map (instantiate_type inst) tyl, instantiate_region tcs)
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
-  inst, Mconstr (tcs, List.map snd inst)
+  inst, Mconstr (tcs, List.map snd inst, instantiate_region tcs)
 
 let instantiate_constructor cs =
   let inst, ty_res = instantiate_type_constructor cs.cs_tcs in
@@ -202,6 +207,10 @@ let instantiate_value v =
   let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.parameters ty) in
   instantiate_type inst ty
 
+let region_of_mutable_type = function
+  | Mconstr (_, _, r) -> r
+  | _                 -> None
+
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
 (* ---------------------------------------------------------------------- *)
@@ -215,7 +224,7 @@ let mutable_apply_type params body args =
 
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
-  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, None) ->
       expand_mutable_type (mutable_apply_type (tcs_params tcs) body args)
   | ty -> ty
 
@@ -233,7 +242,7 @@ let rec occurs v = function
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
       List.exist (occurs v) tyl
-  | Mconstr (tcs, tyl) ->
+  | Mconstr (tcs, tyl, _) ->
       List.exist (occurs v) tyl
 
 exception Unify
@@ -254,11 +263,12 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1), _ ->
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, None), _ ->
         unify (mutable_apply_type (tcs_params tcs1) body1 tyl1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2) ->
+    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, None) ->
         unify ty1 (mutable_apply_type (tcs_params tcs2) body2 tyl2)
-    | Mconstr (tcs1, tyl1), Mconstr (tcs2, tyl2) when tcs1 == tcs2 ->
+    | Mconstr (tcs1, tyl1, r1), Mconstr (tcs2, tyl2, r2) when tcs1 == tcs2 ->
+        Effect.unify_region_opt r1 r2;
         unify_list tyl1 tyl2
     | _ ->
         raise Unify

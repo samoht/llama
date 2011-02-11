@@ -212,7 +212,8 @@ let tree_of_mutable_type =
         Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect effect_names phi)
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
-    | Mconstr (tcs, tyl) ->
+    | Mconstr (tcs, tyl, r) ->
+        (* XXX: propagate the region through the outcome tree *)
         Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in

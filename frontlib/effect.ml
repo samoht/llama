@@ -137,8 +137,9 @@ let new_region =
 let new_t () =
   Evar (new_variable ())
 
-let singleton region =
-  Eregion region
+let of_region_opt = function
+  | Some r -> Eregion r
+  | None   -> empty
 
 let _ =
   let v1 = new_t () in
