@@ -1,6 +1,9 @@
-(* Links are useful for unification *)
+(***************)
+(*   Regions   *)
+(***************)
 
 (* Regions are unified with other regions *)
+(* Links are useful for unification       *)
 type region = {
   rid           : int;
   mutable rlink : region option;
@@ -8,6 +11,33 @@ type region = {
 
 let string_of_region r =
   "r" ^ string_of_int r.rid
+
+let rec repr_of_region r =
+  match r.rlink with
+    | None   -> r
+    | Some v -> repr_of_region v
+
+let string_of_opt fn = function
+  | None   -> "<none>"
+  | Some x -> fn x
+
+exception Unify
+
+let unify_region_opt r1 r2 =
+  match r1, r2 with
+    | Some v1, Some v2 ->
+      let v1 = repr_of_region v1 in
+      let v2 = repr_of_region v2 in
+      v1.rlink <- Some v2
+    | _ ->
+      Printf.eprintf "ERROR: cannot unify %s and %s"
+        (string_of_opt string_of_region r1)
+        (string_of_opt string_of_region r2);
+      raise Unify
+
+(***************)
+(*   Effects   *)
+(***************)
 
 (* The type of effects *)
 type t =
@@ -42,8 +72,8 @@ let is_repr_set s =
 let rec repr phi =
   match phi with
     | Evar { link = Some phi }  -> repr phi
-    | Eregion{ rlink = Some r } -> repr (Eregion r)
-    | Evar _ | Eregion _        -> phi
+    | Evar _                    -> phi
+    | Eregion r                 -> Eregion (repr_of_region r)
     | Eunion s
         when Set.cardinal s = 1 -> repr (Set.choose s)
     | Eunion s
@@ -150,10 +180,9 @@ let _ =
 (* v and phi are representant *)
 let rec occurs v phi =
   match phi with
-  | Evar tv -> v.id = tv.id (* XXX: is that correct ? was v == tv *)
+  | Evar tv  -> v.id = tv.id (* XXX: is that correct ? was v == tv *)
+  | Eregion _-> false 
   | Eunion s -> Set.exist (occurs v) s
-
-exception Unify
 
 (* variables / * are unified;
    singleton set / sets are unified;
@@ -169,6 +198,11 @@ let rec unify phi1 phi2 =
     (* v = phi *)
     | Evar v1, _ when not (occurs v1 phi2) -> v1.link <- Some phi2
     | _, Evar v2 when not (occurs v2 phi1) -> v2.link <- Some phi1
+
+    (* regions *)
+    | Eregion r1, Eregion r2 -> r1.rlink <- Some r2
+    | Eregion r1, Eunion s2  -> Set.iter (unify phi1) s2
+    | Eunion s1 , Eregion r2 -> Set.iter (unify phi2) s1
 
     (* {} = phi U {} => phi = {} *)
     | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify phi1) s2
