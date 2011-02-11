@@ -277,7 +277,7 @@ and expression_aux exp =
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      let phi = Effect.new_variable () in
+                      let phi = Effect.new_t () in
                       v.link <- Some (Marrow (ty1, ty2, phi));
                       ty1, ty2, phi
                   | Marrow (ty1, ty2, phi) ->

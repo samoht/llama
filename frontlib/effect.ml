@@ -1,29 +1,49 @@
-type variable = {
-  id : int;
+(* Links are useful for unification *)
+
+(* Regions are unified with other regions *)
+type region = {
+  rid           : int;
+  mutable rlink : region option;
+}
+
+let string_of_region r =
+  "r" ^ string_of_int r.rid
+
+(* The type of effects *)
+type t =
+  | Evar of variable  (* An effect variable *)
+  | Eregion of region (* A region *)
+  | Eunion of t Set.t (* A union of effects *)
+
+(* Effect variables can be unified with any effect *)
+and variable = {
+  id           : int;
   mutable link : t option;
 }
 
-and t =
-  | Evar of variable
-  | Eunion of t Set.t
+let string_of_variable v =
+  "v" ^ string_of_int v.id
 
 let rec to_string = function
-  | Evar v   -> string_of_int v.id
-  | Eunion s -> Printf.sprintf "{%s}" (String.concat "," (List.map to_string (Set.elements s)))
+  | Evar v    -> string_of_variable v
+  | Eregion r -> string_of_region r
+  | Eunion s  -> Printf.sprintf "{%s}" (String.concat "," (List.map to_string (Set.elements s)))
 
 (* check if a set if composed of representants only *)
 let is_repr_set s =
   let aux = function
-    | Evar { link = None } -> true
-    | _                    -> false in
+    | Evar    { link  = None } -> true
+    | Eregion { rlink = None } -> true
+    | _                        -> false in
   Set.for_all aux s
 
 (* Follow the links to find the common representation.
-   The tricky part is to detect when to stop ... *)
+   The tricky part is to detect when to stop with unions ... *)
 let rec repr phi =
   match phi with
-    | Evar { link = Some phi2 } -> repr phi2
-    | Evar _                    -> phi
+    | Evar { link = Some phi }  -> repr phi
+    | Eregion{ rlink = Some r } -> repr (Eregion r)
+    | Evar _ | Eregion _        -> phi
     | Eunion s
         when Set.cardinal s = 1 -> repr (Set.choose s)
     | Eunion s
@@ -74,20 +94,33 @@ let new_variable =
   let x = ref 0 in
   let aux () =
     incr x;
-    Evar { id = !x; link = None } in
+    { id = !x; link = None } in
   aux
 
+let new_region =
+  let x = ref 0 in
+  let aux () =
+    incr x;
+    { rid = !x; rlink = None } in
+  aux
+
+let new_t () =
+  Evar (new_variable ())
+
+let singleton region =
+  Eregion region
+
 let _ =
-  let v1 = new_variable () in
-  let v2 = new_variable () in
+  let v1 = new_t () in
+  let v2 = new_t () in
   assert (compare v1 v2 = -1);
   assert (compare v1 v1 = 0);
   assert (compare v2 v1 = 1)
 
 let _ =
-  let v1 = new_variable () in
-  let v2 = new_variable () in
-  let v3 = new_variable () in
+  let v1 = new_t () in
+  let v2 = new_t () in
+  let v3 = new_t () in
   let s1 = union v1 v2 in
   let s2 = union v2 v3 in
   let s3 = union v2 v3 in
@@ -101,9 +134,9 @@ let _ =
   assert (compare s4 s5 = 0)
 
 let _ =
-  let v1 = new_variable () in
-  let v2 = new_variable () in
-  let v3 = new_variable () in
+  let v1 = new_t () in
+  let v2 = new_t () in
+  let v3 = new_t () in
   let s1 = union_list [v1; v2; v3] in
   let s2 = union_list [v1; v3; v2] in
   let s3 = union v2 (union v1 v3) in
@@ -152,9 +185,9 @@ let rec unify phi1 phi2 =
       raise Unify
 
 let _ =
-  let v1 = new_variable () in
-  let v2 = new_variable () in
-  let v3 = new_variable () in
+  let v1 = new_t () in
+  let v2 = new_t () in
+  let v3 = new_t () in
   unify v2 v1;
   let s1 = union v1 v3 in
   let s2 = union_list [v1; v2; v3] in
