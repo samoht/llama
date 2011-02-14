@@ -248,10 +248,12 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
                               Type_arity_mismatch (lid, arity, List.length tyl)))
         end;
         match gentcs with
-            Local ltcs -> Lconstr_local (ltcs, []) (* XXX: fix recursive types *)
+          | Local ltcs ->
+            let rs = regions_of_ltc 0 ltcs in
+            Lconstr_local (ltcs, standard_parameters rs)
           | Global tcs ->
             let tys = List.map (local_type pseudoenv) tyl in
-            let rs = List.fold_left regions_of_lt (List.length (tcs_regions tcs)) tys in
+            let rs =  regions_of_ltl (List.length (tcs_regions tcs)) tys in
             Lconstr (tcs, tys, standard_parameters rs)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
