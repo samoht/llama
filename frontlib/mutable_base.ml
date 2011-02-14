@@ -121,8 +121,11 @@ let rec regions_of_ltc accu ltc =
 and regions_of_kind accu = function
   | Ltcs_abstract     -> accu
   | Ltcs_variant vrts -> regions_of_ltl accu (List.flatten (List.map snd vrts))
-  | Ltcs_record lbls  -> regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
   | Ltcs_abbrev ltc   -> regions_of_lt accu ltc
+  | Ltcs_record lbls  ->
+    let accu = if List.exist (fun (_,m,_) -> m=Mutable) lbls then accu + 1 else accu in
+    regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
+
 
 and regions_of_lt accu = function
   | Lparam _             -> accu
