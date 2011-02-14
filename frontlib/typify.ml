@@ -414,7 +414,7 @@ and expression_expect exp expected_ty =
         begin try
           unify ty expected_ty;
           phi
-        with Unify ->
+        with Unify | Effect.Unify ->
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
         end
 

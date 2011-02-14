@@ -163,9 +163,9 @@ let print_out_string_list ppf = function
   | [h]   -> fprintf ppf "%s" h
   | h::t  ->
     let rec aux ppf = function
-      | []   -> fprintf ppf "}"
-      | h::t -> fprintf ppf ",%s%a" h aux t in
-    fprintf ppf "{%s%a" h aux t
+      | []   -> ()
+      | h::t -> fprintf ppf ".%s%a" h aux t in
+    fprintf ppf "%s%a" h aux t
 
 let rec print_out_type ppf =
   function
@@ -197,7 +197,7 @@ and print_simple_out_type ppf =
   | Otyp_constr (id, tyl, []) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
   | Otyp_constr (id, tyl, r) ->
-      fprintf ppf "@[(%a%a)%a@])" print_typargs tyl print_ident id print_out_string_list r
+      fprintf ppf "@[%a%a%a@]" print_typargs tyl print_ident id print_out_string_list r
   | Otyp_object (fields, rest) ->
       fprintf ppf "@[<2>< %a >@]" (print_fields rest) fields
   | Otyp_stuff s -> fprintf ppf "%s" s
