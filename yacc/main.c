@@ -327,10 +327,10 @@ void create_file_names(void)
     if (union_fd == -1)
         open_error(union_file_name);
 #else
-    mktemp(action_file_name);
-    mktemp(entry_file_name);
-    mktemp(text_file_name);
-    mktemp(union_file_name);
+    mkstemp(action_file_name);
+    mkstemp(entry_file_name);
+    mkstemp(text_file_name);
+    mkstemp(union_file_name);
 #endif
 #endif
 
