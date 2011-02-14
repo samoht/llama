@@ -1,3 +1,8 @@
+let debug_ = false
+
+let debug fmt =
+  Printf.kprintf (fun str -> if debug_ then Printf.eprintf "EFFECT: %s\n%!" str) fmt
+
 (***************)
 (*     Base    *)
 (***************)
@@ -35,7 +40,7 @@ let rec repr_of_region r =
     | Some v -> repr_of_region v
 
 let string_of_mutable_regions l =
-  Printf.sprintf "{%s}" (String.concat "," (List.map string_of_mutable_region l))
+  Printf.sprintf "[%s]" (String.concat "." (List.map string_of_mutable_region l))
 
 exception Unify
 
@@ -45,6 +50,7 @@ let rec unify_region r1 r2 =
     | [v1], [v2] ->
       let v1 = repr_of_region v1 in
       let v2 = repr_of_region v2 in
+      debug "unify_region %s %s" (string_of_mutable_region v1) (string_of_mutable_region v2);
       if v1.rid != v2.rid then
         v1.rlink <- Some v2
     | l1, l2 when List.length l1 = List.length l2 -> (* XXX: really ? *)
@@ -196,6 +202,7 @@ let rec occurs v phi =
 let rec unify phi1 phi2 =
   let phi1 = repr phi1 in
   let phi2 = repr phi2 in
+  debug "unify %s %s" (to_string phi1) (to_string phi2);
   match phi1, phi2 with
     (* reflexivity *)
     | Evar v1   , Evar v2    when v1 == v2              -> ()
