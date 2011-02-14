@@ -118,7 +118,7 @@ exception Empty (* Empty pattern *)
 let get_type_path ty =
   let ty = Basics.expand_type ty in
   match ty with
-  | Tconstr (path,_) -> path
+  | Tconstr (path,_,_) -> path
   | _ -> Fatal.error "Parmatch.get_type_path"
 
 

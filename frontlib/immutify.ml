@@ -15,26 +15,45 @@ exception Error of Location.t * error
 
 type env =
   { mutable type_variables : (mutable_type_variable * parameter) list;
-    mutable variables : (mutable_variable * variable) list }
+    mutable variables : (mutable_variable * variable) list;
+    mutable regions : (Effect.mutable_region * Effect.region) list; }
 
 let new_env () =
   { type_variables = [];
-    variables = [] }
+    variables = [];
+    regions = []; }
 
 (* ---------------------------------------------------------------------- *)
 (* Types and type variables.                                              *)
 (* ---------------------------------------------------------------------- *)
 
+let mutable_region f r =
+  let r = Effect.repr_of_region r in
+  try List.assq r f.regions
+  with Not_found ->
+    let i = List.length f.regions in
+    f.regions <- (r, i) :: f.regions;
+    i
+
+let rec mutable_effect f phi =
+  let phi = Effect.repr phi in
+  match phi with
+    | Effect.Evar _    -> [] (* XXX: what should we do here ? *)
+    | Effect.Eregion r -> [ mutable_region f r ]
+    | Effect.Eunion u  ->
+      let l = Set.elements u in
+      List.flatten (List.map (mutable_effect f) l)
+
 let rec mutable_type f = function
     Mvar v ->
       type_variable f v
   | Marrow (ty1, ty2, phi) ->
-      Tarrow (mutable_type f ty1, mutable_type f ty2, phi)
+      Tarrow (mutable_type f ty1, mutable_type f ty2, mutable_effect f phi)
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)
   | Mconstr (tcs, tyl, r) ->
       (* XXX: need to export the region to display it *)
-      Tconstr (tcs, List.map (mutable_type f) tyl)
+      Tconstr (tcs, List.map (mutable_type f) tyl, List.map (mutable_region f) r)
 
 and type_variable f tvar =
   match tvar.link with
@@ -171,17 +190,18 @@ and expression_option f = function
 let type_of_local_type subst local_args =
   let rec aux = function
       Lparam i -> Tparam i
-    | Larrow (ty1, ty2) -> Tarrow (aux ty1, aux ty2, Effect.empty) (* XXX: ? *)
+    | Larrow (ty1, ty2, phi) -> Tarrow (aux ty1, aux ty2, phi)
     | Ltuple tyl -> Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl) -> Tconstr (tcs, List.map aux tyl)
-    | Lconstr_local ltcs ->
-        Tconstr (List.assq ltcs subst, local_args) in
+    | Lconstr (tcs, tyl, rl) -> Tconstr (tcs, List.map aux tyl, rl)
+    | Lconstr_local (ltcs, rl) ->
+        Tconstr (List.assq ltcs subst, local_args, rl) in
   aux
 
-let make_type_constructor_group modenv params ltcs_list =
+let make_type_constructor_group modenv params regions ltcs_list =
   let tcsg =
     { tcsg_module = Modenv.current_module modenv;
       tcsg_params = params;
+      tcsg_regions = regions;
       tcsg_members = [] } in
   let tcs_list =
     List.map
@@ -235,15 +255,16 @@ let make_type_constructor_group modenv params ltcs_list =
     tcs_list ltcs_list;
   tcsg
   
-let make_singleton_type modenv arity name kind =
+let make_singleton_type modenv arity name =
   let rec tcsg =
     { tcsg_module = Modenv.current_module modenv;
       tcsg_params = standard_parameters arity;
+      tcsg_regions = [];
       tcsg_members = [ tcs ] }
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
-      tcs_kind = kind } in
+      tcs_kind = Tcs_abstract } in
   tcsg
 
 let primitive_value modenv name ty prim =
@@ -268,7 +289,7 @@ let signature_item env tsig =
   let modenv = Env.modenv env in
   match tsig.msig_desc with
       Msig_abstract_type (arity, name) ->
-        let tcsg = make_singleton_type modenv arity name Tcs_abstract in
+        let tcsg = make_singleton_type modenv arity name in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
     | Msig_value (name, ty) ->
         let v =
@@ -281,7 +302,7 @@ let signature_item env tsig =
         let v = primitive_value modenv name ty prim in
         [Sig_value v], Env.add_value v env
     | Msig_type (params, decls) ->
-        let tcsg = make_type_constructor_group modenv params decls in
+        let tcsg = make_type_constructor_group modenv params (regions_of_ltcl decls) decls in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
     | Msig_exception (name, args) ->
         let cs = exception_constructor modenv name args in
@@ -321,13 +342,13 @@ let structure_item env str =
         List.fold_left (fun env v -> Env.add_value v env) env vals,
         None
     | Mstr_external_type (arity, name) ->
-        let tcsg = make_singleton_type modenv arity name Tcs_abstract in
+        let tcsg = make_singleton_type modenv arity name in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
     | Mstr_external (name, ty, prim) ->
         let v = primitive_value modenv name ty prim in
         [Str_external v], Env.add_value v env, None
     | Mstr_type (params, decls) ->
-        let tcsg = make_type_constructor_group modenv params decls in
+        let tcsg = make_type_constructor_group modenv params (regions_of_ltcl decls) decls in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
     | Mstr_exception (name, args) ->
         let cs = exception_constructor modenv name args in

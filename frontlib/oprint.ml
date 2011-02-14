@@ -158,16 +158,14 @@ let pr_present =
 let pr_vars =
   print_list (fun ppf s -> fprintf ppf "'%s" s) (fun ppf -> fprintf ppf "@ ")
 
-let rec print_out_effect ppf = function
-  | Oeff_var v     -> fprintf ppf "'%s" v
-  | Oeff_union []  -> fprintf ppf ""
-  | Oeff_union [v] -> print_out_effect ppf v
-  | Oeff_union l   -> fprintf ppf "{%a}" print_out_effect_list l
-
-and print_out_effect_list ppf = function
-  | []        -> fprintf ppf ""
-  | [phi]     -> fprintf ppf "%a" print_out_effect phi
-  | phi::phis -> fprintf ppf "%a,%a" print_out_effect phi print_out_effect_list phis
+let print_out_string_list ppf = function
+  | []    -> ()
+  | [h]   -> fprintf ppf "%s" h
+  | h::t  ->
+    let rec aux ppf = function
+      | []   -> fprintf ppf "}"
+      | h::t -> fprintf ppf ",%s%a" h aux t in
+    fprintf ppf "{%s%a" h aux t
 
 let rec print_out_type ppf =
   function
@@ -184,7 +182,7 @@ and print_out_type_1 ppf =
   function
     Otyp_arrow (lab, ty1, ty2, phi) ->
       fprintf ppf "@[%s%a -%a>@ %a@]" (if lab <> "" then lab ^ ":" else "")
-        print_out_type_2 ty1 print_out_effect phi print_out_type_1 ty2
+        print_out_type_2 ty1 print_out_string_list phi print_out_type_1 ty2
   | ty -> print_out_type_2 ppf ty
 and print_out_type_2 ppf =
   function
@@ -196,8 +194,10 @@ and print_simple_out_type ppf =
     Otyp_class (ng, id, tyl) ->
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
-  | Otyp_constr (id, tyl) ->
+  | Otyp_constr (id, tyl, []) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
+  | Otyp_constr (id, tyl, r) ->
+      fprintf ppf "@[(%a%a)%a@])" print_typargs tyl print_ident id print_out_string_list r
   | Otyp_object (fields, rest) ->
       fprintf ppf "@[<2>< %a >@]" (print_fields rest) fields
   | Otyp_stuff s -> fprintf ppf "%s" s

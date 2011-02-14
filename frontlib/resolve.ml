@@ -132,21 +132,19 @@ let context_lookup_value lid ctxt =
 type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
-  pseudoenv_type_variables : (string * parameter) list }
+  pseudoenv_type_variables : (string * parameter) list;
+ }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
-  pseudoenv_type_variables = [] }
+  pseudoenv_type_variables = [];
+}
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
       pseudoenv_type_constructors =
       Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
-
-let pseudoenv_add_type_variable name i pseudoenv =
-  { pseudoenv with
-      pseudoenv_type_variables = (name, i) :: pseudoenv.pseudoenv_type_variables }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -208,26 +206,27 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
             params := (name, ty) :: !params;
             ty
           end
-      | Ptyp_arrow (ty1, ty2) ->
-          Tarrow (aux ty1, aux ty2, Effect.empty)
+      | Ptyp_arrow (ty1, ty2) -> (* XXX: we should be able to constraint effects *)
+          Tarrow (aux ty1, aux ty2, [])
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
-      | Ptyp_constr (lid, tyl) ->
+      | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-          Tconstr (tcs, List.map aux tyl)
+          Tconstr (tcs, List.map aux tyl, [])
     end
   in
   aux ty
 
+(* XXX: we should be able to annotate effects and region in the code *)
 let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
         Lparam (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
-        Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2)
+        Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2, []) (* XXX: no effects from parsing *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv) tyl)
     | Ptyp_constr (lid, tyl) ->
@@ -249,8 +248,11 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
                               Type_arity_mismatch (lid, arity, List.length tyl)))
         end;
         match gentcs with
-            Local ltcs -> Lconstr_local ltcs
-          | Global tcs -> Lconstr (tcs, List.map (local_type pseudoenv) tyl)
+            Local ltcs -> Lconstr_local (ltcs, []) (* XXX: fix recursive types *)
+          | Global tcs ->
+            let tys = List.map (local_type pseudoenv) tyl in
+            let rs = List.fold_left regions_of_lt (List.length (tcs_regions tcs)) tys in
+            Lconstr (tcs, tys, standard_parameters rs)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -271,8 +273,12 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let cts = lookup_type_constructor env lid ty.ptyp_loc in 
-        let r = instantiate_region cts in
+        let cts = lookup_type_constructor env lid ty.ptyp_loc in
+        let r = 
+          if Base.is_record_with_mutable_fields cts then
+            [Effect.new_region_variable ()]
+          else
+            [] in
         Mconstr (tcs, List.map (mutable_type env) tyl, r)
 
 (* ---------------------------------------------------------------------- *)
@@ -469,9 +475,9 @@ let type_kind pseudoenv = function
 let is_recursive_abbrev =
   let rec occ seen = function
       Lparam _ -> false
-    | Larrow (ty1, ty2) -> occ seen ty1 || occ seen ty2
-    | Ltuple tyl | Lconstr (_, tyl) -> List.exist (occ seen) tyl
-    | Lconstr_local ltcs ->
+    | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
+    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exist (occ seen) tyl
+    | Lconstr_local (ltcs, _) ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
                Ltcs_abbrev ty -> occ (ltcs :: seen) ty

@@ -12,6 +12,7 @@ let mkabs name params =
   let rec tcsg =
     { tcsg_module = Module_builtin;
       tcsg_params = params;
+      tcsg_regions = [];
       tcsg_members = [ tcs ] }
   and tcs =
     { tcs_group = tcsg;
@@ -35,6 +36,7 @@ let tcsg_int64, tcs_int64 = mkabs "int64" []
 let rec tcsg_unit =
   { tcsg_module = Module_builtin;
     tcsg_params = [];
+    tcsg_regions = [];
     tcsg_members = [ tcs_unit ] }
 
 and tcs_unit =
@@ -51,6 +53,7 @@ and cs_void =
 
 let rec tcsg_bool =
   { tcsg_module = Module_builtin;
+    tcsg_regions = [];
     tcsg_params = [];
     tcsg_members = [ tcs_bool ] }
 
@@ -76,6 +79,7 @@ and cs_true =
 let rec tcsg_list =
   { tcsg_module = Module_builtin;
     tcsg_params = [ 0 ];
+    tcsg_regions = [];
     tcsg_members = [ tcs_list ] }
 
 and tcs_list =
@@ -94,12 +98,13 @@ and cs_cons =
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tparam 0; Tconstr (tcs_list, [ Tparam 0 ]) ];
+    cs_args = [ Tparam 0; Tconstr (tcs_list, [ Tparam 0 ], []) ];
     cs_tag = Tag_block 0 }
 
 let rec tcsg_option =
   { tcsg_module = Module_builtin;
     tcsg_params = [ 0 ];
+    tcsg_regions = [];
     tcsg_members = [ tcs_option ] }
 
 and tcs_option =
@@ -130,19 +135,22 @@ let type_constructor_groups =
 
 (* helpers *)
 
-let type_int = Tconstr (tcs_int, [])
-let type_char = Tconstr (tcs_char, [])
-let type_string = Tconstr (tcs_string, [])
-let type_float = Tconstr (tcs_float, [])
-let type_bool = Tconstr (tcs_bool, [])
-let type_unit = Tconstr (tcs_unit, [])
-let type_exn = Tconstr (tcs_exn, [])
-let type_array ty = Tconstr (tcs_array, [ty])
-let type_list ty = Tconstr (tcs_list, [ty])
-let type_option ty = Tconstr (tcs_option, [ty])
-let type_nativeint = Tconstr (tcs_nativeint, [])
-let type_int32 = Tconstr (tcs_int32, [])
-let type_int64 = Tconstr (tcs_int64, [])
+let type_int = Tconstr (tcs_int, [], [])
+let type_char = Tconstr (tcs_char, [], [])
+let type_string = Tconstr (tcs_string, [], [])
+let type_float = Tconstr (tcs_float, [], [])
+let type_bool = Tconstr (tcs_bool, [], [])
+let type_unit = Tconstr (tcs_unit, [], [])
+let type_exn = Tconstr (tcs_exn, [], [])
+let type_nativeint = Tconstr (tcs_nativeint, [], [])
+let type_int32 = Tconstr (tcs_int32, [], [])
+let type_int64 = Tconstr (tcs_int64, [], [])
+
+(* XXX: should we inherit the regions from the type parameter ? *)
+let type_array ty = Tconstr (tcs_array, [ty], [])
+let type_list ty = Tconstr (tcs_list, [ty], [])
+let type_option ty = Tconstr (tcs_option, [ty], [])
+
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)

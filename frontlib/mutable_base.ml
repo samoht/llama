@@ -5,9 +5,9 @@ open Base
 
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type * Effect.t
+  | Marrow of mutable_type * mutable_type * Effect.mutable_t
   | Mtuple of mutable_type list
-  | Mconstr of type_constructor * mutable_type list * Effect.region option
+  | Mconstr of type_constructor * mutable_type list * Effect.mutable_region list
 
 and mutable_type_variable =
   { mutable link : mutable_type option }
@@ -19,7 +19,7 @@ and mutable_type_variable =
 type mutable_variable =
   { mvar_name : string;
     mvar_type : mutable_type;
-    mvar_effect : Effect.t; }
+    mvar_effect : Effect.mutable_t; }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -42,6 +42,7 @@ and mutable_pattern_desc =
   | Mpat_or of mutable_pattern * mutable_pattern
   | Mpat_constraint of mutable_pattern * mutable_type
 
+
 let rec mutable_pattern_variables pat =
   match pat.mpat_desc with
       Mpat_any | Mpat_literal _ -> []
@@ -63,7 +64,7 @@ type mutable_expression =
   { mexp_desc : mutable_expression_desc;
     mexp_loc : Location.t;
     mexp_type : mutable_type;
-    mexp_effect : Effect.t }
+    mexp_effect : Effect.mutable_t }
 
 and mutable_expression_desc =
     Mexp_var of mutable_variable
@@ -107,10 +108,35 @@ and local_type_constructor_kind =
 
 and local_type =
     Lparam of parameter
-  | Larrow of local_type * local_type
+  | Larrow of local_type * local_type * Effect.t
   | Ltuple of local_type list
-  | Lconstr of type_constructor * local_type list
-  | Lconstr_local of local_type_constructor
+  | Lconstr of type_constructor * local_type list * Effect.region list
+  | Lconstr_local of local_type_constructor * Effect.region list
+
+(* XXX: when region names will appear in the source code, we will need to
+   use lists into accu instead of int *)
+let rec regions_of_ltc accu ltc =
+  regions_of_kind accu ltc.ltcs_kind
+
+and regions_of_kind accu = function
+  | Ltcs_abstract     -> accu
+  | Ltcs_variant vrts -> regions_of_ltl accu (List.flatten (List.map snd vrts))
+  | Ltcs_record lbls  -> regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
+  | Ltcs_abbrev ltc   -> regions_of_lt accu ltc
+
+and regions_of_lt accu = function
+  | Lparam _             -> accu
+  | Larrow (lt1, lt2, e) -> regions_of_lt (regions_of_lt (List.length e + accu) lt1) lt2
+  | Ltuple ltl           -> regions_of_ltl accu ltl
+  | Lconstr (_, _, r)    -> List.length r + accu
+  | Lconstr_local (_, r) -> List.length r + accu
+
+and regions_of_ltl accu ltl =
+  List.fold_left regions_of_lt accu ltl
+
+let regions_of_ltcl ltcl =
+  let n = List.fold_left regions_of_ltc 0 ltcl in
+  standard_parameters n
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
@@ -155,61 +181,76 @@ type mutable_structure = mutable_structure_item list
 
 let new_type_variable () = Mvar { link = None }
 
-let mutable_type_int = Mconstr (Predef.tcs_int, [], None)
-let mutable_type_char = Mconstr (Predef.tcs_char, [], None)
-let mutable_type_string = Mconstr (Predef.tcs_string, [], None)
-let mutable_type_float = Mconstr (Predef.tcs_float, [], None)
-let mutable_type_bool = Mconstr (Predef.tcs_bool, [], None)
-let mutable_type_unit = Mconstr (Predef.tcs_unit, [], None)
-let mutable_type_exn = Mconstr (Predef.tcs_exn, [], None)
-let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty], None)
-let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], None)
-let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], None)
-let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [], None)
-let mutable_type_int32 = Mconstr (Predef.tcs_int32, [], None)
-let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], None)
+let mutable_type_int = Mconstr (Predef.tcs_int, [], [])
+let mutable_type_char = Mconstr (Predef.tcs_char, [], [])
+let mutable_type_string = Mconstr (Predef.tcs_string, [], [])
+let mutable_type_float = Mconstr (Predef.tcs_float, [], [])
+let mutable_type_bool = Mconstr (Predef.tcs_bool, [], [])
+let mutable_type_unit = Mconstr (Predef.tcs_unit, [], [])
+let mutable_type_exn = Mconstr (Predef.tcs_exn, [], [])
+let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty], [])
+let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], [])
+let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], [])
+let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [], [])
+let mutable_type_int32 = Mconstr (Predef.tcs_int32, [], [])
+let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], [])
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
 (* ---------------------------------------------------------------------- *)
 
-let instantiate_region tcs =
-  match tcs.tcs_kind with
-    | Tcs_record _ -> Some (Effect.new_region ())
-    | _            -> None
+let instantiate_region inst_r param =
+  List.assq param inst_r
 
-let rec instantiate_type inst = function
+let instantiate_effect inst_r phi =
+  let rec aux accu = function
+    | []   -> accu
+    | h::t ->
+      let r = List.assq h inst_r in
+      let phi = Effect.Eregion r in
+      aux (Effect.union phi accu) t in
+  aux Effect.empty phi
+
+(* inst   : int -> type variable
+   inst_r : int -> region variable *)
+let rec instantiate_type inst inst_r = function
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2, phi) ->
-      Marrow (instantiate_type inst ty1, instantiate_type inst ty2, phi)
+      Marrow (instantiate_type inst inst_r ty1, instantiate_type inst inst_r ty2, instantiate_effect inst_r phi)
   | Ttuple tyl ->
-      Mtuple (List.map (instantiate_type inst) tyl)
-  | Tconstr (tcs, tyl) ->
-      Mconstr (tcs, List.map (instantiate_type inst) tyl, instantiate_region tcs)
+      Mtuple (List.map (instantiate_type inst inst_r) tyl)
+  | Tconstr (tcs, tyl, rel) ->
+      try Mconstr (tcs, List.map (instantiate_type inst inst_r) tyl, List.map (instantiate_region inst_r) rel)
+      with e -> Printf.eprintf "error in type %s\n%!" tcs.tcs_name; raise e
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
-  inst, Mconstr (tcs, List.map snd inst, instantiate_region tcs)
+  let inst_r = List.map (fun param -> (param, Effect.new_region_variable ())) (tcs_regions tcs) in
+  inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
-  let inst, ty_res = instantiate_type_constructor cs.cs_tcs in
-  let ty_args = List.map (instantiate_type inst) cs.cs_args in
+  let inst, inst_r, ty_res = instantiate_type_constructor cs.cs_tcs in
+  let ty_args = List.map (instantiate_type inst inst_r) cs.cs_args in
   ty_args, ty_res
 
 let instantiate_label lbl =
-  let inst, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let ty_arg = instantiate_type inst lbl.lbl_arg in
-  ty_res, ty_arg
+  let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
+  let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
+  let r =
+    if Base.is_record_with_mutable_fields lbl.lbl_tcs then
+      match inst_r with
+        | []         -> Some (Effect.new_region_variable ())
+        | (_,v) :: _ -> Some v
+    else
+      None in
+  ty_res, ty_arg, r
 
 let instantiate_value v =
   let ty = v.val_type in
   let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.parameters ty) in
-  instantiate_type inst ty
-
-let region_of_mutable_type = function
-  | Mconstr (_, _, r) -> r
-  | _                 -> None
+  let inst_r = List.map (fun i -> (i, Effect.new_region_variable ())) (Basics.regions ty) in
+  instantiate_type inst inst_r ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
@@ -219,13 +260,14 @@ let rec mutable_type_repr = function
     Mvar { link = Some ty } -> mutable_type_repr ty
   | ty -> ty
 
-let mutable_apply_type params body args =
-  instantiate_type (List.combine params args) body
+let mutable_apply_type params regions body args =
+  let inst_r = List.map (fun i -> i, Effect.new_region_variable ()) regions in
+  instantiate_type (List.combine params args) inst_r body
 
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
-  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, None) ->
-      expand_mutable_type (mutable_apply_type (tcs_params tcs) body args)
+  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []) ->
+      expand_mutable_type (mutable_apply_type (tcs_params tcs) (tcs_regions tcs) body args)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -263,12 +305,13 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, None), _ ->
-        unify (mutable_apply_type (tcs_params tcs1) body1 tyl1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, None) ->
-        unify ty1 (mutable_apply_type (tcs_params tcs2) body2 tyl2)
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, []), _ ->
+        unify (mutable_apply_type (tcs_params tcs1) (tcs_regions tcs1) body1 tyl1) ty2
+    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, []) ->
+        unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2)
     | Mconstr (tcs1, tyl1, r1), Mconstr (tcs2, tyl2, r2) when tcs1 == tcs2 ->
-        Effect.unify_region_opt r1 r2;
+        if Base.is_record_with_mutable_fields tcs1 then
+          Effect.unify_region r1 r2;
         unify_list tyl1 tyl2
     | _ ->
         raise Unify

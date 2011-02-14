@@ -40,14 +40,11 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let rec tree_of_effect phi =
-  let phi = Effect.repr phi in
-  match phi with
-    | Effect.Evar v   -> Oeff_var (Effect.parameter_name v.Effect.id)
-    | Effect.Eunion s ->
-      let l = Set.elements s in
-      let l = List.map tree_of_effect l in
-      Oeff_union l
+let tree_of_region i =
+  Effect.string_of_region i
+
+let tree_of_effect e =
+  List.map (fun i -> tree_of_region i) e
 
 let rec tree_of_type = function
     Tparam i ->
@@ -56,8 +53,8 @@ let rec tree_of_type = function
       Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
   | Ttuple tyl ->
       Otyp_tuple (tree_of_type_list tyl)
-  | Tconstr (tcs, tyl) ->
-      Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl)
+  | Tconstr (tcs, tyl, r) ->
+      Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl, List.map tree_of_region r)
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl
@@ -175,26 +172,23 @@ let signature ppf sg =
 
 open Mutable_base
 
-let effect_name effect_names v =
-  try List.assq v !effect_names with Not_found ->
-    let name = Effect.parameter_name (List.length !effect_names) in
-    effect_names := (v, name) :: !effect_names;
-    name
+(* XXX: need to normalize region and variable names *)
+let tree_of_mutable_region r =
+  let r = Effect.repr_of_region r in
+  Effect.string_of_mutable_region r
 
-(* normalize effect variable *)
-let rec tree_of_mutable_effect effect_names phi =
+let rec tree_of_mutable_effect phi =
   let phi = Effect.repr phi in
   match phi with
-    | Effect.Evar v   -> Oeff_var (effect_name effect_names v)
-    | Effect.Eunion s ->
+    | Effect.Evar v    -> [Effect.string_of_variable v] (* XXX: we should check that we don't have these anymore *)
+    | Effect.Eregion r -> [Effect.string_of_mutable_region r]
+    | Effect.Eunion s  ->
       let l = Set.elements s in
-      let l = List.map (tree_of_mutable_effect effect_names) l in
-      Oeff_union l
+      List.flatten (List.map tree_of_mutable_effect l)
 
 (* normalize type variables *)
 let tree_of_mutable_type =
   let var_names = ref ([] : (mutable_type_variable * string) list) in
-  let effect_names = ref ([] : (Effect.variable * string) list) in
   let var_name v =
     try List.assq v !var_names with Not_found ->
       let name = parameter_name (List.length !var_names) in
@@ -209,12 +203,11 @@ let tree_of_mutable_type =
               tree_of_mutable_type ty
         end
     | Marrow (ty1, ty2, phi) ->
-        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect effect_names phi)
+        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect phi)
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Mconstr (tcs, tyl, r) ->
-        (* XXX: propagate the region through the outcome tree *)
-        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl)
+        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl, List.map tree_of_mutable_region r)
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
   fun ty ->

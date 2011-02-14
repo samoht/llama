@@ -1,20 +1,32 @@
 open Base
 
-let parameters =
-  let rec aux accu = function
-      Tparam tv -> if List.memq tv accu then accu else tv :: accu
-    | Tarrow (ty1, ty2, _) -> aux (aux accu ty1) ty2
-    | Ttuple tyl | Tconstr (_, tyl) -> List.fold_left aux accu tyl in
-  fun ty -> List.rev (aux [] ty)
+(* Returns the pair (list of type parameters, list of region parameters) *)
+let all_parameters ty =
+  let rec aux (tl, rl) = function
+      Tparam tv              -> if List.memq tv tl then (tl, rl) else (tv :: tl, rl)
+    | Tarrow (ty1, ty2, phi) -> aux (aux (tl, phi @ rl) ty1) ty2
+    | Ttuple tyl             -> List.fold_left aux (tl, rl) tyl
+    | Tconstr (_, tyl, rs)    ->
+      let rec add accu = function
+        | []   -> accu
+        | h::t -> if List.memq h rl then add accu t else add (h :: accu) t in
+      List.fold_left aux (tl, add rl rs) tyl in
+  let tl, rl = aux ([], []) ty in
+  List.rev tl, List.rev rl
 
-let type_closed ty = (parameters ty = [])
+let type_closed ty =
+  let tl, rl = all_parameters ty in
+  tl = [] && rl = []
 
-(* XXX: should we substitute effects as well ? *)
+let parameters ty = fst (all_parameters ty)
+let regions ty = snd (all_parameters ty)
+
+(* XXX: we need to substitute effects as well *)
 let rec subst_type s = function
     Tparam tv -> List.assq tv s
   | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type s ty1, subst_type s ty2, phi)
   | Ttuple tyl -> Ttuple (List.map (subst_type s) tyl)
-  | Tconstr (tcs, tyl) -> Tconstr (tcs, List.map (subst_type s) tyl)
+  | Tconstr (tcs, tyl, r) -> Tconstr (tcs, List.map (subst_type s) tyl, r)
 
 (* Expansion of abbreviations. *)
 
@@ -22,7 +34,7 @@ let apply_type params body args =
   subst_type (List.combine params args) body
 
 let rec expand_type = function
-    Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+    Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []) ->
       expand_type (apply_type (tcs_params tcs) body args)
   | ty -> ty
 
@@ -48,11 +60,12 @@ let types_equal, types_equiv =
           equiv_gen corresp t1arg t2arg && equiv_gen corresp t1res t2res
       | Ttuple(t1args), Ttuple(t2args) ->
           List.for_all2 (equiv_gen corresp) t1args t2args
-      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []), _ ->
           equiv_gen corresp (apply_type (tcs_params tcs) body args) ty2
-      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []) ->
           equiv_gen corresp ty1 (apply_type (tcs_params tcs) body args)
-      | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
+      | Tconstr(tcs1, tyl1, _), Tconstr(tcs2, tyl2, _) when tcs1 == tcs2 ->
+          (* XXX: should we test equality on regions as well ? *)
           List.for_all2 (equiv_gen corresp) tyl1 tyl2
       | _ ->
           false
@@ -78,11 +91,12 @@ let find_instantiation =
           aux (aux inst dom1 dom2) cod1 cod2
       | Ttuple tyl1, Ttuple tyl2 ->
           List.fold_left2 aux inst tyl1 tyl2
-      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args), _ ->
+      | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []), _ ->
           aux inst (apply_type (tcs_params tcs) body args) ty2
-      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args) ->
+      | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []) ->
           aux inst ty1 (apply_type (tcs_params tcs) body args)
-      | Tconstr(tcs1, tyl1), Tconstr(tcs2, tyl2) when tcs1 == tcs2 ->
+      | Tconstr(tcs1, tyl1, _), Tconstr(tcs2, tyl2, _) when tcs1 == tcs2 ->
+          (* XXX: need to do something on regions as well *)
           List.fold_left2 aux inst tyl1 tyl2
       | _ ->
           raise Not_found in
