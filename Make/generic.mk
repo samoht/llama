@@ -6,7 +6,7 @@ OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
 LLAMARUN=$(BOOTDIR)/llamarun
-LLAMAC=$(LLAMARUN) $(BOOTDIR)/llamac -nostdlib
+LLAMAC=$(LLAMARUN) $(BOOTDIR)/llamac -nostdlib -g
 LLAMAOPT=$(LLAMARUN) $(BOOTDIR)/llamaopt -nostdlib
 LLAMADEP=$(LLAMARUN) $(BOOTDIR)/llamadep
 LLAMALEX=$(LLAMARUN) $(BOOTDIR)/llamalex
