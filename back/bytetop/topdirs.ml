@@ -146,7 +146,7 @@ let match_printer_type ppf env desc typename =
       raise Exit in
   let ty_arg = Mutable_base.new_type_variable() in
   Mutable_base.unify
-    (Mutable_base.Mconstr (printer_tcs, [ty_arg], None))
+    (Mutable_base.Mconstr (printer_tcs, [ty_arg], []))
     (Mutable_base.instantiate_value desc);
   Immutify.mutable_type (Immutify.new_env ()) ty_arg
 
