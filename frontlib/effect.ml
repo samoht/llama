@@ -180,40 +180,6 @@ let of_region_opt = function
   | Some r -> Eregion r
   | None   -> empty
 
-let _ =
-  let v1 = new_t () in
-  let v2 = new_t () in
-  assert (compare v1 v2 = -1);
-  assert (compare v1 v1 = 0);
-  assert (compare v2 v1 = 1)
-
-let _ =
-  let v1 = new_t () in
-  let v2 = new_t () in
-  let v3 = new_t () in
-  let s1 = union v1 v2 in
-  let s2 = union v2 v3 in
-  let s3 = union v2 v3 in
-  assert (compare s1 s2 = -1);
-  assert (compare s2 s1 = 1);
-  assert (compare v1 s1 = 1);
-  assert (compare s1 v1 = -1);
-  assert (compare s2 s3 = 0);
-  let s4 = union v1 s3 in
-  let s5 = union v3 s1 in
-  assert (compare s4 s5 = 0)
-
-let _ =
-  let v1 = new_t () in
-  let v2 = new_t () in
-  let v3 = new_t () in
-  let s1 = union_list [v1; v2; v3] in
-  let s2 = union_list [v1; v3; v2] in
-  let s3 = union v2 (union v1 v3) in
-  assert (compare s1 s2 = 0);
-  assert (compare s2 s3 = 0);
-  assert (compare s1 s3 = 0)
-
     
 (* unification *)
 
@@ -258,17 +224,3 @@ let rec unify phi1 phi2 =
     | _ ->
       Printf.eprintf "ERROR: cannot unify effects %s and %s\n%!" (to_string phi1) (to_string phi2);
       raise Unify
-
-let _ =
-  let v1 = new_t () in
-  let v2 = new_t () in
-  let v3 = new_t () in
-  unify v2 v1;
-  let s1 = union v1 v3 in
-  let s2 = union_list [v1; v2; v3] in
-  let s3 = union v2 v3 in
-  assert (compare s1 s2 = 0);
-  assert (compare s2 s3 = 0);
-  assert (compare s1 s3 = 0);
-  let s4 = union v1 v2 in
-  assert (compare v1 s4 = 0)
