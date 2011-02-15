@@ -22,12 +22,12 @@ open Lambda
 
 let has_base_type exp base_tcs =
   match Basics.expand_type exp.exp_type with
-  | Tconstr(tcs, _) -> tcs == base_tcs
+  | Tconstr(tcs, _, _) -> tcs == base_tcs
   | _ -> false
 
 let maybe_pointer exp =
   match Basics.expand_type exp.exp_type with
-  | Tconstr(tcs, args) ->
+  | Tconstr(tcs, args, _) ->
       not (tcs == Predef.tcs_int) &&
       not (tcs == Predef.tcs_char) &&
       begin try
@@ -47,7 +47,7 @@ let array_element_kind ty =
   match Basics.expand_type ty with
   | Tparam _ ->
       Pgenarray
-  | Tconstr(tcs, args) ->
+  | Tconstr(tcs, args, _) ->
       if tcs == Predef.tcs_int || tcs == Predef.tcs_char then
         Pintarray
       else if tcs == Predef.tcs_float then
@@ -79,7 +79,7 @@ let array_element_kind ty =
 
 let array_kind_gen ty =
   match Basics.expand_type ty with
-  | Tconstr(tcs, [elt_ty]) when tcs == Predef.tcs_array ->
+  | Tconstr(tcs, [elt_ty], _) when tcs == Predef.tcs_array ->
       array_element_kind elt_ty
   | _ ->
       (* This can happen with e.g. Obj.field *)
@@ -91,7 +91,7 @@ let array_pattern_kind pat = array_kind_gen pat.pat_type
 
 let bigarray_decode_type ty tbl dfl =
   match Basics.expand_type ty with
-    | Tconstr (tcs, []) when tcs_module tcs = Module "Bigarray" ->
+    | Tconstr (tcs, [], _) when tcs_module tcs = Module "Bigarray" ->
         begin try List.assoc tcs.tcs_name tbl with Not_found -> dfl end
     | _ ->
         dfl
@@ -116,7 +116,7 @@ let layout_table =
 
 let bigarray_kind_and_layout exp =
   match Basics.expand_type exp.exp_type with
-  | Tconstr(_, [caml_type; elt_type; layout_type]) ->
+  | Tconstr(_, [caml_type; elt_type; layout_type], _) ->
       (bigarray_decode_type elt_type kind_table Pbigarray_unknown,
        bigarray_decode_type layout_type layout_table Pbigarray_unknown_layout)
   | _ ->

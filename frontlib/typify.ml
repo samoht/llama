@@ -51,11 +51,11 @@ and pattern_aux pat =
         let (ty_args, ty_res) = instantiate_constructor cs in
         List.iter2 pattern_expect args ty_args;
         ty_res
-    | Mpat_record (tcs, lbl_arg_list) ->
-        let inst, ty_res = instantiate_type_constructor tcs in
+    | Mpat_record (tcs, lbl_arg_list) -> (* XXX: anything to do here ? *)
+        let inst, inst_r, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, arg) ->
-             let ty_arg = instantiate_type inst lbl.lbl_arg in
+             let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
              pattern_expect arg ty_arg) lbl_arg_list;
         ty_res
     | Mpat_array patl ->
@@ -235,7 +235,8 @@ let formatstring loc fmt =
     let ty_ureader, ty_args = scan_format 0 in
     Mconstr
       (Predef.tcs_format6,
-       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result])
+       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result],
+      [])
   in
   type_in_format fmt
 
@@ -277,7 +278,7 @@ and expression_aux exp =
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      let phi = Effect.new_variable () in
+                      let phi = Effect.new_t () in
                       v.link <- Some (Marrow (ty1, ty2, phi));
                       ty1, ty2, phi
                   | Marrow (ty1, ty2, phi) ->
@@ -349,12 +350,11 @@ and expression_aux exp =
         let phis = List.map (fun e -> expression_expect e ty_arg) elist in
         mutable_type_array ty_arg, Effect.union_list phis
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
-        (* XXX: shouldn't the mutable fields introduce some new effect variable ? *)
-        let inst, ty_res = instantiate_type_constructor tcs in
+        let inst, inst_r, ty_res = instantiate_type_constructor tcs in
         let phis =
           List.map
             (fun (lbl, exp) ->
-               let ty_arg = instantiate_type inst lbl.lbl_arg in
+               let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
                expression_expect exp ty_arg)
             lbl_exp_list
         and phi1 =
@@ -364,13 +364,14 @@ and expression_aux exp =
         in
         ty_res, Effect.union_list (phi1 :: phis)
     | Mexp_field (e, lbl) ->
-        let (ty_res, ty_arg) = instantiate_label lbl in
-        ty_arg, expression_expect e ty_res
+        let ty_res, ty_arg, r = instantiate_label lbl in
+        let phi = expression_expect e ty_res in
+        ty_arg, Effect.union (Effect.of_region_opt r) phi
     | Mexp_setfield (e1, lbl, e2) ->
-        let (ty_res, ty_arg) = instantiate_label lbl in
+        let ty_res, ty_arg, r = instantiate_label lbl in
         let phi1 = expression_expect e1 ty_res
         and phi2 = expression_expect e2 ty_arg in
-        mutable_type_unit, Effect.union phi1 phi2
+        mutable_type_unit, Effect.union_list [Effect.of_region_opt r; phi1; phi2]
     | Mexp_assert e ->
         mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
@@ -401,7 +402,7 @@ and expression_expect exp expected_ty =
               Mexp_literal (Literal_string s) ->
                 let ty =
                   match expand_mutable_type expected_ty with
-                      Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
+                      Mconstr (tcs, _, []) when tcs == Predef.tcs_format6 ->
                         formatstring exp.mexp_loc s
                     | _ ->
                         mutable_type_string in
@@ -413,7 +414,7 @@ and expression_expect exp expected_ty =
         begin try
           unify ty expected_ty;
           phi
-        with Unify ->
+        with Unify | Effect.Unify ->
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
         end
 
@@ -442,7 +443,7 @@ and statement expr =
   | Marrow(_,_,_) ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Partial_application
   | Mvar _ -> ()
-  | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
+  | Mconstr (tcs, _, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Statement_type
   end;

@@ -32,11 +32,12 @@ type llama_type =
     Tparam of parameter
   | Tarrow of llama_type * llama_type * Effect.t
   | Ttuple of llama_type list
-  | Tconstr of type_constructor * llama_type list
+  | Tconstr of type_constructor * llama_type list * Effect.region list
 
 and type_constructor_group =
-  { tcsg_module : module_id;                (* Defining module *)
-    tcsg_params : parameter list;           (* List of type parameters *)
+  { tcsg_module : module_id;                        (* Defining module *)
+    tcsg_params : parameter list;                   (* List of type parameters *)
+    tcsg_regions : Effect.region list;              (* List of region parameters *)
     mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
 
 and type_constructor =
@@ -68,10 +69,8 @@ type value =
   { val_module : module_id;    (* Defining module *)
     val_name : string;         (* Name of the value *)
     val_type : llama_type;     (* Type of the value *)
-    val_kind : value_kind}     (* Is this a primitive? *)
- (* val_effect : llama_effect; (* XXX some exported effects *) *)
-
-
+    val_kind : value_kind;     (* Is this a primitive? *)
+  }
 type signature_item =
     Sig_type of type_constructor_group
   | Sig_value of value
@@ -149,9 +148,12 @@ type structure = structure_item list
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
+let tcs_regions tcs = tcs.tcs_group.tcsg_regions (* List of region parameters *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr (tcs, List.map (fun param -> Tparam param) (tcs_params tcs))
+  Tconstr (tcs,
+           List.map (fun param -> Tparam param) (tcs_params tcs),
+           tcs_regions tcs)
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
@@ -163,15 +165,22 @@ let get_constructors tcs =
   match tcs.tcs_kind with
       Tcs_variant cs_list -> cs_list
     | _ -> failwith "Base.get_constructors"
+
 let get_labels tcs =
   match tcs.tcs_kind with
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
 
+let is_record_with_mutable_fields tcs =
+  match tcs.tcs_kind with
+    | Tcs_record lbl_list -> List.exist (fun l -> l.lbl_mut) lbl_list
+    | _                   -> false
+
 let parameter_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
+
 let standard_parameters n =
   let rec aux i = if i < n then i :: aux (succ i) else [] in
   aux 0
