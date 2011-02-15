@@ -7,7 +7,7 @@ let debug fmt =
 (*     Base    *)
 (***************)
 
-(* Parameters are de brujin indices *)
+(* Parameters are de Bruijn indices *)
 (* Structures are immutable *)
 
 type region = int
@@ -44,6 +44,7 @@ let string_of_mutable_regions l =
 
 exception Unify
 
+(* Unify region lists r1 and r2 (region parameters of a type) *)
 let rec unify_region r1 r2 =
   match r1, r2 with
     | []  , []   -> ()
@@ -51,12 +52,12 @@ let rec unify_region r1 r2 =
       let v1 = repr_of_region v1 in
       let v2 = repr_of_region v2 in
       debug "unify_region %s %s" (string_of_mutable_region v1) (string_of_mutable_region v2);
-      if v1.rid != v2.rid then
+      if v1.rid <> v2.rid then
         v1.rlink <- Some v2
     | l1, l2 when List.length l1 = List.length l2 -> (* XXX: really ? *)
       List.iter2 (fun v1 v2 -> unify_region [v1] [v2]) l1 l2
     | _ ->
-      Printf.eprintf "ERROR: cannot unify regions %s and %s\n"
+      Printf.eprintf "ERROR: cannot unify region lists %s and %s\n"
         (string_of_mutable_regions r1)
         (string_of_mutable_regions r2);
       raise Unify
@@ -139,7 +140,7 @@ and union_list l =
     | h::t  -> aux (union h accu) t in
   aux (Eunion (Set.empty_custom compare)) l
 
-(* var < region < union *)
+(* var > region > union *)
 and compare phi1 phi2 =
   let phi1 = repr phi1 in
   let phi2 = repr phi2 in
@@ -165,13 +166,6 @@ let is_empty = function
   | Eunion s -> Set.is_empty s
   | _        -> false
 
-let new_variable =
-  let x = ref 0 in
-  let aux () =
-    incr x;
-    { id = !x; link = None } in
-  aux
-
 let new_region_variable =
   let x = ref 0 in
   let aux () =
@@ -179,8 +173,11 @@ let new_region_variable =
     { rid = !x; rlink = None } in
   aux
 
-let new_t () =
-  Evar (new_variable ())
+let new_t =
+  let x = ref 0 in
+  fun () ->
+    incr x;
+    Evar { id = !x; link = None }
 
 let of_region_opt = function
   | Some r -> Eregion r
