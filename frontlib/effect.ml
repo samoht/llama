@@ -210,9 +210,9 @@ let rec unify phi1 phi2 =
     | _, Evar v2 when not (occurs v2 phi1) -> v2.link <- Some phi1
 
     (* regions *)
-    | Eregion r1, Eregion r2 -> r1.rlink <- Some r2
-    | Eregion r1, Eunion s2  -> Set.iter (unify phi1) s2
-    | Eunion s1 , Eregion r2 -> Set.iter (unify phi2) s1
+    | Eregion r1, Eregion r2                            -> r1.rlink <- Some r2
+    | Eregion r1, Eunion s2  when not (Set.is_empty s2) -> Set.iter (unify phi1) s2
+    | Eunion s1 , Eregion r2 when not (Set.is_empty s1) -> Set.iter (unify phi2) s1
 
     (* {} = phi U {} => phi = {} *)
     | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify empty_effect) s2
