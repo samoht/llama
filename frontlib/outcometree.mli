@@ -93,7 +93,7 @@ and out_sig_item =
   | Osig_type of out_type_decl * out_rec_status
   | Osig_value of string * out_type * string list
 and out_type_decl =
-  string * (string * (bool * bool)) list * out_type *
+  string * (string * (bool * bool)) list * string list * out_type *
   (out_type * out_type) list
 and out_rec_status =
   | Orec_not

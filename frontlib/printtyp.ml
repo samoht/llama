@@ -103,6 +103,7 @@ let tree_of_type_declaration rec_status tcs =
   Osig_type (begin
                tcs.tcs_name,
                List.map (fun i -> parameter_name i, (true, true)) (tcs_params tcs),
+               List.map (fun i -> Effect.string_of_region i) (tcs_regions tcs),
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract

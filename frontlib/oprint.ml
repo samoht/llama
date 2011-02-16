@@ -387,7 +387,7 @@ and print_out_sig_item ppf =
       fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident name !out_type
         ty pr_prims prims
 
-and print_out_type_decl kwd ppf (name, args, ty, constraints) =
+and print_out_type_decl kwd ppf (name, args, regs, ty, constraints) =
   let print_constraints ppf params =
     List.iter
       (fun (ty1, ty2) ->
@@ -409,7 +409,7 @@ and print_out_type_decl kwd ppf (name, args, ty, constraints) =
     | _ -> ()
   in
   let print_name_args ppf =
-    fprintf ppf "%s %t%a" kwd type_defined print_manifest ty
+    fprintf ppf "%s %t%a%a" kwd type_defined print_manifest ty print_out_string_list regs
   in
   let ty =
     match ty with
