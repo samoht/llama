@@ -14,8 +14,8 @@ let debug fmt =
 type region_parameter = int
 
 let string_of_region i =
-  "@" ^ string_of_int i
-
+  string_of_int i
+    
 (* effect parameter : regions order is NOT important *)
 type effect = region_parameter list
 

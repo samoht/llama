@@ -160,12 +160,11 @@ let pr_vars =
 
 let print_out_string_list ppf = function
   | []    -> ()
-  | [h]   -> fprintf ppf "%s" h
   | h::t  ->
     let rec aux ppf = function
       | []   -> ()
-      | h::t -> fprintf ppf ".%s%a" h aux t in
-    fprintf ppf "%s%a" h aux t
+      | h::t -> fprintf ppf ",%s%a" h aux t in
+    fprintf ppf "[%s%a]" h aux t
 
 let rec print_out_type ppf =
   function
