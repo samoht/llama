@@ -205,6 +205,9 @@ let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], [])
 let instantiate_region inst_r param =
   List.assq param inst_r
 
+(* If phi is empty, then instantiate a new effect variable to be unified later;
+   If phi is a collection of region parameters, then for each of them, look into
+   the context to get the corresponding region parameter *)
 let instantiate_effect inst_r phi =
   let rec aux accu = function
     | []   -> accu
@@ -212,7 +215,9 @@ let instantiate_effect inst_r phi =
       let r = List.assq h inst_r in
       let phi = Effect.Eregion r in
       aux (Effect.union phi accu) t in
-  aux Effect.empty_effect phi
+  match phi with
+    | [] -> Effect.new_effect_variable ()
+    | _  -> aux Effect.empty_effect phi
 
 (* inst   : int -> type variable
    inst_r : int -> region variable *)
