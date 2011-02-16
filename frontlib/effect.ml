@@ -3,11 +3,11 @@ let debug_ = false
 let debug fmt =
   Printf.kprintf (fun str -> if debug_ then Printf.eprintf "EFFECT: %s\n%!" str) fmt
 
-(***************)
-(*     Base    *)
-(***************)
+(******************)
+(* Immutable base *)
+(******************)
 
-(* Parameters are de bruijn indices *)
+(* Parameters are de Bruijn indices *)
 (* Structures are immutable *)
 
 (* region parameter *)
