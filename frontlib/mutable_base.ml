@@ -5,7 +5,7 @@ open Base
 
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type * Effect.mutable_t
+  | Marrow of mutable_type * mutable_type * Effect.mutable_effect
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_type list * Effect.mutable_region list
 
@@ -19,7 +19,7 @@ and mutable_type_variable =
 type mutable_variable =
   { mvar_name : string;
     mvar_type : mutable_type;
-    mvar_effect : Effect.mutable_t; }
+    mvar_effect : Effect.mutable_effect; }
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -64,7 +64,7 @@ type mutable_expression =
   { mexp_desc : mutable_expression_desc;
     mexp_loc : Location.t;
     mexp_type : mutable_type;
-    mexp_effect : Effect.mutable_t }
+    mexp_effect : Effect.mutable_effect; }
 
 and mutable_expression_desc =
     Mexp_var of mutable_variable
@@ -108,38 +108,38 @@ and local_type_constructor_kind =
 
 and local_type =
     Lparam of parameter
-  | Larrow of local_type * local_type * Effect.t
+  | Larrow of local_type * local_type * Effect.effect
   | Ltuple of local_type list
-  | Lconstr of type_constructor * local_type list * Effect.region list
-  | Lconstr_local of local_type_constructor * Effect.region list
+  | Lconstr of type_constructor * local_type list * Effect.region_parameter list
+  | Lconstr_local of local_type_constructor * Effect.region_parameter list
 
-(* XXX: when region names will appear in the source code, we will need to
-   use lists into accu instead of int *)
-let rec regions_of_ltc accu ltc =
-  regions_of_kind accu ltc.ltcs_kind
+(* Count the number of region variables in a local type term *)
+(* We assume here that there is no region annotation in the source-code
+   ie. that any records with mutable field(s) will create a new region *)
+let rec count_regions_of_ltc accu ltc =
+  count_regions_of_kind accu ltc.ltcs_kind
 
-and regions_of_kind accu = function
+and count_regions_of_kind accu = function
   | Ltcs_abstract     -> accu
-  | Ltcs_variant vrts -> regions_of_ltl accu (List.flatten (List.map snd vrts))
-  | Ltcs_abbrev ltc   -> regions_of_lt accu ltc
+  | Ltcs_variant vrts -> count_regions_of_ltl accu (List.flatten (List.map snd vrts))
+  | Ltcs_abbrev lt    -> count_regions_of_lt accu lt
   | Ltcs_record lbls  ->
     let accu = if List.exist (fun (_,m,_) -> m=Mutable) lbls then accu + 1 else accu in
-    regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
+    count_regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
 
-
-and regions_of_lt accu = function
+(* We assume here that Lconstr accumulates correctly the sub-regions *)
+and count_regions_of_lt accu = function
   | Lparam _             -> accu
-  | Larrow (lt1, lt2, e) -> regions_of_lt (regions_of_lt (List.length e + accu) lt1) lt2
-  | Ltuple ltl           -> regions_of_ltl accu ltl
+  | Larrow (lt1, lt2, e) -> count_regions_of_lt (count_regions_of_lt (List.length e + accu) lt1) lt2
+  | Ltuple ltl           -> count_regions_of_ltl accu ltl
   | Lconstr (_, _, r)    -> List.length r + accu
   | Lconstr_local (_, r) -> List.length r + accu
 
-and regions_of_ltl accu ltl =
-  List.fold_left regions_of_lt accu ltl
+and count_regions_of_ltl accu ltl =
+  List.fold_left count_regions_of_lt accu ltl
 
-let regions_of_ltcl ltcl =
-  let n = List.fold_left regions_of_ltc 0 ltcl in
-  standard_parameters n
+let count_regions_of_ltcl accu ltcl =
+  List.fold_left count_regions_of_ltc accu ltcl
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
@@ -212,7 +212,7 @@ let instantiate_effect inst_r phi =
       let r = List.assq h inst_r in
       let phi = Effect.Eregion r in
       aux (Effect.union phi accu) t in
-  aux Effect.empty phi
+  aux Effect.empty_effect phi
 
 (* inst   : int -> type variable
    inst_r : int -> region variable *)
@@ -240,14 +240,7 @@ let instantiate_constructor cs =
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
   let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
-  let r =
-    if Base.is_record_with_mutable_fields lbl.lbl_tcs then
-      match inst_r with
-        | []         -> Some (Effect.new_region_variable ())
-        | (_,v) :: _ -> Some v
-    else
-      None in
-  ty_res, ty_arg, r
+  ty_res, List.map snd inst_r, ty_arg
 
 let instantiate_value v =
   let ty = v.val_type in
@@ -308,13 +301,14 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, []), _ ->
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, _), _ ->
+        (* XXX: we should apply_region somewhere *)
         unify (mutable_apply_type (tcs_params tcs1) (tcs_regions tcs1) body1 tyl1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, []) ->
+    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, _) ->
+        (* XXX: we should apply_region somewhere *)
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2)
-    | Mconstr (tcs1, tyl1, r1), Mconstr (tcs2, tyl2, r2) when tcs1 == tcs2 ->
-        if Base.is_record_with_mutable_fields tcs1 then
-          Effect.unify_region r1 r2;
+    | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
+        Effect.unify_regions r1s r2s;
         unify_list tyl1 tyl2
     | _ ->
         raise Unify

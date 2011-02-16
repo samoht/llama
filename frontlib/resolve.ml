@@ -249,12 +249,13 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         end;
         match gentcs with
           | Local ltcs ->
-            let rs = regions_of_ltc 0 ltcs in
-            Lconstr_local (ltcs, standard_parameters rs)
+            let n = count_regions_of_ltc 0 ltcs in
+            Lconstr_local (ltcs, standard_parameters n)
           | Global tcs ->
-            let tys = List.map (local_type pseudoenv) tyl in
-            let rs =  regions_of_ltl (List.length (tcs_regions tcs)) tys in
-            Lconstr (tcs, tys, standard_parameters rs)
+            (* XXX: we should ensure that the new regions doens't conflict with the ones in tys *)
+            let tys = List.map (local_type pseudoenv) tyl in 
+            let n = List.length (tcs_regions tcs) + count_regions_of_ltl 0 tys in
+            Lconstr (tcs, tys, standard_parameters n)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -267,7 +268,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Marrow (mutable_type env ty1, mutable_type env ty2, Effect.new_t ())
+        Marrow (mutable_type env ty1, mutable_type env ty2, Effect.new_effect_variable ())
     | Ptyp_tuple tyl ->
         Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
@@ -275,13 +276,10 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let cts = lookup_type_constructor env lid ty.ptyp_loc in
-        let r = 
-          if Base.is_record_with_mutable_fields cts then
-            [Effect.new_region_variable ()]
-          else
-            [] in
-        Mconstr (tcs, List.map (mutable_type env) tyl, r)
+        let tcs = lookup_type_constructor env lid ty.ptyp_loc in
+        let rs = tcs_regions tcs in
+        let mrs = List.map (fun _ -> Effect.new_region_variable ()) rs in
+        Mconstr (tcs, List.map (mutable_type env) tyl, mrs)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -293,7 +291,9 @@ let pattern env pat =
       None -> ()
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
-  let values = List.map (fun name -> (name, new_variable name (new_type_variable ()) (Effect.new_t ()))) names in
+  let values = List.map
+    (fun name -> name, new_variable name (new_type_variable ()) (Effect.new_effect_variable ()))
+    names in
   let rec pattern pat =
     { mpat_desc = pattern_aux pat;
       mpat_loc = pat.ppat_loc;
@@ -352,7 +352,7 @@ let rec expression ctxt exp =
   { mexp_desc = expression_aux ctxt exp;
     mexp_loc = exp.pexp_loc;
     mexp_type = new_type_variable ();
-    mexp_effect = Effect.new_t (); }
+    mexp_effect = Effect.new_effect_variable (); }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
@@ -420,7 +420,7 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Mexp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name (new_type_variable ()) (Effect.new_t ()) in
+        let var = new_variable name (new_type_variable ()) (Effect.new_effect_variable ()) in
         let big_ctxt = context_add_variable var ctxt in
         Mexp_for (var,
                   expression ctxt e1,

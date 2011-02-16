@@ -7,88 +7,88 @@ let debug fmt =
 (*     Base    *)
 (***************)
 
-(* Parameters are de brujin indices *)
+(* Parameters are de bruijn indices *)
 (* Structures are immutable *)
 
-type region = int
+(* region parameter *)
+type region_parameter = int
 
 let string_of_region i =
   "@" ^ string_of_int i
 
-type t = region list
+(* effect parameter : regions order is NOT important *)
+type effect = region_parameter list
 
 
-(***************)
-(*   Regions   *)
-(***************)
+(*******************)
+(* Mutable regions *)
+(*******************)
 
 (* Below, all the mutable links are used during the unification phase *)
 
-(* Regions are unified with other regions *)
-(* Links are useful for unification       *)
-type mutable_region = {
+(* Mutable regions = mutable regions variables *)
+type mutable_region_variable = {
   rid           : int;
-  mutable rlink : mutable_region option;
+  mutable rlink : mutable_region option; 
 }
+
+and mutable_region = mutable_region_variable
 
 let string_of_mutable_region r =
   string_of_region r.rid
 
-let rec repr_of_region r =
+let string_of_mutable_regions l =
+  Printf.sprintf "[%s]" (String.concat "," (List.map string_of_mutable_region l))
+
+let rec mutable_region_repr r =
   match r.rlink with
     | None   -> r
-    | Some v -> repr_of_region v
-
-let string_of_mutable_regions l =
-  Printf.sprintf "[%s]" (String.concat "." (List.map string_of_mutable_region l))
+    | Some v -> mutable_region_repr v
 
 exception Unify
 
-let rec unify_region r1 r2 =
-  match r1, r2 with
-    | []  , []   -> ()
-    | [v1], [v2] ->
-      let v1 = repr_of_region v1 in
-      let v2 = repr_of_region v2 in
-      debug "unify_region %s %s" (string_of_mutable_region v1) (string_of_mutable_region v2);
-      if v1.rid != v2.rid then
-        v1.rlink <- Some v2
-    | l1, l2 when List.length l1 = List.length l2 -> (* XXX: really ? *)
-      List.iter2 (fun v1 v2 -> unify_region [v1] [v2]) l1 l2
-    | _ ->
-      Printf.eprintf "ERROR: cannot unify regions %s and %s\n"
-        (string_of_mutable_regions r1)
-        (string_of_mutable_regions r2);
-      raise Unify
+let unify_region r1 r2 =
+  let r1 = mutable_region_repr r1 in
+  let r2 = mutable_region_repr r2 in
+  debug "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2);
+  if r1.rid <> r2.rid then
+    r1.rlink <- Some r2
+  
+(* r1 and r2 are two lists of region variables, whose order IS important *)
+let rec unify_regions r1s r2s =
+  if List.length r1s = List.length r2s then
+    List.iter2 unify_region r1s r2s
+  else begin
+    Printf.eprintf "ERROR: cannot unify region parameters %s and %s\n"
+      (string_of_mutable_regions r1s)
+      (string_of_mutable_regions r2s);
+    raise Unify
+  end
 
+(*******************)
+(* Mutable effects *)
+(*******************)
 
-(***************)
-(*   Effects   *)
-(***************)
+type mutable_effect =
+  | Evar of mutable_effect_variable (* An effect variable *)
+  | Eregion of mutable_region       (* A region variable *)
+  | Eunion of mutable_effect Set.t  (* A union of effects *)
 
-
-(* The type of effects *)
-type mutable_t =
-  | Evar of variable          (* An effect variable *)
-  | Eregion of mutable_region (* A region *)
-  | Eunion of mutable_t Set.t (* A union of effects *)
-
-(* Effect variables can be unified with any effect *)
-and variable = {
+and mutable_effect_variable = {
   id           : int;
-  mutable link : mutable_t option;
+  mutable link : mutable_effect option;
 }
 
-let string_of_variable v =
-  "_" ^ string_of_int v.id
+let string_of_mutable_effect_variable v =
+  "E" ^ string_of_int v.id
 
-let rec to_string = function
-  | Evar v    -> string_of_variable v
+let rec string_of_mutable_effect = function
+  | Evar v    -> string_of_mutable_effect_variable v
   | Eregion r -> string_of_mutable_region r
-  | Eunion s  -> Printf.sprintf "{%s}" (String.concat "," (List.map to_string (Set.elements s)))
+  | Eunion s  -> Printf.sprintf "{%s}" (String.concat "," (List.map string_of_mutable_effect (Set.elements s)))
 
 (* check if a set if composed of representants only *)
-let is_repr_set s =
+let is_union_repr s =
   let aux = function
     | Evar    { link  = None } -> true
     | Eregion { rlink = None } -> true
@@ -97,24 +97,24 @@ let is_repr_set s =
 
 (* Follow the links to find the common representation.
    The tricky part is to detect when to stop with unions ... *)
-let rec repr phi =
+let rec mutable_effect_repr phi =
   match phi with
-    | Evar { link = Some phi }  -> repr phi
+    | Evar { link = Some phi }  -> mutable_effect_repr phi
     | Evar _                    -> phi
-    | Eregion r                 -> Eregion (repr_of_region r)
+    | Eregion r                 -> Eregion (mutable_region_repr r)
     | Eunion s
-        when Set.cardinal s = 1 -> repr (Set.choose s)
+        when Set.cardinal s = 1 -> mutable_effect_repr (Set.choose s)
     | Eunion s
-        when is_repr_set s      -> phi
+        when is_union_repr s    -> phi
     | Eunion s                  -> 
       let l = Set.elements s in
-      let l = List.map repr l in
-      repr (union_list l)
+      let l = List.map mutable_effect_repr l in
+      mutable_effect_repr (union_list l)
 
 (* phi1 U phi2 *)
 and union phi1 phi2 =
-  let phi1 = repr phi1 in
-  let phi2 = repr phi2 in
+  let phi1 = mutable_effect_repr phi1 in
+  let phi2 = mutable_effect_repr phi2 in
   match phi1, phi2 with
     | Eregion _, Eregion _
     | Eregion _, Evar _
@@ -129,7 +129,7 @@ and union phi1 phi2 =
       else (* U is associative *)
         Eunion (Set.union e1 e2)
 
-    | Eunion e1, _    -> Eunion (Set.add phi2 e1)
+    | Eunion e1, _         -> Eunion (Set.add phi2 e1)
     | _        , Eunion e2 -> Eunion (Set.add phi1 e2)
 
 (* phi1 U ... U phin *)
@@ -139,12 +139,12 @@ and union_list l =
     | h::t  -> aux (union h accu) t in
   aux (Eunion (Set.empty_custom compare)) l
 
-(* var < region < union *)
+(* compare using IDs when possible; and var > region > union otherwise *)
 and compare phi1 phi2 =
-  let phi1 = repr phi1 in
-  let phi2 = repr phi2 in
+  let phi1 = mutable_effect_repr phi1 in
+  let phi2 = mutable_effect_repr phi2 in
   match phi1, phi2 with
-    | Evar phi1 , Evar phi2  -> phi1.id - phi2.id (* XXX: may not work ... *)
+    | Evar phi1 , Evar phi2  -> phi1.id - phi2.id
     | Eregion r1, Eregion r2 -> r1.rid - r2.rid
     | Eunion s1 , Eunion s2  -> Set.compare s1 s2
 
@@ -157,21 +157,15 @@ and compare phi1 phi2 =
     | Eunion _  , Evar _     -> -1
 
 (* The empty effect is defined using the compare function above *)
-let empty_set : mutable_t Set.t = Set.empty_custom compare
+let empty_set : mutable_effect Set.t = Set.empty_custom compare
 
-let empty = Eunion empty_set
+let empty_effect = Eunion empty_set
 
 let is_empty = function
   | Eunion s -> Set.is_empty s
   | _        -> false
 
-let new_variable =
-  let x = ref 0 in
-  let aux () =
-    incr x;
-    { id = !x; link = None } in
-  aux
-
+(* Returns a fresh region variable *)
 let new_region_variable =
   let x = ref 0 in
   let aux () =
@@ -179,34 +173,36 @@ let new_region_variable =
     { rid = !x; rlink = None } in
   aux
 
-let new_t () =
-  Evar (new_variable ())
+(* Returns a fresh effect variable *)
+let new_effect_variable =
+  let x = ref 0 in
+  let aux () =
+    incr x;
+    Evar { id = !x; link = None } in
+  aux
 
-let of_region_opt = function
-  | Some r -> Eregion r
-  | None   -> empty
-
+let effect_of_region r =
+  Eregion r
     
 (* unification *)
 
 (* v and phi are representant *)
 let rec occurs v phi =
   match phi with
-  | Evar tv  -> v.id = tv.id (* XXX: is that correct ? was v == tv *)
+  | Evar tv  -> v == tv
   | Eregion _-> false 
   | Eunion s -> Set.exist (occurs v) s
 
-(* variables / * are unified;
-   singleton set / sets are unified;
-   sets / sets are not unified (it raises an error) *)
 let rec unify phi1 phi2 =
-  let phi1 = repr phi1 in
-  let phi2 = repr phi2 in
-  debug "unify %s %s" (to_string phi1) (to_string phi2);
+  let phi1 = mutable_effect_repr phi1 in
+  let phi2 = mutable_effect_repr phi2 in
+  debug "unify %s %s"
+    (string_of_mutable_effect phi1)
+    (string_of_mutable_effect phi2);
   match phi1, phi2 with
     (* reflexivity *)
-    | Evar v1   , Evar v2    when v1 == v2              -> ()
-    | Eregion r1, Eregion r2 when r1 == r2              -> ()
+    | Evar v1   , Evar v2    when v1.id = v2.id         -> ()
+    | Eregion r1, Eregion r2 when r1.rid = r2.rid       -> ()
     | Eunion s1 , Eunion s2  when Set.compare s1 s2 = 0 -> ()
 
     (* v = phi *)
@@ -219,15 +215,17 @@ let rec unify phi1 phi2 =
     | Eunion s1 , Eregion r2 -> Set.iter (unify phi2) s1
 
     (* {} = phi U {} => phi = {} *)
-    | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify phi1) s2
-    | Eunion s1, Eunion s2 when Set.is_empty s2 -> Set.iter (unify phi2) s1
+    | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify empty_effect) s2
+    | Eunion s1, Eunion s2 when Set.is_empty s2 -> Set.iter (unify empty_effect) s1
 
     (* phi1 = phi1 U phi2 => ({} <= phi2 <= phi1 *)
     (* XXX: does 'phi2 = {}' ensure minimality ? *)
-    | Evar _   , Eunion s2 -> Set.iter (unify empty) (Set.remove phi1 s2)
-    | Eunion s1, Evar _    -> Set.iter (unify empty) (Set.remove phi2 s1)
-    | Eunion s1, Eunion s2 -> Set.iter (unify empty) (Set.diff s2 s1)
+    | Evar _   , Eunion s2 -> Set.iter (unify empty_effect) (Set.remove phi1 s2)
+    | Eunion s1, Evar _    -> Set.iter (unify empty_effect) (Set.remove phi2 s1)
+    | Eunion s1, Eunion s2 -> Set.iter (unify empty_effect) (Set.diff s2 s1)
 
     | _ ->
-      Printf.eprintf "ERROR: cannot unify effects %s and %s\n%!" (to_string phi1) (to_string phi2);
+      Printf.eprintf "ERROR: cannot unify effects %s and %s\n%!"
+        (string_of_mutable_effect phi1)
+        (string_of_mutable_effect phi2);
       raise Unify

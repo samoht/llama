@@ -30,14 +30,14 @@ type parameter = int
 
 type llama_type =
     Tparam of parameter
-  | Tarrow of llama_type * llama_type * Effect.t
+  | Tarrow of llama_type * llama_type * Effect.effect
   | Ttuple of llama_type list
-  | Tconstr of type_constructor * llama_type list * Effect.region list
+  | Tconstr of type_constructor * llama_type list * Effect.region_parameter list
 
 and type_constructor_group =
   { tcsg_module : module_id;                        (* Defining module *)
     tcsg_params : parameter list;                   (* List of type parameters *)
-    tcsg_regions : Effect.region list;              (* List of region parameters *)
+    tcsg_regions : Effect.region_parameter list;    (* List of region parameters *)
     mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
 
 and type_constructor =
@@ -170,11 +170,6 @@ let get_labels tcs =
   match tcs.tcs_kind with
       Tcs_record lbl_list -> lbl_list
     | _ -> failwith "Base.get_labels"
-
-let is_record_with_mutable_fields tcs =
-  match tcs.tcs_kind with
-    | Tcs_record lbl_list -> List.exist (fun l -> l.lbl_mut) lbl_list
-    | _                   -> false
 
 let parameter_name i =
   if i < 26

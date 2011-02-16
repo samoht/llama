@@ -91,7 +91,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty) in
+  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty_effect) in
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -258,9 +258,9 @@ and expression_aux exp =
       Mexp_var var ->
         var.mvar_type, var.mvar_effect
     | Mexp_value v ->
-        instantiate_value v, Effect.empty (* XXX: read (optional) exported effects from signatures *)
+        instantiate_value v, Effect.empty_effect (* XXX: read (optional) exported effects from signatures *)
     | Mexp_literal c ->
-        literal c, Effect.empty
+        literal c, Effect.empty_effect
     | Mexp_tuple args ->
         let tys, phis = List.split (List.map expression args) in
         Mtuple tys, Effect.union_list phis
@@ -278,7 +278,7 @@ and expression_aux exp =
                     Mvar v ->
                       let ty1 = new_type_variable () in
                       let ty2 = new_type_variable () in
-                      let phi = Effect.new_t () in
+                      let phi = Effect.new_effect_variable () in
                       v.link <- Some (Marrow (ty1, ty2, phi));
                       ty1, ty2, phi
                   | Marrow (ty1, ty2, phi) ->
@@ -309,7 +309,7 @@ and expression_aux exp =
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         let phi = caselist ty_arg ty_res pat_exp_list in
-        Marrow (ty_arg, ty_res, phi), Effect.empty
+        Marrow (ty_arg, ty_res, phi), Effect.empty_effect
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn in
         let ty_res, phi1 = expression body in
@@ -359,26 +359,28 @@ and expression_aux exp =
             lbl_exp_list
         and phi1 =
           match opt_init with
-              None -> Effect.empty
+              None -> Effect.empty_effect
             | Some init -> expression_expect init ty_res
         in
         ty_res, Effect.union_list (phi1 :: phis)
     | Mexp_field (e, lbl) ->
-        let ty_res, ty_arg, r = instantiate_label lbl in
+        let ty_res, rl, ty_arg = instantiate_label lbl in
         let phi = expression_expect e ty_res in
-        ty_arg, Effect.union (Effect.of_region_opt r) phi
+        let rl = List.map Effect.effect_of_region rl in
+        ty_arg, Effect.union_list (phi :: rl)
     | Mexp_setfield (e1, lbl, e2) ->
-        let ty_res, ty_arg, r = instantiate_label lbl in
+        let ty_res, rl, ty_arg = instantiate_label lbl in
         let phi1 = expression_expect e1 ty_res
         and phi2 = expression_expect e2 ty_arg in
-        mutable_type_unit, Effect.union_list [Effect.of_region_opt r; phi1; phi2]
+        let rl = List.map Effect.effect_of_region rl in
+        mutable_type_unit, Effect.union_list (rl @ [ phi1; phi2])
     | Mexp_assert e ->
         mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
-        new_type_variable (), Effect.empty
+        new_type_variable (), Effect.empty_effect
     | Mexp_thread e ->
         let _ = statement e in
-        mutable_type_unit, Effect.empty
+        mutable_type_unit, Effect.empty_effect
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages.
@@ -407,7 +409,7 @@ and expression_expect exp expected_ty =
                     | _ ->
                         mutable_type_string in
                 unify exp.mexp_type ty;
-                ty, Effect.empty
+                ty, Effect.empty_effect
             | _ ->
                 expression exp
         in

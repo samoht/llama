@@ -174,13 +174,13 @@ open Mutable_base
 
 (* XXX: need to normalize region and variable names *)
 let tree_of_mutable_region r =
-  let r = Effect.repr_of_region r in
+  let r = Effect.mutable_region_repr r in
   Effect.string_of_mutable_region r
 
 let rec tree_of_mutable_effect phi =
-  let phi = Effect.repr phi in
+  let phi = Effect.mutable_effect_repr phi in
   match phi with
-    | Effect.Evar v    -> [Effect.string_of_variable v] (* XXX: we should check that we don't have these anymore *)
+    | Effect.Evar v    -> [Effect.string_of_mutable_effect_variable v] (* XXX: we should check that we don't have these anymore *)
     | Effect.Eregion r -> [Effect.string_of_mutable_region r]
     | Effect.Eunion s  ->
       let l = Set.elements s in

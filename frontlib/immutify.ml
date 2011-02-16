@@ -16,7 +16,7 @@ exception Error of Location.t * error
 type env =
   { mutable type_variables : (mutable_type_variable * parameter) list;
     mutable variables : (mutable_variable * variable) list;
-    mutable regions : (Effect.mutable_region * Effect.region) list; }
+    mutable regions : (Effect.mutable_region_variable * Effect.region_parameter) list; }
 
 let new_env () =
   { type_variables = [];
@@ -28,7 +28,7 @@ let new_env () =
 (* ---------------------------------------------------------------------- *)
 
 let mutable_region f r =
-  let r = Effect.repr_of_region r in
+  let r = Effect.mutable_region_repr r in
   try List.assq r f.regions
   with Not_found ->
     let i = List.length f.regions in
@@ -36,7 +36,7 @@ let mutable_region f r =
     i
 
 let rec mutable_effect f phi =
-  let phi = Effect.repr phi in
+  let phi = Effect.mutable_effect_repr phi in
   match phi with
     | Effect.Evar _    -> [] (* XXX: what should we do here ? *)
     | Effect.Eregion r -> [ mutable_region f r ]
@@ -302,7 +302,8 @@ let signature_item env tsig =
         let v = primitive_value modenv name ty prim in
         [Sig_value v], Env.add_value v env
     | Msig_type (params, decls) ->
-        let tcsg = make_type_constructor_group modenv params (regions_of_ltcl decls) decls in
+        let n = count_regions_of_ltcl 0 decls in
+        let tcsg = make_type_constructor_group modenv params (standard_parameters n) decls in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
     | Msig_exception (name, args) ->
         let cs = exception_constructor modenv name args in
@@ -348,7 +349,8 @@ let structure_item env str =
         let v = primitive_value modenv name ty prim in
         [Str_external v], Env.add_value v env, None
     | Mstr_type (params, decls) ->
-        let tcsg = make_type_constructor_group modenv params (regions_of_ltcl decls) decls in
+        let n = count_regions_of_ltcl 0 decls in
+        let tcsg = make_type_constructor_group modenv params (standard_parameters n) decls in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
     | Mstr_exception (name, args) ->
         let cs = exception_constructor modenv name args in

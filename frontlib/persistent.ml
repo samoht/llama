@@ -14,14 +14,14 @@ type 'a reference =
 
 type llama_type =
     Tparam of int
-  | Tarrow of llama_type * llama_type * Effect.t
+  | Tarrow of llama_type * llama_type * Effect.effect
   | Ttuple of llama_type list
-  | Tconstr of type_constructor reference * llama_type list * Effect.region list
+  | Tconstr of type_constructor reference * llama_type list * Effect.region_parameter list
 
 and type_constructor_group =
   { tcsg_module : module_id;
     tcsg_params : int list;
-    tcsg_regions : Effect.region list;
+    tcsg_regions : Effect.region_parameter list;
     mutable tcsg_members : type_constructor list }
 
 and type_constructor =

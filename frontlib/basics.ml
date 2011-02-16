@@ -15,8 +15,8 @@ let all_parameters ty =
   List.rev tl, List.rev rl
 
 let type_closed ty =
-  let tl, rl = all_parameters ty in
-  tl = [] && rl = []
+  let tl, _ = all_parameters ty in
+  tl = []
 
 let parameters ty = fst (all_parameters ty)
 let regions ty = snd (all_parameters ty)
