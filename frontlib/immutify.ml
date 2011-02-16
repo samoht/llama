@@ -38,7 +38,7 @@ let mutable_region f r =
 let rec mutable_effect f phi =
   let phi = Effect.mutable_effect_repr phi in
   match phi with
-    | Effect.Evar _    -> [] (* XXX: what should we do here ? *)
+    | Effect.Evar _    -> []
     | Effect.Eregion r -> [ mutable_region f r ]
     | Effect.Eunion u  ->
       let l = Set.elements u in
