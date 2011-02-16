@@ -261,14 +261,15 @@ let rec mutable_type_repr = function
     Mvar { link = Some ty } -> mutable_type_repr ty
   | ty -> ty
 
-let mutable_apply_type params regions body args =
-  let inst_r = List.map (fun i -> i, Effect.new_region_variable ()) regions in
-  instantiate_type (List.combine params args) inst_r body
+let mutable_apply_type params rparams body args rargs =
+  let inst = List.combine params args in
+  let inst_r = List.combine rparams rargs in
+  instantiate_type inst inst_r body
 
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
-  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, []) ->
-      expand_mutable_type (mutable_apply_type (tcs_params tcs) (tcs_regions tcs) body args)
+  | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, rs) ->
+      expand_mutable_type (mutable_apply_type (tcs_params tcs) (tcs_regions tcs) body args rs)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -306,12 +307,10 @@ let rec unify ty1 ty2 =
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, _), _ ->
-        (* XXX: we should apply_region somewhere *)
-        unify (mutable_apply_type (tcs_params tcs1) (tcs_regions tcs1) body1 tyl1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, _) ->
-        (* XXX: we should apply_region somewhere *)
-        unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2)
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, tyl1, r1s), _ ->
+        unify (mutable_apply_type (tcs_params tcs1) (tcs_regions tcs1) body1 tyl1 r1s) ty2
+    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, r2s) ->
+        unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
         Effect.unify_regions r1s r2s;
         unify_list tyl1 tyl2
