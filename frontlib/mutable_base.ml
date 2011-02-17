@@ -98,6 +98,7 @@ and mutable_expression_desc =
 
 type local_type_constructor = {
   ltcs_name : string;
+  mutable ltcs_regions : Effect.region_parameter list;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -110,36 +111,46 @@ and local_type =
     Lparam of parameter
   | Larrow of local_type * local_type * Effect.effect
   | Ltuple of local_type list
+  (* The region parameter list maps (position -> parameters) inside the type_constructor *)
   | Lconstr of type_constructor * local_type list * Effect.region_parameter list
+   (* XXX: for local constructor, we impose that the arguments
+      are exactly the ones of the type declaration. This is a
+      very weird restriction *)
+  (* However, region parameter don't have to be the same *)
   | Lconstr_local of local_type_constructor * Effect.region_parameter list
+       
 
-(* Count the number of region variables in a local type term *)
-(* We assume here that there is no region annotation in the source-code
-   ie. that any records with mutable field(s) will create a new region *)
-let rec count_regions_of_ltc accu ltc =
-  count_regions_of_kind accu ltc.ltcs_kind
+(* Get the regions parameters in a local type terms *)
+let new_region l = List.length l
 
-and count_regions_of_kind accu = function
+let rec regions_of_ltc_ accu ltc =
+  regions_of_kind_ accu ltc.ltcs_kind
+
+and regions_of_kind_ accu = function
   | Ltcs_abstract     -> accu
-  | Ltcs_variant vrts -> count_regions_of_ltl accu (List.flatten (List.map snd vrts))
-  | Ltcs_abbrev lt    -> count_regions_of_lt accu lt
+  | Ltcs_variant vrts -> regions_of_ltl_ accu (List.flatten (List.map snd vrts))
+  | Ltcs_abbrev lt    -> regions_of_lt_ accu lt
   | Ltcs_record lbls  ->
-    let accu = if List.exist (fun (_,m,_) -> m=Mutable) lbls then accu + 1 else accu in
-    count_regions_of_ltl accu (List.map (fun (_,_,lt) -> lt) lbls)
+    let accu = if List.exist (fun (_,m,_) -> m=Mutable) lbls then new_region accu :: accu else accu in
+    regions_of_ltl_ accu (List.map (fun (_,_,lt) -> lt) lbls)
 
 (* We assume here that Lconstr accumulates correctly the sub-regions *)
-and count_regions_of_lt accu = function
-  | Lparam _             -> accu
-  | Larrow (lt1, lt2, e) -> count_regions_of_lt (count_regions_of_lt (List.length e + accu) lt1) lt2
-  | Ltuple ltl           -> count_regions_of_ltl accu ltl
-  | Lconstr (_, _, r)    -> List.length r + accu
-  | Lconstr_local (_, r) -> List.length r + accu
+and regions_of_lt_ accu = function
+  | Lparam _               -> accu
+  | Larrow (lt1, lt2, e)   -> regions_of_lt_ (regions_of_lt_ (e @ accu) lt1) lt2
+  | Ltuple ltl             -> regions_of_ltl_ accu ltl
+  | Lconstr (tcs, _, r)    -> r @ accu
+  | Lconstr_local (ltcs,r) -> r @ accu
 
-and count_regions_of_ltl accu ltl =
-  List.fold_left count_regions_of_lt accu ltl
+and regions_of_ltl_ accu ltl =
+  List.fold_left regions_of_lt_ accu ltl
 
-let count_regions_of_ltcl accu ltcl =
-  List.fold_left count_regions_of_ltc accu ltcl
+let regions_of_ltcl_ accu ltcl =
+  List.fold_left regions_of_ltc_ accu ltcl
+
+let regions_of_lt lt = List.sort compare (regions_of_lt_ [] lt)
+
+let regions_of_ltc ltc = List.sort compare (regions_of_ltc_ [] ltc)
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
@@ -151,7 +162,7 @@ type mutable_signature_item =
 
 and mutable_signature_item_desc =
     Msig_abstract_type of int * string
-  | Msig_type of int list * local_type_constructor list
+  | Msig_type of parameter list * local_type_constructor list
   | Msig_value of string * llama_type
   | Msig_external of string * llama_type * Primitive.description
   | Msig_exception of string * local_type list
@@ -228,8 +239,8 @@ let rec instantiate_type inst inst_r = function
       Marrow (instantiate_type inst inst_r ty1, instantiate_type inst inst_r ty2, instantiate_effect inst_r phi)
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst inst_r) tyl)
-  | Tconstr (tcs, tyl, rel) ->
-      try Mconstr (tcs, List.map (instantiate_type inst inst_r) tyl, List.map (instantiate_region inst_r) rel)
+  | Tconstr (tcs, tyl, rs) ->
+      try Mconstr (tcs, List.map (instantiate_type inst inst_r) tyl, List.map (instantiate_region inst_r) rs)
       with e -> Printf.eprintf "error in type %s\n%!" tcs.tcs_name; raise e
 
 let instantiate_type_constructor tcs =
@@ -249,8 +260,8 @@ let instantiate_label lbl =
 
 let instantiate_value v =
   let ty = v.val_type in
-  let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.parameters ty) in
-  let inst_r = List.map (fun i -> (i, Effect.new_region_variable ())) (Basics.regions ty) in
+  let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.type_parameters ty) in
+  let inst_r = List.map (fun i -> (i, Effect.new_region_variable ())) (Basics.region_parameters ty) in
   instantiate_type inst inst_r ty
 
 (* ---------------------------------------------------------------------- *)

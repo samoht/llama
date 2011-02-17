@@ -40,21 +40,28 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let tree_of_region i =
-  Effect.string_of_region i
+(* Need to subsitute region parameter *)
+let tree_of_region rs i =
+  let j = rs i in
+  Effect.string_of_region j
 
+(* Effect have already been substituted *)
 let tree_of_effect e =
-  List.map (fun i -> tree_of_region i) e
+  List.map (fun i -> tree_of_region (fun i -> i) i) e
+
+let xxx s = String.concat "," (List.map string_of_int s)
 
 let rec tree_of_type = function
-    Tparam i ->
-      Otyp_var (false, parameter_name i)
+  | Tparam i ->
+    Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2, phi) ->
-      Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
+    Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
   | Ttuple tyl ->
-      Otyp_tuple (tree_of_type_list tyl)
-  | Tconstr (tcs, tyl, r) ->
-      Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl, List.map tree_of_region r)
+    Otyp_tuple (tree_of_type_list tyl)
+  | Tconstr (tcs, tyl, rs) ->
+    let fn i = List.nth rs i in
+    Printf.eprintf "TT: regions=%s; rs=%s\n%!" (xxx tcs.tcs_regions) (xxx rs);
+    Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl, List.map (tree_of_region fn) tcs.tcs_regions)
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl

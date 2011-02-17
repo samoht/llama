@@ -31,6 +31,10 @@ exception Error of Location.t * error
 
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
+
+let region_variables = ref 0
+let reset_region_variables () = region_variables := 0
+
 let new_variable name ty phi = {
   mvar_name = name;
   mvar_type = ty;
@@ -133,18 +137,20 @@ type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
   pseudoenv_type_variables : (string * parameter) list;
+  pseudoenv_regions : int;
  }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
   pseudoenv_type_variables = [];
+  pseudoenv_regions = 0;
 }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
   { pseudoenv with
       pseudoenv_type_constructors =
-      Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
+        Tbl.add ltcs.ltcs_name ltcs pseudoenv.pseudoenv_type_constructors }
 
 let pseudoenv_lookup_type_constructor lid pseudoenv =
   let look_global () =
@@ -196,6 +202,7 @@ let lookup_type_variable pseudoenv name loc =
 
 let llama_type env ty =  (* val foo : 'a -> 'a *)
   let params = ref [] in
+  let regions = ref 0 in
   let rec aux ty =
     begin match ty.ptyp_desc with
         Ptyp_var name ->
@@ -212,10 +219,13 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
+          let n = !regions in
+          regions := n + (List.length tcs.tcs_regions);
+          let rs = shift_regions tcs.tcs_regions n in
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-          Tconstr (tcs, List.map aux tyl, [])
+          Tconstr (tcs, List.map aux tyl, rs)
     end
   in
   aux ty
@@ -233,7 +243,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         begin match gentcs with
             Local ltcs ->
-              let rec check l1 l2 =
+              let rec check l1 l2 = (* XXX: need to remove that check at one point *)
                 match l1, l2 with
                     ({ptyp_desc=Ptyp_var name} :: tl1), ((name', _) :: tl2) when name = name' ->
                       check tl1 tl2
@@ -249,13 +259,17 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         end;
         match gentcs with
           | Local ltcs ->
-            let n = count_regions_of_ltc 0 ltcs in
-            Lconstr_local (ltcs, standard_parameters n)
+            let rs = shift_regions ltcs.ltcs_regions pseudoenv.pseudoenv_regions in
+            Lconstr_local (ltcs, rs)
           | Global tcs ->
-            (* XXX: we should ensure that the new regions doens't conflict with the ones in tys *)
-            let tys = List.map (local_type pseudoenv) tyl in 
-            let n = List.length (tcs_regions tcs) + count_regions_of_ltl 0 tys in
-            Lconstr (tcs, tys, standard_parameters n)
+            let pseudoenv, ltcsl = List.fold_left (fun (pseudoenv, accu) ty ->
+              let lt = local_type pseudoenv ty in
+              let n = pseudoenv.pseudoenv_regions in
+              let regions = regions_of_lt lt in
+              let pseudoenv = { pseudoenv with pseudoenv_regions = n + (List.length regions) } in
+              (pseudoenv, lt :: accu)
+            ) (pseudoenv, []) tyl in
+            Lconstr (tcs, List.rev ltcsl, shift_regions tcs.tcs_regions pseudoenv.pseudoenv_regions)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -277,9 +291,11 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
         let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-        let rs = tcs_regions tcs in
-        let mrs = List.map (fun _ -> Effect.new_region_variable ()) rs in
-        Mconstr (tcs, List.map (mutable_type env) tyl, mrs)
+        let n = !region_variables in
+        region_variables := (List.length tcs.tcs_regions) + n;
+        let tcs = { tcs with tcs_regions = shift_regions tcs.tcs_regions n } in
+        let regions = List.map (fun _ -> Effect.new_region_variable ()) tcs.tcs_regions in
+        Mconstr (tcs, List.map (mutable_type env) tyl, regions)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -479,7 +495,7 @@ let is_recursive_abbrev =
       Lparam _ -> false
     | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
     | Ltuple tyl | Lconstr (_, tyl, _) -> List.exist (occ seen) tyl
-    | Lconstr_local (ltcs, _) ->
+    | Lconstr_local (ltcs,_) ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
                Ltcs_abbrev ty -> occ (ltcs :: seen) ty
@@ -488,11 +504,6 @@ let is_recursive_abbrev =
     match ltcs.ltcs_kind with
         Ltcs_abbrev ty -> occ [ltcs] ty
       | _ -> false
-
-(* Check it the top-level fields are mutable *)
-let is_mutable = function
-  | Ptype_record lbl_list -> List.exist (fun (_,mut,_,_) -> mut = Mutable) lbl_list
-  | _ -> false
 
 let type_declarations env pdecls =
   let pdecl1 = List.hd pdecls in
@@ -510,6 +521,7 @@ let type_declarations env pdecls =
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
+          ltcs_regions = [];
           ltcs_kind = Ltcs_variant [] }
       end pdecls
   in
@@ -522,7 +534,9 @@ let type_declarations env pdecls =
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
   List.iter2
     (fun pdecl ltcs ->
-       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind) pdecls ltcs_list;
+       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind;
+       ltcs.ltcs_regions <- regions_of_ltc ltcs;
+    ) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->
        if is_recursive_abbrev ltcs then

@@ -52,7 +52,6 @@ let rec mutable_type f = function
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)
   | Mconstr (tcs, tyl, r) ->
-      (* XXX: need to export the region to display it *)
       Tconstr (tcs, List.map (mutable_type f) tyl, List.map (mutable_region f) r)
 
 and type_variable f tvar =
@@ -189,25 +188,24 @@ and expression_option f = function
 
 let type_of_local_type subst local_args =
   let rec aux = function
-      Lparam i -> Tparam i
-    | Larrow (ty1, ty2, phi) -> Tarrow (aux ty1, aux ty2, phi)
-    | Ltuple tyl -> Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl, rl) -> Tconstr (tcs, List.map aux tyl, rl)
-    | Lconstr_local (ltcs, rl) ->
-        Tconstr (List.assq ltcs subst, local_args, rl) in
+    | Lparam i                -> Tparam i
+    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, phi)
+    | Ltuple tyl              -> Ttuple (List.map aux tyl)
+    | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
+    | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
   aux
 
-let make_type_constructor_group modenv params regions ltcs_list =
+let make_type_constructor_group modenv params ltcs_list =
   let tcsg =
     { tcsg_module = Modenv.current_module modenv;
       tcsg_params = params;
-      tcsg_regions = regions;
       tcsg_members = [] } in
   let tcs_list =
     List.map
       begin fun ltcs ->
         { tcs_group = tcsg;
           tcs_name = ltcs.ltcs_name;
+          tcs_regions = ltcs.ltcs_regions;
           tcs_kind = Tcs_abstract }
       end
       ltcs_list in
@@ -259,11 +257,11 @@ let make_singleton_type modenv arity name =
   let rec tcsg =
     { tcsg_module = Modenv.current_module modenv;
       tcsg_params = standard_parameters arity;
-      tcsg_regions = [];
       tcsg_members = [ tcs ] }
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
+      tcs_regions = [];
       tcs_kind = Tcs_abstract } in
   tcsg
 
@@ -302,8 +300,7 @@ let signature_item env tsig =
         let v = primitive_value modenv name ty prim in
         [Sig_value v], Env.add_value v env
     | Msig_type (params, decls) ->
-        let n = count_regions_of_ltcl 0 decls in
-        let tcsg = make_type_constructor_group modenv params (standard_parameters n) decls in
+        let tcsg = make_type_constructor_group modenv params decls in
         [Sig_type tcsg], Env.add_type_constructor_group tcsg env
     | Msig_exception (name, args) ->
         let cs = exception_constructor modenv name args in
@@ -349,8 +346,7 @@ let structure_item env str =
         let v = primitive_value modenv name ty prim in
         [Str_external v], Env.add_value v env, None
     | Mstr_type (params, decls) ->
-        let n = count_regions_of_ltcl 0 decls in
-        let tcsg = make_type_constructor_group modenv params (standard_parameters n) decls in
+        let tcsg = make_type_constructor_group modenv params decls in
         [Str_type tcsg], Env.add_type_constructor_group tcsg env, None
     | Mstr_exception (name, args) ->
         let cs = exception_constructor modenv name args in

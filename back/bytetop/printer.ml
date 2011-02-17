@@ -188,13 +188,13 @@ open Outcometree
               else
               Oval_stuff "<lazy>"
 *)
-          | Tconstr(tcs, ty_list, _) ->
+          | Tconstr(tcs, ty_list, rs) ->
               match tcs with
                 | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Basics.apply_type (tcs_params tcs) body ty_list)
+                      (Basics.apply_type (tcs_params tcs) (tcs_regions tcs) body ty_list rs)
                 | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -205,7 +205,7 @@ open Outcometree
                     let ty_args =
                       List.map
                         (function ty ->
-                           Basics.apply_type (tcs_params tcs) ty ty_list)
+                           Basics.apply_type (tcs_params tcs) (tcs_regions tcs) ty ty_list rs)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -217,8 +217,11 @@ open Outcometree
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Basics.apply_type (tcs_params tcs) lbl.lbl_arg
-                                  ty_list in
+                                Basics.apply_type
+                                  (tcs_params tcs)
+                                  (tcs_regions tcs)
+                                  lbl.lbl_arg
+                                  ty_list rs in
                               let lid = tree_of_label env lbl in
                               let v =
                                 tree_of_val (depth - 1) (Obj.field obj pos)

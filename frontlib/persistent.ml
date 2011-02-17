@@ -16,7 +16,7 @@ type llama_type =
     Tparam of int
   | Tarrow of llama_type * llama_type (** Effect.effect*)
   | Ttuple of llama_type list
-  | Tconstr of type_constructor reference * llama_type list (** Effect.region_parameter list*)
+  | Tconstr of type_constructor reference * llama_type list
 
 and type_constructor_group =
   { tcsg_module : module_id;
@@ -83,8 +83,8 @@ let rec save_type saver = function
       Tarrow (save_type saver ty1, save_type saver ty2 (*, phi*))
   | Base.Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
-  | Base.Tconstr (tcs, tyl, rl) ->
-      Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl (*, rl*))
+  | Base.Tconstr (tcs, tyl, r) -> (* XXX: should rename the region names inside the type-constructor saver *)
+      Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl)
 
 and save_type_constructor_reference saver tcs =
   if Base.tcs_module tcs = saver.saver_module then
@@ -184,9 +184,11 @@ let rec load_type loader = function
       Base.Tarrow (load_type loader ty1, load_type loader ty2, [])
   | Ttuple tyl ->
       Base.Ttuple (List.map (load_type loader) tyl)
-  | Tconstr (tcs, tyl (*, rl*)) ->
-      Base.Tconstr (load_type_constructor_reference loader tcs,
-                    List.map (load_type loader) tyl, [] (*rl*))
+  | Tconstr (tcs, tyl) ->
+      let tcs = load_type_constructor_reference loader tcs in
+      Base.Tconstr (tcs,
+                    List.map (load_type loader) tyl,
+                    []) (* XXX: should get all the region variables inside tcs *)
 
 and load_type_constructor_reference loader = function
     Internal tcs ->
@@ -199,7 +201,6 @@ and load_type_constructor_group loader tcsg =
     let tcsg' =
       { Base.tcsg_module = tcsg.tcsg_module;
         Base.tcsg_params = tcsg.tcsg_params;
-        Base.tcsg_regions = []; (*tcsg.tcsg_regions;*)
         Base.tcsg_members = [] } in
     loader.loader_tcsg <- (tcsg, tcsg') :: loader.loader_tcsg;
     tcsg'.Base.tcsg_members <- List.map (load_type_constructor loader) tcsg.tcsg_members;
@@ -210,6 +211,7 @@ and load_type_constructor loader tcs =
     let tcs' =
       { Base.tcs_group = load_type_constructor_group loader tcs.tcs_group;
         Base.tcs_name = tcs.tcs_name;
+        Base.tcs_regions = [];
         Base.tcs_kind = Base.Tcs_abstract } in
     loader.loader_tcs <- (tcs, tcs') :: loader.loader_tcs;
     tcs'.Base.tcs_kind <- load_type_constructor_kind loader tcs.tcs_kind;

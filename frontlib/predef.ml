@@ -8,40 +8,40 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params =
+let mkabs name params regions =
   let rec tcsg =
     { tcsg_module = Module_builtin;
       tcsg_params = params;
-      tcsg_regions = [];
       tcsg_members = [ tcs ] }
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
+      tcs_regions = regions;
       tcs_kind = Tcs_abstract } in
   tcsg, tcs
 
-let tcsg_int, tcs_int = mkabs "int" []
-let tcsg_char, tcs_char = mkabs "char" []
-let tcsg_string, tcs_string = mkabs "string" []
-let tcsg_float, tcs_float = mkabs "float" []
-let tcsg_exn, tcs_exn = mkabs "exn" []
-let tcsg_array, tcs_array = mkabs "array" (standard_parameters 1)
-let tcsg_format6, tcs_format6 = mkabs "format6" (standard_parameters 6)
-let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" []
-let tcsg_int32, tcs_int32 = mkabs "int32" []
-let tcsg_int64, tcs_int64 = mkabs "int64" []
+let tcsg_int, tcs_int = mkabs "int" [] []
+let tcsg_char, tcs_char = mkabs "char" [] []
+let tcsg_string, tcs_string = mkabs "string" [] []
+let tcsg_float, tcs_float = mkabs "float" [] []
+let tcsg_exn, tcs_exn = mkabs "exn" [] []
+let tcsg_array, tcs_array = mkabs "array" (standard_parameters 1) (standard_parameters 1)
+let tcsg_format6, tcs_format6 = mkabs "format6" (standard_parameters 6) []
+let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] []
+let tcsg_int32, tcs_int32 = mkabs "int32" [] []
+let tcsg_int64, tcs_int64 = mkabs "int64" [] []
 
 (* variant types *)
 
 let rec tcsg_unit =
   { tcsg_module = Module_builtin;
     tcsg_params = [];
-    tcsg_regions = [];
     tcsg_members = [ tcs_unit ] }
 
 and tcs_unit =
   { tcs_group = tcsg_unit;
     tcs_name = "unit";
+    tcs_regions = [];
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
@@ -53,13 +53,13 @@ and cs_void =
 
 let rec tcsg_bool =
   { tcsg_module = Module_builtin;
-    tcsg_regions = [];
     tcsg_params = [];
     tcsg_members = [ tcs_bool ] }
 
 and tcs_bool =
   { tcs_group = tcsg_bool;
     tcs_name = "bool";
+    tcs_regions = [];
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
@@ -79,12 +79,12 @@ and cs_true =
 let rec tcsg_list =
   { tcsg_module = Module_builtin;
     tcsg_params = [ 0 ];
-    tcsg_regions = [];
     tcsg_members = [ tcs_list ] }
 
 and tcs_list =
   { tcs_group = tcsg_list;
     tcs_name = "list";
+    tcs_regions = [];
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -104,12 +104,12 @@ and cs_cons =
 let rec tcsg_option =
   { tcsg_module = Module_builtin;
     tcsg_params = [ 0 ];
-    tcsg_regions = [];
     tcsg_members = [ tcs_option ] }
 
 and tcs_option =
   { tcs_group = tcsg_option;
     tcs_name = "option";
+    tcs_regions = [];
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =
@@ -135,21 +135,21 @@ let type_constructor_groups =
 
 (* helpers *)
 
-let type_int = Tconstr (tcs_int, [], [])
-let type_char = Tconstr (tcs_char, [], [])
-let type_string = Tconstr (tcs_string, [], [])
-let type_float = Tconstr (tcs_float, [], [])
-let type_bool = Tconstr (tcs_bool, [], [])
-let type_unit = Tconstr (tcs_unit, [], [])
-let type_exn = Tconstr (tcs_exn, [], [])
-let type_nativeint = Tconstr (tcs_nativeint, [], [])
-let type_int32 = Tconstr (tcs_int32, [], [])
-let type_int64 = Tconstr (tcs_int64, [], [])
+let mkconstr ty params = Tconstr (ty, params, ty.tcs_regions)
 
-(* XXX: should we inherit the regions from the type parameter ? *)
-let type_array ty = Tconstr (tcs_array, [ty], [])
-let type_list ty = Tconstr (tcs_list, [ty], [])
-let type_option ty = Tconstr (tcs_option, [ty], [])
+let type_int       = mkconstr tcs_int []
+let type_char      = mkconstr tcs_char []
+let type_string    = mkconstr tcs_string []
+let type_float     = mkconstr tcs_float []
+let type_bool      = mkconstr tcs_bool []
+let type_unit      = mkconstr tcs_unit []
+let type_exn       = mkconstr tcs_exn []
+let type_nativeint = mkconstr tcs_nativeint []
+let type_int32     = mkconstr tcs_int32 []
+let type_int64     = mkconstr tcs_int64 []
+let type_array ty  = mkconstr tcs_array [ty]
+let type_list ty   = mkconstr tcs_list [ty]
+let type_option ty = mkconstr tcs_option [ty]
 
 
 (* ---------------------------------------------------------------------- *)

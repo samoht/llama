@@ -29,20 +29,26 @@ type parameter = int
 (* The record types are compared with (==). *)
 
 type llama_type =
-    Tparam of parameter
+  | Tparam of parameter
+  (* Regions on arrows are already substituted. *)
   | Tarrow of llama_type * llama_type * Effect.effect
   | Ttuple of llama_type list
+  (* Region parameters are (position -> parameter) substitution for the
+     tcs_regions params of the type constructor.
+     Invariants :
+     * tcs_regions goes from 0 to number of free regions in the type
+     * length(tcs_regions) is equals to size of the region parameter list *)
   | Tconstr of type_constructor * llama_type list * Effect.region_parameter list
 
 and type_constructor_group =
   { tcsg_module : module_id;                        (* Defining module *)
     tcsg_params : parameter list;                   (* List of type parameters *)
-    tcsg_regions : Effect.region_parameter list;    (* List of region parameters *)
     mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
 
 and type_constructor =
   { tcs_group : type_constructor_group;         (* Containing group *)
     tcs_name : string;                          (* Name of the type ctor. *)
+    tcs_regions : Effect.region_parameter list; (* Regions parameters. *)
     mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
 
 and type_constructor_kind =
@@ -148,7 +154,7 @@ type structure = structure_item list
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
-let tcs_regions tcs = tcs.tcs_group.tcsg_regions (* List of region parameters *)
+let tcs_regions tcs = tcs.tcs_regions            (* List of region parameters *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   Tconstr (tcs,
@@ -179,3 +185,7 @@ let parameter_name i =
 let standard_parameters n =
   let rec aux i = if i < n then i :: aux (succ i) else [] in
   aux 0
+
+let shift_regions rs n =
+  List.map ((+) n) rs
+
