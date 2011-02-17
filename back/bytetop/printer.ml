@@ -249,7 +249,7 @@ open Outcometree
 
     and tree_of_exception depth bucket =
       let name = (Obj.obj(Obj.field(Obj.field bucket 0) 0) : string) in
-      let lid = Longident.parse name in
+      let _ (* lid *) = Longident.parse name in
       outval_of_untyped_exception bucket
 (*
       try

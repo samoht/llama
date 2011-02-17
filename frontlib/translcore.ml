@@ -680,6 +680,8 @@ let rec transl_exp modenv e =
       else Lifthenelse (transl_exp modenv cond, lambda_unit, assert_failed modenv e.exp_loc)
   | Exp_assertfalse -> assert_failed modenv e.exp_loc
   | Exp_constraint (e, _) -> transl_exp modenv e
+  | Exp_lock (_, e) -> transl_exp modenv e (* DUMMY *)
+  | Exp_thread e -> transl_exp modenv e    (* DUMMY *)
 
 and transl_list modenv expr_list =
   List.map (transl_exp modenv) expr_list
