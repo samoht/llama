@@ -296,10 +296,6 @@ and expression_aux exp =
         let phi1 = bindings pat_expr_list
         and ty, phi2 = expression body in
         ty, Effect.union phi1 phi2
-    | Mexp_lock (l, e) -> (* DUMMY *)
-        let _, phis = List.split (List.map expression l)
-        and ty, phi = expression e in
-        ty, Effect.union (Effect.union_list phis) phi
     | Mexp_match (item, pat_exp_list) ->
         let ty_arg, phi1 = expression item in
         let ty_res = new_type_variable () in
@@ -378,8 +374,14 @@ and expression_aux exp =
         mutable_type_unit, expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
         new_type_variable (), Effect.empty_effect
+    | Mexp_lock (l, e) ->
+        let rhos, phis = List.split (List.map lockable l)
+        (* XXX: We should show a warning if 2 rhos are the same
+           but we can't be sure yet *)
+        and ty, phi = expression e in
+        ty, Effect.union_list (Effect.effect_of_regions rhos :: phi :: phis)
     | Mexp_thread e ->
-        let _ = statement e in
+        ignore (statement e);
         mutable_type_unit, Effect.empty_effect
 
 (* Typing of an expression with an expected type.
@@ -424,7 +426,10 @@ and expression_expect exp expected_ty =
 
 and bindings pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
-  let phis = List.map (fun (pat, expr) -> expression_expect expr pat.mpat_type) pat_expr_list in
+  let phis =
+    List.map
+      (fun (pat, expr) -> expression_expect expr pat.mpat_type)
+      pat_expr_list in
   Effect.union_list phis
 
 (* Typing of match cases *)
@@ -450,6 +455,18 @@ and statement expr =
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Statement_type
   end;
   phi
+
+(* Typing of e in "lock e in ..." *)
+
+and lockable expr =
+  let ty, phi = expression expr in
+  match expand_mutable_type ty with
+(*  | Mconstr ({tcs_kind=Tcs_record _}, _, rho::_) ->
+      rho, phi *)
+    | Mconstr ({tcs_kind=Tcs_record _}, _, _) ->
+        Effect.new_region_variable (), phi (* DUMMY; why doesn't the above work ? *)
+    | _ -> (* Not a lockable type *)
+        raise Unify (* XXX: should raise (Error sth); *)
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)

@@ -183,6 +183,9 @@ let new_effect_variable =
 
 let effect_of_region r =
   Eregion r
+
+let effect_of_regions l =
+  Eunion (List.fold_left (fun phi r -> Set.add (Eregion r) phi) empty_set l)
     
 (* unification *)
 

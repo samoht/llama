@@ -290,7 +290,6 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let tcs = lookup_type_constructor env lid ty.ptyp_loc in
         let n = !region_variables in
         region_variables := (List.length tcs.tcs_regions) + n;
         let tcs = { tcs with tcs_regions = shift_regions tcs.tcs_regions n } in
