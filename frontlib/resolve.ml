@@ -290,9 +290,12 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let n = !region_variables in
-        region_variables := (List.length tcs.tcs_regions) + n;
-        let tcs = { tcs with tcs_regions = shift_regions tcs.tcs_regions n } in
+        let tcs =
+          if List.length tcs.tcs_regions = 0 then tcs else (* Temporary hack to compile Pervasives *)
+            let n = !region_variables in
+            region_variables := (List.length tcs.tcs_regions) + n;
+            { tcs with tcs_regions = shift_regions tcs.tcs_regions n } in
+        (* ^ XXX: wrong: messes up (==) test @ Mutable_base.unify *)
         let regions = List.map (fun _ -> Effect.new_region_variable ()) tcs.tcs_regions in
         Mconstr (tcs, List.map (mutable_type env) tyl, regions)
 
@@ -443,7 +446,7 @@ and expression_aux ctxt exp =
                   dir_flag,
                   expression big_ctxt e3)
     | Pexp_constraint(e,te) ->
-        Mexp_constraint(expression ctxt e,mutable_type ctxt.ctxt_env te)
+        Mexp_constraint(expression ctxt e, mutable_type ctxt.ctxt_env te)
     | Pexp_array l ->
         Mexp_array(List.map (expression ctxt) l)
     | Pexp_record (lbl_exp_list, opt_init) ->

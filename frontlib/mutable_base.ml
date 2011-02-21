@@ -202,7 +202,7 @@ let mutable_type_float = Mconstr (Predef.tcs_float, [], [])
 let mutable_type_bool = Mconstr (Predef.tcs_bool, [], [])
 let mutable_type_unit = Mconstr (Predef.tcs_unit, [], [])
 let mutable_type_exn = Mconstr (Predef.tcs_exn, [], [])
-let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty], [])
+let mutable_type_array ty rho = Mconstr (Predef.tcs_array, [ty], [rho])
 let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], [])
 let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], [])
 let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [], [])
@@ -297,7 +297,7 @@ let rec occurs v = function
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
       List.exist (occurs v) tyl
-  | Mconstr (tcs, tyl, _) ->
+  | Mconstr (_, tyl, _) ->
       List.exist (occurs v) tyl
 
 exception Unify
@@ -313,7 +313,7 @@ let rec unify ty1 ty2 =
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
-        Effect.unify phi1 phi2;
+        (* Effect.unify phi1 phi2; *)
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->

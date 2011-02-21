@@ -61,7 +61,7 @@ and pattern_aux pat =
     | Mpat_array patl ->
         let ty = new_type_variable () in
         List.iter (fun pat -> pattern_expect pat ty) patl;
-        mutable_type_array ty
+        mutable_type_array ty (Effect.new_region_variable ()) (* DUMMY ? *)
     | Mpat_or (pat1, pat2) ->
         let ty = pattern pat1 in
         pattern_expect pat2 ty;
@@ -344,7 +344,7 @@ and expression_aux exp =
     | Mexp_array elist ->
         let ty_arg = new_type_variable () in
         let phis = List.map (fun e -> expression_expect e ty_arg) elist in
-        mutable_type_array ty_arg, Effect.union_list phis
+        mutable_type_array ty_arg (Effect.new_region_variable ()), Effect.union_list phis
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, inst_r, ty_res = instantiate_type_constructor tcs in
         let phis =
@@ -376,7 +376,7 @@ and expression_aux exp =
         new_type_variable (), Effect.empty_effect
     | Mexp_lock (l, e) ->
         let rhos, phis = List.split (List.map lockable l)
-        (* XXX: We should show a warning if 2 rhos are the same
+        (* XXX: We should show a warning if 2 rhos are the same,
            but we can't be sure yet *)
         and ty, phi = expression e in
         ty, Effect.union_list (Effect.effect_of_regions rhos :: phi :: phis)
