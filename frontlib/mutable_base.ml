@@ -302,6 +302,21 @@ let rec occurs v = function
 
 exception Unify
 
+let rec mysprint = function
+  | Mvar _ -> "Mvar"
+  | Marrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map mysprint [a; r])) ^ ")"
+  | Mtuple l -> "Mtuple (" ^ (String.concat ", " (List.map mysprint l)) ^ ")"
+  | Mconstr (tcs, _, _) ->
+    if tcs == Predef.tcs_format6 then "==Predef.tcs_format6" else
+    Printf.sprintf "Mconstr (%s, %s, [%s])"
+      (match tcs.tcs_kind with
+        | Tcs_abstract -> "Tcs_abstract"
+        | Tcs_variant _ -> "Tcs_variant"
+        | Tcs_record _ -> "Tcs_record"
+        | Tcs_abbrev _ -> "Tcs_abbrev")
+      tcs.tcs_name
+      (String.concat "; " (List.map string_of_int tcs.tcs_regions))
+
 let rec unify ty1 ty2 =
   let ty1 = mutable_type_repr ty1 in
   let ty2 = mutable_type_repr ty2 in
@@ -323,9 +338,11 @@ let rec unify ty1 ty2 =
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, r2s) ->
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
-        Effect.unify_regions r1s r2s;
+        let debug = Printf.sprintf "unifying (%s, %s)\n%!" (mysprint ty1) (mysprint ty2) in
+        Effect.unify_regions r1s r2s debug;
         unify_list tyl1 tyl2
     | _ ->
+        Printf.eprintf "Unify (%s, %s)\n%!" (mysprint ty1) (mysprint ty2);
         raise Unify
 
 and unify_list tyl1 tyl2 =
@@ -336,4 +353,5 @@ and unify_list tyl1 tyl2 =
         unify ty1 ty2;
         unify_list rest1 rest2
     | _ ->
+        Printf.eprintf "Unify list\n%!";
         raise Unify

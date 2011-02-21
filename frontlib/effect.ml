@@ -55,10 +55,12 @@ let unify_region r1 r2 =
     r1.rlink <- Some r2
   
 (* r1 and r2 are two lists of region variables, whose order IS important *)
-let rec unify_regions r1s r2s =
+let rec unify_regions r1s r2s debug =
   if List.length r1s = List.length r2s then
     List.iter2 unify_region r1s r2s
   else begin
+    if debug <> "" then
+      Printf.eprintf "%s\n" debug;
     Printf.eprintf "ERROR: cannot unify region parameters %s and %s\n"
       (string_of_mutable_regions r1s)
       (string_of_mutable_regions r2s);

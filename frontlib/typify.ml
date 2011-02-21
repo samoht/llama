@@ -418,7 +418,12 @@ and expression_expect exp expected_ty =
         begin try
           unify ty expected_ty;
           phi
-        with Unify | Effect.Unify ->
+        with
+          | Unify ->
+          Printf.eprintf "Hi there (typify, 423)\n%!";
+          raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
+          | Effect.Unify ->
+          Printf.eprintf "Hi there (typify, 426)\n%!";
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
         end
 
