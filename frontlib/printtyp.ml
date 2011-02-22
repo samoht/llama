@@ -59,8 +59,7 @@ let rec tree_of_type = function
   | Ttuple tyl ->
     Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, tyl, rs) ->
-    let fn i = List.nth rs i in
-    Printf.eprintf "TT: regions=%s; rs=%s\n%!" (xxx tcs.tcs_regions) (xxx rs);
+    let fn i = try List.nth rs i with _ -> 0 in
     Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl, List.map (tree_of_region fn) tcs.tcs_regions)
 
 and tree_of_type_list tyl =
