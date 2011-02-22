@@ -209,7 +209,7 @@ let mutable_type_float = Mconstr (Predef.tcs_float, [], [])
 let mutable_type_bool = Mconstr (Predef.tcs_bool, [], [])
 let mutable_type_unit = Mconstr (Predef.tcs_unit, [], [])
 let mutable_type_exn = Mconstr (Predef.tcs_exn, [], [])
-let mutable_type_array ty = Mconstr (Predef.tcs_array, [ty], [])
+let mutable_type_array ty rho = Mconstr (Predef.tcs_array, [ty], [rho])
 let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], [])
 let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], [])
 let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, [], [])
@@ -304,10 +304,25 @@ let rec occurs v = function
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
       List.exist (occurs v) tyl
-  | Mconstr (tcs, tyl, _) ->
+  | Mconstr (_, tyl, _) ->
       List.exist (occurs v) tyl
 
 exception Unify
+
+let rec mysprint = function
+  | Mvar _ -> "Mvar"
+  | Marrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map mysprint [a; r])) ^ ")"
+  | Mtuple l -> "Mtuple (" ^ (String.concat ", " (List.map mysprint l)) ^ ")"
+  | Mconstr (tcs, _, _) ->
+    if tcs == Predef.tcs_format6 then "==Predef.tcs_format6" else
+    Printf.sprintf "Mconstr (%s, %s, [%s])"
+      (match tcs.tcs_kind with
+        | Tcs_abstract -> "Tcs_abstract"
+        | Tcs_variant _ -> "Tcs_variant"
+        | Tcs_record _ -> "Tcs_record"
+        | Tcs_abbrev _ -> "Tcs_abbrev")
+      tcs.tcs_name
+      (String.concat "; " (List.map string_of_int tcs.tcs_regions))
 
 let rec unify ty1 ty2 =
   let ty1 = mutable_type_repr ty1 in
@@ -320,7 +335,7 @@ let rec unify ty1 ty2 =
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
-        Effect.unify phi1 phi2;
+        (* Effect.unify phi1 phi2; *)
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
@@ -330,9 +345,11 @@ let rec unify ty1 ty2 =
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, r2s) ->
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
-        Effect.unify_regions r1s r2s;
+        let debug = Printf.sprintf "unifying (%s, %s)\n%!" (mysprint ty1) (mysprint ty2) in
+        Effect.unify_regions r1s r2s debug;
         unify_list tyl1 tyl2
     | _ ->
+        Printf.eprintf "Unify (%s, %s)\n%!" (mysprint ty1) (mysprint ty2);
         raise Unify
 
 and unify_list tyl1 tyl2 =
@@ -343,4 +360,5 @@ and unify_list tyl1 tyl2 =
         unify ty1 ty2;
         unify_list rest1 rest2
     | _ ->
+        Printf.eprintf "Unify list\n%!";
         raise Unify
