@@ -32,6 +32,9 @@ exception Error of Location.t * error
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
+let region_variables = ref 0
+let reset_region_variable () = region_variables := 0
+
 let new_variable name ty phi = {
   mvar_name = name;
   mvar_type = ty;
@@ -134,14 +137,12 @@ type pseudoenv = {
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
   pseudoenv_type_variables : (string * parameter) list;
-  pseudoenv_regions : int;
  }
 
 let pseudoenv_create env = {
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
   pseudoenv_type_variables = [];
-  pseudoenv_regions = 0;
 }
 
 let pseudoenv_add_type_constructor ltcs pseudoenv =
@@ -256,17 +257,26 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
         end;
         match gentcs with
           | Local ltcs ->
-            let rs = shift_regions ltcs.ltcs_regions pseudoenv.pseudoenv_regions in
+            (* XXX: would be nice to memoize the computation of region parameters *)
+            let regions = local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind in
+            ltcs.ltcs_regions <- regions;
+            (* shift the computed regions to take into account the region parameters alreay seen *)
+            let rs = shift_regions regions !region_variables in
+            region_variables  := !region_variables + (List.length regions);
+            (* XXX: we don't care about the type arguments tyl as we know they are the same as the
+               parameters of the type declaration (because of the above checks *)
             Lconstr_local (ltcs, rs)
           | Global tcs ->
-            let pseudoenv, ltcsl = List.fold_left (fun (pseudoenv, accu) ty ->
-              let lt = local_type pseudoenv ty in
-              let n = pseudoenv.pseudoenv_regions in
-              let regions = local_region_parameters (Longident.name lid) lt in
-              let pseudoenv = { pseudoenv with pseudoenv_regions = n + (List.length regions) } in
-              (pseudoenv, lt :: accu)
-            ) (pseudoenv, []) tyl in
-            Lconstr (tcs, List.rev ltcsl, shift_regions tcs.tcs_regions pseudoenv.pseudoenv_regions)
+            Printf.eprintf "global\n tcs_name=%s; tcs_regions=%d\n%!" tcs.tcs_name (List.length tcs.tcs_regions);
+            let ltcsl = List.fold_left (fun accu ty ->
+              let lt            = local_type pseudoenv ty in
+              let regions       = local_region_parameters (Longident.name lid) lt in
+              region_variables := !region_variables +  (List.length regions);
+              lt :: accu
+            ) [] tyl in
+            let rs              = shift_regions tcs.tcs_regions !region_variables in
+            region_variables   := !region_variables + (List.length tcs.tcs_regions);
+            Lconstr (tcs, List.rev ltcsl, rs)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -508,6 +518,7 @@ let type_declarations env pdecls =
        if pdecl.ptype_params <> params then
          raise (Error (pdecl.ptype_loc, Nonidentical_parameter_lists)))
     (List.tl pdecls);
+  (* Create dummy kinds/regions in a first pass *)
   let ltcs_list =
     List.map
       begin fun pdecl ->
@@ -525,12 +536,15 @@ let type_declarations env pdecls =
   in
   let int_params = standard_parameters (List.length params) in
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
+  (* Then, fill kinds *)
   List.iter2
-    (fun pdecl ltcs ->
-       let lt = type_kind pseudoenv pdecl.ptype_kind in
-       ltcs.ltcs_kind <- lt;
-       ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name lt;
-    ) pdecls ltcs_list;
+    (fun pdecl ltcs -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
+    pdecls ltcs_list;
+  (* Then, fill region parameters *)
+  List.iter2
+    (fun pdecl ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
+    pdecls ltcs_list;
+  (* Check for recursive abbreviations *)
   List.iter2
     (fun pdecl ltcs ->
        if is_recursive_abbrev ltcs then

@@ -138,7 +138,7 @@ let local_region_parameters name lt =
     | Lconstr (_, tyl, rs)   -> List.fold_left aux (merge_regions accu rs) tyl
     | Lconstr_local (ltc, _) when
         ltc.ltcs_name = name -> accu
-    | Lconstr_local (ltc,rs) -> merge_regions accu rs in
+    | Lconstr_local (_, rs)  -> merge_regions accu rs in
   List.sort compare (aux [] lt)
 
 (* Returns the region parameters of a local type constructor kind *)
