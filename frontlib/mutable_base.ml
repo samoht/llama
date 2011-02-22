@@ -123,34 +123,41 @@ and local_type =
 (* Get the regions parameters in a local type terms *)
 let new_region l = List.length l
 
-let rec regions_of_ltc_ accu ltc =
-  regions_of_kind_ accu ltc.ltcs_kind
+(* List union *)
+let merge_regions accu rs =
+  List.fold_left
+    (fun accu elt -> if List.mem elt accu then accu else elt :: accu)
+    accu rs
+    
+(* Returns the region parameters of a local type *)
+let local_region_parameters name lt =
+  let rec aux accu = function
+    | Lparam _               -> accu
+    | Larrow (ty1, ty2, phi) -> aux (aux (merge_regions accu phi) ty1) ty2
+    | Ltuple tyl             -> List.fold_left aux accu tyl
+    | Lconstr (_, tyl, rs)   -> List.fold_left aux (merge_regions accu rs) tyl
+    | Lconstr_local (ltc, _) when
+        ltc.ltcs_name = name -> accu
+    | Lconstr_local (ltc,rs) -> merge_regions accu rs in
+  List.sort compare (aux [] lt)
 
-and regions_of_kind_ accu = function
-  | Ltcs_abstract     -> accu
-  | Ltcs_variant vrts -> regions_of_ltl_ accu (List.flatten (List.map snd vrts))
-  | Ltcs_abbrev lt    -> regions_of_lt_ accu lt
-  | Ltcs_record lbls  ->
-    let accu = if List.exist (fun (_,m,_) -> m=Mutable) lbls then new_region accu :: accu else accu in
-    regions_of_ltl_ accu (List.map (fun (_,_,lt) -> lt) lbls)
-
-(* We assume here that Lconstr accumulates correctly the sub-regions *)
-and regions_of_lt_ accu = function
-  | Lparam _               -> accu
-  | Larrow (lt1, lt2, e)   -> regions_of_lt_ (regions_of_lt_ (e @ accu) lt1) lt2
-  | Ltuple ltl             -> regions_of_ltl_ accu ltl
-  | Lconstr (tcs, _, r)    -> r @ accu
-  | Lconstr_local (ltcs,r) -> r @ accu
-
-and regions_of_ltl_ accu ltl =
-  List.fold_left regions_of_lt_ accu ltl
-
-let regions_of_ltcl_ accu ltcl =
-  List.fold_left regions_of_ltc_ accu ltcl
-
-let regions_of_lt lt = List.sort compare (regions_of_lt_ [] lt)
-
-let regions_of_ltc ltc = List.sort compare (regions_of_ltc_ [] ltc)
+(* Returns the region parameters of a local type constructor kind *)
+let local_kind_region_parameters name lt =
+  let rec ltc accu = function
+    | Ltcs_abstract   -> accu
+    | Ltcs_variant vt -> List.fold_left (fun accu (_,ltl) -> lt_list accu ltl) accu vt
+    | Ltcs_record rs  -> List.fold_left rcd accu rs
+    | Ltcs_abbrev lt  -> local_region_parameters name lt
+  and lt_list accu ltl =
+    List.fold_left (fun accu lt -> merge_regions accu (local_region_parameters name lt)) accu ltl
+  and rcd accu = function
+    | (_, Mutable, lt) ->
+      let regions = local_region_parameters name lt in
+      merge_regions accu (new_region regions :: regions)
+    | (_, _, lt)       -> 
+      let regions = local_region_parameters name lt in
+      merge_regions accu regions in
+  List.sort compare (ltc [] lt)
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)

@@ -265,7 +265,7 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
             let pseudoenv, ltcsl = List.fold_left (fun (pseudoenv, accu) ty ->
               let lt = local_type pseudoenv ty in
               let n = pseudoenv.pseudoenv_regions in
-              let regions = regions_of_lt lt in
+              let regions = local_region_parameters (Longident.name lid) lt in
               let pseudoenv = { pseudoenv with pseudoenv_regions = n + (List.length regions) } in
               (pseudoenv, lt :: accu)
             ) (pseudoenv, []) tyl in
@@ -534,8 +534,9 @@ let type_declarations env pdecls =
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
   List.iter2
     (fun pdecl ltcs ->
-       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind;
-       ltcs.ltcs_regions <- regions_of_ltc ltcs;
+       let lt = type_kind pseudoenv pdecl.ptype_kind in
+       ltcs.ltcs_kind <- lt;
+       ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name lt;
     ) pdecls ltcs_list;
   List.iter2
     (fun pdecl ltcs ->
