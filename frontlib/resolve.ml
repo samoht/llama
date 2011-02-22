@@ -32,9 +32,6 @@ exception Error of Location.t * error
 let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
-let region_variables = ref 0
-let reset_region_variables () = region_variables := 0
-
 let new_variable name ty phi = {
   mvar_name = name;
   mvar_type = ty;
@@ -290,12 +287,6 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let tcs =
-          if List.length tcs.tcs_regions = 0 then tcs else (* Temporary hack to compile Pervasives *)
-            let n = !region_variables in
-            region_variables := (List.length tcs.tcs_regions) + n;
-            { tcs with tcs_regions = shift_regions tcs.tcs_regions n } in
-        (* ^ XXX: wrong: messes up (==) test @ Mutable_base.unify *)
         let regions = List.map (fun _ -> Effect.new_region_variable ()) tcs.tcs_regions in
         Mconstr (tcs, List.map (mutable_type env) tyl, regions)
 
