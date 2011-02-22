@@ -267,7 +267,6 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
                parameters of the type declaration (because of the above checks *)
             Lconstr_local (ltcs, rs)
           | Global tcs ->
-            Printf.eprintf "global\n tcs_name=%s; tcs_regions=%d\n%!" tcs.tcs_name (List.length tcs.tcs_regions);
             let ltcsl = List.fold_left (fun accu ty ->
               let lt            = local_type pseudoenv ty in
               let regions       = local_region_parameters (Longident.name lid) lt in
