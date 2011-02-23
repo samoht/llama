@@ -78,8 +78,8 @@ type ('primitive, 'act) _Arg = {
 *)
 
     type 'a inter =
-        {cases : (int * int * int) array ;
-          actions : 'a array}
+        { switch_cases : (int * int * int) array ;
+          switch_actions : 'a array}
 
 type 'a t_ctx =  {off : int ; arg : 'a}
 
@@ -101,7 +101,7 @@ let pcases chan cases =
   done
 
     let prerr_inter i = Printf.fprintf stderr
-        "cases=%a" pcases i.cases
+        "cases=%a" pcases i.switch_cases
 
 let get_act cases i =
   let _,_,r = cases.(i) in
@@ -128,9 +128,9 @@ let pta chan t =
 let count_tests s =
   let r =
     Array.init
-      (Array.length s.actions)
+      (Array.length s.switch_actions)
       (fun _ -> {n=0 ; ni=0 }) in
-  let c = s.cases in
+  let c = s.switch_cases in
   let imax = Array.length c-1 in
   for i=0 to imax do
     let l,h,act = c.(i) in
@@ -550,7 +550,7 @@ and enum top cases =
               (konst d) arg (mk_ifso ctx) (mk_ifno ctx))
 
 
-    let rec c_test _Arg konst ctx ({cases=cases ; actions=actions} as s) =
+    let rec c_test _Arg konst ctx ({switch_cases=cases ; switch_actions=actions} as s) =
       let lcases = Array.length cases in
       assert(lcases > 0) ;
       if lcases = 1 then
@@ -576,36 +576,36 @@ and enum top cases =
             make_if_eq _Arg
               konst ctx.arg
               (low+ctx.off)
-              (c_test _Arg konst ctx {s with cases=inside})
-              (c_test _Arg konst ctx {s with cases=outside})
+              (c_test _Arg konst ctx {s with switch_cases=inside})
+              (c_test _Arg konst ctx {s with switch_cases=outside})
           else
             make_if_ne _Arg
               konst ctx.arg
               (low+ctx.off)
-              (c_test _Arg konst ctx {s with cases=outside})
-              (c_test _Arg konst ctx {s with cases=inside})
+              (c_test _Arg konst ctx {s with switch_cases=outside})
+              (c_test _Arg konst ctx {s with switch_cases=inside})
         end else begin
           if less_tests coutside cinside then
             make_if_in _Arg
               konst ctx
               (low+ctx.off)
               (high-low)
-              (fun ctx -> c_test _Arg konst ctx {s with cases=inside})
-              (fun ctx -> c_test _Arg konst ctx {s with cases=outside})
+              (fun ctx -> c_test _Arg konst ctx {s with switch_cases=inside})
+              (fun ctx -> c_test _Arg konst ctx {s with switch_cases=outside})
           else
             make_if_out _Arg
               konst ctx
               (low+ctx.off)
               (high-low)
-              (fun ctx -> c_test _Arg konst ctx {s with cases=outside})
-              (fun ctx -> c_test _Arg konst ctx {s with cases=inside})
+              (fun ctx -> c_test _Arg konst ctx {s with switch_cases=outside})
+              (fun ctx -> c_test _Arg konst ctx {s with switch_cases=inside})
         end
     | Sep i ->
         let lim,left,right = coupe cases i in
         let _,(cleft,_) = opt_count false left
         and _,(cright,_) = opt_count false right in
-        let left = {s with cases=left}
-        and right = {s with cases=right} in
+        let left = {s with switch_cases=left}
+        and right = {s with switch_cases=right} in
 
         if i=1 && (lim+ctx.off)=1 && get_low cases 0+ctx.off=0 then
           make_if_ne _Arg konst
@@ -648,7 +648,7 @@ let approx_count cases i j n_actions =
 
 (* Sends back a boolean that says whether is switch is worth or not *)
 
-let dense {cases=cases ; actions=actions} i j =
+let dense {switch_cases=cases ; switch_actions=actions} i j =
   if i=j then true
   else
     let l,_,_ = cases.(i)
@@ -669,7 +669,7 @@ let dense {cases=cases ; actions=actions} i j =
    Software Practice and Exprience Vol. 24(2) 233 (Feb 1994)
 *)
 
-let comp_clusters ({cases=cases ; actions=actions} as s) =
+let comp_clusters ({switch_cases=cases ; switch_actions=actions} as s) =
   let len = Array.length cases in
   let min_clusters = Array.create len max_int
   and k = Array.create len 0 in
@@ -689,7 +689,7 @@ let comp_clusters ({cases=cases ; actions=actions} as s) =
   min_clusters.(len-1),k
 
 (* Assume j > i *)
-let make_switch _Arg {cases=cases ; actions=actions} i j =
+let create_switch _Arg {switch_cases=cases ; switch_actions=actions} i j =
   let ll,_,_ = cases.(i)
   and _,hh,_ = cases.(j) in
   let tbl = Array.create (hh-ll+1) 0
@@ -725,7 +725,7 @@ let make_switch _Arg {cases=cases ; actions=actions} i j =
           (fun arg -> _Arg.make_switch arg tbl acts))
 
 
-let make_clusters _Arg ({cases=cases ; actions=actions} as s) n_clusters k =
+let make_clusters _Arg ({switch_cases=cases ; switch_actions=actions} as s) n_clusters k =
   let len = Array.length cases in
   let r = Array.create n_clusters (0,0,0)
   and t = Hashtbl.create 17
@@ -758,14 +758,14 @@ let make_clusters _Arg ({cases=cases ; actions=actions} as s) n_clusters k =
     else (* assert i < j *)
       let l,_,_ = cases.(i)
       and _,h,_ = cases.(j) in
-      r.(ir) <- (l,h,add_index (make_switch _Arg s i j))
+      r.(ir) <- (l,h,add_index (create_switch _Arg s i j))
     end ;
     if i > 0 then zyva (i-1) (ir-1) in
 
   zyva (len-1) (n_clusters-1) ;
   let acts = Array.create !index (fun _ -> assert false) in
   Hashtbl.iter (fun _ (i,act) -> acts.(i) <- act) t ;
-  {cases = r ; actions = acts}
+  {switch_cases = r ; switch_actions = acts}
 ;;
 
 
@@ -774,7 +774,7 @@ let zyva _Arg (low,high) konst arg cases actions =
   ok_inter := (abs low <= inter_limit && abs high <= inter_limit) ;
   if !ok_inter <> old_ok then Hashtbl.clear t ;
 
-  let s = {cases=cases ; actions=actions} in
+  let s = {switch_cases=cases ; switch_actions=actions} in
 (*
   Printf.eprintf "ZYVA: %b\n" !ok_inter ;
   pcases stderr cases ;
@@ -792,8 +792,8 @@ and test_sequence _Arg konst arg cases actions =
   ok_inter := false ;
   if !ok_inter <> old_ok then Hashtbl.clear t ;
   let s =
-    {cases=cases ;
-    actions=Array.map (fun act -> (fun _ -> act)) actions} in
+    {switch_cases=cases ;
+     switch_actions=Array.map (fun act -> (fun _ -> act)) actions} in
 (*
   Printf.eprintf "SEQUENCE: %b\n" !ok_inter ;
   pcases stderr cases ;

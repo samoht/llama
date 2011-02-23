@@ -5,9 +5,9 @@ LIBRARIES=backlib
 MODULES=effect \
   frontmisc frontconfig warnings \
   linenum frontlocation longident \
-  syntaxerr parser \
+  syntaxerr parsetree parser \
   lexer parse \
-  unused_var oprint \
+  unused_var outcometree oprint \
   base predef basics \
   persistent module modenv env \
   mutable_base printtyp resolve \

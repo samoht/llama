@@ -4,8 +4,8 @@
 
 BOOTDIR=../boot
 NONPERVASIVES=sys list array char string \
-  hashtbl sort marshal obj \
-  int32 int64 nativeint \
+  hashtbl sort marshal int32 obj \
+  int64 nativeint \
   lexing parsing \
   set map \
   stack queue \
@@ -46,11 +46,11 @@ camlheader:
 	echo "#!`which ocamlrun`" > $@
 llamaheader: ../config.mk
 	echo "#!$(BINDIR)/llamarun" > $@
-pervasives.lmi: pervasives.mli
+pervasives.lmi: pervasives.ml
 	$(LLAMAC) -c $(INCLUDES) -nopervasives $<
 pervasives.lmo: pervasives.ml
 	$(LLAMAC) -c $(INCLUDES) -nopervasives $<
-pervasives.cmi: pervasives.mli
+pervasives.cmi: pervasives.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
 pervasives.cmo: pervasives.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
@@ -60,7 +60,7 @@ pervasives.cmo: pervasives.ml
 # ----------------------------------------------------------------------
 
 depend:
-	$(LLAMADEP) *.ml *.mli threads/*.ml thread/*.mli > .depend
+	$(LLAMADEP) *.ml threads/*.ml > .depend
 
 ocamldepend:
 	$(OCAMLDEP) *.ml *.mli threads/*.ml threads/*.mli > .ocamldepend

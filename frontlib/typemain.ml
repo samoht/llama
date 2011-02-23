@@ -49,7 +49,7 @@ let implementation srcfile outputprefix modname env pstr =
   end else begin
     let sourceintf =
       Frontmisc.chop_extension_if_any srcfile ^ !Frontconfig.interface_suffix in
-    if Sys.file_exists sourceintf then begin
+    (* if Sys.file_exists sourceintf then begin
       let intf_file =
         try
           find_in_path_uncap (Modenv.load_path modenv) (modname ^ ".lmi")
@@ -58,7 +58,7 @@ let implementation srcfile outputprefix modname env pstr =
       let dclsig = Modenv.load_signature modenv  modname intf_file in
       let coercion = Include.compunit modenv (Module modname) srcfile sg intf_file dclsig in
       (str, coercion)
-    end else begin
+    end else *) begin
       if not !Frontconfig.dont_write_files then Modenv.save_signature sg modname (outputprefix ^ ".lmi") modenv;
       (str, Include.Tcoerce_none)
     end

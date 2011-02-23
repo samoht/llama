@@ -139,6 +139,7 @@ external classify_float: float -> fpclass = "caml_classify_float"
 
 (* String operations -- more in module String *)
 
+external string_set : string -> int -> char -> unit = "%string_safe_set"
 external string_length : string -> int = "%string_length"
 external string_create: int -> string = "caml_create_string"
 external string_blit : string -> int -> string -> int -> int -> unit
@@ -419,7 +420,7 @@ let input_line ic =
       end;
       let c = input_char ic in
       if c = '\n' then raise Exit;
-      !buf.[!pos] <- c;
+      string_set !buf !pos c;
       incr pos
     done
   with Exit -> ()
