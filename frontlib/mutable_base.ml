@@ -351,7 +351,6 @@ let rec unify ty1 ty2 =
             (Effect.string_of_mutable_regions r1s) 
             (mysprint ty2) 
             (Effect.string_of_mutable_regions r2s) in
-        Printf.eprintf "Unifying %s and %s" ;
         Effect.unify_regions r1s r2s debug;
         unify_list tyl1 tyl2
     | _ ->

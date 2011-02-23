@@ -4,7 +4,7 @@ with-ocaml: $(BINARY)-ocaml
 .PHONY: with-ocaml
 
 $(BINARY)-ocaml: $(MODULES:%=%.cmo)
-	$(OCAMLC_STRICT) $(INCLUDES) $(LIBRARIES:%=%.cma) $^ -o $@
+	$(OCAMLC_STRICT) -custom $(RUNTIME_PATH) $(INCLUDES) $(LIBRARIES:%=%.cma) $^ -o $@
 
 ocamlinstall:
 	cp $(BINARY)-ocaml $(BINDIR)/$(BINARY)
