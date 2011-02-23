@@ -14,18 +14,18 @@ type 'a reference =
 
 type llama_type =
     Tparam of int
-  | Tarrow of llama_type * llama_type (** Effect.effect*)
+  | Tarrow of llama_type * llama_type * Effect.effect
   | Ttuple of llama_type list
-  | Tconstr of type_constructor reference * llama_type list
+  | Tconstr of type_constructor reference * llama_type list * Effect.region_parameter list
 
 and type_constructor_group =
   { tcsg_module : module_id;
     tcsg_params : int list;
-(*    tcsg_regions : Effect.region_parameter list; *)
     mutable tcsg_members : type_constructor list }
 
 and type_constructor =
   { tcs_group : type_constructor_group;
+    tcs_regions : Effect.region_parameter list;
     tcs_name : string;
     mutable tcs_kind : type_constructor_kind }
 
@@ -80,11 +80,11 @@ let rec save_type saver = function
     Base.Tparam tv ->
       Tparam tv
   | Base.Tarrow (ty1, ty2, phi) ->
-      Tarrow (save_type saver ty1, save_type saver ty2 (*, phi*))
+      Tarrow (save_type saver ty1, save_type saver ty2, phi)
   | Base.Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
-  | Base.Tconstr (tcs, tyl, r) -> (* XXX: should rename the region names inside the type-constructor saver *)
-      Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl)
+  | Base.Tconstr (tcs, tyl, r) ->
+      Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl, r)
 
 and save_type_constructor_reference saver tcs =
   if Base.tcs_module tcs = saver.saver_module then
@@ -97,7 +97,6 @@ and save_type_constructor_group saver tcsg =
     let tcsg' =
       { tcsg_module = tcsg.Base.tcsg_module;
         tcsg_params = tcsg.Base.tcsg_params;
-(*        tcsg_regions = tcsg.Base.tcsg_params; *)
         tcsg_members = [] } in
     saver.saver_tcsg <- (tcsg, tcsg') :: saver.saver_tcsg;
     tcsg'.tcsg_members <- List.map (save_type_constructor saver) tcsg.Base.tcsg_members;
@@ -108,6 +107,7 @@ and save_type_constructor saver tcs =
     let tcs' =
       { tcs_group = save_type_constructor_group saver tcs.Base.tcs_group;
         tcs_name = tcs.Base.tcs_name;
+        tcs_regions = tcs.Base.tcs_regions;
         tcs_kind = Tcs_abstract } in
     saver.saver_tcs <- (tcs, tcs') :: saver.saver_tcs;
     tcs'.tcs_kind <- save_type_constructor_kind saver tcs.Base.tcs_kind;
@@ -180,15 +180,15 @@ type loader =
 let rec load_type loader = function
     Tparam tvar ->
       Base.Tparam tvar
-  | Tarrow (ty1, ty2 (*, t*)) ->
-      Base.Tarrow (load_type loader ty1, load_type loader ty2, [])
+  | Tarrow (ty1, ty2, phi) ->
+      Base.Tarrow (load_type loader ty1, load_type loader ty2, phi)
   | Ttuple tyl ->
       Base.Ttuple (List.map (load_type loader) tyl)
-  | Tconstr (tcs, tyl) ->
+  | Tconstr (tcs, tyl, r) ->
       let tcs = load_type_constructor_reference loader tcs in
       Base.Tconstr (tcs,
                     List.map (load_type loader) tyl,
-                    []) (* XXX: should get all the region variables inside tcs *)
+                    r)
 
 and load_type_constructor_reference loader = function
     Internal tcs ->
