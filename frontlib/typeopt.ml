@@ -34,7 +34,7 @@ let maybe_pointer exp =
         match tcs with
           {tcs_kind = Tcs_variant []} -> true (* type exn *)
         | {tcs_kind = Tcs_variant cstrs} ->
-            List.exist (fun cs -> cs.cs_args <> []) cstrs
+            List.exists (fun cs -> cs.cs_args <> []) cstrs
         | _ -> true
       with Not_found -> true
         (* This can happen due to e.g. missing -I options,

@@ -852,7 +852,7 @@ let rec satisfiable pss qs = match pss with
         | [] -> satisfiable (filter_extra pss) qs
         | constrs  ->
             if full_match false constrs then
-              List.exist
+              List.exists
                 (fun (p,pss) ->
                   not (is_absent_pat p) &&
                   satisfiable pss (simple_match_args p omega @ qs))
@@ -1282,7 +1282,7 @@ let get_mins le ps =
   let rec select_rec r = function
       [] -> r
     | p::ps ->
-        if List.exist (fun p0 -> le p0 p) ps
+        if List.exists (fun p0 -> le p0 p) ps
         then select_rec r ps
         else select_rec (p::r) ps in
   select_rec [] (select_rec [] ps)
@@ -1653,7 +1653,7 @@ let rec inactive pat = match pat with
 | Pat_alias (p,_) | Pat_variant (_, Some p, _) ->
     inactive p.pat_desc
 | Pat_record ldps ->
-    List.exist (fun (_, p) -> inactive p.pat_desc) ldps
+    List.exists (fun (_, p) -> inactive p.pat_desc) ldps
 | Pat_or (p,q,_) ->
     inactive p.pat_desc && inactive q.pat_desc
 

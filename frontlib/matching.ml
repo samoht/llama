@@ -267,9 +267,9 @@ let ctx_lub p ctx =
     ctx []
 
 let ctx_match ctx pss =
-  List.exist
+  List.exists
     (fun {right=qs} ->
-      List.exist
+      List.exists
         (fun ps -> compats qs ps)
         pss)
     ctx
@@ -1722,7 +1722,7 @@ let call_switcher konst fail arg low high int_lambda_list =
 
 
 let exists_ctx ok ctx =
-  List.exist
+  List.exists
     (function
       | {right=p::_} -> ok p
       | _ -> assert false)
@@ -1753,7 +1753,7 @@ let rec extract_pat seen k p = match p.pat_desc with
     raise All
 | _ ->
     let q = normalize_pat p in
-    if  List.exist (compat q) seen then
+    if  List.exists (compat q) seen then
       k, seen
     else
       q::k, q::seen
@@ -2184,9 +2184,9 @@ let compile_test compile_fun partial divide combine ctx to_match =
 let rec approx_present v = function
   | Lconst _ -> false
   | Lstaticraise (_,args) ->
-      List.exist (fun lam -> approx_present v lam) args
+      List.exists (fun lam -> approx_present v lam) args
   | Lprim (_,args) ->
-      List.exist (fun lam -> approx_present v lam) args
+      List.exists (fun lam -> approx_present v lam) args
   | Llet (Alias, _, l1, l2) ->
       approx_present v l1 || approx_present v l2
   | Lvar vv -> Ident.same v vv
@@ -2398,7 +2398,7 @@ and compile_no_test modenv divide up_ctx repr partial ctx to_match =
 
 let check_partial pat_act_list partial =
   if
-    List.exist
+    List.exists
       (fun (_,lam) -> is_guarded lam)
        pat_act_list
   then begin

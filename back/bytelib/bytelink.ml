@@ -135,7 +135,7 @@ let scan_file obj_name tolink =
           (fun compunit reqd ->
             if compunit.cu_force_link
             || !Clflags.link_everything
-            || List.exist is_required compunit.cu_reloc
+            || List.exists is_required compunit.cu_reloc
             then begin
               List.iter remove_required compunit.cu_reloc;
               List.iter add_required compunit.cu_reloc;

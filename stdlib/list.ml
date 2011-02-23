@@ -116,9 +116,9 @@ let rec for_all p = function
     [] -> true
   | a::l -> p a && for_all p l
 
-let rec exist p = function
+let rec exists p = function
     [] -> false
-  | a::l -> p a || exist p l
+  | a::l -> p a || exists p l
 
 let rec for_all2 p l1 l2 =
   match (l1, l2) with
@@ -126,10 +126,10 @@ let rec for_all2 p l1 l2 =
   | (a1::l1, a2::l2) -> p a1 a2 && for_all2 p l1 l2
   | (_, _) -> invalid_arg "List.for_all2"
 
-let rec exist2 p l1 l2 =
+let rec exists2 p l1 l2 =
   match (l1, l2) with
     ([], []) -> false
-  | (a1::l1, a2::l2) -> p a1 a2 || exist2 p l1 l2
+  | (a1::l1, a2::l2) -> p a1 a2 || exists2 p l1 l2
   | (_, _) -> invalid_arg "List.exist2"
 
 let rec mem x = function

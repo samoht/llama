@@ -303,9 +303,9 @@ let rec occurs v = function
   | Marrow (ty1, ty2, _) ->
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
-      List.exist (occurs v) tyl
+      List.exists (occurs v) tyl
   | Mconstr (_, tyl, _) ->
-      List.exist (occurs v) tyl
+      List.exists (occurs v) tyl
 
 exception Unify
 

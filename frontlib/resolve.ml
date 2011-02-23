@@ -498,7 +498,7 @@ let is_recursive_abbrev =
   let rec occ seen = function
       Lparam _ -> false
     | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
-    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exist (occ seen) tyl
+    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exists (occ seen) tyl
     | Lconstr_local (ltcs,_) ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with

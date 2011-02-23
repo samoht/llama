@@ -217,7 +217,7 @@ let values l =
   let l_ele = gen_search p_values l () in
   let p v1 v2 = v1.val_name = v2.val_name in
   let rec iter acc = function
-      (Res_value v) :: q -> if List.exist (p v) acc then iter acc q else iter (v :: acc) q
+      (Res_value v) :: q -> if List.exists (p v) acc then iter acc q else iter (v :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -229,7 +229,7 @@ let exceptions l =
   let l_ele = gen_search p_exceptions l () in
   let p e1 e2 = e1.ex_name = e2.ex_name in
   let rec iter acc = function
-      (Res_exception t) :: q -> if List.exist (p t) acc then iter acc q else iter (t :: acc) q
+      (Res_exception t) :: q -> if List.exists (p t) acc then iter acc q else iter (t :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -241,7 +241,7 @@ let types l =
   let l_ele = gen_search p_types l () in
   let p t1 t2 = t1.ty_name = t2.ty_name in
   let rec iter acc = function
-      (Res_type t) :: q -> if List.exist (p t) acc then iter acc q else iter (t :: acc) q
+      (Res_type t) :: q -> if List.exists (p t) acc then iter acc q else iter (t :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -254,7 +254,7 @@ let attributes l =
   let l_ele = gen_search p_attributes l () in
   let p a1 a2 = a1.att_value.val_name = a2.att_value.val_name in
   let rec iter acc = function
-      (Res_attribute t) :: q -> if List.exist (p t) acc then iter acc q else iter (t :: acc) q
+      (Res_attribute t) :: q -> if List.exists (p t) acc then iter acc q else iter (t :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -265,7 +265,7 @@ let methods l =
   let l_ele = gen_search p_methods l () in
   let p m1 m2 = m1.met_value.val_name = m2.met_value.val_name in
   let rec iter acc = function
-      (Res_method t) :: q -> if List.exist (p t) acc then iter acc q else iter (t :: acc) q
+      (Res_method t) :: q -> if List.exists (p t) acc then iter acc q else iter (t :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -277,7 +277,7 @@ let modules l =
   let l_ele = gen_search p_modules l () in
   let p m1 m2 = m1.m_name = m2.m_name in
   let rec iter acc = function
-      (Res_module m) :: q -> if List.exist (p m) acc then iter acc q else iter (m :: acc) q
+      (Res_module m) :: q -> if List.exists (p m) acc then iter acc q else iter (m :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -289,7 +289,7 @@ let module_types l =
   let l_ele = gen_search p_module_types l () in
   let p m1 m2 = m1.mt_name = m2.mt_name in
   let rec iter acc = function
-      (Res_module_type m) :: q -> if List.exist (p m) acc then iter acc q else iter (m :: acc) q
+      (Res_module_type m) :: q -> if List.exists (p m) acc then iter acc q else iter (m :: acc) q
     | _ :: q -> iter acc q
     | [] -> acc
   in
@@ -297,7 +297,7 @@ let module_types l =
 
 let type_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_type _ -> true
       | _ -> false
@@ -306,7 +306,7 @@ let type_exists mods regexp =
 
 let value_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_value _ -> true
       | _ -> false
@@ -315,7 +315,7 @@ let value_exists mods regexp =
 
 let module_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_module _ -> true
       | _ -> false
@@ -324,7 +324,7 @@ let module_exists mods regexp =
 
 let module_type_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_module_type _ -> true
       | _ -> false
@@ -333,7 +333,7 @@ let module_type_exists mods regexp =
 
 let exception_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_exception _ -> true
       | _ -> false
@@ -342,7 +342,7 @@ let exception_exists mods regexp =
 
 let attribute_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_attribute _ -> true
       | _ -> false
@@ -351,7 +351,7 @@ let attribute_exists mods regexp =
 
 let method_exists mods regexp =
   let l = gen_search p_name mods regexp in
-  List.exist
+  List.exists
     (function
         Res_method _ -> true
       | _ -> false

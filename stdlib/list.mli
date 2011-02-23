@@ -135,7 +135,7 @@ val for_all : ('a -> bool) -> 'a list -> bool
    satisfy the predicate [p]. That is, it returns
    [(p a1) && (p a2) && ... && (p an)]. *)
 
-val exist : ('a -> bool) -> 'a list -> bool
+val exists : ('a -> bool) -> 'a list -> bool
 (** [exist p [a1; ...; an]] checks if at least one element of
    the list satisfies the predicate [p]. That is, it returns
    [(p a1) || (p a2) || ... || (p an)]. *)
@@ -145,7 +145,7 @@ val for_all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
    Raise [Invalid_argument] if the two lists have
    different lengths. *)
 
-val exist2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
+val exists2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
 (** Same as {!List.exist}, but for a two-argument predicate.
    Raise [Invalid_argument] if the two lists have
    different lengths. *)

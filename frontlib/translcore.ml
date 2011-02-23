@@ -404,11 +404,11 @@ let check_recursive_lambda idlist lam =
     | Levent (lam, _) -> check idlist lam
     | lam ->
         let fv = free_variables lam in
-        not (List.exist (fun id -> Set.mem id fv) idlist)
+        not (List.exists (fun id -> Set.mem id fv) idlist)
 
   and add_let id arg idlist =
     let fv = free_variables arg in
-    if List.exist (fun id -> Set.mem id fv) idlist
+    if List.exists (fun id -> Set.mem id fv) idlist
     then id :: idlist
     else idlist
 
@@ -797,7 +797,7 @@ and transl_record modenv all_labels repres lbl_expr_list opt_init_expr =
       lbl_expr_list;
     let ll = Array.to_list lv in
     let mut =
-      if List.exist (fun (lbl, expr) -> lbl.lbl_mut) lbl_expr_list
+      if List.exists (fun (lbl, expr) -> lbl.lbl_mut) lbl_expr_list
       then Mutable
       else Immutable in
     let lam =
