@@ -62,6 +62,13 @@ ocamlpromote:
 	cp back/bytec/llamac-ocaml boot/llamac
 .PHONY: ocamlpromote
 
+# Bootstrap the compiler
+bootstrap:
+	make && make promote && make mlclean && make
+
+recover-bootstrap:
+	git checkout boot/ && make mlclean && make
+
 # ----------------------------------------------------------------------
 # Directory rules and dependencies
 # ----------------------------------------------------------------------
