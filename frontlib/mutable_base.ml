@@ -376,7 +376,13 @@ let rec unify ty1 ty2 =
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, r2s) ->
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
-        let debug = Printf.sprintf "unifying (%s, %s)\n%!" (mysprint ty1) (mysprint ty2) in
+        let debug =
+          Printf.sprintf "unifying (%s: %s, %s: %s)\n%!"
+            (mysprint ty1)
+            (Effect.string_of_mutable_regions r1s) 
+            (mysprint ty2) 
+            (Effect.string_of_mutable_regions r2s) in
+        Printf.eprintf "Unifying %s and %s" ;
         Effect.unify_regions r1s r2s debug;
         unify_list tyl1 tyl2
     | _ ->
