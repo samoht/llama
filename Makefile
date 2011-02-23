@@ -156,7 +156,9 @@ COREDIRS=$(CORELIBDIRS) $(COREAPPDIRS)
 
 LIBDIRS=$(CORELIBDIRS)
 APPDIRS=$(COREAPPDIRS) doctool back/bytetop
-DIRS=$(LIBDIRS) $(APPDIRS) $(CDIRS)
+MLDIRS=$(LIBDIRS) $(APPDIRS)
+
+DIRS=$(MLDIRS) $(CDIRS)
 
 # ----------------------------------------------------------------------
 # Install
@@ -183,6 +185,8 @@ ocamldepend:
 
 clean:
 	for dir in $(DIRS); do make -C $$dir clean; done
+mlclean:
+	for dir in $(MLDIRS); do make -C $$dir clean; done
 ocamlclean:
 	for dir in $(COREDIRS); do make -C $$dir ocamlclean; done
-.PHONY: clean ocamlclean
+.PHONY: clean mlclean ocamlclean
