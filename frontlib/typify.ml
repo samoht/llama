@@ -55,7 +55,7 @@ and pattern_aux pat =
         let inst, inst_r, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, arg) ->
-             let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
+             let ty_arg = instantiate_type inst inst_r "Typify.pattern" lbl.lbl_arg in
              pattern_expect arg ty_arg) lbl_arg_list;
         ty_res
     | Mpat_array patl ->
@@ -350,7 +350,7 @@ and expression_aux exp =
         let phis =
           List.map
             (fun (lbl, exp) ->
-               let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
+               let ty_arg = instantiate_type inst inst_r "Typify.expression" lbl.lbl_arg in
                expression_expect exp ty_arg)
             lbl_exp_list
         and phi1 =
