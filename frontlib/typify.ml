@@ -288,7 +288,7 @@ and expression_aux exp =
               (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *) 
               let phi1 = expression_expect arg1 ty1 in
               (* add the constraint that phi = phi_res U phi1 *)
-              Effect.unify phi (Effect.union phi_res phi1);
+              (* Effect.unify phi (Effect.union phi_res phi1); *)
               type_args ty2 phi argl
         in
         type_args ty_fct phi_fct args

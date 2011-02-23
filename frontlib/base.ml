@@ -41,15 +41,18 @@ type llama_type =
   | Tconstr of type_constructor * llama_type list * Effect.region_parameter list
 
 and type_constructor_group =
-  { tcsg_module : module_id;                        (* Defining module *)
-    tcsg_params : parameter list;                   (* List of type parameters *)
-    mutable tcsg_members : type_constructor list }  (* Type constructors in the group *)
+  { tcsg_module : module_id;                       (* Defining module *)
+    tcsg_params : parameter list;                  (* List of type parameters *)
+      (* ^ XXX: should be a tcs_ below *)
+    mutable tcsg_members : type_constructor list } (* Type constructors in the group *)
 
 and type_constructor =
-  { tcs_group : type_constructor_group;         (* Containing group *)
-    tcs_name : string;                          (* Name of the type ctor. *)
-    tcs_regions : Effect.region_parameter list; (* Regions parameters. *)
-    mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
+  { tcs_group : type_constructor_group;                   (* Containing group *)
+    tcs_name : string;                              (* Name of the type ctor. *)
+    tcs_regions : Effect.region_parameter list;         (* Regions parameters *)
+      (* ^ XXX: should be just the number of those *)
+    tcs_mutable : bool;          (* Is the type mutable (and thus lockable) ? *)
+    mutable tcs_kind : type_constructor_kind }      (* Kind of the type ctor. *)
 
 and type_constructor_kind =
     Tcs_abstract                     (* Abstract type *)
@@ -155,6 +158,7 @@ let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
 let tcs_regions tcs = tcs.tcs_regions            (* List of region parameters *)
+let tcs_mutable tcs = tcs.tcs_mutable            (* Is the type mutable ? *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   Tconstr (tcs,
@@ -189,3 +193,16 @@ let standard_parameters n =
 let shift_regions rs n =
   List.map ((+) n) rs
 
+(* Is a given type mutable/lockable ?
+   To use only in Mutable_base.local_is_mutable *)
+let rec is_mutable = function
+  | Tparam _ -> assert false (* DUMMY *)(* XXX: Is  type 'a t = 'a  useful ? *)
+  | Tarrow _ -> false
+  | Ttuple _ -> false
+  | Tconstr (tcs, _, _) -> kind_is_mutable tcs.tcs_kind
+
+and kind_is_mutable = function
+  | Tcs_abstract -> false (* DUMMY *)
+  | Tcs_variant _ -> false
+  | Tcs_record l -> List.exists (fun lbl -> lbl.lbl_mut) l
+  | Tcs_abbrev t -> is_mutable t

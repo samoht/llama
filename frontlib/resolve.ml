@@ -527,6 +527,7 @@ let type_declarations env pdecls =
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         { ltcs_name = pdecl.ptype_name;
           ltcs_regions = [];
+          ltcs_mutable = false;
           ltcs_kind = Ltcs_variant [] }
       end pdecls
   in
@@ -542,9 +543,13 @@ let type_declarations env pdecls =
     (fun pdecl ltcs -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
     pdecls ltcs_list;
   (* Then, fill region parameters *)
-  List.iter2
-    (fun pdecl ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
-    pdecls ltcs_list;
+  List.iter
+    (fun ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
+    ltcs_list;
+  (* Then, fill mutable flag *)
+  List.iter
+    (fun ltcs -> ltcs.ltcs_mutable <- local_kind_is_mutable ltcs.ltcs_kind)
+    ltcs_list;
   (* Check for recursive abbreviations *)
   List.iter2
     (fun pdecl ltcs ->

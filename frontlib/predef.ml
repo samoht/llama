@@ -8,7 +8,7 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params regions =
+let mkabs name params regions is_mutable =
   let rec tcsg =
     { tcsg_module = Module_builtin;
       tcsg_params = params;
@@ -17,19 +17,22 @@ let mkabs name params regions =
     { tcs_group = tcsg;
       tcs_name = name;
       tcs_regions = regions;
+      tcs_mutable = is_mutable;
       tcs_kind = Tcs_abstract } in
   tcsg, tcs
 
-let tcsg_int, tcs_int = mkabs "int" [] []
-let tcsg_char, tcs_char = mkabs "char" [] []
-let tcsg_string, tcs_string = mkabs "string" [] []
-let tcsg_float, tcs_float = mkabs "float" [] []
-let tcsg_exn, tcs_exn = mkabs "exn" [] []
-let tcsg_array, tcs_array = mkabs "array" (standard_parameters 1) (standard_parameters 1)
-let tcsg_format6, tcs_format6 = mkabs "format6" (standard_parameters 6) []
-let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] []
-let tcsg_int32, tcs_int32 = mkabs "int32" [] []
-let tcsg_int64, tcs_int64 = mkabs "int64" [] []
+let tcsg_int, tcs_int = mkabs "int" [] [] false
+let tcsg_char, tcs_char = mkabs "char" [] [] false
+let tcsg_string, tcs_string = mkabs "string" [] (standard_parameters 1) true
+let tcsg_float, tcs_float = mkabs "float" [] [] false
+let tcsg_exn, tcs_exn = mkabs "exn" [] [] false
+let tcsg_array, tcs_array =
+  mkabs "array" (standard_parameters 1) (standard_parameters 1) true
+let tcsg_format6, tcs_format6 =
+  mkabs "format6" (standard_parameters 6) [] false
+let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] [] false
+let tcsg_int32, tcs_int32 = mkabs "int32" [] [] false
+let tcsg_int64, tcs_int64 = mkabs "int64" [] [] false
 
 (* variant types *)
 
@@ -42,6 +45,7 @@ and tcs_unit =
   { tcs_group = tcsg_unit;
     tcs_name = "unit";
     tcs_regions = [];
+    tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_void ] }
 
 and cs_void =
@@ -60,6 +64,7 @@ and tcs_bool =
   { tcs_group = tcsg_bool;
     tcs_name = "bool";
     tcs_regions = [];
+    tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
 and cs_false =
@@ -85,6 +90,7 @@ and tcs_list =
   { tcs_group = tcsg_list;
     tcs_name = "list";
     tcs_regions = [];
+    tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
 and cs_nil =
@@ -110,6 +116,7 @@ and tcs_option =
   { tcs_group = tcsg_option;
     tcs_name = "option";
     tcs_regions = [];
+    tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
 and cs_none =

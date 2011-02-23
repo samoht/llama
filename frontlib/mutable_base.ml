@@ -99,6 +99,7 @@ and mutable_expression_desc =
 type local_type_constructor = {
   ltcs_name : string;
   mutable ltcs_regions : Effect.region_parameter list;
+  mutable ltcs_mutable : bool;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -158,6 +159,20 @@ let local_kind_region_parameters name lt =
       let regions = local_region_parameters name lt in
       merge_regions accu regions in
   List.sort compare (ltc [] lt)
+
+(* Is a given local type mutable ? To use only in Resolve.type_declarations. *)
+let rec local_is_mutable = function
+  | Lparam _ -> assert false (* DUMMY *)(* XXX: Is  type 'a t = 'a  useful ? *)
+  | Larrow _ -> false
+  | Ltuple _ -> false
+  | Lconstr (tcs, _, _) -> kind_is_mutable tcs.tcs_kind
+  | Lconstr_local (ltcs, _) -> local_kind_is_mutable ltcs.ltcs_kind
+
+and local_kind_is_mutable = function
+  | Ltcs_abstract -> false (* DUMMY *)
+  | Ltcs_variant _ -> false
+  | Ltcs_record l -> List.exists (fun (_, mut, _) -> mut = Mutable) l
+  | Ltcs_abbrev t -> local_is_mutable t
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
