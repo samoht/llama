@@ -33,7 +33,7 @@ let type_variables = ref ([] : (string * mutable_type) list);;
 let reset_type_variables () = type_variables := []
 
 let region_variables = ref 0
-let reset_region_variable () = region_variables := 0
+let reset_region_variables () = region_variables := 0
 
 let new_variable name ty phi = {
   mvar_name = name;
@@ -480,7 +480,9 @@ and expression_aux ctxt exp =
 (* Type declarations.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let type_kind pseudoenv = function
+let type_kind pseudoenv ty =
+  reset_region_variables ();
+  match ty with
     Ptype_abstract ->
       Ltcs_abstract
   | Ptype_abbrev ty ->
@@ -564,6 +566,7 @@ let external_declaration decl ty =
 
 let signature_item env psig =
   reset_type_variables ();
+  reset_region_variables ();
   { msig_desc =
       begin match psig.psig_desc with
         | Psig_value (s, te) ->
@@ -597,6 +600,7 @@ let top_bindings env rec_flag ppat_pexp_list =
 
 let structure_item env pstr =
   reset_type_variables ();
+  reset_region_variables ();
   { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->

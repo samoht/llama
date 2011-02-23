@@ -192,6 +192,11 @@ let type_of_local_type subst local_args =
     | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, phi)
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
+    | Lconstr_local (ltcs,rs) when
+        List.length ltcs.ltcs_regions <> List.length rs ->
+      (* Can happen only on recursive type definitions *)
+      assert (rs = []);
+      Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions)
     | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
   aux
 
