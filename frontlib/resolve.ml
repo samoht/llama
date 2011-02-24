@@ -229,14 +229,14 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
   aux ty
 
 (* XXX: we should be able to annotate effects and region in the code *)
-let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
+let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
   match ty.ptyp_desc with
       Ptyp_var name ->
         Lparam (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
-        Larrow (local_type pseudoenv ty1, local_type pseudoenv ty2, []) (* XXX: no effects from parsing *)
+        Larrow (local_type pseudoenv root_tcs ty1, local_type pseudoenv root_tcs ty2, []) (* XXX: no effects from parsing *)
     | Ptyp_tuple tyl ->
-        Ltuple (List.map (local_type pseudoenv) tyl)
+        Ltuple (List.map (local_type pseudoenv root_tcs) tyl)
     | Ptyp_constr (lid, tyl) ->
         let gentcs = lookup_general_type_constructor pseudoenv lid ty.ptyp_loc in
         begin match gentcs with
@@ -267,15 +267,24 @@ let rec local_type pseudoenv ty =  (* type 'a foo = 'a -> 'a *)
                parameters of the type declaration (because of the above checks *)
             Lconstr_local (ltcs, rs)
           | Global tcs ->
-            let ltcsl = List.fold_left (fun accu ty ->
-              let lt            = local_type pseudoenv ty in
-              let regions       = local_region_parameters (Longident.name lid) lt in
-              region_variables := !region_variables +  (List.length regions);
-              lt :: accu
-            ) [] tyl in
-            let rs              = shift_regions tcs.tcs_regions !region_variables in
-            region_variables   := !region_variables + (List.length tcs.tcs_regions);
-            Lconstr (tcs, List.rev ltcsl, rs)
+            match root_tcs with
+              | Some tcs' when tcs' == Predef.tcs_exn ->
+                let ltcsl = List.map (local_type pseudoenv root_tcs) tyl in
+                let rs = List.rev_map (fun _ -> 0) tcs.tcs_regions in
+                Lconstr (tcs, ltcsl, rs)
+
+              | _ ->
+                let ltcsl = List.map
+                  (fun ty ->
+                    let lt            = local_type pseudoenv root_tcs ty in
+                    let regions       = local_region_parameters (Longident.name lid) lt in
+                    region_variables := !region_variables +  (List.length regions);
+                    lt)
+                  tyl
+                in
+                let rs            = shift_regions tcs.tcs_regions !region_variables in
+                region_variables := !region_variables + (List.length tcs.tcs_regions);
+                Lconstr (tcs, ltcsl, rs)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -480,19 +489,19 @@ and expression_aux ctxt exp =
 (* Type declarations.                                                     *)
 (* ---------------------------------------------------------------------- *)
 
-let type_kind pseudoenv ty =
+let type_kind pseudoenv ty = (* None => DUMMY *)
   reset_region_variables ();
   match ty with
     Ptype_abstract ->
       Ltcs_abstract
   | Ptype_abbrev ty ->
-      Ltcs_abbrev (local_type pseudoenv ty)
+      Ltcs_abbrev (local_type pseudoenv None ty)
   | Ptype_variant cs_list ->
       Ltcs_variant (List.map (fun (name, tyl, _) ->
-                                (name, List.map (local_type pseudoenv) tyl)) cs_list)
+                                (name, List.map (local_type pseudoenv None) tyl)) cs_list)
   | Ptype_record lbl_list ->
       Ltcs_record (List.map (fun (name, mut, ty, _) ->
-                               (name, mut, local_type pseudoenv ty)) lbl_list)
+                               (name, mut, local_type pseudoenv None ty)) lbl_list)
 
 let is_recursive_abbrev =
   let rec occ seen = function
@@ -538,24 +547,24 @@ let type_declarations env pdecls =
   in
   let int_params = standard_parameters (List.length params) in
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
-  (* Then, fill kinds *)
+  (* Then, fill kinds; *)
   List.iter2
     (fun pdecl ltcs -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
     pdecls ltcs_list;
-  (* Then, fill region parameters *)
-  List.iter
-    (fun ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
-    ltcs_list;
-  (* Then, fill mutable flag *)
-  List.iter
-    (fun ltcs -> ltcs.ltcs_mutable <- local_kind_is_mutable ltcs.ltcs_kind)
-    ltcs_list;
-  (* Check for recursive abbreviations *)
+  (* check for recursive abbreviations; *)
   List.iter2
     (fun pdecl ltcs ->
        if is_recursive_abbrev ltcs then
          raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
     pdecls ltcs_list;
+  (* fill region parameters; *)
+  List.iter
+    (fun ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
+    ltcs_list;
+  (* fill mutable flag *)
+  List.iter
+    (fun ltcs -> ltcs.ltcs_mutable <- local_kind_is_mutable ltcs.ltcs_kind)
+    ltcs_list;
   int_params, ltcs_list
 
 (* ---------------------------------------------------------------------- *)
@@ -583,7 +592,7 @@ let signature_item env psig =
             Msig_type (params, decls)
         | Psig_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
-            Msig_exception (name, List.map (local_type pseudoenv) args)
+            Msig_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Psig_open name ->
             Msig_open (name, lookup_module (Env.modenv env) name psig.psig_loc)
       end;
@@ -621,7 +630,7 @@ let structure_item env pstr =
             Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in
-            Mstr_exception (name, List.map (local_type pseudoenv) args)
+            Mstr_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Pstr_open name ->
             Mstr_open (name, lookup_module (Env.modenv env) name pstr.pstr_loc)
       end;

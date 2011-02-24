@@ -25,7 +25,7 @@ let tcsg_int, tcs_int = mkabs "int" [] [] false
 let tcsg_char, tcs_char = mkabs "char" [] [] false
 let tcsg_string, tcs_string = mkabs "string" [] (standard_parameters 1) true
 let tcsg_float, tcs_float = mkabs "float" [] [] false
-let tcsg_exn, tcs_exn = mkabs "exn" [] [] false
+let tcsg_exn, tcs_exn = mkabs "exn" [] (standard_parameters 1) false
 let tcsg_array, tcs_array =
   mkabs "array" (standard_parameters 1) (standard_parameters 1) true
 let tcsg_format6, tcs_format6 =
