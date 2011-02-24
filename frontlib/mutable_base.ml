@@ -347,7 +347,8 @@ let mutable_apply_type params rparams body args rargs =
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
   | Mconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, rs) ->
-      expand_mutable_type (mutable_apply_type (tcs_params tcs) (tcs_regions tcs) body args rs)
+      expand_mutable_type
+        (mutable_apply_type (tcs_params tcs) (tcs_regions tcs) body args rs)
   | ty -> ty
 
 (* ---------------------------------------------------------------------- *)
@@ -374,15 +375,19 @@ let rec mysprint = function
   | Marrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map mysprint [a; r])) ^ ")"
   | Mtuple l -> "Mtuple (" ^ (String.concat ", " (List.map mysprint l)) ^ ")"
   | Mconstr (tcs, _, _) ->
-    if tcs == Predef.tcs_format6 then "==Predef.tcs_format6" else
-    Printf.sprintf "Mconstr (%s, %s, [%s])"
+    Printf.sprintf "Mconstr (%s, %s, %d, %d)"
       (match tcs.tcs_kind with
         | Tcs_abstract -> "Tcs_abstract"
         | Tcs_variant _ -> "Tcs_variant"
         | Tcs_record _ -> "Tcs_record"
         | Tcs_abbrev _ -> "Tcs_abbrev")
       tcs.tcs_name
-      (String.concat "; " (List.map string_of_int tcs.tcs_regions))
+      (List.length tcs.tcs_group.tcsg_params)
+      (List.length tcs.tcs_regions)
+    ^
+      if List.memq tcs.tcs_group Predef.type_constructor_groups
+      then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"
+      else ""
 
 let rec unify ty1 ty2 =
   let ty1 = mutable_type_repr ty1 in
@@ -406,7 +411,7 @@ let rec unify ty1 ty2 =
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
         let debug =
-          Printf.sprintf "unifying (%s: %s, %s: %s)\n%!"
+          Printf.sprintf "Unifying %s: %s\n    with %s: %s"
             (mysprint ty1)
             (Effect.string_of_mutable_regions r1s) 
             (mysprint ty2) 
