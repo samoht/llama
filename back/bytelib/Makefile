@@ -3,8 +3,8 @@ LIBRARY=bytelib
 INCLUDES=-I ../../stdlib -I ../../backlib
 LIBRARIES=backlib
 MODULES=misc config clflags ccomp runtimedef \
-  meta instruct switch bytegen \
-  printinstr opcodes emitcode \
+  meta instruct store bytegen \
+  printinstr opcodes cmo_format emitcode \
   bytesections dll symtable \
   bytelink bytelibrarian byteerrors
 GENSOURCES=config.ml opcodes.ml runtimedef.ml

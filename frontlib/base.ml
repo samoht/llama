@@ -154,6 +154,30 @@ type structure = structure_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
+(* Check if a type constructor is well formed with respect to region parameters *)
+let well_formed tcs =
+  let saw = ref [] in
+  let (=|=) x y = List.length x = List.length y in
+  let rec llama_type = function
+    | Tparam _            -> true
+    | Tconstr (tc, a, rs) ->
+        tc.tcs_regions =|= rs && List.for_all llama_type a && type_constructor tc
+    | Tarrow (t1, t2, _)  -> llama_type t1 && llama_type t2
+    | Ttuple ts           -> List.for_all llama_type ts 
+  and type_constructor_kind = function
+    | Tcs_abstract   -> true
+    | Tcs_variant cl -> List.for_all (fun x -> List.for_all llama_type x.cs_args) cl
+    | Tcs_record ll  -> List.for_all (fun x -> llama_type x.lbl_arg) ll
+    | Tcs_abbrev l   -> llama_type l
+  and type_constructor t =
+    if List.memq t !saw then
+      true
+    else begin
+      saw := t :: !saw;
+      type_constructor_kind t.tcs_kind
+    end in
+  type_constructor tcs
+
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)

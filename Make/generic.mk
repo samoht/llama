@@ -1,4 +1,4 @@
-.SUFFIXES: .mli .ml .lmi .lml .lmo .lmx .cmi .cmo .mll .mly
+.SUFFIXES: .ml .lml .lmo .lmx .cmi .cmo .mll .mly # .mli .lmi
 
 OCAMLC_STRICT=ocamlc -strict-sequence -warn-error A -nostdlib
 OCAMLDEP=ocamldep
@@ -12,8 +12,8 @@ LLAMADEP=$(LLAMARUN) $(BOOTDIR)/llamadep
 LLAMALEX=$(LLAMARUN) $(BOOTDIR)/llamalex
 LLAMAYACC=$(BOOTDIR)/llamayacc
 
-.mli.lmi:
-	$(LLAMAC) -c $(INCLUDES) $<
+#.mli.lmi:
+#	$(LLAMAC) -c $(INCLUDES) $<
 .ml.lmo:
 	$(LLAMAC) -c $(INCLUDES) $<
 .ml.lmx:

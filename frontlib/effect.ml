@@ -15,10 +15,18 @@ type region_parameter = int
 
 let string_of_region i =
   string_of_int i
+
+let string_of_regions = function
+  | [] -> ""
+  | l  -> Printf.sprintf "[%s]" (String.concat "," (List.map string_of_region l))
     
 (* effect parameter : regions order is NOT important *)
 type effect = region_parameter list
 
+let string_of_effect = function
+  | [] -> ""
+  | l  -> Printf.sprintf "{%s}" (String.concat "," (List.map string_of_region l))
+    
 
 (*******************)
 (* Mutable regions *)

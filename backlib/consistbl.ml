@@ -16,7 +16,7 @@
 
 type t = (string, Digest.t * string) Hashtbl.t
 
-let create () = Hashtbl.create 13
+let create () : t = Hashtbl.create 13
 
 let clear = Hashtbl.clear
 

@@ -119,7 +119,30 @@ and local_type =
       very weird restriction *)
   (* However, region parameter don't have to be the same *)
   | Lconstr_local of local_type_constructor * Effect.region_parameter list
-       
+
+(* Check whether a local type constructor name is used in a type declaration *)
+(* [deps] associates name dependencies to names appearting in [ltc] *)
+let mem_lconstr deps name ltc =
+  let tdeps = (* transitive closure of deps *) (* XXX: can be more efficient *)
+    let rec aux accu elt =
+      if List.mem elt accu then
+        accu
+      else
+        List.fold_left (fun accu e -> aux (e::accu) e) [] (List.assoc elt deps) in
+    List.map (fun elt -> elt, aux [] elt) (List.map fst deps) in
+  List.mem_assoc ltc.ltcs_name tdeps && (List.mem name (List.assoc ltc.ltcs_name tdeps))
+
+(* Sort local type declations in dependance order *)
+(* [deps] associates name dependencies to names appearting in [ltc] *)
+let compare_ltc deps ltc1 ltc2 =
+    let r12 = mem_lconstr deps ltc1.ltcs_name ltc2 in
+    let r21 = mem_lconstr deps ltc2.ltcs_name ltc1 in
+    if r12 && r21 || not (r12 || r21) then
+      0
+    else if r12 then
+      -1
+    else
+      1
 
 (* Get the regions parameters in a local type terms *)
 let new_region l = List.length l
@@ -236,7 +259,13 @@ let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], [])
 (* ---------------------------------------------------------------------- *)
 
 let instantiate_region inst_r param =
-  List.assq param inst_r
+  try List.assq param inst_r
+  with e ->
+    Printf.eprintf
+      "Cannot find region %d (inst_r=%s)\n%!"
+      param
+      (String.concat "," (List.map (fun (i,j) -> Printf.sprintf "%d -> %s" i (Effect.string_of_mutable_region j)) inst_r));
+    raise e
 
 (* If phi is empty, then instantiate a new effect variable to be unified later;
    If phi is a collection of region parameters, then for each of them, look into

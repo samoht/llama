@@ -18,7 +18,7 @@ open Misc
 open Asttypes
 open Primitive
 open Lambda
-open Switch
+open Store
 open Instruct
 
 (**** Label generation ****)

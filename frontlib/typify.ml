@@ -9,6 +9,7 @@ type error =
   | Pattern_type_clash of mutable_type * mutable_type
   | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
+  | Unknown
 
 exception Error of Location.t * error
 
@@ -247,10 +248,10 @@ let formatstring loc fmt =
 let rec expression exp =
   let ty, phi = expression_aux exp in
   (try
-     unify exp.mexp_type ty;
-     Effect.unify exp.mexp_effect phi;
-   with Unify | Effect.Unify ->
-     Fatal.error "Typify.expression");
+    unify exp.mexp_type ty;
+    Effect.unify exp.mexp_effect phi;
+  with Unify | Effect.Unify ->
+    raise (Error (exp.mexp_loc, Unknown)));
   ty, phi
 
 and expression_aux exp =
@@ -288,6 +289,7 @@ and expression_aux exp =
               (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *) 
               let phi1 = expression_expect arg1 ty1 in
               (* add the constraint that phi = phi_res U phi1 *)
+              (* XXX: unification should not be done inside expression_aux, but inside expression only *)
               (* Effect.unify phi (Effect.union phi_res phi1); *)
               type_args ty2 phi argl
         in

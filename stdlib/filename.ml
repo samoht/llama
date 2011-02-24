@@ -210,7 +210,7 @@ let temp_file_gen temp_dir_opt prefix suffix =
       if counter >= 1000 then raise e else try_name (counter + 1)
   in try_name 0
 
-let temp_file = temp_file_gen None
+let temp_file prefix suffix = temp_file_gen None prefix suffix
 
 let open_temp_file_gen mode_opt temp_dir_opt prefix suffix =
   let mode = match mode_opt with None -> [Open_text] | Some m -> m in
@@ -224,4 +224,4 @@ let open_temp_file_gen mode_opt temp_dir_opt prefix suffix =
       if counter >= 1000 then raise e else try_name (counter + 1)
   in try_name 0
 
-let open_temp_file = open_temp_file_gen None None
+let open_temp_file prefix suffix = open_temp_file_gen None None prefix suffix

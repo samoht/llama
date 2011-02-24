@@ -152,11 +152,11 @@ let rec print_list pr sep ppf =
   | [a] -> pr ppf a
   | a :: l -> pr ppf a; sep ppf; print_list pr sep ppf l
 
-let pr_present =
-  print_list (fun ppf s -> fprintf ppf "`%s" s) (fun ppf -> fprintf ppf "@ ")
+let pr_present ppf =
+  print_list (fun ppf s -> fprintf ppf "`%s" s) (fun ppf -> fprintf ppf "@ ") ppf
 
-let pr_vars =
-  print_list (fun ppf s -> fprintf ppf "'%s" s) (fun ppf -> fprintf ppf "@ ")
+let pr_vars ppf =
+  print_list (fun ppf s -> fprintf ppf "'%s" s) (fun ppf -> fprintf ppf "@ ") ppf
 
 let print_out_string_list ppf = function
   | []    -> ()
@@ -287,7 +287,7 @@ let print_out_class_params ppf =
         (print_list type_parameter (fun ppf -> fprintf ppf ", "))
         tyl
 
-let rec print_out_class_type ppf =
+let rec print_out_class_type ppf : Outcometree.out_class_type -> unit =
   function
     Octy_constr (id, tyl) ->
       let pr_tyl ppf =

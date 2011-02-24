@@ -119,7 +119,7 @@ clean ::
 # ---------------------------------------------------------------------- #
 
 CFLAGS=-DCAML_NAME_SPACE -O $(BYTECCCOMPOPTS) $(IFLEXDIR)
-DFLAGS=-DCAML_NAME_SPACE -g -DDEBUG $(BYTECCCOMPOPTS)
+DFLAGS=-DCAML_NAME_SPACE -DDEBUG $(BYTECCCOMPOPTS)
 
 OBJS=$(COMMONOBJS) unix.o main.o
 DOBJS=$(OBJS:.o=.d.o) instrtrace.d.o
@@ -135,7 +135,7 @@ llamarun$(EXE): libcamlrun.a prims.o
 		  prims.o libcamlrun.a $(BYTECCLIBS)
 
 llamarund$(EXE): libcamlrund.a prims.o
-	$(MKEXE) -g $(BYTECCLINKOPTS) -o llamarund$(EXE) \
+	$(MKEXE) $(BYTECCLINKOPTS) -o llamarund$(EXE) \
 		  prims.o libcamlrund.a $(BYTECCLIBS)
 
 libcamlrun.a: $(OBJS)

@@ -25,6 +25,7 @@ external unsafe_blit : string -> int -> string -> int -> int -> unit
                      = "caml_blit_string" "noalloc"
 external unsafe_fill : string -> int -> int -> char -> unit
                      = "caml_fill_string" "noalloc"
+external compare: 'a -> 'a -> int = "%compare"
 
 let make n c =
   let s = create n in
@@ -180,4 +181,3 @@ let rcontains_from s i c =
 
 type t = string
 
-let compare = Pervasives.compare
