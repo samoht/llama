@@ -72,4 +72,4 @@ open Printtyp
 let report_error ppf = function
     Interface_not_compiled intf_name ->
       fprintf ppf
-        "@[Could not find the .cmi file for interface@ %s.@]" intf_name
+        "@[Could not find the .lmi file for interface@ %s.@]" intf_name
