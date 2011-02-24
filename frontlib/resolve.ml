@@ -498,7 +498,7 @@ let is_recursive_abbrev =
   let rec occ seen = function
       Lparam _ -> false
     | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
-    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exist (occ seen) tyl
+    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exists (occ seen) tyl
     | Lconstr_local (ltcs,_) ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
@@ -553,6 +553,7 @@ let type_declarations env pdecls =
         pdecl,
         { ltcs_name = pdecl.ptype_name;
           ltcs_regions = [];
+          ltcs_mutable = false;
           ltcs_kind = Ltcs_variant [] }
       ) pdecls
   in
@@ -576,6 +577,10 @@ let type_declarations env pdecls =
   (* Then, fill region parameters *)
   List.iter
     (fun (pdecl, ltcs) -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
+    ltcs_list;
+  (* Then, fill mutable flag *)
+  List.iter
+    (fun (pdecl, ltcs) -> ltcs.ltcs_mutable <- local_kind_is_mutable ltcs.ltcs_kind)
     ltcs_list;
   (* Check for recursive abbreviations *)
   List.iter

@@ -99,6 +99,7 @@ and mutable_expression_desc =
 type local_type_constructor = {
   ltcs_name : string;
   mutable ltcs_regions : Effect.region_parameter list;
+  mutable ltcs_mutable : bool;
   mutable ltcs_kind : local_type_constructor_kind }
 
 and local_type_constructor_kind =
@@ -181,6 +182,20 @@ let local_kind_region_parameters name lt =
       let regions = local_region_parameters name lt in
       merge_regions accu regions in
   List.sort compare (ltc [] lt)
+
+(* Is a given local type mutable ? To use only in Resolve.type_declarations. *)
+let rec local_is_mutable = function
+  | Lparam _ -> assert false (* DUMMY *)(* XXX: Is  type 'a t = 'a  useful ? *)
+  | Larrow _ -> false
+  | Ltuple _ -> false
+  | Lconstr (tcs, _, _) -> kind_is_mutable tcs.tcs_kind
+  | Lconstr_local (ltcs, _) -> local_kind_is_mutable ltcs.ltcs_kind
+
+and local_kind_is_mutable = function
+  | Ltcs_abstract -> false (* DUMMY *)
+  | Ltcs_variant _ -> false
+  | Ltcs_record l -> List.exists (fun (_, mut, _) -> mut = Mutable) l
+  | Ltcs_abbrev t -> local_is_mutable t
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
@@ -268,16 +283,30 @@ let instantiate_effect inst_r phi =
 
 (* inst   : int -> type variable
    inst_r : int -> region variable *)
-let rec instantiate_type inst inst_r = function
+let rec instantiate_type inst inst_r debug =
+  let debug' = debug ^ ">rec" in
+  function
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2, phi) ->
-      Marrow (instantiate_type inst inst_r ty1, instantiate_type inst inst_r ty2, instantiate_effect inst_r phi)
+      Marrow (instantiate_type inst inst_r debug' ty1, instantiate_type inst inst_r debug' ty2, instantiate_effect inst_r phi)
   | Ttuple tyl ->
-      Mtuple (List.map (instantiate_type inst inst_r) tyl)
-  | Tconstr (tcs, tyl, rs) ->
-      try Mconstr (tcs, List.map (instantiate_type inst inst_r) tyl, List.map (instantiate_region inst_r) rs)
-      with e -> Printf.eprintf "error in type: %s%s\n%!" tcs.tcs_name (Effect.string_of_regions tcs.tcs_regions); raise e
+      Mtuple (List.map (instantiate_type inst inst_r debug') tyl)
+  | Tconstr (tcs, tyl, rl) ->
+      let ityl = List.map (instantiate_type inst inst_r debug') tyl in
+      let irl =
+        try List.map (instantiate_region inst_r) rl
+        with e ->
+          Printf.eprintf "Error in type %s from %s\n" tcs.tcs_name debug;
+          if tcs.tcs_group == Predef.tcsg_string then
+            Printf.eprintf "tcs.tcs_group == tcsg_string\n"
+              (*(List.hd tcs.tcs_group.tcsg_members).tcs_name*);
+          Printf.eprintf "inst_r = [%s]\n"
+            (String.concat "; " (List.map (fun (x, y) -> string_of_int x ^ ", " ^ Effect.string_of_mutable_region y) inst_r));
+          Printf.eprintf "rl = [%s]\n%!" (String.concat "; " (List.map string_of_int rl));
+          raise e
+      in
+      Mconstr (tcs, ityl, irl)
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
@@ -285,20 +314,22 @@ let instantiate_type_constructor tcs =
   inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
+  Printf.eprintf "instantiate_constructor : name = %s; tcs = %s\n%!" cs.cs_name cs.cs_tcs.tcs_name;
   let inst, inst_r, ty_res = instantiate_type_constructor cs.cs_tcs in
-  let ty_args = List.map (instantiate_type inst inst_r) cs.cs_args in
+  let ty_args =
+    List.map (instantiate_type inst inst_r "Mut_base.instantiate_constructor") cs.cs_args in
   ty_args, ty_res
 
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let ty_arg = instantiate_type inst inst_r lbl.lbl_arg in
+  let ty_arg = instantiate_type inst inst_r "Mut_base.instantiate_label" lbl.lbl_arg in
   ty_res, List.map snd inst_r, ty_arg
 
 let instantiate_value v =
   let ty = v.val_type in
   let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.type_parameters ty) in
   let inst_r = List.map (fun i -> (i, Effect.new_region_variable ())) (Basics.region_parameters ty) in
-  instantiate_type inst inst_r ty
+  instantiate_type inst inst_r "Mut_base.instantiate_value" ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
@@ -311,7 +342,7 @@ let rec mutable_type_repr = function
 let mutable_apply_type params rparams body args rargs =
   let inst = List.combine params args in
   let inst_r = List.combine rparams rargs in
-  instantiate_type inst inst_r body
+  instantiate_type inst inst_r "Mut_base.mutable_apply_type" body
 
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
@@ -332,9 +363,9 @@ let rec occurs v = function
   | Marrow (ty1, ty2, _) ->
       occurs v ty1 || occurs v ty2
   | Mtuple tyl ->
-      List.exist (occurs v) tyl
+      List.exists (occurs v) tyl
   | Mconstr (_, tyl, _) ->
-      List.exist (occurs v) tyl
+      List.exists (occurs v) tyl
 
 exception Unify
 

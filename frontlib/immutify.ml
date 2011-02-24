@@ -211,6 +211,7 @@ let make_type_constructor_group modenv params ltcs_list =
         { tcs_group = tcsg;
           tcs_name = ltcs.ltcs_name;
           tcs_regions = ltcs.ltcs_regions;
+          tcs_mutable = ltcs.ltcs_mutable;
           tcs_kind = Tcs_abstract }
       end
       ltcs_list in
@@ -267,6 +268,7 @@ let make_singleton_type modenv arity name =
     { tcs_group = tcsg;
       tcs_name = name;
       tcs_regions = [];
+      tcs_mutable = false; (* DUMMY *)
       tcs_kind = Tcs_abstract } in
   tcsg
 
