@@ -509,6 +509,31 @@ let is_recursive_abbrev =
         Ltcs_abbrev ty -> occ [ltcs] ty
       | _ -> false
 
+(* Get all the type variables in a ptype *)
+let var_of_ptype ptyp =
+  let rec desc accu = function
+    | Ptyp_var   s        -> if List.mem s accu then accu else s :: accu
+    | Ptyp_arrow (t1, t2) -> desc (desc accu t1.ptyp_desc) t2.ptyp_desc
+    | Ptyp_tuple t        -> List.fold_left (fun accu e -> desc accu e.ptyp_desc) accu t
+    | Ptyp_constr (l, ts) ->
+      let l = Longident.name l in
+      let accu = if List.mem l accu then accu else l :: accu in
+      List.fold_left (fun accu e -> desc accu e.ptyp_desc) accu ts in
+  let kind accu = function
+    | Ptype_abstract   -> accu
+    | Ptype_variant vl ->
+      List.fold_left (fun accu (_,te,_) ->
+        List.fold_left (fun accu e -> desc accu e.ptyp_desc) accu te
+      ) accu vl
+    | Ptype_record rl ->
+      List.fold_left (fun accu (_,_,e,_) -> desc accu e.ptyp_desc) accu rl
+    | Ptype_abbrev e -> desc accu e.ptyp_desc in
+  kind [] ptyp.ptype_kind
+
+(* list intersection XXX: move it in the standard lib *)
+let inter s1 s2 =
+  List.fold_left (fun accu e1 -> if List.mem e1 s2 then e1 :: accu else accu) [] s1
+
 let type_declarations env pdecls =
   let pdecl1 = List.hd pdecls in
   let params = pdecl1.ptype_params in
@@ -522,36 +547,43 @@ let type_declarations env pdecls =
   (* Create dummy kinds/regions in a first pass *)
   let ltcs_list =
     List.map
-      begin fun pdecl ->
+      (fun pdecl ->
         if find_duplicate pdecl.ptype_params <> None then
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
+        pdecl,
         { ltcs_name = pdecl.ptype_name;
           ltcs_regions = [];
           ltcs_kind = Ltcs_variant [] }
-      end pdecls
+      ) pdecls
   in
   let pseudoenv =
     List.fold_left
-      (fun pseudoenv ltcs -> pseudoenv_add_type_constructor ltcs pseudoenv)
+      (fun pseudoenv (_,ltcs) -> pseudoenv_add_type_constructor ltcs pseudoenv)
       (pseudoenv_create env) ltcs_list
   in
   let int_params = standard_parameters (List.length params) in
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
+
+  (* order the declaration by dependency relation *)
+  let names = List.map (fun (pdecl,_)  -> pdecl.ptype_name) ltcs_list in
+  let deps  = List.map (fun (pdecl, _) -> pdecl.ptype_name, inter names (var_of_ptype pdecl)) ltcs_list in
+  let ltcs_list = List.sort (fun (_, l1) (_,l2) -> compare_ltc deps l1 l2) ltcs_list in
+
   (* Then, fill kinds *)
-  List.iter2
-    (fun pdecl ltcs -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
-    pdecls ltcs_list;
+  List.iter
+    (fun (pdecl, ltcs) -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
+    ltcs_list;
   (* Then, fill region parameters *)
-  List.iter2
-    (fun pdecl ltcs -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
-    pdecls ltcs_list;
+  List.iter
+    (fun (pdecl, ltcs) -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
+    ltcs_list;
   (* Check for recursive abbreviations *)
-  List.iter2
-    (fun pdecl ltcs ->
+  List.iter
+    (fun (pdecl, ltcs) ->
        if is_recursive_abbrev ltcs then
          raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
-    pdecls ltcs_list;
-  int_params, ltcs_list
+    ltcs_list;
+  int_params, List.map snd ltcs_list
 
 (* ---------------------------------------------------------------------- *)
 (* Signature and structure items.                                         *)
