@@ -186,12 +186,12 @@ let local_kind_region_parameters name lt =
   let rec ltc = function
     | Ltcs_abstract   -> 0
     | Ltcs_variant vl -> list_map_add variant vl
-    | Ltcs_record rs  -> list_map_add record rs
+    | Ltcs_record rs  -> 
+      let r = if List.exists (fun (_, mut, _) -> mut = Mutable) rs then 1 else 0 in
+      r + list_map_add record rs
     | Ltcs_abbrev lt  -> local_region_parameters name lt
   and variant (_,ltl) = list_map_add (local_region_parameters name) ltl
-  and record = function
-    | (_, Mutable, lt) -> 1 + local_region_parameters name lt
-    | (_, _, lt)       -> local_region_parameters name lt in
+  and record (_,_,lt) = local_region_parameters name lt in
   ltc lt
 
 (* ---------------------------------------------------------------------- *)
