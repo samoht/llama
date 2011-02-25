@@ -24,7 +24,9 @@ let split str sep =
 let predicates section =
   try
     let s = Sys.getenv llamadebug in
-    s = all || (s = info && List.mem section info_sections) || List.mem section (split s sep)
+    s = all ||
+    (List.mem info (split s sep) && List.mem section info_sections) ||
+    List.mem section (split s sep)
   with _ ->
     false
 

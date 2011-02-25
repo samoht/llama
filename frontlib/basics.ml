@@ -41,7 +41,7 @@ let rec subst_type sv sr = function
 (* params/args : type parameter
    rparams/rargs : region parameter *)
 let apply_type params rparams body args rargs=
-  subst_type (List.combine params args) (List.combine rparams rargs) body
+  subst_type (List.combine params args) (List.combine (standard_parameters rparams) rargs) body
 
 let rec expand_type = function
     Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, r) ->

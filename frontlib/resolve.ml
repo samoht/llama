@@ -221,8 +221,8 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
           let n = !regions in
-          regions := n + (List.length tcs.tcs_regions);
-          let rs = shift_regions tcs.tcs_regions n in
+          regions := n + tcs.tcs_regions;
+          let rs = shift_regions (standard_parameters tcs.tcs_regions) n in
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
@@ -264,8 +264,8 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
             let regions = local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind in
             ltcs.ltcs_regions <- regions;
             (* shift the computed regions to take into account the region parameters alreay seen *)
-            let rs = shift_regions regions !region_variables in
-            region_variables  := !region_variables + (List.length regions);
+            let rs = shift_regions (standard_parameters regions) !region_variables in
+            region_variables  := !region_variables + regions;
             (* XXX: we don't care about the type arguments tyl as we know they are the same as the
                parameters of the type declaration (because of the above checks *)
             Lconstr_local (ltcs, rs)
@@ -273,7 +273,7 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
             match root_tcs with
               | Some tcs' when tcs' == Predef.tcs_exn ->
                 let ltcsl = List.map (local_type pseudoenv root_tcs) tyl in
-                let rs = List.rev_map (fun _ -> 0) tcs.tcs_regions in
+                let rs = List.rev_map (fun _ -> 0) (standard_parameters tcs.tcs_regions) in
                 Lconstr (tcs, ltcsl, rs)
 
               | _ ->
@@ -281,16 +281,16 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
                   (fun ty ->
                     let lt            = local_type pseudoenv root_tcs ty in
                     let regions       = local_region_parameters (Longident.name lid) lt in
-                    region_variables := !region_variables +  (List.length regions);
+                    region_variables := !region_variables + regions;
                     lt)
                   tyl
                 in
-                let rs            = shift_regions tcs.tcs_regions !region_variables in
-                debug section "Type %s%s rs=%s"
+                let rs = shift_regions (standard_parameters tcs.tcs_regions) !region_variables in
+                debug section "global type %s[%d] rs=%s"
                   tcs.tcs_name
-                  (Effect.string_of_regions tcs.tcs_regions)
+                  tcs.tcs_regions
                   (Effect.string_of_regions rs);
-                region_variables := !region_variables + (List.length tcs.tcs_regions);
+                region_variables := !region_variables + tcs.tcs_regions;
                 Lconstr (tcs, ltcsl, rs)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
@@ -312,7 +312,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let regions = List.map (fun _ -> Effect.new_region_variable ()) tcs.tcs_regions in
+        let regions = List.map (fun _ -> Effect.new_region_variable ()) (standard_parameters tcs.tcs_regions) in
         Mconstr (tcs, List.map (mutable_type env) tyl, regions)
 
 (* ---------------------------------------------------------------------- *)
@@ -568,7 +568,7 @@ let type_declarations env pdecls =
           raise (Error (pdecl.ptype_loc, Repeated_parameter));
         pdecl,
         { ltcs_name = pdecl.ptype_name;
-          ltcs_regions = [];
+          ltcs_regions = 0;
           ltcs_mutable = false;
           ltcs_kind = Ltcs_variant [] }
       ) pdecls

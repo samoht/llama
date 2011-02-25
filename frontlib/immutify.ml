@@ -4,6 +4,9 @@ open Asttypes
 open Base
 open Mutable_base
 
+open Log
+let section = "immutify"
+
 type error =
     Non_generalizable of llama_type
 
@@ -186,19 +189,23 @@ and expression_option f = function
 (* Helpers for creating global entities.                                  *)
 (* ---------------------------------------------------------------------- *)
 
-let type_of_local_type subst local_args =
+let type_of_local_type subst local_args lt =
   let rec aux = function
     | Lparam i                -> Tparam i
     | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, phi)
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
     | Lconstr_local (ltcs,rs) when
-        List.length ltcs.ltcs_regions <> List.length rs ->
+        ltcs.ltcs_regions <> List.length rs ->
       (* Can happen only on recursive type definitions *)
       assert (rs = []);
-      Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions)
+      Tconstr (List.assq ltcs subst, local_args, standard_parameters ltcs.ltcs_regions)
     | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
-  aux
+  let t = aux lt in
+  let w = well_formed t in
+  debug section "type_of_local_type: %b" w;
+  assert w;
+  t
 
 let make_type_constructor_group modenv params ltcs_list =
   let tcsg =
@@ -267,7 +274,7 @@ let make_singleton_type modenv arity name =
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
-      tcs_regions = [];
+      tcs_regions = 0;
       tcs_mutable = false; (* DUMMY *)
       tcs_kind = Tcs_abstract } in
   tcsg

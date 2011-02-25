@@ -25,7 +25,7 @@ and type_constructor_group =
 
 and type_constructor =
   { tcs_group : type_constructor_group;
-    tcs_regions : Effect.region_parameter list;
+    tcs_regions : int;
     tcs_name : string;
     mutable tcs_kind : type_constructor_kind }
 
@@ -211,7 +211,7 @@ and load_type_constructor loader tcs =
     let tcs' =
       { Base.tcs_group = load_type_constructor_group loader tcs.tcs_group;
         Base.tcs_name = tcs.tcs_name;
-        Base.tcs_regions = [];
+        Base.tcs_regions = tcs.tcs_regions;
         Base.tcs_mutable = false; (* DUMMY *)
         Base.tcs_kind = Base.Tcs_abstract } in
     loader.loader_tcs <- (tcs, tcs') :: loader.loader_tcs;

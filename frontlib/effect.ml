@@ -42,7 +42,7 @@ type mutable_region_variable = {
 and mutable_region = mutable_region_variable
 
 let string_of_mutable_region r =
-  string_of_region r.rid
+  "R" ^ string_of_region r.rid
 
 let string_of_mutable_regions l =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_mutable_region l))
@@ -63,7 +63,7 @@ let unify_region r1 r2 =
   
 (* r1 and r2 are two lists of region variables, whose order IS important *)
 let rec unify_regions r1s r2s msg =
-  if List.length r1s = List.length r2s then
+(*  if List.length r1s = List.length r2s then
     List.iter2 unify_region r1s r2s
   else begin
     if msg <> "" then debug section "%s" msg;
@@ -71,7 +71,7 @@ let rec unify_regions r1s r2s msg =
       (string_of_mutable_regions r1s)
       (string_of_mutable_regions r2s);
     raise Unify
-  end
+  end *) ()
 
 (*******************)
 (* Mutable effects *)

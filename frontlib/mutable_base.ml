@@ -101,7 +101,7 @@ and mutable_expression_desc =
 
 type local_type_constructor = {
   ltcs_name : string;
-  mutable ltcs_regions : Effect.region_parameter list;
+  mutable ltcs_regions : int; (* region arity *)
   mutable ltcs_mutable : bool;
   mutable ltcs_kind : local_type_constructor_kind }
 
@@ -147,51 +147,19 @@ let compare_ltc deps ltc1 ltc2 =
     else
       1
 
-(* Get the regions parameters in a local type terms *)
-let new_region l = List.length l
+(* XXX: add in the std library *)
+let list_map_add fn l =
+  List.fold_left (+) 0 (List.map fn l)
 
-(* List union *)
-let merge_regions accu rs =
-  List.fold_left
-    (fun accu elt -> if List.mem elt accu then accu else elt :: accu)
-    accu rs
-    
-(* Returns the region parameters of a local type *)
-let local_region_parameters name lt =
-  let rec aux accu = function
-    | Lparam _               -> accu
-    | Larrow (ty1, ty2, phi) -> aux (aux (merge_regions accu phi) ty1) ty2
-    | Ltuple tyl             -> List.fold_left aux accu tyl
-    | Lconstr (_, tyl, rs)   -> List.fold_left aux (merge_regions accu rs) tyl
-    | Lconstr_local (ltc, _) when
-        ltc.ltcs_name = name -> accu
-    | Lconstr_local (_, rs)  -> merge_regions accu rs in
-  List.sort compare (aux [] lt)
-
-(* Returns the region parameters of a local type constructor kind *)
-let local_kind_region_parameters name lt =
-  let rec ltc accu = function
-    | Ltcs_abstract   -> accu
-    | Ltcs_variant vt -> List.fold_left (fun accu (_,ltl) -> lt_list accu ltl) accu vt
-    | Ltcs_record rs  -> List.fold_left rcd accu rs
-    | Ltcs_abbrev lt  -> local_region_parameters name lt
-  and lt_list accu ltl =
-    List.fold_left (fun accu lt -> merge_regions accu (local_region_parameters name lt)) accu ltl
-  and rcd accu = function
-    | (_, Mutable, lt) ->
-      let regions = local_region_parameters name lt in
-      merge_regions accu (new_region regions :: regions)
-    | (_, _, lt)       -> 
-      let regions = local_region_parameters name lt in
-      merge_regions accu regions in
-  List.sort compare (ltc [] lt)
+let is_mutable_predef tcs =
+  tcs == Predef.tcs_string || tcs == Predef.tcs_array
 
 (* Is a given local type mutable ? To use only in Resolve.type_declarations. *)
 let rec local_is_mutable = function
   | Lparam _ -> assert false (* DUMMY *)(* XXX: Is  type 'a t = 'a  useful ? *)
   | Larrow _ -> false
   | Ltuple _ -> false
-  | Lconstr (tcs, _, _) -> kind_is_mutable tcs.tcs_kind
+  | Lconstr (tcs, _, _) -> is_mutable_predef tcs || kind_is_mutable tcs.tcs_kind
   | Lconstr_local (ltcs, _) -> local_kind_is_mutable ltcs.ltcs_kind
 
 and local_kind_is_mutable = function
@@ -199,6 +167,32 @@ and local_kind_is_mutable = function
   | Ltcs_variant _ -> false
   | Ltcs_record l -> List.exists (fun (_, mut, _) -> mut = Mutable) l
   | Ltcs_abbrev t -> local_is_mutable t
+
+(* Returns the number of region parameters of a local type *)
+let rec local_region_parameters name = function
+  | Lparam _               -> 0
+  | Larrow (ty1, ty2, phi) -> 
+    local_region_parameters name ty1 + List.length phi + local_region_parameters name ty2
+  | Ltuple tyl             -> list_map_add (local_region_parameters name) tyl
+  | Lconstr (tcs, tyl, rs) ->
+    let r = if is_mutable_predef tcs then 1 else 0 in
+    r + List.length rs + list_map_add (local_region_parameters name) tyl
+  | Lconstr_local (ltc, _) when
+      ltc.ltcs_name = name -> 0
+  | Lconstr_local (_, rs)  -> List.length rs
+
+(* Returns the number of region parameters of a local type constructor kind *)
+let local_kind_region_parameters name lt =
+  let rec ltc = function
+    | Ltcs_abstract   -> 0
+    | Ltcs_variant vl -> list_map_add variant vl
+    | Ltcs_record rs  -> list_map_add record rs
+    | Ltcs_abbrev lt  -> local_region_parameters name lt
+  and variant (_,ltl) = list_map_add (local_region_parameters name) ltl
+  and record = function
+    | (_, Mutable, lt) -> 1 + local_region_parameters name lt
+    | (_, _, lt)       -> local_region_parameters name lt in
+  ltc lt
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
@@ -300,7 +294,7 @@ let rec instantiate_type inst inst_r msg =
       let irl =
         try List.map (instantiate_region inst_r) rl
         with e ->
-          debug section "Error in type %s%s from %s" tcs.tcs_name (Effect.string_of_regions tcs.tcs_regions) msg;
+          debug section "Error in type %s[%d] from %s" tcs.tcs_name tcs.tcs_regions msg;
           if tcs.tcs_group == Predef.tcsg_string then
             debug section "tcs.tcs_group == tcsg_string";
           debug section "inst_r = [%s]"
@@ -312,7 +306,7 @@ let rec instantiate_type inst inst_r msg =
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
-  let inst_r = List.map (fun param -> (param, Effect.new_region_variable ())) (tcs_regions tcs) in
+  let inst_r = List.map (fun param -> (param, Effect.new_region_variable ())) (standard_parameters (tcs_regions tcs)) in
   inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
@@ -324,7 +318,9 @@ let instantiate_constructor cs =
 
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let msg = Printf.sprintf "Mut_base.instantiate_label(%s.%s)" lbl.lbl_tcs.tcs_name lbl.lbl_name in
+  let msg = Printf.sprintf "instantiate_label(%s.%s : well_formed=%b)"
+    lbl.lbl_tcs.tcs_name lbl.lbl_name
+    (well_formed lbl.lbl_arg) in
   let ty_arg = instantiate_type inst inst_r msg lbl.lbl_arg in
   ty_res, List.map snd inst_r, ty_arg
 
@@ -332,7 +328,7 @@ let instantiate_value v =
   let ty = v.val_type in
   let inst = List.map (fun i -> (i, new_type_variable ())) (Basics.type_parameters ty) in
   let inst_r = List.map (fun i -> (i, Effect.new_region_variable ())) (Basics.region_parameters ty) in
-  instantiate_type inst inst_r "Mut_base.instantiate_value" ty
+  instantiate_type inst inst_r "instantiate_value" ty
 
 (* ---------------------------------------------------------------------- *)
 (* Expansion of abbreviations.                                            *)
@@ -344,8 +340,8 @@ let rec mutable_type_repr = function
 
 let mutable_apply_type params rparams body args rargs =
   let inst = List.combine params args in
-  let inst_r = List.combine rparams rargs in
-  instantiate_type inst inst_r "Mut_base.mutable_apply_type" body
+  let inst_r = List.combine (standard_parameters rparams) rargs in
+  instantiate_type inst inst_r "mutable_apply_type" body
 
 let rec expand_mutable_type = function
     Mvar { link = Some ty } -> expand_mutable_type ty
@@ -386,7 +382,7 @@ let rec mysprint = function
         | Tcs_abbrev _ -> "Tcs_abbrev")
       tcs.tcs_name
       (List.length tcs.tcs_group.tcsg_params)
-      (List.length tcs.tcs_regions)
+      tcs.tcs_regions
     ^
       if List.memq tcs.tcs_group Predef.type_constructor_groups
       then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"

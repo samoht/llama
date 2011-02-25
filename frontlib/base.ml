@@ -47,12 +47,11 @@ and type_constructor_group =
     mutable tcsg_members : type_constructor list } (* Type constructors in the group *)
 
 and type_constructor =
-  { tcs_group : type_constructor_group;                   (* Containing group *)
-    tcs_name : string;                              (* Name of the type ctor. *)
-    tcs_regions : Effect.region_parameter list;         (* Regions parameters *)
-      (* ^ XXX: should be just the number of those *)
-    tcs_mutable : bool;          (* Is the type mutable (and thus lockable) ? *)
-    mutable tcs_kind : type_constructor_kind }      (* Kind of the type ctor. *)
+  { tcs_group : type_constructor_group;         (* Containing group *)
+    tcs_name : string;                          (* Name of the type ctor. *)
+    tcs_regions : int;                          (* Regions arity *)
+    tcs_mutable : bool;                         (* Is the type mutable (and thus lockable) ? *)
+    mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
 
 and type_constructor_kind =
     Tcs_abstract                     (* Abstract type *)
@@ -154,14 +153,13 @@ type structure = structure_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-(* Check if a type constructor is well formed with respect to region parameters *)
-let well_formed tcs =
+(* Check whether a llama type is well formed with respect to region parameters *)
+let well_formed lt  =
   let saw = ref [] in
-  let (=|=) x y = List.length x = List.length y in
   let rec llama_type = function
     | Tparam _            -> true
     | Tconstr (tc, a, rs) ->
-        tc.tcs_regions =|= rs && List.for_all llama_type a && type_constructor tc
+        tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
     | Tarrow (t1, t2, _)  -> llama_type t1 && llama_type t2
     | Ttuple ts           -> List.for_all llama_type ts 
   and type_constructor_kind = function
@@ -176,7 +174,11 @@ let well_formed tcs =
       saw := t :: !saw;
       type_constructor_kind t.tcs_kind
     end in
-  type_constructor tcs
+  llama_type lt
+
+let standard_parameters n =
+  let rec aux i = if i < n then i :: aux (succ i) else [] in
+  aux 0
 
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
@@ -187,7 +189,7 @@ let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   Tconstr (tcs,
            List.map (fun param -> Tparam param) (tcs_params tcs),
-           tcs_regions tcs)
+           standard_parameters (tcs_regions tcs))
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
@@ -209,10 +211,6 @@ let parameter_name i =
   if i < 26
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
-
-let standard_parameters n =
-  let rec aux i = if i < n then i :: aux (succ i) else [] in
-  aux 0
 
 let shift_regions rs n =
   List.map ((+) n) rs
