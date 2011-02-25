@@ -322,7 +322,8 @@ let instantiate_constructor cs =
 
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let ty_arg = instantiate_type inst inst_r "Mut_base.instantiate_label" lbl.lbl_arg in
+  let debug = Printf.sprintf "Mut_base.instantiate_label(%s.%s)" lbl.lbl_tcs.tcs_name lbl.lbl_name in
+  let ty_arg = instantiate_type inst inst_r debug lbl.lbl_arg in
   ty_res, List.map snd inst_r, ty_arg
 
 let instantiate_value v =
