@@ -316,8 +316,8 @@ let instantiate_type_constructor tcs =
   inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
-  let msg = debug section "instantiate_constructor(%s.%s)" cs.cs_tcs.tcs_name cs.cs_name;
   let inst, inst_r, ty_res = instantiate_type_constructor cs.cs_tcs in
+  let msg = Printf.sprintf "instantiate_constructor(%s.%s)" cs.cs_tcs.tcs_name cs.cs_name in
   let ty_args =
     List.map (instantiate_type inst inst_r msg) cs.cs_args in
   ty_args, ty_res
