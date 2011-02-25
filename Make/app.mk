@@ -8,7 +8,7 @@ install:
 .PHONY: install
 
 clean:
-	rm -f $(BINARY) *.lmi *.lml *.lmo *.lmx .depend
+	rm -f $(BINARY) *.lmi *.lml *.lmo *.lmx depend
 .PHONY: clean
 
 scrapeclean: clean
@@ -16,7 +16,7 @@ scrapeclean: clean
 .PHONY: scrapeclean
 
 depend: $(GENSOURCES)
-	$(LLAMADEP) $(INCLUDES) *.ml *.mli > .depend
+	$(LLAMADEP) $(INCLUDES) *.ml *.mli > depend
 
 .PHONY: depend
 

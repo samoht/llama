@@ -154,7 +154,7 @@ install::
 	  cp libcamlrun_shared.so $(LIBDIR)/libcamlrun_shared.so; fi
 
 clean::
-	rm -f libcamlrun_shared.so .depend
+	rm -f libcamlrun_shared.so depend
 
 
 .SUFFIXES: .d.o .pic.o
@@ -165,12 +165,10 @@ clean::
 .c.pic.o:
 	$(CC) -c $(CFLAGS) $(SHAREDCCCOMPOPTS) $< -o $@
 
-depend : prims.c opnames.h jumptbl.h version.h
-	-gcc -MM $(BYTECCCOMPOPTS) *.c > .depend
-	-gcc -MM $(BYTECCCOMPOPTS) -DDEBUG *.c | sed -e 's/\.o/.d.o/' >> .depend
-	-gcc -MM $(BYTECCCOMPOPTS) *.c | sed -e 's/\.o/.pic.o/' >> .depend
-
-.PHONY: depend
+depend : opnames.h jumptbl.h version.h *.c
+	-gcc -MM $(BYTECCCOMPOPTS) *.c > depend
+	-gcc -MM $(BYTECCCOMPOPTS) -DDEBUG *.c | sed -e 's/\.o/.d.o/' >> depend
+	-gcc -MM $(BYTECCCOMPOPTS) *.c | sed -e 's/\.o/.pic.o/' >> depend
 
 -include .depend
 
