@@ -2,7 +2,8 @@ BOOTDIR=../boot
 LIBRARY=frontlib
 INCLUDES=-I ../stdlib -I ../backlib
 LIBRARIES=backlib
-MODULES=effect \
+MODULES= \
+  log effect \
   frontmisc frontconfig warnings \
   linenum frontlocation longident \
   syntaxerr parsetree parser \

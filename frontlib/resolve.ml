@@ -7,6 +7,9 @@ open Parsetree
 open Mutable_base
 open Primitive
 
+open Log
+let section = "resolve"
+
 type error =
     Unbound_type_constructor of Longident.t
   | Unbound_value of Longident.t
@@ -283,6 +286,10 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
                   tyl
                 in
                 let rs            = shift_regions tcs.tcs_regions !region_variables in
+                debug section "Type %s%s rs=%s"
+                  tcs.tcs_name
+                  (Effect.string_of_regions tcs.tcs_regions)
+                  (Effect.string_of_regions rs);
                 region_variables := !region_variables + (List.length tcs.tcs_regions);
                 Lconstr (tcs, ltcsl, rs)
 
@@ -589,7 +596,7 @@ let type_declarations env pdecls =
        if is_recursive_abbrev ltcs then
          raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
     ltcs_list;
-  (* Then, fill region parameters *)
+  (* Then, fill missing region parameters *)
   List.iter
     (fun (pdecl, ltcs) -> ltcs.ltcs_regions <- local_kind_region_parameters ltcs.ltcs_name ltcs.ltcs_kind)
     ltcs_list;

@@ -1,7 +1,5 @@
-let debug_ = false
-
-let debug fmt =
-  Printf.kprintf (fun str -> if debug_ then Printf.eprintf "EFFECT: %s\n%!" str) fmt
+open Log
+let section = "effect"
 
 (******************)
 (* Immutable base *)
@@ -58,18 +56,17 @@ exception Unify
 let unify_region r1 r2 =
   let r1 = mutable_region_repr r1 in
   let r2 = mutable_region_repr r2 in
-  debug "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2);
+  debug section "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2);
   if r1.rid <> r2.rid then
     r1.rlink <- Some r2
   
 (* r1 and r2 are two lists of region variables, whose order IS important *)
-let rec unify_regions r1s r2s debug =
+let rec unify_regions r1s r2s msg =
   if List.length r1s = List.length r2s then
     List.iter2 unify_region r1s r2s
   else begin
-    if debug <> "" then
-      Printf.eprintf "%s\n" debug;
-    Printf.eprintf "ERROR: cannot unify region parameters %s and %s\n"
+    if msg <> "" then debug section "%s" msg;
+    debug section "ERROR: cannot unify region parameters %s and %s"
       (string_of_mutable_regions r1s)
       (string_of_mutable_regions r2s);
     raise Unify
@@ -209,7 +206,7 @@ let rec occurs v phi =
 let rec unify phi1 phi2 =
   let phi1 = mutable_effect_repr phi1 in
   let phi2 = mutable_effect_repr phi2 in
-  debug "unify %s %s"
+  debug section "unify %s %s"
     (string_of_mutable_effect phi1)
     (string_of_mutable_effect phi2);
   match phi1, phi2 with
@@ -238,7 +235,7 @@ let rec unify phi1 phi2 =
     | Eunion s1, Eunion s2 -> Set.iter (unify empty_effect) (Set.diff s2 s1)
 
     | _ ->
-      Printf.eprintf "ERROR: cannot unify effects %s and %s\n%!"
+      debug section "ERROR: cannot unify effects %s and %s"
         (string_of_mutable_effect phi1)
         (string_of_mutable_effect phi2);
       raise Unify

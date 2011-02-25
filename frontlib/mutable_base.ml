@@ -3,6 +3,9 @@
 open Asttypes
 open Base
 
+open Log
+let section = "mutable_base"
+
 type mutable_type =
     Mvar of mutable_type_variable
   | Marrow of mutable_type * mutable_type * Effect.mutable_effect
@@ -261,8 +264,8 @@ let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], [])
 let instantiate_region inst_r param =
   try List.assq param inst_r
   with e ->
-    Printf.eprintf
-      "Cannot find region %d (inst_r=%s)\n%!"
+    debug section
+      "Cannot find region %d (inst_r=%s)"
       param
       (String.concat "," (List.map (fun (i,j) -> Printf.sprintf "%d -> %s" i (Effect.string_of_mutable_region j)) inst_r));
     raise e
@@ -283,27 +286,26 @@ let instantiate_effect inst_r phi =
 
 (* inst   : int -> type variable
    inst_r : int -> region variable *)
-let rec instantiate_type inst inst_r debug =
-  let debug' = debug ^ ">rec" in
+let rec instantiate_type inst inst_r msg =
+  let msgrec = msg ^ ">rec" in
   function
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2, phi) ->
-      Marrow (instantiate_type inst inst_r debug' ty1, instantiate_type inst inst_r debug' ty2, instantiate_effect inst_r phi)
+      Marrow (instantiate_type inst inst_r msgrec ty1, instantiate_type inst inst_r msgrec ty2, instantiate_effect inst_r phi)
   | Ttuple tyl ->
-      Mtuple (List.map (instantiate_type inst inst_r debug') tyl)
+      Mtuple (List.map (instantiate_type inst inst_r msgrec) tyl)
   | Tconstr (tcs, tyl, rl) ->
-      let ityl = List.map (instantiate_type inst inst_r debug') tyl in
+      let ityl = List.map (instantiate_type inst inst_r msgrec) tyl in
       let irl =
         try List.map (instantiate_region inst_r) rl
         with e ->
-          Printf.eprintf "Error in type %s from %s\n" tcs.tcs_name debug;
+          debug section "Error in type %s%s from %s" tcs.tcs_name (Effect.string_of_regions tcs.tcs_regions) msg;
           if tcs.tcs_group == Predef.tcsg_string then
-            Printf.eprintf "tcs.tcs_group == tcsg_string\n"
-              (*(List.hd tcs.tcs_group.tcsg_members).tcs_name*);
-          Printf.eprintf "inst_r = [%s]\n"
+            debug section "tcs.tcs_group == tcsg_string";
+          debug section "inst_r = [%s]"
             (String.concat "; " (List.map (fun (x, y) -> string_of_int x ^ ", " ^ Effect.string_of_mutable_region y) inst_r));
-          Printf.eprintf "rl = [%s]\n%!" (String.concat "; " (List.map string_of_int rl));
+          debug section "rl = [%s]" (String.concat "; " (List.map string_of_int rl));
           raise e
       in
       Mconstr (tcs, ityl, irl)
@@ -314,7 +316,7 @@ let instantiate_type_constructor tcs =
   inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
-  Printf.eprintf "instantiate_constructor : name = %s; tcs = %s\n%!" cs.cs_name cs.cs_tcs.tcs_name;
+  debug section "instantiate_constructor : name = %s; tcs = %s" cs.cs_name cs.cs_tcs.tcs_name;
   let inst, inst_r, ty_res = instantiate_type_constructor cs.cs_tcs in
   let ty_args =
     List.map (instantiate_type inst inst_r "Mut_base.instantiate_constructor") cs.cs_args in
@@ -322,8 +324,8 @@ let instantiate_constructor cs =
 
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let debug = Printf.sprintf "Mut_base.instantiate_label(%s.%s)" lbl.lbl_tcs.tcs_name lbl.lbl_name in
-  let ty_arg = instantiate_type inst inst_r debug lbl.lbl_arg in
+  let msg = Printf.sprintf "Mut_base.instantiate_label(%s.%s)" lbl.lbl_tcs.tcs_name lbl.lbl_name in
+  let ty_arg = instantiate_type inst inst_r msg lbl.lbl_arg in
   ty_res, List.map snd inst_r, ty_arg
 
 let instantiate_value v =
@@ -411,16 +413,16 @@ let rec unify ty1 ty2 =
     | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, tyl2, r2s) ->
         unify ty1 (mutable_apply_type (tcs_params tcs2) (tcs_regions tcs2) body2 tyl2 r2s)
     | Mconstr (tcs1, tyl1, r1s), Mconstr (tcs2, tyl2, r2s) when tcs1 == tcs2 ->
-        let debug =
+        let msg =
           Printf.sprintf "Unifying %s: %s\n    with %s: %s"
             (mysprint ty1)
             (Effect.string_of_mutable_regions r1s) 
             (mysprint ty2) 
             (Effect.string_of_mutable_regions r2s) in
-        Effect.unify_regions r1s r2s debug;
+        Effect.unify_regions r1s r2s msg;
         unify_list tyl1 tyl2
     | _ ->
-        Printf.eprintf "Unify (%s, %s)\n%!" (mysprint ty1) (mysprint ty2);
+        debug section "Unify (%s, %s)" (mysprint ty1) (mysprint ty2);
         raise Unify
 
 and unify_list tyl1 tyl2 =
@@ -431,5 +433,5 @@ and unify_list tyl1 tyl2 =
         unify ty1 ty2;
         unify_list rest1 rest2
     | _ ->
-        Printf.eprintf "Unify list\n%!";
+        debug section "Unify list";
         raise Unify
