@@ -41,6 +41,14 @@ type mutable_region_variable = {
 
 and mutable_region = mutable_region_variable
 
+(* Returns a fresh region variable *)
+let new_region_variable =
+  let x = ref 0 in
+  let aux () =
+    incr x;
+    { rid = !x; rlink = None } in
+  aux
+
 let string_of_mutable_region r =
   "R" ^ string_of_region r.rid
 
@@ -63,7 +71,7 @@ let unify_region r1 r2 =
   
 (* r1 and r2 are two lists of region variables, whose order IS important *)
 let rec unify_regions r1s r2s msg =
-(*  if List.length r1s = List.length r2s then
+  if List.length r1s = List.length r2s then
     List.iter2 unify_region r1s r2s
   else begin
     if msg <> "" then debug section "%s" msg;
@@ -71,7 +79,7 @@ let rec unify_regions r1s r2s msg =
       (string_of_mutable_regions r1s)
       (string_of_mutable_regions r2s);
     raise Unify
-  end *) ()
+  end
 
 (*******************)
 (* Mutable effects *)
@@ -172,14 +180,6 @@ let empty_effect = Eunion empty_set
 let is_empty = function
   | Eunion s -> Set.is_empty s
   | _        -> false
-
-(* Returns a fresh region variable *)
-let new_region_variable =
-  let x = ref 0 in
-  let aux () =
-    incr x;
-    { rid = !x; rlink = None } in
-  aux
 
 (* Returns a fresh effect variable *)
 let new_effect_variable =

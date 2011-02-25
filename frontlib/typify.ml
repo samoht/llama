@@ -21,7 +21,7 @@ exception Error of Location.t * error
 let literal = function
     Literal_int _ -> mutable_type_int
   | Literal_float _ -> mutable_type_float
-  | Literal_string _ -> mutable_type_string
+  | Literal_string _ -> mutable_type_string (Effect.new_region_variable ())
   | Literal_char _ -> mutable_type_char
   | Literal_int32 _ -> mutable_type_int32
   | Literal_int64 _ -> mutable_type_int64
@@ -188,10 +188,11 @@ let formatstring loc fmt =
         if j >= len then raise (incomplete_format fmt) else
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
-        | 's' | 'S' -> conversion j mutable_type_string
+        | 's' | 'S' ->
+          conversion j (mutable_type_string (Effect.new_region_variable ()))
         | '[' ->
           let j = range_closing_index fmt j in
-          conversion j mutable_type_string
+          conversion j (mutable_type_string (Effect.new_region_variable ()))
         | 'c' | 'C' -> conversion j mutable_type_char
         | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
           conversion j mutable_type_int
@@ -250,7 +251,7 @@ let rec expression exp =
   let ty, phi = expression_aux exp in
   (try
     unify exp.mexp_type ty;
-    Effect.unify exp.mexp_effect phi;
+    (* Effect.unify exp.mexp_effect phi; *)
   with Unify | Effect.Unify ->
     raise (Error (exp.mexp_loc, Unknown)));
   ty, phi
@@ -287,7 +288,7 @@ and expression_aux exp =
                       ty1, ty2, phi
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
               in
-              (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *) 
+              (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *)
               let _ = expression_expect arg1 ty1 in
               (* add the constraint that phi = phi_res U phi1 *)
               (* XXX: unification should not be done inside expression_aux, but inside expression only *)
@@ -310,7 +311,7 @@ and expression_aux exp =
         let phi = caselist ty_arg ty_res pat_exp_list in
         Marrow (ty_arg, ty_res, phi), Effect.empty_effect
     | Mexp_try (body, pat_exp_list) ->
-        let ty_arg = mutable_type_exn in
+        let ty_arg = mutable_type_exn (Effect.new_region_variable ()) in
         let ty_res, phi1 = expression body in
         let phi2 = caselist ty_arg ty_res pat_exp_list in
         ty_res, Effect.union phi1 phi2
@@ -410,7 +411,7 @@ and expression_expect exp expected_ty =
                       Mconstr (tcs, _, []) when tcs == Predef.tcs_format6 ->
                         formatstring exp.mexp_loc s
                     | _ ->
-                        mutable_type_string in
+                        mutable_type_string (Effect.new_region_variable ()) in
                 unify exp.mexp_type ty;
                 ty, Effect.empty_effect
             | _ ->

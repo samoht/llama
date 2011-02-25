@@ -256,11 +256,11 @@ let new_type_variable () = Mvar { link = None }
 
 let mutable_type_int = Mconstr (Predef.tcs_int, [], [])
 let mutable_type_char = Mconstr (Predef.tcs_char, [], [])
-let mutable_type_string = Mconstr (Predef.tcs_string, [], [])
+let mutable_type_string rho = Mconstr (Predef.tcs_string, [], [rho])
 let mutable_type_float = Mconstr (Predef.tcs_float, [], [])
 let mutable_type_bool = Mconstr (Predef.tcs_bool, [], [])
 let mutable_type_unit = Mconstr (Predef.tcs_unit, [], [])
-let mutable_type_exn = Mconstr (Predef.tcs_exn, [], [])
+let mutable_type_exn rho = Mconstr (Predef.tcs_exn, [], [rho])
 let mutable_type_array ty rho = Mconstr (Predef.tcs_array, [ty], [rho])
 let mutable_type_list ty = Mconstr (Predef.tcs_list, [ty], [])
 let mutable_type_option ty = Mconstr (Predef.tcs_option, [ty], [])
