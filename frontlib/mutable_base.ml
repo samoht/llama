@@ -152,7 +152,7 @@ let list_map_add fn l =
   List.fold_left (+) 0 (List.map fn l)
 
 let is_mutable_predef tcs =
-  tcs == Predef.tcs_string || tcs == Predef.tcs_array
+  tcs == Predef.tcs_string || tcs == Predef.tcs_array || tcs == Predef.tcs_exn
 
 (* Is a given local type mutable ? To use only in Resolve.type_declarations. *)
 let rec local_is_mutable = function
@@ -168,31 +168,48 @@ and local_kind_is_mutable = function
   | Ltcs_record l -> List.exists (fun (_, mut, _) -> mut = Mutable) l
   | Ltcs_abbrev t -> local_is_mutable t
 
-(* Returns the number of region parameters of a local type *)
-let rec local_region_parameters name = function
+(* Returns the number of external region parameters of a local type *)
+(* [names] is the list of internal names *)
+let rec local_region_external_arity names = function
   | Lparam _               -> 0
   | Larrow (ty1, ty2, phi) -> 
-    local_region_parameters name ty1 + List.length phi + local_region_parameters name ty2
-  | Ltuple tyl             -> list_map_add (local_region_parameters name) tyl
+    local_region_external_arity names ty1 + List.length phi + local_region_external_arity names ty2
+  | Ltuple tyl             -> list_map_add (local_region_external_arity names) tyl
   | Lconstr (tcs, tyl, rs) ->
     let r = if is_mutable_predef tcs then 1 else 0 in
-    r + List.length rs + list_map_add (local_region_parameters name) tyl
+    r + List.length rs + list_map_add (local_region_external_arity names) tyl
   | Lconstr_local (ltc, _) when
-      ltc.ltcs_name = name -> 0
+      List.mem ltc.ltcs_name names -> 0
   | Lconstr_local (_, rs)  -> List.length rs
 
-(* Returns the number of region parameters of a local type constructor kind *)
-let local_kind_region_parameters name lt =
+(* Returns the number of external region parameters of a local type constructor kind *)
+(* [names] is the list of internal names *)
+let local_kind_external_region_arity names lt =
   let rec ltc = function
     | Ltcs_abstract   -> 0
     | Ltcs_variant vl -> list_map_add variant vl
     | Ltcs_record rs  -> 
       let r = if List.exists (fun (_, mut, _) -> mut = Mutable) rs then 1 else 0 in
       r + list_map_add record rs
-    | Ltcs_abbrev lt  -> local_region_parameters name lt
-  and variant (_,ltl) = list_map_add (local_region_parameters name) ltl
-  and record (_,_,lt) = local_region_parameters name lt in
+    | Ltcs_abbrev lt  -> local_region_external_arity names lt
+  and variant (_,ltl) = list_map_add (local_region_external_arity names) ltl
+  and record (_,_,lt) = local_region_external_arity names lt in
   ltc lt
+
+(* Returns the list of used region variables *)
+let rec local_region_variables = function
+  | Lparam _               -> []
+  | Larrow (ty1, ty2, phi) -> local_region_variables ty1 @ phi @ local_region_variables ty2
+  | Ltuple t               -> List.flatten (List.map local_region_variables t)
+  | Lconstr (_, _, rs)     -> rs
+  | Lconstr_local _        -> []
+
+let local_kind_region_variables = function
+  | Ltcs_abstract  -> []
+  | Ltcs_variant v -> List.flatten (List.map (fun (_,ltl) -> List.flatten (List.map local_region_variables ltl)) v)
+  | Ltcs_record r  -> List.flatten (List.map (fun (_,_,lt) -> local_region_variables lt) r)
+  | Ltcs_abbrev lt -> local_region_variables lt
+
 
 (* ---------------------------------------------------------------------- *)
 (* Signature items.                                                       *)
