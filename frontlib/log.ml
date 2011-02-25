@@ -3,6 +3,10 @@
 (* Name of the environment variable *)
 let llamadebug = "LLAMADEBUG"
 let sep        = ':'
+let all        = "all"
+
+let info       = "info"
+let info_sections = [ "effect"; "mutable_base" ]
 
 (* XXX: put that in the standard library *)
 let split str sep =
@@ -20,7 +24,7 @@ let split str sep =
 let predicates section =
   try
     let s = Sys.getenv llamadebug in
-    List.mem section (split s sep)
+    s = all || (s = info && List.mem section info_sections) || List.mem section (split s sep)
   with _ ->
     false
 
