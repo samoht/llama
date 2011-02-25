@@ -9,6 +9,7 @@ type error =
   | Pattern_type_clash of mutable_type * mutable_type
   | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
+  | Lock_non_mutable of mutable_type
   | Unknown
 
 exception Error of Location.t * error
@@ -287,7 +288,7 @@ and expression_aux exp =
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
               in
               (* type arg1 and unify the result with ty1, the return result if the effect of arg1 *) 
-              let phi1 = expression_expect arg1 ty1 in
+              let _ = expression_expect arg1 ty1 in
               (* add the constraint that phi = phi_res U phi1 *)
               (* XXX: unification should not be done inside expression_aux, but inside expression only *)
               (* Effect.unify phi (Effect.union phi_res phi1); *)
@@ -378,8 +379,6 @@ and expression_aux exp =
         new_type_variable (), Effect.empty_effect
     | Mexp_lock (l, e) ->
         let rhos, phis = List.split (List.map lockable l)
-        (* XXX: We should show a warning if 2 rhos are the same,
-           but we can't be sure yet *)
         and ty, phi = expression e in
         ty, Effect.union_list (Effect.effect_of_regions rhos :: phi :: phis)
     | Mexp_thread e ->
@@ -417,17 +416,16 @@ and expression_expect exp expected_ty =
             | _ ->
                 expression exp
         in
-        begin try
+        try
           unify ty expected_ty;
           phi
-        with
-          | Unify ->
-          Printf.eprintf "Hi there (typify, 423)\n%!";
+        with e ->
+          Printf.eprintf "Typify.expression_expect: %s\n%!"
+            (match e with
+              | Unify -> "Unify"
+              | Effect.Unify -> "Effect.Unify"
+              | e -> raise e);
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
-          | Effect.Unify ->
-          Printf.eprintf "Hi there (typify, 426)\n%!";
-          raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
-        end
 
 (* Typing of "let" definitions *)
 
@@ -468,12 +466,8 @@ and statement expr =
 and lockable expr =
   let ty, phi = expression expr in
   match expand_mutable_type ty with
-(*  | Mconstr ({tcs_kind=Tcs_record _}, _, rho::_) ->
-      rho, phi *)
-    | Mconstr ({tcs_kind=Tcs_record _}, _, _) ->
-        Effect.new_region_variable (), phi (* DUMMY; why doesn't the above work ? *)
-    | _ -> (* Not a lockable type *)
-        raise Unify (* XXX: should raise (Error sth); *)
+    | Mconstr ({tcs_mutable=true}, _, rho::_) -> rho, phi
+    | _ -> raise (Error (expr.mexp_loc, Lock_non_mutable ty))
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)
@@ -531,3 +525,5 @@ let report_error ppf = function
           fprintf ppf
             "This expression is not a function; it cannot be applied"
       end
+  | Lock_non_mutable typ ->
+      fprintf ppf "This expression is not mutable; it cannot be locked"

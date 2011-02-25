@@ -47,7 +47,7 @@ let implementation srcfile outputprefix modname env pstr =
     Format.fprintf Format.std_formatter "%a@." Printtyp.signature sg;
     (str, Include.Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
-    let sourceintf =
+    let _ (*sourceintf*) =
       Frontmisc.chop_extension_if_any srcfile ^ !Frontconfig.interface_suffix in
     (* if Sys.file_exists sourceintf then begin
       let intf_file =
@@ -72,4 +72,4 @@ open Printtyp
 let report_error ppf = function
     Interface_not_compiled intf_name ->
       fprintf ppf
-        "@[Could not find the .cmi file for interface@ %s.@]" intf_name
+        "@[Could not find the .lmi file for interface@ %s.@]" intf_name
