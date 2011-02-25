@@ -224,9 +224,9 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-          let n = !regions in
-          regions := n + tcs.tcs_regions;
-          let rs = shift_regions (standard_parameters tcs.tcs_regions) n in
+          let rs = shift_regions (standard_parameters tcs.tcs_regions) !regions in
+          debug section "llama_type %s: !regions = %d; tcs_regions = %d" tcs.tcs_name !regions tcs.tcs_regions;
+          regions := !regions + tcs.tcs_regions;
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
@@ -271,6 +271,7 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
               (* at this point, ltcs_kind is valid and ltcs_regions contains external region arity *)
               let regions = local_kind_region_variables ltcs.ltcs_kind in
               ltcs.ltcs_regions <- List.length regions;
+              debug section "local type %s[%d] rs=%s" ltcs.ltcs_name ltcs.ltcs_regions (Effect.string_of_regions regions);
               Lconstr_local (ltcs, regions)
             end
 
@@ -590,10 +591,10 @@ let type_declarations env pdecls =
   let names = List.map (fun (pdecl,_)  -> pdecl.ptype_name) ltcs_list in
   let pseudoenv = { pseudoenv with names = names } in
 
-  (* Order the declaration by dependency relation *)
+(*(* Order the declaration by dependency relation *)
   let deps  = List.map (fun (pdecl, _) -> pdecl.ptype_name, inter names (var_of_ptype pdecl)) ltcs_list in
   let ltcs_list = List.sort (fun (_, l1) (_,l2) -> compare_ltc deps l1 l2) ltcs_list in
-
+*)
   (* First, fill kinds *)
   List.iter
     (fun (pdecl, ltcs) -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
@@ -606,13 +607,15 @@ let type_declarations env pdecls =
     ltcs_list;
   (* Then, fill external region arity *)
   List.iter
-    (fun (pdecl, ltcs) -> ltcs.ltcs_regions <- local_kind_external_region_arity names ltcs.ltcs_kind)
+    (fun (pdecl, ltcs) ->
+      ltcs.ltcs_regions <- local_kind_external_region_arity names ltcs.ltcs_kind)
     ltcs_list;
   (* Fill valid region/kind *)
   let pseudoenv = { pseudoenv with first_pass = false } in
   reset_region_variables ();
   List.iter
-    (fun (pdecl, ltcs) -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
+    (fun (pdecl, ltcs) -> (* ltcs_regions <- ??? *)
+      ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
     ltcs_list;
   (* Fill mutable flag *)
   List.iter

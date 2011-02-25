@@ -176,8 +176,8 @@ let rec local_region_external_arity names = function
     local_region_external_arity names ty1 + List.length phi + local_region_external_arity names ty2
   | Ltuple tyl             -> list_map_add (local_region_external_arity names) tyl
   | Lconstr (tcs, tyl, rs) ->
-    let r = if is_mutable_predef tcs then 1 else 0 in
-    r + List.length rs + list_map_add (local_region_external_arity names) tyl
+    (* let r = if is_mutable_predef tcs then 1 else 0 in
+    r +*) List.length rs + list_map_add (local_region_external_arity names) tyl
   | Lconstr_local (ltc, _) when
       List.mem ltc.ltcs_name names -> 0
   | Lconstr_local (_, rs)  -> List.length rs
@@ -192,7 +192,7 @@ let local_kind_external_region_arity names lt =
       let r = if List.exists (fun (_, mut, _) -> mut = Mutable) rs then 1 else 0 in
       r + list_map_add record rs
     | Ltcs_abbrev lt  -> local_region_external_arity names lt
-  and variant (_,ltl) = list_map_add (local_region_external_arity names) ltl
+  and variant (_,ltl) = local_region_external_arity names (Ltuple ltl)
   and record (_,_,lt) = local_region_external_arity names lt in
   ltc lt
 
@@ -274,12 +274,15 @@ let mutable_type_int64 = Mconstr (Predef.tcs_int64, [], [])
 
 let instantiate_region inst_r param =
   try List.assq param inst_r
-  with e ->
-    debug section
-      "Cannot find region %d (inst_r=%s)"
+  with Not_found ->
+    debug section "Cannot find region %d (inst_r=%s)"
       param
-      (String.concat "," (List.map (fun (i,j) -> Printf.sprintf "%d -> %s" i (Effect.string_of_mutable_region j)) inst_r));
-    raise e
+      (String.concat ","
+         (List.map
+            (fun (i,j) ->
+              Printf.sprintf "%d -> %s" i (Effect.string_of_mutable_region j))
+            inst_r));
+    raise Not_found
 
 (* If phi is empty, then instantiate a new effect variable to be unified later;
    If phi is a collection of region parameters, then for each of them, look into
@@ -312,8 +315,8 @@ let rec instantiate_type inst inst_r msg =
         try List.map (instantiate_region inst_r) rl
         with e ->
           debug section "Error in type %s[%d] from %s" tcs.tcs_name tcs.tcs_regions msg;
-          if tcs.tcs_group == Predef.tcsg_string then
-            debug section "tcs.tcs_group == tcsg_string";
+          if List.mem tcs.tcs_group Predef.type_constructor_groups then
+            debug section "tcs == Predef.tcs_%s" tcs.tcs_name;
           debug section "inst_r = [%s]"
             (String.concat "; " (List.map (fun (x, y) -> string_of_int x ^ ", " ^ Effect.string_of_mutable_region y) inst_r));
           debug section "rl = [%s]" (String.concat "; " (List.map string_of_int rl));

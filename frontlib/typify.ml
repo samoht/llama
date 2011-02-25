@@ -354,7 +354,7 @@ and expression_aux exp =
         let phis =
           List.map
             (fun (lbl, exp) ->
-               let ty_arg = instantiate_type inst inst_r "Typify.expression" lbl.lbl_arg in
+               let ty_arg = instantiate_type inst inst_r ("Typify.expression lbl_name="^lbl.lbl_name) lbl.lbl_arg in
                expression_expect exp ty_arg)
             lbl_exp_list
         and phi1 =
