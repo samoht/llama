@@ -27,5 +27,5 @@ let predicates section =
 let debug section fmt =
   let fn message =
     if predicates section then
-      Printf.eprintf "%-10s | %s\n%!" section message in
+      Printf.eprintf "%-15s %s\n%!" section message in
   Printf.kprintf fn fmt
