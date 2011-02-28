@@ -283,14 +283,7 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
                 Lconstr (tcs, ltcsl, rs)
 
               | _ ->
-                let ltcsl = List.map
-                  (fun ty ->
-                    let lt            = local_type pseudoenv root_tcs ty in
-                    let regions       = local_region_external_arity pseudoenv.names lt in
-                    region_variables := !region_variables + regions;
-                    lt)
-                  tyl
-                in
+                let ltcsl = List.map (fun ty -> local_type pseudoenv root_tcs ty) tyl in
                 let rs = shift_regions (standard_parameters tcs.tcs_regions) !region_variables in
                 debug section "global type %s[%d] rs=%s"
                   tcs.tcs_name
