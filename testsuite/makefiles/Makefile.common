@@ -2,7 +2,7 @@ TOPDIR=$(BASEDIR)/..
 LLAMARUN=$(TOPDIR)/back/byterun/llamarun
 LLAMAC=$(LLAMARUN) $(TOPDIR)/back/bytec/llamac
 
-.SUFFIXES: .mli .ml .lmi .lml .lmo
+.SUFFIXES: .ml .lml .lmo # .mli .lmi 
 
 .mli.lmi:
 	$(LLAMAC) -c -g $(INCLUDES) $<

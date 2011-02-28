@@ -1,4 +1,4 @@
-compile: testing.lmi testing.lmo
+compile: testing.lmo # testing.lmi 
 
 clean: defaultclean
 
