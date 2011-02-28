@@ -9,9 +9,9 @@ let section_verbose = "mutable_base+"
 
 type mutable_type =
     Mvar of mutable_type_variable
-  | Marrow of mutable_type * mutable_type * Effect.mutable_effect
+  | Marrow of mutable_type * mutable_type * Effects.mutable_effect
   | Mtuple of mutable_type list
-  | Mconstr of type_constructor * mutable_type list * Effect.mutable_region list
+  | Mconstr of type_constructor * mutable_type list * Effects.mutable_region list
 
 and mutable_type_variable =
   { mutable link : mutable_type option }
