@@ -204,7 +204,7 @@ let rec occurs v phi =
   | Eregion _-> false 
   | Eunion s -> Set.exist (occurs v) s
 
-let rec unify phi1 phi2 = () 
+let rec unify phi1 phi2 =
   let phi1 = mutable_effect_repr phi1 in
   let phi2 = mutable_effect_repr phi2 in
   debug section_verbose "unify %s %s"
