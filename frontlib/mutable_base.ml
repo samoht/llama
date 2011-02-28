@@ -148,9 +148,7 @@ let union s1 s2 =
   List.fold_left (fun accu e1 -> if List.mem e1 accu then accu else e1::accu) s2 s1
 
 (* Returns the region parameters of a local type *)
-(* - [Saw] is the list of local type names already visited *)
 (* - If [internals] is true, then returns the internal region parameters as well *)
-(* - [accu] is the list of regions computed so far *)
 (* - [k] is a local kind *)
 let rec local_kind_region_parameters internals k =
   let saw = ref [] in
