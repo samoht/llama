@@ -196,10 +196,13 @@ let type_of_local_type subst local_args lt =
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
     | Lconstr_local (ltcs,rs) when
-        ltcs.ltcs_regions <> List.length rs ->
+        List.length ltcs.ltcs_regions <> List.length rs ->
       (* Can happen only on recursive type definitions *)
-      assert (rs = []);
-      Tconstr (List.assq ltcs subst, local_args, standard_parameters ltcs.ltcs_regions)
+      debug section "type %s: ltcs_regions=%s rs=%s"
+        ltcs.ltcs_name
+        (Effect.string_of_regions ltcs.ltcs_regions)
+        (Effect.string_of_regions rs);
+      Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions)
     | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
   let t = aux lt in
   let w = well_formed t in
@@ -274,7 +277,7 @@ let make_singleton_type modenv arity name =
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
-      tcs_regions = 0;
+      tcs_regions = [];
       tcs_mutable = false; (* DUMMY *)
       tcs_kind = Tcs_abstract } in
   tcsg

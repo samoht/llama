@@ -41,11 +41,11 @@ let rec subst_type sv sr = function
 (* params/args : type parameter
    rparams/rargs : region parameter *)
 let apply_type params rparams body args rargs=
-  subst_type (List.combine params args) (List.combine (standard_parameters rparams) rargs) body
+  subst_type (List.combine params args) (List.combine rparams rargs) body
 
 let rec expand_type = function
     Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, r) ->
-      expand_type (apply_type (tcs_params tcs) (tcs_regions tcs) body args r)
+      expand_type (apply_type (tcs_params tcs) tcs.tcs_regions body args r)
   | ty -> ty
 
 (* Rename type variables to standard parameter names. *)
@@ -73,9 +73,9 @@ let types_equal, types_equiv =
       | Ttuple(t1args), Ttuple(t2args) ->
           List.for_all2 (equiv_gen corresp) t1args t2args
       | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, r), _ ->
-          equiv_gen corresp (apply_type (tcs_params tcs) (tcs_regions tcs) body args r) ty2
+          equiv_gen corresp (apply_type (tcs_params tcs) tcs.tcs_regions body args r) ty2
       | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, r) ->
-          equiv_gen corresp ty1 (apply_type (tcs_params tcs) (tcs_regions tcs) body args r)
+          equiv_gen corresp ty1 (apply_type (tcs_params tcs) tcs.tcs_regions body args r)
       | Tconstr(tcs1, tyl1, r1), Tconstr(tcs2, tyl2, r2) when tcs1 == tcs2 && r1 = r2 ->
           List.for_all2 (equiv_gen corresp) tyl1 tyl2
       | _ ->
@@ -103,9 +103,9 @@ let find_instantiation =
       | Ttuple tyl1, Ttuple tyl2 ->
           List.fold_left2 aux inst tyl1 tyl2
       | Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args, r), _ ->
-          aux inst (apply_type (tcs_params tcs) (tcs_regions tcs) body args r) ty2
+          aux inst (apply_type (tcs_params tcs) tcs.tcs_regions body args r) ty2
       | _, Tconstr ({tcs_kind=Tcs_abbrev body} as tcs, args,r ) ->
-          aux inst ty1 (apply_type (tcs_params tcs) (tcs_regions tcs) body args r)
+          aux inst ty1 (apply_type (tcs_params tcs) tcs.tcs_regions body args r)
       | Tconstr(tcs1, tyl1, r1), Tconstr(tcs2, tyl2, r2) when tcs1 == tcs2 ->
           (* XXX: need to do something on regions as well *)
           List.fold_left2 aux inst tyl1 tyl2
