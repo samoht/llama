@@ -20,13 +20,15 @@ let split str sep =
     end in
   split_rec 0
 
+(* cache the environment variable to avoid performance issues *)
+let env = split (Sys.getenv llamadebug) sep 
+
 (* The predicate read some environment variables to filter the messags to print out *)
 let predicates section =
   try
-    let s = Sys.getenv llamadebug in
-    s = all ||
-    (List.mem info (split s sep) && List.mem section info_sections) ||
-    List.mem section (split s sep)
+    List.mem all env ||
+    (List.mem info env && List.mem section info_sections) ||
+    List.mem section env
   with _ ->
     false
 

@@ -49,7 +49,7 @@ and type_constructor_group =
 and type_constructor =
   { tcs_group : type_constructor_group;         (* Containing group *)
     tcs_name : string;                          (* Name of the type ctor. *)
-    tcs_regions : int;                          (* Regions arity *)
+    tcs_regions : Effect.region_parameter list; (* Regions parameters *)
     tcs_mutable : bool;                         (* Is the type mutable (and thus lockable) ? *)
     mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
 
@@ -159,7 +159,7 @@ let well_formed lt  =
   let rec llama_type = function
     | Tparam _            -> true
     | Tconstr (tc, a, rs) ->
-        tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
+        List.length tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
     | Tarrow (t1, t2, _)  -> llama_type t1 && llama_type t2
     | Ttuple ts           -> List.for_all llama_type ts 
   and type_constructor_kind = function
@@ -183,13 +183,12 @@ let standard_parameters n =
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
 let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
-let tcs_regions tcs = tcs.tcs_regions            (* List of region parameters *)
 let tcs_mutable tcs = tcs.tcs_mutable            (* Is the type mutable ? *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   Tconstr (tcs,
            List.map (fun param -> Tparam param) (tcs_params tcs),
-           standard_parameters (tcs_regions tcs))
+           tcs.tcs_regions)
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
@@ -215,6 +214,10 @@ let parameter_name i =
 let shift_regions rs n =
   List.map ((+) n) rs
 
+let max_region = function
+  | [] -> 0
+  | rs -> max (List.fold_left max 0 rs) (List.length rs)
+
 (* Is a given type mutable/lockable ?
    To use only in Mutable_base.local_is_mutable *)
 let rec is_mutable = function
@@ -234,13 +237,13 @@ let rec string_of_llamatype = function
   | Tarrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map string_of_llamatype [a; r])) ^ ")"
   | Ttuple l         -> "Mtuple (" ^ (String.concat ", " (List.map string_of_llamatype l)) ^ ")"
   | Tconstr (tcs, _, rl) ->
-    Printf.sprintf "Mconstr (%s, %s[%d], %s)"
+    Printf.sprintf "Mconstr (%s, %s%s, %s)"
       tcs.tcs_name
       (match tcs.tcs_kind with
         | Tcs_abstract -> "Tcs_abstract"
         | Tcs_variant _-> "Tcs_variant"
         | Tcs_record _ -> "Tcs_record"
         | Tcs_abbrev _ -> "Tcs_abbrev")
-      tcs.tcs_regions
+      (Effect.string_of_regions tcs.tcs_regions)
       (Effect.string_of_regions rl)
 

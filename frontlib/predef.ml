@@ -21,18 +21,18 @@ let mkabs name params regions is_mutable =
       tcs_kind = Tcs_abstract } in
   tcsg, tcs
 
-let tcsg_int, tcs_int = mkabs "int" [] 0 false
-let tcsg_char, tcs_char = mkabs "char" [] 0 false
-let tcsg_string, tcs_string = mkabs "string" [] 1 true
-let tcsg_float, tcs_float = mkabs "float" [] 0 false
-let tcsg_exn, tcs_exn = mkabs "exn" [] 1 false
+let tcsg_int, tcs_int = mkabs "int" [] [] false
+let tcsg_char, tcs_char = mkabs "char" [] [] false
+let tcsg_string, tcs_string = mkabs "string" [] (standard_parameters 1) true
+let tcsg_float, tcs_float = mkabs "float" [] [] false
+let tcsg_exn, tcs_exn = mkabs "exn" [] (standard_parameters 1) false
 let tcsg_array, tcs_array =
-  mkabs "array" (standard_parameters 1) 1 true
+  mkabs "array" (standard_parameters 1) (standard_parameters 1) true
 let tcsg_format6, tcs_format6 =
-  mkabs "format6" (standard_parameters 6) 0 false
-let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] 0 false
-let tcsg_int32, tcs_int32 = mkabs "int32" [] 0 false
-let tcsg_int64, tcs_int64 = mkabs "int64" [] 0 false
+  mkabs "format6" (standard_parameters 6) [] false
+let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] [] false
+let tcsg_int32, tcs_int32 = mkabs "int32" [] [] false
+let tcsg_int64, tcs_int64 = mkabs "int64" [] [] false
 
 (* variant types *)
 
@@ -44,7 +44,7 @@ let rec tcsg_unit =
 and tcs_unit =
   { tcs_group = tcsg_unit;
     tcs_name = "unit";
-    tcs_regions = 0;
+    tcs_regions = [];
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_void ] }
 
@@ -63,7 +63,7 @@ let rec tcsg_bool =
 and tcs_bool =
   { tcs_group = tcsg_bool;
     tcs_name = "bool";
-    tcs_regions = 0;
+    tcs_regions = [];
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
@@ -89,7 +89,7 @@ let rec tcsg_list =
 and tcs_list =
   { tcs_group = tcsg_list;
     tcs_name = "list";
-    tcs_regions = 0;
+    tcs_regions = [];
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
@@ -115,7 +115,7 @@ let rec tcsg_option =
 and tcs_option =
   { tcs_group = tcsg_option;
     tcs_name = "option";
-    tcs_regions = 0;
+    tcs_regions = [];
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
@@ -142,7 +142,7 @@ let type_constructor_groups =
 
 (* helpers *)
 
-let mkconstr ty params = Tconstr (ty, params, standard_parameters ty.tcs_regions)
+let mkconstr ty params = Tconstr (ty, params, ty.tcs_regions)
 
 let type_int       = mkconstr tcs_int []
 let type_char      = mkconstr tcs_char []

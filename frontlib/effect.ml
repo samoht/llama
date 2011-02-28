@@ -65,7 +65,7 @@ exception Unify
 let unify_region r1 r2 =
   let r1 = mutable_region_repr r1 in
   let r2 = mutable_region_repr r2 in
-  debug section_verbose "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2);
+  (* debug section_verbose "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2); *)
   if r1.rid <> r2.rid then
     r1.rlink <- Some r2
   
@@ -240,3 +240,4 @@ let rec unify phi1 phi2 =
         (string_of_mutable_effect phi1)
         (string_of_mutable_effect phi2);
       raise Unify
+
