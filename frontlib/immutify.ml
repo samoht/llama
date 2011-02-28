@@ -203,7 +203,7 @@ let type_of_local_type subst local_args lt =
     | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
   let t = aux lt in
   let w = well_formed t in
-  debug section "type_of_local_type: %b" w;
+  debug section "type_of_local_type: well_formed=%b" w;
   assert w;
   t
 

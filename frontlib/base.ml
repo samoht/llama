@@ -228,3 +228,19 @@ and kind_is_mutable = function
   | Tcs_variant _ -> false
   | Tcs_record l -> List.exists (fun lbl -> lbl.lbl_mut) l
   | Tcs_abbrev t -> is_mutable t
+
+let rec string_of_llamatype = function
+  | Tparam i         -> "Tparam" ^ string_of_int i
+  | Tarrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map string_of_llamatype [a; r])) ^ ")"
+  | Ttuple l         -> "Mtuple (" ^ (String.concat ", " (List.map string_of_llamatype l)) ^ ")"
+  | Tconstr (tcs, _, rl) ->
+    Printf.sprintf "Mconstr (%s, %s[%d], %s)"
+      tcs.tcs_name
+      (match tcs.tcs_kind with
+        | Tcs_abstract -> "Tcs_abstract"
+        | Tcs_variant _-> "Tcs_variant"
+        | Tcs_record _ -> "Tcs_record"
+        | Tcs_abbrev _ -> "Tcs_abbrev")
+      tcs.tcs_regions
+      (Effect.string_of_regions rl)
+

@@ -588,6 +588,7 @@ let type_declarations env pdecls =
   let deps  = List.map (fun (pdecl, _) -> pdecl.ptype_name, inter names (var_of_ptype pdecl)) ltcs_list in
   let ltcs_list = List.sort (fun (_, l1) (_,l2) -> compare_ltc deps l1 l2) ltcs_list in
 *)
+  debug section "Processing type %s declaration(s)." (String.concat " and " names);
   (* First, fill kinds *)
   List.iter
     (fun (pdecl, ltcs) -> ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
@@ -633,13 +634,16 @@ let signature_item env psig =
   { msig_desc =
       begin match psig.psig_desc with
         | Psig_value (s, te) ->
+            debug section "Processing signature : val %s." s;
             Msig_value (s, llama_type env te)
         | Psig_external(id,te,pr) ->
+            debug section "Processing signature : external val %s." id;
             Msig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
             let params, decls = type_declarations env pdecls in
             Msig_type (params, decls)
         | Psig_exception (name, args) ->
+            debug section "Processing signature : exception %s." name;
             let pseudoenv = pseudoenv_create env in
             Msig_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Psig_open name ->
@@ -674,8 +678,10 @@ let structure_item env pstr =
         | Pstr_eval pexp ->
             Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
+            debug section "Processing external type %s." name;
             Mstr_external_type (List.length params, name)
         | Pstr_external (name, pty, decl) ->
+            debug section "Processing external value %s." name;
             Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
             let pseudoenv = pseudoenv_create env in

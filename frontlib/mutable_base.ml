@@ -5,6 +5,7 @@ open Base
 
 open Log
 let section = "mutable_base"
+let section_verbose = "mutable_base+"
 
 type mutable_type =
     Mvar of mutable_type_variable
@@ -300,9 +301,10 @@ let instantiate_effect inst_r phi =
 
 (* inst   : int -> type variable
    inst_r : int -> region variable *)
-let rec instantiate_type inst inst_r msg =
+let rec instantiate_type inst inst_r msg ty =
+  debug section_verbose "instantiate_type %s" (string_of_llamatype ty);
   let msgrec = msg ^ ">rec" in
-  function
+  match ty with
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2, phi) ->
@@ -407,7 +409,6 @@ let rec mysprint = function
       if List.memq tcs.tcs_group Predef.type_constructor_groups
       then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"
       else ""
-
 let rec unify ty1 ty2 =
   let ty1 = mutable_type_repr ty1 in
   let ty2 = mutable_type_repr ty2 in
