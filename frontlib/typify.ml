@@ -1,8 +1,8 @@
 open Frontmisc
 open Asttypes
+open Effect
 open Base
 open Mutable_base
-open Effects
 
 open Log
 let section = "typify"
@@ -26,7 +26,7 @@ exception Error of Location.t * error
 let literal = function
     Literal_int _ -> mutable_type_int
   | Literal_float _ -> mutable_type_float
-  | Literal_string _ -> mutable_type_string (Effect.new_region_variable ())
+  | Literal_string _ -> mutable_type_string (new_region_variable ())
   | Literal_char _ -> mutable_type_char
   | Literal_int32 _ -> mutable_type_int32
   | Literal_int64 _ -> mutable_type_int64
@@ -68,7 +68,7 @@ and pattern_aux pat =
     | Mpat_array patl ->
         let ty = new_type_variable () in
         List.iter (fun pat -> pattern_expect pat ty) patl;
-        mutable_type_array ty (Effect.new_region_variable ()) (* DUMMY ? *)
+        mutable_type_array ty (new_region_variable ())
     | Mpat_or (pat1, pat2) ->
         let ty = pattern pat1 in
         pattern_expect pat2 ty;
@@ -98,7 +98,7 @@ external format_to_string :
 
 let formatstring loc fmt =
 
-  let ty_arrow gty ty = Marrow(gty, ty, Effect.empty_effect) in
+  let ty_arrow gty ty = Marrow(gty, ty, new_empty_effect ()) in
 
   let bad_conversion fmt i c =
     Error (loc, Bad_conversion (fmt, i, c)) in
@@ -194,10 +194,10 @@ let formatstring loc fmt =
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
         | 's' | 'S' ->
-          conversion j (mutable_type_string (Effect.new_region_variable ()))
+          conversion j (mutable_type_string (new_region_variable ()))
         | '[' ->
           let j = range_closing_index fmt j in
-          conversion j (mutable_type_string (Effect.new_region_variable ()))
+          conversion j (mutable_type_string (new_region_variable ()))
         | 'c' | 'C' -> conversion j mutable_type_char
         | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
           conversion j mutable_type_int
@@ -253,35 +253,36 @@ let formatstring loc fmt =
 (* ---------------------------------------------------------------------- *)
 
 let rec expression exp =
-  let ty, phis = expression_aux exp in
+  let ty, rhol, phil = expression_aux exp
+  and phi = mutable_effect_repr exp.mexp_effect in
+  let rhos = set_of_list empty_region_set rhol
+  and phis = set_of_list Effect.empty_set phil in
+  phi.body <- Effect.body_union phi.body (Eset (rhos, phis));
   (try
-    unify exp.mexp_type ty;
-    if exp.mexp_effect.atoms <> [] then
-      debug section_verbose "exp.mexp_effect <> {}"
-    mutable_effect_append phis exp.mexp_effect
-  with Unify | Effects.Unify ->
-    raise (Error (exp.mexp_loc, Unknown)));
-  ty, exp.mexp_effect
+     unify exp.mexp_type ty;
+   with Unify | Effect.Unify ->
+     raise (Error (exp.mexp_loc, Unknown)));
+  ty, phi
 
-and expression_aux exp : mutable_type * mutable_effect_atom list =
+and expression_aux exp : mutable_type * mutable_region list * mutable_effect list =
   match exp.mexp_desc with
       Mexp_var var ->
-        var.mvar_type, var.mvar_effect
+        var.mvar_type, [], [var.mvar_effect]
     | Mexp_value v ->
-        instantiate_value v, new_mutable_effect () (* XXX: read (optional) exported effects from signatures *)
+        instantiate_value v, [], [] (* XXX: read (optional) exported effects from signatures *)
     | Mexp_literal c ->
-        literal c,  new_mutable_effect ()
+        literal c, [], []
     | Mexp_tuple args ->
-        let tys, phil = List.split (List.map expression args) in
-        Mtuple tys, phil
+        let tyl, phil = List.split (List.map expression args) in
+        Mtuple tyl, [], phil
     | Mexp_construct (cs, args) ->
         let (ty_args, ty_res) = instantiate_constructor cs in
-        let phil = List.map2 expression_expect args ty_args in
-        ty_res, phil
-    | Mexp_apply (fct, args) ->
+        let phil = List.flatten (List.map2 expression_expect args ty_args) in
+        ty_res, [], phil
+    | Mexp_apply (fct, args) -> (* TODO *)
         let ty_fct, phi_fct = expression fct in
         let rec type_args ty_res phil = function
-            [] -> ty_res, phil
+            [] -> ty_res, [], phil
           | arg1 :: argl ->
               let ty1, ty2, phi_latent =
                 match expand_mutable_type ty_res with
@@ -295,98 +296,103 @@ and expression_aux exp : mutable_type * mutable_effect_atom list =
                       ty1, ty2, phi
                   | _ -> raise(Error(exp.mexp_loc, Apply_non_function ty_fct))
             in
-            let phi_arg = expression_expect arg1 ty1 in
-            type_args ty2 (phi_arg :: phi_latent :: phil) argl
+            let phil_arg = expression_expect arg1 ty1 in
+            type_args ty2 (phi_latent :: List.rev_append phil_arg phil) argl
         in
         type_args ty_fct [phi_fct] args
     | Mexp_let (_, pat_expr_list, body) ->
         let phil = bindings pat_expr_list
         and ty, phi = expression body in
-        ty, phi :: phil
+        ty, [], phi :: phil
     | Mexp_match (item, pat_exp_list) ->
         let ty_arg, phi = expression item in
         let ty_res = new_type_variable () in
         let phil = caselist ty_arg ty_res pat_exp_list in
-        ty_res, phi :: phil
+        ty_res, [], phi :: phil
     | Mexp_function pat_exp_list ->
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         let phi = new_mutable_effect () in
-        Effects.append (caselist ty_arg ty_res pat_exp_list) phi;
-        Marrow (ty_arg, ty_res, phi), new_mutable_effect ()
+        phi.body <-
+          Eset (empty_region_set,
+                Effect.set_of_list Effect.empty_set
+                  (caselist ty_arg ty_res pat_exp_list));
+        Marrow (ty_arg, ty_res, phi), [], []
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn (new_region_variable ()) in
         let ty_res, phi = expression body in
         let phil = caselist ty_arg ty_res pat_exp_list in
-        ty_res, phi :: phil
+        ty_res, [], phi :: phil
     | Mexp_sequence (e1, e2) ->
         let phi1 = statement e1
         and ty, phi2 = expression e2 in
-        ty, [phi1; phi2]
+        ty, [], [phi1; phi2]
     | Mexp_ifthenelse (cond, ifso, ifnot) ->
-        let phi1 = expression_expect cond mutable_type_bool in
+        let phil1 = expression_expect cond mutable_type_bool in
         begin match ifnot with
           | None ->
-              let phi2 = expression_expect ifso mutable_type_unit in
-              mutable_type_unit, [phi1; phi2]
+              let phil2 = expression_expect ifso mutable_type_unit in
+              mutable_type_unit, [], phil1 @ phil2
           | Some ifnot ->
               let ty, phi2 = expression ifso in
-              let phi3 = expression_expect ifnot ty in
-              ty, [phi1; phi2; phi3]
+              let phil3 = expression_expect ifnot ty in
+              ty, [], phi2 :: List.rev_append phil1 phil3
         end
     | Mexp_when (cond, act) ->
-        let phi1 = expression_expect cond mutable_type_bool
-        and ty, phi2 = expression act in
-        ty, [phi1; phi2]
+        let phil = expression_expect cond mutable_type_bool
+        and ty, phi = expression act in
+        ty, [], phi :: phil
     | Mexp_while (cond, body) ->
-        let phi1 = expression_expect cond mutable_type_bool
-        and phi2 = statement body in
-        mutable_type_unit, [phi1; phi2]
+        let phil = expression_expect cond mutable_type_bool
+        and phi = statement body in
+        mutable_type_unit, [], phi :: phil
     | Mexp_for (id, start, stop, up_flag, body) ->
-        let phi1 = expression_expect start mutable_type_int
-        and phi2 = expression_expect stop mutable_type_int
-        and phi3 = statement body in
-        mutable_type_unit, [phi1; phi2; phi3]
+        let phil1 = expression_expect start mutable_type_int
+        and phil2 = expression_expect stop mutable_type_int
+        and phi = statement body in
+        mutable_type_unit, [], phi :: List.rev_append phil1 phil2
     | Mexp_constraint (e, ty') ->
-        ty', expression_expect e ty'
+        ty', [], expression_expect e ty'
     | Mexp_array elist ->
         let ty_arg = new_type_variable () in
-        let phil = List.map (fun e -> expression_expect e ty_arg) elist in
-        mutable_type_array ty_arg (new_region_variable ()), phil
+        let phil = List.flatten
+          (List.map (fun e -> expression_expect e ty_arg) elist) in
+        mutable_type_array ty_arg (new_region_variable ()), [], phil
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
         let inst, inst_r, ty_res = instantiate_type_constructor tcs in
         let phil =
-          List.map
-            (fun (lbl, exp) ->
-               let ty_arg = instantiate_type inst inst_r ("Typify.expression lbl_name="^lbl.lbl_name) lbl.lbl_arg in
-               expression_expect exp ty_arg)
-            lbl_exp_list
-        and phi =
-          match opt_init with
-              None -> new_mutable_effect ()
-            | Some init -> expression_expect init ty_res
+          List.flatten
+            (List.map
+               (fun (lbl, exp) ->
+                 let ty_arg = instantiate_type inst inst_r
+                   ("Typify.expression lbl_name="^lbl.lbl_name) lbl.lbl_arg in
+                 expression_expect exp ty_arg)
+            lbl_exp_list)
         in
-        ty_res, phi :: phil
+        (match opt_init with
+            None -> ty_res, [], phil
+          | Some init ->
+              ty_res, [], List.rev_append phil (expression_expect init ty_res))
     | Mexp_field (e, lbl) ->
         let ty_res, _, ty_arg = instantiate_label lbl in
-        let phi = expression_expect e ty_res in
-        ty_arg, phi
+        let phil = expression_expect e ty_res in
+        ty_arg, [], phil
     | Mexp_setfield (e1, lbl, e2) ->
-        let ty_res, ty_arg = instantiate_label lbl in
-        let phi1 = expression_expect e1 ty_res
-        and phi2 = expression_expect e2 ty_arg in
-        mutable_type_unit, [phi1; phi2]
+        let ty_res, _, ty_arg = instantiate_label lbl in
+        let phil1 = expression_expect e1 ty_res
+        and phil2 = expression_expect e2 ty_arg in
+        mutable_type_unit, [], List.rev_append phil1 phil2
     | Mexp_assert e ->
-        mutable_type_unit, expression_expect e mutable_type_bool
+        mutable_type_unit, [], expression_expect e mutable_type_bool
     | Mexp_assertfalse ->
-        new_type_variable (), new_mutable_effect ()
+        new_type_variable (), [], []
     | Mexp_lock (l, e) ->
         let rhol, phil = List.split (List.map lockable l)
         and ty, phi = expression e in
-        ty, phi :: phil @ List.map (fun r -> Eregion r) rhol
+        ty, rhol, phi :: phil
     | Mexp_thread e ->
         ignore (statement e);
-        mutable_type_unit, new_mutable_effect ()
+        mutable_type_unit, [], []
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages.
@@ -396,15 +402,15 @@ and expression_aux exp : mutable_type * mutable_effect_atom list =
 and expression_expect exp expected_ty =
   match exp.mexp_desc with
     | Mexp_let (_, pat_expr_list, body) ->
-        let phil = bindings pat_expr_list in
-        let phi = expression_expect body expected_ty in
-        phi :: phil
+        let phil1 = bindings pat_expr_list in
+        let phil2 = expression_expect body expected_ty in
+        List.rev_append phil1 phil2
     | Mexp_sequence (e1, e2) ->
-        let phi1 = statement e1 in
-        let phi2 = expression_expect e2 expected_ty in
-        [phi1; phi2]
+        let phi = statement e1 in
+        let phil = expression_expect e2 expected_ty in
+        phi :: phil
     | _ ->
-        let ty, phi =
+        let ty, phil =
           (* Terrible hack for format strings *)
           match exp.mexp_desc with
               Mexp_literal (Literal_string s) ->
@@ -413,20 +419,20 @@ and expression_expect exp expected_ty =
                       Mconstr (tcs, _, []) when tcs == Predef.tcs_format6 ->
                         formatstring exp.mexp_loc s
                     | _ ->
-                        mutable_type_string (Effects.new_region_variable ()) in
+                        mutable_type_string (new_region_variable ()) in
                 unify exp.mexp_type ty;
-                ty, new_mutable_effect ()
+                ty, []
             | _ ->
-                expression exp
+              let ty, phi = expression exp in ty, [phi]
         in
         try
           unify ty expected_ty;
-          [phi]
+          phil
         with e ->
           Printf.eprintf "Typify.expression_expect: %s\n%!"
             (match e with
               | Unify -> "Unify"
-              | Effects.Unify -> "Effect.Unify"
+              | Effect.Unify -> "Effect.Unify"
               | e -> raise e);
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
 
@@ -434,18 +440,20 @@ and expression_expect exp expected_ty =
 
 and bindings pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
-  List.map
-    (fun (pat, expr) -> expression_expect expr pat.mpat_type)
-    pat_expr_list
+  List.flatten
+    (List.map
+       (fun (pat, expr) -> expression_expect expr pat.mpat_type)
+       pat_expr_list)
 
 (* Typing of match cases *)
 
 and caselist ty_arg ty_res pat_expr_list =
-  List.map
-    (fun (pat, expr) ->
-      pattern_expect pat ty_arg;
-      expression_expect expr ty_res)
-    pat_expr_list
+  List.flatten
+    (List.map
+       (fun (pat, expr) ->
+         pattern_expect pat ty_arg;
+         expression_expect expr ty_res)
+       pat_expr_list)
 
 (* Typing of statements (expressions whose values are ignored) *)
 
@@ -466,7 +474,7 @@ and statement expr =
 and lockable expr =
   let ty, phi = expression expr in
   match expand_mutable_type ty with
-    | Mconstr ({tcs_mutable=true}, _, rho::_) -> rho, phi
+    | Mconstr ({tcs_mutable=true}, _, rho::_) -> mutable_region_repr rho, phi
     | _ -> raise (Error (expr.mexp_loc, Lock_non_mutable ty))
 
 (* ---------------------------------------------------------------------- *)

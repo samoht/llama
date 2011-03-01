@@ -186,13 +186,14 @@ let tree_of_mutable_region r =
 
 let rec tree_of_mutable_effect phi =
   let phi = Effect.mutable_effect_repr phi in
-  match phi with
+  [Effect.long_string_of_mutable_effect phi]
+(*  match phi with
     | Effect.Evar v    -> [Effect.string_of_mutable_effect_variable v] (* XXX: we should check that we don't have these anymore *)
     | Effect.Eregion r -> [Effect.string_of_mutable_region r]
     | Effect.Eunion s  ->
       let l = Set.elements s in
       List.flatten (List.map tree_of_mutable_effect l)
-
+*)
 (* normalize type variables *)
 let tree_of_mutable_type =
   let var_names = ref ([] : (mutable_type_variable * string) list) in
