@@ -277,7 +277,9 @@ let rec instantiate_type inst inst_r msg ty =
     Tparam param ->
       List.assq param inst
   | Tarrow (ty1, ty2, phi) ->
-      Marrow (instantiate_type inst inst_r msgrec ty1, instantiate_type inst inst_r msgrec ty2, instantiate_effect inst_r phi)
+      Marrow (instantiate_type inst inst_r msgrec ty1,
+              instantiate_type inst inst_r msgrec ty2,
+              instantiate_effect inst_r phi)
   | Ttuple tyl ->
       Mtuple (List.map (instantiate_type inst inst_r msgrec) tyl)
   | Tconstr (tcs, tyl, rl) ->
@@ -376,6 +378,7 @@ let rec mysprint = function
       if List.memq tcs.tcs_group Predef.type_constructor_groups
       then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"
       else ""
+
 let rec unify ty1 ty2 =
   let ty1 = mutable_type_repr ty1 in
   let ty2 = mutable_type_repr ty2 in
@@ -387,7 +390,7 @@ let rec unify ty1 ty2 =
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
-        (* Effect.unify phi1 phi2; *)
+        Effect.unify phi1 phi2;
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
@@ -403,8 +406,8 @@ let rec unify ty1 ty2 =
             (Effect.string_of_mutable_regions r1s) 
             (mysprint ty2) 
             (Effect.string_of_mutable_regions r2s) in
-        Effect.unify_regions r1s r2s msg;
-        unify_list tyl1 tyl2
+        unify_list tyl1 tyl2;
+        Effect.unify_regions r1s r2s msg
     | _ ->
         debug section "Unify (%s, %s)" (mysprint ty1) (mysprint ty2);
         raise Unify

@@ -81,163 +81,105 @@ let rec unify_regions r1s r2s msg =
     raise Unify
   end
 
+
+let compare_regions r s =
+  compare r.rid s.rid
+
+let empty_region_set = Set.empty_custom compare_regions
+
+
 (*******************)
 (* Mutable effects *)
 (*******************)
 
 type mutable_effect =
-  | Evar of mutable_effect_variable (* An effect variable *)
-  | Eregion of mutable_region       (* A region variable *)
-  | Eunion of mutable_effect Set.t  (* A union of effects *)
+  { id : int;
+    mutable body : mutable_effect_body }
 
-and mutable_effect_variable = {
-  id           : int;
-  mutable link : mutable_effect option;
-}
+and mutable_effect_body =
+  | Evar                                (* Simple variable *)
+  | Elink of mutable_effect             (* Union-find link *)
+  | Eset of mutable_region Set.t * mutable_effect Set.t
+                          (* Regions set and effects union *)
 
-let string_of_mutable_effect_variable v =
-  "E" ^ string_of_int v.id
 
-let rec string_of_mutable_effect = function
-  | Evar v    -> string_of_mutable_effect_variable v
-  | Eregion r -> string_of_mutable_region r
-  | Eunion s  -> Printf.sprintf "{%s}" (String.concat "," (List.map string_of_mutable_effect (Set.elements s)))
+let compare_effects e f =
+  compare e.id f.id
 
-(* check if a set if composed of representants only *)
-let is_union_repr s =
-  let aux = function
-    | Evar    { link  = None } -> true
-    | Eregion { rlink = None } -> true
-    | _                        -> false in
-  Set.for_all aux s
+let empty_set = Set.empty_custom compare_effects
 
-(* Follow the links to find the common representation.
-   The tricky part is to detect when to stop with unions ... *)
-let rec mutable_effect_repr phi =
-  match phi with
-    | Evar { link = Some phi }  -> mutable_effect_repr phi
-    | Evar _                    -> phi
-    | Eregion r                 -> Eregion (mutable_region_repr r)
-    | Eunion s
-        when Set.cardinal s = 1 -> mutable_effect_repr (Set.choose s)
-    | Eunion s
-        when is_union_repr s    -> phi
-    | Eunion s                  -> 
-      let l = Set.elements s in
-      let l = List.map mutable_effect_repr l in
-      mutable_effect_repr (union_list l)
-
-(* phi1 U phi2 *)
-and union phi1 phi2 =
-  let phi1 = mutable_effect_repr phi1 in
-  let phi2 = mutable_effect_repr phi2 in
-  match phi1, phi2 with
-    | Eregion _, Eregion _
-    | Eregion _, Evar _
-    | Evar _   , Eregion _
-    | Evar _   , Evar _    -> Eunion (Set.add phi1 (Set.add phi2 (Set.empty_custom compare)))
-
-    | Eunion e1, Eunion e2 ->
-      if Set.is_empty e1 then  (* \empyset is idempotent *)
-        phi2
-      else if Set.is_empty e2 then
-        phi1
-      else (* U is associative *)
-        Eunion (Set.union e1 e2)
-
-    | Eunion e1, _         -> Eunion (Set.add phi2 e1)
-    | _        , Eunion e2 -> Eunion (Set.add phi1 e2)
-
-(* phi1 U ... U phin *)
-and union_list l =
-  let rec aux accu = function
-    | []    -> accu
-    | h::t  -> aux (union h accu) t in
-  aux (Eunion (Set.empty_custom compare)) l
-
-(* compare using IDs when possible; and var > region > union otherwise *)
-and compare phi1 phi2 =
-  let phi1 = mutable_effect_repr phi1 in
-  let phi2 = mutable_effect_repr phi2 in
-  match phi1, phi2 with
-    | Evar phi1 , Evar phi2  -> phi1.id - phi2.id
-    | Eregion r1, Eregion r2 -> r1.rid - r2.rid
-    | Eunion s1 , Eunion s2  -> Set.compare s1 s2
-
-    | Evar _    , Eregion _
-    | Evar _    , Eunion _
-    | Eregion _ , Eunion _   -> 1
-
-    | Eregion _ , Evar _
-    | Eunion _  , Eregion _
-    | Eunion _  , Evar _     -> -1
-
-(* The empty effect is defined using the compare function above *)
-let empty_set : mutable_effect Set.t = Set.empty_custom compare
-
-let empty_effect = Eunion empty_set
-
-let is_empty = function
-  | Eunion s -> Set.is_empty s
-  | _        -> false
 
 (* Returns a fresh effect variable *)
-let new_effect_variable =
+let new_mutable_effect =
   let x = ref 0 in
-  let aux () =
+  fun () ->
     incr x;
-    Evar { id = !x; link = None } in
-  aux
+    { id = !x; body = Evar }
 
-let effect_of_region r =
-  Eregion r
+let new_empty_effect () =
+  let e = new_mutable_effect () in
+  e.body <- Eset (empty_region_set, empty_set);
+  e
 
-let effect_of_regions l =
-  Eunion (List.fold_left (fun phi r -> Set.add (Eregion r) phi) empty_set l)
-    
-(* unification *)
 
-(* v and phi are representant *)
-let rec occurs v phi =
-  match phi with
-  | Evar tv  -> v == tv
-  | Eregion _-> false 
-  | Eunion s -> Set.exist (occurs v) s
+let string_of_mutable_effect e =
+  "E" ^ string_of_int e.id
 
-let rec unify phi1 phi2 =
-  let phi1 = mutable_effect_repr phi1 in
-  let phi2 = mutable_effect_repr phi2 in
-  debug section_verbose "unify %s %s"
-    (string_of_mutable_effect phi1)
-    (string_of_mutable_effect phi2);
-  match phi1, phi2 with
-    (* reflexivity *)
-    | Evar v1   , Evar v2    when v1.id = v2.id         -> ()
-    | Eregion r1, Eregion r2 when r1.rid = r2.rid       -> ()
-    | Eunion s1 , Eunion s2  when Set.compare s1 s2 = 0 -> ()
+let string_of_mutable_effect_body = function
+  | Evar -> ""
+  | Elink v -> "->" ^ string_of_mutable_effect v
+  | Eset (rs, es) -> 
+    Printf.sprintf "{%s}"
+      (String.concat ","
+         ((List.map string_of_mutable_region (Set.elements rs))
+          @ (List.map string_of_mutable_effect (Set.elements es))))
 
-    (* v = phi *)
-    | Evar v1, _ when not (occurs v1 phi2) -> v1.link <- Some phi2
-    | _, Evar v2 when not (occurs v2 phi1) -> v2.link <- Some phi1
+let long_string_of_mutable_effect phi =
+  string_of_mutable_effect phi ^ string_of_mutable_effect_body phi.body
 
-    (* regions *)
-    | Eregion r1, Eregion r2                            -> r1.rlink <- Some r2
-    | Eregion r1, Eunion s2  when not (Set.is_empty s2) -> Set.iter (unify phi1) s2
-    | Eunion s1 , Eregion r2 when not (Set.is_empty s1) -> Set.iter (unify phi2) s1
 
-    (* {} = phi U {} => phi = {} *)
-    | Eunion s1, Eunion s2 when Set.is_empty s1 -> Set.iter (unify empty_effect) s2
-    | Eunion s1, Eunion s2 when Set.is_empty s2 -> Set.iter (unify empty_effect) s1
+let rec mutable_effect_repr phi =
+  match phi.body with
+    | Elink v -> mutable_effect_repr v
+    | _ -> phi
 
-    (* phi1 = phi1 U phi2 => ({} <= phi2 <= phi1 *)
-    (* XXX: does 'phi2 = {}' ensure minimality ? *)
-    | Evar _   , Eunion s2 -> Set.iter (unify empty_effect) (Set.remove phi1 s2)
-    | Eunion s1, Evar _    -> Set.iter (unify empty_effect) (Set.remove phi2 s1)
-    | Eunion s1, Eunion s2 -> Set.iter (unify empty_effect) (Set.diff s2 s1)
 
-    | _ ->
-      debug section "ERROR: cannot unify effects %s and %s"
-        (string_of_mutable_effect phi1)
-        (string_of_mutable_effect phi2);
-      raise Unify
+let body_union x y =
+  match x, y with
+    | Elink _, _ | _, Elink _ -> invalid_arg "body_union"
+    | Evar, _ -> y
+    | _, Evar -> x
+    | Eset (rs1, es1), Eset (rs2, es2) ->
+        Eset (Set.union rs1 rs2, Set.union es1 es2)
 
+let unify e f =
+  let e = mutable_effect_repr e
+  and f = mutable_effect_repr f in
+  if e != f then
+    (e.body <- body_union e.body f.body;
+     f.body <- Elink e)
+
+
+(* Stdlib ? *)
+let set_of_list init l =
+  List.fold_left (fun s -> fun x -> Set.add x s) init l
+
+
+(* Returns the set of the regions and the set of the simple effect variables
+   that e recursively contains *)
+let rec contents e =
+  match e.body with
+    | Evar -> empty_region_set, Set.add e empty_set
+    | Elink e' -> contents e'
+    | Eset (rs, es) ->
+        let rs', es' = set_contents es in
+        (set_of_list rs' (List.map mutable_region_repr (Set.elements rs)),
+         es')
+
+and set_contents s =
+  Set.fold
+    (fun e (rs, es) ->
+      let rs', es' = contents e in
+      Set.union rs rs', Set.union es es')
+    s
+    (empty_region_set, empty_set)
