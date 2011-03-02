@@ -285,7 +285,7 @@ let rec instantiate_type inst inst_r msg ty =
       let irl =
         try List.map (instantiate_region inst_r) rl
         with e ->
-          debug section "Error in type %s%s from %s" tcs.tcs_name (Effect.string_of_regions tcs.tcs_regions) msg;
+          debug section "Error in type %s[%d] from %s" tcs.tcs_name tcs.tcs_regions msg;
           if List.mem tcs.tcs_group Predef.type_constructor_groups then
             debug section "tcs == Predef.tcs_%s" tcs.tcs_name;
           debug section "inst_r = [%s]"
@@ -297,7 +297,7 @@ let rec instantiate_type inst inst_r msg ty =
 
 let instantiate_type_constructor tcs =
   let inst = List.map (fun param -> (param, new_type_variable ())) (tcs_params tcs) in
-  let inst_r = List.map (fun param -> (param, Effect.new_region_variable ())) tcs.tcs_regions in
+  let inst_r = List.map (fun param -> (param, Effect.new_region_variable ())) (standard_parameters tcs.tcs_regions) in
   inst, inst_r, Mconstr (tcs, List.map snd inst, List.map snd inst_r)
 
 let instantiate_constructor cs =
@@ -309,9 +309,7 @@ let instantiate_constructor cs =
 
 let instantiate_label lbl =
   let inst, inst_r, ty_res = instantiate_type_constructor lbl.lbl_tcs in
-  let msg = Printf.sprintf "instantiate_label(%s.%s : well_formed=%b)"
-    lbl.lbl_tcs.tcs_name lbl.lbl_name
-    (well_formed lbl.lbl_arg) in
+  let msg = Printf.sprintf "instantiate_label(%s.%s)" lbl.lbl_tcs.tcs_name lbl.lbl_name in
   let ty_arg = instantiate_type inst inst_r msg lbl.lbl_arg in
   ty_res, List.map snd inst_r, ty_arg
 
@@ -331,7 +329,7 @@ let rec mutable_type_repr = function
 
 let mutable_apply_type params rparams body args rargs =
   let inst = List.combine params args in
-  let inst_r = List.combine rparams rargs in
+  let inst_r = List.combine (standard_parameters rparams) rargs in
   instantiate_type inst inst_r "mutable_apply_type" body
 
 let rec expand_mutable_type = function
@@ -365,7 +363,7 @@ let rec mysprint = function
   | Marrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map mysprint [a; r])) ^ ")"
   | Mtuple l -> "Mtuple (" ^ (String.concat ", " (List.map mysprint l)) ^ ")"
   | Mconstr (tcs, _, _) ->
-    Printf.sprintf "Mconstr (%s, %s, %d, %s)"
+    Printf.sprintf "Mconstr (%s, %s, %d, %d)"
       (match tcs.tcs_kind with
         | Tcs_abstract -> "Tcs_abstract"
         | Tcs_variant _ -> "Tcs_variant"
@@ -373,7 +371,7 @@ let rec mysprint = function
         | Tcs_abbrev _ -> "Tcs_abbrev")
       tcs.tcs_name
       (List.length tcs.tcs_group.tcsg_params)
-      (Effect.string_of_regions tcs.tcs_regions)
+      tcs.tcs_regions
     ^
       if List.memq tcs.tcs_group Predef.type_constructor_groups
       then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"

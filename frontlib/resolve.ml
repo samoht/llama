@@ -221,12 +221,12 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-          let rs = shift_regions tcs.tcs_regions !regions in
-          debug section "llama_type %s: !regions = %d; tcs_regions = %s"
+          let rs = shift_regions (standard_parameters tcs.tcs_regions) !regions in
+          debug section "llama_type %s: !regions = %d; tcs_regions = %d"
             tcs.tcs_name
             !regions
-            (Effect.string_of_regions tcs.tcs_regions);
-          regions := !regions + max_region tcs.tcs_regions;
+            tcs.tcs_regions;
+          regions := !regions + tcs.tcs_regions;
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
@@ -271,16 +271,16 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
             match root_tcs with
               | Some tcs' when tcs' == Predef.tcs_exn ->
                 let ltcsl = List.map (local_type pseudoenv root_tcs) tyl in
-                let rs = List.rev_map (fun _ -> 0) tcs.tcs_regions in (* XXX: ? *)
+                let rs = List.rev_map (fun _ -> 0) (standard_parameters tcs.tcs_regions) in (* XXX: ? *)
                 Lconstr (tcs, ltcsl, rs)
 
               | _ ->
                 let ltcsl = List.map (fun ty -> local_type pseudoenv root_tcs ty) tyl in
-                let rs = shift_regions tcs.tcs_regions !region_variables in
-                region_variables := !region_variables + max_region tcs.tcs_regions;
-                debug section "global type %s%s rs=%s"
+                let rs = shift_regions (standard_parameters tcs.tcs_regions) !region_variables in
+                region_variables := !region_variables + tcs.tcs_regions;
+                debug section "global type %s[%d] rs=%s"
                   tcs.tcs_name
-                  (Effect.string_of_regions tcs.tcs_regions)
+                  tcs.tcs_regions
                   (Effect.string_of_regions rs);
                 Lconstr (tcs, ltcsl, rs)
 
@@ -303,7 +303,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let regions = List.map (fun _ -> Effect.new_region_variable ()) tcs.tcs_regions in
+        let regions = List.map (fun _ -> Effect.new_region_variable ()) (standard_parameters tcs.tcs_regions) in
         Mconstr (tcs, List.map (mutable_type env) tyl, regions)
 
 (* ---------------------------------------------------------------------- *)

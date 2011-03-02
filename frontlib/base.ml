@@ -49,7 +49,7 @@ and type_constructor_group =
 and type_constructor =
   { tcs_group : type_constructor_group;         (* Containing group *)
     tcs_name : string;                          (* Name of the type ctor. *)
-    tcs_regions : Effect.region_parameter list; (* Regions parameters *)
+    tcs_regions : int;                          (* Regions arity *)
     tcs_mutable : bool;                         (* Is the type mutable (and thus lockable) ? *)
     mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
 
@@ -159,7 +159,7 @@ let well_formed lt  =
   let rec llama_type = function
     | Tparam _            -> true
     | Tconstr (tc, a, rs) ->
-        List.length tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
+        tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
     | Tarrow (t1, t2, _)  -> llama_type t1 && llama_type t2
     | Ttuple ts           -> List.for_all llama_type ts 
   and type_constructor_kind = function
@@ -188,7 +188,7 @@ let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   Tconstr (tcs,
            List.map (fun param -> Tparam param) (tcs_params tcs),
-           tcs.tcs_regions)
+           standard_parameters tcs.tcs_regions)
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
@@ -231,19 +231,3 @@ and kind_is_mutable = function
   | Tcs_variant _ -> false
   | Tcs_record l -> List.exists (fun lbl -> lbl.lbl_mut) l
   | Tcs_abbrev t -> is_mutable t
-
-let rec string_of_llamatype = function
-  | Tparam i         -> "Tparam" ^ string_of_int i
-  | Tarrow (a, r, _) -> "Marrow (" ^ (String.concat ", " (List.map string_of_llamatype [a; r])) ^ ")"
-  | Ttuple l         -> "Mtuple (" ^ (String.concat ", " (List.map string_of_llamatype l)) ^ ")"
-  | Tconstr (tcs, _, rl) ->
-    Printf.sprintf "Mconstr (%s, %s%s, %s)"
-      tcs.tcs_name
-      (match tcs.tcs_kind with
-        | Tcs_abstract -> "Tcs_abstract"
-        | Tcs_variant _-> "Tcs_variant"
-        | Tcs_record _ -> "Tcs_record"
-        | Tcs_abbrev _ -> "Tcs_abbrev")
-      (Effect.string_of_regions tcs.tcs_regions)
-      (Effect.string_of_regions rl)
-

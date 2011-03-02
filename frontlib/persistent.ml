@@ -25,8 +25,8 @@ and type_constructor_group =
 
 and type_constructor =
   { tcs_group : type_constructor_group;
-    tcs_regions : Effect.region_parameter list;
     tcs_name : string;
+    tcs_regions : int;
     mutable tcs_kind : type_constructor_kind }
 
 and type_constructor_kind =

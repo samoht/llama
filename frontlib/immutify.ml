@@ -190,12 +190,20 @@ and expression_option f = function
 (* ---------------------------------------------------------------------- *)
 
 let type_of_local_type subst local_args lt =
+  let regions = ref [] in
+  let renumber r =
+    if List.mem_assoc r !regions then
+      List.assoc r !regions
+    else begin
+      let n = List.length !regions in
+      regions := (r, n) :: !regions;
+      n end in
   let rec aux = function
     | Lparam i                -> Tparam i
-    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, phi)
+    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, List.map renumber phi)
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
-    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions) in
+    | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, List.map renumber rs)
+    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, List.map renumber ltcs.ltcs_regions) in
   aux lt
 
 let make_type_constructor_group modenv params ltcs_list =
@@ -208,7 +216,7 @@ let make_type_constructor_group modenv params ltcs_list =
       begin fun ltcs ->
         { tcs_group = tcsg;
           tcs_name = ltcs.ltcs_name;
-          tcs_regions = ltcs.ltcs_regions;
+          tcs_regions = List.length ltcs.ltcs_regions;
           tcs_mutable = ltcs.ltcs_mutable;
           tcs_kind = Tcs_abstract }
       end
@@ -265,7 +273,7 @@ let make_singleton_type modenv arity name =
   and tcs =
     { tcs_group = tcsg;
       tcs_name = name;
-      tcs_regions = [];
+      tcs_regions = 0;
       tcs_mutable = false; (* DUMMY *)
       tcs_kind = Tcs_abstract } in
   tcsg
