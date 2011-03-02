@@ -195,20 +195,8 @@ let type_of_local_type subst local_args lt =
     | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, phi)
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, rs)
-    | Lconstr_local (ltcs,rs) when
-        List.length ltcs.ltcs_regions <> List.length rs ->
-      (* Can happen only on recursive type definitions *)
-      debug section "type %s: ltcs_regions=%s rs=%s"
-        ltcs.ltcs_name
-        (Effect.string_of_regions ltcs.ltcs_regions)
-        (Effect.string_of_regions rs);
-      Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions)
-    | Lconstr_local (ltcs,rs) -> Tconstr (List.assq ltcs subst, local_args, rs) in
-  let t = aux lt in
-  let w = well_formed t in
-  debug section "type_of_local_type: well_formed=%b" w;
-  assert w;
-  t
+    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, ltcs.ltcs_regions) in
+  aux lt
 
 let make_type_constructor_group modenv params ltcs_list =
   let tcsg =

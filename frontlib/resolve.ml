@@ -138,14 +138,12 @@ let context_lookup_value lid ctxt =
    and type variables. (Compare with contexts, above.) *)
 
 type pseudoenv = {
-  first_pass : bool;
   pseudoenv_env : Env.t;
   pseudoenv_type_constructors : (string, local_type_constructor) Tbl.t;
   pseudoenv_type_variables : (string * parameter) list;
  }
 
 let pseudoenv_create env = {
-  first_pass = true;
   pseudoenv_env = env;
   pseudoenv_type_constructors = Tbl.empty;
   pseudoenv_type_variables = [];
@@ -266,20 +264,8 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
         end;
         match gentcs with
           | Local ltcs ->
-            if pseudoenv.first_pass then
               (* If we are doing the first pass, external region parameters are not yet computed *)
-              Lconstr_local (ltcs, [])
-            else begin
-              (* at this point, ltcs_kind is valid and ltcs_regions contains external region arity.   *)
-              (* So we can safely compute the list of all external regions that are transitively used *)
-              (* in the type declaration *)
-              let regions = union ltcs.ltcs_regions (local_kind_region_parameters ltcs.ltcs_kind) in
-              debug section "local type %s%s rs=%s"
-                ltcs.ltcs_name
-                (Effect.string_of_regions ltcs.ltcs_regions)
-                (Effect.string_of_regions regions);
-              Lconstr_local (ltcs, regions)
-            end
+              Lconstr_local ltcs
 
           | Global tcs ->
             match root_tcs with
@@ -520,7 +506,7 @@ let is_recursive_abbrev =
       Lparam _ -> false
     | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
     | Ltuple tyl | Lconstr (_, tyl, _) -> List.exists (occ seen) tyl
-    | Lconstr_local (ltcs,_) ->
+    | Lconstr_local ltcs ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
                Ltcs_abbrev ty -> occ (ltcs :: seen) ty
@@ -530,15 +516,23 @@ let is_recursive_abbrev =
         Ltcs_abbrev ty -> occ [ltcs] ty
       | _ -> false
 
-let update_regions fn ltcs =
-  if local_kind_is_mutable_record ltcs.ltcs_kind then (
-    ltcs.ltcs_regions <- [ !region_variables ];
-    incr region_variables
-  ) else
-    ltcs.ltcs_regions <- [];
-  ltcs.ltcs_regions <- union ltcs.ltcs_regions (fn ltcs.ltcs_kind);
-  ltcs.ltcs_regions <- List.sort compare ltcs.ltcs_regions
+(* Get all the external region parameters + mutable internal ones *)
+let external_regions ltcs =
+  let mut = 
+    if local_kind_is_mutable_record ltcs.ltcs_kind then (
+      let x = [ !region_variables ] in
+      incr region_variables;
+      x
+    ) else [] in
+  List.sort
+    compare
+    (mut @ local_kind_external_region_parameters ltcs.ltcs_kind)
 
+(* Get all the external region parameters + transitive mutable internal ones *)
+let all_regions ltcs =
+  List.sort
+    compare
+    (union ltcs.ltcs_regions (local_kind_region_parameters ltcs.ltcs_kind))
 
 let type_declarations env pdecls =
   reset_region_variables ();
@@ -575,10 +569,11 @@ let type_declarations env pdecls =
   (* compute the internal names *)
   debug section "Processing type %s declaration(s)."
     (String.concat " and " (List.map (fun d -> d.ptype_name) pdecls));
+
   (* First, fill kinds *)
   List.iter
     (fun (pdecl, ltcs) ->
-      debug section "Computing kind for %s" ltcs.ltcs_name;
+      debug section_verbose "Computing kind for %s" ltcs.ltcs_name;
       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
     ltcs_list;
   (* and check for recursive abbreviations *)
@@ -590,26 +585,14 @@ let type_declarations env pdecls =
   (* Then, fill external region parameters *)
   List.iter
     (fun (pdecl, ltcs) ->
-      update_regions local_kind_external_region_parameters ltcs;
-      debug section "External region for %s is %s" ltcs.ltcs_name (Effect.string_of_regions ltcs.ltcs_regions))
-    ltcs_list;
-  (* Fill with valid kind *)
-  let pseudoenv = { pseudoenv with first_pass = false } in
-  reset_region_variables ();
-  List.iter
-    (fun (pdecl, ltcs) ->
-      debug section "Computing a valid kind for %s" ltcs.ltcs_name;
-      ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
+      ltcs.ltcs_regions <- external_regions ltcs;
+      debug section_verbose "External region for %s is %s" ltcs.ltcs_name (Effect.string_of_regions ltcs.ltcs_regions))
     ltcs_list;
   (* Fill with valid region arity *)
   List.iter
     (fun (pdecl, ltcs) ->
-      let r = ltcs.ltcs_regions in
-      update_regions local_kind_region_parameters ltcs;
-      debug section_verbose "Computing valid region for type %s: old=%s new=%s"
-        ltcs.ltcs_name
-        (Effect.string_of_regions r)
-        (Effect.string_of_regions ltcs.ltcs_regions))
+      ltcs.ltcs_regions <- all_regions ltcs;
+      debug section_verbose "Computing valid region for type %s: %s" ltcs.ltcs_name (Effect.string_of_regions ltcs.ltcs_regions))
     ltcs_list;
   (* Fill mutable flag *)
   List.iter

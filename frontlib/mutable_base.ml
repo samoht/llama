@@ -120,8 +120,8 @@ and local_type =
    (* XXX: for local constructor, we impose that the arguments
       are exactly the ones of the type declaration. This is a
       very weird restriction *)
-  (* However, region parameter don't have to be the same *)
-  | Lconstr_local of local_type_constructor * Effect.region_parameter list
+  (* However, for region parameter this restriction makes sense as we have to infer the parameters *)
+  | Lconstr_local of local_type_constructor
 
 let list_map_add fn l =
   List.fold_left (+) 0 (List.map fn l)
@@ -135,7 +135,7 @@ let rec local_is_mutable = function
   | Larrow _ -> false
   | Ltuple _ -> false
   | Lconstr (tcs, _, _) -> is_mutable_predef tcs || kind_is_mutable tcs.tcs_kind
-  | Lconstr_local (ltcs, _) -> local_kind_is_mutable ltcs.ltcs_kind
+  | Lconstr_local ltcs  -> local_kind_is_mutable ltcs.ltcs_kind
 
 and local_kind_is_mutable = function
   | Ltcs_abstract -> false (* DUMMY *)
@@ -157,10 +157,10 @@ let rec local_kind_region_parameters internals k =
     | Larrow (ty1, ty2, phi) -> local (local (union phi accu) ty1) ty2
     | Ltuple tyl             -> List.fold_left local accu tyl
     | Lconstr (tcs, tyl, rs) -> List.fold_left local (union rs accu) tyl
-    | Lconstr_local (l, rs)  ->
+    | Lconstr_local l        ->
       if internals && not (List.mem l.ltcs_name !saw) then (
         saw := l.ltcs_name :: !saw;
-        local_kind (union accu rs) l.ltcs_kind
+        local_kind (union accu l.ltcs_regions) l.ltcs_kind
       ) else
         accu
   and variant accu (_,ltl) = local accu (Ltuple ltl)
