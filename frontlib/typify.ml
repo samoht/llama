@@ -257,7 +257,7 @@ let rec expression exp =
   and phi = mutable_effect_repr exp.mexp_effect in
   let rhos = set_of_list empty_region_set rhol
   and phis = set_of_list Effect.empty_set phil in
-  phi.body <- Effect.body_union phi.body (Eset (rhos, phis));
+  phi.body <- Effect.body_union phi.body (MEset (rhos, phis));
   (try
      unify exp.mexp_type ty;
    with Unify | Effect.Unify ->
@@ -314,7 +314,7 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         let ty_res = new_type_variable () in
         let phi = new_mutable_effect () in
         phi.body <-
-          Eset (empty_region_set,
+          MEset (empty_region_set,
                 Effect.set_of_list Effect.empty_set
                   (caselist ty_arg ty_res pat_exp_list));
         Marrow (ty_arg, ty_res, phi), [], []

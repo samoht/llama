@@ -97,9 +97,9 @@ type mutable_effect =
     mutable body : mutable_effect_body }
 
 and mutable_effect_body =
-  | Evar                                (* Simple variable *)
-  | Elink of mutable_effect             (* Union-find link *)
-  | Eset of mutable_region Set.t * mutable_effect Set.t
+  | MEvar                                (* Simple variable *)
+  | MElink of mutable_effect             (* Union-find link *)
+  | MEset of mutable_region Set.t * mutable_effect Set.t
                           (* Regions set and effects union *)
 
 
@@ -114,11 +114,11 @@ let new_mutable_effect =
   let x = ref 0 in
   fun () ->
     incr x;
-    { id = !x; body = Evar }
+    { id = !x; body = MEvar }
 
 let new_empty_effect () =
   let e = new_mutable_effect () in
-  e.body <- Eset (empty_region_set, empty_set);
+  e.body <- MEset (empty_region_set, empty_set);
   e
 
 
@@ -126,9 +126,9 @@ let string_of_mutable_effect e =
   "E" ^ string_of_int e.id
 
 let string_of_mutable_effect_body = function
-  | Evar -> ""
-  | Elink v -> "->" ^ string_of_mutable_effect v
-  | Eset (rs, es) -> 
+  | MEvar -> ""
+  | MElink v -> "->" ^ string_of_mutable_effect v
+  | MEset (rs, es) -> 
     Printf.sprintf "{%s}"
       (String.concat ","
          ((List.map string_of_mutable_region (Set.elements rs))
@@ -140,24 +140,24 @@ let long_string_of_mutable_effect phi =
 
 let rec mutable_effect_repr phi =
   match phi.body with
-    | Elink v -> mutable_effect_repr v
+    | MElink v -> mutable_effect_repr v
     | _ -> phi
 
 
 let body_union x y =
   match x, y with
-    | Elink _, _ | _, Elink _ -> invalid_arg "body_union"
-    | Evar, _ -> y
-    | _, Evar -> x
-    | Eset (rs1, es1), Eset (rs2, es2) ->
-        Eset (Set.union rs1 rs2, Set.union es1 es2)
+    | MElink _, _ | _, MElink _ -> invalid_arg "body_union"
+    | MEvar, _ -> y
+    | _, MEvar -> x
+    | MEset (rs1, es1), MEset (rs2, es2) ->
+        MEset (Set.union rs1 rs2, Set.union es1 es2)
 
 let unify e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
     (e.body <- body_union e.body f.body;
-     f.body <- Elink e)
+     f.body <- MElink e)
 
 
 (* Stdlib ? *)
@@ -169,9 +169,9 @@ let set_of_list init l =
    that e recursively contains *)
 let rec contents e =
   match e.body with
-    | Evar -> empty_region_set, Set.add e empty_set
-    | Elink e' -> contents e'
-    | Eset (rs, es) ->
+    | MEvar -> empty_region_set, Set.add e empty_set
+    | MElink e' -> contents e'
+    | MEset (rs, es) ->
         let rs', es' = set_contents es in
         (set_of_list rs' (List.map mutable_region_repr (Set.elements rs)),
          es')
