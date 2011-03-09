@@ -17,7 +17,7 @@ let region_parameters ty =
       accu rs in
   let rec aux accu = function
     | Tparam _               -> accu
-    | Tarrow (ty1, ty2, phi) -> aux (aux (merge accu phi) ty1) ty2
+    | Tarrow (ty1, ty2, phi) -> aux (aux (*merge accu phi*)[] ty1) ty2 (* DUMMY *)
     | Ttuple tyl             -> List.fold_left aux accu tyl
     | Tconstr (_, tyl, rs)   -> List.fold_left aux (merge accu rs) tyl in
   List.rev (aux [] ty)
@@ -32,7 +32,7 @@ let subst_region sr r =
 
 let rec subst_type sv sr = function
   | Tparam tv              -> List.assq tv sv
-  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, List.map (subst_region sr) phi)
+  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, (*List.map (subst_region sr)*) phi) (* DUMMY *)
   | Ttuple tyl             -> Ttuple (List.map (subst_type sv sr) tyl)
   | Tconstr (tcs, tyl, rs) -> Tconstr (tcs, List.map (subst_type sv sr) tyl, List.map (subst_region sr) rs)
 

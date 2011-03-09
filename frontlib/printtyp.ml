@@ -55,7 +55,7 @@ let rec tree_of_type = function
   | Tparam i ->
     Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2, phi) ->
-    Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
+    Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, (*tree_of_effect phi*)[]) (* DUMMY *)
   | Ttuple tyl ->
     Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, tyl, rs) ->

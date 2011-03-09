@@ -39,6 +39,9 @@ let reset_type_variables () = type_variables := []
 let region_variables = ref 0
 let reset_region_variables () = region_variables := 0
 
+let effect_variables = ref 0
+let reset_effect_variables () = effect_variables := 0
+
 let new_variable name ty phi = {
   mvar_name = name;
   mvar_type = ty;
@@ -216,7 +219,8 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
             ty
           end
       | Ptyp_arrow (ty1, ty2) -> (* XXX: we should be able to constraint effects *)
-          Tarrow (aux ty1, aux ty2, [])
+          incr effect_variables;
+          Tarrow (aux ty1, aux ty2, Effect.Eparam !effect_variables)
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
@@ -241,7 +245,8 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
       Ptyp_var name ->
         Lparam (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
-        Larrow (local_type pseudoenv root_tcs ty1, local_type pseudoenv root_tcs ty2, []) (* XXX: no effects from parsing *)
+        incr effect_variables;
+        Larrow (local_type pseudoenv root_tcs ty1, local_type pseudoenv root_tcs ty2, Effect.Eparam !effect_variables) (* XXX: no effects from parsing *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv root_tcs) tyl)
     | Ptyp_constr (lid, tyl) ->

@@ -3,6 +3,7 @@
 open Asttypes
 open Base
 open Mutable_base
+open Effect
 
 open Log
 let section = "immutify"
@@ -19,12 +20,14 @@ exception Error of Location.t * error
 type env =
   { mutable type_variables : (mutable_type_variable * parameter) list;
     mutable variables : (mutable_variable * variable) list;
-    mutable regions : (Effect.mutable_region_variable * Effect.region_parameter) list; }
+    mutable regions : (mutable_region_variable * region_parameter) list;
+    mutable effects : (mutable_effect * effect_parameter) list }
 
 let new_env () =
   { type_variables = [];
     variables = [];
-    regions = []; }
+    regions = [];
+    effects = []; }
 
 (* ---------------------------------------------------------------------- *)
 (* Types and type variables.                                              *)
@@ -39,13 +42,19 @@ let mutable_region f r =
     i
 
 let rec mutable_effect f phi =
-  let phi = Effect.mutable_effect_repr phi in
-  match phi with
-    | Effect.Evar _    -> []
-    | Effect.Eregion r -> [ mutable_region f r ]
-    | Effect.Eunion u  ->
-      let l = Set.elements u in
-      List.flatten (List.map (mutable_effect f) l)
+  match phi.body with
+    | MEvar ->
+      Eparam
+        (try List.assq phi f.effects
+         with Not_found ->
+           let i = List.length f.effects in
+           f.effects <- (phi, i) :: f.effects;
+           i)
+    | MElink phi' -> mutable_effect f phi'
+    | MEset (rs, fs) ->
+      Eset (List.rev_append
+              (List.map (fun rho -> EAregparam (mutable_region f rho)) (Set.elements rs))
+              (List.map (fun phi -> mutable_effect f phi) (Set.elements fs)))
 
 let rec mutable_type f = function
     Mvar v ->

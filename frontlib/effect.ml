@@ -6,6 +6,25 @@ let section_verbose = "effect+"
 (* Immutable base *)
 (******************)
 
+type region_parameter = int
+type effect_parameter = int
+(*
+type region = { rname : int }
+*)
+type effect_atom =
+  | EAparam of effect_parameter
+  | EAregparam of region_parameter
+(*  | EAregion of region *)
+
+type effect =
+  | Eparam of effect_parameter
+  | Eset of effect_atom list
+
+let string_of_region r = "" (* DUMMY *)
+and string_of_regions l = ""
+and string_of_effect f = ""
+
+(*
 (* Parameters are de Bruijn indices *)
 (* Structures are immutable *)
 
@@ -25,7 +44,7 @@ type effect = region_parameter list
 let string_of_effect = function
   | [] -> ""
   | l  -> Printf.sprintf "{%s}" (String.concat "," (List.map string_of_region l))
-    
+*)
 
 (*******************)
 (* Mutable regions *)
@@ -50,7 +69,7 @@ let new_region_variable =
   aux
 
 let string_of_mutable_region r =
-  "R" ^ string_of_region r.rid
+  "R" ^ string_of_int r.rid
 
 let string_of_mutable_regions l =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_mutable_region l))
