@@ -33,28 +33,50 @@ let new_env () =
 (* Types and type variables.                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let mutable_region f r =
-  let r = Effect.mutable_region_repr r in
+let mutable_region_param f r =
   try List.assq r f.regions
   with Not_found ->
     let i = List.length f.regions in
     f.regions <- (r, i) :: f.regions;
     i
 
+let mutable_region f r =
+  mutable_region_param f (mutable_region_repr r)
+
+
+let mutable_effect_param f phi =
+  try List.assq phi f.effects
+  with Not_found ->
+    let i = List.length f.effects in
+    f.effects <- (phi, i) :: f.effects;
+    i
+
+let rec uniq = function
+  | [] -> []
+  | h::t -> if List.mem h t then uniq t else h :: (uniq t)
+
 let rec mutable_effect f phi =
+  let rec aux phi =
+    match phi.body with
+      | MElink phi' -> aux phi'
+      | MEvar -> [EAparam (mutable_effect_param f phi)]
+      | MEset (rs, fs) ->
+          let rs' =
+            List.map (fun r -> EAregparam (mutable_region_param f r))
+              (Set.elements rs)
+          and fs' = List.flatten (List.map aux (Set.elements fs)) in
+          List.rev_append rs' fs'
+  in
   match phi.body with
-    | MEvar ->
-      Eparam
-        (try List.assq phi f.effects
-         with Not_found ->
-           let i = List.length f.effects in
-           f.effects <- (phi, i) :: f.effects;
-           i)
     | MElink phi' -> mutable_effect f phi'
+    | MEvar -> Eparam (mutable_effect_param f phi)
     | MEset (rs, fs) ->
-      Eset (List.rev_append
-              (List.map (fun rho -> EAregparam (mutable_region f rho)) (Set.elements rs))
-              (List.map (fun phi -> mutable_effect f phi) (Set.elements fs)))
+        let rs' =
+          List.map (fun r -> EAregparam (mutable_region_param f r))
+            (Set.elements rs)
+        and fs' = List.flatten (List.map aux (Set.elements fs)) in
+        Eset (List.rev_append rs' fs')
+
 
 let rec mutable_type f = function
     Mvar v ->
@@ -203,16 +225,18 @@ let type_of_local_type subst local_args lt =
   let renumber r =
     if List.mem_assoc r !regions then
       List.assoc r !regions
-    else begin
+    else
       let n = List.length !regions in
       regions := (r, n) :: !regions;
-      n end in
+      n
+  in
   let rec aux = function
     | Lparam i                -> Tparam i
-    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, List.map renumber phi)
+    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, (*List.map renumber phi*)phi) (* DUMMY *)
     | Ltuple tyl              -> Ttuple (List.map aux tyl)
     | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, List.map renumber rs)
-    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, List.map renumber ltcs.ltcs_regions) in
+    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, List.map renumber ltcs.ltcs_regions)
+  in
   aux lt
 
 let make_type_constructor_group modenv params ltcs_list =
