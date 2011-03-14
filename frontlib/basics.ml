@@ -32,20 +32,20 @@ let type_closed ty =
 let subst_region sr r =
   List.assq r sr
 
-let effect_subst_regions sr = function
-  | Eparam p -> Eparam p
-  | Eset l ->
-      Eset (List.map
-              (function
-                | EAregparam r -> EAregparam (subst_region sr r)
-                | a -> a )
-              l )
+let subst_regions sr =
+  Effect.map_region_parameters (subst_region sr)
 
 let rec subst_type sv sr = function
-  | Tparam tv              -> List.assq tv sv
-  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, effect_subst_regions sr phi)
-  | Ttuple tyl             -> Ttuple (List.map (subst_type sv sr) tyl)
-  | Tconstr (tcs, tyl, rs) -> Tconstr (tcs, List.map (subst_type sv sr) tyl, List.map (subst_region sr) rs)
+  | Tparam tv ->
+      List.assq tv sv
+  | Tarrow (ty1, ty2, phi) ->
+      Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, subst_regions sr phi)
+  | Ttuple tyl ->
+      Ttuple (List.map (subst_type sv sr) tyl)
+  | Tconstr (tcs, tyl, rs) ->
+      Tconstr (tcs,
+               List.map (subst_type sv sr) tyl,
+               List.map (subst_region sr) rs)
 
 (* Expansion of abbreviations. *)
 
