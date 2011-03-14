@@ -181,6 +181,15 @@ let rec mutable_effect_repr phi =
     | _ -> phi
 
 
+(*
+let rec mem f b =
+  assert ((mutable_effect_repr f) == f);
+  match b with
+    | MEvar -> false
+    | MEset (_, fs) -> Set.exists (fun f' -> mem f (mutable_effect_repr f').body) fs
+    | MElink f' -> mem f (mutable_effect_repr f').body
+*)
+
 let body_union x y =
   match x, y with
     | MElink _, _ | _, MElink _ -> invalid_arg "body_union"

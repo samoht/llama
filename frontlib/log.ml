@@ -7,7 +7,7 @@ let all        = "all"
 
 let info       = "info"
 let info_sections =
-  [ "effect"; "immutify"; "mutable_base"; "resolve"; "typify" ]
+  [ "effect"; "immutify"; "mutable_base"; "resolve"; "typemain"; "typify" ]
 
 (* XXX: put that in the standard library *)
 let split str sep =

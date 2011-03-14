@@ -59,15 +59,18 @@ let rec uniq = function
 let rec mutable_effect f phi =
   let rec aux phi =
     match phi.body with
-      | MElink phi' -> aux phi'
+      | MElink phi' -> debug section_verbose "mutable_effect aux link"; aux phi'
       | MEvar -> [EAparam (mutable_effect_param f phi)]
       | MEset (rs, fs) ->
+          debug section_verbose "mutable_effect aux set";
           let rs' =
             List.map (fun r -> EAregparam (mutable_region_param f r))
               (Set.elements rs)
           and fs' = List.flatten (List.map aux (Set.elements fs)) in
+          debug section_verbose "</set>";
           List.rev_append rs' fs'
   in
+  debug section "mutable_effect";
   match phi.body with
     | MElink phi' -> mutable_effect f phi'
     | MEvar -> Eparam (mutable_effect_param f phi)
@@ -117,6 +120,7 @@ let variable f var =
 (* ---------------------------------------------------------------------- *)
 
 let rec pattern f pat =
+  debug section "pattern";
   { pat_desc = pattern_desc f pat.mpat_desc;
     pat_loc = pat.mpat_loc;
     pat_type = mutable_type f pat.mpat_type }
@@ -148,6 +152,7 @@ and pattern_desc f = function
 (* ---------------------------------------------------------------------- *)
 
 let rec expression f expr =
+  debug section "expression";
   { exp_desc = expression_desc f expr.mexp_desc;
     exp_loc = expr.mexp_loc;
     exp_type = mutable_type f expr.mexp_type }
@@ -374,22 +379,27 @@ let structure_item env str =
         let expr = expression menv texpr in
         [Str_eval expr], env, Some (Basics.renumber_parameters expr.exp_type)
     | Mstr_let (rec_flag, pat_expr_list) ->
+        debug section_verbose "Immutify let 0";
         let pat_expr_list = pattern_expression_list menv pat_expr_list in
+        debug section_verbose "Immutify let 1";
         List.iter
           (fun (pat, expr) ->
              let ty = pat.pat_type in
              if not (Basics.is_nonexpansive expr) && not (Basics.type_closed ty) then
                raise (Error (expr.exp_loc, Non_generalizable (Basics.renumber_parameters ty))))
           pat_expr_list;
+        debug section_verbose "Immutify let 2";
         let vars =
           List.flatten
             (List.map (fun (pat, _) -> Basics.pattern_variables pat) pat_expr_list) in
+        debug section_verbose "Immutify let 3";
         let vals =
           List.map (fun var ->
                       { val_module = Modenv.current_module modenv;
                         val_name = var.var_name;
                         val_type = Basics.renumber_parameters var.var_type;
                         val_kind = Val_reg }) vars in
+        debug section_verbose "Immutify let 4";
         [Str_let (rec_flag, pat_expr_list, List.combine vars vals)],
         List.fold_left (fun env v -> Env.add_value v env) env vals,
         None

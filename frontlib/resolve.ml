@@ -234,7 +234,9 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-          Tconstr (tcs, List.map aux tyl, rs)
+          let tyl' = List.map aux tyl in
+          debug section_verbose "</llama_type>";
+          Tconstr (tcs, tyl', rs)
     end
   in
   aux ty
@@ -619,6 +621,7 @@ let external_declaration decl ty =
 let signature_item env psig =
   reset_type_variables ();
   reset_region_variables ();
+  let res =
   { msig_desc =
       begin match psig.psig_desc with
         | Psig_value (s, te) ->
@@ -628,6 +631,7 @@ let signature_item env psig =
             debug section "Processing signature : external val %s." id;
             Msig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
+            debug section "Processing signature : type.";
             let params, decls = type_declarations env pdecls in
             Msig_type (params, decls)
         | Psig_exception (name, args) ->
@@ -635,12 +639,15 @@ let signature_item env psig =
             let pseudoenv = pseudoenv_create env in
             Msig_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Psig_open name ->
+            debug section "Processing signature : open %s." name;
             Msig_open (name, lookup_module (Env.modenv env) name psig.psig_loc)
       end;
-    msig_loc = psig.psig_loc }
-            
+    msig_loc = psig.psig_loc } in
+  res
+
 let top_bindings env rec_flag ppat_pexp_list =
   let pat_list = List.map (fun (ppat, _) -> pattern env ppat) ppat_pexp_list in
+  debug section_verbose "top_bindings 1";
   let ctxt =
     match rec_flag with
         Recursive ->
@@ -651,19 +658,28 @@ let top_bindings env rec_flag ppat_pexp_list =
       | Nonrecursive ->
           context_create env
   in
-  List.map2 (fun pat (_, pexp) -> pat, expression ctxt pexp) pat_list ppat_pexp_list
+  debug section_verbose "top_bindings 2";
+  let res =
+    List.map2 (fun pat (_, pexp) -> pat, expression ctxt pexp) pat_list ppat_pexp_list
+  in
+    debug section_verbose "top_bindings 3";
+    res
 
 let structure_item env pstr =
   reset_type_variables ();
   reset_region_variables ();
+  let res =
   { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->
+            debug section "Processing type.";
             let params, decls = type_declarations env pdecls in
             Mstr_type (params, decls)
         | Pstr_let (rec_flag, ppat_pexp_list) ->
+            debug section "Processing let.";
             Mstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
         | Pstr_eval pexp ->
+            debug section "Processing eval.";
             Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
             debug section "Processing external type %s." name;
@@ -672,12 +688,15 @@ let structure_item env pstr =
             debug section "Processing external value %s." name;
             Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
+            debug section "Processing exception %s." name;
             let pseudoenv = pseudoenv_create env in
             Mstr_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Pstr_open name ->
+            debug section "Processing open %s." name;
             Mstr_open (name, lookup_module (Env.modenv env) name pstr.pstr_loc)
       end;
-    mstr_loc = pstr.pstr_loc }
+    mstr_loc = pstr.pstr_loc } in
+  res
 
 (* ---------------------------------------------------------------------- *)
 (* Error report.                                                          *)

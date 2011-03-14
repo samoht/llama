@@ -2,6 +2,10 @@ open Frontmisc
 open Base
 open Mutable_base
 
+open Log
+let section = "typemain"
+and section_verbose = "typemain+"
+
 type error =
     Interface_not_compiled of string
 
@@ -23,8 +27,11 @@ let rec structure env = function
     [] -> []
   | pstr :: rest ->
       let tstr = Resolve.structure_item env pstr in
+      debug section_verbose "structure 1";
       let _ = Typify.structure_item tstr in
+      debug section_verbose "structure 2";
       let str, env, _ = Immutify.structure_item env tstr in
+      debug section_verbose "structure 3";
       str @ structure env rest
 
 (* Convert a structure into a signature *)
