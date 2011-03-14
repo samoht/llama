@@ -6,7 +6,8 @@ let sep        = ':'
 let all        = "all"
 
 let info       = "info"
-let info_sections = [ "effect"; "mutable_base" ]
+let info_sections =
+  [ "effect"; "immutify"; "mutable_base"; "resolve"; "typify" ]
 
 (* XXX: put that in the standard library *)
 let split str sep =
@@ -21,7 +22,9 @@ let split str sep =
   split_rec 0
 
 (* cache the environment variable to avoid performance issues *)
-let env = split (Sys.getenv llamadebug) sep 
+let env =
+  try split (Sys.getenv llamadebug) sep
+  with Not_found -> []
 
 (* The predicate read some environment variables to filter the messags to print out *)
 let predicates section =

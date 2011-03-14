@@ -7,6 +7,7 @@ open Effect
 
 open Log
 let section = "immutify"
+and section_verbose = "immutify+"
 
 type error =
     Non_generalizable of llama_type
