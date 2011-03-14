@@ -1,4 +1,5 @@
 open Base
+open Effect
 
 (* Returns the list of type parameters *)
 let type_parameters ty =
@@ -17,7 +18,8 @@ let region_parameters ty =
       accu rs in
   let rec aux accu = function
     | Tparam _               -> accu
-    | Tarrow (ty1, ty2, phi) -> aux (aux (*merge accu phi*)[] ty1) ty2 (* DUMMY *)
+    | Tarrow (ty1, ty2, phi) ->
+        aux (aux (merge accu (Effect.region_parameters phi)) ty1) ty2
     | Ttuple tyl             -> List.fold_left aux accu tyl
     | Tconstr (_, tyl, rs)   -> List.fold_left aux (merge accu rs) tyl in
   List.rev (aux [] ty)
@@ -30,9 +32,18 @@ let type_closed ty =
 let subst_region sr r =
   List.assq r sr
 
+let effect_subst_regions sr = function
+  | Eparam p -> Eparam p
+  | Eset l ->
+      Eset (List.map
+              (function
+                | EAregparam r -> EAregparam (subst_region sr r)
+                | a -> a )
+              l )
+
 let rec subst_type sv sr = function
   | Tparam tv              -> List.assq tv sv
-  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, (*List.map (subst_region sr)*) phi) (* DUMMY *)
+  | Tarrow (ty1, ty2, phi) -> Tarrow (subst_type sv sr ty1, subst_type sv sr ty2, effect_subst_regions sr phi)
   | Ttuple tyl             -> Ttuple (List.map (subst_type sv sr) tyl)
   | Tconstr (tcs, tyl, rs) -> Tconstr (tcs, List.map (subst_type sv sr) tyl, List.map (subst_region sr) rs)
 

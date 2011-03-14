@@ -148,13 +148,6 @@ and local_kind_is_mutable = function
 let union s1 s2 =
   List.fold_left (fun accu e1 -> if List.mem e1 accu then accu else e1::accu) s2 s1
 
-let rec list_match f = function
-  | [] -> []
-  | h::t ->
-    match f h with
-      | None -> list_match f t
-      | Some x -> x :: list_match f t
-
 (* Returns the region parameters of a local type *)
 (* - If [internals] is true, then returns the internal region parameters as well *)
 (* - [k] is a local kind *)
@@ -163,12 +156,7 @@ let rec local_kind_region_parameters internals k =
   let rec local accu = function
     | Lparam _               -> accu
     | Larrow (ty1, ty2, phi) ->
-      let rhol =
-        match phi with
-          | Eparam _ -> []
-          | Eset l ->
-            list_match (function EAregparam r -> Some r | _ -> None) l in
-      local (local rhol ty1) ty2
+      local (local (Effect.region_parameters phi) ty1) ty2
     | Ltuple tyl             -> List.fold_left local accu tyl
     | Lconstr (tcs, tyl, rs) -> List.fold_left local (union rs accu) tyl
     | Lconstr_local l        ->

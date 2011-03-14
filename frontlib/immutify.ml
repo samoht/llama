@@ -223,19 +223,26 @@ and expression_option f = function
 let type_of_local_type subst local_args lt =
   let regions = ref [] in
   let renumber r =
-    if List.mem_assoc r !regions then
+    try
       List.assoc r !regions
-    else
+    with Not_found ->
       let n = List.length !regions in
       regions := (r, n) :: !regions;
       n
   in
   let rec aux = function
-    | Lparam i                -> Tparam i
-    | Larrow (ty1, ty2, phi)  -> Tarrow (aux ty1, aux ty2, (*List.map renumber phi*)phi) (* DUMMY *)
-    | Ltuple tyl              -> Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl, rs)  -> Tconstr (tcs, List.map aux tyl, List.map renumber rs)
-    | Lconstr_local ltcs      -> Tconstr (List.assq ltcs subst, local_args, List.map renumber ltcs.ltcs_regions)
+    | Lparam i ->
+        Tparam i
+    | Larrow (ty1, ty2, phi) ->
+        Tarrow (aux ty1, aux ty2, Effect.map_region_parameters renumber phi)
+    | Ltuple tyl ->
+        Ttuple (List.map aux tyl)
+    | Lconstr (tcs, tyl, rs) ->
+        Tconstr (tcs, List.map aux tyl, List.map renumber rs)
+    | Lconstr_local ltcs ->
+        Tconstr (List.assq ltcs subst,
+                 local_args,
+                 List.map renumber ltcs.ltcs_regions)
   in
   aux lt
 

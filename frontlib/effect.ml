@@ -20,9 +20,27 @@ type effect =
   | Eparam of effect_parameter
   | Eset of effect_atom list
 
-let string_of_region r = "" (* DUMMY *)
-and string_of_regions l = ""
-and string_of_effect f = ""
+
+let string_of_region r = "string_of_region"
+and string_of_regions l = "string_of_regions"
+and string_of_effect f = "string_of_effect" (* DUMMY *)
+
+
+let rec list_match f = function
+  | [] -> []
+  | h::t ->
+      match f h with
+        | None -> list_match f t
+        | Some x -> x :: list_match f t
+
+let region_parameters = function
+  | Eparam _ -> []
+  | Eset l -> list_match (function EAregparam r -> Some r | _ -> None) l
+
+let map_region_parameters f = function
+  | Eparam p -> Eparam p
+  | Eset l ->
+      Eset (List.map (function EAregparam r -> EAregparam (f r) | a -> a) l)
 
 (*
 (* Parameters are de Bruijn indices *)
