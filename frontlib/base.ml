@@ -1,6 +1,7 @@
 (* Where Llama Light really starts. *)
 
 open Asttypes
+open Effect
 
 (* ---------------------------------------------------------------------- *)
 (* Utility types.                                                         *)
@@ -30,15 +31,9 @@ type parameter = int
 
 type llama_type =
   | Tparam of parameter
-  (* Regions on arrows are already substituted. *)
-  | Tarrow of llama_type * llama_type * Effect.effect
+  | Tarrow of llama_type * llama_type * effect
   | Ttuple of llama_type list
-  (* Region parameters are (position -> parameter) substitution for the
-     tcs_regions params of the type constructor.
-     Invariants :
-     * tcs_regions goes from 0 to number of free regions in the type
-     * length(tcs_regions) is equals to size of the region parameter list *)
-  | Tconstr of type_constructor * llama_type list * Effect.region_parameter list
+  | Tconstr of type_constructor * type_constructor_parameters
 
 and type_constructor_group =
   { tcsg_module : module_id;                       (* Defining module *)
@@ -50,8 +45,15 @@ and type_constructor =
   { tcs_group : type_constructor_group;         (* Containing group *)
     tcs_name : string;                          (* Name of the type ctor. *)
     tcs_regions : int;                          (* Regions arity *)
+    tcs_effects : int;                          (* Effects arity *)
     tcs_mutable : bool;                         (* Is the type mutable (and thus lockable) ? *)
     mutable tcs_kind : type_constructor_kind }  (* Kind of the type ctor. *)
+
+and type_constructor_parameters = {
+  tcp_types   : llama_type list;        (* type parameters   *)
+  tcp_regions : region_parameter list;  (* region parameters *)
+  tcp_effects : effect_parameter list;  (* effect parameters *)
+}
 
 and type_constructor_kind =
     Tcs_abstract                     (* Abstract type *)
@@ -158,8 +160,10 @@ let well_formed lt  =
   let saw = ref [] in
   let rec llama_type = function
     | Tparam _            -> true
-    | Tconstr (tc, a, rs) ->
-        tc.tcs_regions = List.length rs && List.for_all llama_type a && type_constructor tc
+    | Tconstr (tc, p)     ->
+        tc.tcs_regions = List.length p.tcp_regions &&
+        List.for_all llama_type p.tcp_types &&
+        type_constructor tc
     | Tarrow (t1, t2, _)  -> llama_type t1 && llama_type t2
     | Ttuple ts           -> List.for_all llama_type ts 
   and type_constructor_kind = function
@@ -176,9 +180,11 @@ let well_formed lt  =
     end in
   llama_type lt
 
-let standard_parameters n =
-  let rec aux i = if i < n then i :: aux (succ i) else [] in
-  aux 0
+let parameter_range min max =
+  let rec aux i = if i < max then i :: aux (succ i) else [] in
+  aux min
+
+let standard_parameters n = parameter_range 0 n
 
 let tcsg_arity tcsg = List.length tcsg.tcsg_params  (* No. of type parameters *)
 let tcs_module tcs = tcs.tcs_group.tcsg_module   (* Defining module *)
@@ -186,9 +192,13 @@ let tcs_params tcs = tcs.tcs_group.tcsg_params   (* List of type parameters *)
 let tcs_mutable tcs = tcs.tcs_mutable            (* Is the type mutable ? *)
 let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
-  Tconstr (tcs,
-           List.map (fun param -> Tparam param) (tcs_params tcs),
-           standard_parameters tcs.tcs_regions)
+  let p = {
+    tcp_types   = List.map (fun param -> Tparam param) (tcs_params tcs);
+    tcp_regions = standard_parameters tcs.tcs_regions;
+    tcp_effects = standard_parameters tcs.tcs_effects;
+  } in
+  Tconstr (tcs, p)
+
 let cs_arity cs = List.length cs.cs_args         (* Number of arguments *)
 let cs_res cs = tcs_res cs.cs_tcs                (* Type of the result *)
 let lbl_module lbl = tcs_module lbl.lbl_tcs      (* Defining module *)
@@ -211,9 +221,6 @@ let parameter_name i =
   then String.make 1 (char_of_int (i+97))
   else String.make 1 (char_of_int ((i mod 26) + 97)) ^ string_of_int (i/26)
 
-let shift_regions rs n =
-  List.map ((+) n) rs
-
 let max_region = function
   | [] -> 0
   | rs -> max (List.fold_left max 0 rs) (List.length rs)
@@ -224,7 +231,7 @@ let rec is_mutable = function
   | Tparam _ -> assert false (* DUMMY *)(* XXX: Is  type 'a t = 'a  useful ? *)
   | Tarrow _ -> false
   | Ttuple _ -> false
-  | Tconstr (tcs, _, _) -> kind_is_mutable tcs.tcs_kind
+  | Tconstr (tcs, _) -> kind_is_mutable tcs.tcs_kind
 
 and kind_is_mutable = function
   | Tcs_abstract -> false (* DUMMY *)

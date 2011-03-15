@@ -26,7 +26,7 @@ exception Error of Location.t * error
 let literal = function
     Literal_int _ -> mutable_type_int
   | Literal_float _ -> mutable_type_float
-  | Literal_string _ -> mutable_type_string (new_region_variable ())
+  | Literal_string _ -> mutable_type_string (new_mutable_region ())
   | Literal_char _ -> mutable_type_char
   | Literal_int32 _ -> mutable_type_int32
   | Literal_int64 _ -> mutable_type_int64
@@ -59,16 +59,16 @@ and pattern_aux pat =
         List.iter2 pattern_expect args ty_args;
         ty_res
     | Mpat_record (tcs, lbl_arg_list) -> (* XXX: anything to do here ? *)
-        let inst, inst_r, ty_res = instantiate_type_constructor tcs in
+        let inst, inst_r, inst_e, ty_res = instantiate_type_constructor tcs in
         List.iter
           (fun (lbl, arg) ->
-             let ty_arg = instantiate_type inst inst_r "Typify.pattern" lbl.lbl_arg in
+             let ty_arg = instantiate_type inst inst_r inst_e "Typify.pattern" lbl.lbl_arg in
              pattern_expect arg ty_arg) lbl_arg_list;
         ty_res
     | Mpat_array patl ->
         let ty = new_type_variable () in
         List.iter (fun pat -> pattern_expect pat ty) patl;
-        mutable_type_array ty (new_region_variable ())
+        mutable_type_array ty (new_mutable_region ())
     | Mpat_or (pat1, pat2) ->
         let ty = pattern pat1 in
         pattern_expect pat2 ty;
@@ -194,10 +194,10 @@ let formatstring loc fmt =
         match fmt.[j] with
         | '%' | '!' | ',' -> scan_format (j + 1)
         | 's' | 'S' ->
-          conversion j (mutable_type_string (new_region_variable ()))
+          conversion j (mutable_type_string (new_mutable_region ()))
         | '[' ->
           let j = range_closing_index fmt j in
-          conversion j (mutable_type_string (new_region_variable ()))
+          conversion j (mutable_type_string (new_mutable_region ()))
         | 'c' | 'C' -> conversion j mutable_type_char
         | 'd' | 'i' | 'o' | 'x' | 'X' | 'u' | 'N' ->
           conversion j mutable_type_int
@@ -241,10 +241,12 @@ let formatstring loc fmt =
       scan_flags i j in
 
     let ty_ureader, ty_args = scan_format 0 in
-    Mconstr
-      (Predef.tcs_format6,
-       [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result],
-      [])
+    let p = {
+      m_types   = [ty_args; ty_input; ty_aresult; ty_ureader; ty_uresult; ty_result];
+      m_regions = [];
+      m_effects = [];
+    } in
+    Mconstr (Predef.tcs_format6, p)
   in
   type_in_format fmt
 
@@ -255,11 +257,11 @@ let formatstring loc fmt =
 let rec expression exp =
   let ty, rhol, phil = expression_aux exp in
   let rhos = set_of_list empty_region_set rhol
-  and phis = set_of_list Effect.empty_set phil in
+  and phis = set_of_list empty_effect_set phil in
   half_unify exp.mexp_effect (MEset (rhos, phis));
   (try
      unify exp.mexp_type ty;
-   with Unify | Effect.Unify ->
+   with Unify | Unify_regions ->
      raise (Error (exp.mexp_loc, Unknown)));
   ty, exp.mexp_effect
 
@@ -314,11 +316,11 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         let phi = new_mutable_effect () in
         phi.body <-
           MEset (empty_region_set,
-                Effect.set_of_list Effect.empty_set
-                  (caselist ty_arg ty_res pat_exp_list));
+                 set_of_list empty_effect_set
+                   (caselist ty_arg ty_res pat_exp_list));
         Marrow (ty_arg, ty_res, phi), [], []
     | Mexp_try (body, pat_exp_list) ->
-        let ty_arg = mutable_type_exn (new_region_variable ()) in
+        let ty_arg = mutable_type_exn (new_mutable_region ()) in
         let ty_res, phi = expression body in
         let phil = caselist ty_arg ty_res pat_exp_list in
         ty_res, [], phi :: phil
@@ -356,14 +358,14 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         let ty_arg = new_type_variable () in
         let phil = List.flatten
           (List.map (fun e -> expression_expect e ty_arg) elist) in
-        mutable_type_array ty_arg (new_region_variable ()), [], phil
+        mutable_type_array ty_arg (new_mutable_region ()), [], phil
     | Mexp_record (tcs, lbl_exp_list, opt_init) ->
-        let inst, inst_r, ty_res = instantiate_type_constructor tcs in
+        let inst, inst_r, inst_e, ty_res = instantiate_type_constructor tcs in
         let phil =
           List.flatten
             (List.map
                (fun (lbl, exp) ->
-                 let ty_arg = instantiate_type inst inst_r
+                 let ty_arg = instantiate_type inst inst_r inst_e
                    ("Typify.expression lbl_name="^lbl.lbl_name) lbl.lbl_arg in
                  expression_expect exp ty_arg)
             lbl_exp_list)
@@ -373,11 +375,11 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
           | Some init ->
               ty_res, [], List.rev_append phil (expression_expect init ty_res))
     | Mexp_field (e, lbl) ->
-        let ty_res, _, ty_arg = instantiate_label lbl in
+        let ty_res, _, _, ty_arg = instantiate_label lbl in
         let phil = expression_expect e ty_res in
         ty_arg, [], phil
     | Mexp_setfield (e1, lbl, e2) ->
-        let ty_res, _, ty_arg = instantiate_label lbl in
+        let ty_res, _, _, ty_arg = instantiate_label lbl in
         let phil1 = expression_expect e1 ty_res
         and phil2 = expression_expect e2 ty_arg in
         mutable_type_unit, [], List.rev_append phil1 phil2
@@ -415,10 +417,10 @@ and expression_expect exp expected_ty =
               Mexp_literal (Literal_string s) ->
                 let ty =
                   match expand_mutable_type expected_ty with
-                      Mconstr (tcs, _, []) when tcs == Predef.tcs_format6 ->
+                      Mconstr (tcs, _) when tcs == Predef.tcs_format6 ->
                         formatstring exp.mexp_loc s
                     | _ ->
-                        mutable_type_string (new_region_variable ()) in
+                        mutable_type_string (new_mutable_region ()) in
                 unify exp.mexp_type ty;
                 ty, []
             | _ ->
@@ -430,8 +432,8 @@ and expression_expect exp expected_ty =
         with e ->
           Printf.eprintf "Typify.expression_expect: %s\n%!"
             (match e with
-              | Unify -> "Unify"
-              | Effect.Unify -> "Effect.Unify"
+              | Unify         -> "Unify"
+              | Unify_regions -> "Unify_regions"
               | e -> raise e);
           raise (Error (exp.mexp_loc, Expression_type_clash (ty, expected_ty)))
 
@@ -462,7 +464,7 @@ and statement expr =
   | Marrow(_,_,_) ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Partial_application
   | Mvar _ -> ()
-  | Mconstr (tcs, _, _) when tcs == Predef.tcs_unit -> ()
+  | Mconstr (tcs, _) when tcs == Predef.tcs_unit -> ()
   | _ ->
       Frontlocation.prerr_warning expr.mexp_loc Warnings.Statement_type
   end;
@@ -473,7 +475,8 @@ and statement expr =
 and lockable expr =
   let ty, phi = expression expr in
   match expand_mutable_type ty with
-    | Mconstr ({tcs_mutable=true}, _, rho::_) -> mutable_region_repr rho, phi
+    | Mconstr ({tcs_mutable=true}, { m_regions = rho :: _ }) ->
+        mutable_region_repr rho, phi
     | _ -> raise (Error (expr.mexp_loc, Lock_non_mutable ty))
 
 (* ---------------------------------------------------------------------- *)

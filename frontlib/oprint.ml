@@ -193,10 +193,10 @@ and print_simple_out_type ppf =
     Otyp_class (ng, id, tyl) ->
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
-  | Otyp_constr (id, tyl, []) ->
+  | Otyp_constr (id, tyl, ([],[])) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
-  | Otyp_constr (id, tyl, r) ->
-      fprintf ppf "@[%a%a%a@]" print_typargs tyl print_ident id print_out_string_list r
+  | Otyp_constr (id, tyl, (rs,es)) ->
+      fprintf ppf "@[%a%a%a@]" print_typargs tyl print_ident id print_out_string_list (rs @ es)
   | Otyp_object (fields, rest) ->
       fprintf ppf "@[<2>< %a >@]" (print_fields rest) fields
   | Otyp_stuff s -> fprintf ppf "%s" s

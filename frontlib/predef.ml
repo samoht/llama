@@ -17,6 +17,7 @@ let mkabs name params regions is_mutable =
     { tcs_group = tcsg;
       tcs_name = name;
       tcs_regions = regions;
+      tcs_effects = 0;
       tcs_mutable = is_mutable;
       tcs_kind = Tcs_abstract } in
   tcsg, tcs
@@ -45,6 +46,7 @@ and tcs_unit =
   { tcs_group = tcsg_unit;
     tcs_name = "unit";
     tcs_regions = 0;
+    tcs_effects = 0;
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_void ] }
 
@@ -64,6 +66,7 @@ and tcs_bool =
   { tcs_group = tcsg_bool;
     tcs_name = "bool";
     tcs_regions = 0;
+    tcs_effects = 0;
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_false; cs_true ] }
 
@@ -90,6 +93,7 @@ and tcs_list =
   { tcs_group = tcsg_list;
     tcs_name = "list";
     tcs_regions = 0;
+    tcs_effects = 0;
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_nil; cs_cons ] }
 
@@ -101,10 +105,15 @@ and cs_nil =
     cs_tag = Tag_constant 0 }
 
 and cs_cons =
+  let p = {
+    tcp_types   = [ Tparam 0 ];
+    tcp_regions = [];
+    tcp_effects = [];
+  } in
   { cs_tcs = tcs_list;
     cs_module = Module_builtin;
     cs_name = "::";
-    cs_args = [ Tparam 0; Tconstr (tcs_list, [ Tparam 0 ], []) ];
+    cs_args = [ Tparam 0; Tconstr (tcs_list, p) ];
     cs_tag = Tag_block 0 }
 
 let rec tcsg_option =
@@ -116,6 +125,7 @@ and tcs_option =
   { tcs_group = tcsg_option;
     tcs_name = "option";
     tcs_regions = 0;
+    tcs_effects = 0;
     tcs_mutable = false;
     tcs_kind = Tcs_variant [ cs_none; cs_some ] }
 
@@ -142,7 +152,13 @@ let type_constructor_groups =
 
 (* helpers *)
 
-let mkconstr ty params = Tconstr (ty, params, standard_parameters ty.tcs_regions)
+let mkconstr ty params =
+  let p = {
+    tcp_types   = params;
+    tcp_regions = standard_parameters ty.tcs_regions;
+    tcp_effects = standard_parameters ty.tcs_effects;
+  } in
+  Tconstr (ty, p)
 
 let type_int       = mkconstr tcs_int []
 let type_char      = mkconstr tcs_char []

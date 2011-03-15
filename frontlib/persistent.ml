@@ -16,7 +16,7 @@ type llama_type =
     Tparam of int
   | Tarrow of llama_type * llama_type * Effect.effect
   | Ttuple of llama_type list
-  | Tconstr of type_constructor reference * llama_type list * Effect.region_parameter list
+  | Tconstr of type_constructor reference * type_constructor_parameters
 
 and type_constructor_group =
   { tcsg_module : module_id;
@@ -27,7 +27,15 @@ and type_constructor =
   { tcs_group : type_constructor_group;
     tcs_name : string;
     tcs_regions : int;
+    tcs_effects : int;
+    tcs_mutable : bool;
     mutable tcs_kind : type_constructor_kind }
+
+and type_constructor_parameters = {
+  tcp_types   : llama_type list;
+  tcp_regions : Effect.region_parameter list;
+  tcp_effects : Effect.effect_parameter list;
+}
 
 and type_constructor_kind =
     Tcs_abstract
@@ -83,8 +91,13 @@ let rec save_type saver = function
       Tarrow (save_type saver ty1, save_type saver ty2, phi)
   | Base.Ttuple tyl ->
       Ttuple (List.map (save_type saver) tyl)
-  | Base.Tconstr (tcs, tyl, r) ->
-      Tconstr (save_type_constructor_reference saver tcs, List.map (save_type saver) tyl, r)
+  | Base.Tconstr (tcs, p) ->
+      let p = {
+        tcp_types   = List.map (save_type saver) p.Base.tcp_types;
+        tcp_regions = p.Base.tcp_regions;
+        tcp_effects = p.Base.tcp_effects;
+      } in
+      Tconstr (save_type_constructor_reference saver tcs, p)
 
 and save_type_constructor_reference saver tcs =
   if Base.tcs_module tcs = saver.saver_module then
@@ -108,6 +121,8 @@ and save_type_constructor saver tcs =
       { tcs_group = save_type_constructor_group saver tcs.Base.tcs_group;
         tcs_name = tcs.Base.tcs_name;
         tcs_regions = tcs.Base.tcs_regions;
+        tcs_effects = tcs.Base.tcs_effects;
+        tcs_mutable = tcs.Base.tcs_mutable;
         tcs_kind = Tcs_abstract } in
     saver.saver_tcs <- (tcs, tcs') :: saver.saver_tcs;
     tcs'.tcs_kind <- save_type_constructor_kind saver tcs.Base.tcs_kind;
@@ -184,11 +199,14 @@ let rec load_type loader = function
       Base.Tarrow (load_type loader ty1, load_type loader ty2, phi)
   | Ttuple tyl ->
       Base.Ttuple (List.map (load_type loader) tyl)
-  | Tconstr (tcs, tyl, r) ->
+  | Tconstr (tcs, p) ->
       let tcs = load_type_constructor_reference loader tcs in
-      Base.Tconstr (tcs,
-                    List.map (load_type loader) tyl,
-                    r)
+      let p = {
+        Base.tcp_types   = List.map (load_type loader) p.tcp_types;
+        Base.tcp_regions = p.tcp_regions;
+        Base.tcp_effects = p.tcp_effects;
+      } in
+      Base.Tconstr (tcs, p)
 
 and load_type_constructor_reference loader = function
     Internal tcs ->
@@ -209,11 +227,12 @@ and load_type_constructor_group loader tcsg =
 and load_type_constructor loader tcs =
   try List.assq tcs loader.loader_tcs with Not_found ->
     let tcs' =
-      { Base.tcs_group = load_type_constructor_group loader tcs.tcs_group;
-        Base.tcs_name = tcs.tcs_name;
+      { Base.tcs_group   = load_type_constructor_group loader tcs.tcs_group;
+        Base.tcs_name    = tcs.tcs_name;
         Base.tcs_regions = tcs.tcs_regions;
-        Base.tcs_mutable = false; (* DUMMY *)
-        Base.tcs_kind = Base.Tcs_abstract } in
+        Base.tcs_effects = tcs.tcs_effects;
+        Base.tcs_mutable = tcs.tcs_mutable;
+        Base.tcs_kind    = Base.Tcs_abstract } in
     loader.loader_tcs <- (tcs, tcs') :: loader.loader_tcs;
     tcs'.Base.tcs_kind <- load_type_constructor_kind loader tcs.tcs_kind;
     tcs'

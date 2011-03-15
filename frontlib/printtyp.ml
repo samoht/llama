@@ -3,6 +3,7 @@ open Longident
 open Base
 open Outcometree
 open Oprint
+open Effect
 
 (* ---------------------------------------------------------------------- *)
 (* Identifiers and named entities.                                        *)
@@ -40,27 +41,32 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-(* Need to subsitute region parameter *)
-let tree_of_region rs i =
-  let j = rs i in
-  Effect.string_of_region j
+let tree_of_region_parameters fn_r rs =
+  List.map (fun i -> string_of_region_parameter (fn_r i)) rs
 
-(* Effect have already been substituted *)
+let tree_of_effect_parameters fn_e es =
+  List.map (fun i -> string_of_effect_parameter (fn_e i)) es
+
+(* Regions/Effects on arrows have already been substituted *)
 let tree_of_effect e =
-  List.map (fun i -> tree_of_region (fun i -> i) i) e
-
-let xxx s = String.concat "," (List.map string_of_int s)
-
+  let rs = region_parameters e in
+  let re = effect_parameters e in
+  List.map string_of_region_parameter rs, List.map string_of_effect_parameter re
+  
 let rec tree_of_type = function
   | Tparam i ->
-    Otyp_var (false, parameter_name i)
+      Otyp_var (false, parameter_name i)
   | Tarrow (ty1, ty2, phi) ->
-    Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, (*tree_of_effect phi*)[]) (* DUMMY *)
+      Otyp_arrow ("", tree_of_type ty1, tree_of_type ty2, tree_of_effect phi)
   | Ttuple tyl ->
-    Otyp_tuple (tree_of_type_list tyl)
-  | Tconstr (tcs, tyl, rs) ->
-    let fn i = List.nth rs i in
-    Otyp_constr (tree_of_type_constructor tcs, tree_of_type_list tyl, List.map (tree_of_region fn) rs)
+      Otyp_tuple (tree_of_type_list tyl)
+  | Tconstr (tcs, p) ->
+      let fn_r i = List.nth p.tcp_regions i in
+      let fn_e i = List.nth p.tcp_effects i in
+      Otyp_constr (tree_of_type_constructor tcs,
+                   tree_of_type_list p.tcp_types,
+                   (tree_of_region_parameters fn_r p.tcp_regions,
+                    tree_of_effect_parameters fn_e p.tcp_effects))
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl
@@ -109,7 +115,7 @@ let tree_of_type_declaration rec_status tcs =
   Osig_type (begin
                tcs.tcs_name,
                List.map (fun i -> parameter_name i, (true, true)) (tcs_params tcs),
-               List.map (fun i -> Effect.string_of_region i) (standard_parameters tcs.tcs_regions),
+               (tcs.tcs_regions, tcs.tcs_effects),
                begin match tcs.tcs_kind with
                    Tcs_abstract ->
                      Otyp_abstract
@@ -181,12 +187,12 @@ open Mutable_base
 
 (* XXX: need to normalize region and variable names *)
 let tree_of_mutable_region r =
-  let r = Effect.mutable_region_repr r in
-  Effect.string_of_mutable_region r
+  let r = mutable_region_repr r in
+  string_of_mutable_region r
 
 let rec tree_of_mutable_effect phi =
-  let phi = Effect.mutable_effect_repr phi in
-  [Effect.long_string_of_mutable_effect phi]
+  let phi = mutable_effect_repr phi in
+  [ long_string_of_mutable_effect phi ]
 (*  match phi with
     | Effect.Evar v    -> [Effect.string_of_mutable_effect_variable v] (* XXX: we should check that we don't have these anymore *)
     | Effect.Eregion r -> [Effect.string_of_mutable_region r]
@@ -211,11 +217,14 @@ let tree_of_mutable_type =
               tree_of_mutable_type ty
         end
     | Marrow (ty1, ty2, phi) ->
-        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect phi)
+        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, ([], tree_of_mutable_effect phi))
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
-    | Mconstr (tcs, tyl, r) ->
-        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list tyl, List.map tree_of_mutable_region r)
+    | Mconstr (tcs, p) ->
+        Otyp_constr (tree_of_type_constructor tcs,
+                     tree_of_mutable_type_list p.m_types,
+                     (List.map tree_of_mutable_region p.m_regions, 
+                      List.flatten (List.map tree_of_mutable_effect p.m_effects)))
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
   fun ty ->

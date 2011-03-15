@@ -145,8 +145,13 @@ let match_printer_type ppf env desc typename =
       fprintf ppf "Cannot find type Topdirs.%s.@." typename;
       raise Exit in
   let ty_arg = Mutable_base.new_type_variable() in
+  let mp = {
+    Mutable_base.m_types   = [ty_arg];
+    Mutable_base.m_regions = [];
+    Mutable_base.m_effects = [];
+  } in
   Mutable_base.unify
-    (Mutable_base.Mconstr (printer_tcs, [ty_arg], []))
+    (Mutable_base.Mconstr (printer_tcs, mp))
     (Mutable_base.instantiate_value desc);
   Immutify.mutable_type (Immutify.new_env ()) ty_arg
 

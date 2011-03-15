@@ -142,9 +142,9 @@ open Outcometree
               Oval_stuff "<fun>"
           | Ttuple(ty_list) ->
               Oval_tuple (tree_of_val_list 0 depth obj ty_list)
-          | Tconstr(tcs, [], _) when tcs == Predef.tcs_exn ->
+          | Tconstr(tcs, {tcp_types=[]}) when tcs == Predef.tcs_exn ->
               tree_of_exception depth obj
-          | Tconstr(tcs, [ty_arg], _) when tcs == Predef.tcs_list ->
+          | Tconstr(tcs, {tcp_types=[ty_arg]}) when tcs == Predef.tcs_list ->
               if Obj.is_block obj then
                 match check_depth depth obj ty with
                   Some x -> x
@@ -162,7 +162,7 @@ open Outcometree
                     Oval_list (List.rev (tree_of_conses [] obj))
               else
                 Oval_list []
-          | Tconstr(tcs, [ty_arg], _) when tcs == Predef.tcs_array ->
+          | Tconstr(tcs, {tcp_types=[ty_arg]}) when tcs == Predef.tcs_array ->
               let length = Obj.size obj in
               if length > 0 then
                 match check_depth depth obj ty with
@@ -188,13 +188,13 @@ open Outcometree
               else
               Oval_stuff "<lazy>"
 *)
-          | Tconstr(tcs, ty_list, rs) ->
+          | Tconstr(tcs, p) ->
               match tcs with
                 | {tcs_kind = Tcs_abstract} ->
                     Oval_stuff "<abstr>"
                 | {tcs_kind = Tcs_abbrev body} ->
                     tree_of_val depth obj
-                      (Basics.apply_type (tcs_params tcs) tcs.tcs_regions body ty_list rs)
+                      (Basics.apply_type tcs body p)
                 | {tcs_kind = Tcs_variant constr_list} ->
                     let tag =
                       if Obj.is_block obj
@@ -205,7 +205,7 @@ open Outcometree
                     let ty_args =
                       List.map
                         (function ty ->
-                           Basics.apply_type (tcs_params tcs) tcs.tcs_regions ty ty_list rs)
+                           Basics.apply_type tcs ty p)
                         cs.cs_args in
                     tree_of_constr_with_args (tree_of_constr env)
                                            cs 0 depth obj ty_args
@@ -217,11 +217,7 @@ open Outcometree
                           | [] -> []
                           | lbl :: remainder ->
                               let ty_arg =
-                                Basics.apply_type
-                                  (tcs_params tcs)
-                                  tcs.tcs_regions
-                                  lbl.lbl_arg
-                                  ty_list rs in
+                                Basics.apply_type tcs lbl.lbl_arg p in
                               let lid = tree_of_label env lbl in
                               let v =
                                 tree_of_val (depth - 1) (Obj.field obj pos)

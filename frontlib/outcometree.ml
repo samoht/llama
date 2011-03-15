@@ -44,12 +44,15 @@ type out_value =
   | Oval_tuple of out_value list
   | Oval_variant of string * out_value option
 
+(* Region parameters x Effect parameters *)
+type out_effects = string list * string list
+
 type out_type =
   | Otyp_abstract
   | Otyp_alias of out_type * string
-  | Otyp_arrow of string * out_type * out_type * string list
+  | Otyp_arrow of string * out_type * out_type * out_effects
   | Otyp_class of bool * out_ident * out_type list
-  | Otyp_constr of out_ident * out_type list * string list
+  | Otyp_constr of out_ident * out_type list * out_effects
   | Otyp_manifest of out_type * out_type
   | Otyp_object of (string * out_type) list * bool option
   | Otyp_record of (string * bool * out_type) list
@@ -93,7 +96,7 @@ and out_sig_item =
   | Osig_type of out_type_decl * out_rec_status
   | Osig_value of string * out_type * string list
 and out_type_decl =
-  string * (string * (bool * bool)) list * string list * out_type *
+  string * (string * (bool * bool)) list * (int * int) * out_type *
   (out_type * out_type) list
 and out_rec_status =
   | Orec_not

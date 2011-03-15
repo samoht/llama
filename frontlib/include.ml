@@ -48,8 +48,9 @@ let rec subst_type subst = function
       Tarrow (subst_type subst ty1, subst_type subst ty2, phi) (* XXX: should we substitute effects as well ? *)
   | Ttuple tyl ->
       Ttuple (List.map (subst_type subst) tyl)
-  | Tconstr (tcs, tyl, rl) ->
-      Tconstr (subst_type_constructor subst tcs, List.map (subst_type subst) tyl, rl) (* XXX: subst regions ? *)
+  | Tconstr (tcs, p) ->
+      let p = { p with tcp_types = List.map (subst_type subst) p.tcp_types } in (* XXX: subst regions and effects ? *)
+      Tconstr (subst_type_constructor subst tcs, p) 
 
 (* ---------------------------------------------------------------------- *)
 (* Coercions in the format supported by the ocaml compiler.               *)

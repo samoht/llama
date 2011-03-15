@@ -35,17 +35,15 @@ let new_env () =
 (* ---------------------------------------------------------------------- *)
 
 let mutable_region_param f r =
+  let r = mutable_region_repr r in
   try List.assq r f.regions
   with Not_found ->
     let i = List.length f.regions in
     f.regions <- (r, i) :: f.regions;
     i
 
-let mutable_region f r =
-  mutable_region_param f (mutable_region_repr r)
-
-
 let mutable_effect_param f phi =
+  let phi = mutable_effect_repr phi in
   try List.assq phi f.effects
   with Not_found ->
     let i = List.length f.effects in
@@ -64,7 +62,8 @@ let rec mutable_effect f phi =
       | MEset (rs, fs) ->
           debug section_verbose "mutable_effect aux set";
           let rs' =
-            List.map (fun r -> EAregparam (mutable_region_param f r))
+            List.map
+              (fun r -> EAregparam (mutable_region_param f r))
               (Set.elements rs)
           and fs' = List.flatten (List.map aux (Set.elements fs)) in
           debug section_verbose "</set>";
@@ -76,7 +75,8 @@ let rec mutable_effect f phi =
     | MEvar -> Eparam (mutable_effect_param f phi)
     | MEset (rs, fs) ->
         let rs' =
-          List.map (fun r -> EAregparam (mutable_region_param f r))
+          List.map
+            (fun r -> EAregparam (mutable_region_param f r))
             (Set.elements rs)
         and fs' = List.flatten (List.map aux (Set.elements fs)) in
         Eset (List.rev_append rs' fs')
@@ -89,8 +89,13 @@ let rec mutable_type f = function
       Tarrow (mutable_type f ty1, mutable_type f ty2, mutable_effect f phi)
   | Mtuple tyl ->
       Ttuple (List.map (mutable_type f) tyl)
-  | Mconstr (tcs, tyl, r) ->
-      Tconstr (tcs, List.map (mutable_type f) tyl, List.map (mutable_region f) r)
+  | Mconstr (tcs, p) ->
+      let ip = {
+        tcp_types   = List.map (mutable_type f) p.m_types;
+        tcp_regions = List.map (mutable_region_param f) p.m_regions;
+        tcp_effects = List.map (mutable_effect_param f) p.m_effects;
+      } in
+      Tconstr (tcs, ip)
 
 and type_variable f tvar =
   match tvar.link with
@@ -228,28 +233,42 @@ and expression_option f = function
 
 let type_of_local_type subst local_args lt =
   let regions = ref [] in
-  let renumber r =
+  let renumber_r r =
     try
       List.assoc r !regions
     with Not_found ->
       let n = List.length !regions in
       regions := (r, n) :: !regions;
-      n
-  in
+      n in
+ let effects = ref [] in
+  let renumber_e e =
+    try
+      List.assoc e !effects
+    with Not_found ->
+      let n = List.length !effects in
+      effects := (e, n) :: !effects;
+      n in
   let rec aux = function
     | Lparam i ->
         Tparam i
     | Larrow (ty1, ty2, phi) ->
-        Tarrow (aux ty1, aux ty2, Effect.map_region_parameters renumber phi)
+        Tarrow (aux ty1, aux ty2, map_effect renumber_r renumber_e phi)
     | Ltuple tyl ->
         Ttuple (List.map aux tyl)
-    | Lconstr (tcs, tyl, rs) ->
-        Tconstr (tcs, List.map aux tyl, List.map renumber rs)
+    | Lconstr (tcs, lp) ->
+        let p = {
+          tcp_types   = List.map aux lp.l_types;
+          tcp_regions = List.map renumber_r lp.l_regions;
+          tcp_effects = List.map renumber_e lp.l_effects;
+        } in
+        Tconstr (tcs, p)
     | Lconstr_local ltcs ->
-        Tconstr (List.assq ltcs subst,
-                 local_args,
-                 List.map renumber ltcs.ltcs_regions)
-  in
+        let p = {
+          tcp_types   = local_args;
+          tcp_regions = List.map renumber_r ltcs.ltcs_regions;
+          tcp_effects = List.map renumber_e ltcs.ltcs_effects;
+        } in
+        Tconstr (List.assq ltcs subst, p) in
   aux lt
 
 let make_type_constructor_group modenv params ltcs_list =
@@ -263,6 +282,7 @@ let make_type_constructor_group modenv params ltcs_list =
         { tcs_group = tcsg;
           tcs_name = ltcs.ltcs_name;
           tcs_regions = List.length ltcs.ltcs_regions;
+          tcs_effects = List.length ltcs.ltcs_effects;
           tcs_mutable = ltcs.ltcs_mutable;
           tcs_kind = Tcs_abstract }
       end
@@ -320,6 +340,7 @@ let make_singleton_type modenv arity name =
     { tcs_group = tcsg;
       tcs_name = name;
       tcs_regions = 0;
+      tcs_effects = 0;
       tcs_mutable = false; (* DUMMY *)
       tcs_kind = Tcs_abstract } in
   tcsg

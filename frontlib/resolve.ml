@@ -6,6 +6,7 @@ open Base
 open Parsetree
 open Mutable_base
 open Primitive
+open Effect
 
 open Log
 let section = "resolve"
@@ -208,6 +209,7 @@ let lookup_type_variable pseudoenv name loc =
 let llama_type env ty =  (* val foo : 'a -> 'a *)
   let params = ref [] in
   let regions = ref 0 in
+  let effects = ref 0 in
   let rec aux ty =
     begin match ty.ptyp_desc with
         Ptyp_var name ->
@@ -220,23 +222,29 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
           end
       | Ptyp_arrow (ty1, ty2) -> (* XXX: we should be able to constraint effects *)
           incr effect_variables;
-          Tarrow (aux ty1, aux ty2, Effect.Eparam !effect_variables)
+          Tarrow (aux ty1, aux ty2, Eparam !effect_variables)
       | Ptyp_tuple tyl ->
           Ttuple (List.map aux tyl)
       | Ptyp_constr (lid, tyl) -> (* XXX: we should be able to constraint regions *)
           let tcs = lookup_type_constructor env lid ty.ptyp_loc in
-          let rs = shift_regions (standard_parameters tcs.tcs_regions) !regions in
-          debug section "llama_type %s: !regions = %d; tcs_regions = %d"
-            tcs.tcs_name
-            !regions
-            tcs.tcs_regions;
-          regions := !regions + tcs.tcs_regions;
           if List.length tyl <> tcs_arity tcs then
             raise (Error (ty.ptyp_loc, 
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-          let tyl' = List.map aux tyl in
+          let p = {
+            tcp_types   = List.map aux tyl;
+            tcp_regions = parameter_range !regions (!regions + tcs.tcs_regions);
+            tcp_effects = parameter_range !effects (!effects + tcs.tcs_effects);
+          } in
+          debug section "llama_type %s: !regions = %d; tcs_regions = %d !effects = %d; tcs_effects = %d"
+            tcs.tcs_name
+            !regions
+            tcs.tcs_regions
+            !effects
+            tcs.tcs_effects;
+          regions := !regions + tcs.tcs_regions;
+          effects := !effects + tcs.tcs_effects;
           debug section_verbose "</llama_type>";
-          Tconstr (tcs, tyl', rs)
+          Tconstr (tcs, p)
     end
   in
   aux ty
@@ -248,7 +256,7 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
         Lparam (lookup_type_variable pseudoenv name ty.ptyp_loc)
     | Ptyp_arrow (ty1, ty2) ->
         incr effect_variables;
-        Larrow (local_type pseudoenv root_tcs ty1, local_type pseudoenv root_tcs ty2, Effect.Eparam !effect_variables) (* XXX: no effects from parsing *)
+        Larrow (local_type pseudoenv root_tcs ty1, local_type pseudoenv root_tcs ty2, Eparam !effect_variables) (* XXX: no effects from parsing *)
     | Ptyp_tuple tyl ->
         Ltuple (List.map (local_type pseudoenv root_tcs) tyl)
     | Ptyp_constr (lid, tyl) ->
@@ -271,25 +279,33 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
         end;
         match gentcs with
           | Local ltcs ->
-              (* If we are doing the first pass, external region parameters are not yet computed *)
               Lconstr_local ltcs
 
           | Global tcs ->
             match root_tcs with
               | Some tcs' when tcs' == Predef.tcs_exn ->
-                let ltcsl = List.map (local_type pseudoenv root_tcs) tyl in
-                let rs = List.rev_map (fun _ -> 0) (standard_parameters tcs.tcs_regions) in (* XXX: ? *)
-                Lconstr (tcs, ltcsl, rs)
+                  let lp = {
+                    l_types   = List.map (local_type pseudoenv root_tcs) tyl;
+                    l_regions = List.rev_map (fun _ -> 0) (standard_parameters tcs.tcs_regions); (* XXX: ? *)
+                    l_effects = List.rev_map (fun _ -> 0) (standard_parameters tcs.tcs_effects); (* XXX: ? *)
+                  } in
+                  Lconstr (tcs, lp)
 
               | _ ->
-                let ltcsl = List.map (fun ty -> local_type pseudoenv root_tcs ty) tyl in
-                let rs = shift_regions (standard_parameters tcs.tcs_regions) !region_variables in
-                region_variables := !region_variables + tcs.tcs_regions;
-                debug section "global type %s[%d] rs=%s"
+                  let lp = {
+                    l_types   = List.map (fun ty -> local_type pseudoenv root_tcs ty) tyl; 
+                    l_regions = parameter_range !region_variables (!region_variables + tcs.tcs_regions);
+                    l_effects = parameter_range !effect_variables (!effect_variables + tcs.tcs_effects);
+                  } in
+                  region_variables := !region_variables + tcs.tcs_regions;
+                  effect_variables := !effect_variables + tcs.tcs_effects;
+                debug section "global type %s[%d|%d] rs=%s es=%s"
                   tcs.tcs_name
                   tcs.tcs_regions
-                  (Effect.string_of_regions rs);
-                Lconstr (tcs, ltcsl, rs)
+                  tcs.tcs_effects
+                  (string_of_region_parameters lp.l_regions)
+                  (string_of_effect_parameters lp.l_effects);
+                Lconstr (tcs, lp)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
   match ty.ptyp_desc with
@@ -302,7 +318,7 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
           ty
         end
     | Ptyp_arrow (ty1, ty2) ->
-        Marrow (mutable_type env ty1, mutable_type env ty2, Effect.new_mutable_effect ())
+        Marrow (mutable_type env ty1, mutable_type env ty2, new_mutable_effect ())
     | Ptyp_tuple tyl ->
         Mtuple (List.map (mutable_type env) tyl)
     | Ptyp_constr (lid, tyl) ->
@@ -310,8 +326,12 @@ let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
         if List.length tyl <> tcs_arity tcs then
           raise (Error (ty.ptyp_loc, 
                         Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
-        let regions = List.map (fun _ -> Effect.new_region_variable ()) (standard_parameters tcs.tcs_regions) in
-        Mconstr (tcs, List.map (mutable_type env) tyl, regions)
+        let parameters = {
+          m_types   = List.map (mutable_type env) tyl;
+          m_regions = List.map (fun _ -> new_mutable_region ()) (standard_parameters tcs.tcs_regions);
+          m_effects = List.map (fun _ -> new_mutable_effect ()) (standard_parameters tcs.tcs_effects);
+        }  in
+        Mconstr (tcs, parameters)
 
 (* ---------------------------------------------------------------------- *)
 (* Resolution of patterns.                                                *)
@@ -324,7 +344,7 @@ let pattern env pat =
     | Some bad_name -> raise (Error (pat.ppat_loc, Multiply_bound_variable bad_name))
   end;
   let values = List.map
-    (fun name -> name, new_variable name (new_type_variable ()) (Effect.new_mutable_effect ()))
+    (fun name -> name, new_variable name (new_type_variable ()) (new_mutable_effect ()))
     names in
   let rec pattern pat =
     { mpat_desc = pattern_aux pat;
@@ -384,7 +404,7 @@ let rec expression ctxt exp =
   { mexp_desc = expression_aux ctxt exp;
     mexp_loc = exp.pexp_loc;
     mexp_type = new_type_variable ();
-    mexp_effect = Effect.new_mutable_effect (); }
+    mexp_effect = new_mutable_effect (); }
 
 and expression_aux ctxt exp =
   match exp.pexp_desc with
@@ -452,7 +472,7 @@ and expression_aux ctxt exp =
     | Pexp_while (e1, e2) ->
         Mexp_while(expression ctxt e1, expression ctxt e2)
     | Pexp_for (name, e1, e2, dir_flag, e3) ->
-        let var = new_variable name (new_type_variable ()) (Effect.new_mutable_effect ()) in
+        let var = new_variable name (new_type_variable ()) (new_mutable_effect ()) in
         let big_ctxt = context_add_variable var ctxt in
         Mexp_for (var,
                   expression ctxt e1,
@@ -512,7 +532,7 @@ let is_recursive_abbrev =
   let rec occ seen = function
       Lparam _ -> false
     | Larrow (ty1, ty2, _) -> occ seen ty1 || occ seen ty2
-    | Ltuple tyl | Lconstr (_, tyl, _) -> List.exists (occ seen) tyl
+    | Ltuple tyl | Lconstr (_, {l_types = tyl}) -> List.exists (occ seen) tyl
     | Lconstr_local ltcs ->
         List.memq ltcs seen ||
           (match ltcs.ltcs_kind with
@@ -524,22 +544,21 @@ let is_recursive_abbrev =
       | _ -> false
 
 (* Get all the external region parameters + mutable internal ones *)
-let external_regions ltcs =
+let external_regions_and_effects ltcs =
   let mut = 
     if local_kind_is_mutable_record ltcs.ltcs_kind then (
       let x = [ !region_variables ] in
       incr region_variables;
       x
     ) else [] in
-  List.sort
-    compare
-    (mut @ local_kind_external_region_parameters ltcs.ltcs_kind)
+  let rs, es = local_kind_external_region_parameters ltcs.ltcs_kind in
+  mut @ rs, es
 
 (* Get all the external region parameters + transitive mutable internal ones *)
-let all_regions ltcs =
-  List.sort
-    compare
-    (union ltcs.ltcs_regions (local_kind_region_parameters ltcs.ltcs_kind))
+let all_regions_and_effects ltcs =
+  union
+    (ltcs.ltcs_regions, ltcs.ltcs_effects)
+    (local_kind_region_parameters ltcs.ltcs_kind)
 
 let type_declarations env pdecls =
   reset_region_variables ();
@@ -561,6 +580,7 @@ let type_declarations env pdecls =
         pdecl,
         { ltcs_name = pdecl.ptype_name;
           ltcs_regions = [];
+          ltcs_effects = [];
           ltcs_mutable = false;
           ltcs_kind = Ltcs_variant [] }
       ) pdecls
@@ -589,17 +609,27 @@ let type_declarations env pdecls =
        if is_recursive_abbrev ltcs then
          raise (Error (pdecl.ptype_loc, Recursive_abbrev ltcs.ltcs_name)))
     ltcs_list;
-  (* Then, fill external region parameters *)
+  (* Then, fill external region/effect parameters *)
   List.iter
     (fun (pdecl, ltcs) ->
-      ltcs.ltcs_regions <- external_regions ltcs;
-      debug section_verbose "External region for %s is %s" ltcs.ltcs_name (Effect.string_of_regions ltcs.ltcs_regions))
+      let rs, es = external_regions_and_effects ltcs in
+      ltcs.ltcs_regions <- rs;
+      ltcs.ltcs_effects <- es;
+      debug section_verbose "Type %s: external regions=%s; external effects=%s"
+        ltcs.ltcs_name
+        (string_of_region_parameters rs)
+        (string_of_effect_parameters es))
     ltcs_list;
-  (* Fill with valid region arity *)
+  (* Fill with valid region/effect parameters *)
   List.iter
     (fun (pdecl, ltcs) ->
-      ltcs.ltcs_regions <- all_regions ltcs;
-      debug section_verbose "Computing valid region for type %s: %s" ltcs.ltcs_name (Effect.string_of_regions ltcs.ltcs_regions))
+      let (rs, es) = all_regions_and_effects ltcs in
+      ltcs.ltcs_regions <- rs;
+      ltcs.ltcs_effects <- es;
+      debug section_verbose "Type %s: valid regions=%s; valid effects=%s"
+        ltcs.ltcs_name
+        (string_of_region_parameters rs)
+        (string_of_effect_parameters es))
     ltcs_list;
   (* Fill mutable flag *)
   List.iter

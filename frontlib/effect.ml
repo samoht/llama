@@ -8,23 +8,14 @@ let section_verbose = "effect+"
 
 type region_parameter = int
 type effect_parameter = int
-(*
-type region = { rname : int }
-*)
+
 type effect_atom =
   | EAparam of effect_parameter
   | EAregparam of region_parameter
-(*  | EAregion of region *)
 
 type effect =
   | Eparam of effect_parameter
   | Eset of effect_atom list
-
-
-let string_of_region r = "string_of_region"
-and string_of_regions l = "string_of_regions"
-and string_of_effect f = "string_of_effect" (* DUMMY *)
-
 
 let rec list_match f = function
   | [] -> []
@@ -37,32 +28,37 @@ let region_parameters = function
   | Eparam _ -> []
   | Eset l -> list_match (function EAregparam r -> Some r | _ -> None) l
 
-let map_region_parameters f = function
-  | Eparam p -> Eparam p
-  | Eset l ->
-      Eset (List.map (function EAregparam r -> EAregparam (f r) | a -> a) l)
+let effect_parameters = function
+  | Eparam i -> [i]
+  | Eset s   -> list_match (function EAparam i -> Some i | _ -> None) s
 
-(*
-(* Parameters are de Bruijn indices *)
-(* Structures are immutable *)
+let map_effect fn_region fn_effect = function
+  | Eparam e -> Eparam (fn_effect e)
+  | Eset s   ->
+    let aux = function
+      | EAparam e    -> EAparam (fn_effect e)
+      | EAregparam r -> EAregparam (fn_region r) in
+    Eset (List.map aux s)
 
-(* region parameter *)
-type region_parameter = int
+let string_of_region_parameter i =
+  "R" ^ string_of_int i
 
-let string_of_region i =
-  string_of_int i
+let string_of_effect_parameter i =
+  "E" ^ string_of_int i
 
-let string_of_regions = function
-  | [] -> ""
-  | l  -> Printf.sprintf "[%s]" (String.concat "," (List.map string_of_region l))
-    
-(* effect parameter : regions order is NOT important *)
-type effect = region_parameter list
+let string_of_effect e =
+  match e with
+  | Eparam i -> string_of_effect_parameter i
+  | Eset _   ->
+      let rs = List.map string_of_region_parameter (region_parameters e) in
+      let es = List.map string_of_effect_parameter (effect_parameters e) in
+      Printf.sprintf "{%s}" (String.concat "," (rs @ es))
 
-let string_of_effect = function
-  | [] -> ""
-  | l  -> Printf.sprintf "{%s}" (String.concat "," (List.map string_of_region l))
-*)
+let string_of_region_parameters r =
+  Printf.sprintf "[%s]" (String.concat "," (List.map string_of_region_parameter r))
+
+let string_of_effect_parameters e =
+  Printf.sprintf "[%s]" (String.concat "," (List.map string_of_effect_parameter e))
 
 (*******************)
 (* Mutable regions *)
@@ -79,7 +75,7 @@ type mutable_region_variable = {
 and mutable_region = mutable_region_variable
 
 (* Returns a fresh region variable *)
-let new_region_variable =
+let new_mutable_region =
   let x = ref 0 in
   let aux () =
     incr x;
@@ -97,7 +93,7 @@ let rec mutable_region_repr r =
     | None   -> r
     | Some v -> mutable_region_repr v
 
-exception Unify
+exception Unify_regions
 
 let unify_region r1 r2 =
   let r1 = mutable_region_repr r1 in
@@ -115,7 +111,7 @@ let rec unify_regions r1s r2s msg =
     debug section "ERROR: cannot unify region parameters %s and %s"
       (string_of_mutable_regions r1s)
       (string_of_mutable_regions r2s);
-    raise Unify
+    raise Unify_regions
   end
 
 
@@ -143,7 +139,7 @@ and mutable_effect_body =
 let compare_effects e f =
   compare e.id f.id
 
-let empty_set = Set.empty_custom compare_effects
+let empty_effect_set = Set.empty_custom compare_effects
 
 
 (* Returns a fresh effect variable *)
@@ -155,7 +151,7 @@ let new_mutable_effect =
 
 let new_empty_effect () =
   let e = new_mutable_effect () in
-  e.body <- MEset (empty_region_set, empty_set);
+  e.body <- MEset (empty_region_set, empty_effect_set);
   e
 
 
@@ -198,7 +194,7 @@ exception Found of
 let rec toto x phi =
   match phi.body with
     | MElink phi' -> debug section_verbose "toto:link"; toto x phi'
-    | _ when phi == x -> debug section_verbose "toto:phi==x"; Some (empty_region_set, empty_set, empty_set)
+    | _ when phi == x -> debug section_verbose "toto:phi==x"; Some (empty_region_set, empty_effect_set, empty_effect_set)
     | MEvar -> debug section_verbose "toto:var"; None
     | MEset (rs, fs) -> debug section_verbose "toto:set";
        try
@@ -245,7 +241,7 @@ let body_union x y =
         MEset (Set.union rs1 rs2, Set.union es1 es2)
 
 
-let unify e f =
+let unify_effect e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
@@ -260,7 +256,7 @@ let unify e f =
 let half_unify e b =
   let f = new_mutable_effect () in
   f.body <- b;
-  unify e f
+  unify_effect e f
 
 (* Never used
 let rec mem f b =
@@ -279,7 +275,7 @@ let unify e f =
      f.body <- MElink e)
 *)
 
-(* Stdlib ? *)
+(* XXX: move to Stdlib *)
 let set_of_list init l =
   List.fold_left (fun s -> fun x -> Set.add x s) init l
 
@@ -288,7 +284,7 @@ let set_of_list init l =
    that e recursively contains *)
 let rec contents e =
   match e.body with
-    | MEvar -> empty_region_set, Set.add e empty_set
+    | MEvar -> empty_region_set, Set.add e empty_effect_set
     | MElink e' -> contents e'
     | MEset (rs, es) ->
         let rs', es' = set_contents es in
@@ -301,4 +297,4 @@ and set_contents s =
       let rs', es' = contents e in
       Set.union rs rs', Set.union es es')
     s
-    (empty_region_set, empty_set)
+    (empty_region_set, empty_effect_set)
