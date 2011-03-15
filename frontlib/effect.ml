@@ -181,14 +181,60 @@ let rec mutable_effect_repr phi =
     | _ -> phi
 
 
-(*
-let rec mem f b =
-  assert ((mutable_effect_repr f) == f);
-  match b with
-    | MEvar -> false
-    | MEset (_, fs) -> Set.exists (fun f' -> mem f (mutable_effect_repr f').body) fs
-    | MElink f' -> mem f (mutable_effect_repr f').body
+
+exception Found of
+    mutable_effect * mutable_region Set.t *
+      mutable_effect Set.t * mutable_effect Set.t
+
+(* Parameters: two mutable effects x and phi
+   Assert: no loop in phi; x is a representant
+   Effect: no side effects
+   Result: if x \notin phi then None else
+     consider found path to x in phi:
+     Some (regions in effects on the path,
+           effects in effects on the path,
+           effects (representants) on the path)
 *)
+let rec toto x phi =
+  match phi.body with
+    | MElink phi' -> debug section_verbose "toto:link"; toto x phi'
+    | _ when phi == x -> debug section_verbose "toto:phi==x"; Some (empty_region_set, empty_set, empty_set)
+    | MEvar -> debug section_verbose "toto:var"; None
+    | MEset (rs, fs) -> debug section_verbose "toto:set";
+       try
+         Set.iter
+           (fun phi' ->
+             match toto x phi' with
+               | None -> ()
+               | Some (rs', fs', path) -> raise (Found (phi', rs', fs', path)) )
+           fs;
+         None
+       with Found (phi', rs', fs', path) ->
+         Some (Set.union rs rs',
+               Set.union (Set.remove phi' fs) fs',
+               Set.add phi' path)
+
+
+(* Parameters: two mutable effects x and phi
+   Assert: no loop in phi; x is a representant
+   Effect: if x \in phi, each path that leads to x in phi is flattened
+     and x is removed
+   Result: no result
+*)
+let rec eliminate x phi =
+  debug section_verbose "eliminate";
+  let phi = mutable_effect_repr phi in
+  let loop = ref true in
+  while !loop do
+    debug section_verbose "eliminate:loop";
+    match toto x phi with
+      | None -> loop := false
+      | Some (rs, fs, path) ->
+          phi.body <- MEset (rs, fs);
+          Set.iter (fun phi' -> eliminate phi' phi; phi'.body <- MElink phi)
+            path
+  done
+
 
 let body_union x y =
   match x, y with
@@ -198,13 +244,40 @@ let body_union x y =
     | MEset (rs1, es1), MEset (rs2, es2) ->
         MEset (Set.union rs1 rs2, Set.union es1 es2)
 
+
+let unify e f =
+  let e = mutable_effect_repr e
+  and f = mutable_effect_repr f in
+  if e != f then
+    (eliminate e f;
+     eliminate f e;
+     let e = mutable_effect_repr e
+     and f = mutable_effect_repr f in
+     e.body <- body_union e.body f.body;
+     f.body <- MElink e)
+
+
+let half_unify e b =
+  let f = new_mutable_effect () in
+  f.body <- b;
+  unify e f
+
+(* Never used
+let rec mem f b =
+  assert ((mutable_effect_repr f) == f);
+  match b with
+    | MEvar -> false
+    | MEset (_, fs) -> Set.exists (fun f' -> mem f (mutable_effect_repr f').body) fs
+    | MElink f' -> mem f (mutable_effect_repr f').body
+
+(* Wrong *)
 let unify e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
     (e.body <- body_union e.body f.body;
      f.body <- MElink e)
-
+*)
 
 (* Stdlib ? *)
 let set_of_list init l =

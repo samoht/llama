@@ -253,16 +253,15 @@ let formatstring loc fmt =
 (* ---------------------------------------------------------------------- *)
 
 let rec expression exp =
-  let ty, rhol, phil = expression_aux exp
-  and phi = mutable_effect_repr exp.mexp_effect in
+  let ty, rhol, phil = expression_aux exp in
   let rhos = set_of_list empty_region_set rhol
   and phis = set_of_list Effect.empty_set phil in
-  phi.body <- Effect.body_union phi.body (MEset (rhos, phis));
+  half_unify exp.mexp_effect (MEset (rhos, phis));
   (try
      unify exp.mexp_type ty;
    with Unify | Effect.Unify ->
      raise (Error (exp.mexp_loc, Unknown)));
-  ty, phi
+  ty, exp.mexp_effect
 
 and expression_aux exp : mutable_type * mutable_region list * mutable_effect list =
   match exp.mexp_desc with
