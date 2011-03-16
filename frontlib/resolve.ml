@@ -657,21 +657,21 @@ let signature_item env psig =
   { msig_desc =
       begin match psig.psig_desc with
         | Psig_value (s, te) ->
-            debug section "Processing signature : val %s." s;
+            debug section_verbose "Processing signature : val %s." s;
             Msig_value (s, llama_type env te)
         | Psig_external(id,te,pr) ->
-            debug section "Processing signature : external val %s." id;
+            debug section_verbose "Processing signature : external val %s." id;
             Msig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
-            debug section "Processing signature : type.";
+            debug section_verbose "Processing signature : type.";
             let params, decls = type_declarations env pdecls in
             Msig_type (params, decls)
         | Psig_exception (name, args) ->
-            debug section "Processing signature : exception %s." name;
+            debug section_verbose "Processing signature : exception %s." name;
             let pseudoenv = pseudoenv_create env in
             Msig_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Psig_open name ->
-            debug section "Processing signature : open %s." name;
+            debug section_verbose "Processing signature : open %s." name;
             Msig_open (name, lookup_module (Env.modenv env) name psig.psig_loc)
       end;
     msig_loc = psig.psig_loc } in
@@ -705,27 +705,27 @@ let structure_item env pstr =
   { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->
-            debug section "Processing type.";
+            debug section_verbose "Processing type.";
             let params, decls = type_declarations env pdecls in
             Mstr_type (params, decls)
         | Pstr_let (rec_flag, ppat_pexp_list) ->
-            debug section "Processing let.";
+            debug section_verbose "Processing let.";
             Mstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
         | Pstr_eval pexp ->
-            debug section "Processing eval.";
+            debug section_verbose "Processing eval.";
             Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
-            debug section "Processing external type %s." name;
+            debug section_verbose "Processing external type %s." name;
             Mstr_external_type (List.length params, name)
         | Pstr_external (name, pty, decl) ->
-            debug section "Processing external value %s." name;
+            debug section_verbose "Processing external value %s." name;
             Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
-            debug section "Processing exception %s." name;
+            debug section_verbose "Processing exception %s." name;
             let pseudoenv = pseudoenv_create env in
             Mstr_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Pstr_open name ->
-            debug section "Processing open %s." name;
+            debug section_verbose "Processing open %s." name;
             Mstr_open (name, lookup_module (Env.modenv env) name pstr.pstr_loc)
       end;
     mstr_loc = pstr.pstr_loc } in
