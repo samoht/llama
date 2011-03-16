@@ -13,8 +13,10 @@ type mutable_type =
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_parameters
 
-and mutable_type_variable =
-  { mutable link : mutable_type option }
+and mutable_type_variable = {
+  mutable link : mutable_type option;
+  mutable mark : int option;
+}
 
 and mutable_parameters = {
   m_types   : mutable_type list;
@@ -26,10 +28,12 @@ and mutable_parameters = {
 (* Variables.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-type mutable_variable =
-  { mvar_name : string;
-    mvar_type : mutable_type;
-    mvar_effect : mutable_effect; }
+type mutable_variable = {
+  mvar_name   : string;
+  mvar_type   : mutable_type;
+  mvar_effect : mutable_effect;
+  mutable mvar_mark : variable option;
+}
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -158,7 +162,7 @@ and local_kind_is_mutable = function
   | Ltcs_record l -> List.exists (fun (_, mut, _) -> mut = Mutable) l
   | Ltcs_abbrev t -> local_is_mutable t
 
-let union (r1,e1) (r2,e2) =
+let pair_union (r1,e1) (r2,e2) =
   List.fold_left
     (fun accu r -> if List.mem r accu then accu else r::accu)
     r1 r2,
@@ -176,14 +180,14 @@ let rec local_kind_region_parameters internals k =
     | Larrow (ty1, ty2, phi) ->
         let rs = region_parameters phi in
         let es = effect_parameters phi in
-        local (local (union accu (rs, es)) ty1) ty2
+        local (local (pair_union accu (rs, es)) ty1) ty2
     | Ltuple tyl             -> List.fold_left local accu tyl
     | Lconstr (tcs, p)       ->
-        let accu = union (p.l_regions, p.l_effects) accu in
+        let accu = pair_union (p.l_regions, p.l_effects) accu in
         List.fold_left local accu p.l_types
     | Lconstr_local l        ->
         if internals && not (List.mem l.ltcs_name !saw) then (
-          let accu = union accu (l.ltcs_regions, l.ltcs_effects) in
+          let accu = pair_union accu (l.ltcs_regions, l.ltcs_effects) in
           saw := l.ltcs_name :: !saw;
         local_kind accu l.ltcs_kind
       ) else
@@ -249,7 +253,8 @@ type mutable_structure = mutable_structure_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let new_type_variable () = Mvar { link = None }
+let new_type_variable () =
+  Mvar { link = None; mark = None }
 
 let params ts r = {
   m_types   = ts;
@@ -301,14 +306,16 @@ let instantiate_effect inst_r inst_e e =
     (* instantiate the region set *)
     let rs = region_parameters e in
     let rs = List.map (fun r -> List.assq r inst_r) rs in
-    let rs = set_of_list empty_region_set rs in
     (* instantiate the effect set *)
     let es = effect_parameters e in
     let es = List.map (fun e -> List.assq e inst_e) es in
-    let es = set_of_list empty_effect_set es in
     (* build a new effect variable to store the instantiations *)
     let res = new_mutable_effect () in
-    res.body <- MEset (rs, es);
+    let s = {
+      me_regions = rs;
+      me_effects = es;
+    } in
+    res.body <- MEset s;
     res
 
 (* inst   : int -> type variable

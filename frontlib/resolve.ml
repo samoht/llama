@@ -44,9 +44,11 @@ let effect_variables = ref 0
 let reset_effect_variables () = effect_variables := 0
 
 let new_variable name ty phi = {
-  mvar_name = name;
-  mvar_type = ty;
-  mvar_effect = phi; }
+  mvar_name   = name;
+  mvar_type   = ty;
+  mvar_effect = phi;
+  mvar_mark   = None;
+}
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities for checking things.                                         *)
@@ -556,7 +558,7 @@ let external_regions_and_effects ltcs =
 
 (* Get all the external region parameters + transitive mutable internal ones *)
 let all_regions_and_effects ltcs =
-  union
+  pair_union
     (ltcs.ltcs_regions, ltcs.ltcs_effects)
     (local_kind_region_parameters ltcs.ltcs_kind)
 

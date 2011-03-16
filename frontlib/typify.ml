@@ -256,9 +256,11 @@ let formatstring loc fmt =
 
 let rec expression exp =
   let ty, rhol, phil = expression_aux exp in
-  let rhos = set_of_list empty_region_set rhol
-  and phis = set_of_list empty_effect_set phil in
-  half_unify exp.mexp_effect (MEset (rhos, phis));
+  let s = {
+    me_regions = rhol;
+    me_effects = phil;
+  } in
+  half_unify exp.mexp_effect (MEset s);
   (try
      unify exp.mexp_type ty;
    with Unify | Unify_regions ->
@@ -314,10 +316,11 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         let ty_arg = new_type_variable () in
         let ty_res = new_type_variable () in
         let phi = new_mutable_effect () in
-        phi.body <-
-          MEset (empty_region_set,
-                 set_of_list empty_effect_set
-                   (caselist ty_arg ty_res pat_exp_list));
+        let s = {
+          me_regions = [];
+          me_effects = caselist ty_arg ty_res pat_exp_list;
+        } in
+        phi.body <- MEset s;
         Marrow (ty_arg, ty_res, phi), [], []
     | Mexp_try (body, pat_exp_list) ->
         let ty_arg = mutable_type_exn (new_mutable_region ()) in

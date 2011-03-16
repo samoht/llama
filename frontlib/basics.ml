@@ -85,7 +85,7 @@ let renumber_parameters ty =
   let rec aux i = function
     | []          -> []
     | (var :: tl) -> (var, i) :: aux (i+1) tl in
-  let sv = aux  0 (type_parameters ty) in
+  let sv = aux 0 (type_parameters ty) in
   let sv = List.map (fun (v, i) -> (v, Tparam i)) sv in
   let sr = aux 0 (region_parameters ty) in
   let se = aux 0 (effect_parameters ty) in

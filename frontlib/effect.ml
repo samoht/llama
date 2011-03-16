@@ -9,36 +9,31 @@ let section_verbose = "effect+"
 type region_parameter = int
 type effect_parameter = int
 
-type effect_atom =
-  | EAparam of effect_parameter
-  | EAregparam of region_parameter
+type effects = {
+  e_regions: region_parameter list;
+  e_effects: effect_parameter list;
+}
 
 type effect =
   | Eparam of effect_parameter
-  | Eset of effect_atom list
-
-let rec list_match f = function
-  | [] -> []
-  | h::t ->
-      match f h with
-        | None -> list_match f t
-        | Some x -> x :: list_match f t
+  | Eset   of effects
 
 let region_parameters = function
   | Eparam _ -> []
-  | Eset l -> list_match (function EAregparam r -> Some r | _ -> None) l
+  | Eset s   -> s.e_regions
 
 let effect_parameters = function
   | Eparam i -> [i]
-  | Eset s   -> list_match (function EAparam i -> Some i | _ -> None) s
+  | Eset s   -> s.e_effects 
 
 let map_effect fn_region fn_effect = function
   | Eparam e -> Eparam (fn_effect e)
-  | Eset s   ->
-    let aux = function
-      | EAparam e    -> EAparam (fn_effect e)
-      | EAregparam r -> EAregparam (fn_region r) in
-    Eset (List.map aux s)
+  | Eset s   -> 
+      let s = {
+        e_regions = List.map fn_region s.e_regions;
+        e_effects = List.map fn_effect s.e_effects;
+      } in
+      Eset s
 
 let string_of_region_parameter i =
   "R" ^ string_of_int i
@@ -69,7 +64,8 @@ let string_of_effect_parameters e =
 (* Mutable regions = mutable regions variables *)
 type mutable_region_variable = {
   rid           : int;
-  mutable rlink : mutable_region option; 
+  mutable rlink : mutable_region option;
+  mutable rmark : int option;
 }
 
 and mutable_region = mutable_region_variable
@@ -79,7 +75,7 @@ let new_mutable_region =
   let x = ref 0 in
   let aux () =
     incr x;
-    { rid = !x; rlink = None } in
+    { rid = !x; rlink = None; rmark = None } in
   aux
 
 let string_of_mutable_region r =
@@ -114,236 +110,180 @@ let rec unify_regions r1s r2s msg =
     raise Unify_regions
   end
 
-
 let compare_regions r s =
   compare r.rid s.rid
-
-let empty_region_set = Set.empty_custom compare_regions
-
 
 (*******************)
 (* Mutable effects *)
 (*******************)
 
-type mutable_effect =
-  { id : int;
-    mutable body : mutable_effect_body }
+type mutable_effect_variable = {
+  id            : int;
+  mutable body  : mutable_effect_body;
+  mutable emark : int option;
+}
+
+and mutable_effects = {
+  me_regions : mutable_region list;
+  me_effects : mutable_effect list;
+}
 
 and mutable_effect_body =
-  | MEvar                                (* Simple variable *)
-  | MElink of mutable_effect             (* Union-find link *)
-  | MEset of mutable_region Set.t * mutable_effect Set.t
-                          (* Regions set and effects union *)
+  | MEvar
+  | MElink of mutable_effect
+  | MEset  of mutable_effects
 
+and mutable_effect = mutable_effect_variable
+
+(* XXX: should be in the stdlib *)
+let union l1 l2 =
+  List.fold_left (fun accu e1 -> if List.mem e1 accu then accu else e1::accu) l2 l1
+
+let remove x l =
+  List.filter ((!=) x) l
+
+let add x l =
+  if List.mem x l then l else x::l
+
+(* l1 / l2 *)
+let diff l1 l2 =
+  List.fold_left (fun accu e1 -> if List.mem e1 l2 then accu else e1::accu) [] l1
+
+let region_and_effect_variables e =
+  let rec aux (rs, es) e =
+    match e.body with
+      | MEvar     -> (rs, add e es)
+      | MElink e' -> aux (rs, es) e
+      | MEset s   -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
+  aux ([], []) e
 
 let compare_effects e f =
   compare e.id f.id
-
-let empty_effect_set = Set.empty_custom compare_effects
-
 
 (* Returns a fresh effect variable *)
 let new_mutable_effect =
   let x = ref 0 in
   fun () ->
     incr x;
-    { id = !x; body = MEvar }
+    { id = !x; body = MEvar; emark = None }
 
 let new_empty_effect () =
   let e = new_mutable_effect () in
-  e.body <- MEset (empty_region_set, empty_effect_set);
+  let body = {
+    me_regions = [];
+    me_effects = [];
+  } in
+  e.body <- MEset body;
   e
-
 
 let string_of_mutable_effect e =
   "E" ^ string_of_int e.id
 
 let string_of_mutable_effect_body = function
-  | MEvar -> ""
+  | MEvar    -> ""
   | MElink v -> "->" ^ string_of_mutable_effect v
-  | MEset (rs, es) -> 
-    Printf.sprintf "{%s}"
-      (String.concat ","
-         ((List.map string_of_mutable_region (Set.elements rs))
-          @ (List.map string_of_mutable_effect (Set.elements es))))
+  | MEset  s ->
+      let rs = List.map string_of_mutable_region s.me_regions in
+      let es = List.map string_of_mutable_effect s.me_effects in
+      Printf.sprintf "{%s|%s}" (String.concat "," rs) (String.concat "," es)
 
 let long_string_of_mutable_effect phi =
   string_of_mutable_effect phi ^ string_of_mutable_effect_body phi.body
-
 
 let rec mutable_effect_repr phi =
   match phi.body with
     | MElink v -> mutable_effect_repr v
     | _ -> phi
 
-
-(*
-exception Found of
-    mutable_effect * mutable_region Set.t *
-      mutable_effect Set.t * mutable_effect Set.t
-
-(* Parameters: two mutable effects x and phi
-   Assert: no loop in phi; x is a representant
-   Effect: no side effects
-   Result: if x \notin phi then None else
-     consider found path to x in phi:
-     Some (regions in effects on the path,
-           effects in effects on the path,
-           effects (representants) on the path)
-*)
-let rec toto x phi =
-  match phi.body with
-    | MElink phi' -> debug section_verbose "toto:link"; toto x phi'
-    | _ when phi == x -> debug section_verbose "toto:phi==x"; Some (empty_region_set, empty_effect_set, empty_effect_set)
-    | MEvar -> debug section_verbose "toto:var"; None
-    | MEset (rs, fs) -> debug section_verbose "toto:set";
-       try
-         Set.iter
-           (fun phi' ->
-             match toto x phi' with
-               | None -> ()
-               | Some (rs', fs', path) -> raise (Found (phi', rs', fs', path)) )
-           fs;
-         None
-       with Found (phi', rs', fs', path) ->
-         Some (Set.union rs rs',
-               Set.union (Set.remove phi' fs) fs',
-               Set.add phi' path)
-
-
-(* Parameters: two mutable effects x and phi
-   Assert: no loop in phi; x is a representant
-   Effect: if x \in phi, each path that leads to x in phi is flattened
-     and x is removed
-   Result: no result
-*)
-let rec eliminate x phi =
-  debug section_verbose "eliminate";
-  let phi = mutable_effect_repr phi in
-  let loop = ref true in
-  while !loop do
-    debug section_verbose "eliminate:loop";
-    match toto x phi with
-      | None -> loop := false
-      | Some (rs, fs, path) ->
-          phi.body <- MEset (rs, fs);
-          Set.iter (fun phi' -> eliminate phi' phi; phi'.body <- MElink phi)
-            path
-  done
-  *)
-
 let body_union x y =
   match x, y with
     | MElink _, _ | _, MElink _ -> invalid_arg "body_union"
     | MEvar, _ -> y
     | _, MEvar -> x
-    | MEset (rs1, es1), MEset (rs2, es2) ->
-        MEset (Set.union rs1 rs2, Set.union es1 es2)
-
-(*
-let unify_effect e f =
-  let e = mutable_effect_repr e
-  and f = mutable_effect_repr f in
-  if e != f then
-    (eliminate e f;
-     eliminate f e;
-     let e = mutable_effect_repr e
-     and f = mutable_effect_repr f in
-     if e != f then (* DUMMY *)
-       (e.body <- body_union e.body f.body;
-        f.body <- MElink e))
-    *)
-
-(* Never used
-let rec mem f b =
-  assert ((mutable_effect_repr f) == f);
-  match b with
-    | MEvar -> false
-    | MEset (_, fs) -> Set.exists (fun f' -> mem f (mutable_effect_repr f').body) fs
-    | MElink f' -> mem f (mutable_effect_repr f').body
-
-(* Wrong *)
-let unify e f =
-  let e = mutable_effect_repr e
-  and f = mutable_effect_repr f in
-  if e != f then
-    (e.body <- body_union e.body f.body;
-     f.body <- MElink e)
-*)
-
+    | MEset s1, MEset s2 ->
+       let s = {
+         me_regions = union s1.me_regions s2.me_regions;
+         me_effects = union s1.me_effects s2.me_effects;
+       } in
+       MEset s
 
 (* Unification : clearer *)
 
 (* Effect: none
    Result: effects on the paths leading to an effect of s in phi *)
-let rec paths_to s phi =
+let rec paths_to_aux s phi =
   (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
   match phi.body with
     | MElink phi' ->
         debug section_verbose "paths_to: link";
-        paths_to s phi'
+        paths_to_aux s phi'
     | MEvar ->
         debug section_verbose "paths_to: var";
-        if Set.mem phi s then Some empty_effect_set else None
-    | MEset (_, phis) ->
+        if List.mem phi s then Some [] else None
+    | MEset { me_effects=phis } ->
         debug section_verbose "paths_to: set";
-        let bool = ref (Set.mem phi s)
-        and set = ref empty_effect_set in
-        Set.iter
+        let bool = ref (List.memq phi s)
+        and set  = ref [] in
+        List.iter
           (fun phi' ->
-            match paths_to s phi' with
-              | Some s' -> bool := true; set := Set.union !set s'
+            match paths_to_aux s phi' with
+              | Some s' -> bool := true; set := union !set s'
               | None -> ())
           phis;
         if !bool then Some !set else None
 
 let paths_to s phi =
-  match paths_to s phi with
+  match paths_to_aux s phi with
     | Some s' -> s'
-    | None -> empty_effect_set
+    | None    -> []
 
 
 (* Effect: none
    Result: regions and effects of <phi> that directly belong to effects of
      <paths> (except those that are in <paths>) *)
+(* XXX: very similar to region_and_effect_variables below (but with a paht) *)
 let rec contents paths phi =
-  (* assert (Set.for_all (fun f -> mutable_effect_repr f == f) paths); *)
+  (* assert (List.for_all (fun f -> mutable_effect_repr f == f) paths); *)
   match phi.body with
     | MElink phi' ->
         debug section_verbose "contents: link";
         contents paths phi'
-    | _ when not (Set.mem phi paths) ->
+    | _ when not (List.mem phi paths) ->
         debug section_verbose "contents: phi \notin paths";
-        empty_region_set, Set.add phi empty_effect_set
+        [], [phi]
     | MEvar ->
         debug section_verbose "contents: var";
-        empty_region_set, empty_effect_set
-    | MEset (rs, fs) ->
+        [], []
+    | MEset s ->
         debug section_verbose "contents: set";
-        let rs' = ref rs
-        and fs' = ref empty_effect_set in
-        Set.iter
+        let rs' = ref s.me_regions
+        and fs' = ref [] in
+        List.iter
           (fun phi' ->
             let rs, fs = contents paths phi' in
-            rs' := Set.union !rs' rs;
-            fs' := Set.union !fs' fs)
-          fs;
+            rs' := union !rs' rs;
+            fs' := union !fs' fs)
+          s.me_effects;
         !rs', !fs'
 
 
 (* Effect: Merge all effects of set s in phi
    Result: none *)
-let flatten s phi =
-  let todo = ref s
-  and seen = ref empty_effect_set in
-  while not (Set.is_empty !todo) do
+let flatten l phi =
+  let todo = ref l
+  and seen = ref [] in
+  while !todo <> [] do
     let paths = paths_to !todo phi in
-    seen := Set.union !todo !seen;
-    todo := Set.diff paths !seen
+    seen := union !todo !seen;
+    todo := diff paths !seen
   done;
-  (let x, y = contents !seen phi in
-   phi.body <- MEset (x, y));
-  Set.iter (fun phi' -> phi'.body <- MElink phi) (Set.diff !seen s)
+  let x, y = contents !seen phi in
+  let s = {
+    me_regions = x;
+    me_effects = y;
+  } in
+  phi.body <- MEset s;
+  List.iter (fun phi' -> phi'.body <- MElink phi) (diff !seen l)
 
 
 let unify_effect e f =
@@ -360,28 +300,3 @@ let half_unify e b =
   unify_effect e f
 
 (* </Unification> *)
-
-
-(* XXX: move to Stdlib *)
-let set_of_list init l =
-  List.fold_left (fun s -> fun x -> Set.add x s) init l
-
-
-(* Returns the set of the regions and the set of the simple effect variables
-   that e recursively contains *)
-let rec contents e =
-  match e.body with
-    | MEvar -> empty_region_set, Set.add e empty_effect_set
-    | MElink e' -> contents e'
-    | MEset (rs, es) ->
-        let rs', es' = set_contents es in
-        (set_of_list rs' (List.map mutable_region_repr (Set.elements rs)),
-         es')
-
-and set_contents s =
-  Set.fold
-    (fun e (rs, es) ->
-      let rs', es' = contents e in
-      Set.union rs rs', Set.union es es')
-    s
-    (empty_region_set, empty_effect_set)
