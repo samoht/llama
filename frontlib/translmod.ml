@@ -265,8 +265,8 @@ let transl_store_implementation modenv module_name (str, restr) =
 (* Compile a toplevel phrase *)
 
 let toploop_ident = Makeident.of_module (Module "Toploop")
-let toploop_getvalue_pos = 0 (* position of getvalue in module Toploop *)
-let toploop_setvalue_pos = 1 (* position of setvalue in module Toploop *)
+let toploop_getvalue_pos = 1 (* position of getvalue in module Toploop *)
+let toploop_setvalue_pos = 2 (* position of setvalue in module Toploop *)
 
 let aliased_idents = ref (Ident.empty : (Ident.t, string) Tbl.t)
 
