@@ -562,6 +562,7 @@ let all_regions_and_effects ltcs =
 
 let type_declarations env pdecls =
   reset_region_variables ();
+  reset_effect_variables ();
   let pdecl1 = List.hd pdecls in
   let params = pdecl1.ptype_params in
   if find_duplicate params <> None then
@@ -651,6 +652,7 @@ let external_declaration decl ty =
 let signature_item env psig =
   reset_type_variables ();
   reset_region_variables ();
+  reset_effect_variables ();
   let res =
   { msig_desc =
       begin match psig.psig_desc with
@@ -698,6 +700,7 @@ let top_bindings env rec_flag ppat_pexp_list =
 let structure_item env pstr =
   reset_type_variables ();
   reset_region_variables ();
+  reset_effect_variables ();
   let res =
   { mstr_desc =
       begin match pstr.pstr_desc with
