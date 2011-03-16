@@ -44,9 +44,11 @@ let effect_variables = ref 0
 let reset_effect_variables () = effect_variables := 0
 
 let new_variable name ty phi = {
-  mvar_name = name;
-  mvar_type = ty;
-  mvar_effect = phi; }
+  mvar_name   = name;
+  mvar_type   = ty;
+  mvar_effect = phi;
+  mvar_mark   = None;
+}
 
 (* ---------------------------------------------------------------------- *)
 (* Utilities for checking things.                                         *)

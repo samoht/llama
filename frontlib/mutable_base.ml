@@ -13,8 +13,10 @@ type mutable_type =
   | Mtuple of mutable_type list
   | Mconstr of type_constructor * mutable_parameters
 
-and mutable_type_variable =
-  { mutable link : mutable_type option }
+and mutable_type_variable = {
+  mutable link : mutable_type option;
+  mutable mark : int option;
+}
 
 and mutable_parameters = {
   m_types   : mutable_type list;
@@ -26,10 +28,12 @@ and mutable_parameters = {
 (* Variables.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-type mutable_variable =
-  { mvar_name : string;
-    mvar_type : mutable_type;
-    mvar_effect : mutable_effect; }
+type mutable_variable = {
+  mvar_name   : string;
+  mvar_type   : mutable_type;
+  mvar_effect : mutable_effect;
+  mutable mvar_mark : variable option;
+}
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -249,7 +253,8 @@ type mutable_structure = mutable_structure_item list
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
-let new_type_variable () = Mvar { link = None }
+let new_type_variable () =
+  Mvar { link = None; mark = None }
 
 let params ts r = {
   m_types   = ts;

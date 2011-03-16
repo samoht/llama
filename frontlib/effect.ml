@@ -65,6 +65,7 @@ let string_of_effect_parameters e =
 type mutable_region_variable = {
   rid           : int;
   mutable rlink : mutable_region option;
+  mutable rmark : int option;
 }
 
 and mutable_region = mutable_region_variable
@@ -74,7 +75,7 @@ let new_mutable_region =
   let x = ref 0 in
   let aux () =
     incr x;
-    { rid = !x; rlink = None } in
+    { rid = !x; rlink = None; rmark = None } in
   aux
 
 let string_of_mutable_region r =
@@ -117,8 +118,9 @@ let compare_regions r s =
 (*******************)
 
 type mutable_effect_variable = {
-  id           : int;
-  mutable body : mutable_effect_body
+  id            : int;
+  mutable body  : mutable_effect_body;
+  mutable emark : int option;
 }
 
 and mutable_effects = {
@@ -159,7 +161,7 @@ let new_mutable_effect =
   let x = ref 0 in
   fun () ->
     incr x;
-    { id = !x; body = MEvar }
+    { id = !x; body = MEvar; emark = None }
 
 let new_empty_effect () =
   let e = new_mutable_effect () in

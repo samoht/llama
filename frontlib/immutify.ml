@@ -18,39 +18,43 @@ exception Error of Location.t * error
 (* Common environment for all the maps.                                   *)
 (* ---------------------------------------------------------------------- *)
 
-type env =
-  { mutable type_variables : (mutable_type_variable * parameter) list;
-    mutable variables : (mutable_variable * variable) list;
-    mutable regions : (mutable_region_variable * region_parameter) list;
-    mutable effects : (mutable_effect * effect_parameter) list }
+type env = {
+  mutable variables : int;
+  mutable regions   : int;
+  mutable effects   : int;
+}
 
-let new_env () =
-  { type_variables = [];
-    variables = [];
-    regions = [];
-    effects = []; }
+let new_env () = {
+  variables      = 0;
+  regions        = 0;
+  effects        = 0;
+}
 
 (* ---------------------------------------------------------------------- *)
 (* Types and type variables.                                              *)
 (* ---------------------------------------------------------------------- *)
 
 let mutable_region_param f r =
-  debug section_verbose "mutable_region_param : %d" (List.length f.regions);
+  debug section_verbose "mutable_region_param : %d" f.regions;
   let r = mutable_region_repr r in
-  try List.assq r f.regions
-  with Not_found ->
-    let i = List.length f.regions in
-    f.regions <- (r, i) :: f.regions;
-    i
+  match r.rmark with
+    | None   ->
+        r.rmark   <- Some f.regions;
+        f.regions <- f.regions + 1;
+        f.regions - 1
+    | Some i ->
+        i
 
 let mutable_effect_param f phi =
-  debug section_verbose "mutable_effect_param : %d" (List.length f.effects);
+  debug section_verbose "mutable_effect_param : %d" f.effects;
   let phi = mutable_effect_repr phi in
-  try List.assq phi f.effects
-  with Not_found ->
-    let i = List.length f.effects in
-    f.effects <- (phi, i) :: f.effects;
-    i
+  match phi.emark with
+    | None   ->
+        phi.emark  <- Some f.effects;
+        f.effects <- f.effects + 1;
+        f.effects - 1
+    | Some i ->
+        i
 
 let rec mutable_effect f phi =
   debug section_verbose "mutable_effect";
@@ -82,26 +86,33 @@ let rec mutable_type f = function
 
 and type_variable f tvar =
   match tvar.link with
-      None ->
-        begin try Tparam (List.assq tvar f.type_variables)
-        with Not_found ->
-          let i = List.length f.type_variables in
-          f.type_variables <- (tvar, i) :: f.type_variables;
-          Tparam i
-        end
-    | Some ty ->
-        mutable_type f ty
+    | Some ty -> mutable_type f ty
+    | None    ->
+        debug section_verbose "type_variable : %d" f.variables;
+        match tvar.mark with
+          | None   ->
+              tvar.mark   <- Some f.variables;
+              f.variables <- f.variables + 1;
+              Tparam (f.variables - 1)
+          | Some i ->
+              Tparam i
 
 (* ---------------------------------------------------------------------- *)
 (* Variables.                                                             *)
 (* ---------------------------------------------------------------------- *)
 
 let variable f var =
-  try List.assq var f.variables
-  with Not_found ->
-    let var' = { var_name = var.mvar_name; var_type = mutable_type f var.mvar_type } in
-    f.variables <- (var, var') :: f.variables;
-    var'
+  debug section_verbose "variable : %d" f.variables;
+  match var.mvar_mark with
+    | None ->
+        let v = {
+          var_name = var.mvar_name;
+          var_type = mutable_type f var.mvar_type
+        } in
+        var.mvar_mark <- Some v;
+        v
+    | Some v ->
+        v
 
 (* ---------------------------------------------------------------------- *)
 (* Patterns.                                                              *)
@@ -403,7 +414,9 @@ let structure_item env str =
                         val_name = var.var_name;
                         val_type = Basics.renumber_parameters var.var_type;
                         val_kind = Val_reg }) vars in
-        debug section_verbose "Immutify let 4";
+        debug section_verbose
+          "Immutify let 4 (vals=%s)"
+          (String.concat "," (List.map (fun v -> v.val_name) vals));
         [Str_let (rec_flag, pat_expr_list, List.combine vars vals)],
         List.fold_left (fun env v -> Env.add_value v env) env vals,
         None
