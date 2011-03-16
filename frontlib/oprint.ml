@@ -179,9 +179,9 @@ let rec print_out_type ppf =
 
 and print_out_type_1 ppf =
   function
-    Otyp_arrow (lab, ty1, ty2, phi) ->
+    Otyp_arrow (lab, ty1, ty2, (rs,es)) ->
       fprintf ppf "@[%s%a -%a>@ %a@]" (if lab <> "" then lab ^ ":" else "")
-        print_out_type_2 ty1 print_out_string_list phi print_out_type_1 ty2
+        print_out_type_2 ty1 print_out_string_list (rs @ es) print_out_type_1 ty2
   | ty -> print_out_type_2 ppf ty
 and print_out_type_2 ppf =
   function
@@ -387,7 +387,11 @@ and print_out_sig_item ppf =
       fprintf ppf "@[<2>%s %a :@ %a%a@]" kwd value_ident name !out_type
         ty pr_prims prims
 
-and print_out_type_decl kwd ppf (name, args, regs, ty, constraints) =
+and print_out_effect_params ppf (r, e) =
+  if not (r=0 && e=0) then
+    fprintf ppf "<%d,%d>" r e
+
+and print_out_type_decl kwd ppf (name, args, effs, ty, constraints) =
   let print_constraints ppf params =
     List.iter
       (fun (ty1, ty2) ->
@@ -409,7 +413,7 @@ and print_out_type_decl kwd ppf (name, args, regs, ty, constraints) =
     | _ -> ()
   in
   let print_name_args ppf =
-    fprintf ppf "%s %t%a%a" kwd type_defined print_manifest ty print_out_string_list regs
+    fprintf ppf "%s %t%a%a" kwd type_defined print_manifest ty print_out_effect_params effs
   in
   let ty =
     match ty with
