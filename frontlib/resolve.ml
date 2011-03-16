@@ -702,14 +702,17 @@ let structure_item env pstr =
   { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->
-            debug section "Processing type.";
+            debug section "Processing type l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
             let params, decls = type_declarations env pdecls in
             Mstr_type (params, decls)
         | Pstr_let (rec_flag, ppat_pexp_list) ->
-            debug section "Processing let.";
+            debug section "Processing let l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
             Mstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
         | Pstr_eval pexp ->
-            debug section "Processing eval.";
+            debug section "Processing eval l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
             Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
             debug section "Processing external type %s." name;

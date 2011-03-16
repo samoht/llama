@@ -177,7 +177,7 @@ let rec mutable_effect_repr phi =
     | _ -> phi
 
 
-
+(*
 exception Found of
     mutable_effect * mutable_region Set.t *
       mutable_effect Set.t * mutable_effect Set.t
@@ -230,7 +230,7 @@ let rec eliminate x phi =
           Set.iter (fun phi' -> eliminate phi' phi; phi'.body <- MElink phi)
             path
   done
-
+  *)
 
 let body_union x y =
   match x, y with
@@ -240,7 +240,7 @@ let body_union x y =
     | MEset (rs1, es1), MEset (rs2, es2) ->
         MEset (Set.union rs1 rs2, Set.union es1 es2)
 
-
+(*
 let unify_effect e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
@@ -249,14 +249,10 @@ let unify_effect e f =
      eliminate f e;
      let e = mutable_effect_repr e
      and f = mutable_effect_repr f in
-     e.body <- body_union e.body f.body;
-     f.body <- MElink e)
-
-
-let half_unify e b =
-  let f = new_mutable_effect () in
-  f.body <- b;
-  unify_effect e f
+     if e != f then (* DUMMY *)
+       (e.body <- body_union e.body f.body;
+        f.body <- MElink e))
+    *)
 
 (* Never used
 let rec mem f b =
@@ -274,6 +270,98 @@ let unify e f =
     (e.body <- body_union e.body f.body;
      f.body <- MElink e)
 *)
+
+
+(* Unification : clearer *)
+
+(* Effect: none
+   Result: effects on the paths leading to an effect of s in phi *)
+let rec paths_too s phi =
+  (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
+  match phi.body with
+    | MElink phi' ->
+        debug section_verbose "paths_to: link";
+        paths_too s phi'
+    | MEvar ->
+        debug section_verbose "paths_to: var";
+        if Set.mem phi s then Some empty_effect_set else None
+    | MEset (_, phis) ->
+        debug section_verbose "paths_to: set";
+        let bool = ref (Set.mem phi s)
+        and set = ref empty_effect_set in
+        Set.iter
+          (fun phi' ->
+            match paths_too s phi' with
+              | Some s' -> bool := true; set := Set.union !set s'
+              | None -> ())
+          phis;
+        if !bool then Some !set else None
+
+let paths_to s phi =
+  match paths_too s phi with
+    | Some s' -> s'
+    | None -> empty_effect_set
+
+
+(* Effect: none
+   Result: regions and effects of <phi> that directly belong to effects of
+     <paths> (except those that are in <paths>) *)
+let rec contents paths phi =
+  (* assert (Set.for_all (fun f -> mutable_effect_repr f == f) paths); *)
+  match phi.body with
+    | MElink phi' ->
+        debug section_verbose "contents: link";
+        contents paths phi'
+    | _ when not (Set.mem phi paths) ->
+        debug section_verbose "contents: phi \notin paths";
+        empty_region_set, Set.add phi empty_effect_set
+    | MEvar ->
+        debug section_verbose "contents: var";
+        empty_region_set, empty_effect_set
+    | MEset (rs, fs) ->
+        debug section_verbose "contents: set";
+        let rs' = ref rs
+        and fs' = ref empty_effect_set in
+        Set.iter
+          (fun phi' ->
+            let rs, fs = contents paths phi' in
+            rs' := Set.union !rs' rs;
+            fs' := Set.union !fs' fs)
+          fs;
+        !rs', !fs'
+
+
+(* Effect: Merge all effects of set s in phi
+   Result: none *)
+let flatten f phi =
+  let todo = ref (Set.add f empty_effect_set)
+  and seen = ref empty_effect_set in
+  while !todo <> empty_effect_set do
+    let paths = paths_to !todo phi in
+    seen := Set.union !todo !seen;
+    todo := Set.diff paths !seen
+  done;
+  (let x, y = contents !seen phi in
+   phi.body <- MEset (x, y) );
+  Set.iter (fun phi' -> phi'.body <- MElink phi) (Set.remove f !seen)
+
+
+let unify_effect e f =
+  let e = mutable_effect_repr e
+  and f = mutable_effect_repr f in
+  if e != f then
+    (flatten e f;
+     flatten f e;
+     e.body <- body_union e.body f.body;
+     f.body <- MElink e)
+
+let half_unify e b =
+  let f = new_mutable_effect () in
+  f.body <- b;
+  unify_effect e f
+
+(* </Unification> *)
+
 
 (* XXX: move to Stdlib *)
 let set_of_list init l =
