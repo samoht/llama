@@ -337,9 +337,12 @@ let rec instantiate_type inst inst_r inst_e msg ty =
         debug section "Error in type %s[%d|%d] from %s" tcs.tcs_name tcs.tcs_regions tcs.tcs_effects msg;
         if List.mem tcs.tcs_group Predef.type_constructor_groups then
           debug section "tcs == Predef.tcs_%s" tcs.tcs_name;
-        debug section "inst_r = [%s]"
-          (String.concat "; " (List.map (fun (x, y) -> string_of_int x ^ ", " ^ string_of_mutable_region y) inst_r));
-        debug section "rl = [%s]" (String.concat "; " (List.map string_of_int p.tcp_regions));
+        debug section "inst_r={%s}; m_regions={%s}"
+          (String.concat "; " (List.map (fun (x, y) -> string_of_region_parameter x ^ "-> " ^ string_of_mutable_region y) inst_r))
+          (string_of_region_parameters p.tcp_regions);
+        debug section "inst_e={%s}; m_effects={%s}"
+          (String.concat "; " (List.map (fun (x, y) -> string_of_effect_parameter x ^ "-> " ^ string_of_mutable_effect y) inst_e))
+          (string_of_effect_parameters p.tcp_effects);
         raise e
 
 let instantiate_type_constructor tcs =

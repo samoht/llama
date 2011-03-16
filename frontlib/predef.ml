@@ -8,7 +8,7 @@ open Base
 
 (* abstract types *)
 
-let mkabs name params regions is_mutable =
+let mkabs name params regions effects is_mutable =
   let rec tcsg =
     { tcsg_module = Module_builtin;
       tcsg_params = params;
@@ -17,23 +17,23 @@ let mkabs name params regions is_mutable =
     { tcs_group = tcsg;
       tcs_name = name;
       tcs_regions = regions;
-      tcs_effects = 0;
+      tcs_effects = effects;
       tcs_mutable = is_mutable;
       tcs_kind = Tcs_abstract } in
   tcsg, tcs
 
-let tcsg_int, tcs_int = mkabs "int" [] 0 false
-let tcsg_char, tcs_char = mkabs "char" [] 0 false
-let tcsg_string, tcs_string = mkabs "string" [] 1 true
-let tcsg_float, tcs_float = mkabs "float" [] 0 false
-let tcsg_exn, tcs_exn = mkabs "exn" [] 1 false
+let tcsg_int, tcs_int = mkabs "int" [] 0 0 false
+let tcsg_char, tcs_char = mkabs "char" [] 0 0 false
+let tcsg_string, tcs_string = mkabs "string" [] 1 0 true
+let tcsg_float, tcs_float = mkabs "float" [] 0 0 false
+let tcsg_exn, tcs_exn = mkabs "exn" [] 1 1 false
 let tcsg_array, tcs_array =
-  mkabs "array" (standard_parameters 1) 1 true
+  mkabs "array" (standard_parameters 1) 1 0 true
 let tcsg_format6, tcs_format6 =
-  mkabs "format6" (standard_parameters 6) 0 false
-let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] 0 false
-let tcsg_int32, tcs_int32 = mkabs "int32" [] 0 false
-let tcsg_int64, tcs_int64 = mkabs "int64" [] 0 false
+  mkabs "format6" (standard_parameters 6) 0 0 false
+let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] 0 0 false
+let tcsg_int32, tcs_int32 = mkabs "int32" [] 0 0 false
+let tcsg_int64, tcs_int64 = mkabs "int64" [] 0 0 false
 
 (* variant types *)
 

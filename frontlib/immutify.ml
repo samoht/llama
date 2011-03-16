@@ -69,7 +69,7 @@ let rec mutable_effect f phi =
           debug section_verbose "</set>";
           List.rev_append rs' fs'
   in
-  debug section "mutable_effect";
+  debug section_verbose "mutable_effect";
   match phi.body with
     | MElink phi' -> mutable_effect f phi'
     | MEvar -> Eparam (mutable_effect_param f phi)
@@ -125,7 +125,7 @@ let variable f var =
 (* ---------------------------------------------------------------------- *)
 
 let rec pattern f pat =
-  debug section "pattern";
+  debug section_verbose "pattern";
   { pat_desc = pattern_desc f pat.mpat_desc;
     pat_loc = pat.mpat_loc;
     pat_type = mutable_type f pat.mpat_type }
@@ -157,7 +157,7 @@ and pattern_desc f = function
 (* ---------------------------------------------------------------------- *)
 
 let rec expression f expr =
-  debug section "expression";
+  debug section_verbose "expression";
   { exp_desc = expression_desc f expr.mexp_desc;
     exp_loc = expr.mexp_loc;
     exp_type = mutable_type f expr.mexp_type }
