@@ -276,12 +276,12 @@ let unify e f =
 
 (* Effect: none
    Result: effects on the paths leading to an effect of s in phi *)
-let rec paths_too s phi =
+let rec paths_to s phi =
   (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
   match phi.body with
     | MElink phi' ->
         debug section_verbose "paths_to: link";
-        paths_too s phi'
+        paths_to s phi'
     | MEvar ->
         debug section_verbose "paths_to: var";
         if Set.mem phi s then Some empty_effect_set else None
@@ -291,14 +291,14 @@ let rec paths_too s phi =
         and set = ref empty_effect_set in
         Set.iter
           (fun phi' ->
-            match paths_too s phi' with
+            match paths_to s phi' with
               | Some s' -> bool := true; set := Set.union !set s'
               | None -> ())
           phis;
         if !bool then Some !set else None
 
 let paths_to s phi =
-  match paths_too s phi with
+  match paths_to s phi with
     | Some s' -> s'
     | None -> empty_effect_set
 
@@ -336,7 +336,7 @@ let rec contents paths phi =
 let flatten f phi =
   let todo = ref (Set.add f empty_effect_set)
   and seen = ref empty_effect_set in
-  while !todo <> empty_effect_set do
+  while not (Set.is_empty !todo) do
     let paths = paths_to !todo phi in
     seen := Set.union !todo !seen;
     todo := Set.diff paths !seen
