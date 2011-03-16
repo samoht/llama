@@ -333,8 +333,8 @@ let rec contents paths phi =
 
 (* Effect: Merge all effects of set s in phi
    Result: none *)
-let flatten f phi =
-  let todo = ref (Set.add f empty_effect_set)
+let flatten s phi =
+  let todo = ref s
   and seen = ref empty_effect_set in
   while not (Set.is_empty !todo) do
     let paths = paths_to !todo phi in
@@ -342,17 +342,16 @@ let flatten f phi =
     todo := Set.diff paths !seen
   done;
   (let x, y = contents !seen phi in
-   phi.body <- MEset (x, y) );
-  Set.iter (fun phi' -> phi'.body <- MElink phi) (Set.remove f !seen)
+   phi.body <- MEset (x, y));
+  Set.iter (fun phi' -> phi'.body <- MElink phi) (Set.diff !seen s)
 
 
 let unify_effect e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
-    (flatten e f;
-     flatten f e;
-     e.body <- body_union e.body f.body;
+    (e.body <- body_union e.body f.body;
+     flatten (Set.add e (Set.add f empty_effect_set)) e;
      f.body <- MElink e)
 
 let half_unify e b =
