@@ -35,6 +35,7 @@ let new_env () =
 (* ---------------------------------------------------------------------- *)
 
 let mutable_region_param f r =
+  debug section_verbose "mutable_region_param : %d" (List.length f.regions);
   let r = mutable_region_repr r in
   try List.assq r f.regions
   with Not_found ->
@@ -43,6 +44,7 @@ let mutable_region_param f r =
     i
 
 let mutable_effect_param f phi =
+  debug section_verbose "mutable_effect_param : %d" (List.length f.effects);
   let phi = mutable_effect_repr phi in
   try List.assq phi f.effects
   with Not_found ->
@@ -50,37 +52,18 @@ let mutable_effect_param f phi =
     f.effects <- (phi, i) :: f.effects;
     i
 
-let rec uniq = function
-  | [] -> []
-  | h::t -> if List.mem h t then uniq t else h :: (uniq t)
-
 let rec mutable_effect f phi =
-  let rec aux phi =
-    match phi.body with
-      | MElink phi' -> debug section_verbose "mutable_effect aux link"; aux phi'
-      | MEvar -> [EAparam (mutable_effect_param f phi)]
-      | MEset (rs, fs) ->
-          debug section_verbose "mutable_effect aux set";
-          let rs' =
-            List.map
-              (fun r -> EAregparam (mutable_region_param f r))
-              (Set.elements rs)
-          and fs' = List.flatten (List.map aux (Set.elements fs)) in
-          debug section_verbose "</set>";
-          List.rev_append rs' fs'
-  in
   debug section_verbose "mutable_effect";
   match phi.body with
     | MElink phi' -> mutable_effect f phi'
-    | MEvar -> Eparam (mutable_effect_param f phi)
-    | MEset (rs, fs) ->
-        let rs' =
-          List.map
-            (fun r -> EAregparam (mutable_region_param f r))
-            (Set.elements rs)
-        and fs' = List.flatten (List.map aux (Set.elements fs)) in
-        Eset (List.rev_append rs' fs')
-
+    | MEvar       -> Eparam (mutable_effect_param f phi)
+    | MEset s     ->
+        let rs, es = region_and_effect_variables phi in
+        let s = {
+          e_regions = List.map (mutable_region_param f) rs;
+          e_effects = List.map (mutable_effect_param f) es;
+        } in
+        Eset s
 
 let rec mutable_type f = function
     Mvar v ->

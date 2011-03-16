@@ -556,7 +556,7 @@ let external_regions_and_effects ltcs =
 
 (* Get all the external region parameters + transitive mutable internal ones *)
 let all_regions_and_effects ltcs =
-  union
+  pair_union
     (ltcs.ltcs_regions, ltcs.ltcs_effects)
     (local_kind_region_parameters ltcs.ltcs_kind)
 
