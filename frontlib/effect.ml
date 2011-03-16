@@ -291,7 +291,7 @@ let unify_effect e f =
   and f = mutable_effect_repr f in
   if e != f then
     (e.body <- body_union e.body f.body;
-     flatten (Set.add e (Set.add f empty_effect_set)) e;
+     flatten [e; f] e;
      f.body <- MElink e)
 
 let half_unify e b =
