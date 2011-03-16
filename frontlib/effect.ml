@@ -145,6 +145,10 @@ let remove x l =
 let add x l =
   if List.mem x l then l else x::l
 
+(* l1 / l2 *)
+let diff l1 l2 =
+  List.fold_left (fun accu e1 -> if List.mem e1 l2 then accu else e1::accu) [] l1
+
 let region_and_effect_variables e =
   let rec aux (rs, es) e =
     match e.body with
@@ -191,62 +195,6 @@ let rec mutable_effect_repr phi =
     | MElink v -> mutable_effect_repr v
     | _ -> phi
 
-
-exception Found of
-    mutable_effect * mutable_region list *
-      mutable_effect list * mutable_effect list
-
-(* Parameters: two mutable effects x and phi
-   Assert: no loop in phi; x is a representant
-   Effect: no side effects
-   Result: if x \notin phi then None else
-     consider found path to x in phi:
-     Some (regions in effects on the path,
-           effects in effects on the path,
-           effects (representants) on the path)
-*)
-
-let rec toto x phi =
-  match phi.body with
-    | _ when phi == x -> debug section_verbose "toto:phi==x"; Some ([], [], [])
-    | MElink phi'     -> debug section_verbose "toto:link"; toto x phi'
-    | MEvar           -> debug section_verbose "toto:var"; None
-    | MEset s         -> debug section_verbose "toto:set";
-       try
-         List.iter
-           (fun phi' ->
-             match toto x phi' with
-               | None -> ()
-               | Some (rs', fs', path) -> raise (Found (phi', rs', fs', path)) )
-           s.me_effects;
-         None
-       with Found (phi', rs', fs', path) ->
-         Some (union s.me_regions rs',
-               union (remove phi' s.me_effects) fs',
-               add phi' path)
-
-
-(* Parameters: two mutable effects x and phi
-   Assert: no loop in phi; x is a representant
-   Effect: if x \in phi, each path that leads to x in phi is flattened
-     and x is removed
-   Result: no result
-*)
-let rec eliminate x phi =
-  debug section_verbose "eliminate";
-  let phi = mutable_effect_repr phi in
-  let loop = ref true in
-  while !loop do
-    debug section_verbose "eliminate:loop";
-    match toto x phi with
-      | None -> loop := false
-      | Some (rs, fs, path) ->
-          phi.body <- MEset { me_regions=rs; me_effects=fs };
-          List.iter (fun phi' -> eliminate phi' phi; phi'.body <- MElink phi)
-            path
-  done
-
-
 let body_union x y =
   match x, y with
     | MElink _, _ | _, MElink _ -> invalid_arg "body_union"
@@ -259,14 +207,91 @@ let body_union x y =
        } in
        MEset s
 
+(* Unification : clearer *)
+
+(* Effect: none
+   Result: effects on the paths leading to an effect of s in phi *)
+let rec paths_to_aux s phi =
+  (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
+  match phi.body with
+    | MElink phi' ->
+        debug section_verbose "paths_to: link";
+        paths_to_aux s phi'
+    | MEvar ->
+        debug section_verbose "paths_to: var";
+        if List.mem phi s then Some [] else None
+    | MEset { me_effects=phis } ->
+        debug section_verbose "paths_to: set";
+        let bool = ref (List.memq phi s)
+        and set  = ref [] in
+        List.iter
+          (fun phi' ->
+            match paths_to_aux s phi' with
+              | Some s' -> bool := true; set := union !set s'
+              | None -> ())
+          phis;
+        if !bool then Some !set else None
+
+let paths_to s phi =
+  match paths_to_aux s phi with
+    | Some s' -> s'
+    | None    -> []
+
+
+(* Effect: none
+   Result: regions and effects of <phi> that directly belong to effects of
+     <paths> (except those that are in <paths>) *)
+(* XXX: very similar to region_and_effect_variables below (but with a paht) *)
+let rec contents paths phi =
+  (* assert (List.for_all (fun f -> mutable_effect_repr f == f) paths); *)
+  match phi.body with
+    | MElink phi' ->
+        debug section_verbose "contents: link";
+        contents paths phi'
+    | _ when not (List.mem phi paths) ->
+        debug section_verbose "contents: phi \notin paths";
+        [], [phi]
+    | MEvar ->
+        debug section_verbose "contents: var";
+        [], []
+    | MEset s ->
+        debug section_verbose "contents: set";
+        let rs' = ref s.me_regions
+        and fs' = ref [] in
+        List.iter
+          (fun phi' ->
+            let rs, fs = contents paths phi' in
+            rs' := union !rs' rs;
+            fs' := union !fs' fs)
+          s.me_effects;
+        !rs', !fs'
+
+
+(* Effect: Merge all effects of set s in phi
+   Result: none *)
+let flatten f phi =
+  let todo = ref [f]
+  and seen = ref [] in
+  while !todo <> [] do
+    let paths = paths_to !todo phi in
+    seen := union !todo !seen;
+    todo := diff paths !seen
+  done;
+  let x, y = contents !seen phi in
+  let s = {
+    me_regions = x;
+    me_effects = y;
+  } in
+  phi.body <- MEset s;
+  List.iter (fun phi' -> phi'.body <- MElink phi) (remove f !seen)
+
+
 let unify_effect e f =
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
-    (eliminate e f;
-     eliminate f e;
-     let e = mutable_effect_repr e
-     and f = mutable_effect_repr f in
+    (flatten e f;
+     flatten f e;
      e.body <- body_union e.body f.body;
      f.body <- MElink e)
 
@@ -275,23 +300,4 @@ let half_unify e b =
   f.body <- b;
   unify_effect e f
 
-(* Never used
-let rec mem f b =
-  assert ((mutable_effect_repr f) == f);
-  match b with
-    | MEvar -> false
-    | MEset (_, fs) -> Set.exists (fun f' -> mem f (mutable_effect_repr f').body) fs
-    | MElink f' -> mem f (mutable_effect_repr f').body
-
-(* Wrong *)
-let unify e f =
-  let e = mutable_effect_repr e
-  and f = mutable_effect_repr f in
-  if e != f then
-    (e.body <- body_union e.body f.body;
-     f.body <- MElink e)
-*)
-
-(* XXX: move to Stdlib *)
-let set_of_list init l =
-  List.fold_left (fun s -> fun x -> Set.add x s) init l
+(* </Unification> *)
