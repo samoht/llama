@@ -192,7 +192,7 @@ let tree_of_mutable_region r =
 
 let rec tree_of_mutable_effect phi =
   let phi = mutable_effect_repr phi in
-  [ long_string_of_mutable_effect phi ]
+  [ string_of_mutable_effect phi ]
 (*  match phi with
     | Effect.Evar v    -> [Effect.string_of_mutable_effect_variable v] (* XXX: we should check that we don't have these anymore *)
     | Effect.Eregion r -> [Effect.string_of_mutable_region r]

@@ -237,15 +237,15 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
             tcp_regions = parameter_range !regions (!regions + tcs.tcs_regions);
             tcp_effects = parameter_range !effects (!effects + tcs.tcs_effects);
           } in
-          debug section "llama_type %s: !regions = %d; tcs_regions = %d !effects = %d; tcs_effects = %d"
+(*          debug section "llama_type %s: !regions = %d; tcs_regions = %d !effects = %d; tcs_effects = %d"
             tcs.tcs_name
             !regions
             tcs.tcs_regions
             !effects
-            tcs.tcs_effects;
+            tcs.tcs_effects; *)
           regions := !regions + tcs.tcs_regions;
           effects := !effects + tcs.tcs_effects;
-          debug section_verbose "</llama_type>";
+(*          debug section_verbose "</llama_type>"; *)
           Tconstr (tcs, p)
     end
   in
@@ -301,12 +301,12 @@ let rec local_type pseudoenv root_tcs ty =  (* type 'a foo = 'a -> 'a *)
                   } in
                   region_variables := !region_variables + tcs.tcs_regions;
                   effect_variables := !effect_variables + tcs.tcs_effects;
-                debug section "global type %s[%d|%d] rs=%s es=%s"
+(*                debug section "global type %s[%d|%d] rs=%s es=%s"
                   tcs.tcs_name
                   tcs.tcs_regions
                   tcs.tcs_effects
                   (string_of_region_parameters lp.l_regions)
-                  (string_of_effect_parameters lp.l_effects);
+                  (string_of_effect_parameters lp.l_effects); *)
                 Lconstr (tcs, lp)
 
 let rec mutable_type env ty =  (* (fun x -> x) : 'a -> 'a *)
@@ -597,13 +597,13 @@ let type_declarations env pdecls =
   let pseudoenv = { pseudoenv with pseudoenv_type_variables = List.combine params int_params } in
 
   (* compute the internal names *)
-  debug section "Processing type %s declaration(s)."
-    (String.concat " and " (List.map (fun d -> d.ptype_name) pdecls));
+(*  debug section "Processing type %s declaration(s)."
+    (String.concat " and " (List.map (fun d -> d.ptype_name) pdecls)); *)
 
   (* First, fill kinds *)
   List.iter
     (fun (pdecl, ltcs) ->
-      debug section_verbose "Computing kind for %s" ltcs.ltcs_name;
+(*      debug section_verbose "Computing kind for %s" ltcs.ltcs_name; *)
       ltcs.ltcs_kind <- type_kind pseudoenv pdecl.ptype_kind)
     ltcs_list;
   (* and check for recursive abbreviations *)
@@ -618,10 +618,10 @@ let type_declarations env pdecls =
       let rs, es = external_regions_and_effects ltcs in
       ltcs.ltcs_regions <- rs;
       ltcs.ltcs_effects <- es;
-      debug section_verbose "Type %s: external regions=%s; external effects=%s"
+ (*      debug section_verbose "Type %s: external regions=%s; external effects=%s"
         ltcs.ltcs_name
         (string_of_region_parameters rs)
-        (string_of_effect_parameters es))
+        (string_of_effect_parameters es)*))
     ltcs_list;
   (* Fill with valid region/effect parameters *)
   List.iter
@@ -629,10 +629,10 @@ let type_declarations env pdecls =
       let (rs, es) = all_regions_and_effects ltcs in
       ltcs.ltcs_regions <- rs;
       ltcs.ltcs_effects <- es;
-      debug section_verbose "Type %s: valid regions=%s; valid effects=%s"
+(*      debug section_verbose "Type %s: valid regions=%s; valid effects=%s"
         ltcs.ltcs_name
         (string_of_region_parameters rs)
-        (string_of_effect_parameters es))
+        (string_of_effect_parameters es)*))
     ltcs_list;
   (* Fill mutable flag *)
   List.iter
@@ -659,21 +659,21 @@ let signature_item env psig =
   { msig_desc =
       begin match psig.psig_desc with
         | Psig_value (s, te) ->
-            debug section_verbose "Processing signature : val %s." s;
+(*            debug section_verbose "Processing signature : val %s." s; *)
             Msig_value (s, llama_type env te)
         | Psig_external(id,te,pr) ->
-            debug section_verbose "Processing signature : external val %s." id;
+(*            debug section_verbose "Processing signature : external val %s." id; *)
             Msig_external (id, llama_type env te, external_declaration pr te)
         | Psig_type pdecls ->
-            debug section_verbose "Processing signature : type.";
+(*            debug section_verbose "Processing signature : type."; *)
             let params, decls = type_declarations env pdecls in
             Msig_type (params, decls)
         | Psig_exception (name, args) ->
-            debug section_verbose "Processing signature : exception %s." name;
+(*            debug section_verbose "Processing signature : exception %s." name; *)
             let pseudoenv = pseudoenv_create env in
             Msig_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Psig_open name ->
-            debug section_verbose "Processing signature : open %s." name;
+(*            debug section_verbose "Processing signature : open %s." name; *)
             Msig_open (name, lookup_module (Env.modenv env) name psig.psig_loc)
       end;
     msig_loc = psig.psig_loc } in
@@ -681,7 +681,7 @@ let signature_item env psig =
 
 let top_bindings env rec_flag ppat_pexp_list =
   let pat_list = List.map (fun (ppat, _) -> pattern env ppat) ppat_pexp_list in
-  debug section_verbose "top_bindings 1";
+(*  debug section_verbose "top_bindings 1"; *)
   let ctxt =
     match rec_flag with
         Recursive ->
@@ -692,11 +692,11 @@ let top_bindings env rec_flag ppat_pexp_list =
       | Nonrecursive ->
           context_create env
   in
-  debug section_verbose "top_bindings 2";
+(*  debug section_verbose "top_bindings 2"; *)
   let res =
     List.map2 (fun pat (_, pexp) -> pat, expression ctxt pexp) pat_list ppat_pexp_list
   in
-    debug section_verbose "top_bindings 3";
+(*    debug section_verbose "top_bindings 3"; *)
     res
 
 let structure_item env pstr =
@@ -707,30 +707,30 @@ let structure_item env pstr =
   { mstr_desc =
       begin match pstr.pstr_desc with
         | Pstr_type pdecls ->
-            debug section_verbose "Processing type l.%d+."
-              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
+(*            debug section_verbose "Processing type l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum; *)
             let params, decls = type_declarations env pdecls in
             Mstr_type (params, decls)
         | Pstr_let (rec_flag, ppat_pexp_list) ->
-            debug section_verbose "Processing let l.%d+."
-              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
+(*            debug section_verbose "Processing let l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum; *)
             Mstr_let (rec_flag, top_bindings env rec_flag ppat_pexp_list)
         | Pstr_eval pexp ->
-            debug section_verbose "Processing eval l.%d+."
-              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum;
+(*            debug section_verbose "Processing eval l.%d+."
+              pstr.pstr_loc.Location.loc_start.Lexing.pos_lnum; *)
             Mstr_eval (expression (context_create env) pexp)
         | Pstr_external_type (params, name) ->
-            debug section_verbose "Processing external type %s." name;
+(*            debug section_verbose "Processing external type %s." name; *)
             Mstr_external_type (List.length params, name)
         | Pstr_external (name, pty, decl) ->
-            debug section_verbose "Processing external value %s." name;
+(*            debug section_verbose "Processing external value %s." name; *)
             Mstr_external (name, llama_type env pty, external_declaration decl pty)
         | Pstr_exception (name, args) ->
-            debug section_verbose "Processing exception %s." name;
+(*            debug section_verbose "Processing exception %s." name; *)
             let pseudoenv = pseudoenv_create env in
             Mstr_exception (name, List.map (local_type pseudoenv (Some Predef.tcs_exn)) args)
         | Pstr_open name ->
-            debug section_verbose "Processing open %s." name;
+(*            debug section_verbose "Processing open %s." name; *)
             Mstr_open (name, lookup_module (Env.modenv env) name pstr.pstr_loc)
       end;
     mstr_loc = pstr.pstr_loc } in

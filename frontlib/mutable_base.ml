@@ -310,13 +310,7 @@ let instantiate_effect inst_r inst_e e =
     let es = effect_parameters e in
     let es = List.map (fun e -> List.assq e inst_e) es in
     (* build a new effect variable to store the instantiations *)
-    let res = new_mutable_effect () in
-    let s = {
-      me_regions = rs;
-      me_effects = es;
-    } in
-    res.body <- MEset s;
-    res
+    merge_effects rs es
 
 (* inst   : int -> type variable
    inst_r : int -> region variable
@@ -452,7 +446,7 @@ let rec unify ty1 ty2 =
     | _, Mvar v2 when not (occurs v2 ty1) ->
         v2.link <- Some ty1
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
-        unify_effect phi1 phi2;
+        unify_effects phi1 phi2;
         unify t1arg t2arg;
         unify t1res t2res
     | Mtuple tyl1, Mtuple tyl2 ->
