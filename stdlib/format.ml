@@ -1302,18 +1302,27 @@ let mkprintf to_s get_out =
 let kfprintf k ppf = mkprintf false (fun _ -> ppf) k;;
 let ikfprintf k ppf = Printf_tformat.kapr (fun _ _ -> Obj.magic (k ppf));;
 
-let fprintf ppf = kfprintf ignore ppf;;
-let ifprintf ppf = ikfprintf ignore ppf;;
-let printf fmt = fprintf std_formatter fmt;;
-let eprintf fmt = fprintf err_formatter fmt;;
+let fprintf : formatter -> ('a, formatter, unit) format -> 'a =
+  function ppf -> kfprintf ignore ppf;;
 
-let ksprintf k =
+let ifprintf : formatter -> ('a, formatter, unit) format -> 'a =
+ function ppf -> ikfprintf ignore ppf;;
+
+let printf : ('a, formatter, unit) format -> 'a =
+  function fmt -> fprintf std_formatter fmt;;
+
+let eprintf : ('a, formatter, unit) format -> 'a =
+  function fmt -> fprintf err_formatter fmt;;
+
+let ksprintf : (string -> 'a) -> ('b, unit, string, 'a) format4 -> 'b =
+  function k ->
   let b = Buffer.create 512 in
   let k ppf = k (string_out b ppf) in
   mkprintf true (fun _ -> formatter_of_buffer b) k
 ;;
 
-let sprintf fmt = ksprintf (fun s -> s) fmt;;
+let sprintf :  ('a, unit, string) format -> 'a =
+  function fmt -> ksprintf (fun s -> s) fmt;;
 
 (**************************************************************
 
