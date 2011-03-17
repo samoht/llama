@@ -137,17 +137,20 @@ and mutable_effect = mutable_effect_variable
 
 (* XXX: should be in the stdlib *)
 let union l1 l2 =
-  List.fold_left (fun accu e1 -> if List.mem e1 accu then accu else e1::accu) l2 l1
+  List.fold_left (fun accu e1 -> if List.memq e1 accu then accu else e1::accu) l2 l1
+
+let inter l1 l2 =
+  List.filter (fun x -> List.memq x l1) l2
 
 let remove x l =
   List.filter ((!=) x) l
 
 let add x l =
-  if List.mem x l then l else x::l
+  if List.memq x l then l else x::l
 
 (* l1 / l2 *)
 let diff l1 l2 =
-  List.fold_left (fun accu e1 -> if List.mem e1 l2 then accu else e1::accu) [] l1
+  List.fold_left (fun accu e1 -> if List.memq e1 l2 then accu else e1::accu) [] l1
 
 let region_and_effect_variables e =
   let rec aux (rs, es) e =
@@ -156,10 +159,10 @@ let region_and_effect_variables e =
       | MElink e' -> aux (rs, es) e
       | MEset s   -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
   aux ([], []) e
-
+(*
 let compare_effects e f =
   compare e.id f.id
-
+*)
 (* Returns a fresh effect variable *)
 let new_mutable_effect =
   let x = ref 0 in
@@ -195,6 +198,9 @@ let rec mutable_effect_repr phi =
     | MElink v -> mutable_effect_repr v
     | _ -> phi
 
+
+(* Unification *)
+
 let body_union x y =
   match x, y with
     | MElink _, _ | _, MElink _ -> invalid_arg "body_union"
@@ -206,8 +212,6 @@ let body_union x y =
          me_effects = union s1.me_effects s2.me_effects;
        } in
        MEset s
-
-(* Unification : clearer *)
 
 (* Effect: none
    Result: effects on the paths leading to an effect of s in phi *)
@@ -241,15 +245,18 @@ let paths_to s phi =
 (* Effect: none
    Result: regions and effects of <phi> that directly belong to effects of
      <paths> (except those that are in <paths>) *)
-(* XXX: very similar to region_and_effect_variables below (but with a paht) *)
+(* XXX: very similar to region_and_effect_variables below (but with a path) *)
 let rec contents paths phi =
-  (* assert (List.for_all (fun f -> mutable_effect_repr f == f) paths); *)
+  assert
+    (List.for_all
+       (fun f -> match f.body with MElink _ -> false | _ -> true)
+       paths );
   match phi.body with
     | MElink phi' ->
         debug section_verbose "contents: link";
         contents paths phi'
-    | _ when not (List.mem phi paths) ->
-        debug section_verbose "contents: phi \notin paths";
+    | _ when not (List.memq phi paths) ->
+        debug section_verbose "contents: phi \\notin paths";
         [], [phi]
     | MEvar ->
         debug section_verbose "contents: var";
