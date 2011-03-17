@@ -215,29 +215,35 @@ let body_union x y =
 
 (* Effect: none
    Result: effects on the paths leading to an effect of s in phi *)
-let rec paths_to_aux s phi =
-  (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
-  match phi.body with
-    | MElink phi' ->
-        debug section_verbose "paths_to: link";
-        paths_to_aux s phi'
-    | MEvar ->
-        debug section_verbose "paths_to: var";
-        if List.mem phi s then Some [] else None
-    | MEset { me_effects=phis } ->
-        debug section_verbose "paths_to: set";
-        let bool = ref (List.memq phi s)
-        and set  = ref [] in
-        List.iter
-          (fun phi' ->
-            match paths_to_aux s phi' with
-              | Some s' -> bool := true; set := union !set s'
-              | None -> ())
-          phis;
-        if !bool then Some !set else None
+let rec body_paths_to l : mutable_effect_body -> mutable_effect list option = function
+  | MElink phi' ->
+      debug section_verbose "paths_to: link";
+      paths_to_aux l phi'
+  | MEvar ->
+      debug section_verbose "paths_to: var";
+      None
+  | MEset { me_effects=phil } ->
+      debug section_verbose "paths_to: set";
+      let bool = ref false
+      and set  = ref [] in
+      List.iter
+        (fun phi' ->
+          match paths_to_aux l phi' with
+            | Some s' -> bool := true; set := union !set s'
+            | None -> ())
+        phil;
+      debug section_verbose "paths_to: </set>";
+      if !bool then Some !set else None
 
-let paths_to s phi =
-  match paths_to_aux s phi with
+and paths_to_aux l phi =
+  match body_paths_to l ((phi.body) : mutable_effect_body) with
+    | Some l -> Some (add phi l)
+    | None -> if List.memq phi l then Some [] else None
+
+let paths_to l phi =
+  assert
+    (List.for_all (fun f -> match f.body with MElink _ -> false | _ -> true) l);
+  match paths_to_aux l phi with
     | Some s' -> s'
     | None    -> []
 
@@ -271,12 +277,14 @@ let rec contents paths phi =
             rs' := union !rs' rs;
             fs' := union !fs' fs)
           s.me_effects;
+        debug section_verbose "contents: </set>";
         !rs', !fs'
 
 
 (* Effect: Merge all effects of set s in phi
    Result: none *)
 let flatten l phi =
+  debug section_verbose "flatten";
   let todo = ref l
   and seen = ref [] in
   while !todo <> [] do
@@ -284,13 +292,16 @@ let flatten l phi =
     seen := union !todo !seen;
     todo := diff paths !seen
   done;
+  debug section_verbose "flatten 1";
   let x, y = contents !seen phi in
+  assert (inter (phi :: !seen) y = []);
+  debug section_verbose "flatten 2";
   let s = {
     me_regions = x;
     me_effects = y;
   } in
   phi.body <- MEset s;
-  List.iter (fun phi' -> phi'.body <- MElink phi) (diff !seen l)
+  List.iter (fun phi' -> phi'.body <- MElink phi) (diff !seen (phi :: l))
 
 
 let unify_effect e f =
@@ -299,7 +310,8 @@ let unify_effect e f =
   if e != f then
     (e.body <- body_union e.body f.body;
      flatten [e; f] e;
-     f.body <- MElink e)
+     assert (body_paths_to [e; f] e.body = None);
+     (*f.body <- MElink e (* done by flatten *)*))
 
 let half_unify e b =
   let f = new_mutable_effect () in
