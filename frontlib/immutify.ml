@@ -50,7 +50,7 @@ let mutable_effect_param f phi =
   let phi = mutable_effect_repr phi in
   match phi.emark with
     | None   ->
-        phi.emark  <- Some f.effects;
+      phi.emark  <- Some f.effects;
         f.effects <- f.effects + 1;
         f.effects - 1
     | Some i ->
@@ -59,9 +59,8 @@ let mutable_effect_param f phi =
 let rec mutable_effect f phi =
   debug section_verbose "mutable_effect";
   match phi.body with
-    | MElink phi' -> mutable_effect f phi'
-    | MEvar       -> Eparam (mutable_effect_param f phi)
-    | MEset s     ->
+    | None       -> Eparam (mutable_effect_param f phi)
+    | Some s     ->
         let rs, es = region_and_effect_variables phi in
         let s = {
           e_regions = List.map (mutable_region_param f) rs;

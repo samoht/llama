@@ -119,7 +119,7 @@ let compare_regions r s =
 
 type mutable_effect_variable = {
   id            : int;
-  mutable body  : mutable_effect_body;
+  mutable body  : mutable_effects option;
   mutable emark : int option;
 }
 
@@ -128,34 +128,87 @@ and mutable_effects = {
   me_effects : mutable_effect list;
 }
 
-and mutable_effect_body =
-  | MEvar
-  | MElink of mutable_effect
-  | MEset  of mutable_effects
-
 and mutable_effect = mutable_effect_variable
+
+let string_of_mutable_effect e =
+  "E" ^ string_of_int e.id
+
+let string_of_mutable_effects e =
+  Printf.sprintf "<%s%s>"
+    (String.concat "," (List.map string_of_mutable_effect e.me_effects))
+    (string_of_mutable_regions e.me_regions)
+
+let string_of_mutable_effectl el =
+  Printf.sprintf "[%s]"
+    (String.concat "," (List.map string_of_mutable_effect el))
+
+(* output an immutable effect as .dot format *)
+let dot_string_of_mutable_effect root =
+  let seen = ref [] in
+  let node phi = Printf.sprintf "node [shape=circle]; %s;" (string_of_mutable_effect phi) in
+  let empty_node phi = Printf.sprintf "node [shape=doublecircle]; %s;" (string_of_mutable_effect phi) in
+  let rec aux accu phi =
+    if List.memq phi !seen then (
+      accu
+    ) else (
+      seen := phi :: !seen;
+      match phi.body with
+      | None   -> node phi :: accu
+      | Some s ->
+          if s.me_regions =[] && s.me_effects = [] then
+            empty_node phi :: accu
+          else
+            let rs = List.map string_of_mutable_region s.me_regions in
+            let rs = String.concat "," rs in
+            let label = if rs = "" then "" else Printf.sprintf " [ label=\"%s\" ]" rs in
+            let arrow e =
+              Printf.sprintf "%s -> %s%s;"
+                (string_of_mutable_effect phi)
+                (string_of_mutable_effect e)
+                label in
+            let es = List.map arrow s.me_effects in
+            List.fold_left aux (node phi :: es @ accu) s.me_effects) in
+  Printf.sprintf "digraph %s {\n%s\n}"
+    (string_of_mutable_effect root)
+    (String.concat "\n" (aux [] root))
+
+let assert_no_cycle root =
+  let rec aux path phi =
+    if List.memq phi path then (
+      Printf.eprintf "ERROR cycle=%s phi=%s root=%s\n%s\n%!"
+        (string_of_mutable_effectl path)
+        (string_of_mutable_effect phi)
+        (string_of_mutable_effect root)
+        (dot_string_of_mutable_effect root);
+      assert false;
+    ) else (
+      match phi.body with
+        | None   -> ()
+        | Some s -> List.iter (aux (phi::path)) s.me_effects
+    ) in
+  aux [] root
 
 (* XXX: should be in the stdlib *)
 let union l1 l2 =
-  List.fold_left (fun accu e1 -> if List.mem e1 accu then accu else e1::accu) l2 l1
+  List.fold_left (fun accu e1 -> if List.memq e1 accu then accu else e1::accu) l2 l1
 
 let remove x l =
   List.filter ((!=) x) l
 
 let add x l =
-  if List.mem x l then l else x::l
+  if List.memq x l then l else x::l
 
 (* l1 / l2 *)
 let diff l1 l2 =
-  List.fold_left (fun accu e1 -> if List.mem e1 l2 then accu else e1::accu) [] l1
+  List.fold_left (fun accu e1 -> if List.memq e1 l2 then accu else e1::accu) [] l1
 
 let region_and_effect_variables e =
   let rec aux (rs, es) e =
     match e.body with
-      | MEvar     -> (rs, add e es)
-      | MElink e' -> aux (rs, es) e
-      | MEset s   -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
-  aux ([], []) e
+      | None   -> (rs, add e es)
+      | Some s -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
+  let r = aux ([], []) e in
+  r
 
 let compare_effects e f =
   compare e.id f.id
@@ -165,7 +218,7 @@ let new_mutable_effect =
   let x = ref 0 in
   fun () ->
     incr x;
-    { id = !x; body = MEvar; emark = None }
+    { id = !x; body = None; emark = None }
 
 let new_empty_effect () =
   let e = new_mutable_effect () in
@@ -173,103 +226,117 @@ let new_empty_effect () =
     me_regions = [];
     me_effects = [];
   } in
-  e.body <- MEset body;
+  e.body <- Some body;
   e
 
-let string_of_mutable_effect e =
-  "E" ^ string_of_int e.id
 
-let string_of_mutable_effect_body = function
-  | MEvar    -> ""
-  | MElink v -> "->" ^ string_of_mutable_effect v
-  | MEset  s ->
-      let rs = List.map string_of_mutable_region s.me_regions in
-      let es = List.map string_of_mutable_effect s.me_effects in
-      Printf.sprintf "{%s|%s}" (String.concat "," rs) (String.concat "," es)
-
-let long_string_of_mutable_effect phi =
-  string_of_mutable_effect phi ^ string_of_mutable_effect_body phi.body
+let merge_effects rs es =
+  let e = new_mutable_effect () in
+(*  debug section_verbose "merge_effects %s %s"
+    (string_of_mutable_effect e)
+    (string_of_mutable_effectl es); *)
+  let s = {
+    me_regions = rs;
+    me_effects = es;
+  } in
+  e.body <- Some s;
+  e
 
 let rec mutable_effect_repr phi =
   match phi.body with
-    | MElink v -> mutable_effect_repr v
+    | Some { me_regions = []; me_effects = [v] } -> mutable_effect_repr v
     | _ -> phi
 
+let mutable_effect_reprs l =
+  List.map mutable_effect_repr l
+
+let link e1 e2 =
+(*  debug section "link %s %s"
+     (string_of_mutable_effect e1) (string_of_mutable_effect e2); *)
+  let e1 = mutable_effect_repr e1 in
+  let e2 = mutable_effect_repr e2 in
+  let s = {
+    me_regions = [];
+    me_effects = [e2];
+  } in
+  e1.body <- Some s
+
+(* we assume than x and y are representants *)
 let body_union x y =
   match x, y with
-    | MElink _, _ | _, MElink _ -> invalid_arg "body_union"
-    | MEvar, _ -> y
-    | _, MEvar -> x
-    | MEset s1, MEset s2 ->
+    | None, _ -> y
+    | _, None -> x
+    | Some s1, Some s2 ->
        let s = {
          me_regions = union s1.me_regions s2.me_regions;
          me_effects = union s1.me_effects s2.me_effects;
        } in
-       MEset s
+       Some s
 
 (* Unification : clearer *)
 
 (* Effect: none
-   Result: effects on the paths leading to an effect of s in phi *)
-let rec paths_to_aux s phi =
-  (* assert (Set.for_all (fun phi -> mutable_effect_repr f == f) s); *)
-  match phi.body with
-    | MElink phi' ->
-        debug section_verbose "paths_to: link";
-        paths_to_aux s phi'
-    | MEvar ->
-        debug section_verbose "paths_to: var";
-        if List.mem phi s then Some [] else None
-    | MEset { me_effects=phis } ->
-        debug section_verbose "paths_to: set";
-        let bool = ref (List.memq phi s)
-        and set  = ref [] in
-        List.iter
-          (fun phi' ->
-            match paths_to_aux s phi' with
+   Result: effects on the paths leading to an effect of list l in phi *)
+let paths_to l phi =
+  let l    = mutable_effect_reprs l in
+  let phi  = mutable_effect_repr phi in
+  let seen = ref [] in
+  let rec aux phi =
+    if not (List.memq phi !seen) then (
+      seen := phi :: !seen;
+      match phi.body with
+      | None    -> if List.memq phi l then Some [] else None
+      | Some es ->
+          let bool = ref (List.memq phi l)
+          and set  = ref [] in
+          List.iter
+            (fun phi' ->
+              match aux phi' with
               | Some s' -> bool := true; set := union !set s'
-              | None -> ())
-          phis;
-        if !bool then Some !set else None
-
-let paths_to s phi =
-  match paths_to_aux s phi with
-    | Some s' -> s'
-    | None    -> []
-
+              | None    -> ())
+            es.me_effects;
+          if !bool then Some !set else None
+    ) else
+      None in
+  match aux phi with
+  | Some s -> s
+  | None   -> []
 
 (* Effect: none
-   Result: regions and effects of <phi> that directly belong to effects of
-     <paths> (except those that are in <paths>) *)
-(* XXX: very similar to region_and_effect_variables below (but with a paht) *)
-let rec contents paths phi =
-  (* assert (List.for_all (fun f -> mutable_effect_repr f == f) paths); *)
-  match phi.body with
-    | MElink phi' ->
-        debug section_verbose "contents: link";
-        contents paths phi'
-    | _ when not (List.mem phi paths) ->
-        debug section_verbose "contents: phi \notin paths";
-        [], [phi]
-    | MEvar ->
-        debug section_verbose "contents: var";
+   Result: regions and effects of <phi>, withtout recursively looking inside 
+   effects of <paths> *)
+(* XXX: very similar to region_and_effect_variables below (but with a path) *)
+let contents paths phi =
+  let phi   = mutable_effect_repr phi in
+  let paths = mutable_effect_reprs paths in
+  let seen  = ref [] in
+  let rec aux phi =
+    if not (List.memq phi !seen) then (
+      seen := phi :: !seen;
+      if List.memq phi paths then (
         [], []
-    | MEset s ->
-        debug section_verbose "contents: set";
-        let rs' = ref s.me_regions
-        and fs' = ref [] in
-        List.iter
-          (fun phi' ->
-            let rs, fs = contents paths phi' in
-            rs' := union !rs' rs;
-            fs' := union !fs' fs)
-          s.me_effects;
-        !rs', !fs'
+      ) else match phi.body with
+        | None   -> [], []
+        | Some s ->
+            let rs = ref s.me_regions
+            and fs = ref [] in
+            List.iter
+              (fun phi ->
+                let rs', fs' = aux phi in
+                rs := union !rs rs';
+                fs := union !fs fs')
+              s.me_effects;
+            !rs, !fs
+    ) else
+      [], [] in
+  aux phi
 
-
-(* Effect: Merge all effects of set s in phi
+(* Effect: Merge all effects of list l in phi
    Result: none *)
 let flatten l phi =
+(*  debug section_verbose "flatten %s" (string_of_mutable_effect phi); *)
+  let phi = mutable_effect_repr phi in
+  let l   = mutable_effect_reprs l in
   let todo = ref l
   and seen = ref [] in
   while !todo <> [] do
@@ -282,21 +349,19 @@ let flatten l phi =
     me_regions = x;
     me_effects = y;
   } in
-  phi.body <- MEset s;
-  List.iter (fun phi' -> phi'.body <- MElink phi) (diff !seen l)
+  phi.body <- Some s;
+  List.iter (fun phi' -> link phi' phi) (diff !seen l)
 
-
-let unify_effect e f =
+let unify_effects e f =
+(*  debug section_verbose "unify %s and %s"
+    (string_of_mutable_effect e)
+    (string_of_mutable_effect f); *)
   let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then
     (e.body <- body_union e.body f.body;
      flatten [e; f] e;
-     f.body <- MElink e)
-
-let half_unify e b =
-  let f = new_mutable_effect () in
-  f.body <- b;
-  unify_effect e f
+     link f e)
 
 (* </Unification> *)
+           
