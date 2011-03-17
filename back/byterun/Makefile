@@ -113,7 +113,7 @@ version.h : ../VERSION
 
 clean ::
 	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO) libasmrunp.a
-	rm -f unix/*.$(O) threads/*.$(0)
+	rm -f unix/*.$(O) threads/*.$(O)
 	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
 	rm -f version.h
 .PHONY: clean
@@ -144,6 +144,10 @@ libcamlrun.a: $(OBJS)
 	ar rc libcamlrun.a $(OBJS)
 	$(RANLIB) libcamlrun.a
 
+libasmrunp.a: $(OBJS)
+	ar rc libasmrunp.a $(OBJS)
+	$(RANLIB) libasmrunp.a
+
 libcamlrund.a: $(DOBJS)
 	ar rc libcamlrund.a $(DOBJS)
 	$(RANLIB) libcamlrund.a
@@ -157,9 +161,6 @@ install::
 
 clean::
 	rm -f libcamlrun_shared.so depend
-
-libasmrunp.a: libcamlrun.a
-	cp $^ $@
 
 .SUFFIXES: .d.o .pic.o
 

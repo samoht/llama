@@ -28,7 +28,8 @@ LLAMAYACC=$(BOOTDIR)/llamayacc
 	$(LLAMAYACC) -v $<
 
 %.p.cmx %.p.o: %.cmx
-	cp $*.cmx $*.p.cmx
-	cp $*.o $*.p.o
-%.p.cmxa: %.cmxa
-	cp $^ $@
+	@cp $*.cmx $*.p.cmx
+	@cp $*.o $*.p.o
+%.p.cmxa %.p.a: %.cmxa
+	@cp $*.cmxa $*.p.cmxa
+	@cp $*.a $*.p.a

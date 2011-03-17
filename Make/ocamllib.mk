@@ -7,7 +7,7 @@ $(LIBRARY).cmxa: $(MODULES:%=%.p.cmx)
 	$(OCAMLC_STRICT) -a $(INCLUDES) $^ -o $@
 
 ocamlclean:
-	rm -f $(LIBRARY).cmxa *.cmi *.cmx .ocamldepend $(GENSOURCES)
+	rm -f $(LIBRARY).cmxa *.cmi *.cmx *.a *.cmxa *.o .ocamldepend $(GENSOURCES)
 .PHONY: ocamlclean
 
 ocamldepend: $(GENSOURCES)

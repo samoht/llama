@@ -4,7 +4,7 @@ with-ocaml: $(BINARY)-ocaml
 .PHONY: with-ocaml
 
 $(BINARY)-ocaml: $(MODULES:%=%.p.cmx)
-	$(OCAMLC_STRICT) -ccopt -L$(RUNTIME_PATH) -cclib -lasmrunp -linkall \
+	$(OCAMLC_STRICT) -ccopt -L$(RUNTIME_PATH) -cclib -lasmrunp \
 	  -I $(RUNTIME_PATH) $(INCLUDES)  $(LIBRARIES:%=%.p.cmxa) $^ -o $@
 
 ocamlinstall:
@@ -12,7 +12,7 @@ ocamlinstall:
 .PHONY: ocamlinstall
 
 ocamlclean:
-	rm -f $(BINARY)-ocaml *.cmi *.cmx .ocamldepend $(GENSOURCES)
+	rm -f $(BINARY)-ocaml *.cmi *.cmx *.a *.o *.cmxa .ocamldepend $(GENSOURCES) 
 .PHONY: ocamlclean
 
 ocamldepend: $(GENSOURCES)

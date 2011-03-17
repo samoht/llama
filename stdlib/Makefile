@@ -36,7 +36,6 @@ with-ocaml: stdlib.p.cmxa std_exit.p.cmx std_exit.p.o camlheader
 stdlib.lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $^ -o $@
 stdlib.p.cmxa: $(MODULES:%=%.p.cmx)
-	$(MAKE) $(MODULES:%=%.p.o)
 	$(OCAMLC_STRICT) -a $^ -o $@
 
 # ----------------------------------------------------------------------
@@ -86,7 +85,7 @@ clean:
 	rm -f depend
 ocamlclean:
 	rm -f stdlib.cmxa *.cmi *.cmx camlheader *.o *.cmxa
-	rm -f threads/*.cmi threads/*.cmx
+	rm -f threads/*.cmi threads/*.cmx threads/*.o
 	rm -f .ocamldepend
 .PHONY: clean ocamlclean
 
