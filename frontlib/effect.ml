@@ -217,13 +217,10 @@ let body_union x y =
    Result: effects on the paths leading to an effect of s in phi *)
 let rec body_paths_to l : mutable_effect_body -> mutable_effect list option = function
   | MElink phi' ->
-      debug section_verbose "paths_to: link";
       paths_to_aux l phi'
   | MEvar ->
-      debug section_verbose "paths_to: var";
       None
   | MEset { me_effects=phil } ->
-      debug section_verbose "paths_to: set";
       let bool = ref false
       and set  = ref [] in
       List.iter
@@ -232,7 +229,6 @@ let rec body_paths_to l : mutable_effect_body -> mutable_effect list option = fu
             | Some s' -> bool := true; set := union !set s'
             | None -> ())
         phil;
-      debug section_verbose "paths_to: </set>";
       if !bool then Some !set else None
 
 and paths_to_aux l phi =
@@ -259,16 +255,12 @@ let rec contents paths phi =
        paths );
   match phi.body with
     | MElink phi' ->
-        debug section_verbose "contents: link";
         contents paths phi'
     | _ when not (List.memq phi paths) ->
-        debug section_verbose "contents: phi \\notin paths";
         [], [phi]
     | MEvar ->
-        debug section_verbose "contents: var";
         [], []
     | MEset s ->
-        debug section_verbose "contents: set";
         let rs' = ref s.me_regions
         and fs' = ref [] in
         List.iter
@@ -277,7 +269,6 @@ let rec contents paths phi =
             rs' := union !rs' rs;
             fs' := union !fs' fs)
           s.me_effects;
-        debug section_verbose "contents: </set>";
         !rs', !fs'
 
 
