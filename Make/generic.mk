@@ -1,7 +1,7 @@
-.SUFFIXES: .ml .lml .lmo .lmx .cmi .cmo .mll .mly # .mli .lmi
+.SUFFIXES: .ml .lml .lmo .cmi .cmx .cmi .mll .mly # .mli .lmi
 
-OCAMLC_STRICT=ocamlc -strict-sequence -warn-error A -nostdlib
-OCAMLDEP=ocamldep
+OCAMLC_STRICT=ocamlopt -strict-sequence -warn-error A -nostdlib -g -p
+OCAMLDEP=ocamldep -native
 OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
@@ -12,19 +12,23 @@ LLAMADEP=$(LLAMARUN) $(BOOTDIR)/llamadep
 LLAMALEX=$(LLAMARUN) $(BOOTDIR)/llamalex
 LLAMAYACC=$(BOOTDIR)/llamayacc
 
-#.mli.lmi:
-#	$(LLAMAC) -c $(INCLUDES) $<
+%.lmi: %.mli
+	$(LLAMAC) -c $(INCLUDES) $<
 .ml.lmo:
 	$(LLAMAC) -c $(INCLUDES) $<
-.ml.lmx:
-	$(LLAMAOPT) -c $(INCLUDES) $<
-.mli.cmi:
+%.cmi: %.mli
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
-.ml.cmo:
+.ml.cmx:
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
 .mll.ml:
-	$(LLAMALEX) $< || $(OCAMLLEX) $<
+	$(LLAMALEX) $<
 .mly.ml:
-	$(LLAMAYACC) -v $< || $(OCAMLYACC) -v $<
+	$(LLAMAYACC) -v $<
 .mly.mli:
-	$(LLAMAYACC) -v $< || $(OCAMLYACC) -v $<
+	$(LLAMAYACC) -v $<
+
+%.p.cmx %.p.o: %.cmx
+	cp $*.cmx $*.p.cmx
+	cp $*.o $*.p.o
+%.p.cmxa: %.cmxa
+	cp $^ $@

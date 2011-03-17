@@ -40,13 +40,13 @@ promote:
 
 with-ocaml: ocamldepend
 	make -C stdlib with-ocaml
-	make -C backlib with-ocaml && make backlib/backlib.cma
-	make -C frontlib with-ocaml && make frontlib/frontlib.cma
-	make -C back/byterun
+	make -C backlib with-ocaml && make backlib/backlib.p.cmxa
+	make -C frontlib with-ocaml && make frontlib/frontlib.p.cmxa
+	make -C back/byterun with-ocaml
 	make -C deptool with-ocaml && make deptool/llamadep-ocaml
 	make -C lex with-ocaml && make lex/llamalex-ocaml
 	make -C yacc
-	make -C back/bytelib with-ocaml && make back/bytelib/bytelib.cma
+	make -C back/bytelib with-ocaml && make back/bytelib/bytelib.p.cmxa
 	make -C back/bytec with-ocaml && make back/bytec/llamac-ocaml
 .PHONY: with-ocaml
 
@@ -77,7 +77,7 @@ stdlib/stdlib.lma:
 	make -C stdlib clean
 	make -C stdlib
 
-stdlib/stdlib.cma:
+stdlib/stdlib.p.cmxa:
 	make -C stdlib ocamlclean
 	make -C stdlib with-ocaml
 
@@ -85,7 +85,7 @@ backlib/backlib.lma: stdlib/stdlib.lma
 	make -C backlib clean
 	make -C backlib
 
-backlib/backlib.cma: stdlib/stdlib.cma
+backlib/backlib.p.cmxa: stdlib/stdlib.p.cmxa
 	make -C backlib ocamlclean
 	make -C backlib with-ocaml
 
@@ -93,7 +93,7 @@ frontlib/frontlib.lma: backlib/backlib.lma
 	make -C frontlib clean
 	make -C frontlib
 
-frontlib/frontlib.cma: backlib/backlib.cma
+frontlib/frontlib.p.cmxa: backlib/backlib.p.cmxa
 	make -C frontlib ocamlclean
 	make -C frontlib with-ocaml
 
@@ -101,7 +101,7 @@ frontc/llamafrontc: frontlib/frontlib.lma
 	make -C frontc clean
 	make -C frontc
 
-frontc/llamafrontc-ocaml: frontlib/frontlib.cma
+frontc/llamafrontc-ocaml: frontlib/frontlib.p.cmxa
 	make -C frontc ocamlclean
 	make -C frontc with-ocaml
 
@@ -109,7 +109,7 @@ deptool/llamadep: frontlib/frontlib.lma
 	make -C deptool clean
 	make -C deptool
 
-deptool/llamadep-ocaml: frontlib/frontlib.cma
+deptool/llamadep-ocaml: frontlib/frontlib.p.cmxa
 	make -C deptool ocamlclean
 	make -C deptool ocaml
 
@@ -117,7 +117,7 @@ lex/llamalex: stdlib/stdlib.lma
 	make -C lex clean
 	make -C lex
 
-lex/llamalex-ocaml: stdlib/stdlib.cma
+lex/llamalex-ocaml: stdlib/stdlib.p.cmxa
 	make -C lex ocamlclean
 	make -C lex with-ocaml
 
@@ -137,7 +137,7 @@ back/bytelib/bytelib.lma: backlib/backlib.lma back/byterun/llamarun
 	make -C back/bytelib clean
 	make -C back/bytelib
 
-back/bytelib/bytelib.cma: backlib/backlib.cma back/byterun/llamarun
+back/bytelib/bytelib.p.cmxa: backlib/backlib.p.cmxa back/byterun/llamarun
 	make -C back/bytelib ocamlclean
 	make -C back/bytelib with-ocaml
 
@@ -145,7 +145,7 @@ back/bytec/llamac: back/bytelib/bytelib.lma
 	make -C back/bytec clean
 	make -C back/bytec
 
-back/bytec/llamac-ocaml: back/bytelib/bytelib.cma
+back/bytec/llamac-ocaml: back/bytelib/bytelib.p.cmxa
 	make -C back/bytec ocamlclean
 	make -C back/bytec with-ocaml
 

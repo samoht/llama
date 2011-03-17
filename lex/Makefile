@@ -1,7 +1,7 @@
 BOOTDIR=../boot
 BINARY=llamalex
 INCLUDES=-I ../stdlib
-RUNTIME_PATH=-I ../back/byterun
+RUNTIME_PATH=../back/byterun
 MODULES=cset syntax parser lexer table lexgen compact common output outputbis main
 GENSOURCES=parser.ml parser.mli lexer.ml
 

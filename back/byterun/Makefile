@@ -58,7 +58,9 @@ PUBLIC_INCLUDES=\
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
 all:: depend llamarun$(EXE) ld.conf libcamlrun.$(A)
-.PHONY: all
+.PHONY: all with-ocaml
+
+with-ocaml: all libasmrunp.a
 
 ld.conf: ../config/Makefile
 	echo "$(STUBLIBDIR)" > ld.conf
@@ -110,7 +112,7 @@ version.h : ../VERSION
 	echo "#define OCAML_VERSION \"`sed -e 1q ../VERSION`\"" > version.h
 
 clean ::
-	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO)
+	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO) libasmrunp.a
 	rm -f unix/*.$(O) threads/*.$(0)
 	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
 	rm -f version.h
@@ -156,6 +158,8 @@ install::
 clean::
 	rm -f libcamlrun_shared.so depend
 
+libasmrunp.a: libcamlrun.a
+	cp $^ $@
 
 .SUFFIXES: .d.o .pic.o
 

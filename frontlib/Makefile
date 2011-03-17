@@ -17,7 +17,6 @@ MODULES= \
   makeident makelambda \
   typeopt pmc_pattern parmatch switch matching \
   translcore translmod simplif \
-  \
   depend fronterrors
 GENSOURCES=parser.ml parser.mli lexer.ml linenum.ml
 

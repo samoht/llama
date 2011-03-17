@@ -7,7 +7,7 @@ $(LIBRARY).lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $(INCLUDES) $(LIBRARIES:%=%.lma) $^ -o $@
 
 clean:
-	rm -f $(LIBRARY).lma *.lmi *.lml *.lmo *.lmx depend
+	rm -f $(LIBRARY).lma *.lmi *.lml *.lmo *.lmx depend $(GENSOURCES)
 .PHONY: clean
 
 scrapeclean:
