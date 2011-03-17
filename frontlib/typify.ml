@@ -257,6 +257,13 @@ let formatstring loc fmt =
 let rec expression exp =
   let ty, rhol, phil = expression_aux exp in
   let phi = merge_effects rhol phil in
+  debug section_verbose "expression rhol=%s phil=%s phi=%s exp=%s\n%s%s"
+    (string_of_mutable_regions rhol)
+    (string_of_mutable_effectl phil)
+    (string_of_mutable_effect phi)
+    (string_of_mutable_effect exp.mexp_effect)
+    (dot_string_of_mutable_effect phi)
+    (dot_string_of_mutable_effect exp.mexp_effect);
   unify_effects exp.mexp_effect phi;
   (try
      unify exp.mexp_type ty;

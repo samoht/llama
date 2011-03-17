@@ -61,8 +61,9 @@ let rec mutable_effect f phi =
   let phi = mutable_effect_repr phi in
 (*  debug section_verbose "mutable_effect2"; *)
   match phi.body with
-    | None       -> Eparam (mutable_effect_param f phi)
-    | Some s     ->
+    | MEvar    -> Eparam (mutable_effect_param f phi)
+    | MElink _ -> assert false
+    | MEset s  ->
         let rs, es = region_and_effect_variables phi in
         let s = {
           e_regions = List.map (mutable_region_param f) rs;

@@ -119,7 +119,7 @@ let compare_regions r s =
 
 type mutable_effect_variable = {
   id            : int;
-  mutable body  : mutable_effects option;
+  mutable body  : mutable_effect_body;
   mutable emark : int option;
 }
 
@@ -127,6 +127,11 @@ and mutable_effects = {
   me_regions : mutable_region list;
   me_effects : mutable_effect list;
 }
+
+and mutable_effect_body =
+  | MEvar
+  | MElink of mutable_effect
+  | MEset  of mutable_effects
 
 and mutable_effect = mutable_effect_variable
 
@@ -147,26 +152,27 @@ let dot_string_of_mutable_effect root =
   let seen = ref [] in
   let node phi = Printf.sprintf "node [shape=circle]; %s;" (string_of_mutable_effect phi) in
   let empty_node phi = Printf.sprintf "node [shape=doublecircle]; %s;" (string_of_mutable_effect phi) in
+  let arrow phi e label =
+    Printf.sprintf "%s -> %s%s;"
+      (string_of_mutable_effect phi)
+      (string_of_mutable_effect e)
+      label in
   let rec aux accu phi =
     if List.memq phi !seen then (
       accu
     ) else (
       seen := phi :: !seen;
       match phi.body with
-      | None   -> node phi :: accu
-      | Some s ->
+      | MEvar    -> node phi :: accu
+      | MElink e -> aux (arrow phi e "=" :: accu) e
+      | MEset  s ->
           if s.me_regions =[] && s.me_effects = [] then
             empty_node phi :: accu
           else
             let rs = List.map string_of_mutable_region s.me_regions in
             let rs = String.concat "," rs in
             let label = if rs = "" then "" else Printf.sprintf " [ label=\"%s\" ]" rs in
-            let arrow e =
-              Printf.sprintf "%s -> %s%s;"
-                (string_of_mutable_effect phi)
-                (string_of_mutable_effect e)
-                label in
-            let es = List.map arrow s.me_effects in
+            let es = List.map (fun e -> arrow phi e label) s.me_effects in
             List.fold_left aux (node phi :: es @ accu) s.me_effects) in
   Printf.sprintf "digraph %s {\n%s\n}"
     (string_of_mutable_effect root)
@@ -183,8 +189,9 @@ let assert_no_cycle root =
       assert false;
     ) else (
       match phi.body with
-        | None   -> ()
-        | Some s -> List.iter (aux (phi::path)) s.me_effects
+        | MEvar    -> ()
+        | MElink e -> aux path e
+        | MEset  s -> List.iter (aux (phi::path)) s.me_effects
     ) in
   aux [] root
 
@@ -205,8 +212,9 @@ let diff l1 l2 =
 let region_and_effect_variables e =
   let rec aux (rs, es) e =
     match e.body with
-      | None   -> (rs, add e es)
-      | Some s -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
+      | MEvar    -> (rs, add e es)
+      | MElink e -> aux (rs, es) e
+      | MEset  s -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
   let r = aux ([], []) e in
   r
 
@@ -218,7 +226,7 @@ let new_mutable_effect =
   let x = ref 0 in
   fun () ->
     incr x;
-    { id = !x; body = None; emark = None }
+    { id = !x; body = MEvar; emark = None }
 
 let new_empty_effect () =
   let e = new_mutable_effect () in
@@ -226,7 +234,7 @@ let new_empty_effect () =
     me_regions = [];
     me_effects = [];
   } in
-  e.body <- Some body;
+  e.body <- MEset body;
   e
 
 
@@ -239,13 +247,13 @@ let merge_effects rs es =
     me_regions = rs;
     me_effects = es;
   } in
-  e.body <- Some s;
+  e.body <- MEset s;
   e
 
 let rec mutable_effect_repr phi =
   match phi.body with
-    | Some { me_regions = []; me_effects = [v] } -> mutable_effect_repr v
-    | _ -> phi
+    | MElink v -> mutable_effect_repr v
+    | _        -> phi
 
 let mutable_effect_reprs l =
   List.map mutable_effect_repr l
@@ -255,23 +263,19 @@ let link e1 e2 =
      (string_of_mutable_effect e1) (string_of_mutable_effect e2); *)
   let e1 = mutable_effect_repr e1 in
   let e2 = mutable_effect_repr e2 in
-  let s = {
-    me_regions = [];
-    me_effects = [e2];
-  } in
-  e1.body <- Some s
+  e1.body <- MElink e2
 
 (* we assume than x and y are representants *)
 let body_union x y =
   match x, y with
-    | None, _ -> y
-    | _, None -> x
-    | Some s1, Some s2 ->
+    | MEvar   , _        -> y
+    | _       , MEvar    -> x
+    | MEset s1, MEset s2 ->
        let s = {
          me_regions = union s1.me_regions s2.me_regions;
          me_effects = union s1.me_effects s2.me_effects;
        } in
-       Some s
+       MEset s
 
 (* Unification : clearer *)
 
@@ -285,8 +289,9 @@ let paths_to l phi =
     if not (List.memq phi !seen) then (
       seen := phi :: !seen;
       match phi.body with
-      | None    -> if List.memq phi l then Some [] else None
-      | Some es ->
+      | MEvar    -> if List.memq phi l then Some [] else None
+      | MElink e -> aux e
+      | MEset es ->
           let bool = ref (List.memq phi l)
           and set  = ref [] in
           List.iter
@@ -316,8 +321,9 @@ let contents paths phi =
       if List.memq phi paths then (
         [], []
       ) else match phi.body with
-        | None   -> [], []
-        | Some s ->
+        | MEvar    -> [], []
+        | MElink e -> aux e
+        | MEset s  ->
             let rs = ref s.me_regions
             and fs = ref [] in
             List.iter
@@ -349,7 +355,7 @@ let flatten l phi =
     me_regions = x;
     me_effects = y;
   } in
-  phi.body <- Some s;
+  phi.body <- MEset s;
   List.iter (fun phi' -> link phi' phi) (diff !seen l)
 
 let unify_effects e f =
