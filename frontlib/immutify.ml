@@ -230,20 +230,20 @@ and expression_option f = function
 let type_of_local_type subst local_args lt =
   let regions = ref [] in
   let renumber_r r =
-    try
-      List.assoc r !regions
-    with Not_found ->
+    if not (List.mem_assq r !regions) then (
       let n = List.length !regions in
       regions := (r, n) :: !regions;
-      n in
+      n
+    ) else
+      List.assq r !regions in
  let effects = ref [] in
   let renumber_e e =
-    try
-      List.assoc e !effects
-    with Not_found ->
+    if not (List.mem_assq e !effects) then (
       let n = List.length !effects in
       effects := (e, n) :: !effects;
-      n in
+      n
+    ) else
+      List.assq e !effects in
   let rec aux = function
     | Lparam i ->
         Tparam i
