@@ -290,59 +290,44 @@ let link e1 e2 =
 (* Effect: none
    Result: effects on the paths leading to an effect of list l in phi *)
 let paths_to l phi =
-  let seen = ref [] in
+  let seen = ref [] and res = ref [] in
   let rec body = function
     | MElink phi' -> effect phi'
-    | MEvar _     -> None
-    | MEset s     ->
-        let bool = ref false
-        and set  = ref [] in
-        List.iter
-          (fun phi' ->
-            match effect phi' with
-            | Some s' -> bool := true; set := union !set s'
-            | None -> ())
-          s.me_effects;
-        if !bool then Some !set else None
+    | MEvar _     -> false
+    | MEset s     -> List.exists effect s.me_effects
   and effect phi =
-    if List.memq phi !seen then (
-      seen := phi :: !seen;
-      match body phi.body with
-      | Some l -> Some (add phi l)
-      | None   -> if List.memq phi l then Some [] else None
-    ) else
-      None in
-  match effect phi with
-  | Some s' -> s'
-  | None    -> []
+    try List.assq phi !seen
+    with Not_found ->
+      let b = body phi.body in
+      if b then res := add phi !res;
+      let r = b || List.memq phi l in
+      seen := (phi, r) :: !seen;
+      r
+  in
+  !res
 
 (* Effect: none
    Result: regions and effects of <phi>, withtout recursively looking inside 
    effects of <paths> *)
 (* XXX: very similar to region_and_effect_variables below (but with a path) *)
 let contents paths phi =
-  let seen  = ref [] in
+  let seen = ref [] and r_res = ref [] and f_res = ref [] in
   let rec aux phi =
     if not (List.memq phi !seen) then (
       seen := phi :: !seen;
-      if not (List.memq phi paths) then (
-        [], [phi]
-      ) else match phi.body with
-        | MEvar    -> [], []
-        | MElink e -> aux e
-        | MEset s  ->
-            let rs = ref s.me_regions
-            and fs = ref [] in
-            List.iter
-              (fun phi ->
-                let rs', fs' = aux phi in
-                rs := union !rs rs';
-                fs := union !fs fs')
-              s.me_effects;
-            !rs, !fs
-    ) else
-      [], [] in
-  aux phi
+      if not (List.memq phi paths) then
+        f_res := add phi !f_res
+      else
+        match phi.body with
+          | MEvar    -> ()
+          | MElink e -> aux e
+          | MEset s  ->
+              r_res := union !r_res s.me_regions;
+              List.iter aux s.me_effects
+    )
+  in
+  aux phi;
+  !r_res, !f_res
 
 (* Effect: Merge all effects of list l in phi
    Result: none *)
