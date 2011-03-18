@@ -41,11 +41,11 @@ let tree_of_value v = tree_of_longident (val_longident v)
 (* Types.                                                                 *)
 (* ---------------------------------------------------------------------- *)
 
-let tree_of_region_parameters fn_r rs =
-  List.map (fun i -> string_of_region_parameter (fn_r i)) rs
+let tree_of_region_parameters rs =
+  List.map string_of_region_parameter rs
 
-let tree_of_effect_parameters fn_e es =
-  List.map (fun i -> string_of_effect_parameter (fn_e i)) es
+let tree_of_effect_parameters es =
+  List.map string_of_effect_parameter es
 
 (* Regions/Effects on arrows have already been substituted *)
 let tree_of_effect e =
@@ -61,12 +61,10 @@ let rec tree_of_type = function
   | Ttuple tyl ->
       Otyp_tuple (tree_of_type_list tyl)
   | Tconstr (tcs, p) ->
-      let fn_r i = List.nth p.tcp_regions i in
-      let fn_e i = List.nth p.tcp_effects i in
       Otyp_constr (tree_of_type_constructor tcs,
                    tree_of_type_list p.tcp_types,
-                   (tree_of_region_parameters fn_r p.tcp_regions,
-                    tree_of_effect_parameters fn_e p.tcp_effects))
+                   (tree_of_region_parameters p.tcp_regions,
+                    tree_of_effect_parameters p.tcp_effects))
 
 and tree_of_type_list tyl =
   List.map tree_of_type tyl
