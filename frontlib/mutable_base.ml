@@ -199,8 +199,7 @@ let rec local_kind_region_parameters internals k =
     | Ltcs_variant vl -> List.fold_left variant accu vl
     | Ltcs_record rs  -> List.fold_left record accu rs
     | Ltcs_abbrev lt  -> local accu lt in
-  let rs, es = local_kind ([],[]) k in
-  List.sort compare rs, List.sort compare es
+  local_kind ([],[]) k
 
 let local_kind_external_region_parameters k =
   local_kind_region_parameters false k
