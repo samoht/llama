@@ -202,7 +202,7 @@ let tree_of_mutable_type ty =
     List.map (fun r -> region_name (mutable_region_repr r)) rs in
 
   let tree_of_mutable_effect_vars es =
-    List.map (fun r -> effect_name (mutable_effect_repr e)) es in
+    List.map (fun e -> effect_name (mutable_effect_repr e)) es in
 
   let tree_of_mutable_effect phi =
     let phi = mutable_effect_repr phi in
@@ -221,7 +221,7 @@ let tree_of_mutable_type ty =
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Mconstr (tcs, p) ->
         let ps = tree_of_mutable_region_vars p.m_regions, tree_of_mutable_effect_vars p.m_effects in
-        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list p.m_types, ps) in
+        Otyp_constr (tree_of_type_constructor tcs, tree_of_mutable_type_list p.m_types, ps)
 
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
