@@ -183,34 +183,34 @@ let signature ppf sg =
 
 open Mutable_base
 
-(* XXX: need to normalize region and variable names *)
-let tree_of_mutable_region r =
-  let r = mutable_region_repr r in
-  string_of_mutable_region r
+(* normalize type, region and effect variables *)
+let name names fn v =
+  try List.assq v !names with Not_found ->
+    let name = fn (List.length !names) in
+    names := (v, name) :: !names;
+    name
 
-let rec tree_of_mutable_effect phi =
-  let phi = mutable_effect_repr phi in
-  [ string_of_mutable_effect phi ]
-(*  match phi with
-    | Effect.Evar v    -> [Effect.string_of_mutable_effect_variable v] (* XXX: we should check that we don't have these anymore *)
-    | Effect.Eregion r -> [Effect.string_of_mutable_region r]
-    | Effect.Eunion s  ->
-      let l = Set.elements s in
-      List.flatten (List.map tree_of_mutable_effect l)
-*)
-(* normalize type variables *)
-let tree_of_mutable_type =
-  let var_names = ref ([] : (mutable_type_variable * string) list) in
-  let var_name v =
-    try List.assq v !var_names with Not_found ->
-      let name = parameter_name (List.length !var_names) in
-      var_names := (v, name) :: !var_names;
-      name in
+let tree_of_mutable_type ty =
+  let type_names = ref [] in
+  let region_names = ref [] in
+  let effect_names = ref [] in
+  let type_name = name type_names parameter_name in
+  let region_name = name region_names string_of_region_parameter in
+  let effect_name = name effect_names string_of_effect_parameter in
+
+  let tree_of_mutable_region r =
+    region_name (mutable_region_repr r) in
+      
+  let rec tree_of_mutable_effect phi =
+    let phi = mutable_effect_repr phi in
+    let rs, es = region_and_effect_variables phi in
+    List.map region_name rs @ List.map effect_name es in
+
   let rec tree_of_mutable_type = function
       Mvar v ->
         begin match v.link with
           | None ->
-              Otyp_var (false, var_name v)
+              Otyp_var (false, type_name v)
           | Some ty ->
               tree_of_mutable_type ty
         end
@@ -225,9 +225,7 @@ let tree_of_mutable_type =
                       List.flatten (List.map tree_of_mutable_effect p.m_effects)))
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
-  fun ty ->
-    var_names := [];
-    tree_of_mutable_type ty
+  tree_of_mutable_type ty
 
 let mutable_type ppf ty =
   !Oprint.out_type ppf (tree_of_mutable_type ty)
