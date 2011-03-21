@@ -198,13 +198,16 @@ let tree_of_mutable_type ty =
   let region_name = name region_names string_of_region_parameter in
   let effect_name = name effect_names string_of_effect_parameter in
 
-  let tree_of_mutable_region r =
+  let tree_of_mutable_region_var r =
     region_name (mutable_region_repr r) in
-      
-  let rec tree_of_mutable_effect phi =
+
+  let tree_of_mutable_effect_var e =
+    effect_name (mutable_effect_repr e) in
+
+  let tree_of_mutable_effect phi =
     let phi = mutable_effect_repr phi in
     let rs, es = region_and_effect_variables phi in
-    List.map region_name rs @ List.map effect_name es in
+    List.map region_name rs, List.map effect_name es in
 
   let rec tree_of_mutable_type = function
       Mvar v ->
@@ -215,16 +218,18 @@ let tree_of_mutable_type ty =
               tree_of_mutable_type ty
         end
     | Marrow (ty1, ty2, phi) ->
-        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, ([], tree_of_mutable_effect phi))
+        Otyp_arrow ("", tree_of_mutable_type ty1, tree_of_mutable_type ty2, tree_of_mutable_effect phi)
     | Mtuple tyl ->
         Otyp_tuple (tree_of_mutable_type_list tyl)
     | Mconstr (tcs, p) ->
         Otyp_constr (tree_of_type_constructor tcs,
                      tree_of_mutable_type_list p.m_types,
-                     (List.map tree_of_mutable_region p.m_regions, 
-                      List.flatten (List.map tree_of_mutable_effect p.m_effects)))
+                     (List.map tree_of_mutable_region_var p.m_regions, 
+                      List.map tree_of_mutable_effect_var p.m_effects))
+
   and tree_of_mutable_type_list tyl =
     List.map tree_of_mutable_type tyl in
+
   tree_of_mutable_type ty
 
 let mutable_type ppf ty =
