@@ -151,13 +151,10 @@ let string_of_mutable_effects e =
 let dot_string_of_mutable_effect root =
   let seen = ref [] in
   let var_node phi =
-    Printf.sprintf "node [shape=doublecircle]; %s [label=\"%d\"];"
+    Printf.sprintf "node [shape=circle]; %s [label=\"%d\"];"
       (string_of_mutable_effect phi) phi.id in
   let set_node phi =
     Printf.sprintf "node [shape=diamond]; %s;"
-      (string_of_mutable_effect phi) in
-  let empty_node phi =
-    Printf.sprintf "node [shape=circle]; %s;"
       (string_of_mutable_effect phi) in
   let region_node r =
     Printf.sprintf "node [shape=box]; %s;"
@@ -184,7 +181,7 @@ let dot_string_of_mutable_effect root =
       | MElink e -> aux (set_node phi :: nodes, arrow phi (Some "=") e :: edges) e
       | MEset  s ->
           if s.me_regions = [] && s.me_effects = [] then
-            (empty_node phi :: nodes, edges)
+            (set_node phi :: nodes, edges)
           else
             let nodes, edges = List.fold_left
               (fun (nodes, edges) r -> region_node r :: nodes, arrow2 phi r :: edges)
