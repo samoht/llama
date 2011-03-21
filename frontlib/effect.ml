@@ -233,9 +233,9 @@ let diff l1 l2 =
 let region_and_effect_variables e =
   let rec aux (rs, es) e =
     match e.body with
-      | MEvar     -> (rs, add e es)
-      | MElink e' -> aux (rs, es) e
-      | MEset s   -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
+      | MEvar    -> (rs, add e es)
+      | MElink f -> aux (rs, es) f
+      | MEset s  -> List.fold_left aux (union s.me_regions rs, es) s.me_effects in
   aux ([], []) e
 
 (* Returns a fresh effect variable *)
@@ -355,9 +355,10 @@ let unify_effects e f =
   and f = mutable_effect_repr f in
   if e != f then(
     e.body <- unify_bodies e.body f.body;
+    f.body <- (MElink e);
     flatten e;
   )
-           
+
 (*
 
 let test () =
