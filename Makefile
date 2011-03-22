@@ -9,23 +9,23 @@ include config.mk
 
 default: back/byterun/llamarun yacc/llamayacc
 	cp $^ boot
-	make all
+	$(MAKE) all
 .PHONY: default
 
 # Build everything using the ambient C compiler and the core system in "boot"
 
 all: depend
-	make -C stdlib
-	make -C backlib && make backlib/backlib.lma
-	make -C frontlib && make frontlib/frontlib.lma
-	make -C back/byterun
-	make -C deptool && make deptool/llamadep
-	make -C lex && make lex/llamalex
-	make -C yacc
-	make -C doctool && make doctool/llamadoc
-	make -C back/bytelib && make back/bytelib/bytelib.lma
-	make -C back/bytec && make back/bytec/llamac
-	make -C back/bytetop && make back/bytetop/llama
+	$(MAKE) -C stdlib
+	$(MAKE) -C backlib && $(MAKE) backlib/backlib.lma
+	$(MAKE) -C frontlib && $(MAKE) frontlib/frontlib.lma
+	$(MAKE) -C back/byterun
+	$(MAKE) -C deptool && $(MAKE) deptool/llamadep
+	$(MAKE) -C lex && $(MAKE) lex/llamalex
+	$(MAKE) -C yacc
+	$(MAKE) -C doctool && $(MAKE) doctool/llamadoc
+	$(MAKE) -C back/bytelib && $(MAKE) back/bytelib/bytelib.lma
+	$(MAKE) -C back/bytec && $(MAKE) back/bytec/llamac
+	$(MAKE) -C back/bytetop && $(MAKE) back/bytetop/llama
 .PHONY: all
 
 # Copy the core bytecode executables to "boot"
@@ -39,15 +39,15 @@ promote:
 # Build an emergency core system using the ambient C and OCaml compilers
 
 with-ocaml: ocamldepend
-	make -C stdlib with-ocaml
-	make -C backlib with-ocaml && make backlib/backlib.p.cmxa
-	make -C frontlib with-ocaml && make frontlib/frontlib.p.cmxa
-	make -C back/byterun with-ocaml
-	make -C deptool with-ocaml && make deptool/llamadep-ocaml
-	make -C lex with-ocaml && make lex/llamalex-ocaml
-	make -C yacc
-	make -C back/bytelib with-ocaml && make back/bytelib/bytelib.p.cmxa
-	make -C back/bytec with-ocaml && make back/bytec/llamac-ocaml
+	$(MAKE) -C stdlib with-ocaml
+	$(MAKE) -C backlib with-ocaml && $(MAKE) backlib/backlib.p.cmxa
+	$(MAKE) -C frontlib with-ocaml && $(MAKE) frontlib/frontlib.p.cmxa
+	$(MAKE) -C back/byterun with-ocaml
+	$(MAKE) -C deptool with-ocaml && $(MAKE) deptool/llamadep-ocaml
+	$(MAKE) -C lex with-ocaml && $(MAKE) lex/llamalex-ocaml
+	$(MAKE) -C yacc
+	$(MAKE) -C back/bytelib with-ocaml && $(MAKE) back/bytelib/bytelib.p.cmxa
+	$(MAKE) -C back/bytec with-ocaml && $(MAKE) back/bytec/llamac-ocaml
 .PHONY: with-ocaml
 
 # Copy the emergency core system to "boot"
@@ -64,94 +64,94 @@ ocamlpromote:
 
 # Bootstrap the compiler
 bootstrap:
-	make && make promote && make mlclean && make
+	$(MAKE) && $(MAKE) promote && $(MAKE) mlclean && $(MAKE)
 
 recover-bootstrap:
-	git checkout boot/ && make mlclean && make
+	git checkout boot/ && $(MAKE) mlclean && $(MAKE)
 
 # ----------------------------------------------------------------------
 # Directory rules and dependencies
 # ----------------------------------------------------------------------
 
 stdlib/stdlib.lma:
-	make -C stdlib clean
-	make -C stdlib
+	$(MAKE) -C stdlib clean
+	$(MAKE) -C stdlib
 
 stdlib/stdlib.p.cmxa:
-	make -C stdlib ocamlclean
-	make -C stdlib with-ocaml
+	$(MAKE) -C stdlib ocamlclean
+	$(MAKE) -C stdlib with-ocaml
 
 backlib/backlib.lma: stdlib/stdlib.lma
-	make -C backlib clean
-	make -C backlib
+	$(MAKE) -C backlib clean
+	$(MAKE) -C backlib
 
 backlib/backlib.p.cmxa: stdlib/stdlib.p.cmxa
-	make -C backlib ocamlclean
-	make -C backlib with-ocaml
+	$(MAKE) -C backlib ocamlclean
+	$(MAKE) -C backlib with-ocaml
 
 frontlib/frontlib.lma: backlib/backlib.lma
-	make -C frontlib clean
-	make -C frontlib
+	$(MAKE) -C frontlib clean
+	$(MAKE) -C frontlib
 
 frontlib/frontlib.p.cmxa: backlib/backlib.p.cmxa
-	make -C frontlib ocamlclean
-	make -C frontlib with-ocaml
+	$(MAKE) -C frontlib ocamlclean
+	$(MAKE) -C frontlib with-ocaml
 
 frontc/llamafrontc: frontlib/frontlib.lma
-	make -C frontc clean
-	make -C frontc
+	$(MAKE) -C frontc clean
+	$(MAKE) -C frontc
 
 frontc/llamafrontc-ocaml: frontlib/frontlib.p.cmxa
-	make -C frontc ocamlclean
-	make -C frontc with-ocaml
+	$(MAKE) -C frontc ocamlclean
+	$(MAKE) -C frontc with-ocaml
 
 deptool/llamadep: frontlib/frontlib.lma
-	make -C deptool clean
-	make -C deptool
+	$(MAKE) -C deptool clean
+	$(MAKE) -C deptool
 
 deptool/llamadep-ocaml: frontlib/frontlib.p.cmxa
-	make -C deptool ocamlclean
-	make -C deptool ocaml
+	$(MAKE) -C deptool ocamlclean
+	$(MAKE) -C deptool ocaml
 
 lex/llamalex: stdlib/stdlib.lma
-	make -C lex clean
-	make -C lex
+	$(MAKE) -C lex clean
+	$(MAKE) -C lex
 
 lex/llamalex-ocaml: stdlib/stdlib.p.cmxa
-	make -C lex ocamlclean
-	make -C lex with-ocaml
+	$(MAKE) -C lex ocamlclean
+	$(MAKE) -C lex with-ocaml
 
 yacc/llamayacc:
-	make -C yacc clean
-	make -C yacc
+	$(MAKE) -C yacc clean
+	$(MAKE) -C yacc
 
 doctool/llamadoc:
-	make -C doctool clean
-	make -C doctool
+	$(MAKE) -C doctool clean
+	$(MAKE) -C doctool
 
 back/byterun/llamarun:
-	make -C back/byterun clean
-	make -C back/byterun
+	$(MAKE) -C back/byterun clean
+	$(MAKE) -C back/byterun
 
 back/bytelib/bytelib.lma: backlib/backlib.lma back/byterun/llamarun
-	make -C back/bytelib clean
-	make -C back/bytelib
+	$(MAKE) -C back/bytelib clean
+	$(MAKE) -C back/bytelib
 
 back/bytelib/bytelib.p.cmxa: backlib/backlib.p.cmxa back/byterun/llamarun
-	make -C back/bytelib ocamlclean
-	make -C back/bytelib with-ocaml
+	$(MAKE) -C back/bytelib ocamlclean
+	$(MAKE) -C back/bytelib with-ocaml
 
 back/bytec/llamac: back/bytelib/bytelib.lma
-	make -C back/bytec clean
-	make -C back/bytec
+	$(MAKE) -C back/bytec clean
+	$(MAKE) -C back/bytec
 
 back/bytec/llamac-ocaml: back/bytelib/bytelib.p.cmxa
-	make -C back/bytec ocamlclean
-	make -C back/bytec with-ocaml
+	$(MAKE) -C back/bytec ocamlclean
+	$(MAKE) -C back/bytec with-ocaml
 
 back/bytetop/llama: frontlib/frontlib.lma back/bytelib/bytelib.lma
-	make -C back/bytetop clean
-	make -C back/bytetop
+	$(MAKE) -C back/bytetop clean
+	$(MAKE) -C back/bytetop
 
 # ----------------------------------------------------------------------
 
@@ -173,7 +173,7 @@ DIRS=$(MLDIRS) $(CDIRS)
 
 install:
 	mkdir -p $(BINDIR) $(LIBDIR)
-	for dir in $(CDIRS) $(APPDIRS) stdlib; do make -C $$dir install; done
+	for dir in $(CDIRS) $(APPDIRS) stdlib; do $(MAKE) -C $$dir install; done
 .PHONY: install
 
 # ----------------------------------------------------------------------
@@ -181,9 +181,9 @@ install:
 # ----------------------------------------------------------------------
 
 depend:
-	for dir in $(DIRS); do make -C $$dir depend; done
+	for dir in $(DIRS); do $(MAKE) -C $$dir depend; done
 ocamldepend:
-	for dir in $(COREDIRS); do make -C $$dir ocamldepend; done
+	for dir in $(COREDIRS); do $(MAKE) -C $$dir ocamldepend; done
 .PHONY: depend ocamldepend
 
 # ----------------------------------------------------------------------
@@ -191,9 +191,9 @@ ocamldepend:
 # ----------------------------------------------------------------------
 
 clean:
-	for dir in $(DIRS); do make -C $$dir clean; done
+	for dir in $(DIRS); do $(MAKE) -C $$dir clean; done
 mlclean:
-	for dir in $(MLDIRS); do make -C $$dir clean; done
+	for dir in $(MLDIRS); do $(MAKE) -C $$dir clean; done
 ocamlclean:
-	for dir in $(COREDIRS); do make -C $$dir ocamlclean; done
+	for dir in $(COREDIRS); do $(MAKE) -C $$dir ocamlclean; done
 .PHONY: clean mlclean ocamlclean
