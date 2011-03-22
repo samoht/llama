@@ -22,10 +22,11 @@ LLAMAYACC=$(BOOTDIR)/llamayacc
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
 .mll.ml:
 	$(LLAMALEX) $<
-.mly.ml:
+%.ml: %.mly
 	$(LLAMAYACC) -v $<
-.mly.mli:
-	$(LLAMAYACC) -v $<
+	rm $@i
+#%.mli: %.mly
+#	$(LLAMAYACC) -v $<
 
 %.p.cmx %.p.o: %.cmx
 	@cp $*.cmx $*.p.cmx
