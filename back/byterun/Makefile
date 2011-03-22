@@ -15,7 +15,7 @@
 
 include ../config/Makefile
 
-CC=$(BYTECC)
+CC=$(BYTECC) $(PROFILE)
 
 UNIX=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
   chown.c chroot.c close.c closedir.c connect.c cst2constr.c cstringv.c \
@@ -36,31 +36,29 @@ UNIX=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
 
 THREADS=scheduler.c
 
-COMMONOBJS=\
-  interp.o misc.o stacks.o fix_code.o startup.o \
-  freelist.o major_gc.o minor_gc.o memory.o alloc.o roots.o globroots.o \
-  fail.o signals.o signals_byt.o printexc.o backtrace.o \
-  compare.o ints.o floats.o str.o array.o io.o extern.o intern.o \
-  hash.o sys.o meta.o parsing.o gc_ctrl.o terminfo.o md5.o obj.o \
-  lexing.o callback.o debugger.o weak.o compact.o finalise.o custom.o \
-  dynlink.o strstubs.o nat_stubs.o bng.o $(UNIX:%.c=unix/%.o) \
-  $(THREADS:%.c=threads/%.o)
-
 PRIMS=\
-  alloc.c array.c compare.c extern.c floats.c gc_ctrl.c hash.c \
-  intern.c interp.c ints.c io.c lexing.c md5.c meta.c obj.c parsing.c \
-  signals.c str.c sys.c terminfo.c callback.c weak.c finalise.c stacks.c \
-  dynlink.c backtrace.c strstubs.c nat_stubs.c $(UNIX:%.c=unix/%.c) \
+  interp.c misc.c stacks.c fix_code.c startup.c unix.c \
+  freelist.c major_gc.c minor_gc.c memory.c alloc.c roots.c globroots.c \
+  fail.c signals.c signals_byt.c printexc.c backtrace.c \
+  compare.c ints.c floats.c str.c array.c io.c extern.c intern.c \
+  hash.c sys.c meta.c parsing.c gc_ctrl.c terminfo.c md5.c obj.c \
+  lexing.c callback.c debugger.c weak.c compact.c finalise.c custom.c \
+  dynlink.c strstubs.c nat_stubs.c bng.c prims.c \
+	$(UNIX:%=unix/%) \
   $(THREADS:%=threads/%)
+
+OBJS=\
+	$(PRIMS:%.c=%.o)
 
 PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
 all:: depend llamarun$(EXE) ld.conf libcamlrun.$(A)
-.PHONY: all with-ocaml
+.PHONY: all
 
-with-ocaml: all libasmrunp.a
+with-ocaml:
+	$(MAKE) PROFILE=$(CC_PROFILE) all
 
 ld.conf: ../config/Makefile
 	echo "$(STUBLIBDIR)" > ld.conf
@@ -86,10 +84,10 @@ prims.c : primitives
 	(echo '#include "mlvalues.h"'; \
 	 echo '#include "prims.h"'; \
 	 sed -e 's/.*/extern value &();/' primitives; \
-	 echo 'c_primitive caml_builtin_cprim[] = {'; \
+	 echo 'c_primitive llama_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	&,/' primitives; \
 	 echo '	 0 };'; \
-	 echo 'char * caml_names_of_builtin_cprim[] = {'; \
+	 echo 'char * llama_names_of_builtin_cprim[] = {'; \
 	 sed -e 's/.*/	"&",/' primitives; \
 	 echo '	 0 };') > prims.c
 
@@ -109,10 +107,10 @@ jumptbl.h : instruct.h
 	       -e '/^}/q' instruct.h > jumptbl.h
 
 version.h : ../VERSION
-	echo "#define OCAML_VERSION \"`sed -e 1q ../VERSION`\"" > version.h
+	echo "#define LLAMA_VERSION \"`sed -e 1q ../VERSION`\"" > version.h
 
 clean ::
-	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO) libasmrunp.a
+	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO)
 	rm -f unix/*.$(O) threads/*.$(O)
 	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
 	rm -f version.h
@@ -123,37 +121,12 @@ clean ::
 CFLAGS=-DCAML_NAME_SPACE -O $(BYTECCCOMPOPTS) $(IFLEXDIR)
 DFLAGS=-DCAML_NAME_SPACE -DDEBUG $(BYTECCCOMPOPTS)
 
-OBJS=$(COMMONOBJS) unix.o main.o
-DOBJS=$(OBJS:.o=.d.o) instrtrace.d.o
-PICOBJS=$(OBJS:.o=.pic.o)
+llamarun$(EXE): main.o libcamlrun.a
+	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun$(EXE) $^ $(BYTECCLIBS)
 
-SHARED_LIBS_TMP=$(SUPPORTS_SHARED_LIBRARIES:%false=)
-SHARED_LIBS_DEPS=$(SHARED_LIBS_TMP:%true=libcamlrun_shared.so)
-
-all:: $(SHARED_LIBS_DEPS)
-
-llamarun$(EXE): libcamlrun.a prims.o
-	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun$(EXE) \
-		  prims.o libcamlrun.a $(BYTECCLIBS)
-
-llamarund$(EXE): libcamlrund.a prims.o
-	$(MKEXE) $(BYTECCLINKOPTS) -o llamarund$(EXE) \
-		  prims.o libcamlrund.a $(BYTECCLIBS)
-
-libcamlrun.a: $(OBJS)
-	ar rc libcamlrun.a $(OBJS)
+libcamlrun.a: $(OBJS) 
+	ar rc libcamlrun.a $^
 	$(RANLIB) libcamlrun.a
-
-libasmrunp.a: $(OBJS)
-	ar rc libasmrunp.a $(OBJS)
-	$(RANLIB) libasmrunp.a
-
-libcamlrund.a: $(DOBJS)
-	ar rc libcamlrund.a $(DOBJS)
-	$(RANLIB) libcamlrund.a
-
-libcamlrun_shared.so: $(PICOBJS)
-	$(MKDLL) -o libcamlrun_shared.so $(PICOBJS) $(BYTECCLIBS)
 
 install::
 	if test -f libcamlrun_shared.so; then \

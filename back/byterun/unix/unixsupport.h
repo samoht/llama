@@ -13,7 +13,7 @@
 
 /* $Id: unixsupport.h 7045 2005-09-06 12:38:32Z doligez $ */
 
-#undef CAML_NAME_SPACE
+#undef LLAMA_NAME_SPACE
 #include "../compatibility.h"
 
 #ifdef HAS_UNISTD

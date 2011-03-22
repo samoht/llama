@@ -30,12 +30,12 @@ include ../Make/generic.mk
 # ----------------------------------------------------------------------
 
 all: stdlib.lma std_exit.lmo llamaheader
-with-ocaml: stdlib.p.cmxa std_exit.p.cmx std_exit.p.o camlheader
+with-ocaml: stdlib.cmxa std_exit.cmx std_exit.o camlheader
 .PHONY: all with-ocaml
 
 stdlib.lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $^ -o $@
-stdlib.p.cmxa: $(MODULES:%=%.p.cmx)
+stdlib.cmxa: $(MODULES:%=%.cmx)
 	$(OCAMLC_STRICT) -a $^ -o $@
 
 # ----------------------------------------------------------------------

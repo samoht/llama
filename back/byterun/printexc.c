@@ -45,7 +45,7 @@ static void add_string(struct stringbuf *buf, char *s)
   buf->ptr += len;
 }
 
-CAMLexport char * caml_format_exception(value exn)
+CAMLexport char * llama_format_exception(value exn)
 {
   mlsize_t start, i;
   value bucket, v;
@@ -93,33 +93,33 @@ CAMLexport char * caml_format_exception(value exn)
 }
 
 
-void caml_fatal_uncaught_exception(value exn)
+void llama_fatal_uncaught_exception(value exn)
 {
   char * msg;
   value * at_exit;
   int saved_backtrace_active, saved_backtrace_pos;
 
   /* Build a string representation of the exception */
-  msg = caml_format_exception(exn);
+  msg = llama_format_exception(exn);
   /* Perform "at_exit" processing, ignoring all exceptions that may
      be triggered by this */
-  saved_backtrace_active = caml_backtrace_active;
-  saved_backtrace_pos = caml_backtrace_pos;
-  caml_backtrace_active = 0;
-  at_exit = caml_named_value("Pervasives.do_at_exit");
-  if (at_exit != NULL) caml_callback_exn(*at_exit, Val_unit);
-  caml_backtrace_active = saved_backtrace_active;
-  caml_backtrace_pos = saved_backtrace_pos;
+  saved_backtrace_active = llama_backtrace_active;
+  saved_backtrace_pos = llama_backtrace_pos;
+  llama_backtrace_active = 0;
+  at_exit = llama_named_value("Pervasives.do_at_exit");
+  if (at_exit != NULL) llama_callback_exn(*at_exit, Val_unit);
+  llama_backtrace_active = saved_backtrace_active;
+  llama_backtrace_pos = saved_backtrace_pos;
   /* Display the uncaught exception */
   fprintf(stderr, "Fatal error: exception %s\n", msg);
   free(msg);
   /* Display the backtrace if available */
-  if (caml_backtrace_active
+  if (llama_backtrace_active
 #ifndef NATIVE_CODE
-      && !caml_debugger_in_use
+      && !llama_debugger_in_use
 #endif
       ) {
-    caml_print_exception_backtrace();
+    llama_print_exception_backtrace();
   }
   /* Terminate the process */
   exit(2);

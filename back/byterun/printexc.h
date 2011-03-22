@@ -13,15 +13,15 @@
 
 /* $Id: printexc.h 6045 2004-01-01 16:42:43Z doligez $ */
 
-#ifndef CAML_PRINTEXC_H
-#define CAML_PRINTEXC_H
+#ifndef LLAMA_PRINTEXC_H
+#define LLAMA_PRINTEXC_H
 
 
 #include "misc.h"
 #include "mlvalues.h"
 
-CAMLextern char * caml_format_exception (value);
-void caml_fatal_uncaught_exception (value) Noreturn;
+CAMLextern char * llama_format_exception (value);
+void llama_fatal_uncaught_exception (value) Noreturn;
 
 
-#endif /* CAML_PRINTEXC_H */
+#endif /* LLAMA_PRINTEXC_H */

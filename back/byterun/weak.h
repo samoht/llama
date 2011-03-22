@@ -15,12 +15,12 @@
 
 /* Operations on weak arrays */
 
-#ifndef CAML_WEAK_H
-#define CAML_WEAK_H
+#ifndef LLAMA_WEAK_H
+#define LLAMA_WEAK_H
 
 #include "mlvalues.h"
 
-extern value caml_weak_list_head;
-extern value caml_weak_none;
+extern value llama_weak_list_head;
+extern value llama_weak_none;
 
-#endif /* CAML_WEAK_H */
+#endif /* LLAMA_WEAK_H */

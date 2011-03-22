@@ -16,8 +16,8 @@
 /* printf-like formatting of 64-bit integers, in case the C library
    printf() function does not support them. */
 
-#ifndef CAML_INT64_FORMAT_H
-#define CAML_INT64_FORMAT_H
+#ifndef LLAMA_INT64_FORMAT_H
+#define LLAMA_INT64_FORMAT_H
 
 static void I64_format(char * buffer, char * fmt, int64 x)
 {
@@ -104,4 +104,4 @@ static void I64_format(char * buffer, char * fmt, int64 x)
   *p = 0;
 }
 
-#endif /* CAML_INT64_FORMAT_H */
+#endif /* LLAMA_INT64_FORMAT_H */

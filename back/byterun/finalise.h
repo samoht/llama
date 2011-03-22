@@ -13,17 +13,17 @@
 
 /* $Id: finalise.h 6047 2004-01-02 19:23:29Z doligez $ */
 
-#ifndef CAML_FINALISE_H
-#define CAML_FINALISE_H
+#ifndef LLAMA_FINALISE_H
+#define LLAMA_FINALISE_H
 
 #include "roots.h"
 
-void caml_final_update (void);
-void caml_final_do_calls (void);
-void caml_final_do_strong_roots (scanning_action f);
-void caml_final_do_weak_roots (scanning_action f);
-void caml_final_do_young_roots (scanning_action f);
-void caml_final_empty_young (void);
-value caml_final_register (value f, value v);
+void llama_final_update (void);
+void llama_final_do_calls (void);
+void llama_final_do_strong_roots (scanning_action f);
+void llama_final_do_weak_roots (scanning_action f);
+void llama_final_do_young_roots (scanning_action f);
+void llama_final_empty_young (void);
+value llama_final_register (value f, value v);
 
-#endif /* CAML_FINALISE_H */
+#endif /* LLAMA_FINALISE_H */

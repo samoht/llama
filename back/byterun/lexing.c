@@ -56,7 +56,7 @@ struct lexing_table {
 #define Short(tbl,n) (((short *)(tbl))[(n)])
 #endif
 
-CAMLprim value caml_lex_engine(struct lexing_table *tbl, value start_state,
+CAMLprim value llama_lex_engine(struct lexing_table *tbl, value start_state,
                                struct lexer_buffer *lexbuf)
 {
   int state, base, backtrk, c;
@@ -101,7 +101,7 @@ CAMLprim value caml_lex_engine(struct lexing_table *tbl, value start_state,
     if (state < 0) {
       lexbuf->lex_curr_pos = lexbuf->lex_last_pos;
       if (lexbuf->lex_last_action == Val_int(-1)) {
-        caml_failwith("lexing: empty token");
+        llama_failwith("lexing: empty token");
       } else {
         return lexbuf->lex_last_action;
       }
@@ -154,7 +154,7 @@ static void run_tag(char *pc, value mem) {
   }
 }
 
-CAMLprim value caml_new_lex_engine(struct lexing_table *tbl, value start_state,
+CAMLprim value llama_new_lex_engine(struct lexing_table *tbl, value start_state,
                                    struct lexer_buffer *lexbuf)
 {
   int state, base, backtrk, c, pstate ;
@@ -207,7 +207,7 @@ CAMLprim value caml_new_lex_engine(struct lexing_table *tbl, value start_state,
     if (state < 0) {
       lexbuf->lex_curr_pos = lexbuf->lex_last_pos;
       if (lexbuf->lex_last_action == Val_int(-1)) {
-        caml_failwith("lexing: empty token");
+        llama_failwith("lexing: empty token");
       } else {
         return lexbuf->lex_last_action;
       }

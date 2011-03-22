@@ -17,9 +17,9 @@
 
 /* 0. Operating system type string. */
 
-#define OCAML_OS_TYPE "Unix"
-/* #define OCAML_OS_TYPE "Win32" */
-/* #define OCAML_OS_TYPE "MacOS" */
+#define LLAMA_OS_TYPE "Unix"
+/* #define LLAMA_OS_TYPE "Win32" */
+/* #define LLAMA_OS_TYPE "MacOS" */
 
 /* 1. For the runtime system. */
 

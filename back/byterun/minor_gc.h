@@ -13,18 +13,18 @@
 
 /* $Id: minor_gc.h 8211 2007-05-04 14:05:13Z doligez $ */
 
-#ifndef CAML_MINOR_GC_H
-#define CAML_MINOR_GC_H
+#ifndef LLAMA_MINOR_GC_H
+#define LLAMA_MINOR_GC_H
 
 
 #include "misc.h"
 
-CAMLextern char *caml_young_start, *caml_young_ptr;
-CAMLextern char *caml_young_end, *caml_young_limit;
-extern asize_t caml_minor_heap_size;
-extern int caml_in_minor_collection;
+CAMLextern char *llama_young_start, *llama_young_ptr;
+CAMLextern char *llama_young_end, *llama_young_limit;
+extern asize_t llama_minor_heap_size;
+extern int llama_in_minor_collection;
 
-struct caml_ref_table {
+struct llama_ref_table {
   value **base;
   value **end;
   value **threshold;
@@ -33,26 +33,26 @@ struct caml_ref_table {
   asize_t size;
   asize_t reserve;
 };
-CAMLextern struct caml_ref_table caml_ref_table, caml_weak_ref_table;
+CAMLextern struct llama_ref_table llama_ref_table, llama_weak_ref_table;
 
 #define Is_young(val) \
   (Assert (Is_block (val)), \
-   (addr)(val) < (addr)caml_young_end && (addr)(val) > (addr)caml_young_start)
+   (addr)(val) < (addr)llama_young_end && (addr)(val) > (addr)llama_young_start)
 
-extern void caml_set_minor_heap_size (asize_t);
-extern void caml_empty_minor_heap (void);
-CAMLextern void caml_minor_collection (void);
+extern void llama_set_minor_heap_size (asize_t);
+extern void llama_empty_minor_heap (void);
+CAMLextern void llama_minor_collection (void);
 CAMLextern void garbage_collection (void); /* def in asmrun/signals.c */
-extern void caml_realloc_ref_table (struct caml_ref_table *);
-extern void caml_alloc_table (struct caml_ref_table *, asize_t, asize_t);
-extern void caml_oldify_one (value, value *);
-extern void caml_oldify_mopup (void);
+extern void llama_realloc_ref_table (struct llama_ref_table *);
+extern void llama_alloc_table (struct llama_ref_table *, asize_t, asize_t);
+extern void llama_oldify_one (value, value *);
+extern void llama_oldify_mopup (void);
 
 #define Oldify(p) do{ \
     value __oldify__v__ = *p; \
     if (Is_block (__oldify__v__) && Is_young (__oldify__v__)){ \
-      caml_oldify_one (__oldify__v__, (p)); \
+      llama_oldify_one (__oldify__v__, (p)); \
     } \
   }while(0)
 
-#endif /* CAML_MINOR_GC_H */
+#endif /* LLAMA_MINOR_GC_H */

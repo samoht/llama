@@ -19,24 +19,24 @@
 
 (* System interface *)
 
-external get_config: unit -> string * int = "caml_sys_get_config"
-external get_argv: unit -> string * string array = "caml_sys_get_argv"
+external get_config: unit -> string * int = "llama_sys_get_config"
+external get_argv: unit -> string * string array = "llama_sys_get_argv"
 
 let (executable_name, argv) = get_argv()
 let (os_type, word_size) = get_config()
 let max_array_length = (1 lsl (word_size - 10)) - 1;;
 let max_string_length = word_size / 8 * max_array_length - 1;;
 
-external file_exists: string -> bool = "caml_sys_file_exists"
-external is_directory : string -> bool = "caml_sys_is_directory"
-external remove: string -> unit = "caml_sys_remove"
-external rename : string -> string -> unit = "caml_sys_rename"
-external getenv: string -> string = "caml_sys_getenv"
-external command: string -> int = "caml_sys_system_command"
-external time: unit -> float = "caml_sys_time"
-external chdir: string -> unit = "caml_sys_chdir"
-external getcwd: unit -> string = "caml_sys_getcwd"
-external readdir : string -> string array = "caml_sys_read_directory"
+external file_exists: string -> bool = "llama_sys_file_exists"
+external is_directory : string -> bool = "llama_sys_is_directory"
+external remove: string -> unit = "llama_sys_remove"
+external rename : string -> string -> unit = "llama_sys_rename"
+external getenv: string -> string = "llama_sys_getenv"
+external command: string -> int = "llama_sys_system_command"
+external time: unit -> float = "llama_sys_time"
+external chdir: string -> unit = "llama_sys_chdir"
+external getcwd: unit -> string = "llama_sys_getcwd"
+external readdir : string -> string array = "llama_sys_read_directory"
 
 let interactive = ref false
 
@@ -46,7 +46,7 @@ type signal_behavior =
   | Signal_handle of (int -> unit)
 
 external signal : int -> signal_behavior -> signal_behavior
-                = "caml_install_signal_handler"
+                = "llama_install_signal_handler"
 
 let set_signal sig_num sig_beh = ignore(signal sig_num sig_beh)
 

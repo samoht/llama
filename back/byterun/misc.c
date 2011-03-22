@@ -20,7 +20,7 @@
 
 #ifdef DEBUG
 
-int caml_failed_assert (char * expr, char * file, int line)
+int llama_failed_assert (char * expr, char * file, int line)
 {
   fprintf (stderr, "file %s; line %d ### Assertion failed: %s\n",
            file, line, expr);
@@ -29,7 +29,7 @@ int caml_failed_assert (char * expr, char * file, int line)
   return 1; /* not reached */
 }
 
-void caml_set_fields (char *bp, unsigned long start, unsigned long filler)
+void llama_set_fields (char *bp, unsigned long start, unsigned long filler)
 {
   mlsize_t i;
   for (i = start; i < Wosize_bp (bp); i++){
@@ -39,29 +39,29 @@ void caml_set_fields (char *bp, unsigned long start, unsigned long filler)
 
 #endif /* DEBUG */
 
-uintnat caml_verb_gc = 0;
+uintnat llama_verb_gc = 0;
 
-void caml_gc_message (int level, char *msg, uintnat arg)
+void llama_gc_message (int level, char *msg, uintnat arg)
 {
-  if (level < 0 || (caml_verb_gc & level) != 0){
+  if (level < 0 || (llama_verb_gc & level) != 0){
     fprintf (stderr, msg, arg);
     fflush (stderr);
   }
 }
 
-CAMLexport void caml_fatal_error (char *msg)
+CAMLexport void llama_fatal_error (char *msg)
 {
   fprintf (stderr, "%s", msg);
   exit(2);
 }
 
-CAMLexport void caml_fatal_error_arg (char *fmt, char *arg)
+CAMLexport void llama_fatal_error_arg (char *fmt, char *arg)
 {
   fprintf (stderr, fmt, arg);
   exit(2);
 }
 
-CAMLexport void caml_fatal_error_arg2 (char *fmt1, char *arg1,
+CAMLexport void llama_fatal_error_arg2 (char *fmt1, char *arg1,
                                        char *fmt2, char *arg2)
 {
   fprintf (stderr, fmt1, arg1);
@@ -69,7 +69,7 @@ CAMLexport void caml_fatal_error_arg2 (char *fmt1, char *arg1,
   exit(2);
 }
 
-char *caml_aligned_malloc (asize_t size, int modulo, void **block)
+char *llama_aligned_malloc (asize_t size, int modulo, void **block)
 {
   char *raw_mem;
   uintnat aligned_mem;
@@ -95,20 +95,20 @@ char *caml_aligned_malloc (asize_t size, int modulo, void **block)
   return (char *) (aligned_mem - modulo);
 }
 
-void caml_ext_table_init(struct ext_table * tbl, int init_capa)
+void llama_ext_table_init(struct ext_table * tbl, int init_capa)
 {
   tbl->size = 0;
   tbl->capacity = init_capa;
-  tbl->contents = caml_stat_alloc(sizeof(void *) * init_capa);
+  tbl->contents = llama_stat_alloc(sizeof(void *) * init_capa);
 }
 
-int caml_ext_table_add(struct ext_table * tbl, void * data)
+int llama_ext_table_add(struct ext_table * tbl, void * data)
 {
   int res;
   if (tbl->size >= tbl->capacity) {
     tbl->capacity *= 2;
     tbl->contents =
-      caml_stat_resize(tbl->contents, sizeof(void *) * tbl->capacity);
+      llama_stat_resize(tbl->contents, sizeof(void *) * tbl->capacity);
   }
   res = tbl->size;
   tbl->contents[res] = data;
@@ -116,10 +116,10 @@ int caml_ext_table_add(struct ext_table * tbl, void * data)
   return res;
 }
 
-void caml_ext_table_free(struct ext_table * tbl, int free_entries)
+void llama_ext_table_free(struct ext_table * tbl, int free_entries)
 {
   int i;
   if (free_entries)
-    for (i = 0; i < tbl->size; i++) caml_stat_free(tbl->contents[i]);
-  caml_stat_free(tbl->contents);
+    for (i = 0; i < tbl->size; i++) llama_stat_free(tbl->contents[i]);
+  llama_stat_free(tbl->contents);
 }

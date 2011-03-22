@@ -1,9 +1,9 @@
 # Allow a library to be built with OCaml
 
-with-ocaml: $(LIBRARY).p.cmxa
+with-ocaml: $(LIBRARY).cmxa
 .PHONY: with-ocaml
 
-$(LIBRARY).cmxa: $(MODULES:%=%.p.cmx)
+$(LIBRARY).cmxa: $(MODULES:%=%.cmx)
 	$(OCAMLC_STRICT) -a $(INCLUDES) $^ -o $@
 
 ocamlclean:

@@ -22,9 +22,9 @@ CAMLprim value unix_fork(value unit)
   int ret;
   ret = fork();
   if (ret == -1) uerror("fork", Nothing);
-  if (caml_debugger_in_use)
-    if ((caml_debugger_fork_mode && ret == 0) ||
-        (!caml_debugger_fork_mode && ret != 0))
-      caml_debugger_cleanup_fork();
+  if (llama_debugger_in_use)
+    if ((llama_debugger_fork_mode && ret == 0) ||
+        (!llama_debugger_fork_mode && ret != 0))
+      llama_debugger_cleanup_fork();
   return Val_int(ret);
 }

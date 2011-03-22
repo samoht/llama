@@ -38,32 +38,32 @@ static struct custom_operations nat_operations = {
   deserialize_nat
 };
 
-CAMLprim value caml_initialize_nat(value unit)
+CAMLprim value llama_initialize_nat(value unit)
 {
   bng_init();
-  caml_register_custom_operations(&nat_operations);
+  llama_register_custom_operations(&nat_operations);
   return Val_unit;
 }
 
-CAMLprim value caml_create_nat(value size)
+CAMLprim value llama_create_nat(value size)
 {
   mlsize_t sz = Long_val(size);
 
-  return caml_alloc_custom(&nat_operations, sz * sizeof(value), 0, 1);
+  return llama_alloc_custom(&nat_operations, sz * sizeof(value), 0, 1);
 }
 
-CAMLprim value caml_length_nat(value nat)
+CAMLprim value llama_length_nat(value nat)
 {
   return Val_long(Wosize_val(nat) - 1);
 }
 
-CAMLprim value caml_set_to_zero_nat(value nat, value ofs, value len)
+CAMLprim value llama_set_to_zero_nat(value nat, value ofs, value len)
 {
   bng_zero(&Digit_val(nat, Long_val(ofs)), Long_val(len));
   return Val_unit;
 }
 
-CAMLprim value caml_blit_nat(value nat1, value ofs1,
+CAMLprim value llama_blit_nat(value nat1, value ofs1,
                         value nat2, value ofs2,
                         value len)
 {
@@ -73,62 +73,62 @@ CAMLprim value caml_blit_nat(value nat1, value ofs1,
   return Val_unit;
 }
 
-CAMLprim value caml_set_digit_nat(value nat, value ofs, value digit)
+CAMLprim value llama_set_digit_nat(value nat, value ofs, value digit)
 {
   Digit_val(nat, Long_val(ofs)) = Long_val(digit);
   return Val_unit;
 }
 
-CAMLprim value caml_nth_digit_nat(value nat, value ofs)
+CAMLprim value llama_nth_digit_nat(value nat, value ofs)
 {
   return Val_long(Digit_val(nat, Long_val(ofs)));
 }
 
-CAMLprim value caml_set_digit_nat_native(value nat, value ofs, value digit)
+CAMLprim value llama_set_digit_nat_native(value nat, value ofs, value digit)
 {
   Digit_val(nat, Long_val(ofs)) = Nativeint_val(digit);
   return Val_unit;
 }
 
-CAMLprim value caml_nth_digit_nat_native(value nat, value ofs)
+CAMLprim value llama_nth_digit_nat_native(value nat, value ofs)
 {
-  return caml_copy_nativeint(Digit_val(nat, Long_val(ofs)));
+  return llama_copy_nativeint(Digit_val(nat, Long_val(ofs)));
 }
 
-CAMLprim value caml_num_digits_nat(value nat, value ofs, value len)
+CAMLprim value llama_num_digits_nat(value nat, value ofs, value len)
 {
   return Val_long(bng_num_digits(&Digit_val(nat, Long_val(ofs)),
                                  Long_val(len)));
 }
 
-CAMLprim value caml_num_leading_zero_bits_in_digit(value nat, value ofs)
+CAMLprim value llama_num_leading_zero_bits_in_digit(value nat, value ofs)
 {
   return
     Val_long(bng_leading_zero_bits(Digit_val(nat, Long_val(ofs))));
 }
 
-CAMLprim value caml_is_digit_int(value nat, value ofs)
+CAMLprim value llama_is_digit_int(value nat, value ofs)
 {
   return Val_bool(Digit_val(nat, Long_val(ofs)) <= Max_long);
 }
 
-CAMLprim value caml_is_digit_zero(value nat, value ofs)
+CAMLprim value llama_is_digit_zero(value nat, value ofs)
 {
   return Val_bool(Digit_val(nat, Long_val(ofs)) == 0);
 }
 
-CAMLprim value caml_is_digit_normalized(value nat, value ofs)
+CAMLprim value llama_is_digit_normalized(value nat, value ofs)
 {
   return
     Val_bool(Digit_val(nat, Long_val(ofs)) & ((bngdigit)1 << (BNG_BITS_PER_DIGIT-1)));
 }
 
-CAMLprim value caml_is_digit_odd(value nat, value ofs)
+CAMLprim value llama_is_digit_odd(value nat, value ofs)
 {
   return Val_bool(Digit_val(nat, Long_val(ofs)) & 1);
 }
 
-CAMLprim value caml_incr_nat(value nat, value ofs, value len, value carry_in)
+CAMLprim value llama_incr_nat(value nat, value ofs, value len, value carry_in)
 {
   return Val_long(bng_add_carry(&Digit_val(nat, Long_val(ofs)),
                                 Long_val(len), Long_val(carry_in)));
@@ -142,19 +142,19 @@ value add_nat_native(value nat1, value ofs1, value len1,
                           Long_val(carry_in)));
 }
 
-CAMLprim value caml_add_nat(value *argv, int argn)
+CAMLprim value llama_add_nat(value *argv, int argn)
 {
   return add_nat_native(argv[0], argv[1], argv[2], argv[3],
                         argv[4], argv[5], argv[6]);
 }
 
-CAMLprim value caml_complement_nat(value nat, value ofs, value len)
+CAMLprim value llama_complement_nat(value nat, value ofs, value len)
 {
   bng_complement(&Digit_val(nat, Long_val(ofs)), Long_val(len));
   return Val_unit;
 }
 
-CAMLprim value caml_decr_nat(value nat, value ofs, value len, value carry_in)
+CAMLprim value llama_decr_nat(value nat, value ofs, value len, value carry_in)
 {
   return Val_long(1 ^ bng_sub_carry(&Digit_val(nat, Long_val(ofs)),
                                     Long_val(len), 1 ^ Long_val(carry_in)));
@@ -168,7 +168,7 @@ value sub_nat_native(value nat1, value ofs1, value len1,
                               1 ^ Long_val(carry_in)));
 }
 
-CAMLprim value caml_sub_nat(value *argv, int argn)
+CAMLprim value llama_sub_nat(value *argv, int argn)
 {
   return sub_nat_native(argv[0], argv[1], argv[2], argv[3],
                         argv[4], argv[5], argv[6]);
@@ -185,7 +185,7 @@ value mult_digit_nat_native(value nat1, value ofs1, value len1,
                    Digit_val(nat3, Long_val(ofs3))));
 }
 
-CAMLprim value caml_mult_digit_nat(value *argv, int argn)
+CAMLprim value llama_mult_digit_nat(value *argv, int argn)
 {
   return mult_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
                                argv[4], argv[5], argv[6], argv[7]);
@@ -201,7 +201,7 @@ value mult_nat_native(value nat1, value ofs1, value len1,
                           &Digit_val(nat3, Long_val(ofs3)), Long_val(len3)));
 }
 
-CAMLprim value caml_mult_nat(value *argv, int argn)
+CAMLprim value llama_mult_nat(value *argv, int argn)
 {
   return mult_nat_native(argv[0], argv[1], argv[2], argv[3],
                          argv[4], argv[5], argv[6], argv[7], argv[8]);
@@ -215,7 +215,7 @@ value square_nat_native(value nat1, value ofs1, value len1,
                             &Digit_val(nat2, Long_val(ofs2)), Long_val(len2)));
 }
 
-CAMLprim value caml_square_nat(value *argv, int argn)
+CAMLprim value llama_square_nat(value *argv, int argn)
 {
   return square_nat_native(argv[0], argv[1], argv[2],
                            argv[3], argv[4], argv[5]);
@@ -230,7 +230,7 @@ value shift_left_nat_native(value nat1, value ofs1, value len1,
   return Val_unit;
 }
 
-CAMLprim value caml_shift_left_nat(value *argv, int argn)
+CAMLprim value llama_shift_left_nat(value *argv, int argn)
 {
   return shift_left_nat_native(argv[0], argv[1], argv[2],
                                argv[3], argv[4], argv[5]);
@@ -248,7 +248,7 @@ value div_digit_nat_native(value natq, value ofsq,
   return Val_unit;
 }
 
-CAMLprim value caml_div_digit_nat(value *argv, int argn)
+CAMLprim value llama_div_digit_nat(value *argv, int argn)
 {
   return div_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
                               argv[4], argv[5], argv[6], argv[7], argv[8]);
@@ -262,7 +262,7 @@ value div_nat_native(value nat1, value ofs1, value len1,
   return Val_unit;
 }
 
-CAMLprim value caml_div_nat(value *argv, int argn)
+CAMLprim value llama_div_nat(value *argv, int argn)
 {
   return div_nat_native(argv[0], argv[1], argv[2],
                         argv[3], argv[4], argv[5]);
@@ -277,13 +277,13 @@ value shift_right_nat_native(value nat1, value ofs1, value len1,
   return Val_unit;
 }
 
-CAMLprim value caml_shift_right_nat(value *argv, int argn)
+CAMLprim value llama_shift_right_nat(value *argv, int argn)
 {
   return shift_right_nat_native(argv[0], argv[1], argv[2],
                                 argv[3], argv[4], argv[5]);
 }
 
-CAMLprim value caml_compare_digits_nat(value nat1, value ofs1,
+CAMLprim value llama_compare_digits_nat(value nat1, value ofs1,
                                   value nat2, value ofs2)
 {
   bngdigit d1 = Digit_val(nat1, Long_val(ofs1));
@@ -301,25 +301,25 @@ value compare_nat_native(value nat1, value ofs1, value len1,
                         &Digit_val(nat2, Long_val(ofs2)), Long_val(len2)));
 }
 
-CAMLprim value caml_compare_nat(value *argv, int argn)
+CAMLprim value llama_compare_nat(value *argv, int argn)
 {
   return compare_nat_native(argv[0], argv[1], argv[2],
                             argv[3], argv[4], argv[5]);
 }
 
-CAMLprim value caml_land_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
+CAMLprim value llama_land_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
 {
   Digit_val(nat1, Long_val(ofs1)) &= Digit_val(nat2, Long_val(ofs2));
   return Val_unit;
 }
 
-CAMLprim value caml_lor_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
+CAMLprim value llama_lor_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
 {
   Digit_val(nat1, Long_val(ofs1)) |= Digit_val(nat2, Long_val(ofs2));
   return Val_unit;
 }
 
-CAMLprim value caml_lxor_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
+CAMLprim value llama_lxor_digit_nat(value nat1, value ofs1, value nat2, value ofs2)
 {
   Digit_val(nat1, Long_val(ofs1)) ^= Digit_val(nat2, Long_val(ofs2));
   return Val_unit;
@@ -342,9 +342,9 @@ static void serialize_nat(value nat,
 #ifdef ARCH_SIXTYFOUR
   len = len * 2; /* two 32-bit words per 64-bit digit  */
   if (len >= ((mlsize_t)1 << 32))
-    caml_failwith("output_value: nat too big");
+    llama_failwith("output_value: nat too big");
 #endif
-  caml_serialize_int_4((int32) len);
+  llama_serialize_int_4((int32) len);
 #if defined(ARCH_SIXTYFOUR) && defined(ARCH_BIG_ENDIAN)
   { int32 * p;
     mlsize_t i;
@@ -354,7 +354,7 @@ static void serialize_nat(value nat,
     }
   }
 #else
-  caml_serialize_block_4(Data_custom_val(nat), len);
+  llama_serialize_block_4(Data_custom_val(nat), len);
 #endif
   *wsize_32 = len * 4;
   *wsize_64 = len * 4;
@@ -364,22 +364,22 @@ static uintnat deserialize_nat(void * dst)
 {
   mlsize_t len;
 
-  len = caml_deserialize_uint_4();
+  len = llama_deserialize_uint_4();
 #if defined(ARCH_SIXTYFOUR) && defined(ARCH_BIG_ENDIAN)
   { uint32 * p;
     mlsize_t i;
     for (i = len, p = dst; i > 1; i -= 2, p += 2) {
-      p[1] = caml_deserialize_uint_4();   /* low 32 bits of 64-bit digit */
-      p[0] = caml_deserialize_uint_4();   /* high 32 bits of 64-bit digit */
+      p[1] = llama_deserialize_uint_4();   /* low 32 bits of 64-bit digit */
+      p[0] = llama_deserialize_uint_4();   /* high 32 bits of 64-bit digit */
     }
     if (i > 0){
-      p[1] = caml_deserialize_uint_4();   /* low 32 bits of 64-bit digit */
+      p[1] = llama_deserialize_uint_4();   /* low 32 bits of 64-bit digit */
       p[0] = 0;                      /* high 32 bits of 64-bit digit */
       ++ len;
     }
   }
 #else
-  caml_deserialize_block_4(dst, len);
+  llama_deserialize_block_4(dst, len);
 #if defined(ARCH_SIXTYFOUR)
   if (len & 1){
     ((uint32 *) dst)[len] = 0;

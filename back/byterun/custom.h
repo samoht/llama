@@ -13,11 +13,11 @@
 
 /* $Id: custom.h 9547 2010-01-22 12:48:24Z doligez $ */
 
-#ifndef CAML_CUSTOM_H
-#define CAML_CUSTOM_H
+#ifndef LLAMA_CUSTOM_H
+#define LLAMA_CUSTOM_H
 
 
-#ifndef CAML_NAME_SPACE
+#ifndef LLAMA_NAME_SPACE
 #include "compatibility.h"
 #endif
 #include "mlvalues.h"
@@ -41,22 +41,22 @@ struct custom_operations {
 
 #define Custom_ops_val(v) (*((struct custom_operations **) (v)))
 
-CAMLextern value caml_alloc_custom(struct custom_operations * ops,
+CAMLextern value llama_alloc_custom(struct custom_operations * ops,
                                    uintnat size, /*size in bytes*/
                                    mlsize_t mem, /*resources consumed*/
                                    mlsize_t max  /*max resources*/);
 
-CAMLextern void caml_register_custom_operations(struct custom_operations * ops);
+CAMLextern void llama_register_custom_operations(struct custom_operations * ops);
 
-CAMLextern int caml_compare_unordered;
+CAMLextern int llama_compare_unordered;
   /* Used by custom comparison to report unordered NaN-like cases. */
 
 /* <private> */
-extern struct custom_operations * caml_find_custom_operations(char * ident);
+extern struct custom_operations * llama_find_custom_operations(char * ident);
 extern struct custom_operations *
-          caml_final_custom_operations(void (*fn)(value));
+          llama_final_custom_operations(void (*fn)(value));
 
-extern void caml_init_custom_operations(void);
+extern void llama_init_custom_operations(void);
 /* </private> */
 
-#endif /* CAML_CUSTOM_H */
+#endif /* LLAMA_CUSTOM_H */

@@ -16,8 +16,8 @@
 /* Software emulation of 64-bit integer arithmetic, for C compilers
    that do not support it.  */
 
-#ifndef CAML_INT64_EMUL_H
-#define CAML_INT64_EMUL_H
+#ifndef LLAMA_INT64_EMUL_H
+#define LLAMA_INT64_EMUL_H
 
 #include <math.h>
 
@@ -270,4 +270,4 @@ static int64 I64_of_double(double f)
   return res;
 }
 
-#endif /* CAML_INT64_EMUL_H */
+#endif /* LLAMA_INT64_EMUL_H */

@@ -42,16 +42,16 @@ type control = {
   mutable allocation_policy : int;
 };;
 
-external stat : unit -> stat = "caml_gc_stat";;
-external quick_stat : unit -> stat = "caml_gc_quick_stat";;
-external counters : unit -> (float * float * float) = "caml_gc_counters";;
-external get : unit -> control = "caml_gc_get";;
-external set : control -> unit = "caml_gc_set";;
-external minor : unit -> unit = "caml_gc_minor";;
-external major_slice : int -> int = "caml_gc_major_slice";;
-external major : unit -> unit = "caml_gc_major";;
-external full_major : unit -> unit = "caml_gc_full_major";;
-external compact : unit -> unit = "caml_gc_compaction";;
+external stat : unit -> stat = "llama_gc_stat";;
+external quick_stat : unit -> stat = "llama_gc_quick_stat";;
+external counters : unit -> (float * float * float) = "llama_gc_counters";;
+external get : unit -> control = "llama_gc_get";;
+external set : control -> unit = "llama_gc_set";;
+external minor : unit -> unit = "llama_gc_minor";;
+external major_slice : int -> int = "llama_gc_major_slice";;
+external major : unit -> unit = "llama_gc_major";;
+external full_major : unit -> unit = "llama_gc_full_major";;
+external compact : unit -> unit = "llama_gc_compaction";;
 
 open Printf;;
 
@@ -79,8 +79,8 @@ let allocated_bytes () =
   (mi +. ma -. pro) *. float_of_int (Sys.word_size / 8)
 ;;
 
-external finalise : ('a -> unit) -> 'a -> unit = "caml_final_register";;
-external finalise_release : unit -> unit = "caml_final_release";;
+external finalise : ('a -> unit) -> 'a -> unit = "llama_final_register";;
+external finalise_release : unit -> unit = "llama_final_release";;
 
 
 type alarm = bool ref;;

@@ -13,15 +13,15 @@
 
 /* $Id: compact.h 6044 2003-12-31 14:20:40Z doligez $ */
 
-#ifndef CAML_COMPACT_H
-#define CAML_COMPACT_H
+#ifndef LLAMA_COMPACT_H
+#define LLAMA_COMPACT_H
 
 
 #include "config.h"
 #include "misc.h"
 
-extern void caml_compact_heap (void);
-extern void caml_compact_heap_maybe (void);
+extern void llama_compact_heap (void);
+extern void llama_compact_heap_maybe (void);
 
 
-#endif /* CAML_COMPACT_H */
+#endif /* LLAMA_COMPACT_H */

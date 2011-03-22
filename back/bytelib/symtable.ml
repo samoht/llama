@@ -120,12 +120,12 @@ let output_primitive_table outchan =
     fprintf outchan "extern value %s();\n" prim.(i)
   done;
   fprintf outchan "typedef value (*primitive)();\n";
-  fprintf outchan "primitive caml_builtin_cprim[] = {\n";
+  fprintf outchan "primitive llama_builtin_cprim[] = {\n";
   for i = 0 to Array.length prim - 1 do
     fprintf outchan "  %s,\n" prim.(i)
   done;
   fprintf outchan "  (primitive) 0 };\n";
-  fprintf outchan "char * caml_names_of_builtin_cprim[] = {\n";
+  fprintf outchan "char * llama_names_of_builtin_cprim[] = {\n";
   for i = 0 to Array.length prim - 1 do
     fprintf outchan "  \"%s\",\n" prim.(i)
   done;

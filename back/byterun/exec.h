@@ -15,8 +15,8 @@
 
 /* exec.h : format of executable bytecode files */
 
-#ifndef CAML_EXEC_H
-#define CAML_EXEC_H
+#ifndef LLAMA_EXEC_H
+#define LLAMA_EXEC_H
 
 /* Executable bytecode files are composed of a number of sections,
    identified by 4-character names.  A table of contents at the
@@ -59,4 +59,4 @@ struct exec_trailer {
 #define EXEC_MAGIC "Caml1999X008"
 
 
-#endif /* CAML_EXEC_H */
+#endif /* LLAMA_EXEC_H */

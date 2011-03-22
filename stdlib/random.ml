@@ -25,7 +25,7 @@
    passes all the Diehard tests.
 *)
 
-external random_seed: unit -> int = "caml_sys_random_seed";;
+external random_seed: unit -> int = "llama_sys_random_seed";;
 
 (* This is the state you get with [init 27182818]. *)
 let default = {

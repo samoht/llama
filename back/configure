@@ -832,8 +832,8 @@ fi
 
 # Write the OS type (Unix or Cygwin)
 
-echo "#define OCAML_OS_TYPE \"$ostype\"" >> s.h
-echo "#define OCAML_STDLIB_DIR \"$libdir\"" >> s.h
+echo "#define LLAMA_OS_TYPE \"$ostype\"" >> s.h
+echo "#define LLAMA_STDLIB_DIR \"$libdir\"" >> s.h
 
 # Use 64-bit file offset if possible
 

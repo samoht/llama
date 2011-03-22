@@ -13,9 +13,9 @@
 
 /* $Id: compare.h 6044 2003-12-31 14:20:40Z doligez $ */
 
-#ifndef CAML_COMPARE_H
-#define CAML_COMPARE_H
+#ifndef LLAMA_COMPARE_H
+#define LLAMA_COMPARE_H
 
-CAMLextern int caml_compare_unordered;
+CAMLextern int llama_compare_unordered;
 
-#endif /* CAML_COMPARE_H */
+#endif /* LLAMA_COMPARE_H */

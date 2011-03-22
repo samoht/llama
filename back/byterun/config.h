@@ -13,8 +13,8 @@
 
 /* $Id: config.h 9153 2008-12-03 18:09:09Z doligez $ */
 
-#ifndef CAML_CONFIG_H
-#define CAML_CONFIG_H
+#ifndef LLAMA_CONFIG_H
+#define LLAMA_CONFIG_H
 
 /* <include ../config/m.h> */
 /* <include ../config/s.h> */
@@ -23,7 +23,7 @@
 #include "../config/s.h"
 /* </private> */
 
-#ifndef CAML_NAME_SPACE
+#ifndef LLAMA_NAME_SPACE
 #include "compatibility.h"
 #endif
 
@@ -96,7 +96,7 @@ typedef struct { uint32 l, h; } uint64, int64;
 /* We use threaded code interpretation if the compiler provides labels
    as first-class values (GCC 2.x). */
 
-#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG) && !defined (SHRINKED_GNUC) && !defined(CAML_JIT)
+#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG) && !defined (SHRINKED_GNUC) && !defined(LLAMA_JIT)
 #define THREADED_CODE
 #endif
 
@@ -165,4 +165,4 @@ typedef struct { uint32 l, h; } uint64, int64;
 #define Max_percent_free_def 500
 
 
-#endif /* CAML_CONFIG_H */
+#endif /* LLAMA_CONFIG_H */

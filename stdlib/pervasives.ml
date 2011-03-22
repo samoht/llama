@@ -87,35 +87,35 @@ external (+.) : float -> float -> float = "%addfloat"
 external (-.) : float -> float -> float = "%subfloat"
 external ( *. ) : float -> float -> float = "%mulfloat"
 external (/.) : float -> float -> float = "%divfloat"
-external ( ** ) : float -> float -> float = "caml_power_float" "pow" "float"
-external exp : float -> float = "caml_exp_float" "exp" "float"
-external expm1 : float -> float = "caml_expm1_float" "caml_expm1" "float"
-external acos : float -> float = "caml_acos_float" "acos" "float"
-external asin : float -> float = "caml_asin_float" "asin" "float"
-external atan : float -> float = "caml_atan_float" "atan" "float"
-external atan2 : float -> float -> float = "caml_atan2_float" "atan2" "float"
-external cos : float -> float = "caml_cos_float" "cos" "float"
-external cosh : float -> float = "caml_cosh_float" "cosh" "float"
-external log : float -> float = "caml_log_float" "log" "float"
-external log10 : float -> float = "caml_log10_float" "log10" "float"
-external log1p : float -> float = "caml_log1p_float" "caml_log1p" "float"
-external sin : float -> float = "caml_sin_float" "sin" "float"
-external sinh : float -> float = "caml_sinh_float" "sinh" "float"
-external sqrt : float -> float = "caml_sqrt_float" "sqrt" "float"
-external tan : float -> float = "caml_tan_float" "tan" "float"
-external tanh : float -> float = "caml_tanh_float" "tanh" "float"
-external ceil : float -> float = "caml_ceil_float" "ceil" "float"
-external floor : float -> float = "caml_floor_float" "floor" "float"
+external ( ** ) : float -> float -> float = "llama_power_float" "pow" "float"
+external exp : float -> float = "llama_exp_float" "exp" "float"
+external expm1 : float -> float = "llama_expm1_float" "llama_expm1" "float"
+external acos : float -> float = "llama_acos_float" "acos" "float"
+external asin : float -> float = "llama_asin_float" "asin" "float"
+external atan : float -> float = "llama_atan_float" "atan" "float"
+external atan2 : float -> float -> float = "llama_atan2_float" "atan2" "float"
+external cos : float -> float = "llama_cos_float" "cos" "float"
+external cosh : float -> float = "llama_cosh_float" "cosh" "float"
+external log : float -> float = "llama_log_float" "log" "float"
+external log10 : float -> float = "llama_log10_float" "log10" "float"
+external log1p : float -> float = "llama_log1p_float" "llama_log1p" "float"
+external sin : float -> float = "llama_sin_float" "sin" "float"
+external sinh : float -> float = "llama_sinh_float" "sinh" "float"
+external sqrt : float -> float = "llama_sqrt_float" "sqrt" "float"
+external tan : float -> float = "llama_tan_float" "tan" "float"
+external tanh : float -> float = "llama_tanh_float" "tanh" "float"
+external ceil : float -> float = "llama_ceil_float" "ceil" "float"
+external floor : float -> float = "llama_floor_float" "floor" "float"
 external abs_float : float -> float = "%absfloat"
-external mod_float : float -> float -> float = "caml_fmod_float" "fmod" "float"
-external frexp : float -> float * int = "caml_frexp_float"
-external ldexp : float -> int -> float = "caml_ldexp_float"
-external modf : float -> float * float = "caml_modf_float"
+external mod_float : float -> float -> float = "llama_fmod_float" "fmod" "float"
+external frexp : float -> float * int = "llama_frexp_float"
+external ldexp : float -> int -> float = "llama_ldexp_float"
+external modf : float -> float * float = "llama_modf_float"
 external float : int -> float = "%floatofint"
 external float_of_int : int -> float = "%floatofint"
 external truncate : float -> int = "%intoffloat"
 external int_of_float : float -> int = "%intoffloat"
-external float_of_bits : int64 -> float = "caml_int64_float_of_bits"
+external float_of_bits : int64 -> float = "llama_int64_float_of_bits"
 let infinity =
   float_of_bits 0x7F_F0_00_00_00_00_00_00L
 let neg_infinity =
@@ -135,15 +135,15 @@ type fpclass =
   | FP_zero
   | FP_infinite
   | FP_nan
-external classify_float: float -> fpclass = "caml_classify_float"
+external classify_float: float -> fpclass = "llama_classify_float"
 
 (* String operations -- more in module String *)
 
 external string_set : string -> int -> char -> unit = "%string_safe_set"
 external string_length : string -> int = "%string_length"
-external string_create: int -> string = "caml_create_string"
+external string_create: int -> string = "llama_create_string"
 external string_blit : string -> int -> string -> int -> int -> unit
-                     = "caml_blit_string" "noalloc"
+                     = "llama_blit_string" "noalloc"
 
 
 
@@ -181,8 +181,8 @@ external decr: int ref -> unit = "%decr"
 
 (* String conversion functions *)
 
-external format_int: string -> int -> string = "caml_format_int"
-external format_float: string -> float -> string = "caml_format_float"
+external format_int: string -> int -> string = "llama_format_int"
+external format_float: string -> float -> string = "llama_format_float"
 
 let string_of_bool b =
   if b then "true" else "false"
@@ -194,7 +194,7 @@ let bool_of_string = function
 let string_of_int n =
   format_int "%d" n
 
-external int_of_string : string -> int = "caml_int_of_string"
+external int_of_string : string -> int = "llama_int_of_string"
 
 (* module String = struct*)
   external string_get : string -> int -> char = "%string_safe_get"
@@ -213,7 +213,7 @@ let valid_float_lexem s =
 
 let string_of_float f = valid_float_lexem (format_float "%.12g" f);;
 
-external float_of_string : string -> float = "caml_float_of_string"
+external float_of_string : string -> float = "llama_float_of_string"
 
 (* List operations -- more in module List *)
 
@@ -227,8 +227,8 @@ let rec (@) l1 l2 =
 type in_channel
 type out_channel
 
-external open_descriptor_out: int -> out_channel = "caml_ml_open_descriptor_out"
-external open_descriptor_in: int -> in_channel = "caml_ml_open_descriptor_in"
+external open_descriptor_out: int -> out_channel = "llama_ml_open_descriptor_out"
+external open_descriptor_in: int -> in_channel = "llama_ml_open_descriptor_in"
 
 let stdin = open_descriptor_in 0
 let stdout = open_descriptor_out 1
@@ -244,9 +244,9 @@ let thread_wait_read fd = thread_wait_read_prim fd
 let thread_wait_write fd = thread_wait_write_prim fd
 
 external descr_inchan : in_channel -> file_descr
-                      = "caml_channel_descriptor"
+                      = "llama_channel_descriptor"
 external descr_outchan : out_channel -> file_descr
-                       = "caml_channel_descriptor"
+                       = "llama_channel_descriptor"
 
 let wait_inchan ic = thread_wait_read (descr_inchan ic)
 
@@ -259,7 +259,7 @@ type open_flag =
   | Open_creat | Open_trunc | Open_excl
   | Open_binary | Open_text | Open_nonblock
 
-external open_desc: string -> open_flag list -> int -> int = "caml_sys_open"
+external open_desc: string -> open_flag list -> int -> int = "llama_sys_open"
 
 let open_out_gen mode perm name =
   open_descriptor_out(open_desc name mode perm)
@@ -270,7 +270,7 @@ let open_out name =
 let open_out_bin name =
   open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] 0o666 name
 
-external flush_partial : out_channel -> bool = "caml_ml_flush_partial"
+external flush_partial : out_channel -> bool = "llama_ml_flush_partial"
 
 let rec flush oc =
   let success =
@@ -281,7 +281,7 @@ let rec flush oc =
   if success then () else flush oc
 
 external out_channels_list : unit -> out_channel list
-                           = "caml_ml_out_channels_list"
+                           = "llama_ml_out_channels_list"
 
 let flush_all () =
   let rec iter = function
@@ -296,7 +296,7 @@ let flush_all () =
   in iter (out_channels_list ())
 
 external unsafe_output_partial : out_channel -> string -> int -> int -> int
-                        = "caml_ml_output_partial"
+                        = "llama_ml_output_partial"
 
 let rec unsafe_output oc buf pos len =
   if len > 0 then begin
@@ -309,9 +309,9 @@ let rec unsafe_output oc buf pos len =
   end
 
 external output_char_blocking : out_channel -> char -> unit
-                              = "caml_ml_output_char"
+                              = "llama_ml_output_char"
 external output_byte_blocking : out_channel -> int -> unit
-                              = "caml_ml_output_char"
+                              = "llama_ml_output_char"
 
 let rec output_char oc c =
   try
@@ -342,24 +342,24 @@ let output_binary_int oc n =
   output_byte oc n
 
 external marshal_to_string : 'a -> unit list -> string
-                           = "caml_output_value_to_string"
+                           = "llama_output_value_to_string"
 
 let output_value oc v = output_string oc (marshal_to_string v [])
 
-external seek_out_blocking : out_channel -> int -> unit = "caml_ml_seek_out"
+external seek_out_blocking : out_channel -> int -> unit = "llama_ml_seek_out"
 
 let seek_out oc pos = flush oc; seek_out_blocking oc pos
 
-external pos_out : out_channel -> int = "caml_ml_pos_out"
-external out_channel_length : out_channel -> int = "caml_ml_channel_size"
-external close_out_channel : out_channel -> unit = "caml_ml_close_channel"
+external pos_out : out_channel -> int = "llama_ml_pos_out"
+external out_channel_length : out_channel -> int = "llama_ml_channel_size"
+external close_out_channel : out_channel -> unit = "llama_ml_close_channel"
 
 let close_out oc = (try flush oc with _ -> ()); close_out_channel oc
 let close_out_noerr oc =
   (try flush oc with _ -> ());
   (try close_out_channel oc with _ -> ())
 external set_binary_mode_out : out_channel -> bool -> unit
-                             = "caml_ml_set_binary_mode"
+                             = "llama_ml_set_binary_mode"
 
 (* General input functions *)
 
@@ -372,8 +372,8 @@ let open_in name =
 let open_in_bin name =
   open_in_gen [Open_rdonly; Open_binary] 0 name
 
-external input_char_blocking : in_channel -> char = "caml_ml_input_char"
-external input_byte_blocking : in_channel -> int = "caml_ml_input_char"
+external input_char_blocking : in_channel -> char = "llama_ml_input_char"
+external input_byte_blocking : in_channel -> int = "llama_ml_input_char"
 
 let rec input_char ic =
   try
@@ -382,7 +382,7 @@ let rec input_char ic =
     wait_inchan ic; input_char ic
 
 external unsafe_input_blocking : in_channel -> string -> int -> int -> int
-                               = "caml_ml_input"
+                               = "llama_ml_input"
 
 let rec unsafe_input ic s ofs len =
   try
@@ -444,8 +444,8 @@ let input_binary_int ic =
   let b4 = input_byte ic in
   (n1 lsl 24) + (b2 lsl 16) + (b3 lsl 8) + b4
 
-external unmarshal : string -> int -> 'a = "caml_input_value_from_string"
-external marshal_data_size : string -> int -> int = "caml_marshal_data_size"
+external unmarshal : string -> int -> 'a = "llama_input_value_from_string"
+external marshal_data_size : string -> int -> int = "llama_marshal_data_size"
 
 let input_value ic =
   let header = string_create 20 in
@@ -456,13 +456,13 @@ let input_value ic =
   really_input ic buffer 20 bsize;
   unmarshal buffer 0
 
-external seek_in : in_channel -> int -> unit = "caml_ml_seek_in"
-external pos_in : in_channel -> int = "caml_ml_pos_in"
-external in_channel_length : in_channel -> int = "caml_ml_channel_size"
-external close_in : in_channel -> unit = "caml_ml_close_channel"
+external seek_in : in_channel -> int -> unit = "llama_ml_seek_in"
+external pos_in : in_channel -> int = "llama_ml_pos_in"
+external in_channel_length : in_channel -> int = "llama_ml_channel_size"
+external close_in : in_channel -> unit = "llama_ml_close_channel"
 let close_in_noerr ic = (try close_in ic with _ -> ());;
 external set_binary_mode_in : in_channel -> bool -> unit
-                            = "caml_ml_set_binary_mode"
+                            = "llama_ml_set_binary_mode"
 
 (* Output functions on standard output *)
 
@@ -494,13 +494,13 @@ let read_float () = float_of_string(read_line())
 
 (* module LargeFile = *)
 (*  struct *)
-    external largefile_seek_out : out_channel -> int64 -> unit = "caml_ml_seek_out_64"
-    external largefile_pos_out : out_channel -> int64 = "caml_ml_pos_out_64"
+    external largefile_seek_out : out_channel -> int64 -> unit = "llama_ml_seek_out_64"
+    external largefile_pos_out : out_channel -> int64 = "llama_ml_pos_out_64"
     external largefile_out_channel_length : out_channel -> int64
-                                = "caml_ml_channel_size_64"
-    external largefile_seek_in : in_channel -> int64 -> unit = "caml_ml_seek_in_64"
-    external largefile_pos_in : in_channel -> int64 = "caml_ml_pos_in_64"
-    external largefile_in_channel_length : in_channel -> int64 = "caml_ml_channel_size_64"
+                                = "llama_ml_channel_size_64"
+    external largefile_seek_in : in_channel -> int64 -> unit = "llama_ml_seek_in_64"
+    external largefile_pos_in : in_channel -> int64 = "llama_ml_pos_in_64"
+    external largefile_in_channel_length : in_channel -> int64 = "llama_ml_channel_size_64"
 (*  end *)
 
 (* Formats *)
@@ -534,7 +534,7 @@ let string_of_format fmt =
 
 (* Miscellaneous *)
 
-external sys_exit : int -> 'a = "caml_sys_exit"
+external sys_exit : int -> 'a = "llama_sys_exit"
 
 let exit_function = ref flush_all
 
@@ -549,6 +549,6 @@ let exit retcode =
   sys_exit retcode
 
 external register_named_value : string -> 'a -> unit
-                              = "caml_register_named_value"
+                              = "llama_register_named_value"
 
 let _ = register_named_value "Pervasives.do_at_exit" do_at_exit

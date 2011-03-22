@@ -35,11 +35,11 @@
 #include "sys.h"
 #include "backtrace.h"
 
-CAMLexport int caml_backtrace_active = 0;
-CAMLexport int caml_backtrace_pos = 0;
-CAMLexport code_t * caml_backtrace_buffer = NULL;
-CAMLexport value caml_backtrace_last_exn = Val_unit;
-CAMLexport char * caml_cds_file = NULL;
+CAMLexport int llama_backtrace_active = 0;
+CAMLexport int llama_backtrace_pos = 0;
+CAMLexport code_t * llama_backtrace_buffer = NULL;
+CAMLexport value llama_backtrace_last_exn = Val_unit;
+CAMLexport char * llama_cds_file = NULL;
 #define BACKTRACE_BUFFER_SIZE 1024
 
 /* Location of fields in the Instruct.debug_event record */
@@ -63,20 +63,20 @@ enum {
 
 /* Start or stop the backtrace machinery */
 
-CAMLprim value caml_record_backtrace(value vflag)
+CAMLprim value llama_record_backtrace(value vflag)
 {
   int flag = Int_val(vflag);
 
-  if (flag != caml_backtrace_active) {
-    caml_backtrace_active = flag;
-    caml_backtrace_pos = 0;
+  if (flag != llama_backtrace_active) {
+    llama_backtrace_active = flag;
+    llama_backtrace_pos = 0;
     if (flag) {
-      caml_register_global_root(&caml_backtrace_last_exn);
+      llama_register_global_root(&llama_backtrace_last_exn);
     } else {
-      caml_remove_global_root(&caml_backtrace_last_exn);
+      llama_remove_global_root(&llama_backtrace_last_exn);
     }
-    /* Note: lazy initialization of caml_backtrace_buffer in
-       caml_stash_backtrace to simplify the interface with the thread
+    /* Note: lazy initialization of llama_backtrace_buffer in
+       llama_stash_backtrace to simplify the interface with the thread
        libraries */
   }
   return Val_unit;
@@ -84,35 +84,35 @@ CAMLprim value caml_record_backtrace(value vflag)
 
 /* Return the status of the backtrace machinery */
 
-CAMLprim value caml_backtrace_status(value vunit)
+CAMLprim value llama_backtrace_status(value vunit)
 {
-  return Val_bool(caml_backtrace_active);
+  return Val_bool(llama_backtrace_active);
 }
 
 /* Store the return addresses contained in the given stack fragment
    into the backtrace array */
 
-void caml_stash_backtrace(value exn, code_t pc, value * sp)
+void llama_stash_backtrace(value exn, code_t pc, value * sp)
 {
-  code_t end_code = (code_t) ((char *) caml_start_code + caml_code_size);
+  code_t end_code = (code_t) ((char *) llama_start_code + llama_code_size);
   if (pc != NULL) pc = pc - 1;
-  if (exn != caml_backtrace_last_exn) {
-    caml_backtrace_pos = 0;
-    caml_backtrace_last_exn = exn;
+  if (exn != llama_backtrace_last_exn) {
+    llama_backtrace_pos = 0;
+    llama_backtrace_last_exn = exn;
   }
-  if (caml_backtrace_buffer == NULL) {
-    caml_backtrace_buffer = malloc(BACKTRACE_BUFFER_SIZE * sizeof(code_t));
-    if (caml_backtrace_buffer == NULL) return;
+  if (llama_backtrace_buffer == NULL) {
+    llama_backtrace_buffer = malloc(BACKTRACE_BUFFER_SIZE * sizeof(code_t));
+    if (llama_backtrace_buffer == NULL) return;
   }
-  if (caml_backtrace_pos >= BACKTRACE_BUFFER_SIZE) return;
-  if (pc >= caml_start_code && pc < end_code){
-    caml_backtrace_buffer[caml_backtrace_pos++] = pc;
+  if (llama_backtrace_pos >= BACKTRACE_BUFFER_SIZE) return;
+  if (pc >= llama_start_code && pc < end_code){
+    llama_backtrace_buffer[llama_backtrace_pos++] = pc;
   }
-  for (/*nothing*/; sp < caml_trapsp; sp++) {
+  for (/*nothing*/; sp < llama_trapsp; sp++) {
     code_t p = (code_t) *sp;
-    if (p >= caml_start_code && p < end_code) {
-      if (caml_backtrace_pos >= BACKTRACE_BUFFER_SIZE) break;
-      caml_backtrace_buffer[caml_backtrace_pos++] = p;
+    if (p >= llama_start_code && p < end_code) {
+      if (llama_backtrace_pos >= BACKTRACE_BUFFER_SIZE) break;
+      llama_backtrace_buffer[llama_backtrace_pos++] = p;
     }
   }
 }
@@ -136,24 +136,24 @@ static value read_debug_info(void)
   uint32 num_events, orig, i;
   value evl, l;
 
-  if (caml_cds_file != NULL) {
-    exec_name = caml_cds_file;
+  if (llama_cds_file != NULL) {
+    exec_name = llama_cds_file;
   } else {
-    exec_name = caml_exe_name;
+    exec_name = llama_exe_name;
   }
-  fd = caml_attempt_open(&exec_name, &trail, 1);
+  fd = llama_attempt_open(&exec_name, &trail, 1);
   if (fd < 0) CAMLreturn(Val_false);
-  caml_read_section_descriptors(fd, &trail);
-  if (caml_seek_optional_section(fd, &trail, "DBUG") == -1) {
+  llama_read_section_descriptors(fd, &trail);
+  if (llama_seek_optional_section(fd, &trail, "DBUG") == -1) {
     close(fd);
     CAMLreturn(Val_false);
   }
-  chan = caml_open_descriptor_in(fd);
-  num_events = caml_getword(chan);
-  events = caml_alloc(num_events, 0);
+  chan = llama_open_descriptor_in(fd);
+  num_events = llama_getword(chan);
+  events = llama_alloc(num_events, 0);
   for (i = 0; i < num_events; i++) {
-    orig = caml_getword(chan);
-    evl = caml_input_val(chan);
+    orig = llama_getword(chan);
+    evl = llama_input_val(chan);
     /* Relocate events in event list */
     for (l = evl; l != Val_int(0); l = Field(l, 1)) {
       value ev = Field(l, 0);
@@ -162,7 +162,7 @@ static value read_debug_info(void)
     /* Record event list */
     Store_field(events, i, evl);
   }
-  caml_close_channel(chan);
+  llama_close_channel(chan);
   CAMLreturn(events);
 }
 
@@ -174,8 +174,8 @@ static value event_for_location(value events, code_t pc)
   value pos, l, ev, ev_pos, best_ev;
 
   best_ev = 0;
-  Assert(pc >= caml_start_code && pc < caml_start_code + caml_code_size);
-  pos = Val_long((char *) pc - (char *) caml_start_code);
+  Assert(pc >= llama_start_code && pc < llama_start_code + llama_code_size);
+  pos = Val_long((char *) pc - (char *) llama_start_code);
   for (i = 0; i < Wosize_val(events); i++) {
     for (l = Field(events, i); l != Val_int(0); l = Field(l, 1)) {
       ev = Field(l, 0);
@@ -207,7 +207,7 @@ static void extract_location_info(value events, code_t pc,
   value ev, ev_start;
 
   ev = event_for_location(events, pc);
-  li->loc_is_raise = caml_is_instruction(*pc, RAISE);
+  li->loc_is_raise = llama_is_instruction(*pc, RAISE);
   if (ev == Val_false) {
     li->loc_valid = 0;
     return;
@@ -256,7 +256,7 @@ static void print_location(struct loc_info * li, int index)
 
 /* Print a backtrace */
 
-CAMLexport void caml_print_exception_backtrace(void)
+CAMLexport void llama_print_exception_backtrace(void)
 {
   value events;
   int i;
@@ -268,15 +268,15 @@ CAMLexport void caml_print_exception_backtrace(void)
             "(Program not linked with -g, cannot print stack backtrace)\n");
     return;
   }
-  for (i = 0; i < caml_backtrace_pos; i++) {
-    extract_location_info(events, caml_backtrace_buffer[i], &li);
+  for (i = 0; i < llama_backtrace_pos; i++) {
+    extract_location_info(events, llama_backtrace_buffer[i], &li);
     print_location(&li, i);
   }
 }
 
 /* Convert the backtrace to a data structure usable from Caml */
 
-CAMLprim value caml_get_exception_backtrace(value unit)
+CAMLprim value llama_get_exception_backtrace(value unit)
 {
   CAMLparam0();
   CAMLlocal5(events, res, arr, p, fname);
@@ -287,24 +287,24 @@ CAMLprim value caml_get_exception_backtrace(value unit)
   if (events == Val_false) {
     res = Val_int(0);           /* None */
   } else {
-    arr = caml_alloc(caml_backtrace_pos, 0);
-    for (i = 0; i < caml_backtrace_pos; i++) {
-      extract_location_info(events, caml_backtrace_buffer[i], &li);
+    arr = llama_alloc(llama_backtrace_pos, 0);
+    for (i = 0; i < llama_backtrace_pos; i++) {
+      extract_location_info(events, llama_backtrace_buffer[i], &li);
       if (li.loc_valid) {
-        fname = caml_copy_string(li.loc_filename);
-        p = caml_alloc_small(5, 0);
+        fname = llama_copy_string(li.loc_filename);
+        p = llama_alloc_small(5, 0);
         Field(p, 0) = Val_bool(li.loc_is_raise);
         Field(p, 1) = fname;
         Field(p, 2) = Val_int(li.loc_lnum);
         Field(p, 3) = Val_int(li.loc_startchr);
         Field(p, 4) = Val_int(li.loc_endchr);
       } else {
-        p = caml_alloc_small(1, 1);
+        p = llama_alloc_small(1, 1);
         Field(p, 0) = Val_bool(li.loc_is_raise);
       }
-      caml_modify(&Field(arr, i), p);
+      llama_modify(&Field(arr, i), p);
     }
-    res = caml_alloc_small(1, 0); Field(res, 0) = arr; /* Some */
+    res = llama_alloc_small(1, 0); Field(res, 0) = arr; /* Some */
   }
   CAMLreturn(res);
 }

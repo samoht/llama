@@ -9,8 +9,8 @@ LLAMARUN=$(BOOTDIR)/llamarun
 LLAMAC=$(LLAMARUN) $(BOOTDIR)/llamac -nostdlib
 LLAMAOPT=$(LLAMARUN) $(BOOTDIR)/llamaopt -nostdlib
 LLAMADEP=$(LLAMARUN) $(BOOTDIR)/llamadep
-LLAMALEX=$(LLAMARUN) $(BOOTDIR)/llamalex
-LLAMAYACC=$(BOOTDIR)/llamayacc
+LLAMALEX=$(OCAMLLEX)   #$(LLAMARUN) $(BOOTDIR)/llamalex
+LLAMAYACC=$(OCAMLYACC) #$(BOOTDIR)/llamayacc
 
 %.lmi: %.mli
 	$(LLAMAC) -c $(INCLUDES) $<
@@ -26,10 +26,3 @@ LLAMAYACC=$(BOOTDIR)/llamayacc
 	$(LLAMAYACC) -v $<
 .mly.mli:
 	$(LLAMAYACC) -v $<
-
-%.p.cmx %.p.o: %.cmx
-	@cp $*.cmx $*.p.cmx
-	@cp $*.o $*.p.o
-%.p.cmxa %.p.a: %.cmxa
-	@cp $*.cmxa $*.p.cmxa
-	@cp $*.a $*.p.a

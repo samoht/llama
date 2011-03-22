@@ -15,8 +15,8 @@
 
 /* The instruction set. */
 
-#ifndef CAML_INSTRUCT_H
-#define CAML_INSTRUCT_H
+#ifndef LLAMA_INSTRUCT_H
+#define LLAMA_INSTRUCT_H
 
 enum instructions {
   ACC0, ACC1, ACC2, ACC3, ACC4, ACC5, ACC6, ACC7,
@@ -58,4 +58,4 @@ enum instructions {
   EVENT, BREAK
 };
 
-#endif /* CAML_INSTRUCT_H */
+#endif /* LLAMA_INSTRUCT_H */

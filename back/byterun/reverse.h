@@ -15,8 +15,8 @@
 
 /* Swap byte-order in 16, 32, and 64-bit integers or floats */
 
-#ifndef CAML_REVERSE_H
-#define CAML_REVERSE_H
+#ifndef LLAMA_REVERSE_H
+#define LLAMA_REVERSE_H
 
 #define Reverse_16(dst,src) {                                               \
   char * _p, * _q;                                                          \
@@ -85,4 +85,4 @@
   _p[Perm_index(perm_dst, 7)] = _h;                                         \
 }
 
-#endif /* CAML_REVERSE_H */
+#endif /* LLAMA_REVERSE_H */

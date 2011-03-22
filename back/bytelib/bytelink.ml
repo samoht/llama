@@ -403,12 +403,12 @@ let link_bytecode_as_c tolink outfile =
 extern \"C\" {\n\
 #endif\n\
 #include <caml/mlvalues.h>\n\
-CAMLextern void caml_startup_code(\n\
+CAMLextern void llama_startup_code(\n\
            code_t code, asize_t code_size,\n\
            char *data, asize_t data_size,\n\
            char *section_table, asize_t section_table_size,\n\
            char **argv);\n";
-    output_string outchan "static int caml_code[] = {\n";
+    output_string outchan "static int llama_code[] = {\n";
     Symtable.init();
     Consistbl.clear crc_interfaces;
     let currpos = ref 0 in
@@ -420,7 +420,7 @@ CAMLextern void caml_startup_code(\n\
     (* The final STOP instruction *)
     Printf.fprintf outchan "\n0x%x};\n\n" Opcodes.opSTOP;
     (* The table of global data *)
-    output_string outchan "static char caml_data[] = {\n";
+    output_string outchan "static char llama_data[] = {\n";
     output_data_string outchan
       (Marshal.to_string (Symtable.initial_global_table()) []);
     output_string outchan "\n};\n\n";
@@ -429,7 +429,7 @@ CAMLextern void caml_startup_code(\n\
       [ "SYMB", Symtable.data_global_map();
         "PRIM", Obj.repr(Symtable.data_primitive_names());
         "CRCS", Obj.repr(extract_crc_interfaces()) ] in
-    output_string outchan "static char caml_sections[] = {\n";
+    output_string outchan "static char llama_sections[] = {\n";
     output_data_string outchan
       (Marshal.to_string sections []);
     output_string outchan "\n};\n\n";
@@ -437,11 +437,11 @@ CAMLextern void caml_startup_code(\n\
     Symtable.output_primitive_table outchan;
     (* The entry point *)
     output_string outchan "\n\
-void caml_startup(char ** argv)\n\
+void llama_startup(char ** argv)\n\
 {\n\
-  caml_startup_code(caml_code, sizeof(caml_code),\n\
-                    caml_data, sizeof(caml_data),\n\
-                    caml_sections, sizeof(caml_sections),\n\
+  llama_startup_code(llama_code, sizeof(llama_code),\n\
+                    llama_data, sizeof(llama_data),\n\
+                    llama_sections, sizeof(llama_sections),\n\
                     argv);\n\
 }\n\
 #ifdef __cplusplus\n\

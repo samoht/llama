@@ -15,8 +15,8 @@
 
 /* Processor-specific operation: atomic "read and clear" */
 
-#ifndef CAML_SIGNALS_MACHDEP_H
-#define CAML_SIGNALS_MACHDEP_H
+#ifndef LLAMA_SIGNALS_MACHDEP_H
+#define LLAMA_SIGNALS_MACHDEP_H
 
 #if defined(__GNUC__) && defined(__i386__)
 
@@ -59,4 +59,4 @@
 
 #endif
 
-#endif /* CAML_SIGNALS_MACHDEP_H */
+#endif /* LLAMA_SIGNALS_MACHDEP_H */

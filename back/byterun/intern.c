@@ -37,14 +37,14 @@ static unsigned char * intern_input;
    Meaningful only if intern_input_malloced = 1. */
 
 static int intern_input_malloced;
-/* 1 if intern_input was allocated by caml_stat_alloc()
-   and needs caml_stat_free() on error, 0 otherwise. */
+/* 1 if intern_input was allocated by llama_stat_alloc()
+   and needs llama_stat_free() on error, 0 otherwise. */
 
 static header_t * intern_dest;
 /* Writing pointer in destination block */
 
 static char * intern_extra_block;
-/* If non-NULL, point to new heap chunk allocated with caml_alloc_for_heap. */
+/* If non-NULL, point to new heap chunk allocated with llama_alloc_for_heap. */
 
 static asize_t obj_counter;
 /* Count how many objects seen so far */
@@ -100,11 +100,11 @@ static intnat read64s(void)
 
 static void intern_cleanup(void)
 {
-  if (intern_input_malloced) caml_stat_free(intern_input);
-  if (intern_obj_table != NULL) caml_stat_free(intern_obj_table);
+  if (intern_input_malloced) llama_stat_free(intern_input);
+  if (intern_obj_table != NULL) llama_stat_free(intern_obj_table);
   if (intern_extra_block != NULL) {
     /* free newly allocated heap chunk */
-    caml_free_for_heap(intern_extra_block);
+    llama_free_for_heap(intern_extra_block);
   } else if (intern_block != 0) {
     /* restore original header for heap block, otherwise GC is confused */
     Hd_val(intern_block) = intern_header;
@@ -178,7 +178,7 @@ static void intern_rec(value *dest)
         break;
 #else
         intern_cleanup();
-        caml_failwith("input_value: integer too large");
+        llama_failwith("input_value: integer too large");
         break;
 #endif
       case CODE_SHARED8:
@@ -208,7 +208,7 @@ static void intern_rec(value *dest)
         goto read_block;
 #else
         intern_cleanup();
-        caml_failwith("input_value: data block too large");
+        llama_failwith("input_value: data block too large");
         break;
 #endif
       case CODE_STRING8:
@@ -221,7 +221,7 @@ static void intern_rec(value *dest)
       case CODE_DOUBLE_BIG:
         if (sizeof(double) != 8) {
           intern_cleanup();
-          caml_invalid_argument("input_value: non-standard floats");
+          llama_invalid_argument("input_value: non-standard floats");
         }
         v = Val_hp(intern_dest);
         if (intern_obj_table != NULL) intern_obj_table[obj_counter++] = v;
@@ -245,7 +245,7 @@ static void intern_rec(value *dest)
       read_double_array:
         if (sizeof(double) != 8) {
           intern_cleanup();
-          caml_invalid_argument("input_value: non-standard floats");
+          llama_invalid_argument("input_value: non-standard floats");
         }
         size = len * Double_wosize;
         v = Val_hp(intern_dest);
@@ -289,11 +289,11 @@ static void intern_rec(value *dest)
       case CODE_CODEPOINTER:
         ofs = read32u();
         readblock(cksum, 16);
-        if (memcmp(cksum, caml_code_checksum(), 16) != 0) {
+        if (memcmp(cksum, llama_code_checksum(), 16) != 0) {
           intern_cleanup();
-          caml_failwith("input_value: code mismatch");
+          llama_failwith("input_value: code mismatch");
         }
-        v = (value) (caml_code_area_start + ofs);
+        v = (value) (llama_code_area_start + ofs);
         break;
       case CODE_INFIXPOINTER:
         ofs = read32u();
@@ -301,10 +301,10 @@ static void intern_rec(value *dest)
         v = clos + ofs;
         break;
       case CODE_CUSTOM:
-        ops = caml_find_custom_operations((char *) intern_src);
+        ops = llama_find_custom_operations((char *) intern_src);
         if (ops == NULL) {
           intern_cleanup();
-          caml_failwith("input_value: unknown custom block identifier");
+          llama_failwith("input_value: unknown custom block identifier");
         }
         while (*intern_src++ != 0) /*nothing*/;  /*skip identifier*/
         size = ops->deserialize((void *) (intern_dest + 2));
@@ -317,7 +317,7 @@ static void intern_rec(value *dest)
         break;
       default:
         intern_cleanup();
-        caml_failwith("input_value: ill-formed message");
+        llama_failwith("input_value: ill-formed message");
       }
     }
   }
@@ -339,30 +339,30 @@ static void intern_alloc(mlsize_t whsize, mlsize_t num_objects)
     /* Round desired size up to next page */
     asize_t request =
       ((Bsize_wsize(whsize) + Page_size - 1) >> Page_log) << Page_log;
-    intern_extra_block = caml_alloc_for_heap(request);
-    if (intern_extra_block == NULL) caml_raise_out_of_memory();
-    intern_color = caml_allocation_color(intern_extra_block);
+    intern_extra_block = llama_alloc_for_heap(request);
+    if (intern_extra_block == NULL) llama_raise_out_of_memory();
+    intern_color = llama_allocation_color(intern_extra_block);
     intern_dest = (header_t *) intern_extra_block;
   } else {
-    /* this is a specialised version of caml_alloc from alloc.c */
+    /* this is a specialised version of llama_alloc from alloc.c */
     if (wosize == 0){
       intern_block = Atom (String_tag);
     }else if (wosize <= Max_young_wosize){
-      intern_block = caml_alloc_small (wosize, String_tag);
+      intern_block = llama_alloc_small (wosize, String_tag);
     }else{
-      intern_block = caml_alloc_shr (wosize, String_tag);
+      intern_block = llama_alloc_shr (wosize, String_tag);
       /* do not do the urgent_gc check here because it might darken
          intern_block into gray and break the Assert 3 lines down */
     }
     intern_header = Hd_val(intern_block);
     intern_color = Color_hd(intern_header);
-    Assert (intern_color == Caml_white || intern_color == Caml_black);
+    Assert (intern_color == Llama_white || intern_color == Llama_black);
     intern_dest = (header_t *) Hp_val(intern_block);
     intern_extra_block = NULL;
   }
   obj_counter = 0;
   if (num_objects > 0)
-    intern_obj_table = (value *) caml_stat_alloc(num_objects * sizeof(value));
+    intern_obj_table = (value *) llama_stat_alloc(num_objects * sizeof(value));
   else
     intern_obj_table = NULL;
 }
@@ -378,39 +378,39 @@ static void intern_add_to_heap(mlsize_t whsize)
       (header_t *) intern_extra_block + Wsize_bsize(request);
     Assert(intern_dest <= end_extra_block);
     if (intern_dest < end_extra_block){
-      caml_make_free_blocks ((value *) intern_dest,
+      llama_make_free_blocks ((value *) intern_dest,
                              end_extra_block - intern_dest, 0);
     }
-    caml_allocated_words +=
+    llama_allocated_words +=
       Wsize_bsize ((char *) intern_dest - intern_extra_block);
-    caml_add_to_heap(intern_extra_block);
+    llama_add_to_heap(intern_extra_block);
   }
 }
 
-value caml_input_val(struct channel *chan)
+value llama_input_val(struct channel *chan)
 {
   uint32 magic;
   mlsize_t block_len, num_objects, size_32, size_64, whsize;
   char * block;
   value res;
 
-  if (! caml_channel_binary_mode(chan))
-    caml_failwith("input_value: not a binary channel");
-  magic = caml_getword(chan);
-  if (magic != Intext_magic_number) caml_failwith("input_value: bad object");
-  block_len = caml_getword(chan);
-  num_objects = caml_getword(chan);
-  size_32 = caml_getword(chan);
-  size_64 = caml_getword(chan);
+  if (! llama_channel_binary_mode(chan))
+    llama_failwith("input_value: not a binary channel");
+  magic = llama_getword(chan);
+  if (magic != Intext_magic_number) llama_failwith("input_value: bad object");
+  block_len = llama_getword(chan);
+  num_objects = llama_getword(chan);
+  size_32 = llama_getword(chan);
+  size_64 = llama_getword(chan);
   /* Read block from channel */
-  block = caml_stat_alloc(block_len);
-  /* During [caml_really_getblock], concurrent [caml_input_val] operations
+  block = llama_stat_alloc(block_len);
+  /* During [llama_really_getblock], concurrent [llama_input_val] operations
      can take place (via signal handlers or context switching in systhreads),
-     and [intern_input] may change.  So, wait until [caml_really_getblock]
+     and [intern_input] may change.  So, wait until [llama_really_getblock]
      is over before using [intern_input] and the other global vars. */
-  if (caml_really_getblock(chan, block, block_len) == 0) {
-    caml_stat_free(block);
-    caml_failwith("input_value: truncated object");
+  if (llama_really_getblock(chan, block, block_len) == 0) {
+    llama_stat_free(block);
+    llama_failwith("input_value: truncated object");
   }
   intern_input = (unsigned char *) block;
   intern_input_malloced = 1;
@@ -426,24 +426,24 @@ value caml_input_val(struct channel *chan)
   intern_rec(&res);
   intern_add_to_heap(whsize);
   /* Free everything */
-  caml_stat_free(intern_input);
-  if (intern_obj_table != NULL) caml_stat_free(intern_obj_table);
+  llama_stat_free(intern_input);
+  if (intern_obj_table != NULL) llama_stat_free(intern_obj_table);
   return res;
 }
 
-CAMLprim value caml_input_value(value vchan)
+CAMLprim value llama_input_value(value vchan)
 {
   CAMLparam1 (vchan);
   struct channel * chan = Channel(vchan);
   CAMLlocal1 (res);
 
   Lock(chan);
-  res = caml_input_val(chan);
+  res = llama_input_val(chan);
   Unlock(chan);
   CAMLreturn (res);
 }
 
-CAMLexport value caml_input_val_from_string(value str, intnat ofs)
+CAMLexport value llama_input_val_from_string(value str, intnat ofs)
 {
   CAMLparam1 (str);
   mlsize_t num_objects, size_32, size_64, whsize;
@@ -466,13 +466,13 @@ CAMLexport value caml_input_val_from_string(value str, intnat ofs)
   intern_rec(&obj);
   intern_add_to_heap(whsize);
   /* Free everything */
-  if (intern_obj_table != NULL) caml_stat_free(intern_obj_table);
+  if (intern_obj_table != NULL) llama_stat_free(intern_obj_table);
   CAMLreturn (obj);
 }
 
-CAMLprim value caml_input_value_from_string(value str, value ofs)
+CAMLprim value llama_input_value_from_string(value str, value ofs)
 {
-  return caml_input_val_from_string(str, Long_val(ofs));
+  return llama_input_val_from_string(str, Long_val(ofs));
 }
 
 static value input_val_from_block(void)
@@ -494,11 +494,11 @@ static value input_val_from_block(void)
   intern_rec(&obj);
   intern_add_to_heap(whsize);
   /* Free internal data structures */
-  if (intern_obj_table != NULL) caml_stat_free(intern_obj_table);
+  if (intern_obj_table != NULL) llama_stat_free(intern_obj_table);
   return obj;
 }
 
-CAMLexport value caml_input_value_from_malloc(char * data, intnat ofs)
+CAMLexport value llama_input_value_from_malloc(char * data, intnat ofs)
 {
   uint32 magic;
   mlsize_t block_len;
@@ -509,15 +509,15 @@ CAMLexport value caml_input_value_from_malloc(char * data, intnat ofs)
   intern_input_malloced = 1;
   magic = read32u();
   if (magic != Intext_magic_number)
-    caml_failwith("input_value_from_malloc: bad object");
+    llama_failwith("input_value_from_malloc: bad object");
   block_len = read32u();
   obj = input_val_from_block();
   /* Free the input */
-  caml_stat_free(intern_input);
+  llama_stat_free(intern_input);
   return obj;
 }
 
-CAMLexport value caml_input_value_from_block(char * data, intnat len)
+CAMLexport value llama_input_value_from_block(char * data, intnat len)
 {
   uint32 magic;
   mlsize_t block_len;
@@ -528,15 +528,15 @@ CAMLexport value caml_input_value_from_block(char * data, intnat len)
   intern_input_malloced = 0;
   magic = read32u();
   if (magic != Intext_magic_number)
-    caml_failwith("input_value_from_block: bad object");
+    llama_failwith("input_value_from_block: bad object");
   block_len = read32u();
   if (5*4 + block_len > len)
-    caml_failwith("input_value_from_block: bad block length");
+    llama_failwith("input_value_from_block: bad block length");
   obj = input_val_from_block();
   return obj;
 }
 
-CAMLprim value caml_marshal_data_size(value buff, value ofs)
+CAMLprim value llama_marshal_data_size(value buff, value ofs)
 {
   uint32 magic;
   mlsize_t block_len;
@@ -545,7 +545,7 @@ CAMLprim value caml_marshal_data_size(value buff, value ofs)
   intern_input_malloced = 0;
   magic = read32u();
   if (magic != Intext_magic_number){
-    caml_failwith("Marshal.data_size: bad object");
+    llama_failwith("Marshal.data_size: bad object");
   }
   block_len = read32u();
   return Val_long(block_len);
@@ -557,18 +557,18 @@ CAMLprim value caml_marshal_data_size(value buff, value ofs)
 
 #include "md5.h"
 
-unsigned char * caml_code_checksum(void)
+unsigned char * llama_code_checksum(void)
 {
   static unsigned char checksum[16];
   static int checksum_computed = 0;
 
   if (! checksum_computed) {
     struct MD5Context ctx;
-    caml_MD5Init(&ctx);
-    caml_MD5Update(&ctx,
-                   (unsigned char *) caml_code_area_start,
-                   caml_code_area_end - caml_code_area_start);
-    caml_MD5Final(checksum, &ctx);
+    llama_MD5Init(&ctx);
+    llama_MD5Update(&ctx,
+                   (unsigned char *) llama_code_area_start,
+                   llama_code_area_end - llama_code_area_start);
+    llama_MD5Final(checksum, &ctx);
     checksum_computed = 1;
   }
   return checksum;
@@ -578,80 +578,80 @@ unsigned char * caml_code_checksum(void)
 
 #include "fix_code.h"
 
-unsigned char * caml_code_checksum(void)
+unsigned char * llama_code_checksum(void)
 {
-  return caml_code_md5;
+  return llama_code_md5;
 }
 
 #endif
 
 /* Functions for writing user-defined marshallers */
 
-CAMLexport int caml_deserialize_uint_1(void)
+CAMLexport int llama_deserialize_uint_1(void)
 {
   return read8u();
 }
 
-CAMLexport int caml_deserialize_sint_1(void)
+CAMLexport int llama_deserialize_sint_1(void)
 {
   return read8s();
 }
 
-CAMLexport int caml_deserialize_uint_2(void)
+CAMLexport int llama_deserialize_uint_2(void)
 {
   return read16u();
 }
 
-CAMLexport int caml_deserialize_sint_2(void)
+CAMLexport int llama_deserialize_sint_2(void)
 {
   return read16s();
 }
 
-CAMLexport uint32 caml_deserialize_uint_4(void)
+CAMLexport uint32 llama_deserialize_uint_4(void)
 {
   return read32u();
 }
 
-CAMLexport int32 caml_deserialize_sint_4(void)
+CAMLexport int32 llama_deserialize_sint_4(void)
 {
   return read32s();
 }
 
-CAMLexport uint64 caml_deserialize_uint_8(void)
+CAMLexport uint64 llama_deserialize_uint_8(void)
 {
   uint64 i;
-  caml_deserialize_block_8(&i, 1);
+  llama_deserialize_block_8(&i, 1);
   return i;
 }
 
-CAMLexport int64 caml_deserialize_sint_8(void)
+CAMLexport int64 llama_deserialize_sint_8(void)
 {
   int64 i;
-  caml_deserialize_block_8(&i, 1);
+  llama_deserialize_block_8(&i, 1);
   return i;
 }
 
-CAMLexport float caml_deserialize_float_4(void)
+CAMLexport float llama_deserialize_float_4(void)
 {
   float f;
-  caml_deserialize_block_4(&f, 1);
+  llama_deserialize_block_4(&f, 1);
   return f;
 }
 
-CAMLexport double caml_deserialize_float_8(void)
+CAMLexport double llama_deserialize_float_8(void)
 {
   double f;
-  caml_deserialize_block_float_8(&f, 1);
+  llama_deserialize_block_float_8(&f, 1);
   return f;
 }
 
-CAMLexport void caml_deserialize_block_1(void * data, intnat len)
+CAMLexport void llama_deserialize_block_1(void * data, intnat len)
 {
   memmove(data, intern_src, len);
   intern_src += len;
 }
 
-CAMLexport void caml_deserialize_block_2(void * data, intnat len)
+CAMLexport void llama_deserialize_block_2(void * data, intnat len)
 {
 #ifndef ARCH_BIG_ENDIAN
   unsigned char * p, * q;
@@ -664,7 +664,7 @@ CAMLexport void caml_deserialize_block_2(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_deserialize_block_4(void * data, intnat len)
+CAMLexport void llama_deserialize_block_4(void * data, intnat len)
 {
 #ifndef ARCH_BIG_ENDIAN
   unsigned char * p, * q;
@@ -677,7 +677,7 @@ CAMLexport void caml_deserialize_block_4(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_deserialize_block_8(void * data, intnat len)
+CAMLexport void llama_deserialize_block_8(void * data, intnat len)
 {
 #ifndef ARCH_BIG_ENDIAN
   unsigned char * p, * q;
@@ -690,7 +690,7 @@ CAMLexport void caml_deserialize_block_8(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_deserialize_block_float_8(void * data, intnat len)
+CAMLexport void llama_deserialize_block_float_8(void * data, intnat len)
 {
 #if ARCH_FLOAT_ENDIANNESS == 0x01234567
   memmove(data, intern_src, len * 8);
@@ -708,8 +708,8 @@ CAMLexport void caml_deserialize_block_float_8(void * data, intnat len)
 #endif
 }
 
-CAMLexport void caml_deserialize_error(char * msg)
+CAMLexport void llama_deserialize_error(char * msg)
 {
   intern_cleanup();
-  caml_failwith(msg);
+  llama_failwith(msg);
 }

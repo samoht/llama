@@ -22,5 +22,5 @@ extern char ** environ;
 
 CAMLprim value unix_environment(value unit)
 {
-  return caml_copy_string_array((const char**)environ);
+  return llama_copy_string_array((const char**)environ);
 }

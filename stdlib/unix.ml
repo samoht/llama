@@ -154,7 +154,7 @@ let handle_unix_error f arg =
     exit 2
 
 external environment : unit -> string array = "unix_environment"
-external getenv: string -> string = "caml_sys_getenv"
+external getenv: string -> string = "llama_sys_getenv"
 external putenv: string -> string -> unit = "unix_putenv"
 
 type interval_timer =
@@ -231,13 +231,13 @@ let rec single_write fd buf ofs len =
     wait_write fd; single_write fd buf ofs len
 
 external in_channel_of_descr : file_descr -> in_channel
-                             = "caml_ml_open_descriptor_in"
+                             = "llama_ml_open_descriptor_in"
 external out_channel_of_descr : file_descr -> out_channel
-                              = "caml_ml_open_descriptor_out"
+                              = "llama_ml_open_descriptor_out"
 external descr_of_in_channel : in_channel -> file_descr
-                             = "caml_channel_descriptor"
+                             = "llama_channel_descriptor"
 external descr_of_out_channel : out_channel -> file_descr
-                              = "caml_channel_descriptor"
+                              = "llama_channel_descriptor"
 
 type seek_command =
     SEEK_SET

@@ -15,22 +15,22 @@
 
 /* Interface with C primitives. */
 
-#ifndef CAML_PRIMS_H
-#define CAML_PRIMS_H
+#ifndef LLAMA_PRIMS_H
+#define LLAMA_PRIMS_H
 
 typedef value (*c_primitive)();
 
-extern c_primitive caml_builtin_cprim[];
-extern char * caml_names_of_builtin_cprim[];
+extern c_primitive llama_builtin_cprim[];
+extern char * llama_names_of_builtin_cprim[];
 
-extern struct ext_table caml_prim_table;
+extern struct ext_table llama_prim_table;
 #ifdef DEBUG
-extern struct ext_table caml_prim_name_table;
+extern struct ext_table llama_prim_name_table;
 #endif
 
-#define Primitive(n) ((c_primitive)(caml_prim_table.contents[n]))
+#define Primitive(n) ((c_primitive)(llama_prim_table.contents[n]))
 
-extern char * caml_section_table;
-extern asize_t caml_section_table_size;
+extern char * llama_section_table;
+extern asize_t llama_section_table_size;
 
-#endif /* CAML_PRIMS_H */
+#endif /* LLAMA_PRIMS_H */

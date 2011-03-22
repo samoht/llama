@@ -1,13 +1,13 @@
 external format_float: string -> float -> string
-  = "caml_format_float"
+  = "llama_format_float"
 external format_int: string -> int -> string
-  = "caml_format_int"
+  = "llama_format_int"
 external format_int32: string -> int32 -> string
-  = "caml_int32_format"
+  = "llama_int32_format"
 external format_nativeint: string -> nativeint -> string
-  = "caml_nativeint_format"
+  = "llama_nativeint_format"
 external format_int64: string -> int64 -> string
-  = "caml_int64_format"
+  = "llama_int64_format"
 
 let bad_conversion sfmt i c =
   invalid_arg

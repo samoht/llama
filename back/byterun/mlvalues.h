@@ -13,10 +13,10 @@
 
 /* $Id: mlvalues.h 8970 2008-08-01 14:10:36Z xleroy $ */
 
-#ifndef CAML_MLVALUES_H
-#define CAML_MLVALUES_H
+#ifndef LLAMA_MLVALUES_H
+#define LLAMA_MLVALUES_H
 
-#ifndef CAML_NAME_SPACE
+#ifndef LLAMA_NAME_SPACE
 #include "compatibility.h"
 #endif
 #include "config.h"
@@ -164,7 +164,7 @@ typedef opcode_t * code_t;
 
 /* NOTE: [Forward_tag] and [Infix_tag] must be just under
    [No_scan_tag], with [Infix_tag] the lower one.
-   See [caml_oldify_one] in minor_gc.c for more details.
+   See [llama_oldify_one] in minor_gc.c for more details.
 
    NOTE: Update stdlib/obj.ml whenever you change the tags.
  */
@@ -187,10 +187,10 @@ typedef opcode_t * code_t;
 #define Object_tag 248
 #define Class_val(val) Field((val), 0)
 #define Oid_val(val) Long_val(Field((val), 1))
-CAMLextern value caml_get_public_method (value obj, value tag);
+CAMLextern value llama_get_public_method (value obj, value tag);
 /* Called as:
-   caml_callback(caml_get_public_method(obj, caml_hash_variant(name)), obj) */
-/* caml_get_public_method returns 0 if tag not in the table.
+   llama_callback(llama_get_public_method(obj, llama_hash_variant(name)), obj) */
+/* llama_get_public_method returns 0 if tag not in the table.
    Note however that tags being hashed, same tag does not necessarily mean
    same method name. */
 
@@ -203,7 +203,7 @@ CAMLextern value caml_get_public_method (value obj, value tag);
 #define Lazy_tag 246
 
 /* Another special case: variants */
-CAMLextern value caml_hash_variant(char const * tag);
+CAMLextern value llama_hash_variant(char const * tag);
 
 /* 2- If tag >= No_scan_tag : a sequence of bytes. */
 
@@ -222,7 +222,7 @@ CAMLextern value caml_hash_variant(char const * tag);
 /* Strings. */
 #define String_tag 252
 #define String_val(x) ((char *) Bp_val(x))
-CAMLextern mlsize_t caml_string_length (value);   /* size in bytes */
+CAMLextern mlsize_t llama_string_length (value);   /* size in bytes */
 
 /* Floating-point numbers. */
 #define Double_tag 253
@@ -231,19 +231,19 @@ CAMLextern mlsize_t caml_string_length (value);   /* size in bytes */
 #define Double_val(v) (* (double *)(v))
 #define Store_double_val(v,d) (* (double *)(v) = (d))
 #else
-CAMLextern double caml_Double_val (value);
-CAMLextern void caml_Store_double_val (value,double);
-#define Double_val(v) caml_Double_val(v)
-#define Store_double_val(v,d) caml_Store_double_val(v,d)
+CAMLextern double llama_Double_val (value);
+CAMLextern void llama_Store_double_val (value,double);
+#define Double_val(v) llama_Double_val(v)
+#define Store_double_val(v,d) llama_Store_double_val(v,d)
 #endif
 
 /* Arrays of floating-point numbers. */
 #define Double_array_tag 254
 #define Double_field(v,i) Double_val((value)((double *)(v) + (i)))
 #define Store_double_field(v,i,d) do{ \
-  mlsize_t caml__temp_i = (i); \
-  double caml__temp_d = (d); \
-  Store_double_val((value)((double *) (v) + caml__temp_i), caml__temp_d); \
+  mlsize_t llama__temp_i = (i); \
+  double llama__temp_d = (d); \
+  Store_double_val((value)((double *) (v) + llama__temp_i), llama__temp_d); \
 }while(0)
 
 /* Custom blocks.  They contain a pointer to a "method suite"
@@ -262,14 +262,14 @@ struct custom_operations;       /* defined in [custom.h] */
 #ifndef ARCH_ALIGN_INT64
 #define Int64_val(v) (*((int64 *) Data_custom_val(v)))
 #else
-CAMLextern int64 caml_Int64_val(value v);
-#define Int64_val(v) caml_Int64_val(v)
+CAMLextern int64 llama_Int64_val(value v);
+#define Int64_val(v) llama_Int64_val(v)
 #endif
 
 /* 3- Atoms are 0-tuples.  They are statically allocated once and for all. */
 
-CAMLextern header_t caml_atom_table[];
-#define Atom(tag) (Val_hp (&(caml_atom_table [(tag)])))
+CAMLextern header_t llama_atom_table[];
+#define Atom(tag) (Val_hp (&(llama_atom_table [(tag)])))
 
 /* Booleans are integers 0 or 1 */
 
@@ -289,7 +289,7 @@ CAMLextern header_t caml_atom_table[];
 
 /* The table of global identifiers */
 
-extern value caml_global_data;
+extern value llama_global_data;
 
 
-#endif /* CAML_MLVALUES_H */
+#endif /* LLAMA_MLVALUES_H */

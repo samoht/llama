@@ -202,7 +202,7 @@ let _ = Hashtbl.add directive_table "remove_printer"
 
 (* The trace *)
 
-external current_environment: unit -> Obj.t = "caml_get_current_environment"
+external current_environment: unit -> Obj.t = "llama_get_current_environment"
 
 let tracing_function_ptr =
   get_code_pointer

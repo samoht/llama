@@ -72,10 +72,10 @@
 
 /* The thread descriptors */
 
-struct caml_thread_struct {
+struct llama_thread_struct {
   value ident;                  /* Unique id (for equality comparisons) */
-  struct caml_thread_struct * next;  /* Double linking of threads */
-  struct caml_thread_struct * prev;
+  struct llama_thread_struct * next;  /* Double linking of threads */
+  struct llama_thread_struct * prev;
   value * stack_low;            /* The execution stack for this thread */
   value * stack_high;
   value * stack_threshold;
@@ -94,7 +94,7 @@ struct caml_thread_struct {
   value retval;                 /* Value to return when thread resumes */
 };
 
-typedef struct caml_thread_struct * caml_thread_t;
+typedef struct llama_thread_struct * llama_thread_t;
 
 #define RUNNABLE Val_int(0)
 #define KILLED Val_int(1)
@@ -122,11 +122,11 @@ typedef struct caml_thread_struct * caml_thread_t;
 #define DELAY_INFTY 1E30        /* +infty, for this purpose */
 
 /* The thread currently active */
-static caml_thread_t curr_thread = NULL;
+static llama_thread_t curr_thread = NULL;
 /* Identifier for next thread creation */
 static value next_ident = Val_int(0);
 
-#define Assign(dst,src) caml_modify((value *)&(dst), (value)(src))
+#define Assign(dst,src) llama_modify((value *)&(dst), (value)(src))
 
 /* Scan the stacks of the other threads */
 
@@ -134,7 +134,7 @@ static void (*prev_scan_roots_hook) (scanning_action);
 
 static void thread_scan_roots(scanning_action action)
 {
-  caml_thread_t th, start;
+  llama_thread_t th, start;
 
   /* Scan all active descriptors */
   start = curr_thread;
@@ -142,7 +142,7 @@ static void thread_scan_roots(scanning_action action)
   /* Don't scan curr_thread->sp, this has already been done.
      Don't scan local roots either, for the same reason. */
   for (th = start->next; th != start; th = th->next) {
-    caml_do_local_roots(action, th->sp, th->stack_high, NULL);
+    llama_do_local_roots(action, th->sp, th->stack_high, NULL);
   }
   /* Hook */
   if (prev_scan_roots_hook != NULL) (*prev_scan_roots_hook)(action);
@@ -161,20 +161,20 @@ CAMLprim value thread_initialize(value unit)       /* ML */
   if (curr_thread != NULL) return Val_unit;
   /* Create a descriptor for the current thread */
   curr_thread =
-    (caml_thread_t) caml_alloc_shr(sizeof(struct caml_thread_struct)
+    (llama_thread_t) llama_alloc_shr(sizeof(struct llama_thread_struct)
                               / sizeof(value), 0);
   curr_thread->ident = next_ident;
   next_ident = Val_int(Int_val(next_ident) + 1);
   curr_thread->next = curr_thread;
   curr_thread->prev = curr_thread;
-  curr_thread->stack_low = caml_stack_low;
-  curr_thread->stack_high = caml_stack_high;
-  curr_thread->stack_threshold = caml_stack_threshold;
-  curr_thread->sp = caml_extern_sp;
-  curr_thread->trapsp = caml_trapsp;
-  curr_thread->backtrace_pos = Val_int(caml_backtrace_pos);
-  curr_thread->backtrace_buffer = caml_backtrace_buffer;
-  caml_initialize (&curr_thread->backtrace_last_exn, caml_backtrace_last_exn);
+  curr_thread->stack_low = llama_stack_low;
+  curr_thread->stack_high = llama_stack_high;
+  curr_thread->stack_threshold = llama_stack_threshold;
+  curr_thread->sp = llama_extern_sp;
+  curr_thread->trapsp = llama_trapsp;
+  curr_thread->backtrace_pos = Val_int(llama_backtrace_pos);
+  curr_thread->backtrace_buffer = llama_backtrace_buffer;
+  llama_initialize (&curr_thread->backtrace_last_exn, llama_backtrace_last_exn);
   curr_thread->status = RUNNABLE;
   curr_thread->fd = Val_int(0);
   curr_thread->readfds = NO_FDS;
@@ -185,8 +185,8 @@ CAMLprim value thread_initialize(value unit)       /* ML */
   curr_thread->waitpid = NO_WAITPID;
   curr_thread->retval = Val_unit;
   /* Initialize GC */
-  prev_scan_roots_hook = caml_scan_roots_hook;
-  caml_scan_roots_hook = thread_scan_roots;
+  prev_scan_roots_hook = llama_scan_roots_hook;
+  llama_scan_roots_hook = thread_scan_roots;
   /* Set standard file descriptors to non-blocking mode */
   stdin_initial_status = fcntl(0, F_GETFL);
   stdout_initial_status = fcntl(1, F_GETFL);
@@ -219,15 +219,15 @@ CAMLprim value thread_initialize_preemption(value unit)     /* ML */
 
 CAMLprim value thread_new(value clos)          /* ML */
 {
-  caml_thread_t th;
+  llama_thread_t th;
   /* Allocate the thread and its stack */
   Begin_root(clos);
-    th = (caml_thread_t) caml_alloc_shr(sizeof(struct caml_thread_struct)
+    th = (llama_thread_t) llama_alloc_shr(sizeof(struct llama_thread_struct)
                                    / sizeof(value), 0);
   End_roots();
   th->ident = next_ident;
   next_ident = Val_int(Int_val(next_ident) + 1);
-  th->stack_low = (value *) caml_stat_alloc(Thread_stack_size);
+  th->stack_low = (value *) llama_stat_alloc(Thread_stack_size);
   th->stack_high = th->stack_low + Thread_stack_size / sizeof(value);
   th->stack_threshold = th->stack_low + Stack_threshold / sizeof(value);
   th->sp = th->stack_high;
@@ -270,7 +270,7 @@ CAMLprim value thread_new(value clos)          /* ML */
 
 value thread_id(value th)             /* ML */
 {
-  return ((caml_thread_t)th)->ident;
+  return ((llama_thread_t)th)->ident;
 }
 
 /* Return the current time as a floating-point number */
@@ -295,23 +295,23 @@ static void find_bad_fds(value fdl, fd_set *set);
 
 static value schedule_thread(void)
 {
-  caml_thread_t run_thread, th;
+  llama_thread_t run_thread, th;
   fd_set readfds, writefds, exceptfds;
   double delay, now;
   int need_select, need_wait;
 
   /* Don't allow preemption during a callback */
-  if (caml_callback_depth > 1) return curr_thread->retval;
+  if (llama_callback_depth > 1) return curr_thread->retval;
 
   /* Save the status of the current thread */
-  curr_thread->stack_low = caml_stack_low;
-  curr_thread->stack_high = caml_stack_high;
-  curr_thread->stack_threshold = caml_stack_threshold;
-  curr_thread->sp = caml_extern_sp;
-  curr_thread->trapsp = caml_trapsp;
-  curr_thread->backtrace_pos = Val_int(caml_backtrace_pos);
-  curr_thread->backtrace_buffer = caml_backtrace_buffer;
-  caml_modify (&curr_thread->backtrace_last_exn, caml_backtrace_last_exn);
+  curr_thread->stack_low = llama_stack_low;
+  curr_thread->stack_high = llama_stack_high;
+  curr_thread->stack_threshold = llama_stack_threshold;
+  curr_thread->sp = llama_extern_sp;
+  curr_thread->trapsp = llama_trapsp;
+  curr_thread->backtrace_pos = Val_int(llama_backtrace_pos);
+  curr_thread->backtrace_buffer = llama_backtrace_buffer;
+  llama_modify (&curr_thread->backtrace_last_exn, llama_backtrace_last_exn);
 
 try_again:
   /* Find if a thread is runnable.
@@ -355,7 +355,7 @@ try_again:
       }
     }
     if (th->status & (BLOCKED_JOIN - 1)) {
-      if (((caml_thread_t)(th->joining))->status == KILLED) {
+      if (((llama_thread_t)(th->joining))->status == KILLED) {
         th->status = RUNNABLE;
         Assign(th->retval, RESUMED_JOIN);
       }
@@ -401,9 +401,9 @@ try_again:
     else {
       delay_ptr = NULL;
     }
-    caml_enter_blocking_section();
+    llama_enter_blocking_section();
     retcode = select(FD_SETSIZE, &readfds, &writefds, &exceptfds, delay_ptr);
-    caml_leave_blocking_section();
+    llama_leave_blocking_section();
     if (retcode == -1)
       switch (errno) {
       case EINTR:
@@ -428,7 +428,7 @@ try_again:
         retcode = FD_SETSIZE;
         break;
       default:
-        caml_sys_error(NO_ARG);
+        llama_sys_error(NO_ARG);
       }
     if (retcode > 0) {
       /* Some descriptors are ready.
@@ -460,7 +460,7 @@ try_again:
             w = inter_fdlist_set(th->writefds, &writefds, &retcode);
             e = inter_fdlist_set(th->exceptfds, &exceptfds, &retcode);
             if (r != NO_FDS || w != NO_FDS || e != NO_FDS) {
-              value retval = caml_alloc_small(3, TAG_RESUMED_SELECT);
+              value retval = llama_alloc_small(3, TAG_RESUMED_SELECT);
               Field(retval, 0) = r;
               Field(retval, 1) = w;
               Field(retval, 2) = e;
@@ -485,7 +485,7 @@ try_again:
   }
 
   /* If we haven't something to run at that point, we're in big trouble. */
-  if (run_thread == NULL) caml_invalid_argument("Thread: deadlock");
+  if (run_thread == NULL) llama_invalid_argument("Thread: deadlock");
 
   /* Free everything the thread was waiting on */
   Assign(run_thread->readfds, NO_FDS);
@@ -497,14 +497,14 @@ try_again:
 
   /* Activate the thread */
   curr_thread = run_thread;
-  caml_stack_low = curr_thread->stack_low;
-  caml_stack_high = curr_thread->stack_high;
-  caml_stack_threshold = curr_thread->stack_threshold;
-  caml_extern_sp = curr_thread->sp;
-  caml_trapsp = curr_thread->trapsp;
-  caml_backtrace_pos = Int_val(curr_thread->backtrace_pos);
-  caml_backtrace_buffer = curr_thread->backtrace_buffer;
-  caml_backtrace_last_exn = curr_thread->backtrace_last_exn;
+  llama_stack_low = curr_thread->stack_low;
+  llama_stack_high = curr_thread->stack_high;
+  llama_stack_threshold = curr_thread->stack_threshold;
+  llama_extern_sp = curr_thread->sp;
+  llama_trapsp = curr_thread->trapsp;
+  llama_backtrace_pos = Int_val(curr_thread->backtrace_pos);
+  llama_backtrace_buffer = curr_thread->backtrace_buffer;
+  llama_backtrace_last_exn = curr_thread->backtrace_last_exn;
   return curr_thread->retval;
 }
 
@@ -513,8 +513,8 @@ try_again:
 
 static void check_callback(void)
 {
-  if (caml_callback_depth > 1)
-    caml_fatal_error("Thread: deadlock during callback");
+  if (llama_callback_depth > 1)
+    llama_fatal_error("Thread: deadlock during callback");
 }
 
 /* Reschedule without suspending the current thread */
@@ -535,20 +535,20 @@ static void thread_reschedule(void)
   Assert(curr_thread != NULL);
   /* Pop accu from event frame, making it look like a C_CALL frame
      followed by a RETURN frame */
-  accu = *caml_extern_sp++;
+  accu = *llama_extern_sp++;
   /* Reschedule */
   Assign(curr_thread->retval, accu);
   accu = schedule_thread();
   /* Push accu below C_CALL frame so that it looks like an event frame */
-  *--caml_extern_sp = accu;
+  *--llama_extern_sp = accu;
 }
 
 /* Request a re-scheduling as soon as possible */
 
 CAMLprim value thread_request_reschedule(value unit)    /* ML */
 {
-  caml_async_action_hook = thread_reschedule;
-  caml_something_to_do = 1;
+  llama_async_action_hook = thread_reschedule;
+  llama_something_to_do = 1;
   return Val_unit;
 }
 
@@ -572,7 +572,7 @@ static value thread_wait_rw(int kind, value fd)
   if (curr_thread == NULL) return RESUMED_WAKEUP;
   /* As a special case, if we're in a callback, don't fail but block
      the whole process till I/O is possible */
-  if (caml_callback_depth > 1) {
+  if (llama_callback_depth > 1) {
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(Int_val(fd), &fds);
@@ -607,7 +607,7 @@ static value thread_wait_timed_rw(int kind, value arg)
   check_callback();
   curr_thread->fd = Field(arg, 0);
   date = timeofday() + Double_val(Field(arg, 1));
-  Assign(curr_thread->delay, caml_copy_double(date));
+  Assign(curr_thread->delay, llama_copy_double(date));
   curr_thread->status = kind | BLOCKED_DELAY;
   return schedule_thread();
 }
@@ -634,7 +634,7 @@ CAMLprim value thread_select(value arg)        /* ML */
   date = Double_val(Field(arg, 3));
   if (date >= 0.0) {
     date += timeofday();
-    Assign(curr_thread->delay, caml_copy_double(date));
+    Assign(curr_thread->delay, llama_copy_double(date));
     curr_thread->status = BLOCKED_SELECT | BLOCKED_DELAY;
   } else {
     curr_thread->status = BLOCKED_SELECT;
@@ -674,7 +674,7 @@ CAMLprim value thread_delay(value time)          /* ML */
   Assert(curr_thread != NULL);
   check_callback();
   curr_thread->status = BLOCKED_DELAY;
-  Assign(curr_thread->delay, caml_copy_double(date));
+  Assign(curr_thread->delay, llama_copy_double(date));
   return schedule_thread();
 }
 
@@ -684,7 +684,7 @@ CAMLprim value thread_join(value th)          /* ML */
 {
   check_callback();
   Assert(curr_thread != NULL);
-  if (((caml_thread_t)th)->status == KILLED) return Val_unit;
+  if (((llama_thread_t)th)->status == KILLED) return Val_unit;
   curr_thread->status = BLOCKED_JOIN;
   Assign(curr_thread->joining, th);
   return schedule_thread();
@@ -705,16 +705,16 @@ CAMLprim value thread_wait_pid(value pid)          /* ML */
 
 CAMLprim value thread_wakeup(value thread)     /* ML */
 {
-  caml_thread_t th = (caml_thread_t) thread;
+  llama_thread_t th = (llama_thread_t) thread;
   switch (th->status) {
   case SUSPENDED:
     th->status = RUNNABLE;
     Assign(th->retval, RESUMED_WAKEUP);
     break;
   case KILLED:
-    caml_failwith("Thread.wakeup: killed thread");
+    llama_failwith("Thread.wakeup: killed thread");
   default:
-    caml_failwith("Thread.wakeup: thread not suspended");
+    llama_failwith("Thread.wakeup: thread not suspended");
   }
   return Val_unit;
 }
@@ -732,24 +732,24 @@ CAMLprim value thread_self(value unit)         /* ML */
 CAMLprim value thread_kill(value thread)       /* ML */
 {
   value retval = Val_unit;
-  caml_thread_t th = (caml_thread_t) thread;
-  if (th->status == KILLED) caml_failwith("Thread.kill: killed thread");
+  llama_thread_t th = (llama_thread_t) thread;
+  if (th->status == KILLED) llama_failwith("Thread.kill: killed thread");
   /* Don't paint ourselves in a corner */
-  if (th == th->next) caml_failwith("Thread.kill: cannot kill the last thread");
+  if (th == th->next) llama_failwith("Thread.kill: cannot kill the last thread");
   /* This thread is no longer waiting on anything */
   th->status = KILLED;
   /* If this is the current thread, activate another one */
   if (th == curr_thread) {
     Begin_root(thread);
     retval = schedule_thread();
-    th = (caml_thread_t) thread;
+    th = (llama_thread_t) thread;
     End_roots();
   }
   /* Remove thread from the doubly-linked list */
   Assign(th->prev->next, th->next);
   Assign(th->next->prev, th->prev);
   /* Free its resources */
-  caml_stat_free((char *) th->stack_low);
+  llama_stat_free((char *) th->stack_low);
   th->stack_low = NULL;
   th->stack_high = NULL;
   th->stack_threshold = NULL;
@@ -766,11 +766,11 @@ CAMLprim value thread_kill(value thread)       /* ML */
 
 CAMLprim value thread_uncaught_exception(value exn)  /* ML */
 {
-  char * msg = caml_format_exception(exn);
+  char * msg = llama_format_exception(exn);
   fprintf(stderr, "Thread %d killed on uncaught exception %s\n",
           Int_val(curr_thread->ident), msg);
   free(msg);
-  if (caml_backtrace_active) caml_print_exception_backtrace();
+  if (llama_backtrace_active) llama_print_exception_backtrace();
   fflush(stderr);
   return Val_unit;
 }
@@ -798,7 +798,7 @@ static value inter_fdlist_set(value fdl, fd_set *set, int *count)
     for (res = NO_FDS; fdl != NO_FDS; fdl = Field(fdl, 1)) {
       int fd = Int_val(Field(fdl, 0));
       if (FD_ISSET(fd, set)) {
-        cons = caml_alloc_small(2, 0);
+        cons = llama_alloc_small(2, 0);
         Field(cons, 0) = Val_int(fd);
         Field(cons, 1) = res;
         res = cons;
@@ -847,19 +847,19 @@ static value alloc_process_status(int pid, int status)
   value st, res;
 
   if (WIFEXITED(status)) {
-    st = caml_alloc_small(1, TAG_WEXITED);
+    st = llama_alloc_small(1, TAG_WEXITED);
     Field(st, 0) = Val_int(WEXITSTATUS(status));
   }
   else if (WIFSTOPPED(status)) {
-    st = caml_alloc_small(1, TAG_WSTOPPED);
+    st = llama_alloc_small(1, TAG_WSTOPPED);
     Field(st, 0) = Val_int(WSTOPSIG(status));
   }
   else {
-    st = caml_alloc_small(1, TAG_WSIGNALED);
+    st = llama_alloc_small(1, TAG_WSIGNALED);
     Field(st, 0) = Val_int(WTERMSIG(status));
   }
   Begin_root(st);
-    res = caml_alloc_small(2, TAG_RESUMED_WAIT);
+    res = llama_alloc_small(2, TAG_RESUMED_WAIT);
     Field(res, 0) = Val_int(pid);
     Field(res, 1) = st;
   End_roots();

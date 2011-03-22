@@ -28,19 +28,19 @@
 #include "prims.h"
 #include "stacks.h"
 
-extern code_t caml_start_code;
+extern code_t llama_start_code;
 
-intnat caml_icount = 0;
+intnat llama_icount = 0;
 
-void caml_stop_here () {}
+void llama_stop_here () {}
 
-int caml_trace_flag = 0;
+int llama_trace_flag = 0;
 
-void caml_disasm_instr(pc)
+void llama_disasm_instr(pc)
      code_t pc;
 {
   int instr = *pc;
-  printf("%6ld  %s", (long) (pc - caml_start_code),
+  printf("%6ld  %s", (long) (pc - llama_start_code),
          instr < 0 || instr > STOP ? "???" : names_of_instructions[instr]);
   pc++;
   switch(instr) {
@@ -67,10 +67,10 @@ void caml_disasm_instr(pc)
     printf(" %d,", pc[0]); pc++;
     /* fallthrough */
   case C_CALL1: case C_CALL2: case C_CALL3: case C_CALL4: case C_CALL5:
-    if (pc[0] < 0 || pc[0] >= caml_prim_name_table.size)
+    if (pc[0] < 0 || pc[0] >= llama_prim_name_table.size)
       printf(" unknown primitive %d\n", pc[0]);
     else
-      printf(" %s\n", (char *) caml_prim_name_table.contents[pc[0]]);
+      printf(" %s\n", (char *) llama_prim_name_table.contents[pc[0]]);
     break;
   default:
     printf("\n");
@@ -78,7 +78,7 @@ void caml_disasm_instr(pc)
   fflush (stdout);
 }
 
-char * caml_instr_string (code_t pc)
+char * llama_instr_string (code_t pc)
 {
   static char buf[256];
   char nambuf[128];
@@ -161,10 +161,10 @@ char * caml_instr_string (code_t pc)
   case C_CALL3:
   case C_CALL4:
   case C_CALL5:
-    if (pc[0] < 0 || pc[0] >= caml_prim_name_table.size)
+    if (pc[0] < 0 || pc[0] >= llama_prim_name_table.size)
       sprintf(buf, "%s unknown primitive %d", nam, pc[0]);
     else
-      sprintf(buf, "%s %s", nam, (char *) caml_prim_name_table.contents[pc[0]]);
+      sprintf(buf, "%s %s", nam, (char *) llama_prim_name_table.contents[pc[0]]);
     break;
   default:
     sprintf(buf, "%s", nam);
@@ -175,7 +175,7 @@ char * caml_instr_string (code_t pc)
 
 
 void
-caml_trace_value_file (value v, code_t prog, int proglen, FILE * f)
+llama_trace_value_file (value v, code_t prog, int proglen, FILE * f)
 {
   int i;
   fprintf (f, "%#lx", v);
@@ -187,9 +187,9 @@ caml_trace_value_file (value v, code_t prog, int proglen, FILE * f)
     fprintf (f, "=code@%d", (code_t) v - prog);
   else if (Is_long (v))
     fprintf (f, "=long%" ARCH_INTNAT_PRINTF_FORMAT "d", Long_val (v));
-  else if ((void*)v >= (void*)caml_stack_low
-           && (void*)v < (void*)caml_stack_high)
-    fprintf (f, "=stack_%d", (intnat*)caml_stack_high - (intnat*)v);
+  else if ((void*)v >= (void*)llama_stack_low
+           && (void*)v < (void*)llama_stack_high)
+    fprintf (f, "=stack_%d", (intnat*)llama_stack_high - (intnat*)v);
   else if (Is_block (v)) {
     int s = Wosize_val (v);
     int tg = Tag_val (v);
@@ -199,7 +199,7 @@ caml_trace_value_file (value v, code_t prog, int proglen, FILE * f)
       fprintf (f, "=closure[s%d,cod%d]", s, (code_t) (Code_val (v)) - prog);
       goto displayfields;
     case String_tag:
-      l = caml_string_length (v);
+      l = llama_string_length (v);
       fprintf (f, "=string[s%dL%d]'", s, l);
       for (i = 0; i < ((l>0x1f)?0x1f:l) ; i++) {
         if (isprint (Byte (v, i)))
@@ -244,19 +244,19 @@ caml_trace_value_file (value v, code_t prog, int proglen, FILE * f)
 }
 
 void
-caml_trace_accu_sp_file (value accu, value * sp, code_t prog, int proglen,
+llama_trace_accu_sp_file (value accu, value * sp, code_t prog, int proglen,
                          FILE * f)
 {
   int i;
   value *p;
   fprintf (f, "accu=");
-  caml_trace_value_file (accu, prog, proglen, f);
+  llama_trace_value_file (accu, prog, proglen, f);
   fprintf (f, "\n sp=%#" ARCH_INTNAT_PRINTF_FORMAT "x @%d:",
-           (intnat) sp, caml_stack_high - sp);
-  for (p = sp, i = 0; i < 12 + (1 << caml_trace_flag) && p < caml_stack_high;
+           (intnat) sp, llama_stack_high - sp);
+  for (p = sp, i = 0; i < 12 + (1 << llama_trace_flag) && p < llama_stack_high;
        p++, i++) {
-    fprintf (f, "\n[%d] ", caml_stack_high - p);
-    caml_trace_value_file (*p, prog, proglen, f);
+    fprintf (f, "\n[%d] ", llama_stack_high - p);
+    llama_trace_value_file (*p, prog, proglen, f);
   };
   putc ('\n', f);
   fflush (f);

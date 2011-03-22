@@ -100,7 +100,7 @@ static void free_backtrack_stack(struct backtrack_stack * stack)
 {
   struct backtrack_stack * prevstack;
   while ((prevstack = stack->previous) != NULL) {
-    caml_stat_free(stack);
+    llama_stat_free(stack);
     stack = prevstack;
   }
 }
@@ -291,7 +291,7 @@ static int re_match(value re,
       break;
     }
     default:
-      caml_fatal_error ("impossible case in re_match");
+      llama_fatal_error ("impossible case in re_match");
     }
     /* Continue with next instruction */
     continue;
@@ -300,7 +300,7 @@ static int re_match(value re,
     /* Push an item on the backtrack stack and continue with next instr */
     if (sp == stack->point + BACKTRACK_STACK_BLOCK_SIZE) {
       struct backtrack_stack * newstack =
-        caml_stat_alloc(sizeof(struct backtrack_stack));
+        llama_stat_alloc(sizeof(struct backtrack_stack));
       newstack->previous = stack;
       stack = newstack;
       sp = stack->point;
@@ -321,7 +321,7 @@ static int re_match(value re,
       if (sp == stack->point) {
         struct backtrack_stack * prevstack = stack->previous;
         if (prevstack == NULL) return 0;
-        caml_stat_free(stack);
+        llama_stat_free(stack);
         stack = prevstack;
         sp = stack->point + BACKTRACK_STACK_BLOCK_SIZE;
       }
@@ -357,7 +357,7 @@ static value re_alloc_groups(value re, value str)
   int i;
   struct re_group * group;
 
-  res = caml_alloc(n * 2, 0);
+  res = llama_alloc(n * 2, 0);
   for (i = 0; i < n; i++) {
     group = &(re_group[i]);
     if (group->start == NULL || group->end == NULL) {
@@ -374,14 +374,14 @@ static value re_alloc_groups(value re, value str)
 /* String matching and searching.  All functions return the empty array
    on failure, and an array of positions on success. */
 
-CAMLprim value caml_re_string_match(value re, value str, value pos)
+CAMLprim value llama_re_string_match(value re, value str, value pos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(pos));
-  unsigned char * endtxt = &Byte_u(str, caml_string_length(str));
+  unsigned char * endtxt = &Byte_u(str, llama_string_length(str));
 
   if (txt < starttxt || txt > endtxt)
-    caml_invalid_argument("Str.string_match");
+    llama_invalid_argument("Str.string_match");
   if (re_match(re, starttxt, txt, endtxt, 0)) {
     return re_alloc_groups(re, str);
   } else {
@@ -389,14 +389,14 @@ CAMLprim value caml_re_string_match(value re, value str, value pos)
   }
 }
 
-CAMLprim value caml_re_partial_match(value re, value str, value pos)
+CAMLprim value llama_re_partial_match(value re, value str, value pos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(pos));
-  unsigned char * endtxt = &Byte_u(str, caml_string_length(str));
+  unsigned char * endtxt = &Byte_u(str, llama_string_length(str));
 
   if (txt < starttxt || txt > endtxt)
-    caml_invalid_argument("Str.string_partial_match");
+    llama_invalid_argument("Str.string_partial_match");
   if (re_match(re, starttxt, txt, endtxt, 1)) {
     return re_alloc_groups(re, str);
   } else {
@@ -404,15 +404,15 @@ CAMLprim value caml_re_partial_match(value re, value str, value pos)
   }
 }
 
-CAMLprim value caml_re_search_forward(value re, value str, value startpos)
+CAMLprim value llama_re_search_forward(value re, value str, value startpos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(startpos));
-  unsigned char * endtxt = &Byte_u(str, caml_string_length(str));
+  unsigned char * endtxt = &Byte_u(str, llama_string_length(str));
   unsigned char * startchars;
 
   if (txt < starttxt || txt > endtxt)
-    caml_invalid_argument("Str.search_forward");
+    llama_invalid_argument("Str.search_forward");
   if (Startchars(re) == -1) {
     do {
       if (re_match(re, starttxt, txt, endtxt, 0))
@@ -433,15 +433,15 @@ CAMLprim value caml_re_search_forward(value re, value str, value startpos)
   }
 }
 
-CAMLprim value caml_re_search_backward(value re, value str, value startpos)
+CAMLprim value llama_re_search_backward(value re, value str, value startpos)
 {
   unsigned char * starttxt = &Byte_u(str, 0);
   unsigned char * txt = &Byte_u(str, Long_val(startpos));
-  unsigned char * endtxt = &Byte_u(str, caml_string_length(str));
+  unsigned char * endtxt = &Byte_u(str, llama_string_length(str));
   unsigned char * startchars;
 
   if (txt < starttxt || txt > endtxt)
-    caml_invalid_argument("Str.search_backward");
+    llama_invalid_argument("Str.search_backward");
   if (Startchars(re) == -1) {
     do {
       if (re_match(re, starttxt, txt, endtxt, 0))
@@ -464,7 +464,7 @@ CAMLprim value caml_re_search_backward(value re, value str, value startpos)
 
 /* Replacement */
 
-CAMLprim value caml_re_replacement_text(value repl, value groups, value orig)
+CAMLprim value llama_re_replacement_text(value repl, value groups, value orig)
 {
   CAMLparam3(repl, groups, orig);
   CAMLlocal1(res);
@@ -474,13 +474,13 @@ CAMLprim value caml_re_replacement_text(value repl, value groups, value orig)
 
   len = 0;
   p = String_val(repl);
-  n = caml_string_length(repl);
+  n = llama_string_length(repl);
   while (n > 0) {
     c = *p++; n--;
     if(c != '\\')
       len++;
     else {
-      if (n == 0) caml_failwith("Str.replace: illegal backslash sequence");
+      if (n == 0) llama_failwith("Str.replace: illegal backslash sequence");
       c = *p++; n--;
       switch (c) {
       case '\\':
@@ -489,11 +489,11 @@ CAMLprim value caml_re_replacement_text(value repl, value groups, value orig)
       case '5': case '6': case '7': case '8': case '9':
         c -= '0';
         if (c*2 >= Wosize_val(groups))
-          caml_failwith("Str.replace: reference to unmatched group");
+          llama_failwith("Str.replace: reference to unmatched group");
         start = Long_val(Field(groups, c*2));
         end = Long_val(Field(groups, c*2 + 1));
         if (start == (mlsize_t) -1)
-          caml_failwith("Str.replace: reference to unmatched group");
+          llama_failwith("Str.replace: reference to unmatched group");
         len += end - start;
         break;
       default:
@@ -501,10 +501,10 @@ CAMLprim value caml_re_replacement_text(value repl, value groups, value orig)
       }
     }
   }
-  res = caml_alloc_string(len);
+  res = llama_alloc_string(len);
   p = String_val(repl);
   q = String_val(res);
-  n = caml_string_length(repl);
+  n = llama_string_length(repl);
   while (n > 0) {
     c = *p++; n--;
     if(c != '\\')
