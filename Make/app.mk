@@ -1,7 +1,7 @@
 # Main targets for a directory containing a single executable
 
 $(BINARY): $(MODULES:%=%.lmo)
-	$(LLAMAC) $(INCLUDES) $(BYTELINKFLAGS) $(LIBRARIES:%=%.lma) $^ -o $@
+	$(LLAMAC) $(INCLUDES) $(BYTELINKFLAGS) stdlib.lma $(LIBRARIES:%=%.lma) $^ -o $@
 
 install:
 	cp $(BINARY) $(BINDIR)

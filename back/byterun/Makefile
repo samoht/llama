@@ -57,19 +57,20 @@ PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
-all:: depend llamarun$(EXE) ld.conf libcamlrun.$(A)
+all: depend llamarun ld.conf libcamlrun.a
 .PHONY: all with-ocaml
 
-with-ocaml: all libasmrunp.a
+with-ocaml:
+	$(MAKE) PROFILE=$(CC_PROFILE) all
 
 ld.conf: ../config/Makefile
 	echo "$(STUBLIBDIR)" > ld.conf
 	echo "$(LIBDIR)" >> ld.conf
 
 install::
-	cp llamarun$(EXE) $(BINDIR)/llamarun$(EXE)
-	cp libcamlrun.$(A) $(LIBDIR)/libcamlrun.$(A)
-	cd $(LIBDIR); $(RANLIB) libcamlrun.$(A)
+	cp llamarun $(BINDIR)/llamarun
+	cp libcamlrun.a $(LIBDIR)/libcamlrun.a
+	cd $(LIBDIR); $(RANLIB) libcamlrun.a
 	if test -d $(LIBDIR)/caml; then : ; else mkdir $(LIBDIR)/caml; fi
 	for i in $(PUBLIC_INCLUDES); do \
 	  sed -f cleanup-header $$i > $(LIBDIR)/caml/$$i; \
@@ -112,68 +113,27 @@ version.h : ../VERSION
 	echo "#define OCAML_VERSION \"`sed -e 1q ../VERSION`\"" > version.h
 
 clean ::
-	rm -f llamarun$(EXE) llamarund$(EXE) *.$(O) *.$(A) *.$(SO) libasmrunp.a
-	rm -f unix/*.$(O) threads/*.$(O)
+	rm -f llamarun *.o *.a
+	rm -f unix/*.o threads/*.a
 	rm -f primitives prims.c opnames.h jumptbl.h ld.conf
 	rm -f version.h
 .PHONY: clean
 
 # ---------------------------------------------------------------------- #
 
-CFLAGS=-DCAML_NAME_SPACE -O $(BYTECCCOMPOPTS) $(IFLEXDIR)
-DFLAGS=-DCAML_NAME_SPACE -DDEBUG $(BYTECCCOMPOPTS)
-
 OBJS=$(COMMONOBJS) unix.o main.o
-DOBJS=$(OBJS:.o=.d.o) instrtrace.d.o
-PICOBJS=$(OBJS:.o=.pic.o)
 
-SHARED_LIBS_TMP=$(SUPPORTS_SHARED_LIBRARIES:%false=)
-SHARED_LIBS_DEPS=$(SHARED_LIBS_TMP:%true=libcamlrun_shared.so)
-
-all:: $(SHARED_LIBS_DEPS)
-
-llamarun$(EXE): libcamlrun.a prims.o
-	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun$(EXE) \
-		  prims.o libcamlrun.a $(BYTECCLIBS)
-
-llamarund$(EXE): libcamlrund.a prims.o
-	$(MKEXE) $(BYTECCLINKOPTS) -o llamarund$(EXE) \
-		  prims.o libcamlrund.a $(BYTECCLIBS)
+llamarun: prims.o libcamlrun.a
+	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun $^ $(BYTECCLIBS)
 
 libcamlrun.a: $(OBJS)
-	ar rc libcamlrun.a $(OBJS)
-	$(RANLIB) libcamlrun.a
+	ar rc $@ $(OBJS)
+	$(RANLIB) $@
 
-libasmrunp.a: $(OBJS)
-	ar rc libasmrunp.a $(OBJS)
-	$(RANLIB) libasmrunp.a
-
-libcamlrund.a: $(DOBJS)
-	ar rc libcamlrund.a $(DOBJS)
-	$(RANLIB) libcamlrund.a
-
-libcamlrun_shared.so: $(PICOBJS)
-	$(MKDLL) -o libcamlrun_shared.so $(PICOBJS) $(BYTECCLIBS)
-
-install::
-	if test -f libcamlrun_shared.so; then \
-	  cp libcamlrun_shared.so $(LIBDIR)/libcamlrun_shared.so; fi
-
-clean::
-	rm -f libcamlrun_shared.so depend
-
-.SUFFIXES: .d.o .pic.o
-
-.c.d.o:
-	$(CC) -c $(DFLAGS) $< -o $@
-
-.c.pic.o:
-	$(CC) -c $(CFLAGS) $(SHAREDCCCOMPOPTS) $< -o $@
-
-depend : opnames.h jumptbl.h version.h *.c
-	-gcc -MM $(BYTECCCOMPOPTS) *.c > depend
-	-gcc -MM $(BYTECCCOMPOPTS) -DDEBUG *.c | sed -e 's/\.o/.d.o/' >> depend
-	-gcc -MM $(BYTECCCOMPOPTS) *.c | sed -e 's/\.o/.pic.o/' >> depend
+depend: opnames.h jumptbl.h version.h *.c
+	-gcc -MM $(BYTECCCOMPOPTS) *.c > .depend
+	-gcc -MM $(BYTECCCOMPOPTS) -DDEBUG *.c | sed -e 's/\.o/.d.o/' >> .depend
+	-gcc -MM $(BYTECCCOMPOPTS) *.c | sed -e 's/\.o/.pic.o/' >> .depend
 
 -include .depend
 

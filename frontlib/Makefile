@@ -27,3 +27,6 @@ include ../Make/ocamllib.mk
 parser.ml parser.mli: parser.mly
 lexer.ml: lexer.mll
 linenum.ml: linenum.mll
+
+%.cmo: %.ml
+	$(OCAMLCP_STRICT) -c $(INCLUDES) $<

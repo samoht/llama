@@ -2,7 +2,7 @@ BOOTDIR=../boot
 BINARY=llamadep
 INCLUDES=-I ../stdlib -I ../backlib -I ../frontlib
 RUNTIME_PATH=../back/byterun
-LIBRARIES=stdlib backlib frontlib
+LIBRARIES=backlib frontlib
 MODULES=depconfig depmain
 GENSOURES=depconfig.ml
 

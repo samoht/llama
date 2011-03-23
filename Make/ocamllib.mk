@@ -1,13 +1,13 @@
 # Allow a library to be built with OCaml
 
-with-ocaml: $(LIBRARY).p.cmxa
+with-ocaml: $(LIBRARY).cma
 .PHONY: with-ocaml
 
-$(LIBRARY).cmxa: $(MODULES:%=%.p.cmx)
+$(LIBRARY).cma: $(MODULES:%=%.cmo)
 	$(OCAMLC_STRICT) -a $(INCLUDES) $^ -o $@
 
 ocamlclean:
-	rm -f $(LIBRARY).cmxa *.cmi *.cmx *.a *.cmxa *.o .ocamldepend $(GENSOURCES)
+	rm -f *.cmi *.cmo *.a *.cma *.o .ocamldepend $(GENSOURCES)
 .PHONY: ocamlclean
 
 ocamldepend: $(GENSOURCES)
