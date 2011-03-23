@@ -13,13 +13,13 @@
 
 /* $Id: nat_stubs.c 9547 2010-01-22 12:48:24Z doligez $ */
 
-#include "alloc.h"
-#include "config.h"
-#include "custom.h"
-#include "intext.h"
-#include "fail.h"
-#include "memory.h"
-#include "mlvalues.h"
+#include "../alloc.h"
+#include "../config.h"
+#include "../custom.h"
+#include "../intext.h"
+#include "../fail.h"
+#include "../memory.h"
+#include "../mlvalues.h"
 
 #include "bng.h"
 #include "nat.h"
@@ -134,7 +134,7 @@ CAMLprim value llama_incr_nat(value nat, value ofs, value len, value carry_in)
                                 Long_val(len), Long_val(carry_in)));
 }
 
-value add_nat_native(value nat1, value ofs1, value len1,
+value llama_add_nat_native(value nat1, value ofs1, value len1,
                      value nat2, value ofs2, value len2, value carry_in)
 {
   return Val_long(bng_add(&Digit_val(nat1, Long_val(ofs1)), Long_val(len1),
@@ -144,7 +144,7 @@ value add_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_add_nat(value *argv, int argn)
 {
-  return add_nat_native(argv[0], argv[1], argv[2], argv[3],
+  return llama_add_nat_native(argv[0], argv[1], argv[2], argv[3],
                         argv[4], argv[5], argv[6]);
 }
 
@@ -160,7 +160,7 @@ CAMLprim value llama_decr_nat(value nat, value ofs, value len, value carry_in)
                                     Long_val(len), 1 ^ Long_val(carry_in)));
 }
 
-value sub_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_sub_nat_native(value nat1, value ofs1, value len1,
                      value nat2, value ofs2, value len2, value carry_in)
 {
   return Val_long(1 ^ bng_sub(&Digit_val(nat1, Long_val(ofs1)), Long_val(len1),
@@ -170,11 +170,11 @@ value sub_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_sub_nat(value *argv, int argn)
 {
-  return sub_nat_native(argv[0], argv[1], argv[2], argv[3],
+  return llama_sub_nat_native(argv[0], argv[1], argv[2], argv[3],
                         argv[4], argv[5], argv[6]);
 }
 
-value mult_digit_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_mult_digit_nat_native(value nat1, value ofs1, value len1,
                             value nat2, value ofs2, value len2,
                             value nat3, value ofs3)
 {
@@ -187,11 +187,11 @@ value mult_digit_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_mult_digit_nat(value *argv, int argn)
 {
-  return mult_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
+  return llama_mult_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
                                argv[4], argv[5], argv[6], argv[7]);
 }
 
-value mult_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_mult_nat_native(value nat1, value ofs1, value len1,
                       value nat2, value ofs2, value len2,
                       value nat3, value ofs3, value len3)
 {
@@ -203,11 +203,11 @@ value mult_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_mult_nat(value *argv, int argn)
 {
-  return mult_nat_native(argv[0], argv[1], argv[2], argv[3],
+  return llama_mult_nat_native(argv[0], argv[1], argv[2], argv[3],
                          argv[4], argv[5], argv[6], argv[7], argv[8]);
 }
 
-value square_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_square_nat_native(value nat1, value ofs1, value len1,
                         value nat2, value ofs2, value len2)
 {
   return
@@ -217,11 +217,11 @@ value square_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_square_nat(value *argv, int argn)
 {
-  return square_nat_native(argv[0], argv[1], argv[2],
+  return llama_square_nat_native(argv[0], argv[1], argv[2],
                            argv[3], argv[4], argv[5]);
 }
 
-value shift_left_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_shift_left_nat_native(value nat1, value ofs1, value len1,
                             value nat2, value ofs2, value nbits)
 {
   Digit_val(nat2, Long_val(ofs2)) =
@@ -232,11 +232,11 @@ value shift_left_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_shift_left_nat(value *argv, int argn)
 {
-  return shift_left_nat_native(argv[0], argv[1], argv[2],
+  return llama_shift_left_nat_native(argv[0], argv[1], argv[2],
                                argv[3], argv[4], argv[5]);
 }
 
-value div_digit_nat_native(value natq, value ofsq,
+CAMLprim value llama_div_digit_nat_native(value natq, value ofsq,
                            value natr, value ofsr,
                            value nat1, value ofs1, value len1,
                            value nat2, value ofs2)
@@ -250,11 +250,11 @@ value div_digit_nat_native(value natq, value ofsq,
 
 CAMLprim value llama_div_digit_nat(value *argv, int argn)
 {
-  return div_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
+  return llama_div_digit_nat_native(argv[0], argv[1], argv[2], argv[3],
                               argv[4], argv[5], argv[6], argv[7], argv[8]);
 }
 
-value div_nat_native(value nat1, value ofs1, value len1,
+value llama_div_nat_native(value nat1, value ofs1, value len1,
                      value nat2, value ofs2, value len2)
 {
   bng_div_rem(&Digit_val(nat1, Long_val(ofs1)), Long_val(len1),
@@ -264,11 +264,11 @@ value div_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_div_nat(value *argv, int argn)
 {
-  return div_nat_native(argv[0], argv[1], argv[2],
+  return llama_div_nat_native(argv[0], argv[1], argv[2],
                         argv[3], argv[4], argv[5]);
 }
 
-value shift_right_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_shift_right_nat_native(value nat1, value ofs1, value len1,
                              value nat2, value ofs2, value nbits)
 {
   Digit_val(nat2, Long_val(ofs2)) =
@@ -279,7 +279,7 @@ value shift_right_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_shift_right_nat(value *argv, int argn)
 {
-  return shift_right_nat_native(argv[0], argv[1], argv[2],
+  return llama_shift_right_nat_native(argv[0], argv[1], argv[2],
                                 argv[3], argv[4], argv[5]);
 }
 
@@ -293,7 +293,7 @@ CAMLprim value llama_compare_digits_nat(value nat1, value ofs1,
   return Val_int(0);
 }
 
-value compare_nat_native(value nat1, value ofs1, value len1,
+CAMLprim value llama_compare_nat_native(value nat1, value ofs1, value len1,
                          value nat2, value ofs2, value len2)
 {
   return
@@ -303,7 +303,7 @@ value compare_nat_native(value nat1, value ofs1, value len1,
 
 CAMLprim value llama_compare_nat(value *argv, int argn)
 {
-  return compare_nat_native(argv[0], argv[1], argv[2],
+  return llama_compare_nat_native(argv[0], argv[1], argv[2],
                             argv[3], argv[4], argv[5]);
 }
 

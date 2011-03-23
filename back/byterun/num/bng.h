@@ -14,7 +14,7 @@
 /* $Id: bng.h 9547 2010-01-22 12:48:24Z doligez $ */
 
 #include <string.h>
-#include "config.h"
+#include "../config.h"
 
 typedef uintnat bngdigit;
 typedef bngdigit * bng;

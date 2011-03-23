@@ -13,12 +13,12 @@
 
 /* $Id: strstubs.c 10429 2010-05-19 12:22:24Z xleroy $ */
 
-#include "string.h"
-#include "ctype.h"
-#include "mlvalues.h"
-#include "alloc.h"
-#include "memory.h"
-#include "fail.h"
+#include "../string.h"
+#include "../ctype.h"
+#include "../mlvalues.h"
+#include "../alloc.h"
+#include "../memory.h"
+#include "../fail.h"
 
 /* The backtracking NFA interpreter */
 

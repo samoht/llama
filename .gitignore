@@ -9,6 +9,9 @@ depend
 *.lmo
 *.lmx
 *.o
+*.cmo
+*.cmx
+*.cmi
 /config.mk
 back/config/m.h
 back/config/s.h

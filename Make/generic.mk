@@ -1,7 +1,7 @@
 .SUFFIXES: .ml .lml .lmo .cmi .cmx .cmi .mll .mly # .mli .lmi
 
-OCAMLC_STRICT=ocamlopt -strict-sequence -warn-error A -nostdlib -g -p
-OCAMLDEP=ocamldep -native
+OCAMLC_STRICT=ocamlc -strict-sequence -warn-error A -nostdlib -g
+OCAMLDEP=ocamldep
 OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
@@ -18,7 +18,7 @@ LLAMAYACC=$(OCAMLYACC) #$(BOOTDIR)/llamayacc
 	$(LLAMAC) -c $(INCLUDES) $<
 %.cmi: %.mli
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
-.ml.cmx:
+%.cmo: %.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
 .mll.ml:
 	$(LLAMALEX) $<

@@ -36,25 +36,34 @@ UNIX=accept.c access.c addrofstr.c alarm.c bind.c chdir.c chmod.c \
 
 THREADS=scheduler.c
 
-PRIMS=\
-  interp.c misc.c stacks.c fix_code.c startup.c unix.c \
-  freelist.c major_gc.c minor_gc.c memory.c alloc.c roots.c globroots.c \
-  fail.c signals.c signals_byt.c printexc.c backtrace.c \
-  compare.c ints.c floats.c str.c array.c io.c extern.c intern.c \
-  hash.c sys.c meta.c parsing.c gc_ctrl.c terminfo.c md5.c obj.c \
-  lexing.c callback.c debugger.c weak.c compact.c finalise.c custom.c \
-  dynlink.c strstubs.c nat_stubs.c bng.c prims.c \
-	$(UNIX:%=unix/%) \
-  $(THREADS:%=threads/%)
+STR=strstubs.c
 
-OBJS=\
-	$(PRIMS:%.c=%.o)
+NUM=bng.c nat_stubs.c
+
+COMMONOBJS=\
+  interp.o misc.o stacks.o fix_code.o startup.o \
+  freelist.o major_gc.o minor_gc.o memory.o alloc.o roots.o globroots.o \
+  fail.o signals.o signals_byt.o printexc.o backtrace.o \
+  compare.o ints.o floats.o str.o array.o io.o extern.o intern.o \
+  hash.o sys.o meta.o parsing.o gc_ctrl.o terminfo.o md5.o obj.o \
+  lexing.o callback.o debugger.o weak.o compact.o finalise.o custom.o \
+  dynlink.o \
+	$(NUM:%.c=num/%.o) \
+	$(STR:%.c=str/%.o) \
+	$(UNIX:%.c=unix/%.o) unix.o \
+	$(THREADS:%.c=threads/%.o)
+
+PRIMS=\
+  alloc.c array.c compare.c extern.c floats.c gc_ctrl.c hash.c \
+  intern.c interp.c ints.c io.c lexing.c md5.c meta.c obj.c parsing.c \
+  signals.c str.c sys.c terminfo.c callback.c weak.c finalise.c stacks.c \
+  dynlink.c backtrace.c
 
 PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
-all:: depend llamarun$(EXE) ld.conf libcamlrun.$(A)
+all:: depend llamarun$(EXE) ld.conf libllamarun.$(A)
 .PHONY: all
 
 with-ocaml:
@@ -66,9 +75,9 @@ ld.conf: ../config/Makefile
 
 install::
 	cp llamarun$(EXE) $(BINDIR)/llamarun$(EXE)
-	cp libcamlrun.$(A) $(LIBDIR)/libcamlrun.$(A)
-	cd $(LIBDIR); $(RANLIB) libcamlrun.$(A)
-	if test -d $(LIBDIR)/caml; then : ; else mkdir $(LIBDIR)/caml; fi
+	cp libllamarun.$(A) $(LIBDIR)/libllamarun.$(A)
+	cd $(LIBDIR); $(RANLIB) libllamarun.$(A)
+	if test -d $(LIBDIR)/llama; then : ; else mkdir $(LIBDIR)/llama; fi
 	for i in $(PUBLIC_INCLUDES); do \
 	  sed -f cleanup-header $$i > $(LIBDIR)/caml/$$i; \
 	done
@@ -121,19 +130,17 @@ clean ::
 CFLAGS=-DCAML_NAME_SPACE -O $(BYTECCCOMPOPTS) $(IFLEXDIR)
 DFLAGS=-DCAML_NAME_SPACE -DDEBUG $(BYTECCCOMPOPTS)
 
-llamarun$(EXE): main.o libcamlrun.a
+OBJS=$(COMMONOBJS) unix.o prims.o
+
+llamarun$(EXE): main.o libllamarun.a
 	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun$(EXE) $^ $(BYTECCLIBS)
 
-libcamlrun.a: $(OBJS) 
-	ar rc libcamlrun.a $^
-	$(RANLIB) libcamlrun.a
-
-install::
-	if test -f libcamlrun_shared.so; then \
-	  cp libcamlrun_shared.so $(LIBDIR)/libcamlrun_shared.so; fi
+libllamarun.a: $(OBJS)
+	ar rc libllamarun.a $^
+	$(RANLIB) libllamarun.a
 
 clean::
-	rm -f libcamlrun_shared.so depend
+	rm -f depend
 
 .SUFFIXES: .d.o .pic.o
 

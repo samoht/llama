@@ -14,7 +14,7 @@
 /* $Id: bng.c 10450 2010-05-21 12:00:49Z doligez $ */
 
 #include "bng.h"
-#include "config.h"
+#include "../config.h"
 
 #if defined(__GNUC__) && BNG_ASM_LEVEL > 0
 #if defined(BNG_ARCH_ia32)

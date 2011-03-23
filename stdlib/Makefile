@@ -30,13 +30,13 @@ include ../Make/generic.mk
 # ----------------------------------------------------------------------
 
 all: stdlib.lma std_exit.lmo llamaheader
-with-ocaml: stdlib.cmxa std_exit.cmx std_exit.o camlheader
+with-ocaml: stdlib.cma std_exit.cmo std_exit.cmo camlheader
 .PHONY: all with-ocaml
 
 stdlib.lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $^ -o $@
-stdlib.cmxa: $(MODULES:%=%.cmx)
-	$(OCAMLC_STRICT) -a $^ -o $@
+stdlib.cma: $(MODULES:%=%.cmo)
+	$(OCAMLC_STRICT) -nopervasives -a $^ -o $@
 
 # ----------------------------------------------------------------------
 # Special
@@ -52,7 +52,7 @@ pervasives.lmo: pervasives.ml
 	$(LLAMAC) -c $(INCLUDES) -nopervasives $<
 pervasives.cmi: pervasives.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
-pervasives.cmx: pervasives.ml
+pervasives.cmo: pervasives.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) -nopervasives $<
 
 # ----------------------------------------------------------------------
@@ -63,17 +63,16 @@ depend: *.ml threads/*.ml
 	$(LLAMADEP) *.ml threads/*.ml > depend
 
 ocamldepend:
-	$(OCAMLDEP) *.ml *.mli threads/*.ml threads/*.mli > .ocamldepend
+	$(OCAMLDEP) *.ml > .ocamldepend
+	$(OCAMLDEP) -I threads threads/*.ml >> .ocamldepend
 
 .PHONY: ocamldepend
 
 -include .depend
 -include .ocamldepend
 
-pervasives.lmo: pervasives.lmi
-$(NONPERVASIVES:%=%.lmi): pervasives.lmi
-pervasives.cmx: pervasives.cmi
-$(NONPERVASIVES:%=%.cmi): pervasives.cmi
+$(NONPERVASIVES:%=%.lmo): pervasives.lmo
+$(NONPERVASIVES:%=%.cmo): pervasives.cmo
 
 # ----------------------------------------------------------------------
 # Clean
@@ -84,8 +83,8 @@ clean:
 	rm -f threads/*.lmi threads/*.lml threads/*.lmo threads/*.lmx
 	rm -f depend
 ocamlclean:
-	rm -f stdlib.cmxa *.cmi *.cmx camlheader *.o *.cmxa
-	rm -f threads/*.cmi threads/*.cmx threads/*.o
+	rm -f stdlib.cma *.cmi *.cmo camlheader *.o *.cma
+	rm -f threads/*.cmi threads/*.cmo threads/*.o
 	rm -f .ocamldepend
 .PHONY: clean ocamlclean
 

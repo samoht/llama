@@ -198,15 +198,15 @@ static char * read_section(int fd, struct exec_trailer *trail, char *name)
   return data;
 }
 
-/* Invocation of ocamlrun: 4 cases.
+/* Invocation of llamarun: 4 cases.
 
    1.  runtime + bytecode
-       user types:  ocamlrun [options] bytecode args...
-       arguments:  ocamlrun [options] bytecode args...
+       user types:  llamarun [options] bytecode args...
+       arguments:  llamarun [options] bytecode args...
 
    2.  bytecode script
        user types:  bytecode args...
-   2a  (kernel 1) arguments:  ocamlrun ./bytecode args...
+   2a  (kernel 1) arguments:  llamarun ./bytecode args...
    2b  (kernel 2) arguments:  bytecode bytecode args...
 
    3.  concatenated runtime and bytecode
@@ -276,8 +276,7 @@ static int parse_command_line(char **argv)
   }
   return i;
 }
-
-/* Parse the OCAMLRUNPARAM variable */
+/* Parse the LLAMARUNPARAM variable */
 /* The option letter for each runtime option is the first letter of the
    last word of the ML name of the option (see [stdlib/gc.mli]).
    Except for l (maximum stack size) and h (initial heap size).
@@ -299,12 +298,10 @@ static void scanmult (char *opt, uintnat *var)
   }
 }
 
-static void parse_camlrunparam(void)
+static void parse_llamarunparam(void)
 {
-  char *opt = getenv ("OCAMLRUNPARAM");
+  char *opt = getenv ("LLAMARUNPARAM");
   uintnat p;
-
-  if (opt == NULL) opt = getenv ("CAMLRUNPARAM");
 
   if (opt != NULL){
     while (*opt != '\0'){
@@ -354,7 +351,7 @@ CAMLprim value llama_main(char **argv)
 #ifdef DEBUG
   llama_verb_gc = 0xBF;
 #endif
-  parse_camlrunparam();
+  parse_llamarunparam();
   pos = 0;
   exe_name = argv[0];
 #ifdef __linux__
@@ -455,7 +452,7 @@ CAMLexport void llama_startup_code(
     llama_cds_file = llama_stat_alloc(strlen(cds_file) + 1);
     strcpy(llama_cds_file, cds_file);
   }
-  parse_camlrunparam();
+  parse_llamarunparam();
   llama_external_raise = NULL;
   /* Initialize the abstract machine */
   llama_init_gc (minor_heap_init, heap_size_init, heap_chunk_init,

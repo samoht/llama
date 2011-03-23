@@ -459,7 +459,7 @@ void llama_startup(char ** argv)\n\
 
 let build_custom_runtime prim_name exec_name =
   Ccomp.call_linker Ccomp.Exe exec_name
-    ([prim_name] @ List.rev !Clflags.ccobjs @ ["-lcamlrun"])
+    ([prim_name] @ List.rev !Clflags.ccobjs @ ["-llamarun"])
     (Clflags.std_include_flag "-I" ^ " " ^ Config.bytecomp_c_libraries)
 
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
@@ -539,7 +539,7 @@ let link objfiles output_name =
           temps := obj_file :: !temps;
           if not (
             Ccomp.call_linker Ccomp.MainDll output_name
-              ([obj_file] @ List.rev !Clflags.ccobjs @ ["-lcamlrun"])
+              ([obj_file] @ List.rev !Clflags.ccobjs @ ["-llamarun"])
               Config.bytecomp_c_libraries
            ) then raise (Error Custom_runtime);
         end

@@ -6,19 +6,20 @@ OCAML_CCLIBS=-lcurses	-ltermcap -lm -ldl
 with-ocaml: $(BINARY)-ocaml
 .PHONY: with-ocaml
 
-$(BINARY)-ocaml: $(MODULES:%=%.cmx)
-	$(OCAMLC_STRICT) -nopervasives \
+$(BINARY)-ocaml: $(MODULES:%=%.cmo)
+	$(OCAMLC_STRICT) -nopervasives -linkall -custom \
 	  $(OCAML_CCLIBS:%=-cclib %) \
-	  -ccopt -L$(RUNTIME_PATH) -cclib -lcamlrun \
-	  -ccopt -L$(OCAML_RUNTIME_PATH) -cclib -lasmrun \
-	  -I $(RUNTIME_PATH) $(INCLUDES) $(LIBRARIES:%=%.cmxa) $^ -o $@
+	  -ccopt -L$(OCAML_RUNTIME_PATH) -cclib -lcamlrun \
+	  -ccopt -L$(RUNTIME_PATH) -cclib -lllamarun \
+	  -I $(RUNTIME_PATH) $(INCLUDES) $(LIBRARIES:%=%.cma) $^ -o $@
+
 
 ocamlinstall:
 	cp $(BINARY)-ocaml $(BINDIR)/$(BINARY)
 .PHONY: ocamlinstall
 
 ocamlclean:
-	rm -f $(BINARY)-ocaml *.cmi *.cmx *.a *.o *.cmxa .ocamldepend $(GENSOURCES) 
+	rm -f $(BINARY)-ocaml *.cmi *.cmo *.a *.o *.cma .ocamldepend $(GENSOURCES) 
 .PHONY: ocamlclean
 
 ocamldepend: $(GENSOURCES)
