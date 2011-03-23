@@ -8,30 +8,38 @@ let section_verbose = "effect+"
 
 type region_parameter = int
 type effect_parameter = int
+type region = string
 
 type effects = {
-  e_regions: region_parameter list;
-  e_effects: effect_parameter list;
+  e_regparams: region_parameter list;
+  e_effparams: effect_parameter list;
+  e_regions: string list;
 }
 
 type effect =
   | Eparam of effect_parameter
   | Eset   of effects
 
+let new_region_name =
+  let i = ref 0 in
+  fun () ->
+    incr i;
+    "0r" ^ (string_of_int !i)
+
 let region_parameters = function
   | Eparam _ -> []
-  | Eset s   -> s.e_regions
+  | Eset s   -> s.e_regparams
 
 let effect_parameters = function
   | Eparam i -> [i]
-  | Eset s   -> s.e_effects 
+  | Eset s   -> s.e_effparams 
 
 let map_effect fn_region fn_effect = function
   | Eparam e -> Eparam (fn_effect e)
   | Eset s   -> 
-      let s = {
-        e_regions = List.map fn_region s.e_regions;
-        e_effects = List.map fn_effect s.e_effects;
+      let s = { s with
+        e_regparams = List.map fn_region s.e_regparams;
+        e_effparams = List.map fn_effect s.e_effparams;
       } in
       Eset s
 
@@ -44,10 +52,10 @@ let string_of_effect_parameter i =
 let string_of_effect e =
   match e with
   | Eparam i -> string_of_effect_parameter i
-  | Eset _   ->
+  | Eset s   ->
       let rs = List.map string_of_region_parameter (region_parameters e) in
       let es = List.map string_of_effect_parameter (effect_parameters e) in
-      Printf.sprintf "{%s}" (String.concat "," (rs @ es))
+      Printf.sprintf "{%s}" (String.concat "," (rs @ s.e_regions @ es))
 
 let string_of_region_parameters r =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_region_parameter r))

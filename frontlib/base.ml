@@ -121,7 +121,6 @@ and expression_desc =
   | Exp_value of value
   | Exp_literal of literal
   | Exp_let of rec_flag * (pattern * expression) list * expression
-  | Exp_lock of expression list * expression
   | Exp_function of (pattern * expression) list
   | Exp_apply of expression * expression list
   | Exp_match of expression * (pattern * expression) list
@@ -140,6 +139,8 @@ and expression_desc =
   | Exp_assert of expression
   | Exp_assertfalse
   | Exp_constraint of expression * llama_type
+  | Exp_letregion of string list * expression
+  | Exp_lock of expression list * expression
   | Exp_thread of expression
 
 type structure_item =
@@ -148,6 +149,7 @@ type structure_item =
   | Str_eval of expression
   | Str_external of value
   | Str_exception of constructor
+  | Str_region of string list
 
 type structure = structure_item list
 
