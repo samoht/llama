@@ -3,6 +3,7 @@
 # ----------------------------------------------------------------------
 
 BOOTDIR=../boot
+THREADS=thread mutex condition event
 NONPERVASIVES=sys list array char string \
   hashtbl sort marshal int32 obj \
   int64 nativeint \
@@ -17,10 +18,9 @@ NONPERVASIVES=sys list array char string \
   filename complex scanning scanf str \
   int_misc nat big_int arith_flags \
   ratio num arith_status \
-  unix terminfo
-THREADS=thread mutex condition event
+  unix terminfo $(THREADS:%=threads/%)
 
-MODULES=pervasives $(NONPERVASIVES) $(THREADS:%=threads/%)
+MODULES=pervasives $(NONPERVASIVES)
 INCLUDES+=-I threads
 include ../config.mk
 include ../Make/generic.mk
@@ -58,20 +58,20 @@ pervasives.cmo: pervasives.ml
 # ----------------------------------------------------------------------
 
 depend: *.ml threads/*.ml
-	$(LLAMADEP) *.ml > .depend
-	$(LLAMADEP) -I thresds threads/*.ml >> .depend
+	$(LLAMADEP) *.ml > depend
+	$(LLAMADEP) -I threads threads/*.ml >> depend
 
 ocamldepend:
-	$(OCAMLDEP) *.ml > .ocamldepend
-	$(OCAMLDEP) -I threads threads/*.ml >> .ocamldepend
+	$(OCAMLDEP) *.ml *.mli > .ocamldepend
+	$(OCAMLDEP) -I threads threads/*.ml threads/*.mli >> .ocamldepend
 
 .PHONY: ocamldepend
 
 -include .depend
 -include .ocamldepend
 
-$(NONPERVASIVES:%=%.lmo): pervasives.lmo
-$(NONPERVASIVES:%=%.cmo): pervasives.cmo
+$(NONPERVASIVES:%=%.lmo) std_exit.lmo: pervasives.lmo
+$(NONPERVASIVES:%=%.cmo) std_exit.cmo: pervasives.cmo
 
 # ----------------------------------------------------------------------
 # Clean
