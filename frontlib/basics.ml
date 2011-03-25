@@ -15,9 +15,11 @@ let region_parameters ty =
   let merge accu rs =
     List.fold_left
       (fun accu elt -> if List.mem elt accu then accu else elt :: accu)
-      accu rs in
+      accu rs
+  in
   let rec aux accu = function
-    | Tparam _               -> accu
+    | Tparam _ ->
+        accu
     | Tarrow (ty1, ty2, phi) ->
         aux (aux (merge accu (region_parameters phi)) ty1) ty2
     | Ttuple tyl             -> List.fold_left aux accu tyl
@@ -29,13 +31,16 @@ let effect_parameters ty =
   let merge accu rs =
     List.fold_left
       (fun accu elt -> if List.mem elt accu then accu else elt :: accu)
-      accu rs in
+      accu rs
+  in
   let rec aux accu = function
     | Tparam _               -> accu
     | Tarrow (ty1, ty2, phi) ->
         aux (aux (merge accu (effect_parameters phi)) ty1) ty2
     | Ttuple tyl             -> List.fold_left aux accu tyl
-    | Tconstr (_, p)         -> List.fold_left aux (merge accu p.tcp_effects) p.tcp_types in
+    | Tconstr (_, p)         ->
+        List.fold_left aux (merge accu p.tcp_effects) p.tcp_types
+  in
   List.rev (aux [] ty)
 
 let type_closed ty =

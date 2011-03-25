@@ -51,7 +51,7 @@ and type_constructor =
 
 and type_constructor_parameters = {
   tcp_types   : llama_type list;        (* type parameters   *)
-  tcp_regions : region list;  (* region parameters *)
+  tcp_regions : region list;            (* region parameters *)
   tcp_effects : effect_parameter list;  (* effect parameters *)
 }
 
