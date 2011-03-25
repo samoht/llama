@@ -150,20 +150,22 @@ let type_constructor_groups =
     tcsg_exn; tcsg_array; tcsg_list; tcsg_format6; tcsg_option;
     tcsg_nativeint; tcsg_int32; tcsg_int64 ]
 
-(* helpers *)
+(* helpers (used only for exceptions below) *)
 
-let mkconstr ty params =
+let mkconstr ty tparams rparams eparams =
   let p = {
-    tcp_types   = params;
-    tcp_regions = standard_parameters ty.tcs_regions;
-    tcp_effects = standard_parameters ty.tcs_effects;
+    tcp_types   = tparams;
+    tcp_regions = rparams;
+    tcp_effects = eparams;
   } in
   Tconstr (ty, p)
 
-let type_int       = mkconstr tcs_int []
-let type_char      = mkconstr tcs_char []
-let type_string    = mkconstr tcs_string []
-let type_float     = mkconstr tcs_float []
+(*standard_parameters ty.tcs_regions;*)
+
+let type_int        = mkconstr tcs_int [] [] []
+(*let type_char      = mkconstr tcs_char []*)
+let type_string rho = mkconstr tcs_string [] [rho] []
+(*let type_float     = mkconstr tcs_float []
 let type_bool      = mkconstr tcs_bool []
 let type_unit      = mkconstr tcs_unit []
 let type_exn       = mkconstr tcs_exn []
@@ -172,12 +174,13 @@ let type_int32     = mkconstr tcs_int32 []
 let type_int64     = mkconstr tcs_int64 []
 let type_array ty  = mkconstr tcs_array [ty]
 let type_list ty   = mkconstr tcs_list [ty]
-let type_option ty = mkconstr tcs_option [ty]
-
+let type_option ty = mkconstr tcs_option [ty]*)
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)
 (* ---------------------------------------------------------------------- *)
+
+let exn_string = type_string (Rparam 0)
 
 let mkexn name tyl =
   { cs_tcs = tcs_exn;
@@ -187,18 +190,18 @@ let mkexn name tyl =
     cs_tag = Tag_exception }
   
 let cs_out_of_memory = mkexn "Out_of_memory" []
-let cs_sys_error = mkexn "Sys_error" [type_string]
-let cs_failure = mkexn "Failure" [type_string]
-let cs_invalid_argument = mkexn "Invalid_argument" [type_string]
+let cs_sys_error = mkexn "Sys_error" [exn_string]
+let cs_failure = mkexn "Failure" [exn_string]
+let cs_invalid_argument = mkexn "Invalid_argument" [exn_string]
 let cs_end_of_file = mkexn "End_of_file" []
 let cs_division_by_zero = mkexn "Division_by_zero" []
 let cs_not_found = mkexn "Not_found" []
-let cs_match_failure = mkexn "Match_failure" [type_string; type_int; type_int]
+let cs_match_failure = mkexn "Match_failure" [exn_string; type_int; type_int]
 let cs_stack_overflow = mkexn "Stack_overflow" []
 let cs_sys_blocked_io = mkexn "Sys_blocked_io" []
-let cs_assert_failure = mkexn "Assert_failure" [type_string; type_int; type_int]
+let cs_assert_failure = mkexn "Assert_failure" [exn_string; type_int; type_int]
 let cs_undefined_recursive_module =
-  mkexn "Undefined_recursive_module" [type_string; type_int; type_int]
+  mkexn "Undefined_recursive_module" [exn_string; type_int; type_int]
 
 (* all together now *)
 

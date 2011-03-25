@@ -1,7 +1,6 @@
 (* Where Llama Light really starts. *)
 
 open Asttypes
-open Effect
 
 (* ---------------------------------------------------------------------- *)
 (* Utility types.                                                         *)
@@ -22,6 +21,29 @@ type value_kind =
   | Val_prim of Primitive.description  (* Primitive *)
 
 type parameter = int
+
+(* ---------------------------------------------------------------------- *)
+(* Effects.                                                               *)
+(* ---------------------------------------------------------------------- *)
+
+type region_parameter = parameter
+type effect_parameter = parameter
+
+type region_constructor =
+  { rcs_module : module_id;
+    rcs_name : string }
+
+type region =
+    Rparam of region_parameter
+  | Rconstr of region_constructor
+
+type effects =
+  { e_regions : region list;
+    e_effects : effect_parameter list }
+
+type effect =
+    Eparam of effect_parameter
+  | Eset   of effects
 
 (* ---------------------------------------------------------------------- *)
 (* Fundamental types.                                                     *)

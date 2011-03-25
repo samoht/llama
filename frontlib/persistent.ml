@@ -12,9 +12,13 @@ type 'a reference =
     Internal of 'a
   | External of module_id * string
 
+type region =
+    Rparam of int
+  | Rconstr of Base.region_constructor reference
+
 type llama_type =
     Tparam of int
-  | Tarrow of llama_type * llama_type * Effect.effect
+  | Tarrow of llama_type * llama_type * Base.effect
   | Ttuple of llama_type list
   | Tconstr of type_constructor reference * type_constructor_parameters
 
@@ -33,8 +37,8 @@ and type_constructor =
 
 and type_constructor_parameters = {
   tcp_types   : llama_type list;
-  tcp_regions : Effect.region_parameter list;
-  tcp_effects : Effect.effect_parameter list;
+  tcp_regions : region list;
+  tcp_effects : Base.effect_parameter list;
 }
 
 and type_constructor_kind =
@@ -94,10 +98,20 @@ let rec save_type saver = function
   | Base.Tconstr (tcs, p) ->
       let p = {
         tcp_types   = List.map (save_type saver) p.Base.tcp_types;
-        tcp_regions = p.Base.tcp_regions;
+        tcp_regions = List.map (save_region saver) p.Base.tcp_regions;
         tcp_effects = p.Base.tcp_effects;
       } in
       Tconstr (save_type_constructor_reference saver tcs, p)
+
+and save_region_constructor_reference saver rcs =
+  if rcs.Base.rcs_module = saver.saver_module then
+    Internal rcs
+  else
+    External (rcs.Base.rcs_module, rcs.Base.rcs_name)
+
+and save_region saver = function
+  | Base.Rparam p -> Rparam p
+  | Base.Rconstr c -> Rconstr (save_region_constructor_reference saver c)
 
 and save_type_constructor_reference saver tcs =
   if Base.tcs_module tcs = saver.saver_module then

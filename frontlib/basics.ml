@@ -22,8 +22,14 @@ let region_parameters ty =
         accu
     | Tarrow (ty1, ty2, phi) ->
         aux (aux (merge accu (region_parameters phi)) ty1) ty2
-    | Ttuple tyl             -> List.fold_left aux accu tyl
-    | Tconstr (_, p)         -> List.fold_left aux (merge accu p.tcp_regions) p.tcp_types in
+    | Ttuple tyl ->
+        List.fold_left aux accu tyl
+    | Tconstr (_, p) ->
+        List.fold_left aux
+          (merge accu (list_match (function Rparam p -> Some p | _ -> None)
+                         p.tcp_regions))
+          p.tcp_types
+  in
   List.rev (aux [] ty)
 
 (* Returns the list of effect parameters *)
@@ -49,17 +55,18 @@ let type_closed ty =
 (* sv: substitution for type variable
    sr: substitution for region variables
    se: substitution for effect variables *)
-let subst_region sr r =
-  List.assq r sr
+let subst_region sr = function
+  | Rparam p -> List.assq p sr
+  | r -> r
 
 let subst_effect se e =
   List.assq e se
 
-let rec subst_type sv sr se = function
+let rec subst_type sv (sr: (region_parameter * region) list) se = function
   | Tparam tv ->
       List.assq tv sv
   | Tarrow (ty1, ty2, phi) ->
-      let phi = map_effect (subst_region sr) (subst_effect se) phi in
+      let phi = map_effect (fun p -> List.assq p sr) (subst_effect se) phi in
       Tarrow (subst_type sv sr se ty1, subst_type sv sr se ty2, phi)
   | Ttuple tyl ->
       Ttuple (List.map (subst_type sv sr se) tyl)
@@ -92,7 +99,7 @@ let renumber_parameters ty =
     | (var :: tl) -> (var, i) :: aux (i+1) tl in
   let sv = aux 0 (type_parameters ty) in
   let sv = List.map (fun (v, i) -> (v, Tparam i)) sv in
-  let sr = aux 0 (region_parameters ty) in
+  let sr = List.map (fun (i, p) -> (i, Rparam p)) (aux 0 (region_parameters ty)) in
   let se = aux 0 (effect_parameters ty) in
   subst_type sv sr se ty
 

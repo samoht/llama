@@ -1,3 +1,5 @@
+open Base
+
 open Log
 let section = "effect"
 let section_verbose = "effect+"
@@ -13,22 +15,6 @@ let rec list_match f = function
 (* Immutable base *)
 (******************)
 
-type region_parameter = int
-type effect_parameter = int
-type region_constructor = string
-
-type region =
-  | Rparam of region_parameter
-  | Rconstr of region_constructor
-
-type effects = {
-  e_regions: region list;
-  e_effects: effect_parameter list;
-}
-
-type effect =
-  | Eparam of effect_parameter
-  | Eset   of effects
 (*
 let new_region_name =
   let i = ref 0 in
@@ -49,8 +35,8 @@ let map_effect fn_region fn_effect = function
   | Eset s   -> 
       let s = {
         e_regions =
-	  List.map (function Rparam p -> Rparam (fn_region p) | r -> r)
-	    s.e_regions;
+          List.map (function Rparam p -> (fn_region p) | r -> r)
+            s.e_regions;
         e_effects = List.map fn_effect s.e_effects;
       } in
       Eset s
@@ -60,7 +46,7 @@ let string_of_region_parameter i =
 
 let string_of_region = function
   | Rparam p -> string_of_region_parameter p
-  | Rconstr s -> s
+  | Rconstr c -> c.rcs_name
 
 let string_of_effect_parameter i =
   "E" ^ string_of_int i
