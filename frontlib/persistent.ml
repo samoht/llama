@@ -75,6 +75,7 @@ type signature_item =
     Sig_type of type_constructor_group
   | Sig_value of value
   | Sig_exception of constructor
+  | Sig_region of Base.region_constructor list
     
 type signature = signature_item list
 
@@ -108,6 +109,9 @@ and save_region_constructor_reference saver rcs =
     Internal rcs
   else
     External (rcs.Base.rcs_module, rcs.Base.rcs_name)
+
+and save_region_constructor saver rcs =
+  rcs (* DUMMY ? *)
 
 and save_region saver = function
   | Base.Rparam p -> Rparam p
@@ -179,6 +183,8 @@ let save_signature_item saver = function
       Sig_type (save_type_constructor_group saver tcsg)
   | Base.Sig_exception cs ->
       Sig_exception (save_constructor saver cs)
+  | Base.Sig_region rcs ->
+      Sig_region (save_region_constructor saver rcs)
 
 let save_signature saver sg =
   List.map (save_signature_item saver) sg
@@ -197,6 +203,7 @@ let save_signature modid sg =
 
 type loader_lookup =
   { lookup_type_constructor : module_id -> string -> Base.type_constructor;
+    lookup_region_constructor : module_id -> string -> Base.region_constructor;
   }
 
 type loader =
@@ -217,10 +224,20 @@ let rec load_type loader = function
       let tcs = load_type_constructor_reference loader tcs in
       let p = {
         Base.tcp_types   = List.map (load_type loader) p.tcp_types;
-        Base.tcp_regions = p.tcp_regions;
+        Base.tcp_regions = List.map (load_region loader) p.tcp_regions;
         Base.tcp_effects = p.tcp_effects;
       } in
       Base.Tconstr (tcs, p)
+
+and load_region_constructor_reference loader = function
+    Internal rcs ->
+      rcs
+  | External (modid, name) ->
+      loader.loader_lookup.lookup_region_constructor modid name
+
+and load_region loader = function
+    Rparam p -> Base.Rparam p
+  | Rconstr c -> Base.Rconstr (load_region_constructor_reference loader c)
 
 and load_type_constructor_reference loader = function
     Internal tcs ->

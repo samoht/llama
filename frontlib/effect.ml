@@ -78,7 +78,7 @@ type mutable_region_variable = {
 }
 
 and mutable_region_body =
-  | MRconstr of string
+  | MRconstr of region_constructor
   | MRlink of mutable_region_variable
   | MRvar of int option (* parameter number *)
 

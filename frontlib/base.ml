@@ -107,6 +107,7 @@ type signature_item =
     Sig_type of type_constructor_group
   | Sig_value of value
   | Sig_exception of constructor
+  | Sig_region of region_constructor list
 
 type signature = signature_item list
 
@@ -171,7 +172,7 @@ type structure_item =
   | Str_eval of expression
   | Str_external of value
   | Str_exception of constructor
-  | Str_region of string list
+  | Str_region of region_constructor list
 
 type structure = structure_item list
 

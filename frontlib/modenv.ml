@@ -76,7 +76,8 @@ let rec load_module modenv modname filename =
     raise (Error (Corrupted_interface filename))
 
 and lookup_functions modenv =
-  { Persistent.lookup_type_constructor = lookup_type_constructor modenv }
+  { Persistent.lookup_type_constructor = lookup_type_constructor modenv;
+    Persistent.lookup_region_constructor = lookup_region_constructor modenv }
 
 and lookup_module modenv modid =
   (lookup_module_info modenv modid).m
@@ -96,6 +97,9 @@ and lookup_module_info modenv modid =
         end
     | Module_toplevel ->
         failwith "Modenv.lookup_module_info"
+
+and lookup_region_constructor modenv modid name =
+  Module.find_region_constructor name (lookup_module modenv modid)
 
 and lookup_type_constructor modenv modid name =
   Module.find_type_constructor name (lookup_module modenv modid)

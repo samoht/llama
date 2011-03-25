@@ -3,6 +3,7 @@ open Base
 
 type t =
   { modenv : Modenv.t;
+    region_constructors : (string, region_constructor) Map.t;
     type_constructors : (string, type_constructor) Map.t;
     constructors : (string, constructor) Map.t;
     labels : (string, label) Map.t;
@@ -10,6 +11,7 @@ type t =
 
 let create_empty modenv =
   { modenv = modenv;
+    region_constructors = Map.empty_generic;
     type_constructors = Map.empty_generic;
     constructors = Map.empty_generic;
     labels = Map.empty_generic;
@@ -24,6 +26,8 @@ let lookup env_proj modenv_lookup lid env =
 
 let modenv env = env.modenv
 
+let lookup_region_constructor =
+  lookup (fun env -> env.region_constructors) Modenv.lookup_region_constructor
 let lookup_type_constructor =
   lookup (fun env -> env.type_constructors) Modenv.lookup_type_constructor
 let lookup_constructor =
@@ -33,10 +37,14 @@ let lookup_label =
 let lookup_value =
   lookup (fun env -> env.values) Modenv.lookup_value
 
+let find_region_constructor name env = Map.find name env.region_constructors
 let find_type_constructor name env = Map.find name env.type_constructors
 let find_constructor name env = Map.find name env.constructors
 let find_label name env = Map.find name env.labels
 let find_value name env = Map.find name env.values
+
+let add_region_constructor rcs env =
+  { env with region_constructors = Map.add rcs.rcs_name rcs env.region_constructors }
 
 let add_type_constructor tcs env =
   let new_type_constructors =
@@ -74,7 +82,12 @@ let open_signature sg env =
        | Sig_value v ->
            add_value v env
        | Sig_exception cs ->
-           add_exception cs env) env sg
+           add_exception cs env
+       | Sig_region rcsl ->
+           List.fold_left (fun env rcs -> add_region_constructor rcs env)
+             env
+             rcsl
+    ) env sg
 
 let thru_builtins modenv =
   open_signature Predef.signature (create_empty modenv)

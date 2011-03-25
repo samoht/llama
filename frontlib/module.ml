@@ -2,6 +2,7 @@ open Base
 
 type t =
   { mod_id : module_id;
+    region_constructors : (string, region_constructor) Map.t;
     type_constructors : (string, type_constructor) Map.t;
     constructors : (string, constructor) Map.t;
     labels : (string, label) Map.t;
@@ -10,6 +11,7 @@ type t =
     exception_positions : (string, constructor * int) Hashtbl.t }
 
 let make modid sg =
+  let region_constructors = ref Map.empty_generic in
   let type_constructors = ref Map.empty_generic in
   let constructors = ref Map.empty_generic in
   let labels = ref Map.empty_generic in
@@ -39,8 +41,14 @@ let make modid sg =
                  | _ ->
                      ()
                end) tcsg.tcsg_members
+      | Sig_region rcsl ->
+          region_constructors :=
+            List.fold_left (fun s rcs -> Map.add rcs.rcs_name rcs s)
+              !region_constructors
+              rcsl
     end sg;
   { mod_id = modid;
+    region_constructors = !region_constructors;
     values = !values;
     constructors = !constructors;
     labels = !labels;
@@ -50,6 +58,7 @@ let make modid sg =
 
 let id m = m.mod_id
 
+let find_region_constructor name m = Map.find name m.region_constructors
 let find_type_constructor name m = Map.find name m.type_constructors
 let find_constructor name m = Map.find name m.constructors
 let find_label name m = Map.find name m.labels

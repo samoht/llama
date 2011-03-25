@@ -63,7 +63,7 @@ let rec tree_of_type = function
   | Tconstr (tcs, p) ->
       Otyp_constr (tree_of_type_constructor tcs,
                    tree_of_type_list p.tcp_types,
-                   (tree_of_region_parameters p.tcp_regions,
+                   ((*tree_of_region_parameters p.tcp_regions*)[], (* DUMMY *)
                     tree_of_effect_parameters p.tcp_effects))
 
 and tree_of_type_list tyl =
