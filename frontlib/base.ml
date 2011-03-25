@@ -51,7 +51,7 @@ and type_constructor =
 
 and type_constructor_parameters = {
   tcp_types   : llama_type list;        (* type parameters   *)
-  tcp_regions : region_parameter list;  (* region parameters *)
+  tcp_regions : region list;  (* region parameters *)
   tcp_effects : effect_parameter list;  (* effect parameters *)
 }
 
@@ -196,7 +196,7 @@ let tcs_arity tcs = tcsg_arity tcs.tcs_group     (* Number of type parameters *)
 let tcs_res tcs =                                (* Type w/ default arguments *)
   let p = {
     tcp_types   = List.map (fun param -> Tparam param) (tcs_params tcs);
-    tcp_regions = standard_parameters tcs.tcs_regions;
+    tcp_regions = List.map (fun p -> Rparam p) (standard_parameters tcs.tcs_regions); (* DUMMY ? *)
     tcp_effects = standard_parameters tcs.tcs_effects;
   } in
   Tconstr (tcs, p)

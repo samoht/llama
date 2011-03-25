@@ -2,49 +2,65 @@ open Log
 let section = "effect"
 let section_verbose = "effect+"
 
+let rec list_match f = function
+  | [] -> []
+  | h::t ->
+    match f h with
+      | Some x -> x :: list_match f t
+      | None -> list_match f t
+
 (******************)
 (* Immutable base *)
 (******************)
 
 type region_parameter = int
 type effect_parameter = int
-type region = string
+type region_constructor = string
+
+type region =
+  | Rparam of region_parameter
+  | Rconstr of region_constructor
 
 type effects = {
-  e_regparams: region_parameter list;
-  e_effparams: effect_parameter list;
-  e_regions: string list;
+  e_regions: region list;
+  e_effects: effect_parameter list;
 }
 
 type effect =
   | Eparam of effect_parameter
   | Eset   of effects
-
+(*
 let new_region_name =
   let i = ref 0 in
   fun () ->
     incr i;
     "0r" ^ (string_of_int !i)
-
+*)
 let region_parameters = function
   | Eparam _ -> []
-  | Eset s   -> s.e_regparams
+  | Eset s   -> list_match (function Rparam p -> Some p | _ -> None) s.e_regions
 
 let effect_parameters = function
   | Eparam i -> [i]
-  | Eset s   -> s.e_effparams 
+  | Eset s   -> s.e_effects
 
 let map_effect fn_region fn_effect = function
   | Eparam e -> Eparam (fn_effect e)
   | Eset s   -> 
-      let s = { s with
-        e_regparams = List.map fn_region s.e_regparams;
-        e_effparams = List.map fn_effect s.e_effparams;
+      let s = {
+        e_regions =
+	  List.map (function Rparam p -> Rparam (fn_region p) | r -> r)
+	    s.e_regions;
+        e_effects = List.map fn_effect s.e_effects;
       } in
       Eset s
 
 let string_of_region_parameter i =
   "R" ^ string_of_int i
+
+let string_of_region = function
+  | Rparam p -> string_of_region_parameter p
+  | Rconstr s -> s
 
 let string_of_effect_parameter i =
   "E" ^ string_of_int i
@@ -53,9 +69,9 @@ let string_of_effect e =
   match e with
   | Eparam i -> string_of_effect_parameter i
   | Eset s   ->
-      let rs = List.map string_of_region_parameter (region_parameters e) in
-      let es = List.map string_of_effect_parameter (effect_parameters e) in
-      Printf.sprintf "{%s}" (String.concat "," (rs @ s.e_regions @ es))
+      let rs = List.map string_of_region s.e_regions in
+      let es = List.map string_of_effect_parameter s.e_effects in
+      Printf.sprintf "{%s}" (String.concat "," (rs @ es))
 
 let string_of_region_parameters r =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_region_parameter r))
@@ -72,9 +88,13 @@ let string_of_effect_parameters e =
 (* Mutable regions = mutable regions variables *)
 type mutable_region_variable = {
   rid           : int;
-  mutable rlink : mutable_region option;
-  mutable rmark : int option;
+  mutable rbody : mutable_region_body;
 }
+
+and mutable_region_body =
+  | MRconstr of string
+  | MRlink of mutable_region_variable
+  | MRvar of int option (* parameter number *)
 
 and mutable_region = mutable_region_variable
 
@@ -83,7 +103,7 @@ let new_mutable_region =
   let x = ref 0 in
   let aux () =
     incr x;
-    { rid = !x; rlink = None; rmark = None } in
+    { rid = !x; rbody = MRvar None } in
   aux
 
 let string_of_mutable_region r =
@@ -93,9 +113,9 @@ let string_of_mutable_regions l =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_mutable_region l))
 
 let rec mutable_region_repr r =
-  match r.rlink with
-    | None   -> r
-    | Some v -> mutable_region_repr v
+  match r.rbody with
+    | MRlink v -> mutable_region_repr v
+    | _        -> r
 
 exception Unify_regions
 
@@ -103,9 +123,15 @@ let unify_region r1 r2 =
   let r1 = mutable_region_repr r1 in
   let r2 = mutable_region_repr r2 in
   (* debug section_verbose "unify_region %s %s" (string_of_mutable_region r1) (string_of_mutable_region r2); *)
-  if r1.rid <> r2.rid then
-    r1.rlink <- Some r2
-  
+  if r1 != r2 then
+    match r1.rbody, r2.rbody with
+      | _, MRvar None ->
+	  r2.rbody <- MRlink r1
+      | MRvar None, _ ->
+	  r1.rbody <- MRlink r2
+      | b1, b2 ->
+	  raise Unify_regions
+
 (* r1 and r2 are two lists of region variables, whose order IS important *)
 let rec unify_regions r1s r2s msg =
   if List.length r1s = List.length r2s then

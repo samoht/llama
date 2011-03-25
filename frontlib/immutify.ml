@@ -34,16 +34,16 @@ let new_env () = {
 (* Types and type variables.                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let mutable_region_param f r =
+let mutable_region f r =
 (*   debug section_verbose "mutable_region_param : %d" f.regions; *)
   let r = mutable_region_repr r in
-  match r.rmark with
-    | None   ->
-        r.rmark   <- Some f.regions;
+  match r.rbody with
+    | MRconstr s -> Rconstr s
+    | MRvar (Some i) -> Rparam i
+    | MRvar None ->
+        r.rbody   <- MRvar (Some f.regions);
         f.regions <- f.regions + 1;
-        f.regions - 1
-    | Some i ->
-        i
+        Rparam (f.regions - 1)
 
 let mutable_effect_param f phi =
 (*  debug section_verbose "mutable_effect_param : %d" f.effects; *)
@@ -66,7 +66,7 @@ let rec mutable_effect f phi =
     | MEset s  ->
         let rs, es = region_and_effect_variables phi in
         let s = {
-          e_regions = List.map (mutable_region_param f) rs;
+          e_regions = List.map (mutable_region f) rs;
           e_effects = List.map (mutable_effect_param f) es;
         } in
         Eset s
@@ -81,7 +81,7 @@ let rec mutable_type f = function
   | Mconstr (tcs, p) ->
       let ip = {
         tcp_types   = List.map (mutable_type f) p.m_types;
-        tcp_regions = List.map (mutable_region_param f) p.m_regions;
+        tcp_regions = List.map (mutable_region f) p.m_regions;
         tcp_effects = List.map (mutable_effect_param f) p.m_effects;
       } in
       Tconstr (tcs, ip)
