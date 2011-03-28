@@ -17,11 +17,6 @@ let print_DEBUG s = print_string s ; print_newline ()
 
 (** To keep the order of elements in a module. *)
 type module_element =
-(*  Element_module of t_module
-  | Element_module_type of t_module_type
-  | Element_included_module of included_module
-  | Element_class of Odoc_class.t_class
-  | Element_class_type of Odoc_class.t_class_type *)
   | Element_value of Odoc_value.t_value
   | Element_exception of Odoc_exception.t_exception
   | Element_type of Odoc_type.t_type

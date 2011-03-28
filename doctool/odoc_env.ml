@@ -21,20 +21,12 @@ type env_element = Odoc_name.t * Odoc_name.t
 type env = {
     env_values : env_element list ;
     env_types : env_element list ;
-    env_class_types : env_element list ;
-    env_classes : env_element list ;
-    env_modules : env_element list ;
-    env_module_types : env_element list ;
     env_exceptions : env_element list ;
   }
 
 let empty = {
   env_values = [] ;
   env_types = [] ;
-  env_class_types = [] ;
-  env_classes = [] ;
-  env_modules = [] ;
-  env_module_types = [] ;
   env_exceptions = [] ;
   }
 
@@ -67,48 +59,6 @@ let add_value env full_name =
   let simple_name = Odoc_name.simple full_name in
   { env with env_values = (simple_name, full_name) :: env.env_values }
 
-let add_module env full_name =
-  let simple_name = Odoc_name.simple full_name in
-  { env with env_modules = (simple_name, full_name) :: env.env_modules }
-
-let add_module_type env full_name =
-  let simple_name = Odoc_name.simple full_name in
-  { env with env_module_types = (simple_name, full_name) :: env.env_module_types }
-
-let add_class env full_name =
-  let simple_name = Odoc_name.simple full_name in
-  { env with
-    env_classes = (simple_name, full_name) :: env.env_classes ;
-    (* we also add a type 'cause the class name may appear as a type *)
-    env_types = (simple_name, full_name) :: env.env_types
-  }
-
-let add_class_type env full_name =
-  let simple_name = Odoc_name.simple full_name in
-  { env with
-    env_class_types = (simple_name, full_name) :: env.env_class_types ;
-    (* we also add a type 'cause the class type name may appear as a type *)
-    env_types = (simple_name, full_name) :: env.env_types
-  }
-
-let full_module_name env n =
-  try List.assoc n env.env_modules
-  with Not_found ->
-    print_DEBUG ("Module "^n^" not found with env=");
-    List.iter (fun (sn, fn) -> print_DEBUG ("("^sn^", "^fn^")")) env.env_modules;
-    n
-
-let full_module_type_name env n =
-  try List.assoc n env.env_module_types
-  with Not_found ->
-    print_DEBUG ("Module "^n^" not found with env=");
-    List.iter (fun (sn, fn) -> print_DEBUG ("("^sn^", "^fn^")")) env.env_modules;
-    n
-
-let full_module_or_module_type_name env n =
-  try List.assoc n env.env_modules
-  with Not_found -> full_module_type_name env n
-
 let full_type_name env n =
   try
     let full = List.assoc n env.env_types in
@@ -130,24 +80,6 @@ let full_exception_name env n =
     print_DEBUG ("Exception "^n^" not found with env=");
     List.iter (fun (sn, fn) -> print_DEBUG ("("^sn^", "^fn^")")) env.env_exceptions;
     n
-
-let full_class_name env n =
-  try List.assoc n env.env_classes
-  with Not_found ->
-    print_DEBUG ("Class "^n^" not found with env=");
-    List.iter (fun (sn, fn) -> print_DEBUG ("("^sn^", "^fn^")")) env.env_classes;
-    n
-
-let full_class_type_name env n =
-  try List.assoc n env.env_class_types
-  with Not_found ->
-    print_DEBUG ("Class type "^n^" not found with env=");
-    List.iter (fun (sn, fn) -> print_DEBUG ("("^sn^", "^fn^")")) env.env_class_types;
-    n
-
-let full_class_or_class_type_name env n =
-  try List.assoc n env.env_classes
-  with Not_found -> full_class_type_name env n
 
 let print_env_types env =
   List.iter (fun (s1,s2) -> Printf.printf "%s = %s\n" s1 s2) env.env_types
