@@ -159,6 +159,11 @@ let tree_of_value_description v =
 let value_description ppf decl =
   !Oprint.out_sig_item ppf (tree_of_value_description decl)
 
+(* Print a region declaration *)
+
+let tree_of_region_declaration rcsl =
+  Osig_region (List.map (fun rcs -> rcs.rcs_name) rcsl)
+
 (* Print a signature body (used by -i when compiling a .ml) *)
 
 let tree_of_signature_item = function
@@ -168,6 +173,8 @@ let tree_of_signature_item = function
       trees_of_type_constructor_group tcsg
   | Sig_exception cs ->
       [tree_of_exception_declaration cs]
+  | Sig_region rcsl ->
+      [tree_of_region_declaration rcsl]
 
 let tree_of_signature l = List.flatten(List.map tree_of_signature_item l)
 

@@ -271,6 +271,8 @@ let rec print_out_signature ppf =
       fprintf ppf "%a@ %a" !out_sig_item item print_out_signature items
 and print_out_sig_item ppf =
   function
+    Osig_region sl ->
+      fprintf ppf "@[<2>region %s@]" (String.concat ", " sl)
   | Osig_exception (id, tyl) ->
       fprintf ppf "@[<2>exception %a@]" print_out_constr (id, tyl)
   | Osig_type(td, rs) ->

@@ -69,6 +69,7 @@ type out_sig_item =
   | Osig_exception of string * out_type list
   | Osig_type of out_type_decl * out_rec_status
   | Osig_value of string * out_type * string list
+  | Osig_region of string list
 and out_type_decl =
   string * (string * (bool * bool)) list * (int * int) * out_type *
   (out_type * out_type) list
