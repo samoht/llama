@@ -98,10 +98,6 @@ let max_printer_steps = ref 300
 
 let print_out_value = Oprint.out_value
 let print_out_type = Oprint.out_type
-let print_out_class_type = Oprint.out_class_type
-let print_out_module_type = Oprint.out_module_type
-let print_out_sig_item = Oprint.out_sig_item
-let print_out_signature = Oprint.out_signature
 let print_out_phrase = Oprint.out_phrase
 
 let print_untyped_exception ppf obj =

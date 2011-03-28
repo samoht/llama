@@ -170,10 +170,6 @@ let rec print_out_type ppf =
   function
   | Otyp_alias (ty, s) ->
       fprintf ppf "@[%a@ as '%s@]" print_out_type ty s
-  | Otyp_poly (sl, ty) ->
-      fprintf ppf "@[<hov 2>%a.@ %a@]"
-        pr_vars sl
-        print_out_type ty
   | ty ->
       print_out_type_1 ppf ty
 
@@ -190,15 +186,10 @@ and print_out_type_2 ppf =
   | ty -> print_simple_out_type ppf ty
 and print_simple_out_type ppf =
   function
-    Otyp_class (ng, id, tyl) ->
-      fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
-        print_ident id
   | Otyp_constr (id, tyl, ([],[])) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
   | Otyp_constr (id, tyl, (rs,es)) ->
       fprintf ppf "@[%a%a%a@]" print_typargs tyl print_ident id print_out_string_list (rs @ es)
-  | Otyp_object (fields, rest) ->
-      fprintf ppf "@[<2>< %a >@]" (print_fields rest) fields
   | Otyp_stuff s -> fprintf ppf "%s" s
   | Otyp_var (ng, s) -> fprintf ppf "'%s%s" (if ng then "_" else "") s
   | Otyp_variant (non_gen, row_fields, closed, tags) ->
@@ -220,19 +211,9 @@ and print_simple_out_type ppf =
          else if tags = None then "> " else "? ")
         print_fields row_fields
         print_present tags
-  | Otyp_alias _ | Otyp_poly _ | Otyp_arrow _ | Otyp_tuple _ as ty ->
+  | Otyp_alias _ | Otyp_arrow _ | Otyp_tuple _ as ty ->
       fprintf ppf "@[<1>(%a)@]" print_out_type ty
   | Otyp_abstract _ | Otyp_sum _ | Otyp_record _ | Otyp_manifest (_, _) -> ()
-  | Otyp_module (p, n, tyl) ->
-      fprintf ppf "@[<1>(module %s" p;
-      let first = ref true in
-      List.iter2
-        (fun s t ->
-          let sep = if !first then (first := false; "with") else "and" in
-          fprintf ppf " %s type %s = %a" sep s print_out_type t
-        )
-        n tyl;
-      fprintf ppf ")@]"
 and print_fields rest ppf =
   function
     [] ->
@@ -272,76 +253,17 @@ and print_typargs ppf =
 
 let out_type = ref print_out_type
 
-(* Class types *)
+(* Signature *)
 
 let type_parameter ppf (ty, (co, cn)) =
   fprintf ppf "%s'%s" (if not cn then "+" else if not co then "-" else "")
     (*if co then if cn then "!" else "+" else if cn then "-" else "?"*)
     ty
 
-let print_out_class_params ppf =
-  function
-    [] -> ()
-  | tyl ->
-      fprintf ppf "@[<1>[%a]@]@ "
-        (print_list type_parameter (fun ppf -> fprintf ppf ", "))
-        tyl
-
-let rec print_out_class_type ppf : Outcometree.out_class_type -> unit =
-  function
-    Octy_constr (id, tyl) ->
-      let pr_tyl ppf =
-        function
-          [] -> ()
-        | tyl ->
-            fprintf ppf "@[<1>[%a]@]@ " (print_typlist !out_type ",") tyl
-      in
-      fprintf ppf "@[%a%a@]" pr_tyl tyl print_ident id
-  | Octy_fun (lab, ty, cty) ->
-      fprintf ppf "@[%s%a ->@ %a@]" (if lab <> "" then lab ^ ":" else "")
-        print_out_type_2 ty print_out_class_type cty
-  | Octy_signature (self_ty, csil) ->
-      let pr_param ppf =
-        function
-          Some ty -> fprintf ppf "@ @[(%a)@]" !out_type ty
-        | None -> ()
-      in
-      fprintf ppf "@[<hv 2>@[<2>object%a@]@ %a@;<1 -2>end@]" pr_param self_ty
-        (print_list print_out_class_sig_item (fun ppf -> fprintf ppf "@ "))
-        csil
-and print_out_class_sig_item ppf =
-  function
-    Ocsg_constraint (ty1, ty2) ->
-      fprintf ppf "@[<2>constraint %a =@ %a@]" !out_type ty1
-        !out_type ty2
-  | Ocsg_method (name, priv, virt, ty) ->
-      fprintf ppf "@[<2>method %s%s%s :@ %a@]"
-        (if priv then "private " else "") (if virt then "virtual " else "")
-        name !out_type ty
-  | Ocsg_value (name, mut, vr, ty) ->
-      fprintf ppf "@[<2>val %s%s%s :@ %a@]"
-        (if mut then "mutable " else "")
-        (if vr then "virtual " else "")
-        name !out_type ty
-
-let out_class_type = ref print_out_class_type
-
-(* Signature *)
-
-let out_module_type = ref (fun (_:formatter) (_:out_module_type) -> ())
 let out_sig_item = ref (fun (_:formatter) (_:out_sig_item) -> ())
 let out_signature = ref (fun (_:formatter) (_:out_sig_item list) -> ())
 
-let rec print_out_module_type ppf =
-  function
-    Omty_abstract -> ()
-  | Omty_functor (name, mty_arg, mty_res) ->
-      fprintf ppf "@[<2>functor@ (%s : %a) ->@ %a@]" name
-        print_out_module_type mty_arg print_out_module_type mty_res
-  | Omty_ident id -> fprintf ppf "%a" print_ident id
-  | Omty_signature sg ->
-      fprintf ppf "@[<hv 2>sig@ %a@;<1 -2>end@]" !out_signature sg
-and print_out_signature ppf =
+let rec print_out_signature ppf =
   function
     [] -> ()
   | [item] -> !out_sig_item ppf item
@@ -349,28 +271,8 @@ and print_out_signature ppf =
       fprintf ppf "%a@ %a" !out_sig_item item print_out_signature items
 and print_out_sig_item ppf =
   function
-    Osig_class (vir_flag, name, params, clt, rs) ->
-      fprintf ppf "@[<2>%s%s@ %a%s@ :@ %a@]"
-        (if rs = Orec_next then "and" else "class")
-        (if vir_flag then " virtual" else "") print_out_class_params params
-        name !out_class_type clt
-  | Osig_class_type (vir_flag, name, params, clt, rs) ->
-      fprintf ppf "@[<2>%s%s@ %a%s@ =@ %a@]"
-        (if rs = Orec_next then "and" else "class type")
-        (if vir_flag then " virtual" else "") print_out_class_params params
-        name !out_class_type clt
   | Osig_exception (id, tyl) ->
       fprintf ppf "@[<2>exception %a@]" print_out_constr (id, tyl)
-  | Osig_modtype (name, Omty_abstract) ->
-      fprintf ppf "@[<2>module type %s@]" name
-  | Osig_modtype (name, mty) ->
-      fprintf ppf "@[<2>module type %s =@ %a@]" name !out_module_type mty
-  | Osig_module (name, mty, rs) ->
-      fprintf ppf "@[<2>%s %s :@ %a@]"
-        (match rs with Orec_not -> "module"
-                     | Orec_first -> "module rec"
-                     | Orec_next -> "and")
-        name !out_module_type mty
   | Osig_type(td, rs) ->
         print_out_type_decl
           (if rs = Orec_next then "and" else "type")
@@ -446,7 +348,6 @@ and print_out_label ppf (name, mut, arg) =
   fprintf ppf "@[<2>%s%s :@ %a@];" (if mut then "mutable " else "") name
     !out_type arg
 
-let _ = out_module_type := print_out_module_type
 let _ = out_signature := print_out_signature
 let _ = out_sig_item := print_out_sig_item
 

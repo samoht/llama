@@ -51,10 +51,8 @@ type out_type =
   | Otyp_abstract
   | Otyp_alias of out_type * string
   | Otyp_arrow of string * out_type * out_type * out_effects
-  | Otyp_class of bool * out_ident * out_type list
   | Otyp_constr of out_ident * out_type list * out_effects
   | Otyp_manifest of out_type * out_type
-  | Otyp_object of (string * out_type) list * bool option
   | Otyp_record of (string * bool * out_type) list
   | Otyp_stuff of string
   | Otyp_sum of (string * out_type list) list
@@ -62,37 +60,13 @@ type out_type =
   | Otyp_var of bool * string
   | Otyp_variant of
       bool * out_variant * bool * (string list) option
-  | Otyp_poly of string list * out_type
-  | Otyp_module of string * string list * out_type list
 
 and out_variant =
   | Ovar_fields of (string * bool * out_type list) list
   | Ovar_name of out_ident * out_type list
 
-type out_class_type =
-  | Octy_constr of out_ident * out_type list
-  | Octy_fun of string * out_type * out_class_type
-  | Octy_signature of out_type option * out_class_sig_item list
-and out_class_sig_item =
-  | Ocsg_constraint of out_type * out_type
-  | Ocsg_method of string * bool * bool * out_type
-  | Ocsg_value of string * bool * bool * out_type
-
-type out_module_type =
-  | Omty_abstract
-  | Omty_functor of string * out_module_type * out_module_type
-  | Omty_ident of out_ident
-  | Omty_signature of out_sig_item list
-and out_sig_item =
-  | Osig_class of
-      bool * string * (string * (bool * bool)) list * out_class_type *
-        out_rec_status
-  | Osig_class_type of
-      bool * string * (string * (bool * bool)) list * out_class_type *
-        out_rec_status
+type out_sig_item =
   | Osig_exception of string * out_type list
-  | Osig_modtype of string * out_module_type
-  | Osig_module of string * out_module_type * out_rec_status
   | Osig_type of out_type_decl * out_rec_status
   | Osig_value of string * out_type * string list
 and out_type_decl =
