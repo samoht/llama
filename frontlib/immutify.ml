@@ -241,12 +241,13 @@ let type_of_local_type subst local_args lt =
   in
   let effects = ref [] in
   let renumber_e e =
-    if not (List.mem_assq e !effects) then (
+    if not (List.mem_assq e !effects) then
       let n = List.length !effects in
       effects := (e, n) :: !effects;
       n
-    ) else
-      List.assq e !effects in
+    else
+      List.assq e !effects
+  in
   let rec aux = function
     | Lparam i ->
         Tparam i

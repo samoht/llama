@@ -190,7 +190,7 @@ let mkexn name tyl =
     cs_name = name;
     cs_args = tyl;
     cs_tag = Tag_exception }
-  
+
 let cs_out_of_memory = mkexn "Out_of_memory" []
 let cs_sys_error = mkexn "Sys_error" [exn_string]
 let cs_failure = mkexn "Failure" [exn_string]
