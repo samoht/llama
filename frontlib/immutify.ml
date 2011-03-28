@@ -44,6 +44,7 @@ let mutable_region f r =
         r.rbody   <- MRvar (Some f.regions);
         f.regions <- f.regions + 1;
         Rparam (f.regions - 1)
+    | _ -> assert false
 
 let mutable_effect_param f phi =
 (*  debug section_verbose "mutable_effect_param : %d" f.effects; *)
@@ -230,13 +231,15 @@ and expression_option f = function
 let type_of_local_type subst local_args lt =
   let regions = ref [] in
   let renumber_r r =
-    if not (List.mem_assq r !regions) then (
-      let n = List.length !regions in
-      regions := (r, n) :: !regions;
-      n
-    ) else
-      List.assq r !regions in
- let effects = ref [] in
+    Rparam
+      (if not (List.mem_assq r !regions) then
+          let n = List.length !regions in
+          regions := (r, n) :: !regions;
+          n
+       else
+          List.assq r !regions)
+  in
+  let effects = ref [] in
   let renumber_e e =
     if not (List.mem_assq e !effects) then (
       let n = List.length !effects in

@@ -106,9 +106,12 @@ let rec save_type saver = function
 
 and save_region_constructor_reference saver rcs =
   if rcs.Base.rcs_module = saver.saver_module then
-    Internal rcs
+    Internal (save_region_constructor saver rcs)
   else
     External (rcs.Base.rcs_module, rcs.Base.rcs_name)
+
+and save_region_constructor_list saver rcsl =
+  (*List.map (save_region_constructor saver)*) rcsl
 
 and save_region_constructor saver rcs =
   rcs (* DUMMY ? *)
@@ -183,8 +186,8 @@ let save_signature_item saver = function
       Sig_type (save_type_constructor_group saver tcsg)
   | Base.Sig_exception cs ->
       Sig_exception (save_constructor saver cs)
-  | Base.Sig_region rcs ->
-      Sig_region (save_region_constructor saver rcs)
+  | Base.Sig_region rcsl ->
+      Sig_region (save_region_constructor_list saver rcsl)
 
 let save_signature saver sg =
   List.map (save_signature_item saver) sg
@@ -231,9 +234,15 @@ let rec load_type loader = function
 
 and load_region_constructor_reference loader = function
     Internal rcs ->
-      rcs
+      load_region_constructor loader rcs
   | External (modid, name) ->
       loader.loader_lookup.lookup_region_constructor modid name
+
+and load_region_constructor_list loader rcsl =
+  (*List.map (load_region_constructor loader)*) rcsl
+
+and load_region_constructor loader rcs =
+  rcs (* DUMMY ? *)
 
 and load_region loader = function
     Rparam p -> Base.Rparam p
@@ -305,6 +314,8 @@ let load_signature_item loader = function
       Base.Sig_type (load_type_constructor_group loader tcsg)
   | Sig_exception cs ->
       Base.Sig_exception (load_constructor loader cs)
+  | Sig_region rcsl ->
+      Base.Sig_region (load_region_constructor_list loader rcsl)
 
 let load_signature loader sg =
   List.map (load_signature_item loader) sg

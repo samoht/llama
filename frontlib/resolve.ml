@@ -234,7 +234,9 @@ let llama_type env ty =  (* val foo : 'a -> 'a *)
                           Type_arity_mismatch (lid, tcs_arity tcs, List.length tyl)));
           let p = {
             tcp_types   = List.map aux tyl;
-            tcp_regions = parameter_range !regions (!regions + tcs.tcs_regions);
+            tcp_regions =
+              List.map (fun p -> Rparam p)
+                (parameter_range !regions (!regions + tcs.tcs_regions));
             tcp_effects = parameter_range !effects (!effects + tcs.tcs_effects);
           } in
 (*          debug section "llama_type %s: !regions = %d; tcs_regions = %d !effects = %d; tcs_effects = %d"

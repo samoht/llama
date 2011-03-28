@@ -246,7 +246,7 @@ let execute_phrase env print_outcome ppf phr =
           | Exception exn ->
               if exn = Out_of_memory then Gc.full_major();
               let outv =
-                outval_of_value env (Obj.repr exn) Predef.type_exn
+                outval_of_value env (Obj.repr exn) Predef.dummy_type_exn
               in
               Ophr_exception (exn, outv), env
         in

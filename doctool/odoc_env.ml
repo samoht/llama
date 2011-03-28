@@ -19,12 +19,14 @@ let print_DEBUG s = print_string s ; print_newline ();;
 type env_element = Odoc_name.t * Odoc_name.t
 
 type env = {
+    env_regions : env_element list ;
     env_values : env_element list ;
     env_types : env_element list ;
     env_exceptions : env_element list ;
   }
 
 let empty = {
+  env_regions = [] ;
   env_values = [] ;
   env_types = [] ;
   env_exceptions = [] ;
@@ -44,6 +46,7 @@ let rec add_signature env root rel_opt signat =
       Base.Sig_value {Base.val_name=ident} -> { env with env_values = (rel_name ident, qualify ident) :: env.env_values }
     | Base.Sig_type tcsg -> List.fold_left (fun env {Base.tcs_name=ident} -> { env with env_types = (rel_name ident, qualify ident) :: env.env_types }) env tcsg.Base.tcsg_members
     | Base.Sig_exception {Base.cs_name=ident} -> { env with env_exceptions = (rel_name ident, qualify ident) :: env.env_exceptions }
+    | Base.Sig_region rcsl -> List.fold_left (fun env {Base.rcs_name=ident} -> {env with env_regions = (rel_name ident, qualify ident) :: env.env_regions}) env rcsl
   in
   List.fold_left f env signat
 

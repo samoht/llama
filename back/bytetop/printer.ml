@@ -69,7 +69,7 @@ open Outcometree
         (fun x -> Oval_float (Obj.obj x : float));
       Builtin "print_char", Predef.type_char,
         (fun x -> Oval_char (Obj.obj x : char));
-      Builtin "print_string", Predef.type_string,
+      Builtin "print_string", Predef.dummy_type_string,
         (fun x -> Oval_string (Obj.obj x : string));
       Builtin "print_int32", Predef.type_int32,
         (fun x -> Oval_int32 (Obj.obj x : int32));

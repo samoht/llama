@@ -150,7 +150,7 @@ let type_constructor_groups =
     tcsg_exn; tcsg_array; tcsg_list; tcsg_format6; tcsg_option;
     tcsg_nativeint; tcsg_int32; tcsg_int64 ]
 
-(* helpers (used only for exceptions below) *)
+(* helpers used for exceptions below and in back/bytetop/ *)
 
 let mkconstr ty tparams rparams eparams =
   let p = {
@@ -159,22 +159,24 @@ let mkconstr ty tparams rparams eparams =
     tcp_effects = eparams;
   } in
   Tconstr (ty, p)
-
 (*standard_parameters ty.tcs_regions;*)
 
-let type_int        = mkconstr tcs_int [] [] []
-(*let type_char      = mkconstr tcs_char []*)
-let type_string rho = mkconstr tcs_string [] [rho] []
-(*let type_float     = mkconstr tcs_float []
-let type_bool      = mkconstr tcs_bool []
+let type_int         = mkconstr tcs_int [] [] []
+let type_char        = mkconstr tcs_char [] [] []
+let type_float       = mkconstr tcs_float [] [] []
+let type_nativeint   = mkconstr tcs_nativeint [][] []
+let type_int32       = mkconstr tcs_int32 [] [] []
+let type_int64       = mkconstr tcs_int64 [] [] []
+let type_string rho  = mkconstr tcs_string [] [rho] []
+let type_exn rho phi = mkconstr tcs_exn [] [rho] [phi]
+(*let type_bool      = mkconstr tcs_bool []
 let type_unit      = mkconstr tcs_unit []
-let type_exn       = mkconstr tcs_exn []
-let type_nativeint = mkconstr tcs_nativeint []
-let type_int32     = mkconstr tcs_int32 []
-let type_int64     = mkconstr tcs_int64 []
 let type_array ty  = mkconstr tcs_array [ty]
 let type_list ty   = mkconstr tcs_list [ty]
 let type_option ty = mkconstr tcs_option [ty]*)
+
+let dummy_type_string = type_string (Rparam ~-1)
+let dummy_type_exn = type_exn (Rparam ~-1) ~-1
 
 (* ---------------------------------------------------------------------- *)
 (* Exceptions.                                                            *)

@@ -27,12 +27,9 @@ open Odoc_module
 open Odoc_types
 
     type ele =
-      | M of string
-      | MT of string
+      | R of string
       | V of string
       | T of string
-      | C of string
-      | CT of string
       | E of string
       | ER of string
       | P of string
@@ -48,6 +45,10 @@ open Odoc_types
       | Base.Sig_type tcsg ->
           List.iter
             (fun tcs -> Hashtbl.add table (T tcs.Base.tcs_name) signat) tcsg.Base.tcsg_members
+      | Base.Sig_region rcsl ->
+          List.iter
+            (fun rcs -> Hashtbl.add table (R rcs.Base.rcs_name) signat)
+            rcsl
 
     let table signat =
       let t = Hashtbl.create 13 in

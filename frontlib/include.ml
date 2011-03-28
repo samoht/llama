@@ -183,6 +183,7 @@ let make_runtime sg =
       exception_positions = Hashtbl.create 17 } in
   let rec aux pos = function
       [] -> ()
+    | Sig_region _ :: rem -> aux pos rem (* DUMMY *)
     | Sig_type _ :: rem -> aux pos rem
     | Sig_value v :: rem ->
         Hashtbl.add runtime.value_positions v.val_name (v, pos);
@@ -196,6 +197,7 @@ let make_runtime sg =
 let rec pair_main impl_env paired unpaired = function
     [] ->
       List.rev paired, List.rev unpaired
+  | Sig_region _ :: rem -> pair_main impl_env paired unpaired rem (* DUMMY *)
   | Sig_type intf_tcsg :: rem ->
       let paired, unpaired =
         pair_type_constructors impl_env paired unpaired intf_tcsg.tcsg_members in
