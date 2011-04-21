@@ -11,22 +11,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: thread.ml 9547 2010-01-22 12:48:24Z doligez $ *)
-
 (* User-level threads *)
 
-type t
-
-let critical_section = ref false
-
-type resumption_status =
-    Resumed_wakeup
-  | Resumed_delay
-  | Resumed_join
-  | Resumed_io
-  | Resumed_select of
-      Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
-  | Resumed_wait of int * Unix.process_status
+open Tesard
 
 (* It is mucho important that the primitives that reschedule are called
    through an ML function call, not directly. That's because when such a
@@ -38,12 +25,7 @@ type resumption_status =
    frame size, which means that both the primitives and their ML wrappers
    must take exactly one argument. *)
 
-external thread_initialize : unit -> unit = "thread_initialize"
-external thread_initialize_preemption : unit -> unit = "thread_initialize_preemption"
-external thread_new : (unit -> unit) -> t = "thread_new"
 external thread_yield : unit -> unit = "thread_yield"
-external thread_request_reschedule : unit -> unit = "thread_request_reschedule"
-external thread_sleep : unit -> unit = "thread_sleep"
 external thread_wait_read : Unix.file_descr -> unit = "thread_wait_read"
 external thread_wait_write : Unix.file_descr -> unit = "thread_wait_write"
 external thread_wait_timed_read :
@@ -56,28 +38,15 @@ external thread_select :
   Unix.file_descr list * Unix.file_descr list *          (* remember: 1 arg *)
   Unix.file_descr list * float -> resumption_status
   = "thread_select"
-external thread_join : t -> unit = "thread_join"
+external thread_join : thread_t -> unit = "thread_join"
 external thread_delay : float -> unit = "thread_delay"
 external thread_wait_pid : int -> resumption_status = "thread_wait_pid"
-external thread_wakeup : t -> unit = "thread_wakeup"
-external thread_self : unit -> t = "thread_self"
-external thread_kill : t -> unit = "thread_kill"
-external thread_uncaught_exception : exn -> unit = "thread_uncaught_exception"
 
-external id : t -> int = "thread_id"
-
-(* In sleep() below, we rely on the fact that signals are detected
-   only at function applications and beginning of loops,
-   making all other operations atomic. *)
+external id : thread_t -> int = "thread_id"
 
 let yield () = thread_yield()
-let sleep () = critical_section := false; thread_sleep()
 let delay duration = thread_delay duration
 let join th = thread_join th
-let wakeup pid = thread_wakeup pid
-let self () = thread_self()
-let kill pid = thread_kill pid
-let exit () = thread_kill(thread_self())
 
 let select_aux arg = thread_select arg
 
@@ -114,28 +83,9 @@ let wait_signal sigs =
   if !gotsig = 0 then sleep();
   List.iter2 Sys.set_signal sigs oldhdlrs;
   !gotsig
-
-(* For Thread.create, make sure the function passed to thread_new
-   always terminates by calling Thread.exit. *)
-
-let create fn arg =
-  thread_new
-    (fun () ->
-      try
-        fn arg; exit()
-      with x ->
-        flush stdout; flush stderr;
-        thread_uncaught_exception x;
-        exit())
-
-(* Preemption *)
-
-let preempt signal =
-  if !critical_section then () else thread_request_reschedule()
-
-(* Initialization of the scheduler *)
-
-let _ =
-  thread_initialize();
-  Sys.set_signal Sys.sigvtalrm (Sys.Signal_handle preempt);
-  thread_initialize_preemption()
+(*
+let self () = Tesard.self ()
+let kill pid = Tesard.kill pid
+let exit () = Tesard.exit ()
+let create fn arg = Tesard.create_thread fn arg
+*)

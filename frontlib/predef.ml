@@ -34,6 +34,7 @@ let tcsg_format6, tcs_format6 =
 let tcsg_nativeint, tcs_nativeint = mkabs "nativeint" [] 0 0 false
 let tcsg_int32, tcs_int32 = mkabs "int32" [] 0 0 false
 let tcsg_int64, tcs_int64 = mkabs "int64" [] 0 0 false
+let tcsg_thread, tcs_thread = mkabs "thread_t" [] 0 0 false
 
 (* variant types *)
 
@@ -148,7 +149,7 @@ and cs_some =
 let type_constructor_groups =
   [ tcsg_int; tcsg_char; tcsg_string; tcsg_float; tcsg_bool; tcsg_unit;
     tcsg_exn; tcsg_array; tcsg_list; tcsg_format6; tcsg_option;
-    tcsg_nativeint; tcsg_int32; tcsg_int64 ]
+    tcsg_nativeint; tcsg_int32; tcsg_int64; tcsg_thread ]
 
 (* helpers used for exceptions below and in back/bytetop/ *)
 

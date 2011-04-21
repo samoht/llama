@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 
 BOOTDIR=../boot
-THREADS=thread mutex condition event
+THREADS=tesard thread
 NONPERVASIVES=sys list array char string \
   hashtbl sort marshal int32 obj \
   int64 nativeint \

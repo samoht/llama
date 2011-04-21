@@ -395,7 +395,7 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         ty, rhol, phi :: phil
     | Mexp_thread e ->
         ignore (statement e);
-        mutable_type_unit, [], []
+        mutable_type_thread, [], []
 
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages.

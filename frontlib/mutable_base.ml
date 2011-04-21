@@ -274,6 +274,7 @@ let mutable_type_option ty = Mconstr (Predef.tcs_option, params [ty] [])
 let mutable_type_nativeint = Mconstr (Predef.tcs_nativeint, params [] [])
 let mutable_type_int32 = Mconstr (Predef.tcs_int32, params [] [])
 let mutable_type_int64 = Mconstr (Predef.tcs_int64, params [] [])
+let mutable_type_thread = Mconstr (Predef.tcs_thread, params [] [])
 
 (* ---------------------------------------------------------------------- *)
 (* Instantiation (immutable -> mutable).                                  *)
