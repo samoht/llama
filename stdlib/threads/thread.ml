@@ -83,9 +83,8 @@ let wait_signal sigs =
   if !gotsig = 0 then sleep();
   List.iter2 Sys.set_signal sigs oldhdlrs;
   !gotsig
-(*
+
 let self () = Tesard.self ()
-let kill pid = Tesard.kill pid
-let exit () = Tesard.exit ()
+(*let kill pid = Tesard.kill pid*)
+let exit () = raise Tesard.Exit
 let create fn arg = Tesard.create_thread fn arg
-*)

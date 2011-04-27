@@ -17,6 +17,8 @@ type resumption_status =
       Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
   | Resumed_wait of int * Unix.process_status
 
+exception Exit (* Raised by Thread.exit to trigger unlocking in lock_in. *)
+
 (* It is mucho important that the primitives that reschedule are called
    through an ML function call, not directly. That's because when such a
    primitive returns, the bytecode interpreter is only semi-obedient:
@@ -44,21 +46,23 @@ external thread_uncaught_exception : exn -> unit = "thread_uncaught_exception"
 let sleep () = critical_section := false; thread_sleep()
 let wakeup pid = thread_wakeup pid
 let self () = thread_self()
-let kill pid = thread_kill pid
+(*let kill pid = thread_kill pid*)
 let exit () = thread_kill(thread_self())
 
-(* For Thread.create, make sure the function passed to thread_new
-   always terminates by calling Thread.exit. *)
+(* For create_thread, make sure the function passed to thread_new
+   always terminates by calling exit. *)
 
 let create_thread fn arg =
   thread_new
     (fun () ->
-      try
-        fn arg; exit()
-      with x ->
-        flush stdout; flush stderr;
-        thread_uncaught_exception x;
-        exit())
+      (try
+         fn arg
+       with
+         | Exit -> ()
+         | x ->
+             flush stdout; flush stderr;
+             thread_uncaught_exception x);
+      exit())
 
 (* == Preemption == *)
 
