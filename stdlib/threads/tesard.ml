@@ -1,3 +1,4 @@
+(* Tesard runtime *)
 
 (* = Threads = *)
 
@@ -76,10 +77,11 @@ let _ =
 
 (* from the original Mutex module *)
 
-type mutex = { mutable locked: bool; mutable waiting: thread_t list }
+type mutex = { mutable owner: thread_t option; mutable waiting: thread_t list }
 
-let create_mutex () = { locked = false; waiting = [] }
+let create_mutex () = { owner = None; waiting = [] }
 
+(*
 let rec do_lock m =
   if m.locked then begin                (* test and set atomic *)
     critical_section := true;
@@ -92,10 +94,65 @@ let rec do_lock m =
 
 let try_lock m =                        (* test and set atomic *)
   if m.locked then false else begin m.locked <- true; true end
+*)
 
+let can_lock wait m =
+  match m.owner with
+    | None -> true
+    | Some t when t == self() -> true
+    | _ -> if wait then m.waiting <- self() :: m.waiting; false
+
+let rec do_lock phi rhol =
+  critical_section := true;
+  if List.for_all (can_lock true) rhol && List.for_all (can_lock true) phi then
+    (List.iter (fun m -> m.owner <- Some (self())) rhol;
+     critical_section := false)
+  else
+    (sleep();
+     do_lock phi rhol)
+
+let try_lock phi rhol =
+  critical_section := true;
+  let res =
+    List.for_all (can_lock false) rhol && List.for_all (can_lock false) phi in
+  if res then List.iter (fun m -> m.owner <- Some (self())) rhol;
+  critical_section := false;
+  res
+
+(*
 let unlock m =
   (* Don't play with Thread.critical_section here because of Condition.wait *)
   let w = m.waiting in                  (* atomic *)
   m.waiting <- [];                      (* atomic *)
   m.locked <- false;                    (* atomic *)
   List.iter wakeup w
+*)
+
+let unlock ml =
+  (* Unlock all the mutexes, then wake up all the waiting threads *)
+  critical_section := true; (* XXX: Condition.wait -> What about it ? *)
+  let w = ref [] in
+  List.iter
+    (fun m -> w := m.waiting :: !w; m.waiting <- []; m.owner <- None)
+    ml;
+  List.iter (List.iter wakeup) !w;
+  critical_section := false
+
+
+let lock_in phi rhol f =
+  do_lock phi rhol;
+  let res =
+    try f ()
+    with x -> unlock rhol; raise x in
+  unlock rhol;
+  res
+
+let try_lock_in phi rhol f =
+  if try_lock phi rhol then
+    let res =
+      try f ()
+      with x -> unlock rhol; raise x in
+    unlock rhol;
+    Some res
+  else
+    None
