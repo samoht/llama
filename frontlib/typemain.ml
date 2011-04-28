@@ -28,7 +28,7 @@ let rec structure env = function
   | pstr :: rest ->
       let tstr = Resolve.structure_item env pstr in
       debug section_verbose "structure 1";
-      let _ = Typify.structure_item tstr in
+      Typify.structure_item tstr;
       debug section_verbose "structure 2";
       let str, env, _ = Immutify.structure_item env tstr in
       debug section_verbose "structure 3";
