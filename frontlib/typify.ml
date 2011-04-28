@@ -14,7 +14,6 @@ type error =
   | Pattern_type_clash of mutable_type * mutable_type
   | Expression_type_clash of mutable_type * mutable_type
   | Apply_non_function of mutable_type
-  | Lock_non_mutable of mutable_type
   | Unknown
 
 exception Error of Location.t * error
@@ -390,9 +389,9 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
     | Mexp_assertfalse ->
         new_type_variable (), [], []
     | Mexp_lock (l, e) ->
-        let rhol, phil = List.split (List.map lockable l)
+        let rhol, phill = List.split (List.map lockable l)
         and ty, phi = expression e in
-        ty, rhol, phi :: phil
+        ty, rhol, phi :: (List.concat phill)
     | Mexp_thread e ->
         ignore (statement e);
         mutable_type_thread, [], []
@@ -475,11 +474,9 @@ and statement expr =
 (* Typing of e in "lock e in ..." *)
 
 and lockable expr =
-  let ty, phi = expression expr in
-  match expand_mutable_type ty with
-    | Mconstr ({tcs_mutable=true}, { m_regions = rho :: _ }) ->
-        mutable_region_repr rho, phi
-    | _ -> raise (Error (expr.mexp_loc, Lock_non_mutable ty))
+  let rho = new_mutable_region () in
+  let phi = expression_expect expr (new_mutable_type_variable rho) in
+  rho, phi
 
 (* ---------------------------------------------------------------------- *)
 (* Structure items.                                                       *)
@@ -537,7 +534,5 @@ let report_error ppf = function
           fprintf ppf
             "This expression is not a function; it cannot be applied"
       end
-  | Lock_non_mutable typ ->
-      fprintf ppf "This expression is not mutable; it cannot be locked"
   | Unknown ->
       fprintf ppf "Unknown error"

@@ -15,6 +15,7 @@ type mutable_type =
 
 and mutable_type_variable = {
   mutable link : mutable_type option;
+  at : mutable_region option;
   mutable mark : int option;
 }
 
@@ -253,7 +254,10 @@ type mutable_structure = mutable_structure_item list
 (* ---------------------------------------------------------------------- *)
 
 let new_type_variable () =
-  Mvar { link = None; mark = None }
+  Mvar { link = None; at = None; mark = None }
+
+let new_mutable_type_variable rho =
+  Mvar { link = None; at = Some rho; mark = None }
 
 let params ts r = {
   m_types   = ts;
@@ -440,27 +444,39 @@ let rec mysprint = function
       then " (Predef.tcs_" ^ tcs.tcs_name ^ ")"
       else ""
 
-let rec unify ty1 ty2 =
-  let ty1 = mutable_type_repr ty1 in
-  let ty2 = mutable_type_repr ty2 in
-  match ty1, ty2 with
+let rec unify t1 t2 =
+  match mutable_type_repr t1, mutable_type_repr t2 with
       Mvar v1, Mvar v2 when v1 == v2 ->
         ()
-    | Mvar v1, _ when not (occurs v1 ty2) ->
+    | Mvar ({at=Some r1} as v1), (Mvar {at=Some r2} as ty2) ->
+        unify_region r1 r2;
         v1.link <- Some ty2
-    | _, Mvar v2 when not (occurs v2 ty1) ->
-        v2.link <- Some ty1
+    | (Mvar {at=Some _} as ty2), Mvar v1
+    | Mvar v1, (Mvar _ as ty2) ->
+        v1.link <- Some ty2
+
+    | Mvar ({at=Some r1} as v1), (Mconstr (tcs2, p2) as ty2)
+    | (Mconstr (tcs2, p2) as ty2), Mvar ({at=Some r1} as v1)
+      when tcs2.tcs_mutable && not (occurs v1 ty2) ->
+        unify_region r1 (List.hd p2.m_regions);
+        v1.link <- Some ty2
+    | Mvar ({at=None} as v1), ty2
+    | ty2, Mvar ({at=None} as v1) when not (occurs v1 ty2) ->
+        v1.link <- Some ty2
+
     | Marrow (t1arg, t1res, phi1), Marrow(t2arg, t2res, phi2) ->
         unify_effects phi1 phi2;
         unify t1arg t2arg;
         unify t1res t2res
+
     | Mtuple tyl1, Mtuple tyl2 ->
         unify_list tyl1 tyl2
-    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, p1), _ ->
+
+    | Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, p1), ty2
+    | ty2, Mconstr ({tcs_kind=Tcs_abbrev body1} as tcs1, p1) ->
         unify (mutable_apply_type tcs1 body1 p1) ty2
-    | _, Mconstr ({tcs_kind=Tcs_abbrev body2} as tcs2, p2) ->
-        unify ty1 (mutable_apply_type tcs2 body2 p2)
-    | Mconstr (tcs1, p1), Mconstr (tcs2, p2) when tcs1 == tcs2 ->
+    | (Mconstr (tcs1, p1) as ty1), (Mconstr (tcs2, p2) as ty2)
+      when tcs1 == tcs2 ->
         let msg =
           Printf.sprintf "Unifying %s: %s\n    with %s: %s"
             (mysprint ty1)
@@ -469,7 +485,8 @@ let rec unify ty1 ty2 =
             (string_of_mutable_regions p2.m_regions) in
         unify_list p1.m_types p2.m_types;
         unify_regions p1.m_regions p2.m_regions msg
-    | _ ->
+
+    | ty1, ty2 ->
         debug section "Unify (%s, %s)" (mysprint ty1) (mysprint ty2);
         raise Unify
 

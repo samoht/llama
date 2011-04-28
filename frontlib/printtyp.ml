@@ -191,6 +191,7 @@ let signature ppf sg =
 open Mutable_base
 
 (* normalize type, region and effect variables *)
+
 let name names fn v =
   try List.assq v !names with Not_found ->
     let name = fn (List.length !names) in
@@ -201,9 +202,15 @@ let tree_of_mutable_type ty =
   let type_names = ref [] in
   let region_names = ref [] in
   let effect_names = ref [] in
-  let type_name = name type_names parameter_name in
   let region_name = name region_names string_of_region_parameter in
   let effect_name = name effect_names string_of_effect_parameter in
+
+  let type_name v =
+    try List.assq v !type_names with Not_found ->
+      let name = parameter_name (List.length !type_names)
+        ^ (match v.at with Some r -> region_name r | None -> "") in
+      type_names := (v, name) :: !type_names;
+      name in
 
   let tree_of_mutable_region_vars rs =
     List.map (fun r -> region_name (mutable_region_repr r)) rs in
