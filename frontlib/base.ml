@@ -163,7 +163,7 @@ and expression_desc =
   | Exp_assertfalse
   | Exp_constraint of expression * llama_type
   | Exp_letregion of string list * expression
-  | Exp_lock of expression list * expression
+  | Exp_lock of (expression * region) list * expression
   | Exp_thread of expression
 
 type structure_item =
@@ -179,6 +179,18 @@ type structure = structure_item list
 (* ---------------------------------------------------------------------- *)
 (* Utilities.                                                             *)
 (* ---------------------------------------------------------------------- *)
+
+(* Constructors *)
+
+let dummy_pat desc =
+  { pat_desc = desc;
+    pat_loc = Location.none;
+    pat_type = Tparam ~-1 }
+
+let dummy_exp desc =
+  { exp_desc = desc;
+    exp_loc = Location.none;
+    exp_type = Tparam ~-1 }
 
 (* Check whether a llama type is well formed with respect to region parameters *)
 let well_formed lt  =

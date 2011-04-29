@@ -10,8 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: translcore.ml 10445 2010-05-20 14:57:42Z doligez $ *)
-
 (* Translation from typed abstract syntax to lambda terms,
    for the core language *)
 
@@ -680,8 +678,29 @@ let rec transl_exp modenv e =
       else Lifthenelse (transl_exp modenv cond, lambda_unit, assert_failed modenv e.exp_loc)
   | Exp_assertfalse -> assert_failed modenv e.exp_loc
   | Exp_constraint (e, _) -> transl_exp modenv e
-  | Exp_lock (_, e) -> transl_exp modenv e (* DUMMY *)
-  | Exp_thread e -> transl_exp modenv e    (* DUMMY *)
+  | Exp_lock (l, e) ->
+      let el, rl = List.split l in
+      transl_exp modenv
+        (List.fold_right (fun (e1, e2) -> dummy_exp (Exp_sequence (e1, e2))) el
+           e) (* DUMMY *)
+  | Exp_thread e ->
+      transl_exp modenv
+        (dummy_exp
+           (Exp_apply
+              (dummy_exp (Exp_value { val_module = Module "Tesard";
+                                      val_name = "create_thread";
+                                      val_type = Tparam ~-1;
+                                      val_kind = Val_reg }),
+               match e.exp_desc with
+                 | Exp_apply (f, [x]) ->
+                     [f; x]
+                 | _ ->
+                     [dummy_exp (Exp_function
+                                   [dummy_pat (Pat_construct
+                                                 (Predef.cs_void, [])),
+                                    e]);
+                      dummy_exp (Exp_construct (Predef.cs_void, []))]
+              )))
 
 and transl_list modenv expr_list =
   List.map (transl_exp modenv) expr_list
