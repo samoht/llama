@@ -4,7 +4,7 @@
 
 (* from the original Thread module *)
 
-type thread_t
+type thread_t (* DUMMY: thread_t should be a native type, right ? *)
 
 let critical_section = ref false
 
