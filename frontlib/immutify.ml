@@ -74,6 +74,7 @@ let rec mutable_effect f phi =
 
 let rec mutable_type f = function
     Mvar v ->
+      assert (v.at = None); (* DUMMY: Should raise a proper exception. *)
       type_variable f v
   | Marrow (ty1, ty2, phi) ->
       Tarrow (mutable_type f ty1, mutable_type f ty2, mutable_effect f phi)
@@ -211,7 +212,15 @@ and expression_desc f = function
   | Mexp_constraint (expr', ty) ->
       Exp_constraint (expression f expr', mutable_type f ty)
   | Mexp_lock (l, e) ->
-      Exp_lock (List.map (fun e -> expression f e, ) l, expression f e)
+      Exp_lock (List.map
+		  (fun e ->
+		    let res = expression f e in
+		    res,
+		    match res.exp_type with
+			Tconstr (_, ip) -> List.hd ip.tcp_regions
+		      | _ -> assert false)
+		  l,
+		expression f e)
   | Mexp_thread e ->
       Exp_thread (expression f e)
 

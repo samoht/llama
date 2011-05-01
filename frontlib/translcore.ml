@@ -679,10 +679,10 @@ let rec transl_exp modenv e =
   | Exp_assertfalse -> assert_failed modenv e.exp_loc
   | Exp_constraint (e, _) -> transl_exp modenv e
   | Exp_lock (l, e) ->
-      let el, rl = List.split l in
+      let (el:expression list), rl = List.split l in
       transl_exp modenv
-        (List.fold_right (fun (e1, e2) -> dummy_exp (Exp_sequence (e1, e2))) el
-           e) (* DUMMY *)
+        (List.fold_right (fun e1 -> fun e2 -> dummy_exp (Exp_sequence (e1, e2))) el
+           (e:expression)) (* DUMMY *)
   | Exp_thread e ->
       transl_exp modenv
         (dummy_exp
