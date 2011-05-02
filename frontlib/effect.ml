@@ -119,8 +119,8 @@ let unify_region r1 r2 =
 	  raise Unify_regions
 
 (* r1 and r2 are two lists of region variables, whose order IS important *)
-let rec unify_regions r1s r2s msg =
-  if List.length r1s = List.length r2s then
+let rec unify_regions r1s r2s msg = ()
+(*  if List.length r1s = List.length r2s then
     List.iter2 unify_region r1s r2s
   else begin
     if msg <> "" then debug section "%s" msg;
@@ -129,7 +129,7 @@ let rec unify_regions r1s r2s msg =
       (string_of_mutable_regions r2s);
     raise Unify_regions
   end
-
+*)
 let compare_regions r s =
   compare r.rid s.rid
 
@@ -369,16 +369,16 @@ let unify_bodies x y =
 
 (* Unifying two effects means that the two of them becomes equals to the
    union of their effect and region variables *)
-let unify_effects e f =
+let unify_effects e f = ()
 (*  debug section_verbose "UNIFY %s %s" (string_of_mutable_effect e) (string_of_mutable_effect f); *)
-  let e = mutable_effect_repr e
+(*  let e = mutable_effect_repr e
   and f = mutable_effect_repr f in
   if e != f then(
     e.body <- unify_bodies e.body f.body;
     f.body <- (MElink e);
     flatten e;
   )
-
+*)
 (*
 
 let test () =

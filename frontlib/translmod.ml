@@ -97,6 +97,7 @@ let rec transl_structure modenv fields cc x =
   | Str_external(v) :: rem ->
       record_primitive v;
       transl_structure modenv fields cc rem
+  | Str_region _ :: rem -> assert false (* XXX: DUMMY *)
   | Str_type(decls) :: rem ->
       transl_structure modenv fields cc rem
   | Str_exception(cs) :: rem ->
@@ -150,6 +151,7 @@ let transl_store_structure modenv glob map prims str =
   | Str_external(v) :: rem ->
       record_primitive v;
       transl_store subst rem
+  | Str_region _ :: rem -> assert false (* XXX: DUMMY *)
   | Str_type(decls) :: rem ->
       transl_store subst rem
   | Str_exception(cs) :: rem ->
@@ -199,6 +201,7 @@ let rec defined_idents = function
   | Str_let(rec_flag, pat_expr_list, m) :: rem ->
       List.map (fun (_, v) -> Makeident.of_value v) m @ defined_idents rem
   | Str_external _ :: rem -> defined_idents rem
+  | Str_region _ :: rem -> assert false (* XXX: DUMMY *)
   | Str_type (decls) :: rem -> defined_idents rem
   | Str_exception(cs) :: rem -> Makeident.of_exception cs :: defined_idents rem
 
@@ -302,6 +305,7 @@ let transl_toplevel_item modenv = function
                  (make_sequence toploop_setvalue_id idents)
   | Str_external _ ->
       lambda_unit
+  | Str_region _ -> assert false (* XXX: DUMMY *)
   | Str_type(decls) ->
       lambda_unit
   | Str_exception(cs) ->

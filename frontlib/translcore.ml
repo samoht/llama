@@ -678,6 +678,7 @@ let rec transl_exp modenv e =
       else Lifthenelse (transl_exp modenv cond, lambda_unit, assert_failed modenv e.exp_loc)
   | Exp_assertfalse -> assert_failed modenv e.exp_loc
   | Exp_constraint (e, _) -> transl_exp modenv e
+  | Exp_letregion (_, _) -> assert false (* XXX: DUMMY *)
   | Exp_lock (l, e) ->
       let (el:expression list), rl = List.split l in
       transl_exp modenv
