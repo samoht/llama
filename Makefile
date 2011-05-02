@@ -62,10 +62,10 @@ bootstrap:
 	make && make promote && make mlclean && make
 
 ocamlbootstrap:
-	make && make ocamlpromote && make mlclean && make
+	make with-ocaml && make ocamlpromote && make mlclean && make
 
 recover-bootstrap:
-	git checkout boot/ && make mlclean && make
+	git checkout boot/ && make mlclean
 
 CDIRS=yacc back/byterun
 
