@@ -8,8 +8,6 @@ include config.mk
 # Build the core native executables in "boot", then build everything
 # using the ambient C compiler and the core system in "boot"
 default: all
-	cp $^ boot
-	make all
 
 # Build the C parts
 c:
