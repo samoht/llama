@@ -1,7 +1,8 @@
 BOOTDIR=../boot
 BINARY=llamadoc
 INCLUDES=-I ../stdlib -I ../backlib -I ../frontlib
-LIBRARIES=frontlib
+RUNTIME_PATH=../back/byterun
+LIBRARIES=stdlib backlib frontlib
 MODULES=\
   config clflags misc\
   odoc_config odoc_global odoc_messages odoc_types odoc_misc \
@@ -21,14 +22,7 @@ GENSOURCES=\
 include ../config.mk
 include ../Make/generic.mk
 include ../Make/app.mk
+include ../Make/ocamlapp.mk
 
 config.ml: ../config.mk
 	echo "let standard_library = \"$(LIBDIR)\"" > $@
-odoc_text_parser.ml: odoc_text_parser.mly
-odoc_text_parser.mli: odoc_text_parser.mly
-odoc_parser.ml:	odoc_parser.mly
-odoc_parser.mli: odoc_parser.mly
-odoc_text_lexer.ml: odoc_text_lexer.mll
-odoc_lexer.ml: odoc_lexer.mll
-odoc_llamahtml.ml: odoc_llamahtml.mll
-odoc_see_lexer.ml: odoc_see_lexer.mll

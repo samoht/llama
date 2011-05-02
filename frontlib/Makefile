@@ -23,10 +23,3 @@ GENSOURCES=parser.ml parser.mli lexer.ml linenum.ml
 include ../Make/generic.mk
 include ../Make/lib.mk
 include ../Make/ocamllib.mk
-
-parser.ml parser.mli: parser.mly
-lexer.ml: lexer.mll
-linenum.ml: linenum.mll
-
-%.cmo: %.ml
-	$(OCAMLCP_STRICT) -c $(INCLUDES) $<

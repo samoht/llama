@@ -3,55 +3,52 @@ include config.mk
 # ----------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------
+.PHONY: default all with-ocaml
 
 # Build the core native executables in "boot", then build everything
 # using the ambient C compiler and the core system in "boot"
-
-default: back/byterun/llamarun yacc/llamayacc
+default: all
 	cp $^ boot
-	$(MAKE) all
-.PHONY: default
+	make all
+
+# Build the C parts
+c:
+	make -C back/byterun && cp back/byterun/llamarun boot
+	make -C yacc
 
 # Build everything using the ambient C compiler and the core system in "boot"
+all: c
+	make depend
+	make -C stdlib
+	make -C backlib
+	make -C frontlib
+	make -C deptool
+	make -C lex
+	make -C doctool
+	make -C back/bytelib
+	make -C back/bytec
+	make -C back/bytetop
 
-all: depend
-	$(MAKE) -C stdlib
-	$(MAKE) -C backlib && $(MAKE) backlib/backlib.lma
-	$(MAKE) -C frontlib && $(MAKE) frontlib/frontlib.lma
-	$(MAKE) -C back/byterun
-	$(MAKE) -C deptool && $(MAKE) deptool/llamadep
-	$(MAKE) -C lex && $(MAKE) lex/llamalex
-	$(MAKE) -C yacc
-	$(MAKE) -C doctool && $(MAKE) doctool/llamadoc
-	$(MAKE) -C back/bytelib && $(MAKE) back/bytelib/bytelib.lma
-	$(MAKE) -C back/bytec && $(MAKE) back/bytec/llamac
-	$(MAKE) -C back/bytetop && $(MAKE) back/bytetop/llama
-.PHONY: all
+# Build an emergency core system using the ambient C and OCaml compilers
+with-ocaml: c ocamldepend
+	make -C stdlib       with-ocaml
+	make -C backlib      with-ocaml
+	make -C frontlib     with-ocaml
+	make -C deptool      with-ocaml
+	make -C lex          with-ocaml
+	make -C doctool      with-ocaml
+	make -C back/bytelib with-ocaml
+	make -C back/bytec   with-ocaml
+	make -C back/bytetop with-ocaml
+
+# Bootstrap
+.PHONY: promote ocamlpromote bootstrap ocamlbootstrap recover-bootstrap
 
 # Copy the core bytecode executables to "boot"
-
 promote:
 	cp deptool/llamadep boot
 	cp lex/llamalex boot
 	cp back/bytec/llamac boot
-.PHONY: promote
-
-# Build an emergency core system using the ambient C and OCaml compilers
-
-with-ocaml: ocamldepend
-	$(MAKE) -C stdlib with-ocaml
-	$(MAKE) -C backlib with-ocaml && $(MAKE) backlib/backlib.cma
-	$(MAKE) -C frontlib with-ocaml && $(MAKE) frontlib/frontlib.cma
-	$(MAKE) -C back/byterun with-ocaml
-	$(MAKE) -C deptool with-ocaml && $(MAKE) deptool/llamadep-ocaml
-	$(MAKE) -C lex with-ocaml && $(MAKE) lex/llamalex-ocaml
-	$(MAKE) -C yacc
-	$(MAKE) -C back/bytelib with-ocaml && $(MAKE) back/bytelib/bytelib.cma
-	$(MAKE) -C back/bytec with-ocaml && $(MAKE) back/bytec/llamac-ocaml
-.PHONY: with-ocaml
-
-# Copy the emergency core system to "boot"
-# The emergency "llamarun" is a shell script that calls ocamlrun
 
 ocamlpromote:
 	mkdir -p boot
@@ -60,100 +57,15 @@ ocamlpromote:
 	cp deptool/llamadep-ocaml boot/llamadep
 	cp lex/llamalex-ocaml boot/llamalex
 	cp back/bytec/llamac-ocaml boot/llamac
-.PHONY: ocamlpromote
 
-# Bootstrap the compiler
 bootstrap:
-	$(MAKE) && $(MAKE) promote && $(MAKE) mlclean && $(MAKE)
+	make && make promote && make mlclean && make
+
+ocamlbootstrap:
+	make && make ocamlpromote && make mlclean && make
 
 recover-bootstrap:
-	git checkout boot/ && $(MAKE) mlclean && $(MAKE)
-
-# ----------------------------------------------------------------------
-# Directory rules and dependencies
-# ----------------------------------------------------------------------
-
-stdlib/stdlib.lma:
-	$(MAKE) -C stdlib clean
-	$(MAKE) -C stdlib
-
-stdlib/stdlib.cma:
-	$(MAKE) -C stdlib ocamlclean
-	$(MAKE) -C stdlib with-ocaml
-
-backlib/backlib.lma: stdlib/stdlib.lma
-	$(MAKE) -C backlib clean
-	$(MAKE) -C backlib
-
-backlib/backlib.cma: stdlib/stdlib.cma
-	$(MAKE) -C backlib ocamlclean
-	$(MAKE) -C backlib with-ocaml
-
-frontlib/frontlib.lma: backlib/backlib.lma
-	$(MAKE) -C frontlib clean
-	$(MAKE) -C frontlib
-
-frontlib/frontlib.cma: backlib/backlib.cma
-	$(MAKE) -C frontlib ocamlclean
-	$(MAKE) -C frontlib with-ocaml
-
-frontc/llamafrontc: frontlib/frontlib.lma
-	$(MAKE) -C frontc clean
-	$(MAKE) -C frontc
-
-frontc/llamafrontc-ocaml: frontlib/frontlib.cma
-	$(MAKE) -C frontc ocamlclean
-	$(MAKE) -C frontc with-ocaml
-
-deptool/llamadep: frontlib/frontlib.lma
-	$(MAKE) -C deptool clean
-	$(MAKE) -C deptool
-
-deptool/llamadep-ocaml: frontlib/frontlib.cma
-	$(MAKE) -C deptool ocamlclean
-	$(MAKE) -C deptool ocaml
-
-lex/llamalex: stdlib/stdlib.lma
-	$(MAKE) -C lex clean
-	$(MAKE) -C lex
-
-lex/llamalex-ocaml: stdlib/stdlib.cma
-	$(MAKE) -C lex ocamlclean
-	$(MAKE) -C lex with-ocaml
-
-yacc/llamayacc:
-	$(MAKE) -C yacc clean
-	$(MAKE) -C yacc
-
-doctool/llamadoc:
-	$(MAKE) -C doctool clean
-	$(MAKE) -C doctool
-
-back/byterun/llamarun:
-	$(MAKE) -C back/byterun clean
-	$(MAKE) -C back/byterun
-
-back/bytelib/bytelib.lma: backlib/backlib.lma back/byterun/llamarun
-	$(MAKE) -C back/bytelib clean
-	$(MAKE) -C back/bytelib
-
-back/bytelib/bytelib.cma: backlib/backlib.cma back/byterun/llamarun
-	$(MAKE) -C back/bytelib ocamlclean
-	$(MAKE) -C back/bytelib with-ocaml
-
-back/bytec/llamac: back/bytelib/bytelib.lma
-	$(MAKE) -C back/bytec clean
-	$(MAKE) -C back/bytec
-
-back/bytec/llamac-ocaml: back/bytelib/bytelib.cma
-	$(MAKE) -C back/bytec ocamlclean
-	$(MAKE) -C back/bytec with-ocaml
-
-back/bytetop/llama: frontlib/frontlib.lma back/bytelib/bytelib.lma
-	$(MAKE) -C back/bytetop clean
-	$(MAKE) -C back/bytetop
-
-# ----------------------------------------------------------------------
+	git checkout boot/ && make mlclean && make
 
 CDIRS=yacc back/byterun
 
@@ -171,29 +83,42 @@ DIRS=$(MLDIRS) $(CDIRS)
 # Install
 # ----------------------------------------------------------------------
 
+.PHONY: install ocamlinstall uninstall
+
 install:
 	mkdir -p $(BINDIR) $(LIBDIR)
-	for dir in $(CDIRS) $(APPDIRS) stdlib; do $(MAKE) -C $$dir install; done
-.PHONY: install
+	for dir in $(CDIRS) $(APPDIRS) stdlib; do make -C $$dir install; done
+
+ocamlinstall:
+	mkdir -p $(BINDIR) $(LIBDIR)
+	for dir in $(CDIRS); do make -C $$dir install; done
+	for dir in $(APPDIRS) stdlib; do make -C $$dir ocamlinstall; done
+
+uninstall:
+	rm -f $(BINDIR)/llama $(BINDIR)/llamac $(BINDIR)/llamadep $(BINDIR)/llamadoc \
+		$(BINDIR)/llamalex $(BINDIR)/llamarun $(BINDIR)/llamayacc
+	rm -rf $(LIBDIR)
 
 # ----------------------------------------------------------------------
 # Depend
 # ----------------------------------------------------------------------
 
-depend:
-	for dir in $(DIRS); do $(MAKE) -C $$dir depend; done
-ocamldepend:
-	for dir in $(COREDIRS); do $(MAKE) -C $$dir ocamldepend; done
 .PHONY: depend ocamldepend
+
+depend:
+	for dir in $(DIRS); do make -C $$dir depend; done
+ocamldepend:
+	for dir in $(COREDIRS); do make -C $$dir ocamldepend; done
 
 # ----------------------------------------------------------------------
 # Clean
 # ----------------------------------------------------------------------
 
 clean:
-	for dir in $(DIRS); do $(MAKE) -C $$dir clean; done
+	for dir in $(DIRS); do make -C $$dir clean; done
 mlclean:
-	for dir in $(MLDIRS); do $(MAKE) -C $$dir clean; done
+	for dir in $(MLDIRS); do make -C $$dir clean; done
 ocamlclean:
-	for dir in $(COREDIRS); do $(MAKE) -C $$dir ocamlclean; done
+	for dir in $(CDIRS); do make -C $$dir clean; done
+	for dir in $(MLDIRS); do make -C $$dir ocamlclean; done
 .PHONY: clean mlclean ocamlclean

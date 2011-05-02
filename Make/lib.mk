@@ -1,22 +1,16 @@
 # Main targets for a directory containing a single library
 
+.PHONY: default clean depend
+
 default: $(LIBDEPS) $(LIBRARY).lma
-.PHONY: default
 
 $(LIBRARY).lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $(INCLUDES) $(LIBRARIES:%=%.lma) $^ -o $@
 
 clean:
-	rm -f $(LIBRARY).lma *.lmi *.lml *.lmo *.lmx depend $(GENSOURCES)
-.PHONY: clean
+	rm -f $(LIBRARY).lma *.lmi *.lml *.lmo *.lmx $(GENSOURCES)
 
-scrapeclean:
-	rm -f $(GENSOURCES)
-.PHONY: scrapeclean
-
-depend: $(GENSOURCES)
-	$(LLAMADEP) $(INCLUDES) *.ml *.mli > depend
-
-.PHONY: depend
+depend:
+	$(LLAMADEP) $(INCLUDES) *.ml *.mli > .depend
 
 -include .depend

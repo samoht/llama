@@ -30,14 +30,12 @@ include ../Make/generic.mk
 # ----------------------------------------------------------------------
 
 all: stdlib.lma std_exit.lmo llamaheader
-with-ocaml: stdlib.cma std_exit.cmo camlheader profiling.cma
+with-ocaml: stdlib.cma std_exit.cmo camlheader
 .PHONY: all with-ocaml
 
 stdlib.lma: $(MODULES:%=%.lmo)
 	$(LLAMAC) -a $^ -o $@
 stdlib.cma: $(MODULES:%=%.cmo)
-	$(OCAMLC_STRICT) -a $^ -o $@
-profiling.cma: profiling.cmo
 	$(OCAMLC_STRICT) -a $^ -o $@
 
 # ----------------------------------------------------------------------

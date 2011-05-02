@@ -57,7 +57,7 @@ PUBLIC_INCLUDES=\
   alloc.h callback.h config.h custom.h fail.h intext.h \
   memory.h misc.h mlvalues.h printexc.h signals.h compatibility.h
 
-all: depend llamarun ld.conf libcamlrun.a
+all: depend llamarun ld.conf libllamarun.a
 .PHONY: all with-ocaml
 
 with-ocaml:
@@ -69,8 +69,8 @@ ld.conf: ../config/Makefile
 
 install::
 	cp llamarun $(BINDIR)/llamarun
-	cp libcamlrun.a $(LIBDIR)/libcamlrun.a
-	cd $(LIBDIR); $(RANLIB) libcamlrun.a
+	cp libllamarun.a $(LIBDIR)/libllamarun.a
+	cd $(LIBDIR); $(RANLIB) libllamarun.a
 	if test -d $(LIBDIR)/caml; then : ; else mkdir $(LIBDIR)/caml; fi
 	for i in $(PUBLIC_INCLUDES); do \
 	  sed -f cleanup-header $$i > $(LIBDIR)/caml/$$i; \
@@ -123,10 +123,10 @@ clean ::
 
 OBJS=$(COMMONOBJS) unix.o main.o
 
-llamarun: prims.o libcamlrun.a
+llamarun: prims.o libllamarun.a
 	$(MKEXE) $(BYTECCLINKOPTS) -o llamarun $^ $(BYTECCLIBS)
 
-libcamlrun.a: $(OBJS)
+libllamarun.a: $(OBJS)
 	ar rc $@ $(OBJS)
 	$(RANLIB) $@
 

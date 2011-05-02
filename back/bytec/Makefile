@@ -1,8 +1,8 @@
 BOOTDIR=../../boot
 BINARY=llamac
-INCLUDES=-I ../../stdlib -I ../../backlib -I ../../frontlib -I ../bytelib
+INCLUDES=-I ../../stdlib -I ../../backlib -I ../../frontlib -I ../bytelib -I ../byterun
 RUNTIME_PATH=../byterun
-LIBRARIES=backlib frontlib bytelib
+LIBRARIES=stdlib backlib frontlib bytelib
 MODULES=main
 
 include ../../config.mk

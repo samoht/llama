@@ -3,6 +3,7 @@ BINARY=llama
 
 INCLUDES=-I ../../stdlib -I ../../backlib -I ../../frontlib -I ../bytelib
 LIBRARIES=stdlib backlib frontlib bytelib
+RUNTIME_PATH=../byterun
 
 MODULES=\
   ledit_fstream ledit_cursor \
@@ -15,3 +16,4 @@ BYTELINKFLAGS=-linkall
 include ../../config.mk
 include ../../Make/generic.mk
 include ../../Make/app.mk
+include ../../Make/ocamlapp.mk

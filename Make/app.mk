@@ -1,23 +1,17 @@
 # Main targets for a directory containing a single executable
 
+.PHONY: install clean depend
+
 $(BINARY): $(MODULES:%=%.lmo)
-	$(LLAMAC) $(INCLUDES) $(BYTELINKFLAGS) stdlib.lma $(LIBRARIES:%=%.lma) $^ -o $@
+	$(LLAMAC) $(INCLUDES) $(BYTELINKFLAGS) $(LIBRARIES:%=%.lma) $^ -o $@
 
 install:
 	cp $(BINARY) $(BINDIR)
-.PHONY: install
 
 clean:
-	rm -f $(BINARY) *.lmi *.lml *.lmo *.lmx depend $(GENSOURCES)
-.PHONY: clean
+	rm -f $(BINARY) *.lmi *.lml *.lmo *.lmx $(GENSOURCES)
 
-scrapeclean: clean
-	rm -f $(GENSOURCES)
-.PHONY: scrapeclean
-
-depend: $(GENSOURCES)
-	$(LLAMADEP) $(INCLUDES) *.ml *.mli > depend
-
-.PHONY: depend
+depend:
+	$(LLAMADEP) $(INCLUDES) *.ml *.mli > .depend
 
 -include .depend

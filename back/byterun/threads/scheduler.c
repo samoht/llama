@@ -268,7 +268,7 @@ CAMLprim value thread_new(value clos)          /* ML */
 
 /* Return the thread identifier */
 
-value thread_id(value th)             /* ML */
+CAMLprim value thread_id(value th)             /* ML */
 {
   return ((caml_thread_t)th)->ident;
 }
