@@ -15,16 +15,16 @@ LLAMAYACC=$(OCAMLYACC) #$(BOOTDIR)/llamayacc
 
 %.lmi: %.mli %.ml
 	$(LLAMAC) -c $(INCLUDES) $<
-%.lmi: %.ml
-	$(LLAMAC) -c $(INCLUDES) $<
 %.lmo: %.ml %.lmi
+	$(LLAMAC) -c $(INCLUDES) $<
+%.lmi %.lmo: %.ml
 	$(LLAMAC) -c $(INCLUDES) $<
 
 %.cmi: %.mli %.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
-%.cmi: %.ml
-	$(OCAMLC_STRICT) -c $(INCLUDES) $<
 %.cmo: %.ml %.cmi
+	$(OCAMLC_STRICT) -c $(INCLUDES) $<
+%.cmi %.cmo: %.ml
 	$(OCAMLC_STRICT) -c $(INCLUDES) $<
 
 %.ml: %.mll
