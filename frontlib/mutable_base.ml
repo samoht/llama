@@ -390,8 +390,15 @@ let instantiate_value v =
 (* Expansion of abbreviations.                                            *)
 (* ---------------------------------------------------------------------- *)
 
-let rec mutable_type_repr = function
-    Mvar { link = Some ty } -> mutable_type_repr ty
+let mutable_type_repr ty =
+  match ty with
+  | Mvar l ->
+      let rec aux = function
+        | Mvar { link = Some t } ->
+            l.link <- Some t;
+            aux t
+        | ty -> ty in
+      aux ty
   | ty -> ty
 
 let mutable_apply_type tcs body p =

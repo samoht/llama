@@ -98,10 +98,15 @@ let string_of_mutable_region r =
 let string_of_mutable_regions l =
   Printf.sprintf "[%s]" (String.concat "," (List.map string_of_mutable_region l))
 
-let rec mutable_region_repr r =
-  match r.rbody with
-    | MRlink v -> mutable_region_repr v
-    | _        -> r
+let mutable_region_repr r =
+  let rec aux accu =
+    match accu.rbody with
+    | MRlink v -> aux v
+    | _        -> accu in
+  let repr = aux r in
+  if r != repr then
+    r.rbody <- MRlink repr;
+  repr
 
 exception Unify_regions
 
@@ -286,10 +291,15 @@ let merge_effects rs es =
   e.body <- MEset s;
   e
 
-let rec mutable_effect_repr phi =
-  match phi.body with
-    | MElink v -> mutable_effect_repr v
-    | _        -> phi
+let mutable_effect_repr phi =
+  let rec aux accu =
+    match accu.body with
+    | MElink v -> aux v
+    | _        -> accu in
+  let repr = aux phi in
+  if repr != phi then
+    phi.body <- MElink repr;
+  repr
 
 let mutable_effect_reprs l =
   List.map mutable_effect_repr l
