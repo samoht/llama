@@ -310,7 +310,7 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
         in
         type_args ty_fct [phi_fct] args
     | Mexp_let (_, pat_expr_list, body) ->
-        let phil = bindings pat_expr_list
+        let phil = bindings [] pat_expr_list
         and ty, phi = expression body in
         ty, [], phi :: phil
     | Mexp_match (item, pat_exp_list) ->
@@ -404,9 +404,8 @@ and expression_aux exp : mutable_type * mutable_region list * mutable_effect lis
 and expression_expect accu exp expected_ty =
   match exp.mexp_desc with
     | Mexp_let (_, pat_expr_list, body) ->
-        let phil1 = bindings pat_expr_list in
-        let phil2 = expression_expect accu body expected_ty in
-        List.rev_append phil1 phil2 (* XXX: remove the rev_append if possible *)
+        let phil1 = bindings accu pat_expr_list in
+        expression_expect phil1 body expected_ty
     | Mexp_sequence (e1, e2) ->
         let phi = statement e1 in
         expression_expect (phi :: accu) e2 expected_ty
@@ -439,11 +438,11 @@ and expression_expect accu exp expected_ty =
 
 (* Typing of "let" definitions *)
 
-and bindings pat_expr_list =
+and bindings accu pat_expr_list =
   List.iter (fun (pat, _) -> ignore (pattern pat)) pat_expr_list;
   List.fold_left
-    (fun accu (pat, expr) -> accu (*expression_expect accu expr pat.mpat_type*))
-    [] pat_expr_list
+    (fun accu (pat, expr) -> expression_expect accu expr pat.mpat_type)
+    accu pat_expr_list
     
 (* Typing of match cases *)
 
@@ -482,7 +481,7 @@ and lockable expr =
 let structure_item tstr =
   match tstr.mstr_desc with
       Mstr_eval expr -> ignore (expression expr)
-    | Mstr_let (rec_flag, pat_exp_list) -> ignore (bindings pat_exp_list)
+    | Mstr_let (rec_flag, pat_exp_list) -> ignore (bindings [] pat_exp_list)
     | _ -> ()
 
 (* ---------------------------------------------------------------------- *)
